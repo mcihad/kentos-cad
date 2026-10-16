@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, file, fonts, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -410,6 +410,10 @@ __all__ = [
     "FitNurbsBy",
     "FlipBlockAction",
     "FlipBlockParameter",
+    "FontMatch",
+    "FontMatchName",
+    "FontsReport",
+    "FontsReported",
     "Forbidden",
     "FoundSnap",
     "FrameUcsTo",
@@ -611,6 +615,7 @@ __all__ = [
     "MoveTextDimensionEdit",
     "MoveTransform",
     "NAMESPACES",
+    "NamedFont",
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
@@ -657,6 +662,7 @@ __all__ = [
     "OriginUcsTo",
     "Outcome",
     "Page",
+    "ParagraphLayout",
     "ParallelPointConstruction",
     "ParamValue",
     "ParametersOperation",
@@ -877,6 +883,7 @@ __all__ = [
     "StretchWindow",
     "StyleEditOperation",
     "StyleEditOperationName",
+    "StyleFont",
     "StyleImpact",
     "StylesEdit",
     "StylesEdited",
@@ -898,6 +905,7 @@ __all__ = [
     "TenantRef",
     "TextAlign",
     "TextAlignName",
+    "TextColumns",
     "TextDimensionEdit",
     "TextEntity",
     "TextEntityGeometry",
@@ -993,6 +1001,7 @@ __all__ = [
     "drawing",
     "entities",
     "file",
+    "fonts",
     "labels",
     "layers",
     "library",

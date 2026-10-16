@@ -173,6 +173,13 @@ pub enum Field {
     /// Texts' box width (emptied or “Kutusuz”: none) and line spacing (docs/adr/0182 §4).
     TextBox(Vec<Slot>),
     TextSpacing(Vec<Slot>),
+    /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §3).
+    TextIndent(Vec<Slot>),
+    TextLeftIndent(Vec<Slot>),
+    TextTabs(Vec<Slot>),
+    TextColumns(Vec<Slot>),
+    TextColumnHeight(Vec<Slot>),
+    TextColumnGap(Vec<Slot>),
     /// An insert's place (Y, X), scale (above zero) and turn (degrees typed).
     InsertX(Slot),
     InsertY(Slot),
@@ -874,6 +881,31 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 Vec::new()
             };
         }
+        // The layout's numbers (docs/adr/0324 §3): the command refuses one out of range and says why.
+        Field::TextIndent(slots)
+        | Field::TextLeftIndent(slots)
+        | Field::TextColumns(slots)
+        | Field::TextColumnHeight(slots)
+        | Field::TextColumnGap(slots) => {
+            use kentos_interaction::text_layout as layout;
+            let n = web_number(text);
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            return match field {
+                Field::TextIndent(_) => layout::set_indent(model, slots, n),
+                Field::TextLeftIndent(_) => layout::set_left_indent(model, slots, n),
+                Field::TextColumns(_) => layout::set_columns(model, slots, n.max(0.0).min(f64::from(u32::MAX)) as u32),
+                Field::TextColumnHeight(_) => layout::set_column_height(model, slots, n),
+                _ => layout::set_column_gap(model, slots, n),
+            };
+        }
+        Field::TextTabs(slots) => {
+            return match kentos_interaction::text_layout::parse_tabs(text) {
+                Ok(stops) => kentos_interaction::text_layout::set_tabs(model, slots, &stops),
+                Err(words) => vec![words],
+            };
+        }
         Field::LeaderNote(slots) => {
             let note = kentos_interaction::js_trim(text);
             let to = (!note.is_empty()).then(|| note.to_owned());
@@ -1055,6 +1087,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::TextBox(_)
         | Field::AnnotativeScales(_)
         | Field::TextSpacing(_)
+        | Field::TextIndent(_)
+        | Field::TextLeftIndent(_)
+        | Field::TextTabs(_)
+        | Field::TextColumns(_)
+        | Field::TextColumnHeight(_)
+        | Field::TextColumnGap(_)
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)
         | Field::LeaderTurn(_)

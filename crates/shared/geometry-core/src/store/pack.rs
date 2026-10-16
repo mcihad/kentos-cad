@@ -412,7 +412,9 @@ impl Reader<'_> {
                         bold: bits & RUN_BOLD != 0,
                         italic: bits & RUN_ITALIC != 0,
                         underline: bits & RUN_UNDERLINE != 0,
-                        script: if bits & RUN_SUPER != 0 {
+                        script: if bits & (RUN_SUPER | RUN_SUB) == RUN_SUPER | RUN_SUB {
+                            Some(Script::Stack)
+                        } else if bits & RUN_SUPER != 0 {
                             Some(Script::Super)
                         } else if bits & RUN_SUB != 0 {
                             Some(Script::Sub)
@@ -440,6 +442,7 @@ impl Reader<'_> {
                     bulges: bulges.iter().any(|&b| b != 0.0).then_some(bulges),
                 });
                 Shape::Text {
+                    flow: None,
                     p,
                     text,
                     height,
@@ -830,6 +833,8 @@ fn run_bits(r: &Run) -> u32 {
         + match r.script {
             Some(Script::Super) => RUN_SUPER,
             Some(Script::Sub) => RUN_SUB,
+            // Both script bits: a stacked fraction (docs/adr/0324 §1).
+            Some(Script::Stack) => RUN_SUPER | RUN_SUB,
             None => 0,
         }
 }
@@ -1022,6 +1027,7 @@ impl Packer {
                 self.put(&[fit_tolerance.unwrap_or(f64::NAN), a.x, a.y, b.x, b.y]);
             }
             Shape::Text {
+                flow: _,
                 p,
                 text,
                 height,

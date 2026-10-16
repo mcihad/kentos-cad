@@ -108,6 +108,7 @@ impl Placing {
                     box_width,
                     line_spacing,
                     runs,
+                    flow,
                     face: _,
                     path,
                 } = piece.shape
@@ -141,6 +142,7 @@ impl Placing {
                         label_of: None,
                         label_scale: None,
                         paragraph: kentos_contracts::Paragraph {
+                            layout: contract_layout(flow.as_deref()),
                             box_width,
                             line_spacing,
                             runs: contract_runs(runs.as_deref()),
@@ -190,6 +192,7 @@ pub(crate) fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> 
                 script: r.script.map(|s| match s {
                     kentos_contracts::TextScript::Super => Script::Super,
                     kentos_contracts::TextScript::Sub => Script::Sub,
+                    kentos_contracts::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
@@ -399,10 +402,47 @@ pub(crate) fn contract_runs(runs: Option<&[Run]>) -> Vec<kentos_contracts::TextR
             script: r.script.map(|s| match s {
                 Script::Super => kentos_contracts::TextScript::Super,
                 Script::Sub => kentos_contracts::TextScript::Sub,
+                Script::Stack => kentos_contracts::TextScript::Stack,
             }),
             color: r.color.clone(),
         })
         .collect()
+}
+
+/// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
+pub(crate) fn core_layout(
+    l: Option<&kentos_contracts::ParagraphLayout>,
+) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
+    l.map(|l| {
+        Box::new(kentos_geometry_core::text::paragraph::Flow {
+            first: l.indent.unwrap_or(0.0),
+            left: l.left_indent.unwrap_or(0.0),
+            tabs: l.tabs.clone(),
+            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
+}
+
+/// The core's layout as the contract writes it: an indent of 0 is left out.
+pub(crate) fn contract_layout(
+    f: Option<&kentos_geometry_core::text::paragraph::Flow>,
+) -> Option<Box<kentos_contracts::ParagraphLayout>> {
+    f.map(|f| {
+        Box::new(kentos_contracts::ParagraphLayout {
+            indent: (f.first != 0.0).then_some(f.first),
+            left_indent: (f.left != 0.0).then_some(f.left),
+            tabs: f.tabs.clone(),
+            columns: f.columns.map(|c| kentos_contracts::TextColumns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
 }
 
 fn core(p: Vec2) -> CoreVec2 {
@@ -605,6 +645,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
             path: t.path.as_ref().map(core_curve),
         },
@@ -896,6 +937,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
         } => Entity::Text(TextEntity {
@@ -912,6 +954,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             label_of: None,
             label_scale: None,
             paragraph: kentos_contracts::Paragraph {
+                layout: contract_layout(flow.as_deref()),
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: contract_runs(runs.as_deref()),

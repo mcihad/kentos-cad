@@ -36,7 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fonts_report,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
@@ -1184,6 +1184,12 @@ impl Input for kentos_domain::contracts::DimensionsEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::FontsReport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::DimensionsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2080,6 +2086,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_DIMENSIONS_QUERY => {
             run!(dimensions_query, kentos_domain::contracts::DimensionsQuery)
+        }
+        kentos_domain::contracts::CAD_FONTS_REPORT => {
+            run!(fonts_report, kentos_domain::contracts::FontsReport)
         }
         kentos_domain::contracts::CAD_DIMENSIONS_CREATE => {
             run!(dimensions_create, DimensionsCreate)

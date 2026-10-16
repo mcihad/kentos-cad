@@ -37,7 +37,7 @@ impl Objects {
         Self(Vec::new())
     }
 
-    fn push(&mut self, layer: &str, mut fields: Value) -> u32 {
+    pub(crate) fn push(&mut self, layer: &str, mut fields: Value) -> u32 {
         let id = self.0.len() as u32 + 1;
         fields["id"] = json!(id);
         fields["layerId"] = json!(layer);

@@ -178,7 +178,10 @@ use crate::layer::LineType;
 /// 73 (docs/adr/0323): a text's, a dimension's and a leader's `annotative`: `.kcad` document schema 64; in the typed
 ///    columns the text's option 15, the dimension's in its more JSON (bit 29), the leader's bit 2, each its JSON text.
 ///    The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 73;
+/// 74 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script:
+///    `.kcad` document schema 65; in the typed columns the text's option 16 (its JSON text) and a run's flags 8 and 16
+///    together. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 74;
 
 // ── Every import ────────────────────────────────────────────────────────
 

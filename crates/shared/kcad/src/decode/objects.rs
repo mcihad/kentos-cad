@@ -224,6 +224,8 @@ pub(super) struct Features {
     overrides: bool,
     /// Schema 64: a text's, a dimension's and a leader's `annotative` (docs/adr/0323).
     annotative: bool,
+    /// Schema 65: a text's `layout` and a run's `stack` script (docs/adr/0324).
+    paragraph_layout: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -303,6 +305,7 @@ impl Features {
             dimension_marks: schema >= crate::SCHEMA_WITH_DIMENSION_MARKS,
             overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
             annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
+            paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -371,6 +374,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
                     || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
                     || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
+                    || (has.paragraph_layout && key == "layout")
                     || (has.styles
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
                     || (has.text_paths && key == "path")
@@ -624,6 +628,7 @@ struct Fields {
     face_at: usize,
     look: DimensionLook,
     runs_at: usize,
+    layout_at: usize,
     /// A table's own fields (docs/adr/0184), and where each is (for a refusal).
     rows: Option<Vec<f64>>,
     columns: Option<Vec<f64>>,
@@ -1108,6 +1113,12 @@ pub(super) fn object(
                     has.dimension_marks,
                 )?)
             }
+            // Schema 65 (docs/adr/0324 §1): a text's indents, tabs and columns, as their JSON; checked with its box.
+            "layout" => {
+                let (l, at): (kentos_contracts::ParagraphLayout, usize) = json_part(r, "yazının düzeni")?;
+                f.layout_at = at;
+                f.paragraph.layout = Some(Box::new(l));
+            }
             // Schema 64 (docs/adr/0323): the scales, as their JSON; the whole object's rule is checked once it is read.
             "annotative" => {
                 let (a, _): (kentos_contracts::Annotative, usize) = json_part(r, "ölçekler")?;
@@ -1264,7 +1275,7 @@ pub(super) fn object(
             }
             "runs" => {
                 f.runs_at = r.position();
-                f.paragraph.runs = list(r, |r, _| text_run(r))?;
+                f.paragraph.runs = list(r, |r, _| text_run(r, has.paragraph_layout))?;
                 // The writer leaves an empty list out: one spelling (§6.6).
                 if f.paragraph.runs.is_empty() {
                     return Err(r.fail_at(
@@ -1678,6 +1689,19 @@ fn build(
             // The runs inside the text, in order, apart and one per format (docs/adr/0182 §1).
             if let Some(words) = f.paragraph.runs_problem(&text) {
                 return Err(r.fail_at(Code::BadValue, f.runs_at, &words));
+            }
+            // Its layout: in its height's range, columns only in a box; one spelling, no empty layout (docs/adr/0324 §1).
+            if let Some(l) = &f.paragraph.layout {
+                if l.is_plain() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        f.layout_at,
+                        "boş yazı düzeni yazılmaz; düzensiz yazıda alan yoktur",
+                    ));
+                }
+                if let Some((_, words)) = l.problem(f.paragraph.box_width.is_some()) {
+                    return Err(r.fail_at(Code::BadValue, f.layout_at, &words));
+                }
             }
             // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
             if let Some((_, words)) = f.face.problem() {
@@ -2814,7 +2838,7 @@ fn text_path(r: &mut Reader<'_>) -> Result<kentos_contracts::TextPath, KcadError
     })
 }
 
-fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
+fn text_run(r: &mut Reader<'_>, stacks: bool) -> Result<TextRun, KcadError> {
     let (mut start, mut end) = (None, None);
     let mut run = TextRun::default();
     map(r, |r, key| {
@@ -2836,10 +2860,13 @@ fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
             "italic" => run.italic = flag(r, "italic")?,
             "underline" => run.underline = flag(r, "underline")?,
             "script" => {
-                run.script = Some(named(
-                    r,
-                    &[("super", TextScript::Super), ("sub", TextScript::Sub)],
-                )?)
+                // Schema 65 (docs/adr/0324 §1): a stacked fraction.
+                let scripts: &[(&str, TextScript)] = if stacks {
+                    &[("super", TextScript::Super), ("sub", TextScript::Sub), ("stack", TextScript::Stack)]
+                } else {
+                    &[("super", TextScript::Super), ("sub", TextScript::Sub)]
+                };
+                run.script = Some(named(r, scripts)?)
             }
             "color" => run.color = Some(text(r)?),
             _ => return Err(unknown(r)),

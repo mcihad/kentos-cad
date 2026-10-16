@@ -492,6 +492,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path: None,
         } => {
@@ -507,6 +508,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width: box_width.map(|w| w * s),
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
             face: face.clone(),
             path: None,
         }
@@ -524,6 +526,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path: Some(curve),
         } => {
@@ -546,6 +549,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 box_width: box_width.map(|w| w * s),
                 line_spacing: *line_spacing,
                 runs: runs.clone(),
+                flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
                 face: face.clone(),
                 path: Some(placed.curve),
             }

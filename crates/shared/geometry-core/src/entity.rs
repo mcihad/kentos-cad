@@ -325,6 +325,8 @@ pub enum Shape {
         box_width: Option<f64>,
         line_spacing: Option<f64>,
         runs: Option<Vec<crate::text::paragraph::Run>>,
+        /// Its indents, tabs and columns (docs/adr/0324 §1); none: none.
+        flow: Option<Box<crate::text::paragraph::Flow>>,
         /// Its style, typeface, bold, italic and slant (docs/adr/0183 §2).
         face: crate::text::face::Face,
         /// The curve its letters stand on, in its frame (docs/adr/0196); none: straight.
@@ -486,7 +488,7 @@ crate::json_tagged!(Shape, "kind",
     Spline => "spline" { pts, closed },
     // A NURBS curve's tangents are the typed hosts' (docs/adr/0259): the JSON API reads it without them.
     Nurbs => "nurbs" { degree, ctrl, knots, weights, closed, periodic, fit, fit_tolerance => "fitTolerance"; tangents },
-    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, flow => "layout", path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
@@ -1150,6 +1152,8 @@ pub struct TextPlace<'a> {
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
     pub runs: &'a [crate::text::paragraph::Run],
+    /// Its indents, tabs and columns (docs/adr/0324 §1); none for none.
+    pub flow: Option<&'a crate::text::paragraph::Flow>,
     /// Its own typeface, bold and slant (docs/adr/0183 §2): measured in the
     /// typeface, bold in the bold table; `lean` (the slant's tangent) leans
     /// its box with its letters. None, false and 0 for the project's look.
@@ -1174,6 +1178,7 @@ impl<'a> TextPlace<'a> {
                 box_width,
                 line_spacing,
                 runs,
+                flow,
                 face,
                 path,
                 ..
@@ -1187,6 +1192,7 @@ impl<'a> TextPlace<'a> {
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: runs.as_deref().unwrap_or_default(),
+                flow: flow.as_deref(),
                 font: face.font,
                 bold: face.is_bold(),
                 lean: face.lean(),
@@ -1215,6 +1221,7 @@ impl<'a> TextPlace<'a> {
             box_width: None,
             line_spacing: None,
             runs: &[],
+            flow: None,
             font: None,
             bold: false,
             lean: 0.0,
@@ -1252,6 +1259,7 @@ impl<'a> TextPlace<'a> {
         self.box_width.is_some()
             || self.line_spacing.is_some()
             || !self.runs.is_empty()
+            || self.flow.is_some()
             || self.text.contains('\n')
     }
 
@@ -1272,6 +1280,7 @@ impl<'a> TextPlace<'a> {
             along: self.align.map_or(0.0, TextAlign::along),
             font: self.font_or(font),
             bold: self.bold,
+            flow: self.flow,
         })
     }
 
@@ -1285,7 +1294,7 @@ impl<'a> TextPlace<'a> {
             return (w, 0.0, 1, 0.0);
         }
         let laid = self.layout(font);
-        let n = laid.lines.len();
+        let n = laid.depth;
         (
             laid.width,
             n.saturating_sub(1) as f64 * laid.pitch,
@@ -1875,6 +1884,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1885,6 +1895,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1908,6 +1919,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1918,6 +1930,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1943,6 +1956,7 @@ pub(crate) fn along_json<T>(
 ) -> Result<Option<T>, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1953,6 +1967,7 @@ pub(crate) fn along_json<T>(
         box_width: None,
         line_spacing: None,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1990,6 +2005,7 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -2000,6 +2016,7 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -2037,6 +2054,7 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -2047,6 +2065,7 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -2074,6 +2093,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -2084,6 +2104,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,

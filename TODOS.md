@@ -185,6 +185,12 @@ Liste:
   çizim ölçeği değişince ölçekli nesnenin yeni ölçeğe taşınması, pafta haritasının ölçeğindeki kopya (web'in harita çizimi ve PDF'i),
   Öznitelikler'in Ölçekli, Kendi ölçeği, Diğer ölçekler ve Ayrı değerler satırları, Ölçek paneli ve Ölçekteki yeri aracı. Masaüstünde de
   açık: kâğıt üstündeki ölçü öğesi (kuralı ADR 0323 §5'te), ölçekli nesnenin DXF'te AutoCAD'in ölçek bağlamlarıyla yazılması.
+- [ ] `CAD-ANNO-18`…`21` yazının düzeni, kesirler ve yazı tipleri (ADR 0324, 16 Ekim): web'de gerekenler: `.kcad` şema 65 (`layout`,
+  `stack`), çekirdeğin yeni yerleşimi WASM'la (sekmeler, girintiler, sütunlar, kesirler) ve web'in çizimi (sekme parçaları, kesrin
+  çizgisi), `cad.entities.edit`'in `layout`'u, `cad.fonts.report`'un TS işleyicisi, Öznitelikler'in Girinti, Sol girinti, Sekmeler,
+  Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
+  `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
+  kullanıcının kendi TTF/OTF yazı tipleri.
 - [ ] `CAD-ANNO-11`, `16`, `17` merkez işareti, eksen, kot, stil dosyaları ve stilden ayrılan alanlar (ADR 0322, 16 Ekim): web'de
   gerekenler: `.kcad` şema 62 ve 63 (`centerMark`, `centerLine`, `elevation`, `pair`, yazının ve ölçünün `overrides`'ı), çekirdeğin üç
   yerleşimi WASM'la ve `level`, `none` birimleri, belgenin `pair` kuralı, kotun izlemesi ve `mark_overrides`'ı, `cad.dimensions.create`'in üç

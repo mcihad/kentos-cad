@@ -182,7 +182,7 @@ pub fn replace_texts(doc: &mut Document, words: &[(Slot, String)]) -> Vec<String
 /// The texts in `slots` changed by `change`, those it changes, in one step
 /// “Değiştir” (Öznitelikler's Hiza, Genişlik çarpanı and Zemin, docs/adr/0145
 /// §6); what to say: the command's refusal.
-fn change_texts(
+pub(crate) fn change_texts(
     doc: &mut Document,
     slots: &[Slot],
     change: impl Fn(&TextEntity, Font) -> Option<TextEntity>,

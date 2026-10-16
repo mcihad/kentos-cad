@@ -883,6 +883,20 @@
       "shortcuts": [],
       "category": "Açıklama",
       "status": "implemented"
+    },
+    {
+      "id": "text.fonts",
+      "title": "Yazı tipleri",
+      "short": "Yazı tipleri",
+      "icon": "textFonts",
+      "description": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini, KentOS'un hangi yazı tipiyle çizdiğini ve nasıl (kendisi, eşdeğeri, SHX ya da yok) gösterir; paftanın PDF'inin gömdüğü yazı tipleri (cad.fonts.report). Yerine başka yazı tipiyle çizilen stil uyarıyla söylenir.",
+      "aliases": [
+        "FONTREPORT",
+        "YAZITIPLERI"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -978,7 +992,12 @@
     "annotationMake": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M12.5 15.5l2.25-6 2.25 6\"/><path d=\"M13.3 13.3h2.9\"/>",
     "annotationUnmake": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M12.5 9l5 5M17.5 9l-5 5\"/>",
     "annotativePlace": "<path d=\"M2.5 16.5 5.25 9 8 16.5\"/><path d=\"M3.5 14h3.5\"/><path d=\"M14 3v9M9.5 7.5h9\"/><path d=\"M12.5 4.5 14 3l1.5 1.5M12.5 10.5 14 12l1.5-1.5\"/>",
-    "annotationReset": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M17.5 12a3.5 3.5 0 1 1-1.1-2.6\"/><path d=\"M16.8 6.6v2.9h-2.9\"/>"
+    "annotationReset": "<path d=\"M2.5 15.5 6.5 4.5l4 11\"/><path d=\"M4 11.5h5\"/><path d=\"M17.5 12a3.5 3.5 0 1 1-1.1-2.6\"/><path d=\"M16.8 6.6v2.9h-2.9\"/>",
+    "textStack": "<path d=\"M9 4.2l1.6-1.2v5\"/><path d=\"M4.5 10h11\"/><path d=\"M8 13.4c.3-.8 1.2-1.3 2.1-1.2.9.1 1.5.8 1.3 1.6-.2.8-1 1.3-1.7 1.9L8 17h3.8\"/>",
+    "textList": "<path d=\"M4 5h.5M4 10h.5M4 15h.5\"/><path d=\"M8 5h9M8 10h9M8 15h9\"/>",
+    "textNumbered": "<path d=\"M3.2 4.2l1.3-.9v4.2\"/><path d=\"M3 12.3c.3-.7 1-.9 1.6-.8.7.1 1 .7.8 1.3-.2.6-.8.9-1.3 1.4L3 15.5h2.6\"/><path d=\"M8.5 5.5h8.5M8.5 13.5h8.5\"/>",
+    "textListOff": "<path d=\"M4 5h.5M4 10h.5M4 15h.5\"/><path d=\"M8 5h9M8 10h4M8 15h3\"/><path d=\"M12.5 12.5l5 5M17.5 12.5l-5 5\"/>",
+    "textFonts": "<path d=\"M3 16.5 7.5 4.5l4.5 12\"/><path d=\"M5 12.5h5\"/><path d=\"M13.5 9.5h4M15.5 9.5v7\"/><path d=\"M14 16.5h3\"/>"
   },
   "ribbon": [
     {
@@ -1554,6 +1573,19 @@
         },
         {
           "command": "annotation.unmake",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "annotate",
+      "into": "Yazı",
+      "items": [
+        {
+          "command": "text.fonts",
           "size": "small"
         }
       ]

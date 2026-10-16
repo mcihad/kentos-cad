@@ -495,6 +495,10 @@ impl<'d> Encoder<'d> {
                 if !para.runs.is_empty() {
                     f.push(("runs", Val::Runs(&para.runs)));
                 }
+                // Schema 65 (docs/adr/0324 §1): its indents, tabs and columns, as their JSON.
+                if let Some(l) = &para.layout {
+                    f.push(("layout", Val::Json(serde_json::to_value(l).unwrap_or_default())));
+                }
                 // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
                 // drawing's texts (a block definition's objects have no persistent ids to name).
                 if e.label_of.is_some() || e.label_scale.is_some() {
@@ -1442,6 +1446,7 @@ impl<'d> Encoder<'d> {
                             e.w.text(match s {
                                 TextScript::Super => "super",
                                 TextScript::Sub => "sub",
+                                TextScript::Stack => "stack",
                             });
                         }
                         if r.underline {

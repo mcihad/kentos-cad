@@ -29,7 +29,7 @@ use iced::{
 use kentos_contracts::{DrawingFont, Entity, LabelInk};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
-use kentos_geometry_core::text::paragraph::{Run, Script, advance};
+use kentos_geometry_core::text::paragraph::{self, Run, Script, advance};
 use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_native_application::geometry::core_runs;
@@ -673,6 +673,8 @@ impl Collect<'_> {
                 underline: None,
                 fill: None,
                 stroke: None,
+                width_factor: 1.0,
+                lean: 0.0,
             },
         ))
     }
@@ -749,6 +751,9 @@ impl Ink for Collect<'_> {
             mask,
             fill: None,
             stroke: None,
+            // Its width factor and slant on the paper too (docs/adr/0324 §6).
+            width_factor: f64::from(piece.width_factor),
+            lean: f64::from(piece.lean),
             underline: (piece.underline > 0.0).then(|| {
                 // From the baseline's start 0.12 of the height down, 0.06 thick, the bar's length along.
                 let (w, h) = (f64::from(piece.underline) * px, f64::from(piece.size) * px);
@@ -817,6 +822,8 @@ impl Ink for Collect<'_> {
             underline: None,
             fill: None,
             stroke: None,
+            width_factor: 1.0,
+            lean: 0.0,
         });
     }
 
@@ -1064,26 +1071,69 @@ impl Labels<'_> {
             }
             let bold = f.is_some_and(|r| r.bold) || own_bold;
             let script = f.and_then(|r| r.script);
-            let width: f64 = letters[i..j]
-                .iter()
-                .map(|ch| advance(face, *ch, bold, script.is_some()))
-                .sum::<f64>()
-                * em;
-            let lift = match script {
-                Some(Script::Super) => 0.4 * height,
-                Some(Script::Sub) => -0.15 * height,
-                None => 0.0,
-            };
-            let words: String = letters[i..j].iter().collect();
-            let along = x + lift * slant;
-            let place = Vec2::new(at.x + c * along - s * lift, at.y + s * along + c * lift);
             let (font, lean) = face_font(text_face, self.font, false, f);
-            let scaled = if script.is_some() { size * 0.6 } else { size };
             let color = f
                 .and_then(|r| r.color.as_deref())
                 .and_then(|name| self.colors.named(name))
                 .unwrap_or(self.colors.label);
-            if !words.trim().is_empty() || f.is_some_and(|r| r.underline) {
+            let underlined = f.is_some_and(|r| r.underline);
+            // What the run draws: its words, where along and how high, at what size, and its underline's length.
+            let mut parts: Vec<(String, f64, f64, f64, f32)> = Vec::new();
+            let width: f64;
+            let stack = f.filter(|r| {
+                script == Some(Script::Stack) && r.start as usize >= i && r.end as usize <= j
+            });
+            if let Some((q, mark, num, den)) =
+                stack.and_then(|r| paragraph::stack_parts(&letters, r, face, bold))
+            {
+                // A stacked fraction (docs/adr/0324 §2): over and under, or side by side with `#`.
+                let small = size * paragraph::SCRIPT_SIZE;
+                let upper: String = letters[i..q].iter().collect();
+                let lower: String = letters[q + 1..j].iter().collect();
+                if mark == '#' {
+                    let slash = advance(face, '/', bold, true);
+                    parts.push((upper, x, paragraph::STACK_OVER * height, small, 0.0));
+                    parts.push(("/".into(), x + num * em, 0.0, small, 0.0));
+                    parts.push((lower, x + (num + slash) * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    width = (num + slash + den) * em;
+                } else {
+                    let w = num.max(den);
+                    parts.push((upper, x + (w - num) / 2.0 * em, paragraph::STACK_OVER * height, small, 0.0));
+                    parts.push((lower, x + (w - den) / 2.0 * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    if mark == '/' {
+                        // The bar: an underline 0.12 of its size under a blank's baseline.
+                        let bar = paragraph::STACK_BAR * height + 0.12 * height * paragraph::SCRIPT_SIZE;
+                        let long = (w * em * self.camera.get().scale / width_factor) as f32;
+                        parts.push((" ".into(), x, bar, small, long));
+                    }
+                    width = w * em;
+                }
+            } else {
+                width = letters[i..j]
+                    .iter()
+                    .map(|ch| advance(face, *ch, bold, script.is_some()))
+                    .sum::<f64>()
+                    * em;
+                let lift = match script {
+                    Some(Script::Super) => 0.4 * height,
+                    Some(Script::Sub) => -0.15 * height,
+                    _ => 0.0,
+                };
+                let words: String = letters[i..j].iter().collect();
+                let scaled = if script.is_some() { size * 0.6 } else { size };
+                let line = if underlined {
+                    (width * self.camera.get().scale / width_factor) as f32
+                } else {
+                    0.0
+                };
+                parts.push((words, x, lift, scaled, line));
+            }
+            for (words, along, lift, scaled, line) in parts {
+                if words.trim().is_empty() && line == 0.0 {
+                    continue;
+                }
+                let along = along + lift * slant;
+                let place = Vec2::new(at.x + c * along - s * lift, at.y + s * along + c * lift);
                 self.draw(
                     frame,
                     &Piece {
@@ -1096,11 +1146,7 @@ impl Labels<'_> {
                         color,
                         width_factor: width_factor as f32,
                         mask: 0.0,
-                        underline: if f.is_some_and(|r| r.underline) {
-                            (width * self.camera.get().scale / width_factor) as f32
-                        } else {
-                            0.0
-                        },
+                        underline: line,
                         lean,
                     },
                     self.colors.halo,

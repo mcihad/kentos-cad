@@ -256,6 +256,7 @@ impl StationLabels {
         for t in &plan.texts {
             objects.push((
                 EntityGeometry::Text {
+                    layout: None,
                     annotative: None,
                     p: wire(t.p),
                     text: t.text.clone(),

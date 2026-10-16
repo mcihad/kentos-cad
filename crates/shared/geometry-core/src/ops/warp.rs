@@ -622,6 +622,7 @@ fn common<M: Map + ?Sized>(
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
         } => {
@@ -655,6 +656,7 @@ fn common<M: Map + ?Sized>(
                 box_width: box_width.map(|w| w * along),
                 line_spacing: *line_spacing,
                 runs: runs.clone(),
+                flow: flow.as_ref().map(|f| Box::new(f.scaled(height / h0))),
                 face: face.clone(),
                 path,
             })

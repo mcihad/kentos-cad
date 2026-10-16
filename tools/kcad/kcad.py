@@ -209,6 +209,11 @@ SCHEMA_WITH_DIMENSION_MARKS = 62
 SCHEMA_WITH_OVERRIDES = 63
 # Schema 64: schema 63, a text's, a dimension's and a leader's `annotative`: its scales (docs/adr/0323).
 SCHEMA_WITH_ANNOTATIVE = 64
+# Schema 65: schema 64, a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script (docs/adr/0324).
+SCHEMA_WITH_PARAGRAPH_LAYOUT = 65
+# A layout's numbers in the text's height, at most this much; at most this many tab stops (docs/adr/0324 §1).
+MAX_PARAGRAPH_HEIGHTS = 1000.0
+MAX_TABS = 32
 MAX_ANNOTATIVE_SCALES = 32
 MAX_ANNOTATIVE_SCALE = 1.0e6
 TEXT_OVERRIDES = ("font", "bold", "italic", "oblique", "widthFactor", "height")
@@ -397,7 +402,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1907,6 +1912,7 @@ class _Schema:
         self.dim_marks = version >= SCHEMA_WITH_DIMENSION_MARKS
         self.overrides = version >= SCHEMA_WITH_OVERRIDES
         self.annotative = version >= SCHEMA_WITH_ANNOTATIVE
+        self.paragraph_layout = version >= SCHEMA_WITH_PARAGRAPH_LAYOUT
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3398,6 +3404,10 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
+            if kind == "text" and "layout" in fields:
+                self.path.append("layout")
+                self.layout_rules(fields["layout"], "boxWidth" in fields)
+                self.path.pop()
             # A text along a curve or linked to an object is not annotative (docs/adr/0323 §1).
             if kind == "text" and "annotative" in fields and ("path" in fields or "labelOf" in fields):
                 self.path.append("annotative")
@@ -3681,7 +3691,7 @@ class _Schema:
                 "bold": (self.true_flag, False),
                 "italic": (self.true_flag, False),
                 "underline": (self.true_flag, False),
-                "script": (self.enum(("super", "sub")), False),
+                "script": (self.enum(("super", "sub", "stack") if self.paragraph_layout else ("super", "sub")), False),
                 "color": (self.text, False),
             }
         )
@@ -3699,6 +3709,8 @@ class _Schema:
                 self.fail("bad_value", f"{n}. biçim dilimi {r['start']}–{r['end']}; yazının {letters} harfi içinde, başı sonundan önce olmalı")
             if not any(k in r for k in keys):
                 self.fail("bad_value", f"{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz")
+            if r.get("script") == "stack" and not any(c in "/#^" for c in text[r["start"]:r["end"]]):
+                self.fail("bad_value", f"{n}. biçim dilimi kesir, ama harflerinde ayıraç (/, # ya da ^) yok")
             if r.get("color") == "":
                 self.fail("bad_value", f"{n}. biçim diliminin rengi boş")
             if before is not None:
@@ -3707,6 +3719,45 @@ class _Schema:
                 if r["start"] == before["end"] and all(r.get(k) == before.get(k) for k in keys):
                     self.fail("bad_value", f"{n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir")
             before = r
+
+    def layout_of(self, v):
+        """A text's indents, tab stops and columns (docs/adr/0324 §1), in its height (a column's height in metres)."""
+        def columns(c):
+            return self.fields({"count": (self.uint(32), True), "gap": (self.float, True), "height": (self.float, True)})(c)
+
+        floats = lambda a: [self.float(x) for x in self.array(lambda x: x)(a)]  # noqa: E731
+        return self.fields({"indent": (self.float, False), "leftIndent": (self.float, False), "tabs": (floats, False), "columns": (columns, False)})(v)
+
+    def layout_rules(self, layout, boxed):
+        """The layout as the contract allows it (`ParagraphLayout::problem`): not empty, in range, columns in a box."""
+        fits = lambda x: math.isfinite(x) and abs(x) <= MAX_PARAGRAPH_HEIGHTS  # noqa: E731
+        if not (layout.get("indent") or layout.get("leftIndent") or layout.get("tabs") or "columns" in layout):
+            self.fail("bad_value", "boş yazı düzeni yazılmaz; düzensiz yazıda alan yoktur")
+        left, first = layout.get("leftIndent", 0.0), layout.get("indent", 0.0)
+        if not fits(left) or left < 0.0:
+            self.fail("bad_value", f"sol girinti {left}: 0 ile {MAX_PARAGRAPH_HEIGHTS:g} yükseklik arasında olmalı")
+        if not fits(first) or left + first < 0.0:
+            self.fail("bad_value", f"ilk satırın girintisi {first}: sol girintiden fazla geri gidemez")
+        if layout.get("indent") == 0.0 or layout.get("leftIndent") == 0.0:
+            self.fail("bad_value", "sıfır girinti yazılmaz")
+        tabs = layout.get("tabs", [])
+        if len(tabs) > MAX_TABS:
+            self.fail("bad_value", f"en çok {MAX_TABS} sekme durağı olur")
+        last = 0.0
+        for t in tabs:
+            if not fits(t) or t <= last:
+                self.fail("bad_value", "sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı")
+            last = t
+        c = layout.get("columns")
+        if c is not None:
+            if not boxed:
+                self.fail("bad_value", "sütunlar kutu genişliği ister")
+            if not 2 <= c["count"] <= 16:
+                self.fail("bad_value", f"sütun sayısı {c['count']}: 2 ile 16 arasında olmalı")
+            if not fits(c["gap"]) or c["gap"] < 0.0:
+                self.fail("bad_value", f"sütun aralığı {c['gap']}: sıfır ya da pozitif olmalı")
+            if not (math.isfinite(c["height"]) and c["height"] > 0.0):
+                self.fail("bad_value", f"sütun yüksekliği {c['height']}: sıfırdan büyük olmalı")
 
     def label_scale(self, v):
         x = self.float(v)
@@ -4821,6 +4872,7 @@ ENTITY_KINDS = {
         **({"overrides": (s.overrides_of(TEXT_OVERRIDES), False)} if s.overrides else {}),
         # Schema 64 (docs/adr/0323): its scales.
         **({"annotative": (s.annotative_of("text"), False)} if s.annotative else {}),
+        **({"layout": (s.layout_of, False)} if s.paragraph_layout else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {

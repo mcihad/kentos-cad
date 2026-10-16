@@ -1217,6 +1217,14 @@
       ],
       "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323)."
     }
+,
+    "text.fonts": {
+      "level": "query",
+      "via": [
+        "cad.fonts.report"
+      ],
+      "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324)."
+    }
   },
   "tools": {
     "line": {

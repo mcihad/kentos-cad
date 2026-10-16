@@ -244,6 +244,7 @@ pub mod table_place;
 pub mod templates;
 pub mod text;
 pub mod text_along;
+pub mod text_layout;
 pub mod text_file;
 pub mod time_version;
 mod tool;

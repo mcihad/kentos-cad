@@ -215,6 +215,8 @@ pub enum Dialog {
     TakeFrom,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
     LayerList,
+    /// Yazı tipleri (font_report.rs, docs/adr/0324 §5).
+    FontReport,
     /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
     PlotScale,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
@@ -449,6 +451,7 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
+    FontReport(crate::font_report::Event),
     /// Ölçek yaz…'s window (annotation_scale.rs, docs/adr/0205 §4).
     PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
@@ -1690,6 +1693,7 @@ impl App {
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
+            Message::FontReport(event) => return self.font_report_event(event),
             Message::PlotScale(event) => return self.plot_scale_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
@@ -2449,6 +2453,7 @@ impl App {
             }
             "layer.purge" => self.open_layer_purge(),
             "layer.list" => self.open_layer_list(),
+            "text.fonts" => self.open_font_report(),
             // Katman süzgeci (layer_filters.rs, docs/adr/0211 §4): the active layer's; Katmanlar's menu names its
             // layer (layering.rs).
             "layer.filter" => return self.open_layer_filter(None),

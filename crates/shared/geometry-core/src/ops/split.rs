@@ -315,6 +315,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 box_width,
                 line_spacing,
                 runs,
+                flow,
                 face,
                 path,
             },
@@ -329,6 +330,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 box_width: bw,
                 line_spacing: ls,
                 runs: rs,
+                flow: fl,
                 face: f,
                 path: pa,
             },
@@ -349,6 +351,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 }
                 && line_spacing == ls
                 && runs == rs
+                && flow == fl
                 && face == f
                 && match (path, pa) {
                     (Some(x), Some(y)) => {

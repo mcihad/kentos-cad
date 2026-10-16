@@ -1784,6 +1784,7 @@ impl App {
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),
+            Asking::FontReport => self.font_report_view(),
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterStyle => self.raster_look_view(),

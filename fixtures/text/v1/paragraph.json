@@ -153,7 +153,7 @@
             "start": 5,
             "end": 40,
             "width": 42.5075,
-            "x": -0.0,
+            "x": 0.0,
             "y": 4.166666666666667
           },
           {
@@ -787,6 +787,648 @@
         "shares": [
           0.0,
           0.0
+        ]
+      }
+    },
+    {
+      "name": "girintili ilk satır, kutuda sarılır",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Birinci paragrafın ilk satırı girintili, gerisi değil",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 24.0,
+        "layout": {
+          "indent": 2.0
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 18,
+            "width": 18.88,
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "start": 19,
+            "end": 47,
+            "width": 23.9475,
+            "x": 0.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 48,
+            "end": 53,
+            "width": 5.3025,
+            "x": 0.0,
+            "y": 8.333333333333334
+          }
+        ],
+        "width": 24.0,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "sol girintili paragraf",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Sol girintiden başlayan uzun bir paragraf sarılır",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 24.0,
+        "layout": {
+          "leftIndent": 3.0
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 14,
+            "width": 14.497499999999999,
+            "x": 7.5,
+            "y": 0.0
+          },
+          {
+            "start": 15,
+            "end": 28,
+            "width": 15.292500000000004,
+            "x": 7.5,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 29,
+            "end": 41,
+            "width": 12.850000000000001,
+            "x": 7.5,
+            "y": 8.333333333333334
+          },
+          {
+            "start": 42,
+            "end": 49,
+            "width": 6.057500000000001,
+            "x": 7.5,
+            "y": 12.5
+          }
+        ],
+        "width": 24.0,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "madde işaretli liste: asılı girinti ve sekme",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Malzemeler\n•\tKum ve çakıl karışımı kutuya sığmayınca alt satıra geçer\n•\tÇimento",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 30.0,
+        "layout": {
+          "indent": -2.0,
+          "leftIndent": 2.0
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 10,
+            "width": 12.395,
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "start": 11,
+            "end": 12,
+            "width": 1.2349999999999999,
+            "x": 0.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 13,
+            "end": 34,
+            "width": 22.494999999999997,
+            "x": 5.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 35,
+            "end": 56,
+            "width": 23.365000000000002,
+            "x": 5.0,
+            "y": 8.333333333333334
+          },
+          {
+            "start": 57,
+            "end": 69,
+            "width": 12.985,
+            "x": 5.0,
+            "y": 12.5
+          },
+          {
+            "start": 70,
+            "end": 71,
+            "width": 1.2349999999999999,
+            "x": 0.0,
+            "y": 16.666666666666668
+          },
+          {
+            "start": 72,
+            "end": 79,
+            "width": 9.225000000000001,
+            "x": 5.0,
+            "y": 16.666666666666668
+          }
+        ],
+        "width": 30.0,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "numaralı liste",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "1.\tBirinci madde\n2.\tİkinci madde\n10.\tOnuncu madde",
+        "height": 2.5,
+        "rotation": 0,
+        "layout": {
+          "indent": -2.0,
+          "leftIndent": 2.0
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 2,
+            "width": 1.5675,
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "start": 3,
+            "end": 16,
+            "width": 15.032499999999999,
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "start": 17,
+            "end": 19,
+            "width": 2.0475,
+            "x": 0.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 20,
+            "end": 32,
+            "width": 13.837499999999999,
+            "x": 5.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 33,
+            "end": 36,
+            "width": 2.9825,
+            "x": 0.0,
+            "y": 8.333333333333334
+          },
+          {
+            "start": 37,
+            "end": 49,
+            "width": 16.2325,
+            "x": 5.0,
+            "y": 8.333333333333334
+          }
+        ],
+        "width": 21.2325,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "varsayılan sekmeler her dört yükseklikte",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Ad\tSoyad\tParsel\nAli\tYılmaz\t101/5",
+        "height": 2.5,
+        "rotation": 0
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 2,
+            "width": 2.9575,
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "start": 3,
+            "end": 8,
+            "width": 6.7225,
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "start": 9,
+            "end": 15,
+            "width": 6.847500000000004,
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "start": 16,
+            "end": 19,
+            "width": 2.8000000000000003,
+            "x": 0.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 20,
+            "end": 26,
+            "width": 7.087499999999999,
+            "x": 10.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 27,
+            "end": 32,
+            "width": 5.547499999999999,
+            "x": 20.0,
+            "y": 4.166666666666667
+          }
+        ],
+        "width": 26.847500000000004,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "verilen sekme durakları, sonra varsayılanlar",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "a\tb\tc\td",
+        "height": 2.5,
+        "rotation": 0,
+        "layout": {
+          "tabs": [
+            3.0,
+            5.5
+          ]
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 1,
+            "width": 1.2925,
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "width": 1.3825000000000003,
+            "x": 7.5,
+            "y": 0.0
+          },
+          {
+            "start": 4,
+            "end": 5,
+            "width": 1.3149999999999995,
+            "x": 13.75,
+            "y": 0.0
+          },
+          {
+            "start": 6,
+            "end": 7,
+            "width": 1.3825000000000003,
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 25.1325,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "ortalı satır sekmeli",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Kot\t+12,50",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 20.0,
+        "align": "topCenter",
+        "layout": {
+          "tabs": [
+            6.0
+          ]
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 3,
+            "width": 3.85,
+            "x": -0.9299999999999997,
+            "y": 0.0
+          },
+          {
+            "start": 4,
+            "end": 10,
+            "width": 6.859999999999999,
+            "x": 14.07,
+            "y": 0.0
+          }
+        ],
+        "width": 20.0,
+        "pitch": 4.166666666666667,
+        "shares": [
+          10.0,
+          2.5
+        ]
+      }
+    },
+    {
+      "name": "kesir: pay ve payda üst üste",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Oran 1/2 ve 15/32",
+        "height": 2.5,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 5,
+            "end": 8,
+            "script": "stack"
+          },
+          {
+            "start": 12,
+            "end": 17,
+            "script": "stack"
+          }
+        ]
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 17,
+            "width": 11.615499999999999,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 11.615499999999999,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "kesir: yan yana # ve toleranslı ^",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Ölçü 3#4 ve 20+0.1^-0.1",
+        "height": 2.5,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 5,
+            "end": 8,
+            "script": "stack"
+          },
+          {
+            "start": 14,
+            "end": 23,
+            "script": "stack"
+          }
+        ]
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 23,
+            "width": 16.4645,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 16.4645,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "iki sütun: satırlar sütun yüksekliğince",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "Bir\nİki\nÜç\nDört\nBeş",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 10.0,
+        "layout": {
+          "columns": {
+            "count": 2,
+            "gap": 1.0,
+            "height": 8.5
+          }
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 3,
+            "width": 3.125,
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "start": 4,
+            "end": 7,
+            "width": 2.5675,
+            "x": 0.0,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 8,
+            "end": 10,
+            "width": 2.9175,
+            "x": 12.5,
+            "y": 0.0
+          },
+          {
+            "start": 11,
+            "end": 15,
+            "width": 4.7475000000000005,
+            "x": 12.5,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 16,
+            "end": 19,
+            "width": 4.1275,
+            "x": 12.5,
+            "y": 8.333333333333334
+          }
+        ],
+        "width": 22.5,
+        "pitch": 4.166666666666667,
+        "shares": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "üç sütun, son sütun kalanları alır",
+      "text": {
+        "p": {
+          "x": 0,
+          "y": 0
+        },
+        "text": "a\nb\nc\nd\ne\nf\ng\nh",
+        "height": 2.5,
+        "rotation": 0,
+        "boxWidth": 6.0,
+        "align": "middleCenter",
+        "layout": {
+          "columns": {
+            "count": 3,
+            "gap": 0.5,
+            "height": 4.5
+          }
+        }
+      },
+      "want": {
+        "lines": [
+          {
+            "start": 0,
+            "end": 1,
+            "width": 1.2925,
+            "x": 2.35375,
+            "y": 0.0
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "width": 1.3825,
+            "x": 9.55875,
+            "y": 0.0
+          },
+          {
+            "start": 4,
+            "end": 5,
+            "width": 1.315,
+            "x": 16.8425,
+            "y": 0.0
+          },
+          {
+            "start": 6,
+            "end": 7,
+            "width": 1.3825,
+            "x": 16.80875,
+            "y": 4.166666666666667
+          },
+          {
+            "start": 8,
+            "end": 9,
+            "width": 1.34,
+            "x": 16.83,
+            "y": 8.333333333333334
+          },
+          {
+            "start": 10,
+            "end": 11,
+            "width": 0.9175,
+            "x": 17.041249999999998,
+            "y": 12.5
+          },
+          {
+            "start": 12,
+            "end": 13,
+            "width": 1.3575000000000002,
+            "x": 16.82125,
+            "y": 16.666666666666668
+          },
+          {
+            "start": 14,
+            "end": 15,
+            "width": 1.355,
+            "x": 16.822499999999998,
+            "y": 20.833333333333336
+          }
+        ],
+        "width": 20.5,
+        "pitch": 4.166666666666667,
+        "shares": [
+          10.25,
+          -9.166666666666668
         ]
       }
     },

@@ -76,6 +76,7 @@ mod dimension;
 pub mod dimension_create;
 pub mod dimensions_edit;
 pub mod dimensions_query;
+pub mod fonts_report;
 pub mod dimensions_reassociate;
 pub mod divide;
 mod edge_commands;
@@ -221,6 +222,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // Yazı tipleri ([`fonts_report`], docs/adr/0324 §5).
+    (
+        kentos_contracts::CAD_FONTS_REPORT,
+        kentos_contracts::CAD_FONTS_REPORT_VERSION,
     ),
     // Ölçekli açıklamalar ([`annotations_scales`], docs/adr/0323 §4).
     (

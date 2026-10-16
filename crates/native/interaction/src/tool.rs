@@ -1619,11 +1619,11 @@ pub trait Tool {
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
     /// The answer of the paragraph editor it asked for
-    /// ([`ViewChange::Paragraph`]): the text and its letter formats (Tamam),
+    /// ([`ViewChange::Paragraph`]): the text, its letter formats and its layout (Tamam; docs/adr/0324 §3),
     /// or none (Vazgeç).
     fn paragraph_typed(
         &mut self,
-        _typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        _typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
         _cx: &mut Context<'_>,
     ) {
     }

@@ -21,17 +21,17 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | geometry | 17 | 60 | 0 | 8 | 85 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 1 | 23 | 1 | 4 | 29 |
+| query | 2 | 23 | 1 | 4 | 30 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 88 | 340 | 103 | 205 | 736 |
+| **toplam** | 89 | 340 | 103 | 205 | 737 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 531 satırdan 131'i: geometry 77, none 20, processing 13, query 21.
+CBS'ye özgü olmayan 532 satırdan 132'i: geometry 77, none 20, processing 13, query 22.
 
 ### Sonucu çağıran hesaplar (geometry) — 77
 
@@ -158,7 +158,7 @@ CBS'ye özgü olmayan 531 satırdan 131'i: geometry 77, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 21
+### Okuma, Python'da yok (query) — 22
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -179,6 +179,7 @@ CBS'ye özgü olmayan 531 satırdan 131'i: geometry 77, none 20, processing 13, 
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |
+| `text.fonts` | Yazı tipleri | cad | cad.fonts.report | Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324). |
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |

@@ -445,6 +445,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         path: Option<crate::TextPath>,
+        /// Its indents, tab stops and columns (docs/adr/0324 §1); absent: an object updated keeps its own, a new one
+        /// has none; an empty layout (`{}`) takes it away.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        layout: Option<Box<crate::ParagraphLayout>>,
         /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
         /// `cad.annotations.scales` takes them away), a new one has none.
         #[serde(default, skip_serializing_if = "Option::is_none")]

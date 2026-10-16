@@ -97,6 +97,7 @@ impl Attribute {
     pub fn shape_at(&self, p: Vec2, text: String) -> Shape {
         let text = self.shown(&text);
         Shape::Text {
+            flow: None,
             p,
             text,
             height: self.height,

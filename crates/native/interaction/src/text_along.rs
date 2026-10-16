@@ -580,6 +580,7 @@ impl Tool for TextAlong {
             && let Some(t) = self.placed(words, at, cx)
         {
             let geometry = kentos_contracts::EntityGeometry::Text {
+                layout: None,
                 annotative: None,
                 p: t.p,
                 text: t.text.clone(),

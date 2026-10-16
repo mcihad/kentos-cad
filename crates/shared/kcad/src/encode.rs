@@ -1392,6 +1392,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 65 (docs/adr/0324): a text's layout or a stacked fraction (of the drawing or of a block).
+    let laid = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Text(t) => {
+                t.paragraph.layout.is_some()
+                    || t.paragraph.runs.iter().any(|r| r.script == Some(kentos_contracts::TextScript::Stack))
+            }
+            _ => false,
+        })
+    };
+    if laid(&doc.entities) || doc.blocks.iter().any(|b| laid(&b.entities)) {
+        return crate::SCHEMA_WITH_PARAGRAPH_LAYOUT;
+    }
     // Schema 64 (docs/adr/0323): an annotative text, dimension or leader (of the drawing or of a block).
     let scaled = |list: &[Entity]| list.iter().any(|e| kentos_contracts::annotative_of(e).is_some());
     if scaled(&doc.entities) || doc.blocks.iter().any(|b| scaled(&b.entities)) {

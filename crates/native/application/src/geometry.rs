@@ -43,6 +43,7 @@ pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
                 script: r.script.map(|s| match s {
                     kentos_contracts::TextScript::Super => Script::Super,
                     kentos_contracts::TextScript::Sub => Script::Sub,
+                    kentos_contracts::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
@@ -63,10 +64,47 @@ pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
             script: r.script.map(|s| match s {
                 Script::Super => kentos_contracts::TextScript::Super,
                 Script::Sub => kentos_contracts::TextScript::Sub,
+                Script::Stack => kentos_contracts::TextScript::Stack,
             }),
             color: r.color,
         })
         .collect()
+}
+
+/// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
+pub fn core_layout(
+    l: Option<&kentos_contracts::ParagraphLayout>,
+) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
+    l.map(|l| {
+        Box::new(kentos_geometry_core::text::paragraph::Flow {
+            first: l.indent.unwrap_or(0.0),
+            left: l.left_indent.unwrap_or(0.0),
+            tabs: l.tabs.clone(),
+            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
+}
+
+/// The core's layout as the contract writes it: an indent of 0 is left out.
+pub fn contract_layout(
+    f: Option<&kentos_geometry_core::text::paragraph::Flow>,
+) -> Option<Box<kentos_contracts::ParagraphLayout>> {
+    f.map(|f| {
+        Box::new(kentos_contracts::ParagraphLayout {
+            indent: (f.first != 0.0).then_some(f.first),
+            left_indent: (f.left != 0.0).then_some(f.left),
+            tabs: f.tabs.clone(),
+            columns: f.columns.map(|c| kentos_contracts::TextColumns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
 }
 
 /// A table's source as the core carries it, unread (docs/adr/0184 §5): the
@@ -784,6 +822,7 @@ pub fn shape(entity: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
             path: t.path.as_ref().map(core_curve),
         },
@@ -1122,6 +1161,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 box_width,
                 line_spacing,
                 runs,
+                flow,
                 face: _,
                 path,
             },
@@ -1135,6 +1175,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.width_factor = width_factor;
             e.mask = mask == Some(true);
             e.paragraph = kentos_contracts::Paragraph {
+                layout: contract_layout(flow.as_deref()),
                 box_width,
                 line_spacing,
                 runs: contract_runs(runs),
@@ -1418,6 +1459,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             box_width,
             line_spacing,
             runs,
+            layout,
             face,
             path,
         } => Entity::Text(TextEntity {
@@ -1435,7 +1477,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             label_of: None,
             label_scale: None,
             // A spacing of 1 is no spacing (docs/adr/0182): one spelling.
+            // An empty layout is no layout: one spelling.
             paragraph: kentos_contracts::Paragraph {
+                layout: layout.filter(|l| !l.is_plain()),
                 box_width,
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
                 runs,
@@ -1694,10 +1738,12 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
         } => EntityGeometry::Text {
             annotative: None,
+            layout: contract_layout(flow.as_deref()),
             p: p(at),
             text,
             height,

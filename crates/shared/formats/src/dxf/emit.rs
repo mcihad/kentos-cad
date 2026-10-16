@@ -2355,8 +2355,22 @@ impl<'l> Emitter<'l> {
             align: Some(justify::attachment(attach)),
             width_factor: content.width_factor.unwrap_or(1.0),
         };
+        // Its layout (docs/adr/0324 §4): KentOS's own data whole (columns too) when the file has it and it holds,
+        // else MTEXT's first paragraph format.
+        let box_width = (width.is_finite() && width > 0.0).then_some(width);
+        let kept = e
+            .meta
+            .as_ref()
+            .and_then(|m| m.layout.as_deref())
+            .and_then(|json| serde_json::from_str::<kentos_contracts::ParagraphLayout>(json).ok())
+            .filter(|l| !l.is_plain() && l.problem(box_width.is_some()).is_none());
+        let layout = kept
+            .or(content.layout)
+            .filter(|l| l.problem(box_width.is_some()).is_none())
+            .map(Box::new);
         let paragraph = Paragraph {
-            box_width: (width.is_finite() && width > 0.0).then_some(width),
+            layout,
+            box_width,
             line_spacing: (spacing.is_finite() && spacing > 0.0 && spacing != 1.0)
                 .then(|| spacing.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
             runs: content.runs,

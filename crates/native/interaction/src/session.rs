@@ -1458,7 +1458,7 @@ impl Session {
     /// The paragraph editor's answer for the running tool (Çok satırlı yazı, docs/adr/0182 §4).
     pub fn paragraph_typed(
         &mut self,
-        typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
         cx: &mut Context<'_>,
     ) {
         if let Some(tool) = self.tool.as_mut() {

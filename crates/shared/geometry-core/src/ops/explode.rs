@@ -205,6 +205,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                     f.bold = true;
                 }
                 pieces.push(Entity::new(Shape::Text {
+                    flow: None,
                     p: c.at,
                     text: words,
                     height: *height,
@@ -360,6 +361,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
             let r = (l.rotation * PI) / 180.0;
             let half = width_em(&text, look.font.unwrap_or(font)) * height * 0.5;
             pieces.push(Entity::new(Shape::Text {
+                flow: None,
                 p: Vec2::new(l.text_at.x - cos(r) * half, l.text_at.y - sin(r) * half),
                 text,
                 height: *height,
@@ -468,6 +470,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
             }
             if let (Some(text), Some(p)) = (text, l.note_point) {
                 pieces.push(Entity::new(Shape::Text {
+                    flow: None,
                     p,
                     text: text.clone(),
                     height: *height,

@@ -361,6 +361,23 @@ impl<'a> Page<'a> {
         fill: &str,
         halo: Option<&str>,
     ) {
+        self.text_shaped(text, face, size, at, turn, (1.0, 0.0), fill, halo);
+    }
+
+    /// [`Self::text_at`], its letters `shape.0` times as wide and leaning forward by the tangent `shape.1`
+    /// (a drawing text's width factor and slant, docs/adr/0324 §6).
+    #[allow(clippy::too_many_arguments)]
+    pub fn text_shaped(
+        &mut self,
+        text: &str,
+        face: (&str, u16, bool),
+        size: f64,
+        at: [f64; 2],
+        turn: f64,
+        shape: (f64, f64),
+        fill: &str,
+        halo: Option<&str>,
+    ) {
         let fonts = self.fonts;
         let Some((rgb, alpha)) = color(fill) else {
             return;
@@ -378,8 +395,10 @@ impl<'a> Page<'a> {
         }
         let (x, y) = self.xy(at);
         let (s, k) = (libm::sin(turn) as f32, libm::cos(turn) as f32);
-        // Clockwise on the paper is clockwise on the page: the baseline (cos, −sin).
-        let matrix = [k, -s, s, k, x, y];
+        // Clockwise on the paper is clockwise on the page: the baseline (cos, −sin), the letters' up (sin, cos);
+        // widened along the baseline, leaning forward by the slant.
+        let (w, lean) = (shape.0 as f32, shape.1 as f32);
+        let matrix = [w * k, -w * s, s + lean * k, k - lean * s, x, y];
         let show = |c: &mut Content, mode: TextRenderingMode| {
             c.begin_text();
             c.set_text_matrix(matrix);

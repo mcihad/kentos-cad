@@ -26,4 +26,12 @@ font: string, weight: number, italic: boolean, anchor: TextAnchor,
 /**
  * A light outline under the letters.
  */
-halo?: string, };
+halo?: string, 
+/**
+ * The letters' width times this (a text's width factor, docs/adr/0324 §6); absent: 1.
+ */
+widthFactor?: number, 
+/**
+ * The letters leaning forward by this tangent (a text's slant); absent: upright.
+ */
+lean?: number, };

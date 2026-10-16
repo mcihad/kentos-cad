@@ -53,6 +53,9 @@ pub struct MapLabel {
     pub fill: Option<Vec<[f64; 2]>>,
     /// A placed label's callout or its background's outline: a line on the ground in `color`, closed or not.
     pub stroke: Option<(Vec<[f64; 2]>, bool)>,
+    /// A text's width factor and slant's tangent (docs/adr/0324 §6): 1 and 0 for any other label.
+    pub width_factor: f64,
+    pub lean: f64,
 }
 
 /// A label as the PDF writes it (the web's pdfExport.ts `coreText`).
@@ -69,6 +72,8 @@ fn text_of(l: &MapLabel, font: &str) -> MapText {
         italic: l.italic,
         anchor: l.anchor,
         halo: Some(l.halo.clone()),
+        width_factor: (l.width_factor != 1.0).then_some(l.width_factor),
+        lean: (l.lean != 0.0).then_some(l.lean),
     }
 }
 

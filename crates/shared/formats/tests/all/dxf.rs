@@ -2167,13 +2167,19 @@ fn an_mtext_is_one_text_with_its_lines_and_formats() {
         (
             "Büyük Tımes Üst çizik eğik aralık ortalı 11/2",
             Some(TextAlign::MiddleCenter),
-            0
+            1
         )
+    );
+    // `\S1/2;` is a stacked fraction (docs/adr/0324 §4): its three letters one run.
+    let stack = &t.paragraph.runs[0];
+    assert_eq!(
+        (stack.start, stack.end, stack.script),
+        (42, 45, Some(TextScript::Stack))
     );
     assert_eq!(
         noted(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
         Some(
-            "biçimlendirmesinden kaldırılan: yükseklik, kesir, yazı tipi, üst ve üstü çizili çizgi, harf aralığı, eğiklik açısı, paragraf biçimi"
+            "biçimlendirmesinden kaldırılan: yükseklik, yazı tipi, üst ve üstü çizili çizgi, harf aralığı, eğiklik açısı, paragraf biçimi"
         )
     );
     let t = text(2);

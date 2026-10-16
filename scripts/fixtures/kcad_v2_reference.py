@@ -1205,7 +1205,7 @@ def point_part(pp):
 def text_run(r):
     """A multi-line text's run (schema 20, docs/adr/0182): its range, a flag only when true, its script and colour."""
     flag = (lambda b: boolean(b) if b is True else None, False)
-    table = {"start": (uint, True), "end": (uint, True), "bold": flag, "italic": flag, "underline": flag, "script": (enum(("super", "sub")), False), "color": (text, False)}
+    table = {"start": (uint, True), "end": (uint, True), "bold": flag, "italic": flag, "underline": flag, "script": (enum(("super", "sub", "stack")), False), "color": (text, False)}
     return cmap(fields(r, table, "run"))
 
 
@@ -1416,6 +1416,8 @@ KINDS = {
         "overrides": (lambda o: opaque(o) if o else None, False),
         # Schema 64 (docs/adr/0323): its scales, as their JSON.
         "annotative": (opaque, False),
+        # Schema 65 (docs/adr/0324 §1): its indents, tab stops and columns, as their JSON.
+        "layout": (opaque, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -1975,6 +1977,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 65 (docs/adr/0324): a text's layout or a stacked fraction.
+    laid = lambda es: any(e["kind"] == "text" and ("layout" in e or any(r.get("script") == "stack" for r in e.get("runs", []))) for e in es)  # noqa: E731
+    if laid(entities) or any(laid(b["entities"]) for b in blocks or []):
+        return 65
     # Schema 64 (docs/adr/0323): an annotative text, dimension or leader.
     scaled = lambda es: any(e["kind"] in ("text", "dimension", "leader") and "annotative" in e for e in es)  # noqa: E731
     if scaled(entities) or any(scaled(b["entities"]) for b in blocks or []):
@@ -2347,7 +2353,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-65.kcad"] = container(root(cmap(parts), version=uint(65)))
+    files["schema-version-66.kcad"] = container(root(cmap(parts), version=uint(66)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2538,6 +2544,18 @@ def broken(minimal_content, minimal_file):
     files["paragraph-run-touching-same.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(True)), run_of(2, 4, bold=boolean(True))])))
     files["paragraph-run-formatless.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2)])))
     files["paragraph-run-bold-false.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(False))])))
+    # A layout and a stacked fraction are schema 65's (docs/adr/0324): in schema 64 an unknown field and an unknown
+    # script; not empty, a left indent not below 0, the first line not left of the box, tabs ascending, columns in a
+    # box and 2 to 16 of them, a stack around a mark.
+    files["text-layout-in-schema-64.kcad"] = in_schema(64, text_of(layout=cmap({"leftIndent": f64(2.0)})))
+    files["text-stack-in-schema-64.kcad"] = in_schema(64, cmap({"text": cmap({**common, "p": point(one["p"]), "text": text("1/2"), "height": f64(2.5), "rotation": f64(0.0), "runs": array([run_of(0, 3, script=text("stack"))])})}))
+    files["text-layout-empty.kcad"] = in_schema(65, text_of(layout=cmap({})))
+    files["text-layout-left-negative.kcad"] = in_schema(65, text_of(layout=cmap({"leftIndent": f64(-1.0)})))
+    files["text-layout-hangs-out.kcad"] = in_schema(65, text_of(layout=cmap({"indent": f64(-3.0), "leftIndent": f64(2.0)})))
+    files["text-layout-tabs-descending.kcad"] = in_schema(65, text_of(layout=cmap({"tabs": array([f64(6.0), f64(2.0)])})))
+    files["text-layout-columns-boxless.kcad"] = in_schema(65, text_of(layout=cmap({"columns": cmap({"count": uint(2), "gap": f64(1.0), "height": f64(10.0)})})))
+    files["text-layout-columns-one.kcad"] = in_schema(65, text_of(boxWidth=f64(20.0), layout=cmap({"columns": cmap({"count": uint(1), "gap": f64(1.0), "height": f64(10.0)})})))
+    files["text-stack-without-mark.kcad"] = in_schema(65, text_of(runs=array([run_of(0, 2, script=text("stack"))])))
     files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
     files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
     files["paragraph-run-unknown-field.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, size=f64(2.0))])))
@@ -3656,6 +3674,7 @@ def build():
     out["dimension-marks.kcad"] = container(document(load("dimension-marks.json")))
     out["overrides.kcad"] = container(document(load("overrides.json")))
     out["annotative.kcad"] = container(document(load("annotative.json")))
+    out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

@@ -57,7 +57,7 @@
 //! (docs/adr/0258; a polygon has neither, the columns carry them anyway so
 //! that the encoder refuses them with their place); text: align, width factor, mask (no value; docs/adr/0145), link
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
-//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
+//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 8 and 16 stacked (docs/adr/0324), 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
 //! (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask (no value), za, zb
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
@@ -321,6 +321,8 @@ fn run_flags(r: &TextRun) -> u32 {
     bits |= match r.script {
         Some(TextScript::Super) => RUN_SUPER,
         Some(TextScript::Sub) => RUN_SUB,
+        // Both script bits: a stacked fraction (docs/adr/0324 §1).
+        Some(TextScript::Stack) => RUN_SCRIPT,
         None => 0,
     };
     if r.color.is_some() {
@@ -918,6 +920,11 @@ impl Packer {
                 if let Some(a) = annotative {
                     flags |= OPT[15];
                     self.text(&serde_json::to_string(a).unwrap_or_default());
+                }
+                // Its indents, tabs and columns (docs/adr/0324 §1), as their JSON.
+                if let Some(l) = &paragraph.layout {
+                    flags |= OPT[16];
+                    self.text(&serde_json::to_string(l).unwrap_or_default());
                 }
             }
             Entity::Dimension(DimensionEntity {
@@ -2053,8 +2060,9 @@ fn allowed(kind: u8) -> u32 {
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
-        // Schema 63's overrides (docs/adr/0322 §5), schema 64's scales (docs/adr/0323).
-        10 => OPT[..16].iter().fold(0, |m, b| m | b),
+        // Schema 63's overrides (docs/adr/0322 §5), schema 64's scales (docs/adr/0323), schema 65's layout
+        // (docs/adr/0324).
+        10 => OPT[..17].iter().fold(0, |m, b| m | b),
         14 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
@@ -2279,6 +2287,7 @@ fn geometry(
                         script: match bits & RUN_SCRIPT {
                             RUN_SUPER => Some(TextScript::Super),
                             RUN_SUB => Some(TextScript::Sub),
+                            RUN_SCRIPT => Some(TextScript::Stack),
                             _ => None,
                         },
                         color,
@@ -2318,6 +2327,12 @@ fn geometry(
             } else {
                 None
             };
+            let layout: Option<Box<kentos_contracts::ParagraphLayout>> = if has(16) {
+                let t = c.text(|| place("layout"))?;
+                Some(serde_json::from_str(&t).map_err(|_| broken("yazının düzeni"))?)
+            } else {
+                None
+            };
             Entity::Text(TextEntity {
                 annotative,
                 base,
@@ -2331,6 +2346,7 @@ fn geometry(
                 label_of,
                 label_scale,
                 paragraph: Paragraph {
+                    layout,
                     box_width,
                     line_spacing,
                     runs,

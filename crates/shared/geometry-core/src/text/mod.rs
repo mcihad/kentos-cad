@@ -6,6 +6,7 @@
 pub mod along;
 pub mod edit;
 pub mod face;
+pub mod fonts;
 pub mod natural;
 pub mod paragraph;
 #[rustfmt::skip]

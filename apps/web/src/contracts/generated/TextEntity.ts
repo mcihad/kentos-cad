@@ -6,6 +6,7 @@ import type { EntityId } from "./EntityId";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { ParagraphLayout } from "./ParagraphLayout";
 import type { TextAlign } from "./TextAlign";
 import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
@@ -135,6 +136,11 @@ lineSpacing?: number,
  * Absent: none.
  */
 runs?: Array<TextRun>, 
+/**
+ * Its indents, tab stops and columns (docs/adr/0324 §1); absent: none, a tab every
+ * `DEFAULT_TAB` heights, one column.
+ */
+layout?: ParagraphLayout, 
 /**
  * The project's text style it follows, by its id; absent: Standart.
  */

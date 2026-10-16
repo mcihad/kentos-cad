@@ -1279,6 +1279,12 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.fonts.report",
+        refusals: &[&["empty_name", "invalid_name"]],
+        warnings: &["font_substituted"],
+        targets: none,
+    },
+    Entry {
         id: "cad.dimensions.query",
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_dimension"]],
         warnings: &[],

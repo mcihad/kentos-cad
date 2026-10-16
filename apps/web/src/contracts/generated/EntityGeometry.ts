@@ -16,6 +16,7 @@ import type { HatchPattern } from "./HatchPattern";
 import type { ImageFields } from "./ImageFields";
 import type { LeaderArrow } from "./LeaderArrow";
 import type { LineType } from "./LineType";
+import type { ParagraphLayout } from "./ParagraphLayout";
 import type { PointCloudFields } from "./PointCloudFields";
 import type { PointPart } from "./PointPart";
 import type { RasterFields } from "./RasterFields";
@@ -127,6 +128,11 @@ runs?: Array<TextRun>,
  * The curve its letters stand on, in its own frame (docs/adr/0196 §1); absent: straight.
  */
 path?: TextPath, 
+/**
+ * Its indents, tab stops and columns (docs/adr/0324 §1); absent: an object updated keeps its own, a new one
+ * has none; an empty layout (`{}`) takes it away.
+ */
+layout?: ParagraphLayout, 
 /**
  * Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
  * `cad.annotations.scales` takes them away), a new one has none.

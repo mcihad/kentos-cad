@@ -278,6 +278,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
             ..
@@ -292,6 +293,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width: *box_width,
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            flow: flow.clone(),
             face: face.clone(),
             // Its curve is in its frame: it goes with its point (docs/adr/0196 §1).
             path: path.clone(),

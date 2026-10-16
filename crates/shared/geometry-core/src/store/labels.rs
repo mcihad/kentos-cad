@@ -458,7 +458,7 @@ pub fn paragraph_records(
     );
     if masked {
         let (h, m) = (t.height * 1.15, t.height * 0.1);
-        let below = laid.lines.len().saturating_sub(1) as f64 * laid.pitch;
+        let below = laid.depth.saturating_sub(1) as f64 * laid.pitch;
         let y0 = -h * 0.2 - m - below;
         let x0 = -m + y0 * t.lean;
         out.extend([

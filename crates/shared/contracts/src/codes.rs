@@ -730,6 +730,8 @@ codes! {
     SCALE_NOT_TAKEN = "scale_not_taken", Failed, false, "Nesne bu ölçekte değil: önce ölçeği ekleyin.";
     /// An annotative object's scales against their rules.
     INVALID_ANNOTATIVE = "invalid_annotative", Failed, false, "Ölçekli nesnenin ölçekleri kurallarına uymuyor.";
+    /// A typeface KentOS does not have (an SHX line font, Times …), drawn in another (docs/adr/0324 §5).
+    FONT_SUBSTITUTED = "font_substituted", Warning, false, "Yazı tipi KentOS'ta yok; yazılar stilin yazı tipiyle çizilir.";
     /// A .kstil file that does not read.
     INVALID_KSTIL = "invalid_kstil", Failed, false, ".kstil dosyası okunamadı.";
     /// An id the project's library has.

@@ -500,6 +500,10 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 if let (Entity::Text(was), Entity::Text(now)) = (entity, &mut next) {
                     now.label_of = was.label_of;
                     now.label_scale = was.label_scale;
+                    // It keeps its layout when the edit gives none (docs/adr/0324 §3); an empty one takes it away.
+                    if let EntityGeometry::Text { layout: None, .. } = geometry {
+                        now.paragraph.layout = was.paragraph.layout.clone();
+                    }
                 }
                 // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
                 // document lets a point go when the edit moved it, its object unchanged.
@@ -1003,10 +1007,13 @@ pub(crate) fn check_geometry(
         box_width,
         line_spacing,
         runs,
+        layout,
         ..
     } = g
     {
+        // An empty layout is the edit's way to take one away (docs/adr/0324 §3), not a layout to check.
         let paragraph = kentos_contracts::Paragraph {
+            layout: layout.clone().filter(|l| !l.is_plain()),
             box_width: *box_width,
             line_spacing: *line_spacing,
             runs: runs.clone(),

@@ -600,12 +600,145 @@ pub struct Paragraph {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextRun>>", optional))]
     pub runs: Vec<TextRun>,
+    /// Its indents, tab stops and columns (docs/adr/0324 §1); absent: none, a tab every
+    /// `DEFAULT_TAB` heights, one column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layout: Option<Box<ParagraphLayout>>,
+}
+
+/// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\p` codes):
+/// every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
+/// `leftIndent`; a tab goes to the next stop past where it is, a stop every `DEFAULT_TAB` heights after the last
+/// given; columns take the lines in turn, each `columns.height` metres tall.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParagraphLayout {
+    /// A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub indent: Option<f64>,
+    /// Every line but a paragraph's first from the box's left, heights. Absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub left_indent: Option<f64>,
+    /// The tab stops from the box's left, heights, ascending, each over 0.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub tabs: Vec<f64>,
+    /// Static columns; a text in columns has a box.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<TextColumns>,
+}
+
+/// A multi-line text's static columns (docs/adr/0324 §1): `count` columns of the box's width, `gap` heights
+/// apart, each `height` metres tall; lines past the last column's height go on down in it.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TextColumns {
+    #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 16)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    /// The space between two columns, heights.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub gap: f64,
+    /// A column's height, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+}
+
+/// A tab stop every this many heights past the last given one (MTEXT's own).
+pub const DEFAULT_TAB: f64 = 4.0;
+/// The largest indent, tab stop or column gap, heights.
+pub const MAX_PARAGRAPH_HEIGHTS: f64 = 1000.0;
+/// The most tab stops a text keeps.
+pub const MAX_TABS: usize = 32;
+
+impl ParagraphLayout {
+    /// Nothing set: none at all.
+    pub fn is_plain(&self) -> bool {
+        self.indent.is_none_or(|i| i == 0.0)
+            && self.left_indent.is_none_or(|i| i == 0.0)
+            && self.tabs.is_empty()
+            && self.columns.is_none()
+    }
+
+    /// What is wrong with it for a text with a box or none: the field and the words.
+    pub fn problem(&self, boxed: bool) -> Option<(&'static str, String)> {
+        let fits = |v: f64| v.is_finite() && v.abs() <= MAX_PARAGRAPH_HEIGHTS;
+        let left = self.left_indent.unwrap_or(0.0);
+        if !fits(left) || left < 0.0 {
+            return Some((
+                "layout.leftIndent",
+                format!("Sol girinti 0 ile {MAX_PARAGRAPH_HEIGHTS} yükseklik arasında olmalı; {left} verildi."),
+            ));
+        }
+        let first = self.indent.unwrap_or(0.0);
+        if !fits(first) || left + first < 0.0 {
+            return Some((
+                "layout.indent",
+                format!(
+                    "İlk satırın girintisi sol girintiden fazla geri gidemez (ikisinin toplamı sıfırdan küçük olamaz); {first} verildi."
+                ),
+            ));
+        }
+        if self.indent == Some(0.0) || self.left_indent == Some(0.0) {
+            return Some(("layout", "Sıfır girinti yazılmaz; alanı kaldırın.".to_owned()));
+        }
+        if self.tabs.len() > MAX_TABS {
+            return Some(("layout.tabs", format!("En çok {MAX_TABS} sekme durağı olur; {} verildi.", self.tabs.len())));
+        }
+        let mut last = 0.0;
+        for t in &self.tabs {
+            if !fits(*t) || *t <= last {
+                return Some((
+                    "layout.tabs",
+                    "Sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı.".to_owned(),
+                ));
+            }
+            last = *t;
+        }
+        if let Some(c) = &self.columns {
+            if !boxed {
+                return Some((
+                    "layout.columns",
+                    "Sütunlar kutu genişliği ister: önce yazıya kutu genişliği verin.".to_owned(),
+                ));
+            }
+            if !(2..=16).contains(&c.count) {
+                return Some(("layout.columns.count", format!("Sütun sayısı 2 ile 16 arasında olmalı; {} verildi.", c.count)));
+            }
+            if !fits(c.gap) || c.gap < 0.0 {
+                return Some(("layout.columns.gap", format!("Sütun aralığı sıfır ya da pozitif olmalı; {} verildi.", c.gap)));
+            }
+            if !(c.height.is_finite() && c.height > 0.0) {
+                return Some((
+                    "layout.columns.height",
+                    format!("Sütun yüksekliği sıfırdan büyük olmalı; {} verildi.", c.height),
+                ));
+            }
+        }
+        None
+    }
 }
 
 impl Paragraph {
-    /// No box, no spacing, no formats: a text as it always was.
+    /// No box, no spacing, no formats, no layout: a text as it always was.
     pub fn is_plain(&self) -> bool {
-        self.box_width.is_none() && self.line_spacing.is_none() && self.runs.is_empty()
+        self.box_width.is_none()
+            && self.line_spacing.is_none()
+            && self.runs.is_empty()
+            && self.layout.is_none()
     }
 
     /// What is wrong with these fields for `text` (docs/adr/0182 §1): the
@@ -635,6 +768,14 @@ impl Paragraph {
                 ),
             ));
         }
+        if let Some(l) = &self.layout {
+            if l.is_plain() {
+                return Some(("layout", "Boş paragraf düzeni yazılmaz; alanı kaldırın.".to_owned()));
+            }
+            if let Some(p) = l.problem(self.box_width.is_some()) {
+                return Some(p);
+            }
+        }
         self.runs_problem(text).map(|words| ("runs", words))
     }
 
@@ -654,6 +795,16 @@ impl Paragraph {
                 return Some(format!(
                     "{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz. Dilime bir biçim verin ya da dilimi çıkarın."
                 ));
+            }
+            // A stacked run (docs/adr/0324 §1): its letters hold the separator, `/`, `#` or `^`.
+            if r.script == Some(TextScript::Stack) {
+                let letters: Vec<char> = text.chars().collect();
+                let inside = &letters[r.start as usize..(r.end as usize).min(letters.len())];
+                if !inside.iter().any(|c| matches!(c, '/' | '#' | '^')) {
+                    return Some(format!(
+                        "{n}. biçim dilimi kesir, ama harflerinde ayıraç yok: pay ile paydayı /, # ya da ^ ile ayırın (1/2)."
+                    ));
+                }
             }
             if r.color.as_deref().is_some_and(str::is_empty) {
                 return Some(format!(
@@ -738,6 +889,9 @@ pub struct TextRun {
 pub enum TextScript {
     Super,
     Sub,
+    /// A stacked fraction (docs/adr/0324 §1): the run's letters before its first `/`, `#` or `^` raised over
+    /// those after it; `/` a horizontal bar, `#` a slanted one beside them, `^` none (a tolerance).
+    Stack,
 }
 
 /// Whether `n` may be a linked text's scale (docs/adr/0175 §4): finite, over 0.

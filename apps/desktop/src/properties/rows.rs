@@ -1944,13 +1944,51 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
         Some(value) => Row::figure("Satır aralığı", value),
         None => Row::text("Satır aralığı", MIXED),
     };
-    vec![
+    // Its indents, tab stops and columns (docs/adr/0324 §3), the indents and gap in its height.
+    let layout = |t: &kentos_contracts::TextEntity| t.paragraph.layout.as_deref().cloned().unwrap_or_default();
+    let heights = |label: &'static str, value: Option<String>| match value {
+        Some(v) => Row::figure(label, v).unit("× yükseklik"),
+        None => Row::text(label, MIXED),
+    };
+    let number = |v: f64| crate::crs::js_number(fixed_number(v, 3));
+    let indent_row = heights("Girinti", common(&|t| number(layout(t).indent.unwrap_or(0.0))));
+    let left_row = heights("Sol girinti", common(&|t| number(layout(t).left_indent.unwrap_or(0.0))));
+    let tabs_row = Row::text(
+        "Sekmeler",
+        common(&|t| kentos_interaction::text_layout::tabs_text(&layout(t).tabs)).unwrap_or_else(|| MIXED.to_owned()),
+    );
+    let columns = common(&|t| layout(t).columns.map_or(1, |c| c.count).to_string());
+    let columns_row = match &columns {
+        Some(n) => Row::figure("Sütunlar", n.clone()),
+        None => Row::text("Sütunlar", MIXED),
+    };
+    let mut rows = vec![
         Row::text("Hiza", align_text).editor(edit(aligns)),
         factor_row.editor(edit(Editor::Number(Field::TextWidth(slots.to_vec())))),
         box_row.editor(edit(Editor::Number(Field::TextBox(slots.to_vec())))),
         spacing_row.editor(edit(Editor::Number(Field::TextSpacing(slots.to_vec())))),
-        Row::text("Zemin", mask_text).editor(edit(masks)),
-    ]
+        indent_row.editor(edit(Editor::Number(Field::TextIndent(slots.to_vec())))),
+        left_row.editor(edit(Editor::Number(Field::TextLeftIndent(slots.to_vec())))),
+        tabs_row.editor(edit(Editor::Text(Field::TextTabs(slots.to_vec())))),
+        columns_row.editor(edit(Editor::Number(Field::TextColumns(slots.to_vec())))),
+    ];
+    // In columns: their height, metres, and the gap between them.
+    if columns.as_deref().is_some_and(|n| n != "1") {
+        let tall = common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.height)));
+        rows.push(
+            match tall {
+                Some(v) => Row::figure("Sütun yüksekliği", v).unit("m"),
+                None => Row::text("Sütun yüksekliği", MIXED),
+            }
+            .editor(edit(Editor::Number(Field::TextColumnHeight(slots.to_vec())))),
+        );
+        rows.push(
+            heights("Sütun aralığı", common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.gap))))
+                .editor(edit(Editor::Number(Field::TextColumnGap(slots.to_vec())))),
+        );
+    }
+    rows.push(Row::text("Zemin", mask_text).editor(edit(masks)));
+    rows
 }
 
 /// A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows (docs/adr/0146 §7),

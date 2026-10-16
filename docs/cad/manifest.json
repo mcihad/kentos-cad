@@ -6739,6 +6739,22 @@
    "tests": 1
   },
   {
+   "id": "text.fonts",
+   "kind": "command",
+   "title": "Yazı tipleri",
+   "level": "query",
+   "via": [
+    "cad.fonts.report"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "time.compare",
    "kind": "command",
    "title": "Zamanı karşılaştır…",

@@ -977,6 +977,24 @@ FileUnitName = Literal["mm", "cm", "dm", "m", "km", "yd", "mi", "in", "ft", "usF
 """The names of :class:`FileUnit`, for a plain string."""
 
 
+class FontMatch(_StrEnum):
+    """How a named typeface is drawn.
+
+    - ``own``: One of KentOS's own faces (a style naming no file is its own face).
+    - ``equivalent``: A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
+    - ``shx``: An AutoCAD SHX line font, not read: drawn in the style's face.
+    - ``missing``: A face KentOS does not have: drawn in the style's face.
+    """
+    OWN = "own"
+    EQUIVALENT = "equivalent"
+    SHX = "shx"
+    MISSING = "missing"
+
+
+FontMatchName = Literal["own", "equivalent", "shx", "missing"]
+"""The names of :class:`FontMatch`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -2166,12 +2184,18 @@ TextAlignName = Literal["baselineCenter", "baselineRight", "bottomLeft", "bottom
 
 
 class TextScript(_StrEnum):
-    """A run raised over the line (superscript) or lowered under it (subscript)."""
+    """A run raised over the line (superscript) or lowered under it (subscript).
+
+    - ``super``
+    - ``sub``
+    - ``stack``: A stacked fraction (docs/adr/0324 §1): the run's letters before its first `/`, `#` or `^` raised over
+    """
     SUPER = "super"
     SUB = "sub"
+    STACK = "stack"
 
 
-TextScriptName = Literal["super", "sub"]
+TextScriptName = Literal["super", "sub", "stack"]
 """The names of :class:`TextScript`, for a plain string."""
 
 
@@ -11165,6 +11189,61 @@ class FileCommitted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FontsReport(_Model):
+    """Input of `cad.fonts.report` v1. Refusals: `empty_name`, `invalid_name`.
+    Attributes:
+        names: Typefaces by a file or a family (`romans.shx`, `Arial`) to resolve by the same rule, as a DXF's would be.
+    """
+    names: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.names is not UNSET:
+            out["names"] = list(self.names)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FontsReport:
+        return cls(
+            names=list(data["names"]) if "names" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FontsReported(_Model):
+    """Output of `cad.fonts.report` v1. A style drawn in a substitute is also a `font_substituted` warning.
+    Attributes:
+        project: The project's face: texts without a style or a face of their own.
+        faces: The faces the drawing's texts, dimensions and leaders are drawn in, in the contract's order: a sheet's PDF
+            embeds subsets of these.
+    """
+    project: DrawingFont | DrawingFontName
+    styles: list[StyleFont]
+    names: list[NamedFont]
+    faces: list[DrawingFont | DrawingFontName]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["project"] = _enum_out(self.project)
+        out["styles"] = [e0.to_json() for e0 in self.styles]
+        out["names"] = [e0.to_json() for e0 in self.names]
+        out["faces"] = [_enum_out(e0) for e0 in self.faces]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FontsReported:
+        return cls(
+            project=_enum_in(DrawingFont, data["project"]),
+            styles=[StyleFont.from_json(e0) for e0 in data["styles"]],
+            names=[NamedFont.from_json(e0) for e0 in data["names"]],
+            faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FoundSnap(_Model):
     """A snap point as a command reads it.
     Attributes:
@@ -15716,6 +15795,33 @@ class LookupRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NamedFont(_Model):
+    """A name given, resolved.
+    Attributes:
+        face: KentOS's face for it; absent: the project's face takes it.
+    """
+    name: str
+    how: FontMatch | FontMatchName
+    face: DrawingFont | DrawingFontName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["how"] = _enum_out(self.how)
+        if self.face is not UNSET:
+            out["face"] = None if self.face is None else _enum_out(self.face)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedFont:
+        return cls(
+            name=data["name"],
+            how=_enum_in(FontMatch, data["how"]),
+            face=UNSET if "face" not in data else None if data["face"] is None else _enum_in(DrawingFont, data["face"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NamedUcs(_Model):
     """A named UCS of the project.
     Attributes:
@@ -16392,6 +16498,45 @@ class ObjectEnd(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParagraphLayout(_Model):
+    """A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\\p` codes):
+    every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
+    `leftIndent`; a tab goes to the next stop past where it is, a stop every `DEFAULT_TAB` heights after the last
+    given; columns take the lines in turn, each `columns.height` metres tall.
+    Attributes:
+        columns: Static columns; a text in columns has a box.
+        indent: A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0. Unit: 1.
+        left_indent: Every line but a paragraph's first from the box's left, heights. Absent: 0. Unit: 1.
+        tabs: The tab stops from the box's left, heights, ascending, each over 0. Unit: 1.
+    """
+    columns: TextColumns | None | Unset = UNSET
+    indent: float | None | Unset = UNSET
+    left_indent: float | None | Unset = UNSET
+    tabs: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else self.columns.to_json()
+        if self.indent is not UNSET:
+            out["indent"] = None if self.indent is None else float(self.indent)
+        if self.left_indent is not UNSET:
+            out["leftIndent"] = None if self.left_indent is None else float(self.left_indent)
+        if self.tabs is not UNSET:
+            out["tabs"] = [float(e0) for e0 in self.tabs]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParagraphLayout:
+        return cls(
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else TextColumns.from_json(data["columns"]),
+            indent=UNSET if "indent" not in data else None if data["indent"] is None else float(data["indent"]),
+            left_indent=UNSET if "leftIndent" not in data else None if data["leftIndent"] is None else float(data["leftIndent"]),
+            tabs=[float(e0) for e0 in data["tabs"]] if "tabs" in data else UNSET,
         )
 
 
@@ -20807,6 +20952,44 @@ class StretchWindow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StyleFont(_Model):
+    """A text style's typeface.
+    Attributes:
+        face: The face it is drawn in.
+        texts: How many texts of the drawing take the style. Unit: count.
+        file: The file it named (a DXF's STYLE), when it named one.
+    """
+    style: str
+    name: str
+    face: DrawingFont | DrawingFontName
+    how: FontMatch | FontMatchName
+    texts: int
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["style"] = self.style
+        out["name"] = self.name
+        out["face"] = _enum_out(self.face)
+        out["how"] = _enum_out(self.how)
+        out["texts"] = self.texts
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StyleFont:
+        return cls(
+            style=data["style"],
+            name=data["name"],
+            face=_enum_in(DrawingFont, data["face"]),
+            how=_enum_in(FontMatch, data["how"]),
+            texts=data["texts"],
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StyleImpact(_Model):
     """Output of `cad.styles.impact` v1.
     Attributes:
@@ -21385,6 +21568,35 @@ class TableEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class TextColumns(_Model):
+    """A multi-line text's static columns (docs/adr/0324 §1): `count` columns of the box's width, `gap` heights
+    apart, each `height` metres tall; lines past the last column's height go on down in it.
+    Attributes:
+        count: Unit: count.
+        gap: The space between two columns, heights. Unit: 1.
+        height: A column's height, metres. Unit: length.
+    """
+    count: int
+    gap: float
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["count"] = self.count
+        out["gap"] = float(self.gap)
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextColumns:
+        return cls(
+            count=data["count"],
+            gap=float(data["gap"]),
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -21415,6 +21627,8 @@ class TextEntity(Entity):
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0. Unit: scale.
+        layout: Its indents, tab stops and columns (docs/adr/0324 §1); absent: none, a tab every
+            `DEFAULT_TAB` heights, one column.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
@@ -21467,6 +21681,7 @@ class TextEntity(Entity):
     label_of: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     label_scale: float | None | Unset = UNSET
+    layout: ParagraphLayout | None | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
@@ -21519,6 +21734,8 @@ class TextEntity(Entity):
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
+        if self.layout is not UNSET:
+            out["layout"] = None if self.layout is None else self.layout.to_json()
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_spacing is not UNSET:
@@ -21576,6 +21793,7 @@ class TextEntity(Entity):
             label_of=data.get("labelOf", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
+            layout=UNSET if "layout" not in data else None if data["layout"] is None else ParagraphLayout.from_json(data["layout"]),
             line_pattern=data.get("linePattern", UNSET),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
@@ -25314,6 +25532,8 @@ class TextEntityGeometry(EntityGeometry):
             `cad.annotations.scales` takes them away), a new one has none.
         box_width: A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box. Unit: length.
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
+        layout: Its indents, tab stops and columns (docs/adr/0324 §1); absent: an object updated keeps its own, a new one
+            has none; an empty layout (`{}`) takes it away.
         line_spacing: Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4. Unit: 1.
         mask: Its box filled with the drawing area's colour before it is drawn.
         oblique: How far its letters lean, degrees, positive with their tops to the
@@ -25335,6 +25555,7 @@ class TextEntityGeometry(EntityGeometry):
     box_width: float | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
     italic: bool | Unset = UNSET
+    layout: ParagraphLayout | None | Unset = UNSET
     line_spacing: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     oblique: float | None | Unset = UNSET
@@ -25362,6 +25583,8 @@ class TextEntityGeometry(EntityGeometry):
             out["font"] = None if self.font is None else _enum_out(self.font)
         if self.italic is not UNSET:
             out["italic"] = self.italic
+        if self.layout is not UNSET:
+            out["layout"] = None if self.layout is None else self.layout.to_json()
         if self.line_spacing is not UNSET:
             out["lineSpacing"] = None if self.line_spacing is None else float(self.line_spacing)
         if self.mask is not UNSET:
@@ -25393,6 +25616,7 @@ class TextEntityGeometry(EntityGeometry):
             box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
             italic=data.get("italic", UNSET),
+            layout=UNSET if "layout" not in data else None if data["layout"] is None else ParagraphLayout.from_json(data["layout"]),
             line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             mask=data.get("mask", UNSET),
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
@@ -28413,6 +28637,10 @@ __all__ = [
     "FitNurbsBy",
     "FlipBlockAction",
     "FlipBlockParameter",
+    "FontMatch",
+    "FontMatchName",
+    "FontsReport",
+    "FontsReported",
     "FoundSnap",
     "FrameUcsTo",
     "FrozenBlock",
@@ -28602,6 +28830,7 @@ __all__ = [
     "MoveFitCurveEdit",
     "MoveTextDimensionEdit",
     "MoveTransform",
+    "NamedFont",
     "NamedUcs",
     "NamedUcsTo",
     "NamedView",
@@ -28642,6 +28871,7 @@ __all__ = [
     "OrderToName",
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
+    "ParagraphLayout",
     "ParallelPointConstruction",
     "ParamValue",
     "ParametersOperation",
@@ -28850,6 +29080,7 @@ __all__ = [
     "StretchWindow",
     "StyleEditOperation",
     "StyleEditOperationName",
+    "StyleFont",
     "StyleImpact",
     "StylesEdit",
     "StylesEdited",
@@ -28869,6 +29100,7 @@ __all__ = [
     "TenantKindName",
     "TextAlign",
     "TextAlignName",
+    "TextColumns",
     "TextDimensionEdit",
     "TextEntity",
     "TextEntityGeometry",

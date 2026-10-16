@@ -2119,6 +2119,39 @@ pub fn catalog() -> CommandCatalog {
                 }], "revision": "12" })),
             }],
         },
+        // Yazı tipleri (docs/adr/0324 §5), held together by fixtures/commands/v1/cad.fonts.report.json.
+        CommandDescriptor {
+            id: crate::CAD_FONTS_REPORT.into(),
+            version: crate::CAD_FONTS_REPORT_VERSION,
+            title: "Yazı tiplerini raporla".into(),
+            summary: "Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. \
+                      KentOS yalnız kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. \
+                      Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; \
+                      shx: AutoCAD'in SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. \
+                      names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FontsReport>(),
+            output: schema::<crate::FontsReported>(),
+            plan: Some(schema::<crate::FontsReported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir SHX yazı tipinin nasıl çizileceği".into(),
+                input: json!({ "names": ["romans.shx", "arial.ttf"] }),
+                output: Some(json!({
+                    "project": "barlow", "styles": [],
+                    "names": [{ "name": "romans.shx", "how": "shx" }, { "name": "arial.ttf", "face": "arimo", "how": "equivalent" }],
+                    "faces": [], "revision": "3"
+                })),
+            }],
+        },
         // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250), held together by
         // fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json; the desktop's alone while the web is paused.
         CommandDescriptor {
@@ -5076,6 +5109,9 @@ mod tests {
                         serde_json::from_value::<crate::DimensionsQuery>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_FONTS_REPORT => {
+                        serde_json::from_value::<crate::FontsReport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
                         serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())
                     }
@@ -5322,6 +5358,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_ORDER => {
                             serde_json::from_value::<crate::EntitiesOrdered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FONTS_REPORT => {
+                            serde_json::from_value::<crate::FontsReported>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ANNOTATIONS_SCALES => {

@@ -1240,10 +1240,30 @@ fn text_runs(
                 script: r.script.map(|s| match s {
                     kentos_contracts::TextScript::Super => Script::Super,
                     kentos_contracts::TextScript::Sub => Script::Sub,
+                    kentos_contracts::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
             .collect()
+    })
+}
+
+/// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
+fn text_flow(
+    l: Option<&kentos_contracts::ParagraphLayout>,
+) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
+    use kentos_geometry_core::text::paragraph::{Columns, Flow};
+    l.map(|l| {
+        Box::new(Flow {
+            first: l.indent.unwrap_or(0.0),
+            left: l.left_indent.unwrap_or(0.0),
+            tabs: l.tabs.clone(),
+            columns: l.columns.map(|c| Columns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
     })
 }
 
@@ -1439,6 +1459,7 @@ fn shape(entity: &Entity) -> Shape {
             dir: v(&c.dir),
         },
         Entity::Text(t) => Shape::Text {
+            flow: text_flow(t.paragraph.layout.as_deref()),
             p: v(&t.p),
             text: t.text.clone(),
             height: t.height,
