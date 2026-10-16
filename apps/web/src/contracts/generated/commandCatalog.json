@@ -40515,7 +40515,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden",
@@ -46384,7 +46386,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -52237,7 +52241,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -58243,7 +58249,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -64058,7 +64066,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -69885,7 +69895,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -170546,7 +170558,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -335166,7 +335180,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"
@@ -341041,7 +341057,9 @@
           "not_a_layer",
           "layer_locked",
           "invalid_revision",
-          "revision_conflict"
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
         ],
         "warnings": [
           "layer_hidden"

@@ -188,6 +188,8 @@ Liste:
   katmanın izlemesi (`form_follow.rs`'in kuralı, `cad.polygon.create.forms.json` ve `cad.entities.set.forms.json` durumları);
   Formla düzenle'de hesaplanan alanların kilidi, süzülen listeler, sarı uyarı, kapalı grup, son değer; tasarımcının yeni
   denetçi satırları; kapalı girişin soluk görünüşü ve `Form`'un uyarı satırı web'in form bileşenlerinde.
+- [ ] `FORM-O` çizim komutlarında alanların kuralı (ADR 0199'un 16 Ekim eki): web'de gerekenler: `product/`'un çizim
+  komutlarının öznitelikleri alanların kuralından geçirmesi ve varsayılanları yazması (`fixtures/commands/v1/*.fields.json`).
 - [ ] `FORM-M` çoktan çoğa ilişki ve yeni alt kayıt (ADR 0409, 16 Ekim): web'de gerekenler: listesiz çok değerli alanın
   `check_value` yolu, çok değerli başvurunun formu ve ilişkili kayıtların “içerir” kuralı, silme politikasının çok değerli
   bağı izlemesi (`cad.entities.delete.relations.json`), Bağla, Bağı kopar ve Yeni.
@@ -1446,9 +1448,8 @@ burada aşamaları izlenir.
 - [x] `FORM-M` Çoktan çoğa ilişki (çok değerli başvuru alanı, bağlantı tablosu olmadan; silme politikası öbür bağları
   korur) ve formdan yeni alt kayıt. — **16 Ekim, [ADR 0409](docs/adr/0409-many-to-many-and-new-child.md).**
 - [ ] `FORM-N` Geometrisiz tablo katmanı (yeni nesne türü; `.kcad`, sunucu ve PostGIS'te geometrisiz satır).
-- [ ] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) verilen öznitelikleri alanların kuralıyla tek
-  biçime çevirmiyor ve denetlemiyor; yalnız `cad.entities.set` ve `.create` çeviriyor (16 Ekim'de FORM-M'de bulundu). Hepsi
-  `checks::field_values`'tan geçmeli; ortak durumları ve Python testiyle.
+- [x] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) öznitelikleri alanların kuralıyla yazar: tek biçim,
+  ret, varsayılan. — **16 Ekim, [ADR 0199'un eki](docs/adr/0199-layer-fields-and-feature-table.md).**
 - [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
   `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
 

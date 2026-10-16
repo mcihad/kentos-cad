@@ -179,3 +179,14 @@ süzgeçler, sürükle-bırak form tasarımcısı, katman üst verisi (ISO 19115
 - Resimler 1440×900 ve 1100×650'de, koyu ve açık temada iki platformda: Tablo ve Alanlar (`kentos-cad kullan feature-table`,
   `pnpm -C apps/web e2e:use feature-table`), Öznitelikler'in alanları (`features::tests::screens`, `shots.mjs fields`), Kaynaklar
   (`sources::tests::screens`, `shots.mjs sources`, gerçek sunucu ve geçici veritabanıyla `cloud-shots.mjs`'in `sources-*`'ı).
+
+## Ek (16 Ekim 2026): çizim komutları da alanların kuralıyla yazar (TODOS.md `FORM-O`)
+
+§2'nin kuralı yalnız `cad.entities.set` ve `.create`'te uygulanıyordu; çizim komutları (`cad.point.create`, `.line.create`,
+`.polyline.create`, `.polygon.create`, `.circle.create`, `.arc.create`, `.nurbs.create`, `cad.rectangle.create`,
+`cad.polygon.regular`) verilen öznitelikleri olduğu gibi yazıyordu: Python ya da ajan alanın kuralına uymayan değeri
+yazabiliyordu. Artık hepsi `checks::object_attrs`'tan geçer: verilen değer tek biçimine çevrilir, boşu yazılmaz, kuralı bozan
+adların sırasıyla ilki reddedilir (`invalid_attribute`, zorunlu alanın boşu `attribute_required`, yeri `attrs.<ad>`), alanı
+olmayan anahtar olduğu gibi kalır, değeri verilmeyen alana varsayılanı yazılır; plan aynı öznitelikleri gösterir. Ortak
+durumlar her komut için `fixtures/commands/v1/<komut>.fields.json` (21'er), KentOS kodu olmadan
+`scripts/fixtures/primitive_fields_cases.py`'den; kataloğun yetenekleri iki kodu anar.

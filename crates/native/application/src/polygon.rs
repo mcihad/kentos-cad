@@ -55,7 +55,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PolygonCreate) -> CommandResult<P
     match check(cx.doc, input) {
         Ok(warnings) => CommandResult::Completed {
             output: PolygonPlan {
-                entity: polygon(input.clone(), 0),
+                entity: polygon(settled(cx.doc, input.clone()), 0),
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -97,7 +97,7 @@ fn write_execute(
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, polygon(input, 0)) {
+    match checks::add(cx.doc, polygon(settled(cx.doc, input), 0)) {
         Ok((id, uid, revision)) => CommandResult::Completed {
             output: PolygonCreated { uid, id, revision },
             warnings,
@@ -114,7 +114,9 @@ fn check(doc: &Document, input: &PolygonCreate) -> Result<Vec<CommandWarning>, S
     }
     checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    checks::layer(doc, &input.layer_id)
+    let warnings = checks::layer(doc, &input.layer_id)?;
+    checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
+    Ok(warnings)
 }
 
 /// Which ring of the input: the outer one or a hole (0-based).
@@ -240,4 +242,13 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
         closed: false,
         widths: None,
     })
+}
+
+/// `input` with the attributes the object is written with: canonical, the fields' defaults filled
+/// (`checks::object_attrs`; the checks refused what it refuses).
+fn settled(doc: &Document, mut input: PolygonCreate) -> PolygonCreate {
+    input.attrs = checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")
+        .ok()
+        .flatten();
+    input
 }

@@ -39,7 +39,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCreate) -> CommandResult<Poi
     match check(cx.doc, input) {
         Ok(warnings) => CommandResult::Completed {
             output: PointPlan {
-                entity: point(input.clone(), 0),
+                entity: point(settled(cx.doc, input.clone()), 0),
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -67,7 +67,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: PointCreate) -> CommandRe
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, point(input, 0)) {
+    match checks::add(cx.doc, point(settled(cx.doc, input), 0)) {
         Ok((id, uid, revision)) => CommandResult::Completed {
             output: PointCreated { uid, id, revision },
             warnings,
@@ -83,7 +83,9 @@ fn check(doc: &Document, input: &PointCreate) -> Result<Vec<CommandWarning>, Sto
         checks::finite(z, "Kot", "Kotu sonlu bir sayıyla verin.", "z")?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    checks::layer(doc, &input.layer_id)
+    let warnings = checks::layer(doc, &input.layer_id)?;
+    checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
+    Ok(warnings)
 }
 
 /// The point `input` describes, as the document stores it; `id` is the
@@ -106,4 +108,13 @@ fn point(input: PointCreate, id: u32) -> Entity {
         z: input.z,
         parts: None,
     })
+}
+
+/// `input` with the attributes the object is written with: canonical, the fields' defaults filled
+/// (`checks::object_attrs`; the checks refused what it refuses).
+fn settled(doc: &Document, mut input: PointCreate) -> PointCreate {
+    input.attrs = checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")
+        .ok()
+        .flatten();
+    input
 }

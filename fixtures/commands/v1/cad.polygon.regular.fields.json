@@ -1,0 +1,1112 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.polygon.regular",
+ "commandVersion": 1,
+ "title": "Yeni nesnenin öznitelikleri katmanın alanlarıyla",
+ "note": "TODOS.md FORM-O, ADR 0199 §2: çizim komutu verilen öznitelikleri alanların kuralıyla tek biçime çevirir, kuralı bozanı reddeder, verilmeyene alanın varsayılanını yazar. Kural ve beklenenler scripts/fixtures/primitive_fields_cases.py'de, değerlerin kuralı layer_field_cases.py'de KentOS kodu olmadan yazılmıştır.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Alanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "agac",
+    "name": "Ağaç",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ad",
+      "kind": "text",
+      "required": true
+     },
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "agac",
+        "label": "Ağaç"
+       },
+       {
+        "code": "cali",
+        "label": "Çalı"
+       }
+      ],
+      "default": "agac"
+     },
+     {
+      "name": "Boy",
+      "kind": "decimal",
+      "scale": 1,
+      "min": "0",
+      "max": "40"
+     },
+     {
+      "name": "Dikim",
+      "kind": "date"
+     },
+     {
+      "name": "Korunan",
+      "kind": "boolean"
+     },
+     {
+      "name": "Bakım",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "budama",
+        "label": "Budama"
+       },
+       {
+        "code": "sulama",
+        "label": "Sulama"
+       }
+      ]
+     },
+     {
+      "name": "Kod",
+      "kind": "text",
+      "length": 6,
+      "default": "A-1"
+     }
+    ]
+   },
+   {
+    "id": "serbest",
+    "name": "Serbest",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "agac",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "değersiz nokta alanların varsayılanlarını alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listenin etiketi koduna çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Tür": "Çalı"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Tür": "cali",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kod olduğu gibi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Tür": "cali"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Tür": "cali",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık sayı tek biçime: virgül ve sıfırlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "12,50"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Boy” alanı en çok 1 ondalık basamak alır; “12,50” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın.",
+       "path": "attrs.Boy"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarih GG.AA.YYYY'den",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Dikim": "5.11.2026"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Dikim": "2026-11-05",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "evet/hayır Evet'ten",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Korunan": "Evet"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Korunan": "true",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok değerli alan listenin sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Bakım": "Sulama; budama; sulama"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Bakım": "budama; sulama",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş değer yazılmaz, alanın varsayılanı gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Kod": "  "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "verilen değer varsayılanın yerine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Kod": "B-2"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Kod": "B-2",
+         "Tür": "agac"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı olmayan anahtar olduğu gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Not": " serbest "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Not": " serbest ",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alansız katmanda her şey olduğu gibi, varsayılan yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "serbest",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Tür": "Çalı",
+       "x": "1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "Çalı",
+         "x": "1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listede olmayan değer reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Tür": "Ağaççık"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Tür” alanı listedeki değerlerden birini ister; “Ağaççık” listede yok.",
+       "path": "attrs.Tür"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralık dışı boy reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "41"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Boy” alanı 0 ile 40 arasında olmalı; 41 verildi.",
+       "path": "attrs.Boy"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "takvimde olmayan gün reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Dikim": "31.04.2026"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Dikim” alanı tarih ister; “31.04.2026” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın.",
+       "path": "attrs.Dikim"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "evet/hayır olmayan değer reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Korunan": "belki"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Korunan” alanı evet ya da hayır ister; “belki” verildi.",
+       "path": "attrs.Korunan"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "uzun kod reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Kod": "ABCDEFG"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Kod” alanı en çok 6 karakter alır; 7 karakter verildi.",
+       "path": "attrs.Kod"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zorunlu alanın boş değeri reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": " "
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_required",
+       "message": "“Ad” alanı zorunlu; boş bırakılamaz.",
+       "path": "attrs.Ad"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zorunlu alan verilmezse reddedilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Tür": "agac"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok değerli alanda listede olmayan reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Bakım": "budama; gübre"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Bakım” alanı listedeki değerleri ister; “gübre” listede yok.",
+       "path": "attrs.Bakım"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "retler adların sırasıyla: Boy, Dikim'den önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Dikim": "x",
+       "Boy": "x"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Boy” alanı ondalık sayı ister; “x” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın.",
+       "path": "attrs.Boy"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık basamak sınırı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "agac",
+      "sides": 6,
+      "frame": {
+       "kind": "inscribed",
+       "center": {
+        "x": 487020,
+        "y": 4420020
+       },
+       "corner": {
+        "x": 487025,
+        "y": 4420020
+       }
+      },
+      "attrs": {
+       "Ad": "Çınar",
+       "Boy": "1.25"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Boy” alanı en çok 1 ondalık basamak alır; “1.25” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın.",
+       "path": "attrs.Boy"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

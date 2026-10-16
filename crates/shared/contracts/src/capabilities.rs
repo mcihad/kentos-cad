@@ -106,6 +106,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
 ];
 
 /// The revision's two, every writing command's.
+/// A new object's attributes by its layer's fields (TODOS.md FORM-O, ADR 0199 §2).
+const ATTRS: &[&str] = &["invalid_attribute", "attribute_required"];
 const REVISION: &[&str] = &["invalid_revision", "revision_conflict"];
 /// A new object's layer.
 const LAYER: &[&str] = &["layer_not_found", "not_a_layer", "layer_locked"];
@@ -191,6 +193,7 @@ const ENTRIES: &[Entry] = &[
             ],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden", "layer_locked"],
         targets: none,
@@ -207,6 +210,7 @@ const ENTRIES: &[Entry] = &[
             ],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,
@@ -222,13 +226,19 @@ const ENTRIES: &[Entry] = &[
             ],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,
     },
     Entry {
         id: "cad.line.create",
-        refusals: &[&["not_finite", "invalid_line_weight"], LAYER, REVISION],
+        refusals: &[
+            &["not_finite", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
         warnings: &["layer_hidden"],
         targets: none,
     },
@@ -244,6 +254,7 @@ const ENTRIES: &[Entry] = &[
             ],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,
@@ -256,7 +267,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.point.create",
-        refusals: &[&["not_finite"], LAYER, REVISION],
+        refusals: &[&["not_finite"], LAYER, REVISION, ATTRS],
         warnings: &["layer_hidden"],
         targets: none,
     },
@@ -266,6 +277,7 @@ const ENTRIES: &[Entry] = &[
             &["not_finite", "invalid_radius", "invalid_line_weight"],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,
@@ -276,6 +288,7 @@ const ENTRIES: &[Entry] = &[
             &["not_finite", "invalid_radius", "invalid_line_weight"],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,
@@ -828,6 +841,7 @@ const ENTRIES: &[Entry] = &[
             ],
             LAYER,
             REVISION,
+            ATTRS,
         ],
         warnings: &["layer_hidden"],
         targets: none,

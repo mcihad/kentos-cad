@@ -72,6 +72,35 @@ pub(crate) fn line_weight(weight: Option<f64>, path: &str) -> Result<(), Stop> {
     }
 }
 
+/// A new object's attributes on `layer` (docs/adr/0199 §2): the values given in their canonical
+/// text by [`field_values`] (refused as it refuses), and the fields' defaults where none is given;
+/// none when it has none. Every drawing command writes what this gives (FORM-O).
+pub(crate) fn object_attrs(
+    doc: &Document,
+    layer: &str,
+    given: Option<&BTreeMap<String, String>>,
+    at: &str,
+) -> Result<Option<BTreeMap<String, String>>, Stop> {
+    let offered: BTreeMap<String, Option<String>> = given
+        .into_iter()
+        .flatten()
+        .map(|(k, v)| (k.clone(), Some(v.clone())))
+        .collect();
+    let mut out: BTreeMap<String, String> = field_values(doc, layer, &offered, at)?
+        .into_iter()
+        .filter_map(|(k, v)| Some((k, v?)))
+        .filter(|(_, v)| !v.is_empty())
+        .collect();
+    if let Some(node) = doc.layers().get(layer) {
+        for f in &node.fields {
+            if let Some(d) = &f.default {
+                out.entry(f.name.clone()).or_insert_with(|| d.clone());
+            }
+        }
+    }
+    Ok((!out.is_empty()).then_some(out))
+}
+
 /// The attributes written to an object on `layer`, by its fields
 /// (docs/adr/0199 §2): each value given to a field's key in its canonical
 /// text, a null (taken away) checked as empty; in the names' order, the first

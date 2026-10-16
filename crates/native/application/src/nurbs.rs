@@ -45,7 +45,7 @@ pub fn plan_in(doc: &Document, input: &NurbsCreate) -> CommandResult<NurbsPlan> 
     match check(doc, input) {
         Ok((warnings, curve)) => CommandResult::Completed {
             output: NurbsPlan {
-                entity: entity(input.clone(), curve),
+                entity: entity(settled(doc, input.clone()), curve),
                 revision: doc.revision().to_string(),
             },
             warnings,
@@ -70,7 +70,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: NurbsCreate) -> CommandRe
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, entity(input, curve)) {
+    match checks::add(cx.doc, entity(settled(cx.doc, input), curve)) {
         Ok((id, uid, revision)) => CommandResult::Completed {
             output: NurbsCreated { uid, id, revision },
             warnings,
@@ -233,7 +233,9 @@ fn check(doc: &Document, input: &NurbsCreate) -> Result<(Vec<CommandWarning>, Cu
     }
     checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    Ok((checks::layer(doc, &input.layer_id)?, curve))
+    let warnings = checks::layer(doc, &input.layer_id)?;
+    checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
+    Ok((warnings, curve))
 }
 
 /// The curve as the document stores it; `id` is the document's to give (0 in a plan).
@@ -264,4 +266,13 @@ fn entity(input: NurbsCreate, curve: Curve) -> Entity {
         tangents: None,
         fit_tolerance: None,
     })
+}
+
+/// `input` with the attributes the object is written with: canonical, the fields' defaults filled
+/// (`checks::object_attrs`; the checks refused what it refuses).
+fn settled(doc: &Document, mut input: NurbsCreate) -> NurbsCreate {
+    input.attrs = checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")
+        .ok()
+        .flatten();
+    input
 }

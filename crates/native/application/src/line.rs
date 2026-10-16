@@ -44,7 +44,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LineCreate) -> CommandResult<Line
     match check(cx.doc, input) {
         Ok(warnings) => CommandResult::Completed {
             output: LinePlan {
-                entity: line(input.clone(), 0),
+                entity: line(settled(cx.doc, input.clone()), 0),
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -72,7 +72,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LineCreate) -> CommandRes
         Ok(warnings) => warnings,
         Err(stop) => return stop.into(),
     };
-    match checks::add(cx.doc, line(input, 0)) {
+    match checks::add(cx.doc, line(settled(cx.doc, input), 0)) {
         Ok((id, uid, revision)) => CommandResult::Completed {
             output: LineCreated { uid, id, revision },
             warnings,
@@ -95,7 +95,9 @@ fn check(doc: &Document, input: &LineCreate) -> Result<Vec<CommandWarning>, Stop
     }
     checks::line_weight(input.line_weight, "lineWeight")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    checks::layer(doc, &input.layer_id)
+    let warnings = checks::layer(doc, &input.layer_id)?;
+    checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
+    Ok(warnings)
 }
 
 /// The line `input` describes, as the document stores it; `id` is the
@@ -124,4 +126,13 @@ fn line(input: LineCreate, id: u32) -> Entity {
         za: None,
         zb: None,
     })
+}
+
+/// `input` with the attributes the object is written with: canonical, the fields' defaults filled
+/// (`checks::object_attrs`; the checks refused what it refuses).
+fn settled(doc: &Document, mut input: LineCreate) -> LineCreate {
+    input.attrs = checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")
+        .ok()
+        .flatten();
+    input
 }
