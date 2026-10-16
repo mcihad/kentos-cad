@@ -43,7 +43,7 @@ use kentos_contracts::{
     BlockChange, BlockDefinition, BlockId, CommandEnvelope, CommitResult, ConflictReason,
     EventBlock, EventFeature, EventRecord, FeatureChange, FeatureConflict, FeatureOp, LayerNode,
     LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_META_KEY, ProjectChanges,
-    ProjectPermission, block_key,
+    ProjectPermission, ProjectSettings, block_key,
 };
 use kentos_formats::blocks::Placing;
 use serde_json::Value;
@@ -134,6 +134,115 @@ async fn current_copies(
     rows.into_iter()
         .map(|r| record(r).map(|f| (Uuid::parse_str(&f.id).expect("stored ids are UUIDs"), f)))
         .collect()
+}
+
+/// The forms' guard over the commit's object changes (docs/adr/0411 §2, §4): a Veri girişi's
+/// (`entry`) change is its record's attributes through its layer's published form; a write to a
+/// layer whose form enforces its rules keeps them. The forms judge with the project's variables (the
+/// moment's left out), its reading unit and the stored objects of the layers they read.
+async fn guard_forms(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    name: &str,
+    settings: &ProjectSettings,
+    tree: &[LayerNode],
+    changes: &[FeatureChange],
+    entry: bool,
+) -> AppResult<()> {
+    let written: Vec<(usize, &str, &kentos_contracts::Entity)> = changes
+        .iter()
+        .enumerate()
+        .filter_map(|(i, c)| match c {
+            FeatureChange::Create { id, entity } | FeatureChange::Update { id, entity } => {
+                Some((i, id.as_str(), entity))
+            }
+            FeatureChange::Delete { .. } => None,
+        })
+        .collect();
+    let forms: Vec<&kentos_contracts::ProjectForm> = settings
+        .forms
+        .iter()
+        .filter(|f| !f.releases.is_empty() && (entry || f.enforce))
+        .filter(|f| written.iter().any(|(_, _, e)| e.base().layer_id == f.layer))
+        .collect();
+    if forms.is_empty() {
+        if entry && !written.is_empty() {
+            return Err(AppError::forbidden(
+                "Bu katmanın yayımlanmış formu yok; Veri girişi kayıtları yalnız yayımlanmış formla düzenler.",
+            ));
+        }
+        return Ok(());
+    }
+    let mut read: Vec<String> = Vec::new();
+    for f in &forms {
+        if let Some(r) = f.releases.last() {
+            for l in crate::form_guard::world_layers(&r.body) {
+                if !read.contains(&l) {
+                    read.push(l);
+                }
+            }
+        }
+    }
+    let rows: Vec<(String, Uuid, Value)> = if read.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as(
+            "select layer_id, id, properties from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&read)
+        .fetch_all(&mut **tx)
+        .await?
+    };
+    let rows: Vec<(String, String, BTreeMap<String, String>)> = rows
+        .into_iter()
+        .map(|(layer, id, props)| {
+            let attrs = props
+                .as_object()
+                .map(|m| {
+                    m.iter()
+                        .map(|(k, v)| {
+                            let text = v.as_str().map_or_else(|| v.to_string(), str::to_owned);
+                            (k.clone(), text)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            (layer, id.to_string(), attrs)
+        })
+        .collect();
+    let mut variables = kentos_project::variables::expression_variables(name, settings, 0.0, "");
+    variables.retain(|v| !kentos_forms::MOMENT.contains(&v.name.as_str()));
+    let judge = crate::form_guard::Judge {
+        settings,
+        tree,
+        variables,
+        unit: kentos_expression::Unit::per_metre(settings.unit().per_metre()),
+        world: crate::form_guard::world_of(tree, &rows),
+    };
+    let ids: Vec<Uuid> = written
+        .iter()
+        .filter_map(|(_, id, _)| Uuid::parse_str(id).ok())
+        .collect();
+    let before = current_copies(tx, access, &ids).await?;
+    for (i, id, after) in written {
+        let old = Uuid::parse_str(id).ok().and_then(|u| before.get(&u));
+        if entry {
+            let Some(old) = old else {
+                return Err(AppError::forbidden(
+                    "Veri girişi nesne oluşturmaz; yalnız var olan kayıtları formla düzenler.",
+                ));
+            };
+            judge
+                .entry_write(id, &old.entity, after)
+                .map_err(AppError::forbidden)?;
+        }
+        if let Some(why) = judge.enforced(id, old.map(|r| &r.entity), after) {
+            return Err(AppError::invalid_at(format!("features[{i}].entity"), why));
+        }
+    }
+    Ok(())
 }
 
 /// The envelope names the project it is sent to (`access`), in this tenant.
@@ -372,7 +481,24 @@ pub async fn commit(
         return Err(access::archived(&now.name));
     }
     // 3. The rights, as they are now. Block definitions are the drawing's content, as its objects.
-    if !input.features.is_empty() || !input.blocks.is_empty() {
+    // A Veri girişi (`forms.use` without `feature.write`) changes existing records' attributes
+    // through a published form alone (docs/adr/0411 §2): judged with the forms below.
+    let entry = !now.allows(ProjectPermission::FeatureWrite)
+        && now.allows(ProjectPermission::FormsUse)
+        && input.blocks.is_empty()
+        && input.project.is_none();
+    if entry {
+        if let Some(i) = input
+            .features
+            .iter()
+            .position(|c| !matches!(c, FeatureChange::Update { .. }))
+        {
+            return Err(AppError::forbidden(format!(
+                "Veri girişi nesne oluşturmaz ve silmez; yalnız var olan kayıtların özniteliklerini formla düzenler (değişiklik {}).",
+                i + 1
+            )));
+        }
+    } else if !input.features.is_empty() || !input.blocks.is_empty() {
         now.require(ProjectPermission::FeatureWrite)?;
     }
     if input.project.is_some() {
@@ -433,6 +559,30 @@ pub async fn commit(
             }
         };
         check_services(&tree, &connections)?;
+    }
+    // The settings as they are, and as the patch leaves them: the forms' permissions and rules
+    // (docs/adr/0411 §3).
+    let stored_settings: ProjectSettings = {
+        let stored: Value = sqlx::query_scalar(
+            "select settings from kentos.project where tenant_id = $1 and id = $2",
+        )
+        .bind(access.tenant)
+        .bind(project)
+        .fetch_one(&mut *tx)
+        .await?;
+        serde_json::from_value(stored)
+            .map_err(|e| AppError::invalid(format!("Projenin ayarları okunamadı: {e}")))?
+    };
+    if let Some(settings) = &patch.settings {
+        for need in crate::form_guard::settings_needs(&stored_settings, settings) {
+            access.require(need)?;
+        }
+        if let Some((path, why)) = crate::form_guard::settings_problem(settings) {
+            return Err(AppError::invalid_at(path, why));
+        }
+        if let Some(why) = crate::form_guard::releases_problem(&stored_settings, settings) {
+            return Err(AppError::invalid_at("project.settings.forms", why));
+        }
     }
     // A project's networks keep their rules (docs/adr/0209 §2); the layers they name need not exist.
     if let Some(settings) = &patch.settings {
@@ -635,6 +785,20 @@ pub async fn commit(
             });
         }
     }
+
+    // The forms' guard (docs/adr/0411 §2, §4): a Veri girişi's change through its layer's published
+    // form; anyone's write to a layer whose form enforces its rules, by them.
+    let settings_after = patch.settings.as_ref().unwrap_or(&stored_settings);
+    guard_forms(
+        &mut tx,
+        access,
+        &old_name,
+        settings_after,
+        &tree,
+        &input.features,
+        entry,
+    )
+    .await?;
 
     // 5. Write.
     let actor = access.actor.user_id;

@@ -3,4 +3,4 @@
 /**
  * A role in one project. Each has the rights of the ones before it.
  */
-export type ProjectRole = "viewer" | "commenter" | "editor" | "manager" | "owner";
+export type ProjectRole = "viewer" | "commenter" | "entry" | "editor" | "manager" | "owner";

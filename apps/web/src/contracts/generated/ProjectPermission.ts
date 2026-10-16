@@ -4,4 +4,4 @@
  * A permission in a project. The names are fixed: commands (`permissions`
  * in the catalog), the web, the desktop, Python and AI use them as they are.
  */
-export type ProjectPermission = "project.read" | "feature.write" | "project.edit" | "project.delete" | "project.comment" | "project.download" | "project.history" | "project.share" | "project.transfer" | "project.jobs.run";
+export type ProjectPermission = "project.read" | "feature.write" | "project.edit" | "project.delete" | "project.comment" | "project.download" | "project.history" | "project.share" | "project.transfer" | "project.jobs.run" | "forms.design" | "forms.publish" | "forms.use";

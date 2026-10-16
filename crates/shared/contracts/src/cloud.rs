@@ -183,6 +183,8 @@ pub struct MembershipView {
 pub enum ProjectRole {
     Viewer,
     Commenter,
+    /// Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.
+    Entry,
     Editor,
     Manager,
     /// The project's owner; not given by sharing (ownership is transferred).
@@ -195,6 +197,7 @@ impl ProjectRole {
         match self {
             Self::Viewer => "viewer",
             Self::Commenter => "commenter",
+            Self::Entry => "entry",
             Self::Editor => "editor",
             Self::Manager => "manager",
             Self::Owner => "owner",
@@ -205,6 +208,7 @@ impl ProjectRole {
         [
             Self::Viewer,
             Self::Commenter,
+            Self::Entry,
             Self::Editor,
             Self::Manager,
             Self::Owner,
@@ -223,12 +227,20 @@ impl ProjectRole {
 pub enum GrantRole {
     Viewer,
     Commenter,
+    /// Veri girişi (docs/adr/0411 §2).
+    Entry,
     Editor,
     Manager,
 }
 
 impl GrantRole {
-    pub const ALL: [GrantRole; 4] = [Self::Viewer, Self::Commenter, Self::Editor, Self::Manager];
+    pub const ALL: [GrantRole; 5] = [
+        Self::Viewer,
+        Self::Commenter,
+        Self::Entry,
+        Self::Editor,
+        Self::Manager,
+    ];
 
     pub fn name(self) -> &'static str {
         ProjectRole::from(self).name()
@@ -244,6 +256,7 @@ impl From<GrantRole> for ProjectRole {
         match role {
             GrantRole::Viewer => Self::Viewer,
             GrantRole::Commenter => Self::Commenter,
+            GrantRole::Entry => Self::Entry,
             GrantRole::Editor => Self::Editor,
             GrantRole::Manager => Self::Manager,
         }
@@ -287,10 +300,19 @@ pub enum ProjectPermission {
     /// Start server jobs on it.
     #[serde(rename = "project.jobs.run")]
     JobsRun,
+    /// Design the project's forms and relations (docs/adr/0411 §1).
+    #[serde(rename = "forms.design")]
+    FormsDesign,
+    /// Publish a form's new version.
+    #[serde(rename = "forms.publish")]
+    FormsPublish,
+    /// Edit records through a published form.
+    #[serde(rename = "forms.use")]
+    FormsUse,
 }
 
 impl ProjectPermission {
-    pub const ALL: [ProjectPermission; 10] = [
+    pub const ALL: [ProjectPermission; 13] = [
         Self::Read,
         Self::FeatureWrite,
         Self::Edit,
@@ -301,6 +323,9 @@ impl ProjectPermission {
         Self::Share,
         Self::Transfer,
         Self::JobsRun,
+        Self::FormsDesign,
+        Self::FormsPublish,
+        Self::FormsUse,
     ];
 
     pub fn name(self) -> &'static str {
@@ -315,6 +340,9 @@ impl ProjectPermission {
             Self::Share => "project.share",
             Self::Transfer => "project.transfer",
             Self::JobsRun => "project.jobs.run",
+            Self::FormsDesign => "forms.design",
+            Self::FormsPublish => "forms.publish",
+            Self::FormsUse => "forms.use",
         }
     }
 }

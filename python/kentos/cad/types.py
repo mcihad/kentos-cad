@@ -945,14 +945,22 @@ GradientShapeName = Literal["linear", "cylinder", "spherical"]
 
 
 class GrantRole(_StrEnum):
-    """A role a share gives: every project role but the owner's (ownership is transferred, not shared)."""
+    """A role a share gives: every project role but the owner's (ownership is transferred, not shared).
+
+    - ``viewer``
+    - ``commenter``
+    - ``editor``
+    - ``manager``
+    - ``entry``: Veri girişi (docs/adr/0411 §2).
+    """
     VIEWER = "viewer"
     COMMENTER = "commenter"
     EDITOR = "editor"
     MANAGER = "manager"
+    ENTRY = "entry"
 
 
-GrantRoleName = Literal["viewer", "commenter", "editor", "manager"]
+GrantRoleName = Literal["viewer", "commenter", "editor", "manager", "entry"]
 """The names of :class:`GrantRole`, for a plain string."""
 
 
@@ -1672,6 +1680,9 @@ class ProjectPermission(_StrEnum):
     - ``project.share``: Give and take away roles in it.
     - ``project.transfer``: Hand its ownership over.
     - ``project.jobs.run``: Start server jobs on it.
+    - ``forms.design``: Design the project's forms and relations (docs/adr/0411 §1).
+    - ``forms.publish``: Publish a form's new version.
+    - ``forms.use``: Edit records through a published form.
     """
     PROJECT_READ = "project.read"
     FEATURE_WRITE = "feature.write"
@@ -1683,9 +1694,12 @@ class ProjectPermission(_StrEnum):
     PROJECT_SHARE = "project.share"
     PROJECT_TRANSFER = "project.transfer"
     PROJECT_JOBS_RUN = "project.jobs.run"
+    FORMS_DESIGN = "forms.design"
+    FORMS_PUBLISH = "forms.publish"
+    FORMS_USE = "forms.use"
 
 
-ProjectPermissionName = Literal["project.read", "feature.write", "project.edit", "project.delete", "project.comment", "project.download", "project.history", "project.share", "project.transfer", "project.jobs.run"]
+ProjectPermissionName = Literal["project.read", "feature.write", "project.edit", "project.delete", "project.comment", "project.download", "project.history", "project.share", "project.transfer", "project.jobs.run", "forms.design", "forms.publish", "forms.use"]
 """The names of :class:`ProjectPermission`, for a plain string."""
 
 
@@ -1696,16 +1710,18 @@ class ProjectRole(_StrEnum):
     - ``commenter``
     - ``editor``
     - ``manager``
+    - ``entry``: Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.
     - ``owner``: The project's owner; not given by sharing (ownership is transferred).
     """
     VIEWER = "viewer"
     COMMENTER = "commenter"
     EDITOR = "editor"
     MANAGER = "manager"
+    ENTRY = "entry"
     OWNER = "owner"
 
 
-ProjectRoleName = Literal["viewer", "commenter", "editor", "manager", "owner"]
+ProjectRoleName = Literal["viewer", "commenter", "editor", "manager", "entry", "owner"]
 """The names of :class:`ProjectRole`, for a plain string."""
 
 

@@ -19,6 +19,11 @@ kentos-kcad = { path = "../../shared/kcad" }
 # The sheet template library (docs/sheet/design.md §13): a template is read and checked as a
 # device reads it, and the commands' types are the ones the web and the desktop send.
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
+# The forms' guard (docs/adr/0411): a write judged by a form's rules as the desktop's document judges it,
+# with the project's variables as the document reads them.
+kentos-forms = { path = "../../shared/forms" }
+kentos-expression = { path = "../../shared/expression" }
+kentos-project = { path = "../../native/project" }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-util"] }
 serde = { workspace = true }

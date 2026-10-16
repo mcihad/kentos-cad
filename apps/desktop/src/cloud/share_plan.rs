@@ -130,6 +130,7 @@ pub(crate) fn role_label(role: ProjectRole) -> &'static str {
         ProjectRole::Owner => "Sahip",
         ProjectRole::Manager => "Yönetici",
         ProjectRole::Editor => "Düzenleyici",
+        ProjectRole::Entry => "Veri girişi",
         ProjectRole::Commenter => "Yorumcu",
         ProjectRole::Viewer => "Görüntüleyici",
     }
@@ -144,31 +145,40 @@ fn project_role(role: GrantRole) -> ProjectRole {
     match role {
         GrantRole::Manager => ProjectRole::Manager,
         GrantRole::Editor => ProjectRole::Editor,
+        GrantRole::Entry => ProjectRole::Entry,
         GrantRole::Commenter => ProjectRole::Commenter,
         GrantRole::Viewer => ProjectRole::Viewer,
     }
 }
 
 /// The roles a share gives, weakest first (ownership is transferred, not shared).
-pub(crate) const GRANT_ROLES: [GrantRole; 4] = [
+pub(crate) const GRANT_ROLES: [GrantRole; 5] = [
     GrantRole::Viewer,
     GrantRole::Commenter,
+    GrantRole::Entry,
     GrantRole::Editor,
     GrantRole::Manager,
 ];
 
 /// The roles an invitation gives: managing and sharing stay with members.
-pub(crate) const INVITE_ROLES: [GrantRole; 3] =
-    [GrantRole::Viewer, GrantRole::Commenter, GrantRole::Editor];
+pub(crate) const INVITE_ROLES: [GrantRole; 4] = [
+    GrantRole::Viewer,
+    GrantRole::Commenter,
+    GrantRole::Entry,
+    GrantRole::Editor,
+];
 
 /// What each role may do, in one line (docs/adr/0015's table).
 pub(crate) fn role_hint(role: GrantRole) -> &'static str {
     match role {
         GrantRole::Viewer => "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
         GrantRole::Commenter => "Görüntüleyicinin yapabildikleri ve yorum.",
+        GrantRole::Entry => {
+            "Yorumcunun yapabildikleri; kayıtların özniteliklerini yalnız yayımlanmış formla düzenler, çizimi değiştiremez."
+        }
         GrantRole::Editor => "Nesneleri çizer, değiştirir ve siler.",
         GrantRole::Manager => {
-            "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, projeyi paylaşır."
+            "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, projeyi paylaşır."
         }
     }
 }

@@ -110,7 +110,15 @@ async fn roles_come_from_ownership_grants_and_the_policy() {
     assert_eq!((e.role, e.via), (ProjectRole::Editor, AccessSource::Grant));
     assert_eq!(
         e.permissions(),
-        &[Read, FeatureWrite, Comment, Download, History, JobsRun]
+        &[
+            Read,
+            FeatureWrite,
+            Comment,
+            Download,
+            History,
+            JobsRun,
+            FormsUse
+        ]
     );
     let v = open(&db, &viewer, project).await;
     assert_eq!(v.permissions(), &[Read, Download, History]);

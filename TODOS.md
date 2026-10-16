@@ -191,6 +191,9 @@ Liste:
 - [ ] `FORM-N` geometrisiz kayıt (ADR 0410, 16 Ekim): web'de gerekenler: sözleşmenin `record` türü (TS türleri üretildi),
   `io/columns.ts`'in tür 20'si, `cad.records.create`'in TS işleyicisi (`fixtures/commands/v1/cad.records.create.json`), çizim
   ve seçimin kaydı atlaması, Öznitelik tablosunda Kayıt ekle, formun Yeni'si.
+- [ ] `FORM-F` formların izinleri ve sunucunun bekçisi (ADR 0411, 16 Ekim): web'de gerekenler: `ProjectRole`/`GrantRole`'ün `entry`'si
+  (`app/cloud/sharePlan.ts`'in rol adları, sırası, davet rolleri ve açıklamaları; `fixtures/cloud/v1/share.json` güncellendi),
+  `ProjectPermission`'ın üç izni; sunucu bekçisi zaten bütün istemciler için.
 - [ ] `FORM-P` tabloda listelerin etiketi ve dosyadan kayıt (ADR 0410 §4, §6, 16 Ekim): web'de gerekenler: Öznitelik tablosunun formun
   başka katmandan listelerini etiketle göstermesi, Veri aktar'ın `records-append` ve `half-coordinates` durumları.
 - [ ] `FORM-O` çizim komutlarında alanların kuralı (ADR 0199'un 16 Ekim eki): web'de gerekenler: `product/`'un çizim
@@ -1457,8 +1460,11 @@ burada aşamaları izlenir.
 - [x] `FORM-P` Tabloda başka katmandan listenin (ADR 0404) etiketiyle gösterim; Veri aktar'la CSV ve tablo dosyasından kayıtlar. — **16 Ekim, ADR 0410 §4, §6.**
 - [x] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) öznitelikleri alanların kuralıyla yazar: tek biçim,
   ret, varsayılan. — **16 Ekim, [ADR 0199'un eki](docs/adr/0199-layer-fields-and-feature-table.md).**
-- [ ] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): bulutta form taslağı, yayın ve dağıtım kaynakları,
-  `forms.design`, `forms.publish`, `forms.use` izinleri, sunucunun yazma bekçisi bütün yollarda.
+- [x] `FORM-F` Merkezi yayın ve izinler (FM2, plan `FORM-FIRST-14`–`17`): `forms.design`, `forms.publish`, `forms.use`, Veri girişi
+  rolü (göç 0021), ayarların bekçisi (izinler, değişmez yayın), yazma bekçisi `project.changes`'te bütün yollar için. — **16 Ekim,
+  [ADR 0411](docs/adr/0411-form-permissions-and-server-guard.md).**
+- [ ] `FORM-Q` Veri girişi için masaüstünde çizimin salt okunur açılması (yalnız Formla düzenle yazar); alan düzeyinde okuma
+  yetkisi (formun gizlediği alanın okunmaması, plan `FORM-FIRST-16`'nın okuma yanı).
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

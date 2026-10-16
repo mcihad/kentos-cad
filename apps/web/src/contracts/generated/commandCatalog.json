@@ -11956,13 +11956,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -11994,13 +12003,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           },
           "ProjectGrant": {
             "description": "A person's grant in a project.",
@@ -12123,13 +12141,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           },
           "ProjectGrant": {
             "description": "A person's grant in a project.",
@@ -26328,6 +26355,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -26378,6 +26420,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -29846,6 +29893,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -29859,6 +29921,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -30344,6 +30411,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -30357,6 +30439,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -30786,6 +30873,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -30799,6 +30901,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -31205,6 +31312,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -31218,6 +31340,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -31624,6 +31751,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -31637,6 +31779,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -32043,6 +32190,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -32056,6 +32218,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -32462,6 +32629,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -32475,6 +32657,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -32957,6 +33144,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -32970,6 +33172,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -33498,6 +33705,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -33511,6 +33733,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {
@@ -33882,13 +34109,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -33921,13 +34157,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           },
           "InvitationState": {
             "description": "Where an invitation is.",
@@ -34081,13 +34326,22 @@
         "$defs": {
           "GrantRole": {
             "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor",
-              "manager"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2).",
+                "type": "string"
+              }
+            ]
           },
           "InvitationState": {
             "description": "Where an invitation is.",
@@ -34669,6 +34923,21 @@
                 "const": "project.jobs.run",
                 "description": "Start server jobs on it.",
                 "type": "string"
+              },
+              {
+                "const": "forms.design",
+                "description": "Design the project's forms and relations (docs/adr/0411 §1).",
+                "type": "string"
+              },
+              {
+                "const": "forms.publish",
+                "description": "Publish a form's new version.",
+                "type": "string"
+              },
+              {
+                "const": "forms.use",
+                "description": "Edit records through a published form.",
+                "type": "string"
               }
             ]
           },
@@ -34682,6 +34951,11 @@
                   "editor",
                   "manager"
                 ],
+                "type": "string"
+              },
+              {
+                "const": "entry",
+                "description": "Veri girişi (docs/adr/0411 §2): edits existing records' attributes through a published form only.",
                 "type": "string"
               },
               {

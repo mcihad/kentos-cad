@@ -433,6 +433,8 @@ impl App {
         };
         let (tenant, project) = (opened.tenant, opened.project);
         let archived = opened.archived();
+        // A Veri girişi edits records through forms only (docs/adr/0411 §2): said once, on opening.
+        let entry = opened.info.access.role == kentos_contracts::ProjectRole::Entry;
         let name = opened.info.name.clone();
         let storage = opened.info.storage;
         // A file project's events are followed from the cursor it was read at (file_follow.rs).
@@ -490,6 +492,11 @@ impl App {
         if let Some(based_on) = kept_based_on {
             self.output(format!(
                 "“{name}” için bu cihazda bekleyen bir kayıt var (revizyon {based_on} üstüne); bağlantı gelince gönderilecek."
+            ));
+        }
+        if entry && !archived {
+            self.output(format!(
+                "“{name}” projesinde Veri girişi rolündesiniz: kayıtların özniteliklerini Formla düzenle ile değiştirebilirsiniz; nesne çizmek, taşımak ya da silmek buluta kaydedilmez."
             ));
         }
         if archived {

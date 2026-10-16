@@ -7,25 +7,29 @@
    "owner": "Sahip",
    "manager": "Yönetici",
    "editor": "Düzenleyici",
+   "entry": "Veri girişi",
    "commenter": "Yorumcu",
    "viewer": "Görüntüleyici"
   },
   "grant": [
    "viewer",
    "commenter",
+   "entry",
    "editor",
    "manager"
   ],
   "invite": [
    "viewer",
    "commenter",
+   "entry",
    "editor"
   ],
   "hints": {
    "viewer": "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
    "commenter": "Görüntüleyicinin yapabildikleri ve yorum.",
+   "entry": "Yorumcunun yapabildikleri; kayıtların özniteliklerini yalnız yayımlanmış formla düzenler, çizimi değiştiremez.",
    "editor": "Nesneleri çizer, değiştirir ve siler.",
-   "manager": "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, projeyi paylaşır."
+   "manager": "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, projeyi paylaşır."
   }
  },
  "blocks": {

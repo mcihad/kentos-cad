@@ -81,8 +81,10 @@ const GROUPS = [
   // server framework. Listed before `native`.
   { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'native', 'stylelib'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
-  { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
-  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
+  // project model (`project`, over shared and domain) is the server's to use too.
+  { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared

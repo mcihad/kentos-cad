@@ -3,4 +3,4 @@
 /**
  * A role a share gives: every project role but the owner's (ownership is transferred, not shared).
  */
-export type GrantRole = "viewer" | "commenter" | "editor" | "manager";
+export type GrantRole = "viewer" | "commenter" | "entry" | "editor" | "manager";

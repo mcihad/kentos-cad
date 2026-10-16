@@ -19,6 +19,7 @@ pub mod duplicate;
 pub mod error;
 pub mod events;
 pub mod files;
+pub mod form_guard;
 mod idempotency;
 pub mod identity;
 pub mod importing;

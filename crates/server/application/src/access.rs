@@ -30,7 +30,17 @@ pub fn role_permissions(role: ProjectRole) -> &'static [ProjectPermission] {
     match role {
         ProjectRole::Viewer => &[Read, Download, History],
         ProjectRole::Commenter => &[Read, Download, History, Comment],
-        ProjectRole::Editor => &[Read, Download, History, Comment, FeatureWrite, JobsRun],
+        // Veri girişi (docs/adr/0411 §2): records' attributes through a published form, nothing else.
+        ProjectRole::Entry => &[Read, Download, History, Comment, FormsUse],
+        ProjectRole::Editor => &[
+            Read,
+            Download,
+            History,
+            Comment,
+            FeatureWrite,
+            JobsRun,
+            FormsUse,
+        ],
         ProjectRole::Manager => &[
             Read,
             Download,
@@ -40,6 +50,9 @@ pub fn role_permissions(role: ProjectRole) -> &'static [ProjectPermission] {
             JobsRun,
             Edit,
             Share,
+            FormsDesign,
+            FormsPublish,
+            FormsUse,
         ],
         ProjectRole::Owner => &[
             Read,
@@ -52,6 +65,9 @@ pub fn role_permissions(role: ProjectRole) -> &'static [ProjectPermission] {
             Share,
             Delete,
             Transfer,
+            FormsDesign,
+            FormsPublish,
+            FormsUse,
         ],
     }
 }

@@ -57,7 +57,7 @@ fn holder(user: &str, name: &str, role: Option<ProjectRole>) -> ProjectAccessHol
     }
 }
 
-/// The owner (the account), Mehmet with an editor's grant, Zeynep by the policy.
+/// The owner (the account), Mehmet with an editor's grant, Selin with a data entry's, Zeynep by the policy.
 pub(super) fn people_of(app: &App) -> ProjectAccessList {
     let me = me(app);
     let mut owner = holder(&me, "Ayşe Yılmaz", Some(ProjectRole::Owner));
@@ -67,13 +67,21 @@ pub(super) fn people_of(app: &App) -> ProjectAccessList {
     mehmet.grant = Some(GrantRole::Editor);
     let mut zeynep = holder(ZEYNEP, "Zeynep Kaya", Some(ProjectRole::Manager));
     zeynep.via = Some(AccessSource::Policy);
+    // A field clerk who edits records through forms (docs/adr/0411 §2).
+    let mut selin = holder(
+        "0199aaaa-0000-7000-8000-0000000000c1",
+        "Selin Ak",
+        Some(ProjectRole::Entry),
+    );
+    selin.email = Some("selin@buro.example".into());
+    selin.grant = Some(GrantRole::Entry);
     ProjectAccessList {
         tenant_kind: TenantKind::Organization,
         storage: ProjectStorage::Database,
         admins_access_all_projects: true,
         owner_id: me,
         owner_name: "Ayşe Yılmaz".into(),
-        people: vec![owner, mehmet, zeynep],
+        people: vec![owner, mehmet, selin, zeynep],
     }
 }
 
@@ -146,12 +154,16 @@ fn paylas_on_the_catalog_lists_the_people_over_the_catalog() {
     let names: Vec<&str> = rows.iter().map(|r| r.name.as_str()).collect();
     assert_eq!(
         names,
-        ["Ayşe Yılmaz", "Mehmet Demir", "Zeynep Kaya"],
+        ["Ayşe Yılmaz", "Mehmet Demir", "Selin Ak", "Zeynep Kaya"],
         "the owner first, then by name"
     );
     assert!(rows[0].you && !rows[0].can_revoke);
     assert!(rows[1].can_change && rows[1].can_revoke, "a grant");
-    assert!(!rows[2].can_revoke, "the policy's access stays");
+    assert!(
+        rows[2].can_change && rows[2].can_revoke,
+        "a data entry's grant"
+    );
+    assert!(!rows[3].can_revoke, "the policy's access stays");
     // The invitations were asked for after the people.
     assert_eq!(window(&app).invitations, Listed::Loading);
     let id = id(&app);

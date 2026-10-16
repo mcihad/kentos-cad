@@ -15,6 +15,7 @@ pub fn role(role: ProjectRole) -> &'static str {
         ProjectRole::Owner => "Sahip",
         ProjectRole::Manager => "Yönetici",
         ProjectRole::Editor => "Düzenleyici",
+        ProjectRole::Entry => "Veri girişi",
         ProjectRole::Commenter => "Yorumcu",
         ProjectRole::Viewer => "Görüntüleyici",
     }

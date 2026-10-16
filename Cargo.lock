@@ -2520,10 +2520,13 @@ name = "kentos-application"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-expression",
  "kentos-formats",
+ "kentos-forms",
  "kentos-geometry-core",
  "kentos-kcad",
  "kentos-postgres",
+ "kentos-project",
  "kentos-sheet",
  "serde",
  "serde_json",
