@@ -458,9 +458,14 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             let before = (old.base().layer_id == after.layer_id).then_some(&old.base().attrs);
             if let Some(w) =
                 checks::subtype_fit(doc, &after.layer_id, before, &after.attrs, "attrs")?
-                && misfits.is_empty()
+                && !misfits.iter().any(|m| m.code == w.code)
             {
                 misfits.push(w);
+            }
+            for w in checks::combination_fit(doc, &after.layer_id, before, &after.attrs, "attrs")? {
+                if !misfits.iter().any(|m| m.code == w.code) {
+                    misfits.push(w);
+                }
             }
         }
     }

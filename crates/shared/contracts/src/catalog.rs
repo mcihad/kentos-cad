@@ -3239,6 +3239,38 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Değer bileşimleri (docs/adr/0423), held together by fixtures/commands/v1/cad.layers.contingents.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_CONTINGENTS.into(),
+            version: crate::CAD_LAYERS_CONTINGENTS_VERSION,
+            title: "Değer bileşimleri".into(),
+            summary: "Katmanın değer gruplarını yazar (ArcGIS'in contingent values'u): her grup (name) 2–8 değer listeli alanı (fields, anahtarlarıyla) \
+                      ve birlikte geçerli bileşimlerini (rows: cells, alan başına kind code ve code, kind any ya da kind empty; isteğe bağlı subtype) tutar. \
+                      Grubun alanlarını değiştiren yazma, bileşimlerden birine uymuyorsa kısıtlayıcı grupta (restrictive) reddedilir (invalid_combination), \
+                      öbüründe uyarılır (combination_unmet); formun ve tablonun seçenekleri öbür değerlere göre daralır. Boş liste kaldırır; tek geri alma adımı “Değer bileşimleri”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersContingents>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Konut her malzemeyle, sanayi yalnız betonarme ya da çelikle".into(),
+                input: json!({ "layer": "bina", "groups": [{ "name": "Yapı", "fields": ["Tür", "Malzeme"], "restrictive": true, "rows": [
+                    { "cells": [{ "kind": "code", "code": "konut" }, { "kind": "any" }] },
+                    { "cells": [{ "kind": "code", "code": "sanayi" }, { "kind": "code", "code": "beton" }] },
+                    { "cells": [{ "kind": "code", "code": "sanayi" }, { "kind": "code", "code": "celik" }] }
+                ] }] }),
+                output: None,
+            }],
+        },
         // Alt türler (docs/adr/0422), held together by fixtures/commands/v1/cad.layers.subtypes.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_SUBTYPES.into(),
@@ -5347,6 +5379,9 @@ mod tests {
                     crate::CAD_LAYERS_SUBTYPES => {
                         serde_json::from_value::<crate::LayersSubtypes>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LAYERS_CONTINGENTS => {
+                        serde_json::from_value::<crate::LayersContingents>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_COMPOSE => {
                         serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())
                     }
@@ -5635,6 +5670,10 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_SUBTYPES => {
+                            serde_json::from_value::<crate::LayersComposed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_LAYERS_CONTINGENTS => {
                             serde_json::from_value::<crate::LayersComposed>(output.clone())
                                 .map(|_| ())
                         }

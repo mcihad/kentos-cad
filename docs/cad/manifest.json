@@ -1119,6 +1119,22 @@
    "tests": 1
   },
   {
+   "id": "data.contingents",
+   "kind": "command",
+   "title": "Değer bileşimleri",
+   "level": "semantic",
+   "via": [
+    "cad.layers.contingents"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.contingents",
+   "mcp": "cad.layers.contingents",
+   "note": "Gruplar cad.layers.contingents ile tek adımda yazılır; yazmalar, formlar ve tablo onları okur (ADR 0423).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.duplicate",
    "kind": "command",
    "title": "Kaydı çoğalt",

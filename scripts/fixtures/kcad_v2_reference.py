@@ -1169,6 +1169,8 @@ def layer_entries(n):
                 "tableStyles": (opaque, False),
                 # Schema 60 (docs/adr/0422 §4): the subtypes, as their JSON.
                 "subtypes": (opaque, False),
+                # Schema 60 (docs/adr/0423 §4): the value groups, as their JSON.
+                "contingents": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1983,7 +1985,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
     def styled(nodes):
-        return any(n.get("tableStyles") or n.get("subtypes") or styled(n.get("children", [])) for n in nodes)
+        return any(n.get("tableStyles") or n.get("subtypes") or n.get("contingents") or styled(n.get("children", []))
+                   for n in nodes)
 
     if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or styled(layers) or any(
         e["kind"] == "record" for e in entities
@@ -3707,6 +3710,7 @@ def build():
     timed["layers"][0]["fields"] = [f for f in timed["layers"][0]["fields"] if f["kind"] == "datetime"]
     timed["layers"][0].pop("tableStyles")
     timed["layers"][0].pop("subtypes")
+    timed["layers"][0].pop("contingents")
     unretired(timed)
     timed_payload = document(timed)
     assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
@@ -3716,6 +3720,7 @@ def build():
     aged["settings"].pop("forms")
     aged["layers"][0].pop("tableStyles")
     aged["layers"][0].pop("subtypes")
+    aged["layers"][0].pop("contingents")
     aged["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in aged["layers"][0]["fields"]
                                    if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     aged["layers"][0]["fields"] = [f for f in aged["layers"][0]["fields"] if "split" not in f and "merge" not in f]
@@ -3727,6 +3732,7 @@ def build():
     shared["settings"].pop("forms")
     shared["layers"][0].pop("tableStyles")
     shared["layers"][0].pop("subtypes")
+    shared["layers"][0].pop("contingents")
     shared["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in shared["layers"][0]["fields"]
                                      if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     for f in shared["layers"][0]["fields"]:
@@ -3743,6 +3749,7 @@ def build():
                                      if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     unretired(styled)
     styled["layers"][0].pop("subtypes")
+    styled["layers"][0].pop("contingents")
     styled_payload = document(styled)
     assert styled_payload.count(b"\x67version\x18\x3c") == 1, "a table's rules alone are schema 60"
     out["broken/table-styles-in-schema-59.kcad"] = container(styled_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
@@ -3750,6 +3757,7 @@ def build():
     kinds = copy.deepcopy(load("forms.json"))
     kinds["settings"].pop("forms")
     kinds["layers"][0].pop("tableStyles")
+    kinds["layers"][0].pop("contingents")
     kinds["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in kinds["layers"][0]["fields"]
                                     if f["kind"] not in ("datetime", "time") and "split" not in f]
     for f in kinds["layers"][0]["fields"]:
@@ -3761,6 +3769,18 @@ def build():
     kinds_payload = document(kinds)
     assert kinds_payload.count(b"\x67version\x18\x3c") == 1, "the subtypes alone are schema 60"
     out["broken/subtypes-in-schema-59.kcad"] = container(kinds_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A layer's value groups alone are schema 60's (docs/adr/0423 §4).
+    grouped = copy.deepcopy(kinds)
+    grouped["layers"][0].pop("subtypes")
+    grouped["layers"][0]["contingents"] = [{"name": "Durum ve sınıf", "fields": ["Durum", "Sınıf"],
+                                            "rows": [{"cells": [{"kind": "code", "code": "iyi"}, {"kind": "any"}]}]}]
+    grouped_payload = document(grouped)
+    assert grouped_payload.count(b"\x67version\x18\x3c") == 1, "the value groups alone are schema 60"
+    out["broken/contingents-in-schema-59.kcad"] = container(
+        grouped_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    out["broken/contingents-unfit.kcad"] = forms_broken(
+        lambda d: d["layers"][0]["contingents"][0]["rows"].append({"cells": [{"kind": "code", "code": "yok"}, {"kind": "any"}]}))
+    out["broken/contingents-empty-row-list.kcad"] = forms_broken(lambda d: d["layers"][0]["contingents"][0].update(rows=[]))
     out["broken/subtypes-unfit.kcad"] = forms_broken(lambda d: d["layers"][0]["subtypes"]["types"].append({"code": "yok"}))
     out["broken/subtypes-sorter-many.kcad"] = forms_broken(lambda d: d["layers"][0]["subtypes"].update(field="Kullanım"))
     form = lambda d: d["settings"]["forms"][0]  # noqa: E731

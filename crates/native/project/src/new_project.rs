@@ -256,6 +256,7 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
     LayerNode {
         table_styles: Vec::new(),
         subtypes: None,
+        contingents: Vec::new(),
         frozen: None,
         plot: None,
         id: id.to_owned(),

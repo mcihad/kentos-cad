@@ -2499,6 +2499,28 @@ class BlockParameter(_Union):
         return _variant(_BLOCK_PARAMETER, "BlockParameter", "kind", data).from_json(data)
 
 
+class Cell(_Union):
+    """A cell of a combination: a code of its field's list, any value (empty too), or empty.
+
+    One of:
+
+    - :class:`AnyCell` (``kind: any``)
+    - :class:`EmptyCell` (``kind: empty``)
+    - :class:`CodeCell` (``kind: code``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Cell:
+        return _variant(_CELL, "Cell", "kind", data).from_json(data)
+
+
 class ConstructedCurve(_Union):
     """A constructed curve, as the create commands take it.
 
@@ -6129,6 +6151,30 @@ class CloudSource(_Model):
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Combination(_Model):
+    """One combination: a cell for each field of its group, in the group's order.
+    Attributes:
+        subtype: The subtype whose records it is for (docs/adr/0422); none: every record's.
+    """
+    cells: list[Cell]
+    subtype: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cells"] = [e0.to_json() for e0 in self.cells]
+        if self.subtype is not UNSET:
+            out["subtype"] = self.subtype
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Combination:
+        return cls(
+            cells=[Cell.from_json(e0) for e0 in data["cells"]],
+            subtype=data.get("subtype", UNSET),
         )
 
 
@@ -10569,6 +10615,39 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldGroup(_Model):
+    """A group of fields whose values go together.
+    Attributes:
+        name: The group's name, once in the layer.
+        fields: Its fields' keys, in its order: 2–8 single-valued listed fields.
+        rows: The combinations allowed.
+        restrictive: A combination none of its rows allows is refused (advisory: warned).
+    """
+    name: str
+    fields: list[str]
+    rows: list[Combination]
+    restrictive: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["fields"] = list(self.fields)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.restrictive is not UNSET:
+            out["restrictive"] = self.restrictive
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldGroup:
+        return cls(
+            name=data["name"],
+            fields=list(data["fields"]),
+            rows=[Combination.from_json(e0) for e0 in data["rows"]],
+            restrictive=data.get("restrictive", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldRename(_Model):
     """A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
     key `from` becomes `to`, its values kept.
@@ -13636,6 +13715,8 @@ class LayerNode(_Model):
         compose: How it is composed into the drawing (Katman çizimi, docs/adr/0226 §3,
             §4): opacity, blending mode, the mask it cuts into other layers;
             absent, opaque and normal. Only a layer has it, never a group.
+        contingents: Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
+            layer holding objects has them.
         feed: Where the layer's objects were taken from, to take them again
             (docs/adr/0208 §10). Only a layer has it, never a group.
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
@@ -13676,6 +13757,7 @@ class LayerNode(_Model):
     actions: list[LayerAction] | Unset = UNSET
     card: InfoCard | None | Unset = UNSET
     compose: LayerCompose | None | Unset = UNSET
+    contingents: list[FieldGroup] | Unset = UNSET
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
@@ -13705,6 +13787,8 @@ class LayerNode(_Model):
             out["card"] = None if self.card is None else self.card.to_json()
         if self.compose is not UNSET:
             out["compose"] = None if self.compose is None else self.compose.to_json()
+        if self.contingents is not UNSET:
+            out["contingents"] = [e0.to_json() for e0 in self.contingents]
         if self.feed is not UNSET:
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
@@ -13745,6 +13829,7 @@ class LayerNode(_Model):
             actions=[LayerAction.from_json(e0) for e0 in data["actions"]] if "actions" in data else UNSET,
             card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
+            contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
@@ -14265,6 +14350,40 @@ class LayersComposed(_Model):
             layer=data["layer"],
             changed=data["changed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersContingents(_Model):
+    """Input of `cad.layers.contingents` v1: a layer's value groups written as one undo step “Değer
+    bileşimleri”; the groups given (none takes them away). A layer that already has them is left as it is.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_contingents` (groups that do not
+    fit the layer's fields, `contingents_problem`, path `groups/<where>`).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        groups: The groups, in their order.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    groups: list[FieldGroup] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["groups"] = [e0.to_json() for e0 in self.groups]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersContingents:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            groups=[FieldGroup.from_json(e0) for e0 in data["groups"]] if "groups" in data else list(),
         )
 
 
@@ -24246,6 +24365,49 @@ class LookupBlockParameter(BlockParameter):
 
 
 @dataclass(kw_only=True, slots=True)
+class AnyCell(Cell):
+    TAG_VALUE: ClassVar[str] = "any"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "any"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnyCell:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class EmptyCell(Cell):
+    TAG_VALUE: ClassVar[str] = "empty"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "empty"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EmptyCell:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class CodeCell(Cell):
+    TAG_VALUE: ClassVar[str] = "code"
+    code: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "code"}
+        out["code"] = self.code
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CodeCell:
+        return cls(
+            code=data["code"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CircleConstructedCurve(ConstructedCurve):
     """`cad.circle.create`'s `c` and `r`.
     Attributes:
@@ -29219,6 +29381,9 @@ _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "upd
 _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParameter, "polar": PolarBlockParameter, "angle": AngleBlockParameter, "point": PointBlockParameter, "flip": FlipBlockParameter, "visibility": VisibilityBlockParameter, "lookup": LookupBlockParameter}
 
 
+_CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": CodeCell}
+
+
 _CONSTRUCTED_CURVE: dict[str, type[ConstructedCurve]] = {"circle": CircleConstructedCurve, "arc": ArcConstructedCurve, "ellipse": EllipseConstructedCurve}
 
 
@@ -29346,6 +29511,7 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "AnyCell",
     "ArcConstructedCurve",
     "ArcContinueCurveConstruction",
     "ArcCreate",
@@ -29440,6 +29606,7 @@ __all__ = [
     "Bounds",
     "CalloutKind",
     "CalloutKindName",
+    "Cell",
     "CellRange",
     "CenterSubPlace",
     "ChamferRectangleCorners",
@@ -29478,6 +29645,8 @@ __all__ = [
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
+    "CodeCell",
+    "Combination",
     "CommitResult",
     "ConstructedCurve",
     "ConstructionEntity",
@@ -29562,6 +29731,7 @@ __all__ = [
     "EllipseEntity",
     "EllipseEntityGeometry",
     "Ellipsoid",
+    "EmptyCell",
     "EmptyInput",
     "EndSubPlace",
     "EnforceFormsOp",
@@ -29637,6 +29807,7 @@ __all__ = [
     "FenceSelectRegion",
     "FieldChoice",
     "FieldFormItem",
+    "FieldGroup",
     "FieldNetworkDirection",
     "FieldRename",
     "FieldUse",
@@ -29792,6 +29963,7 @@ __all__ = [
     "LayersCompose",
     "LayersComposePlan",
     "LayersComposed",
+    "LayersContingents",
     "LayersEdit",
     "LayersEdited",
     "LayersFilter",

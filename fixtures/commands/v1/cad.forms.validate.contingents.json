@@ -1,0 +1,2051 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.validate",
+ "commandVersion": 1,
+ "title": "Formu denetle ve değer bileşimleri",
+ "note": "ADR 0423 §2: kısıtlayıcı grup seçenekleri daraltır; dokunulan grubun bileşimi yoksa form_combination. Written by scripts/fixtures/contingents_cases.py with the form twin of forms_cases.py, without KentOS code; the issues' sentences are the core's ($any).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Değer bileşimleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "forms": [
+    {
+     "id": "bina",
+     "name": "Bina",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "tur",
+        "field": "Tür"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme"
+       },
+       {
+        "type": "field",
+        "id": "cati",
+        "field": "Çatı"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "d862376edd09b58a4b4de35b406cfaf1",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "tur",
+          "field": "Tür"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "field",
+          "id": "cati",
+          "field": "Çatı"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "konut",
+        "label": "Konut"
+       },
+       {
+        "code": "sanayi",
+        "label": "Sanayi"
+       },
+       {
+        "code": "depo",
+        "label": "Depo"
+       }
+      ]
+     },
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ahsap",
+        "label": "Ahşap"
+       },
+       {
+        "code": "beton",
+        "label": "Betonarme"
+       },
+       {
+        "code": "celik",
+        "label": "Çelik"
+       },
+       {
+        "code": "tas",
+        "label": "Taş"
+       }
+      ],
+      "default": "ahsap"
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "name": "Çatı",
+      "kind": "text",
+      "values": [
+       {
+        "code": "duz",
+        "label": "Düz"
+       },
+       {
+        "code": "kirma",
+        "label": "Kırma"
+       },
+       {
+        "code": "teras",
+        "label": "Teras"
+       }
+      ]
+     }
+    ],
+    "subtypes": {
+     "field": "Tür",
+     "types": [
+      {
+       "code": "konut"
+      },
+      {
+       "code": "sanayi"
+      },
+      {
+       "code": "depo"
+      }
+     ]
+    },
+    "contingents": [
+     {
+      "name": "Yapı",
+      "fields": [
+       "Tür",
+       "Malzeme"
+      ],
+      "restrictive": true,
+      "rows": [
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "konut"
+         },
+         {
+          "kind": "any"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "sanayi"
+         },
+         {
+          "kind": "code",
+          "code": "beton"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "sanayi"
+         },
+         {
+          "kind": "code",
+          "code": "celik"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "depo"
+         },
+         {
+          "kind": "code",
+          "code": "tas"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "depo"
+         },
+         {
+          "kind": "empty"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Çatı",
+      "fields": [
+       "Malzeme",
+       "Çatı"
+      ],
+      "rows": [
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "ahsap"
+         },
+         {
+          "kind": "code",
+          "code": "kirma"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "beton"
+         },
+         {
+          "kind": "any"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "celik"
+         },
+         {
+          "kind": "code",
+          "code": "duz"
+         }
+        ]
+       },
+       {
+        "cells": [
+         {
+          "kind": "code",
+          "code": "celik"
+         },
+         {
+          "kind": "code",
+          "code": "teras"
+         }
+        ],
+        "subtype": "sanayi"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "fabrika",
+    "name": "Fabrika",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "konut",
+        "label": "Konut"
+       },
+       {
+        "code": "sanayi",
+        "label": "Sanayi"
+       },
+       {
+        "code": "depo",
+        "label": "Depo"
+       }
+      ]
+     },
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ahsap",
+        "label": "Ahşap"
+       },
+       {
+        "code": "beton",
+        "label": "Betonarme"
+       },
+       {
+        "code": "celik",
+        "label": "Çelik"
+       },
+       {
+        "code": "tas",
+        "label": "Taş"
+       }
+      ],
+      "default": "ahsap"
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "name": "Çatı",
+      "kind": "text",
+      "values": [
+       {
+        "code": "duz",
+        "label": "Düz"
+       },
+       {
+        "code": "kirma",
+        "label": "Kırma"
+       },
+       {
+        "code": "teras",
+        "label": "Teras"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "koruma",
+    "name": "Koruma alanı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "kilitli",
+      "name": "Sit alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Tür",
+        "kind": "text",
+        "values": [
+         {
+          "code": "konut",
+          "label": "Konut"
+         },
+         {
+          "code": "sanayi",
+          "label": "Sanayi"
+         },
+         {
+          "code": "depo",
+          "label": "Depo"
+         }
+        ]
+       },
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ahsap",
+          "label": "Ahşap"
+         },
+         {
+          "code": "beton",
+          "label": "Betonarme"
+         },
+         {
+          "code": "celik",
+          "label": "Çelik"
+         },
+         {
+          "code": "tas",
+          "label": "Taş"
+         }
+        ],
+        "default": "ahsap"
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       },
+       {
+        "name": "Etiket",
+        "kind": "text",
+        "multiple": true,
+        "values": [
+         {
+          "code": "a",
+          "label": "A"
+         },
+         {
+          "code": "b",
+          "label": "B"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "attrs": {
+     "Tür": "konut",
+     "Malzeme": "ahsap",
+     "Çatı": "kirma"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "attrs": {
+     "Tür": "sanayi",
+     "Malzeme": "beton",
+     "Çatı": "duz"
+    },
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "bina",
+    "attrs": {
+     "Malzeme": "celik"
+    },
+    "pts": [
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420010
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "bina",
+    "attrs": {
+     "Tür": "depo",
+     "Malzeme": "tas"
+    },
+    "pts": [
+     {
+      "x": 487080,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420010
+     },
+     {
+      "x": 487080,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487100,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420010
+     },
+     {
+      "x": 487100,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "konut: malzeme daraltılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "konut",
+        "Malzeme": "ahsap",
+        "Çatı": "kirma"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi: malzeme betonarme ve çelik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "beton",
+        "Çatı": "duz"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depo: malzeme taş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:4"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "tas"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "depo",
+        "Malzeme": "tas"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türsüz çelik: tür seçenekleri çeliği alanlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:3"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "celik"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayıt: daraltma yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:5"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {}
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayiye ahşap: bileşim sorunu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:2",
+      "values": {
+       "Malzeme": "ahsap"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        },
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "ahsap",
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "ahsap",
+        "Çatı": "duz"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konutu sanayi yapmak, ahşap kalınca",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:1",
+      "values": {
+       "Tür": "sanayi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "tur",
+         "field": "Tür",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "ahsap",
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "ahsap",
+        "Çatı": "kirma"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konutu sanayi ve betonarme yapmak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:1",
+      "values": {
+       "Tür": "sanayi",
+       "Malzeme": "beton"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "beton",
+        "Çatı": "kirma"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "danışma grubu: ahşap düz çatı uyarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:1",
+      "values": {
+       "Çatı": "duz"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "cati",
+         "field": "Çatı",
+         "message": "$any"
+        }
+       ],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "konut",
+        "Malzeme": "ahsap",
+        "Çatı": "duz"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "danışma grubu: çelik teras sanayide geçerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:2",
+      "values": {
+       "Malzeme": "celik",
+       "Çatı": "teras"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "celik",
+        "Çatı": "teras"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "danışma grubu: çelik teras türsüz kayıtta uyarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:3",
+      "values": {
+       "Çatı": "teras"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "cati",
+         "field": "Çatı",
+         "message": "$any"
+        }
+       ],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "celik",
+        "Çatı": "teras"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depoya betonarme: sorun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:4",
+      "values": {
+       "Malzeme": "beton"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "tas"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "depo",
+        "Malzeme": "beton"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "depoyu boşaltmak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:4",
+      "values": {
+       "Malzeme": ""
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "tas"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "depo"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni kayıt, sanayi: varsayılan ahşap sorun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:5",
+      "values": {
+       "Tür": "sanayi"
+      },
+      "defaults": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "tur",
+         "field": "Tür",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni kayıt, sanayi çelik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:5",
+      "values": {
+       "Tür": "sanayi",
+       "Malzeme": "celik"
+      },
+      "defaults": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "celik",
+        "Tür": "sanayi"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni kayıt, depo taş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:5",
+      "values": {
+       "Tür": "depo",
+       "Malzeme": "tas"
+      },
+      "defaults": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "tas"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "tas",
+        "Tür": "depo"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni kayıt, varsayılanlarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:5",
+      "defaults": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {}
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dokunulmayan grup sorulmaz: türsüz kayda çatı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:3",
+      "values": {
+       "Tür": "konut"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "celik",
+        "Tür": "konut"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "malzemesi çelik türsüz kayda depo: sorun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:3",
+      "values": {
+       "Tür": "depo"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "tur",
+         "field": "Tür",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi",
+          "depo"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "celik",
+          "tas"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Malzeme": "celik",
+        "Tür": "depo"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sanayi: çatı seçenekleri daraltılmaz (danışma)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut",
+          "sanayi"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true,
+         "choices": [
+          "beton",
+          "celik"
+         ]
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "sanayi",
+        "Malzeme": "beton",
+        "Çatı": "duz"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "konutun ahşabı düzden kırmaya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "uid": "$uidOf:1",
+      "values": {
+       "Çatı": "kirma"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "tur",
+         "shown": true,
+         "choices": [
+          "konut"
+         ]
+        },
+        {
+         "id": "malzeme",
+         "shown": true
+        },
+        {
+         "id": "cati",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Tür": "konut",
+        "Malzeme": "ahsap",
+        "Çatı": "kirma"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

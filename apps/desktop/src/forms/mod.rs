@@ -11,6 +11,7 @@
 //! commands ask it again before they write.
 
 pub mod audit;
+pub mod contingents;
 pub mod designer;
 mod designer_view;
 pub mod entry;
@@ -26,13 +27,14 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 7] = [
+pub const COMMANDS: [&str; 8] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
     "data.formAudit",
     "data.tableStyles",
     "data.subtypes",
+    "data.contingents",
     "data.duplicate",
 ];
 
@@ -75,6 +77,7 @@ impl App {
             "data.formAudit" => return self.open_form_audit(None),
             "data.tableStyles" => return self.open_table_styles(),
             "data.subtypes" => return self.open_subtypes(),
+            "data.contingents" => return self.open_contingents(),
             "data.duplicate" => return self.duplicate_selected(),
             _ => {}
         }

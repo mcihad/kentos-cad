@@ -1362,6 +1362,45 @@ def service_links_problem(layers, connections, entities):
     return None
 
 
+def contingents_problem(fields, subtypes, groups):
+    """The contract's `contingents_problem` (docs/adr/0423 §1): at most 50 groups, each named once, 2–8 single-valued
+    listed fields each once, 1–10000 rows of a cell per field, codes of the fields' lists, subtypes of the layer's, no
+    row twice."""
+    def key(f):
+        return f.get("id") or f["name"]
+
+    if len(groups) > 50:
+        return "bir katmanın en çok 50 değer grubu olur"
+    names = set()
+    for g in groups:
+        if not g["name"] or len(g["name"]) > 64 or g["name"].strip() != g["name"] or g["name"] in names:
+            return f"“{g['name']}” bir grup adı olamaz ya da iki kez var"
+        names.add(g["name"])
+        if not 2 <= len(g["fields"]) <= 8 or len(set(g["fields"])) != len(g["fields"]):
+            return f"“{g['name']}” grubunun alanları olamaz"
+        listed = []
+        for k in g["fields"]:
+            f = next((x for x in fields if key(x) == k), None)
+            if f is None or not f.get("values") or (f.get("multiple") and f["kind"] == "text"):
+                return f"“{k}” alanı “{g['name']}” grubuna giremez"
+            listed.append([c["code"] for c in f["values"]])
+        if not 1 <= len(g["rows"]) <= 10000:
+            return f"“{g['name']}” grubunun bileşimleri olamaz"
+        seen = []
+        codes = [t["code"] for t in (subtypes or {}).get("types", [])]
+        for r in g["rows"]:
+            if len(r["cells"]) != len(g["fields"]):
+                return f"“{g['name']}” grubunda hücre sayısı alanlarınkinden farklı"
+            if any(c["kind"] == "code" and c["code"] not in ok for c, ok in zip(r["cells"], listed)):
+                return f"“{g['name']}” grubunda listede olmayan bir kod var"
+            if "subtype" in r and r["subtype"] not in codes:
+                return f"“{g['name']}” grubunda olmayan bir alt tür var"
+            if r in seen:
+                return f"“{g['name']}” grubunda bir bileşim iki kez var"
+            seen.append(r)
+    return None
+
+
 def subtypes_problem(fields, st):
     """The contract's `subtypes_problem` (docs/adr/0422 §1): the subtype field a single-valued listed field, the
     subtypes its codes, each once, labels within 64 characters; each rule a field of the layer, not the subtype field,
@@ -2861,6 +2900,8 @@ class _Schema:
                 **({"tableStyles": (self.table_styles_, False)} if self.forms else {}),
                 # Schema 60 (docs/adr/0422 §4): the subtypes.
                 **({"subtypes": (self.subtypes_, False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0423 §4): the value groups.
+                **({"contingents": (self.contingents_, False)} if self.forms else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2895,6 +2936,12 @@ class _Schema:
             self.fail("bad_value", "grubun katman çizimi olmaz; katman çizimi yalnız katmanındır")
         if "tableStyles" in n and n["type"] == "group":
             self.fail("bad_value", "grubun koşullu biçimi olmaz; yalnız katmanın olur")
+        if "contingents" in n:
+            if n["type"] == "group":
+                self.fail("bad_value", "grubun değer bileşimleri olmaz; yalnız katmanın olur")
+            problem = contingents_problem(n.get("fields", []), n.get("subtypes"), n["contingents"])
+            if problem:
+                self.fail("bad_value", problem)
         if "subtypes" in n:
             if n["type"] == "group":
                 self.fail("bad_value", "grubun alt türleri olmaz; yalnız katmanın olur")
@@ -2902,6 +2949,28 @@ class _Schema:
             if problem:
                 self.fail("bad_value", problem)
         return n
+
+    # Schema 60's value groups (docs/adr/0423 §1): field by field; `restrictive` only true, the list not empty.
+
+    def contingents_(self, v):
+        def only_true(x):
+            if self.bool(x) is not True:
+                self.fail("bad_value", "restrictive yalnız true yazılır")
+            return True
+
+        def cell(x):
+            c = self.fields({"kind": (self.enum(("any", "empty", "code")), True), "code": (self.text, False)})(x)
+            if (c["kind"] == "code") != ("code" in c):
+                self.fail("bad_value", "kod yalnız code hücresinde yazılır, orada zorunludur")
+            return c
+
+        row = self.fields({"cells": (self.array(cell), True), "subtype": (self.text, False)})
+        group = self.fields({"name": (self.text, True), "fields": (self.array(self.text), True),
+                             "restrictive": (only_true, False), "rows": (self.array(row), True)})
+        out = self.array(group)(v)
+        if not out:
+            self.fail("bad_value", "boş liste yazılmaz; grup yoksa alan hiç yazılmaz")
+        return out
 
     # Schema 60's subtypes (docs/adr/0422 §1): field by field; `required` only true, the label and the lists not
     # written empty. Their fit to the layer's fields is checked with the layer.

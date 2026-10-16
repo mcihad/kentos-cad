@@ -1032,6 +1032,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let (mut plot, mut frozen) = (None, None);
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
+    let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -1104,6 +1105,36 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 subtypes = Some((at, read));
             }
+            // Schema 60 (docs/adr/0423 §4): the value combinations, read whole; checked below.
+            "contingents" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: Vec<kentos_contracts::FieldGroup> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("değer bileşimleri okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "değer bileşimleri yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if read.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; grup yoksa alan hiç yazılmaz",
+                    ));
+                }
+                contingents = Some((at, read));
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -1159,7 +1190,26 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             return Err(r.fail_at(Code::BadValue, *at, &problem));
         }
     }
+    if let Some((at, read)) = &contingents {
+        if kind == Some(LayerNodeType::Group) {
+            return Err(r.fail_at(
+                Code::BadValue,
+                *at,
+                "grubun değer bileşimleri olmaz; yalnız katmanın olur",
+            ));
+        }
+        let none = Vec::new();
+        let fields_now: &Vec<_> = fields.as_ref().unwrap_or(&none);
+        if let Some((_, problem)) = kentos_contracts::contingents_problem(
+            fields_now,
+            subtypes.as_ref().map(|(_, s)| s),
+            read,
+        ) {
+            return Err(r.fail_at(Code::BadValue, *at, &problem));
+        }
+    }
     Ok(LayerNode {
+        contingents: contingents.map(|(_, c)| c).unwrap_or_default(),
         subtypes: subtypes.map(|(_, s)| s),
         table_styles,
         plot,

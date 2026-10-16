@@ -115,7 +115,7 @@ pub struct Entry {
     touched: BTreeSet<String>,
     after: Attrs,
     items: Vec<FormItemState>,
-    issues: Vec<FormIssue>,
+    pub(crate) issues: Vec<FormIssue>,
     /// The groups closed now (a collapsed group starts closed).
     closed: BTreeSet<String>,
     /// The unique fields' values last asked, and what the layer said.

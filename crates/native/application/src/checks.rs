@@ -93,6 +93,7 @@ pub(crate) fn object_attrs(
         .collect();
     new_defaults(doc, layer, &mut out);
     subtype_fit(doc, layer, None, &out, at)?;
+    combination_fit(doc, layer, None, &out, at)?;
     Ok((!out.is_empty()).then_some(out))
 }
 
@@ -125,6 +126,60 @@ pub(crate) fn new_defaults(doc: &Document, layer: &str, out: &mut BTreeMap<Strin
             out.entry(f.name.clone()).or_insert(d);
         }
     }
+}
+
+/// A record's values on `layer` against the layer's value groups (docs/adr/0423 §2): a group whose
+/// fields the write changed (any it fills, for a new record) and whose rows do not allow them is
+/// `invalid_combination` when restrictive, at `{at}.{name}` of its first changed field; an advisory
+/// one is the warning `combination_unmet`. A group the write did not touch is not asked.
+pub(crate) fn combination_fit(
+    doc: &Document,
+    layer: &str,
+    before: Option<&BTreeMap<String, String>>,
+    after: &BTreeMap<String, String>,
+    at: &str,
+) -> Result<Vec<CommandWarning>, Stop> {
+    let Some(node) = doc
+        .layers()
+        .get(layer)
+        .filter(|n| !n.contingents.is_empty())
+    else {
+        return Ok(Vec::new());
+    };
+    let subtype = node
+        .subtypes
+        .as_ref()
+        .and_then(|s| s.of(&node.fields, |n| after.get(n).cloned()))
+        .map(|t| t.code.as_str());
+    let mut warnings = Vec::new();
+    for u in kentos_contracts::unmet(&node.contingents, &node.fields, subtype, |n| {
+        after.get(n).cloned()
+    }) {
+        let changed = u.group.fields.iter().find_map(|k| {
+            let f = node.fields.iter().find(|f| f.key() == k)?;
+            let now = after.get(&f.name);
+            let was = before.and_then(|b| b.get(&f.name));
+            (now != was && (before.is_some() || now.is_some())).then_some(f)
+        });
+        let Some(first) = changed else { continue };
+        let words = kentos_contracts::combination_words(u.group, &node.fields, &u.values);
+        if u.group.restrictive {
+            return Err(Stop::failed(error(
+                codes::INVALID_COMBINATION,
+                format!(
+                    "“{}” değer grubunda bu bileşim yok: {words}. Grubun bileşimlerinden birini seçin.",
+                    u.group.name
+                ),
+                Some(format!("{at}.{}", first.name)),
+            )));
+        }
+        warnings.push(CommandWarning {
+            code: codes::COMBINATION_UNMET.into(),
+            message: format!("“{}” değer grubunda bu bileşim yok: {words}.", u.group.name),
+            path: Some(format!("{at}.{}", first.name)),
+        });
+    }
+    Ok(warnings)
 }
 
 /// A record's values on `layer` against its subtype (docs/adr/0422 §2): a value written anew (one that

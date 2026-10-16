@@ -262,6 +262,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
                 .collect();
         checks::new_defaults(doc, &input.layer_id, &mut own);
         checks::subtype_fit(doc, &input.layer_id, None, &own, &at)?;
+        checks::combination_fit(doc, &input.layer_id, None, &own, &at)?;
         attrs.push(own);
     }
     let placed = placed_points(doc, input)?;

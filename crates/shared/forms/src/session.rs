@@ -49,6 +49,8 @@ pub struct Prepared {
     clear_hidden: bool,
     /// The layer's subtypes (docs/adr/0422 §2): what a record's kind narrows.
     subtypes: Option<kentos_contracts::LayerSubtypes>,
+    /// The layer's value groups (docs/adr/0423 §2).
+    groups: Vec<kentos_contracts::FieldGroup>,
 }
 
 /// An item, flattened in the form's order with its parent.
@@ -153,7 +155,37 @@ impl Prepared {
             calc_order,
             clear_hidden: body.clear_hidden,
             subtypes: None,
+            groups: Vec::new(),
         })
+    }
+
+    /// The form over a layer with value groups (docs/adr/0423 §2): a restrictive group narrows its
+    /// fields' choices to what its rows allow with the record's other values; a combination none
+    /// allows is an issue.
+    pub fn with_contingents(mut self, groups: &[kentos_contracts::FieldGroup]) -> Prepared {
+        self.groups = groups.to_vec();
+        self
+    }
+
+    /// What the restrictive groups let the field at `index` take on the record: none when they do
+    /// not narrow it.
+    fn grouped(&self, index: usize, attrs: &Attrs) -> Option<Vec<String>> {
+        let key = self.fields[index].key();
+        let subtype = self.subtype(attrs).map(|t| t.code.clone());
+        let mut out: Option<Vec<String>> = None;
+        for g in self.groups.iter().filter(|g| g.restrictive) {
+            let Some(at) = g.fields.iter().position(|k| k == key) else {
+                continue;
+            };
+            let values = g.values_of(&self.fields, &|n: &str| attrs.get(n).cloned());
+            if let Some(codes) = g.offered(at, &values, subtype.as_deref()) {
+                out = Some(match out {
+                    None => codes,
+                    Some(now) => now.into_iter().filter(|c| codes.contains(c)).collect(),
+                });
+            }
+        }
+        out
     }
 
     /// The form over a layer with `subtypes` (docs/adr/0422 §2): a record's subtype narrows the values
@@ -298,7 +330,8 @@ impl Prepared {
                 .iter()
                 .any(|r| r.field == field.key() && r.values.is_some())
         });
-        if b.choices.is_none() && !narrows {
+        let grouped = self.grouped(b.index, attrs);
+        if b.choices.is_none() && !narrows && grouped.is_none() {
             return None;
         }
         let held_codes: Vec<String> = attrs.get(&field.name).map_or_else(Vec::new, |v| {
@@ -325,6 +358,9 @@ impl Prepared {
                 .filter(|(code, _)| {
                     kentos_contracts::subtype_offers(field, subtype, code)
                         || held_codes.contains(code)
+                })
+                .filter(|(code, _)| {
+                    grouped.as_ref().is_none_or(|g| g.contains(code)) || held_codes.contains(code)
                 })
                 .filter(|(_, e)| e.is_none_or(|e| holds(e, attrs, object)))
                 .map(|(code, _)| code)
@@ -784,6 +820,7 @@ impl Prepared {
         issues.extend(self.locked(&changed, &after, object));
         issues.extend(self.retired(&changed, before, &after));
         issues.extend(self.misfits(&changed, before, &after));
+        issues.extend(self.combinations(&changed, &after, new));
         // A calculated field given a value other than its calculation's.
         for (index, value) in asked {
             if after.get(&self.fields[index].name) != value.as_ref() {
@@ -854,6 +891,7 @@ impl Prepared {
         issues.extend(self.locked(&changed, &completed, object));
         issues.extend(self.retired(&changed, before, &completed));
         issues.extend(self.misfits(&changed, before, &completed));
+        issues.extend(self.combinations(&changed, &completed, false));
         issues.extend(worked);
         issues.extend(self.validate(&completed, object));
         issues
@@ -919,6 +957,41 @@ impl Prepared {
                     f.label(),
                     codes.join(", ")
                 ),
+            ));
+        }
+        issues
+    }
+
+    /// The value groups whose fields changed (any, for a new record) and whose rows do not allow the
+    /// record's values (docs/adr/0423 §2): an error for a restrictive group, a warning for an advisory
+    /// one, at the first changed field of the group.
+    fn combinations(&self, changed: &[usize], after: &Attrs, new: bool) -> Vec<FormIssue> {
+        if self.groups.is_empty() {
+            return Vec::new();
+        }
+        let subtype = self.subtype(after).map(|t| t.code.clone());
+        let mut issues = Vec::new();
+        for u in kentos_contracts::unmet(&self.groups, &self.fields, subtype.as_deref(), |n| {
+            after.get(n).cloned()
+        }) {
+            let first = u.group.fields.iter().find_map(|k| {
+                let index = self.fields.iter().position(|f| f.key() == k)?;
+                (changed.contains(&index) || new).then_some(index)
+            });
+            let Some(index) = first else { continue };
+            let words = kentos_contracts::combination_words(u.group, &self.fields, &u.values);
+            let severity = if u.group.restrictive {
+                FormSeverity::Error
+            } else {
+                FormSeverity::Warning
+            };
+            issues.push(issue(
+                codes::COMBINATION,
+                severity,
+                self.item_of(index),
+                Some(self.fields[index].key()),
+                None,
+                format!("“{}” değer grubunda bu bileşim yok: {words}.", u.group.name),
             ));
         }
         issues

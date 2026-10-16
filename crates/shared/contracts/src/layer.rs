@@ -483,6 +483,14 @@ pub struct LayerNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub subtypes: Option<crate::subtypes::LayerSubtypes>,
+    /// Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
+    /// layer holding objects has them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::contingents::FieldGroup>>", optional)
+    )]
+    pub contingents: Vec<crate::contingents::FieldGroup>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

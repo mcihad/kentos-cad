@@ -466,6 +466,34 @@ pub struct LayersTable {
     pub expected_revision: Option<String>,
 }
 
+/// Writes a layer's value groups (Değer bileşimleri, docs/adr/0423).
+pub const CAD_LAYERS_CONTINGENTS: &str = "cad.layers.contingents";
+pub const CAD_LAYERS_CONTINGENTS_VERSION: u32 = 1;
+
+/// Input of `cad.layers.contingents` v1: a layer's value groups written as one undo step “Değer
+/// bileşimleri”; the groups given (none takes them away). A layer that already has them is left as it is.
+///
+/// Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_contingents` (groups that do not
+/// fit the layer's fields, `contingents_problem`, path `groups/<where>`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersContingents {
+    /// The layer's id.
+    pub layer: String,
+    /// The groups, in their order.
+    #[serde(default)]
+    pub groups: Vec<crate::contingents::FieldGroup>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Writes a layer's subtypes (Alt türler, docs/adr/0422).
 pub const CAD_LAYERS_SUBTYPES: &str = "cad.layers.subtypes";
 pub const CAD_LAYERS_SUBTYPES_VERSION: u32 = 1;

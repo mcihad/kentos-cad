@@ -522,12 +522,12 @@ fn retired_list(app: &mut App) {
 fn typed_buildings(app: &mut App) {
     let mut o = Objects::new();
     let rows = [
-        ("B-1", "konut", "ahsap", "3", ""),
-        ("B-2", "sanayi", "beton", "2", "Kalıp atölyesi"),
-        ("B-3", "depo", "tas", "1", ""),
-        ("B-4", "konut", "beton", "5", ""),
+        ("B-1", "konut", "ahsap", "3", "", "kirma"),
+        ("B-2", "sanayi", "beton", "2", "Kalıp atölyesi", "duz"),
+        ("B-3", "depo", "tas", "1", "", "kirma"),
+        ("B-4", "konut", "beton", "5", "", "teras"),
     ];
-    for (i, (code, kind, material, floors, note)) in rows.iter().enumerate() {
+    for (i, (code, kind, material, floors, note, roof)) in rows.iter().enumerate() {
         let x = (i % 2) as f64 * 24.0;
         let y = (i / 2) as f64 * 20.0;
         let id = o.path(
@@ -540,6 +540,7 @@ fn typed_buildings(app: &mut App) {
             ("Tür", *kind),
             ("Malzeme", *material),
             ("Kat", *floors),
+            ("Çatı", *roof),
         ];
         if !note.is_empty() {
             attrs.push(("Not", *note));
@@ -557,7 +558,17 @@ fn typed_buildings(app: &mut App) {
                                     { "code": "ahsap", "label": "Ahşap" }, { "code": "beton", "label": "Betonarme" },
                                     { "code": "celik", "label": "Çelik" }, { "code": "tas", "label": "Taş" }] },
                                 { "name": "Kat", "kind": "integer" },
-                                { "name": "Not", "kind": "text" }]);
+                                { "name": "Not", "kind": "text" },
+                                { "name": "Çatı", "kind": "text", "values": [
+                                    { "code": "duz", "label": "Düz" }, { "code": "kirma", "label": "Kırma" },
+                                    { "code": "teras", "label": "Teras" }] }]);
+        bina["contingents"] = json!([{ "name": "Malzeme ve çatı", "fields": ["Malzeme", "Çatı"], "restrictive": true, "rows": [
+            { "cells": [{ "kind": "code", "code": "ahsap" }, { "kind": "code", "code": "kirma" }] },
+            { "cells": [{ "kind": "code", "code": "beton" }, { "kind": "any" }] },
+            { "cells": [{ "kind": "code", "code": "celik" }, { "kind": "code", "code": "duz" }] },
+            { "cells": [{ "kind": "code", "code": "celik" }, { "kind": "code", "code": "teras" }], "subtype": "sanayi" },
+            { "cells": [{ "kind": "code", "code": "tas" }, { "kind": "code", "code": "kirma" }] }
+        ] }]);
         bina["subtypes"] = json!({ "field": "Tür", "types": [
             { "code": "konut" },
             { "code": "sanayi", "label": "Sanayi binası", "fields": [
@@ -577,6 +588,7 @@ fn typed_buildings(app: &mut App) {
             { "type": "field", "id": "tur", "field": "Tür" },
             { "type": "field", "id": "malzeme", "field": "Malzeme" },
             { "type": "field", "id": "kat", "field": "Kat" },
+            { "type": "field", "id": "cati", "field": "Çatı" },
             { "type": "field", "id": "not", "field": "Not" }
         ]),
     );
@@ -585,6 +597,22 @@ fn typed_buildings(app: &mut App) {
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
     app.features.layer = Some("bina".into());
+}
+
+/// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
+fn contingents_window(app: &mut App) {
+    typed_buildings(app);
+    run(app, "data.contingents");
+}
+
+/// A timber house given steel: no row of the group allows steel with a hipped roof; the roof's
+/// choices follow the material (docs/adr/0423 §2). Kaydet is pressed, so the problem is shown.
+fn combination_refused(app: &mut App) {
+    typed_buildings(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Malzeme".into(), "celik".into()));
+    entry(app, entry::Event::Save);
 }
 
 /// Alt türler's window on the buildings, the industrial subtype chosen (docs/adr/0422 §5).
@@ -1368,6 +1396,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-hesap-yenile", recompute),
         ("form-alt-turler", subtypes_window),
         ("form-alt-tur-degisti", subtype_changed),
+        ("form-bilesimler", contingents_window),
+        ("form-bilesim-sorunu", combination_refused),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1576,6 +1606,59 @@ mod tests {
     }
 
     #[test]
+    fn a_value_group_narrows_the_choices_and_refuses_a_combination() {
+        let mut app = crate::files_testing::app_with_drawing();
+        combination_refused(&mut app);
+        let e = app.form_entry.as_ref().expect("the editor stays open");
+        assert!(
+            e.issues
+                .iter()
+                .any(|i| i.code == kentos_forms::codes::COMBINATION),
+            "{:?}",
+            e.issues
+        );
+        let roofs = e
+            .state("cati")
+            .and_then(|s| s.choices.clone())
+            .unwrap_or_default();
+        assert_eq!(roofs, ["duz", "kirma"], "steel's roof, and the one held");
+        let doc = &app.document.as_ref().unwrap().model;
+        let held = doc.by_layer_with_uids("bina").next().unwrap().1;
+        assert_eq!(
+            held.base().attrs.get("Malzeme").map(String::as_str),
+            Some("ahsap"),
+            "nothing written"
+        );
+    }
+
+    #[test]
+    fn the_contingents_window_writes_through_its_command_and_closes() {
+        use crate::forms::contingents::Event;
+        let mut app = crate::files_testing::app_with_drawing();
+        contingents_window(&mut app);
+        let _ = app.update(Message::Contingents(Event::AddRow));
+        let _ = app.update(Message::Contingents(Event::Cell(
+            5,
+            0,
+            kentos_contracts::Cell::Code {
+                code: "ahsap".into(),
+            },
+        )));
+        let _ = app.update(Message::Contingents(Event::Cell(
+            5,
+            1,
+            kentos_contracts::Cell::Code { code: "duz".into() },
+        )));
+        let _ = app.update(Message::Contingents(Event::Save));
+        assert!(app.contingents.is_none(), "Kaydet closes the window");
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(
+            doc.layers().get("bina").unwrap().contingents[0].rows.len(),
+            6
+        );
+    }
+
+    #[test]
     fn a_changed_kind_keeps_its_values_until_they_are_emptied() {
         let mut app = crate::files_testing::app_with_drawing();
         subtype_changed(&mut app);
@@ -1590,11 +1673,9 @@ mod tests {
             .state("malzeme")
             .and_then(|s| s.choices.clone())
             .unwrap_or_default();
-        assert_eq!(
-            choices,
-            ["ahsap", "beton", "celik"],
-            "the held value stays offered"
-        );
+        // Industrial offers concrete and steel, the value group steel only with a flat roof (the
+        // house's is hipped); the held timber stays offered.
+        assert_eq!(choices, ["ahsap", "beton"], "the held value stays offered");
         let _ = app.update(Message::FormEntry(entry::Event::ClearMisfits));
         let e = app.form_entry.as_ref().unwrap();
         assert!(e.misfits().is_empty());

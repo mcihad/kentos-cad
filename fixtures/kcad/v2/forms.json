@@ -337,6 +337,20 @@
           "scale": 2,
           "split": "ratio",
           "merge": "sum"
+        },
+        {
+          "name": "Sınıf",
+          "kind": "text",
+          "values": [
+            {
+              "code": "a",
+              "label": "A sınıfı"
+            },
+            {
+              "code": "b",
+              "label": "B sınıfı"
+            }
+          ]
         }
       ],
       "tableStyles": [
@@ -376,7 +390,53 @@
             ]
           }
         ]
-      }
+      },
+      "contingents": [
+        {
+          "name": "Durum ve sınıf",
+          "fields": [
+            "Durum",
+            "Sınıf"
+          ],
+          "restrictive": true,
+          "rows": [
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "iyi"
+                },
+                {
+                  "kind": "any"
+                }
+              ]
+            },
+            {
+              "cells": [
+                {
+                  "kind": "code",
+                  "code": "inceleme"
+                },
+                {
+                  "kind": "code",
+                  "code": "a"
+                }
+              ],
+              "subtype": "inceleme"
+            },
+            {
+              "cells": [
+                {
+                  "kind": "empty"
+                },
+                {
+                  "kind": "empty"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "activeLayer": "bina",

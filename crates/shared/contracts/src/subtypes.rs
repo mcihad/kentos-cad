@@ -129,12 +129,27 @@ impl LayerSubtypes {
 /// labelled when its subtype does not offer it.
 pub fn offered_on(
     subtypes: Option<&LayerSubtypes>,
+    groups: &[crate::contingents::FieldGroup],
     fields: &[LayerField],
     field: &LayerField,
     value_of: impl Fn(&str) -> Option<String>,
 ) -> Vec<crate::fields::FieldChoice> {
     let value = value_of(&field.name).unwrap_or_default();
     let subtype = subtypes.and_then(|s| s.of(fields, &value_of));
+    // A restrictive value group narrows it to what its rows allow with the other values (docs/adr/0423).
+    let mut grouped: Option<Vec<String>> = None;
+    for g in groups.iter().filter(|g| g.restrictive) {
+        let Some(at) = g.fields.iter().position(|k| k == field.key()) else {
+            continue;
+        };
+        let values = g.values_of(fields, &value_of);
+        if let Some(codes) = g.offered(at, &values, subtype.map(|t| t.code.as_str())) {
+            grouped = Some(match grouped {
+                None => codes,
+                Some(now) => now.into_iter().filter(|c| codes.contains(c)).collect(),
+            });
+        }
+    }
     let held: Vec<&str> = if field.holds_many() {
         field.codes_of(&value)
     } else {
@@ -144,14 +159,20 @@ pub fn offered_on(
         .offered_values(&value)
         .into_iter()
         .filter_map(|mut c| {
-            if subtype_offers(field, subtype, &c.code) {
+            let in_group = grouped.as_ref().is_none_or(|g| g.contains(&c.code));
+            if subtype_offers(field, subtype, &c.code) && in_group {
                 return Some(c);
             }
             if !held.contains(&c.code.as_str()) {
                 return None;
             }
             if !c.retired {
-                c.label = format!("{} (alt türde yok)", c.label);
+                let why = if in_group {
+                    "alt türde yok"
+                } else {
+                    "bileşimde yok"
+                };
+                c.label = format!("{} ({why})", c.label);
             }
             Some(c)
         })

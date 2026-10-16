@@ -100,10 +100,12 @@ impl Document {
                     .layers
                     .get(&f.layer)
                     .map_or(&[][..], |n| n.fields.as_slice());
-                let subtypes = self.layers.get(&f.layer).and_then(|n| n.subtypes.as_ref());
+                let node = self.layers.get(&f.layer);
+                let subtypes = node.and_then(|n| n.subtypes.as_ref());
+                let groups = node.map_or(&[][..], |n| n.contingents.as_slice());
                 Prepared::new_with(body, fields, &variables, unit, &self.form_world(body))
                     .ok()
-                    .map(|p| p.with_subtypes(subtypes))
+                    .map(|p| p.with_subtypes(subtypes).with_contingents(groups))
                     .map(|p| (f.layer.clone(), p))
             })
             .collect();

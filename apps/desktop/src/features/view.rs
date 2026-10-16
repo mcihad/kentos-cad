@@ -331,6 +331,7 @@ impl App {
                                 let node = model.layers().get(&e.base().layer_id);
                                 kentos_contracts::offered_on(
                                     node.and_then(|n| n.subtypes.as_ref()),
+                                    node.map_or(&[][..], |n| n.contingents.as_slice()),
                                     node.map_or(&[][..], |n| n.fields.as_slice()),
                                     f,
                                     |n| e.base().attrs.get(n).cloned(),

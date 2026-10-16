@@ -97,6 +97,9 @@ pub mod codes {
     /// A value the record's subtype does not offer, written anew or left when the subtype changed
     /// (docs/adr/0422 §2).
     pub const VALUE_NOT_IN_SUBTYPE: &str = "form_value_not_in_subtype";
+    /// The record's values of a value group that no row allows (docs/adr/0423 §2): an error for a
+    /// restrictive group, a warning for an advisory one.
+    pub const COMBINATION: &str = "form_combination";
     /// A check of a shown, filled field is not true.
     pub const CHECK_FAILED: &str = "form_check_failed";
     /// A write to a field the form shows read-only.

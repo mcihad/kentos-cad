@@ -666,6 +666,17 @@ impl LayerTree {
         }
     }
 
+    /// A layer's value combinations, as an undo or a redo puts them (docs/adr/0423).
+    pub(crate) fn replace_contingents(
+        &mut self,
+        id: &str,
+        groups: &[kentos_contracts::FieldGroup],
+    ) {
+        if let Some(node) = self.node_mut(id) {
+            node.contingents = groups.to_vec();
+        }
+    }
+
     pub(crate) fn replace_service(&mut self, id: &str, served: &crate::history::Served) {
         if let Some(node) = self.node_mut(id) {
             node.name.clone_from(&served.name);
@@ -688,6 +699,7 @@ impl LayerTree {
         LayerNode {
             table_styles: Vec::new(),
             subtypes: None,
+            contingents: Vec::new(),
             plot: new.plot.filter(|p| !p),
             frozen: new.frozen.filter(|f| *f),
             id,

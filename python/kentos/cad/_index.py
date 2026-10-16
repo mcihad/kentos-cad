@@ -64,6 +64,7 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.validate": forms.validate,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
+    "cad.layers.contingents": layers.contingents,
     "cad.layers.edit": layers.edit,
     "cad.layers.filter": layers.filter,
     "cad.layers.find": layers.find,

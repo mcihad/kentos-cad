@@ -241,6 +241,7 @@ mod tests {
         LayerNode {
             table_styles: Vec::new(),
             subtypes: None,
+            contingents: Vec::new(),
             frozen: None,
             plot: None,
             id: id.to_owned(),

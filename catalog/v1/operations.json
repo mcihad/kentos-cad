@@ -1169,6 +1169,13 @@
       ],
       "note": "Seçili nesneler alt kayıtlarıyla cad.records.duplicate ile tek adımda çoğaltılır (ADR 0415)."
     },
+    "data.contingents": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.contingents"
+      ],
+      "note": "Gruplar cad.layers.contingents ile tek adımda yazılır; yazmalar, formlar ve tablo onları okur (ADR 0423)."
+    },
     "data.subtypes": {
       "level": "semantic",
       "via": [

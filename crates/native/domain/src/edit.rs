@@ -254,6 +254,11 @@ impl Document {
             .subtypes
             .as_ref()
             .and_then(|s| kentos_contracts::follow_subtypes(s, &fields));
+        next_node.contingents = kentos_contracts::follow_contingents(
+            &node.contingents,
+            &fields,
+            next_node.subtypes.as_ref(),
+        );
         if before == fields && changes.is_empty() {
             return Ok(false);
         }
@@ -567,10 +572,54 @@ impl Document {
         if node.subtypes == next {
             return Ok(false);
         }
-        let op = Op::LayerSubtypes {
+        // A row naming a subtype gone goes with it (docs/adr/0423 §1).
+        let groups =
+            kentos_contracts::follow_contingents(&node.contingents, &node.fields, next.as_ref());
+        let mut ops = vec![Op::LayerSubtypes {
             layer: id.to_owned(),
             before: node.subtypes.clone().map(Box::new),
             after: next.map(Box::new),
+        }];
+        if groups != node.contingents {
+            ops.push(Op::LayerContingents {
+                layer: id.to_owned(),
+                before: node.contingents.clone(),
+                after: groups,
+            });
+        }
+        self.record(ops, label);
+        Ok(true)
+    }
+
+    /// A layer's value combinations (Değer bileşimleri, docs/adr/0423) as one undo step `label`;
+    /// whether they changed. A group, or groups that do not fit the layer's fields, are refused.
+    pub fn set_layer_contingents(
+        &mut self,
+        id: &str,
+        next: Vec<kentos_contracts::FieldGroup>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if !next.is_empty() && node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; değer bileşimleri yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some((_, problem)) =
+            kentos_contracts::contingents_problem(&node.fields, node.subtypes.as_ref(), &next)
+        {
+            return Err(Refusal(format!("Değer bileşimleri: {problem}")));
+        }
+        if node.contingents == next {
+            return Ok(false);
+        }
+        let op = Op::LayerContingents {
+            layer: id.to_owned(),
+            before: node.contingents.clone(),
+            after: next,
         };
         self.record(vec![op], label);
         Ok(true)
@@ -1102,6 +1151,13 @@ fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::Lay
             layer: layer.clone(),
             before: node.subtypes.clone().map(Box::new),
             after: next.subtypes.clone().map(Box::new),
+        });
+    }
+    if node.contingents != next.contingents {
+        ops.push(Op::LayerContingents {
+            layer: layer.clone(),
+            before: node.contingents.clone(),
+            after: next.contingents.clone(),
         });
     }
     if node.table_styles != next.table_styles {

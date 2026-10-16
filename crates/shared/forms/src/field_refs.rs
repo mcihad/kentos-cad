@@ -339,6 +339,18 @@ fn node_sites(node: &mut LayerNode, f: &mut Visit<'_>) {
             }
         }
     }
+    // The value combinations name the fields by key (docs/adr/0423 §1).
+    for (i, g) in node.contingents.iter_mut().enumerate() {
+        let place = format!("{w}{SEP}Değer bileşimleri{SEP}“{}”", g.name);
+        for (j, k) in g.fields.iter_mut().enumerate() {
+            put(
+                FieldUseHow::Key,
+                format!("{at}/contingents/{i}/fields/{j}"),
+                place.clone(),
+                k,
+            );
+        }
+    }
     for (i, s) in node.table_styles.iter_mut().enumerate() {
         let rule = format!("{w}{SEP}Koşullu biçim, {}. kural", i + 1);
         if let Some(field) = s.field.as_mut() {

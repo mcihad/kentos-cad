@@ -142,6 +142,12 @@ pub(crate) enum Op {
         before: Option<Box<kentos_contracts::LayerSubtypes>>,
         after: Option<Box<kentos_contracts::LayerSubtypes>>,
     },
+    /// A layer's value combinations (Değer bileşimleri, docs/adr/0423), before and after.
+    LayerContingents {
+        layer: String,
+        before: Vec<kentos_contracts::FieldGroup>,
+        after: Vec<kentos_contracts::FieldGroup>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -305,6 +311,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerSubtypes {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerContingents {
+                layer,
+                before,
+                after,
+            } => Op::LayerContingents {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -737,6 +752,7 @@ impl Document {
                 | Op::LayerCompose { .. }
                 | Op::LayerTableStyles { .. }
                 | Op::LayerSubtypes { .. }
+                | Op::LayerContingents { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerMove { .. }
@@ -898,6 +914,10 @@ impl Document {
             }
             Op::LayerSubtypes { layer, after, .. } => {
                 self.layers.replace_subtypes(layer, after.as_deref());
+                return;
+            }
+            Op::LayerContingents { layer, after, .. } => {
+                self.layers.replace_contingents(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

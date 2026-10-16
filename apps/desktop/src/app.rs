@@ -218,6 +218,8 @@ pub enum Dialog {
     TableStyles,
     /// Alt türler (forms/subtypes.rs, docs/adr/0422); the window is `App::subtypes`.
     Subtypes,
+    /// Değer bileşimleri (forms/contingents.rs, docs/adr/0423); the window is `App::contingents`.
+    Contingents,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
@@ -464,6 +466,7 @@ pub enum Message {
     Relations(crate::forms::relations::Event),
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
+    Contingents(crate::forms::contingents::Event),
     /// An event of Kayıtları denetle (forms/audit.rs, docs/adr/0406).
     FormAudit(crate::forms::audit::Event),
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
@@ -898,6 +901,7 @@ pub struct App {
     pub(crate) relations_window: Option<crate::forms::relations::Window>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
+    pub(crate) contingents: Option<crate::forms::contingents::Window>,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406).
     pub(crate) form_audit: Option<crate::forms::audit::Window>,
     /// What the session remembers of the forms: the "reuse last" values (forms/entry.rs, docs/adr/0402 §7).
@@ -1203,6 +1207,7 @@ impl App {
             relations_window: None,
             table_styles: None,
             subtypes: None,
+            contingents: None,
             form_audit: None,
             form_memory: Default::default(),
             form_preview: None,
@@ -1736,6 +1741,7 @@ impl App {
             Message::Relations(event) => return self.relations_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
+            Message::Contingents(event) => return self.contingents_event(event),
             Message::FormAudit(event) => return self.form_audit_event(event),
             Message::FormEntry(event) => return self.form_entry_event(event),
             Message::FormPreview(event) => return self.form_preview_event(event),

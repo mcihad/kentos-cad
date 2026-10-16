@@ -194,6 +194,10 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AE` değer bileşimleri (ADR 0423, 17 Ekim): web'de gerekenler: katmanın `contingents`'ı (TS türleri üretildi),
+  `cad.layers.contingents`'ın TS işleyicisi ve yazmaların bileşim kuralı (`fixtures/commands/v1/cad.layers.contingents.json`,
+  `cad.entities.set.contingents.json`, `cad.polygon.create.contingents.json`), form çekirdeğinin web bağlayıcısında
+  `with_contingents`, Değer bileşimleri penceresi, `.kcad` okuma.
 - [ ] `FORM-AD` alt türler (ADR 0422, 17 Ekim): web'de gerekenler: katmanın `subtypes`'ı (TS türleri üretildi), `cad.layers.subtypes`'ın TS
   işleyicisi ve yazmaların alt tür kuralı (`fixtures/commands/v1/cad.layers.subtypes.json`, `cad.entities.set.subtypes.json`,
   `cad.polygon.create.subtypes.json`), form çekirdeğinin web bağlayıcısında `with_subtypes`, Alt türler penceresi, Formla düzenle'de
@@ -1496,6 +1500,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AE` Değer bileşimleri: değer listeli alanların birlikte geçerli bileşimleri (herhangi, boş, alt türe özel); kısıtlayıcı grup
+  başka bileşimi yazdırmaz ve seçenekleri daraltır, uyarıcı grup uyarır; `cad.layers.contingents`. —
+  **17 Ekim, [ADR 0423](docs/adr/0423-value-combinations.md).**
 - [x] `FORM-AD` Alt türler: değer listeli bir alan kayıtları türlerine ayırır, her tür öbür alanların değerlerini, varsayılanlarını ve
   zorunluluğunu daraltır; yazmalar, formlar, tablo ve Öznitelikler uygular, tür değişince değerler uyarıyla kalır; `cad.layers.subtypes`.
   — **17 Ekim, [ADR 0422](docs/adr/0422-subtypes.md).**

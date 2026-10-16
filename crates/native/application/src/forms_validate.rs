@@ -36,7 +36,10 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
             crate::expression_unit::reading_unit(doc.settings()),
             &doc.form_world(body),
         )
-        .map(|p| p.with_subtypes(forms::subtypes(doc, &form.layer)))
+        .map(|p| {
+            p.with_subtypes(forms::subtypes(doc, &form.layer))
+                .with_contingents(forms::contingents(doc, &form.layer))
+        })
     {
         let object = forms::object(doc, slot, e);
         let values: Vec<(String, String)> = input

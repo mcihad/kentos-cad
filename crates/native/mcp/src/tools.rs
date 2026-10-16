@@ -555,6 +555,7 @@ fn command_tool(c: &Value) -> Value {
             // An empty list takes a layer's table rules away (docs/adr/0413 §2).
             | "cad.layers.table"
             | "cad.layers.subtypes"
+            | "cad.layers.contingents"
             // The layer tree's, the styles' and the settings' commands remove layers,
             // groups, objects, definitions, states and styles, hide and rename, and
             // assign a coordinate system (docs/adr/0248).

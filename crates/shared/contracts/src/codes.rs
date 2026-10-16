@@ -689,6 +689,12 @@ codes! {
     UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
     /// A record keeps values its subtype does not allow (docs/adr/0422 §2).
     SUBTYPE_MISFIT = "subtype_misfit", Warning, false, "Kaydın alt türüne uymayan değerleri var.";
+    /// A record's values that no row of a restrictive value group allows (docs/adr/0423 §2).
+    INVALID_COMBINATION = "invalid_combination", Failed, false, "Bu değer bileşimi katmanın değer grubunda yok.";
+    /// A record's values that no row of an advisory value group allows (docs/adr/0423 §2).
+    COMBINATION_UNMET = "combination_unmet", Warning, false, "Bu değer bileşimi katmanın değer grubunda yok.";
+    /// A layer's value groups that do not fit its fields (docs/adr/0423 §3).
+    INVALID_CONTINGENTS = "invalid_contingents", Failed, false, "Değer grupları katmanın alanlarına uymuyor.";
     /// A layer's subtypes that do not fit its fields (docs/adr/0422 §3).
     INVALID_SUBTYPES = "invalid_subtypes", Failed, false, "Alt türler katmanın alanlarına uymuyor.";
     /// Records a form's recomputation left as they were (docs/adr/0421).

@@ -1528,11 +1528,16 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         let mut rows = form_rows(doc.model.settings(), &base.layer_id);
         let labels = crate::features::lookup_labels(&doc.model, &base.layer_id, &fields);
         let subtypes = layers.get(&base.layer_id).and_then(|n| n.subtypes.clone());
+        let groups = layers
+            .get(&base.layer_id)
+            .map(|n| n.contingents.clone())
+            .unwrap_or_default();
         rows.extend(field_rows(
             slot,
             base,
             &fields,
             subtypes.as_ref(),
+            &groups,
             locked,
             &labels,
         ));
@@ -1621,6 +1626,7 @@ fn field_rows(
     base: &kentos_contracts::EntityBase,
     fields: &[kentos_contracts::LayerField],
     subtypes: Option<&kentos_contracts::LayerSubtypes>,
+    groups: &[kentos_contracts::FieldGroup],
     locked: bool,
     labels: &[(String, std::collections::BTreeMap<String, String>)],
 ) -> Vec<Row> {
@@ -1656,7 +1662,7 @@ fn field_rows(
                 // A retired value only for the record holding it (docs/adr/0418), narrowed to the
                 // record's subtype (docs/adr/0422).
                 Some(list) if !list.is_empty() => {
-                    kentos_contracts::offered_on(subtypes, fields, f, |n| {
+                    kentos_contracts::offered_on(subtypes, groups, fields, f, |n| {
                         base.attrs.get(n).cloned()
                     })
                     .into_iter()

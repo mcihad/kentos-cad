@@ -194,6 +194,8 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
             ATTRS,
+            // A value group's combination (docs/adr/0423 §2).
+            &["invalid_combination"],
         ],
         warnings: &["layer_hidden", "layer_locked"],
         targets: none,
@@ -264,6 +266,16 @@ const ENTRIES: &[Entry] = &[
         refusals: &[OBJECTS, REVISION, &["relation_restricted"]],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
+    },
+    Entry {
+        id: "cad.layers.contingents",
+        refusals: &[
+            REVISION,
+            &["layer_not_found", "not_a_layer", "service_layer"],
+            &["invalid_contingents"],
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.layers.subtypes",
@@ -649,10 +661,11 @@ const ENTRIES: &[Entry] = &[
                 "line_type_not_found",
                 "constant_attribute",
                 "form_rules",
+                "invalid_combination",
             ],
             REVISION,
         ],
-        warnings: &["layer_hidden", "subtype_misfit"],
+        warnings: &["layer_hidden", "subtype_misfit", "combination_unmet"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {

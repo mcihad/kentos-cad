@@ -948,12 +948,13 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.plot == Some(false))
                 + usize::from(n.frozen == Some(true))
                 + usize::from(!n.table_styles.is_empty())
-                + usize::from(n.subtypes.is_some()),
+                + usize::from(n.subtypes.is_some())
+                + usize::from(!n.contingents.is_empty()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
         // actions compose service visible (7), children expanded replaces scenario subtypes (8),
-        // tableStyles (11).
+        // contingents tableStyles (11).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -1064,6 +1065,23 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(subtypes)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 60 (docs/adr/0423 §4): the value combinations, as their JSON, fitting the fields.
+        if !n.contingents.is_empty() {
+            self.key("contingents");
+            self.at(Seg::Name("contingents"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(Code::BadValue, "grubun değer bileşimleri olmaz; yalnız katmanın olur"));
+                }
+                if let Some((_, problem)) =
+                    kentos_contracts::contingents_problem(&n.fields, n.subtypes.as_ref(), &n.contingents)
+                {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&n.contingents)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -1538,6 +1556,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             n.fields.iter().any(later)
                 || !n.table_styles.is_empty()
                 || n.subtypes.is_some()
+                || !n.contingents.is_empty()
                 || keyed(&n.children)
         })
     }
