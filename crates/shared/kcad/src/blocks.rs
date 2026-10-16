@@ -138,6 +138,16 @@ pub(crate) fn said(fault: &BlockFault, blocks: &[BlockDefinition]) -> Said {
                 name(*definition)
             ),
         ),
+        BlockFault::TooLarge { definition } => (
+            Code::BlockTooLarge,
+            "blocks",
+            in_block(*definition, &[]),
+            format!(
+                "“{}” bloğu iç içe yerleştirmeleriyle {} parçadan çoğuna açılıyor",
+                name(*definition),
+                kentos_contracts::blocks::MAX_BLOCK_PIECES
+            ),
+        ),
     };
     Said {
         code,

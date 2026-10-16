@@ -48,6 +48,7 @@ pub mod blocks;
 pub mod blocks_define;
 pub mod blocks_edit;
 pub mod blocks_insert;
+pub mod file_import_block;
 pub mod blocks_library;
 pub mod break_join;
 pub mod call;
@@ -464,6 +465,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LINE_TYPES_EDIT,
         kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
+    ),
+    // Blocks from a drawing file ([`file_import_block`], docs/adr/0316 §3).
+    (
+        kentos_contracts::FILE_IMPORT_BLOCK,
+        kentos_contracts::FILE_IMPORT_BLOCK_VERSION,
     ),
     // A block placed ([`blocks_insert`], docs/adr/0315 §4).
     (

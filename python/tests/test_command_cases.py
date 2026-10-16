@@ -239,7 +239,8 @@ class Case:
                     data = b.to_json()
                     data.pop("id")
                     got.append(data)
-                same(got, want, f"{at}: blocks")
+                # An insert names a block whose id the case cannot know by `$blockOf:Ad` (docs/adr/0316 §3).
+                same(got, self.block_ids(want, at), f"{at}: blocks")
             elif key == "arrays":
                 # The associative arrays in order, each without its id; the block and the items by `$blockOf:Ad` and
                 # `$uidOf:12` (docs/adr/0300).

@@ -425,6 +425,22 @@
    "tests": 2
   },
   {
+   "id": "block.edit",
+   "kind": "command",
+   "title": "Bloğu düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.edit",
+   "mcp": "cad.blocks.edit",
+   "note": "Blok düzenleyicinin Kaydet'i: update işlemi, nesneler yerel kimlikleriyle (ADR 0316 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "block.export",
    "kind": "command",
    "title": "Blokları dışa aktar",
@@ -460,13 +476,13 @@
    "id": "block.insertFile",
    "kind": "command",
    "title": "Dosyadan blok ekle…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.blocks.define"
+    "file.import.block"
    ],
    "operation": null,
-   "python": "kentos.cad.blocks.define",
-   "mcp": "cad.blocks.define",
+   "python": "Connection: file.import.block",
+   "mcp": "file.import.block",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -501,6 +517,38 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "block.redefineFromFile",
+   "kind": "command",
+   "title": "Başka çizimden yeniden tanımla",
+   "level": "semantic",
+   "via": [
+    "file.import.block"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.block",
+   "mcp": "file.import.block",
+   "note": "blocks kipi, replace (ADR 0316 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "block.writeFile",
+   "kind": "command",
+   "title": "Bloğu dosyaya yaz",
+   "level": "semantic",
+   "via": [
+    "file.export.block"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.block",
+   "mcp": "file.export.block",
+   "note": "WBLOCK: bloğun nesneleri taban noktası başlangıçta ayrı bir çizim (ADR 0316 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "calc.fieldbook",

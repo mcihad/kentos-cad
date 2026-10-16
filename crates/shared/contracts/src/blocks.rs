@@ -9,7 +9,11 @@
 //!   finite;
 //! - no definition holds itself, directly or through others, and nesting is
 //!   at most `MAX_BLOCK_DEPTH` levels (a definition without inserts is one
-//!   level). A cycle longer than that is reported as too deep.
+//!   level). A cycle longer than that is reported as too deep;
+//! - no definition opens into more than `MAX_BLOCK_PIECES` pieces, its
+//!   nested inserts' counted through (docs/adr/0316 §4): a block of a
+//!   thousand inserts of a block of a thousand objects is refused before an
+//!   insert of it is drawn.
 //!
 //! Faults are found in a fixed order (definitions in list order, then their
 //! nesting, then the drawing's own objects), so every implementation names
@@ -69,7 +73,15 @@ pub enum BlockFault {
     TooDeep {
         definition: usize,
     },
+    /// The definition that opens into more than `MAX_BLOCK_PIECES` pieces (docs/adr/0316 §4).
+    TooLarge {
+        definition: usize,
+    },
 }
+
+/// The most pieces one definition opens into, its nested inserts' counted through and its attributes with them
+/// (docs/adr/0316 §4): a million.
+pub const MAX_BLOCK_PIECES: u64 = 1_000_000;
 
 impl BlockFault {
     /// What an edit that breaks the rule is told (the documents' refusals;
@@ -102,6 +114,10 @@ impl BlockFault {
             ),
             BlockFault::TooDeep { definition } => format!(
                 "Bloklar en çok {MAX_BLOCK_DEPTH} düzey iç içe olabilir; “{}” bloğu daha derin.",
+                name(*definition)
+            ),
+            BlockFault::TooLarge { definition } => format!(
+                "“{}” bloğu iç içe yerleştirmeleriyle bir milyondan çok parçaya açılır; böyle bir blok çizilemez. İç içe yerleştirmelerini azaltın ya da bölün.",
                 name(*definition)
             ),
         }
@@ -377,7 +393,36 @@ pub fn nesting<B: Borrow<BlockDefinition>>(
             visit(i, blocks, index, &mut depth, &mut stack)?;
         }
     }
+    sizes(blocks, index, &depth)?;
     Ok(depth)
+}
+
+/// Each definition's pieces, its nested inserts' counted through (docs/adr/0316 §4), definitions taken shallowest
+/// first so a nested one is counted before its holders; the first in the list's order over `MAX_BLOCK_PIECES`
+/// refused. Counts saturate: a cycle cannot reach here (`visit` first).
+pub fn sizes<B: Borrow<BlockDefinition>>(
+    blocks: &[B],
+    index: &HashMap<BlockId, usize>,
+    depth: &[usize],
+) -> Result<Vec<u64>, BlockFault> {
+    let mut order: Vec<usize> = (0..blocks.len()).collect();
+    order.sort_by_key(|&i| (depth[i], i));
+    let mut size = vec![0u64; blocks.len()];
+    for &i in &order {
+        let b = blocks[i].borrow();
+        let mut n = b.attributes.len() as u64;
+        for e in &b.entities {
+            n = n.saturating_add(match e {
+                Entity::Insert(insert) => index.get(&insert.block).map_or(0, |&k| size[k]),
+                _ => 1,
+            });
+        }
+        size[i] = n;
+    }
+    if let Some(definition) = (0..blocks.len()).find(|&i| size[i] > MAX_BLOCK_PIECES) {
+        return Err(BlockFault::TooLarge { definition });
+    }
+    Ok(size)
 }
 
 /// Depth-first, the stack never deeper than the limit: a definition found on
@@ -462,6 +507,57 @@ mod tests {
             attributes: Vec::new(),
             description: None,
         }
+    }
+
+    /// A thousand inserts of a block of a thousand objects is a million pieces: allowed; one more insert is too
+    /// many (docs/adr/0316 §4). A definition's attributes count as pieces.
+    #[test]
+    fn a_definition_opening_into_more_than_a_million_pieces_is_refused() {
+        let point = |n: u32| {
+            Entity::Point(crate::entity::PointEntity {
+                base: EntityBase {
+                    id: n,
+                    layer_id: String::new(),
+                    ..match insert(1, 1.0) {
+                        Entity::Insert(i) => i.base,
+                        _ => unreachable!(),
+                    }
+                },
+                p: Vec2 { x: 0.0, y: 0.0 },
+                z: None,
+                parts: None,
+            })
+        };
+        let thousand = BlockDefinition {
+            entities: (1..=1000).map(point).collect(),
+            ..block(1, "Bin", &[])
+        };
+        let million = block(2, "Milyon", &[1; 1000]);
+        let index: HashMap<BlockId, usize> = [(id(1), 0), (id(2), 1)].into();
+        let ok = [thousand.clone(), million.clone()];
+        let depth = nesting(&ok, &index).expect("a million is allowed");
+        assert_eq!(sizes(&ok, &index, &depth).unwrap(), [1000, 1_000_000]);
+        let mut more = million.clone();
+        more.entities.push(insert(1, 1.0));
+        assert_eq!(
+            nesting(&[thousand.clone(), more], &index),
+            Err(BlockFault::TooLarge { definition: 1 })
+        );
+        let mut tagged = million;
+        tagged.attributes.push(AttributeDefinition {
+            tag: "NO".into(),
+            prompt: None,
+            value: None,
+            p: Vec2 { x: 0.0, y: 0.0 },
+            height: 1.0,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+        });
+        assert_eq!(
+            check(&[thousand, tagged], &[]),
+            Err(BlockFault::TooLarge { definition: 1 })
+        );
     }
 
     /// C holds B, B holds A, D holds nothing: a change of A reaches B and C, not D.

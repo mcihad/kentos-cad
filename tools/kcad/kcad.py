@@ -190,6 +190,8 @@ SCHEMA_WITH_PATTERNS = 56
 # Schema 57: schema 56 and an insert's own y factor (`yScale`, only when it is not `scale`) and a block definition's
 # `units` (docs/adr/0315 §3, §4).
 SCHEMA_WITH_BLOCK_EXTRAS = 57
+# A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
+MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
 MOST_PATTERN_ELEMENTS = 12
 # An associative array holds 2 to 10 000 places (kentos_contracts::ARRAY_PLACES_MAX).
@@ -4190,6 +4192,18 @@ class _Schema:
         for i in range(len(blocks)):
             if depth[i] == 0:
                 visit(i)
+        # No definition opens into more than a million pieces, nested inserts counted through, attributes with them
+        # (docs/adr/0316 §4); shallowest first, the first in the list's order over the limit named.
+        size = [0] * len(blocks)
+        for i in sorted(range(len(blocks)), key=lambda i: (depth[i], i)):
+            n = len(blocks[i].get("attributes", []))
+            for e in blocks[i]["entities"]:
+                n += size[ids[e["block"]]] if e["kind"] == "insert" else 1
+            size[i] = n
+        for i in range(len(blocks)):
+            if size[i] > MAX_BLOCK_PIECES:
+                self.path.append(str(i))
+                self.fail("block_too_large", f"“{blocks[i]['name']}” bloğu {MAX_BLOCK_PIECES} parçadan çoğuna açılıyor")
 
     def common(self):
         return {

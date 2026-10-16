@@ -17,27 +17,26 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 51 | 130 | 38 | 38 | 257 |
-| geometry | 19 | 61 | 0 | 8 | 88 |
+| semantic | 54 | 131 | 38 | 38 | 261 |
+| geometry | 19 | 60 | 0 | 8 | 87 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 0 | 23 | 1 | 4 | 28 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 70 | 340 | 103 | 205 | 718 |
+| **toplam** | 73 | 340 | 103 | 205 | 721 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 513 satırdan 133'i: geometry 80, none 20, processing 13, query 20.
+CBS'ye özgü olmayan 516 satırdan 132'i: geometry 79, none 20, processing 13, query 20.
 
-### Sonucu çağıran hesaplar (geometry) — 80
+### Sonucu çağıran hesaplar (geometry) — 79
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
-| `block.insertFile` | Dosyadan blok ekle… | shared | cad.blocks.define |  |
 | `calc.forward` | Önden kestirme… | shared | cad.entities.create `forwardIntersection` |  |
 | `calc.levelNetwork` | Kot ağı dengelemesi… | shared | cad.entities.edit `levelAdjust` |  |
 | `calc.network` | Yatay ağ dengelemesi… | shared | cad.entities.edit `networkAdjust` |  |

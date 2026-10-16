@@ -455,6 +455,10 @@ impl App {
     /// is copied cheaply now (its objects are shared), encoded and written on
     /// a thread of its own.
     pub(crate) fn recovery_due(&mut self, now: Instant) -> Task<Message> {
+        // The editor's drawing is not the drawing's (block_editor.rs, docs/adr/0316 §1).
+        if self.block_editor.is_some() {
+            return Task::none();
+        }
         let Some(doc) = &self.document else {
             return Task::none();
         };

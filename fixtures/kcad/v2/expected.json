@@ -147,6 +147,7 @@
     { "file": "broken/blank-block-name.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/duplicate-attribute-tag.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/insert-scale-zero.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/block-too-large.kcad", "sniff": "kcad", "error": "block_too_large" },
     { "file": "broken/insert-mirror-false.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/insert-y-scale-in-schema-56.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/insert-y-scale-equal.kcad", "sniff": "kcad", "error": "bad_value" },

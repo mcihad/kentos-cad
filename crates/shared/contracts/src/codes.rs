@@ -309,6 +309,10 @@ codes! {
     BLOCK_CYCLE = "block_cycle", Failed, false, "Tanım kendini doğrudan ya da başka tanımlar üzerinden içerirdi.";
     /// Blocks that would be nested deeper than 16 levels.
     BLOCK_TOO_DEEP = "block_too_deep", Failed, false, "Bloklar 16 düzeyden derin iç içe girerdi.";
+    /// A definition that would open into more than a million pieces (docs/adr/0316 §4).
+    /// `file.import.block`'s pictures and tables, which a block cannot hold, left out (docs/adr/0316 §3).
+    OBJECTS_LEFT_OUT = "objects_left_out", Warning, false, "Resimler ve tablolar bloğa konamaz; dosyadakiler alınmadı.";
+    BLOCK_TOO_LARGE = "block_too_large", Failed, false, "Blok iç içe yerleştirmeleriyle bir milyondan çok parçaya açılırdı.";
     /// `replace` without the layer the insert goes on.
     NO_LAYER = "no_layer", Failed, false, "Yerleştirmenin gideceği katman verilmedi.";
     /// No block given where the operation needs one (`cad.blocks.edit`).
@@ -319,6 +323,8 @@ codes! {
     BLOCK_IN_USE = "block_in_use", Failed, false, "Tanım çizimde ya da başka bir tanımda bir yerleştirmece kullanılıyor.";
     /// An attribute value under a tag the block does not have (`cad.blocks.insert`, docs/adr/0315 §4).
     UNKNOWN_TAG = "unknown_tag", Failed, false, "Blokta bu etiketle bir öznitelik yok.";
+    /// Two objects of a definition with one local id (`cad.blocks.edit`'s `update`, docs/adr/0316 §1).
+    DUPLICATE_PIECE = "duplicate_piece", Failed, false, "Tanımın iki nesnesinin yerel kimliği aynı.";
     /// `cad.blocks.edit`'s `units` without the unit (docs/adr/0315 §4).
     NO_UNITS = "no_units", Failed, false, "Bloğun birimi verilmedi.";
     /// A real-size block drawn in another unit than the drawing's: placed at its own size (docs/adr/0315 §4).

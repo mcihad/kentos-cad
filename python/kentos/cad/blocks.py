@@ -25,6 +25,7 @@ from .types import (  # noqa: F401
     BlocksEdited,
     BlocksInsert,
     BlocksInsertPlan,
+    Entity,
     Vec2,
     Vec2Like,
 )
@@ -250,6 +251,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
+        entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
@@ -283,6 +285,8 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
             block: The definition; every operation but `purge`.
             blocks: `export`: the definitions, by id (absent: every one).
+            entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
+                docs/adr/0316 §1).
             expected_revision: The document revision the input was prepared against, as decimal text.
             layer_id: `redefine` with `replace`: the layer the insert goes on.
             library: `import`: a `kentos.blocks` file's text.
@@ -310,6 +314,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
+            entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
             library=library,
@@ -330,6 +335,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
+        entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
@@ -348,6 +354,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
+            entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
             library=library,
@@ -368,6 +375,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
+        entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
@@ -386,6 +394,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
+            entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
             library=library,
@@ -406,6 +415,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
         base: Vec2Like | None | Unset = UNSET,
         block: str | None | Unset = UNSET,
         blocks: Sequence[str] | None | Unset = UNSET,
+        entities: Sequence[Entity] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         library: str | None | Unset = UNSET,
@@ -429,6 +439,7 @@ class _BlocksEdit(LocalCommand[BlocksEdit, BlocksEdited, BlocksEditPlan]):
             base=_opt(base, lambda x: Vec2.of(x)),
             block=block,
             blocks=_opt(blocks, lambda x: list(x)),
+            entities=_opt(entities, lambda x: list(x)),
             expected_revision=expected_revision,
             layer_id=layer_id,
             library=library,

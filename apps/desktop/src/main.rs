@@ -33,6 +33,7 @@ mod attribute_values;
 mod audit_scenes;
 mod block_attributes;
 mod blocks;
+mod block_editor;
 mod blocks_files;
 mod blocks_panel;
 mod bottom;

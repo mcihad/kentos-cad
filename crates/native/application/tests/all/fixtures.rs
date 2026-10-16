@@ -51,7 +51,9 @@ use kentos_native_application::{
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
     entities_reverse, file_import, stretch,
 };
-use kentos_native_application::{blocks_insert, library_edit, line_types_edit, styles_impact};
+use kentos_native_application::{
+    blocks_insert, file_import_block, library_edit, line_types_edit, styles_impact,
+};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -1380,6 +1382,13 @@ impl Input for BlocksEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::ImportBlock {
+    /// No number to make not finite.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::BlocksInsert {
     /// `at.x`, `at.y`, `rotation`, `scale`, `yScale` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -2002,6 +2011,9 @@ fn run_op(
         kentos_domain::contracts::CAD_BLOCKS_INSERT => {
             run!(blocks_insert, kentos_domain::contracts::BlocksInsert)
         }
+        kentos_domain::contracts::FILE_IMPORT_BLOCK => {
+            run!(file_import_block, kentos_domain::contracts::ImportBlock)
+        }
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
         kentos_domain::contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
@@ -2356,7 +2368,9 @@ fn check(
                         Ok(v)
                     })
                     .collect::<Outcome<_>>()?;
-                expect_same(&json!(got), want, "bloklar", at)?;
+                // A block's insert names a block by `$blockOf:Ad` (a block whose id the case cannot know).
+                let wanted = block_ids(want, doc, state, at)?;
+                expect_same(&json!(got), &wanted, "bloklar", at)?;
             }
             // The drawing's associative arrays in order, each without its id (docs/adr/0300); the expected
             // block and items by `$blockOf:Ad` and `$uidOf:12`.

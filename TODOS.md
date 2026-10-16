@@ -175,6 +175,11 @@ Liste:
   ve parçaların görünürlük kapısı (`Item::veiled`) web'in çiziminde ve seçiminde; 0'daki parçanın `byLayer`'ının yerleştirmenin
   katmanından alınması web'in stilli çiziminde; `cad.blocks.insert`'in ve `cad.blocks.edit` `units`'inin TS işleyicileri, Blok
   ekle'nin Y ölçeği, Öznitelikler'in X/Y ölçeği, Bloklar panelinin Birim ▸'i; web'in DXF yolu çekirdekten geldiği için hazır.
+- [ ] `CAD-BLOCK-05`, `06`, `07`, `11` Blok düzenleyici, blokların dosya API'si ve boyut sınırı (ADR 0316, 16 Ekim): web'de
+  gerekenler: Blok düzenleyici (tanımın nesneleri ayrı çizimde, Kaydet `cad.blocks.edit` `update`'iyle) ve `update`'in TS işleyicisi;
+  `file.import.block`'un TS işleyicisi (web'in Dosyadan blok ekle'si ve Başka çizimden al'ı onunla; çakışan blok kimliğinin
+  yenilenmesi web'in `app/drawingExchange.ts`'inde de); WBLOCK'un web'de indirme olarak yazılması; `model/blocks.ts`'in kurallarına
+  `block_too_large` (bir milyon parça, doymalı sayım).
 - [ ] `CAD-STYLE-12`, `13`, `14`, `15` haritanın katmanları, değişikliğin etkisi, kitaplık API'si ve etki raporu (ADR 0314, 16 Ekim):
   web'de gerekenler: pafta tasarımcısının Denetçi'sinde haritanın Katmanlar bölümü ve web'in pafta çiziminde `layerOverrides`
   (`kentos_plot::layers::map_layers`'ın kuralı WASM'la ya da sheet-wasm'dan); `cad.library.edit` ve `cad.styles.impact`'in TS

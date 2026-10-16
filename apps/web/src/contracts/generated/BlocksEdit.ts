@@ -3,6 +3,7 @@ import type { AttributeDefinition } from "./AttributeDefinition";
 import type { BlockEditOperation } from "./BlockEditOperation";
 import type { BlockId } from "./BlockId";
 import type { BlockUnits } from "./BlockUnits";
+import type { Entity } from "./Entity";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -21,7 +22,8 @@ import type { Vec2 } from "./Vec2";
  * - `duplicate`: `block`, `name` (the copy's);
  * - `export`: `blocks` (absent: every definition);
  * - `import`: `library` (a `kentos.blocks` file's text), `replace`;
- * - `units`: `block`, `units`, `rescale`.
+ * - `units`: `block`, `units`, `rescale`;
+ * - `update`: `block`, `entities` (its objects, local ids kept, 0 new), `base` and `attributes` when they change.
  *
  * What would change nothing (the same name, base point, objects or
  * attributes; nothing unused to purge) writes nothing: the answer is
@@ -80,6 +82,11 @@ blocks?: Array<BlockId>,
  * `import`: a `kentos.blocks` file's text.
  */
 library?: string, 
+/**
+ * `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
+ * docs/adr/0316 §1).
+ */
+entities?: Array<Entity>, 
 /**
  * `units`: the unit it is drawn in (docs/adr/0315 §4).
  */

@@ -2668,6 +2668,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Dosyadan blok ekle and Başka çizimden yeniden tanımla (docs/adr/0316 §3), held together by
+        // fixtures/commands/v1/file.import.block.json.
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_BLOCK.into(),
+            version: crate::FILE_IMPORT_BLOCK_VERSION,
+            title: "Dosyadan blok al".into(),
+            summary: "path'teki .kcad çizimini (v2 ya da eski v1 JSON) bloklar olarak alır; tek geri alma adımı, adı “Dosyadan blok: ad.kcad”. \
+                      mode drawing (varsayılan): çizimin nesneleri (resim ve tablo hariç) tek blok olur, adı name ya da dosyanın adı (çizimde varsa “(2)”), taban noktası nesnelerin sol alt köşesi; iç bloklar ve nesnelerin katmanları yollarıyla gelir. \
+                      mode blocks: dosyanın names'teki (yoksa bütün) blokları, yerleştirdikleriyle gelir; çizimde aynı adlı blok varsa korunur (skipped), replace ile dosyanınkiyle yeniden tanımlanır ve bütün yerleştirmeleri yenisini gösterir. \
+                      plan okur, hiçbir şey yazmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Bloğu dosyaya yazmak file.export.block'tur."
+                .into(),
+            aliases: vec!["insertfile".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportBlock>(),
+            output: schema::<crate::BlockFileImported>(),
+            plan: Some(schema::<crate::BlockFileImported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir çizimi tek blok olarak al".into(),
+                    input: json!({ "path": "/tmp/kapi-90.kcad", "name": "Kapı 90" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ofis kitaplığından blokları yeniden tanımla".into(),
+                    input: json!({ "path": "/tmp/ofis-bloklari.kcad", "mode": "blocks", "names": ["Kapı 90", "Pencere"], "replace": true }),
+                    output: None,
+                },
+            ],
+        },
         // Blok ekle (docs/adr/0315 §4), held together by fixtures/commands/v1/cad.blocks.insert.json.
         CommandDescriptor {
             id: crate::CAD_BLOCKS_INSERT.into(),
@@ -4346,6 +4382,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // WBLOCK (docs/adr/0316 §3).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_BLOCK.into(),
+            version: crate::FILE_EXPORT_BLOCK_VERSION,
+            title: "Bloğu dosyaya yaz".into(),
+            summary: "Bir bloğu (block) ya da kalıcı kimlikleriyle verilen nesneleri (uids) yeni bir .kcad çizimi olarak yazar (AutoCAD'in WBLOCK'u): kullandıkları katmanlar, iç içe bloklar, stiller, kitaplık öğeleri ve proje ayarlarıyla. \
+                      base çizimin başlangıcına (0, 0) gelir; blokta verilmezse bloğun taban noktasıdır, nesnelerde verilmezse nesneler yerinde kalır. Bloğun kendi katmanındaki nesneler 0 katmanına yazılır. \
+                      Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir, tek adımda yerine konur; overwrite verilmezse var olan dosya reddedilir (file_exists). \
+                      plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Dosyadan blok almak file.import.block'tur."
+                .into(),
+            aliases: vec!["wblock".into(), "blokyaz".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportBlock>(),
+            output: schema::<crate::BlockFileExported>(),
+            plan: Some(schema::<crate::BlockFileExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kapı bloğu kendi dosyasına".into(),
+                input: json!({ "path": "/tmp/kapi-90.kcad", "block": "01925f3e-7c1c-7b22-8d33-4c5e6f708192" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_EXPORT_PDF.into(),
             version: crate::FILE_EXPORT_PDF_VERSION,
@@ -4753,6 +4817,12 @@ mod tests {
                     }
                     crate::CAD_BLOCKS_INSERT => {
                         serde_json::from_value::<crate::BlocksInsert>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_BLOCK => {
+                        serde_json::from_value::<crate::ImportBlock>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_BLOCK => {
+                        serde_json::from_value::<crate::ExportBlock>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())

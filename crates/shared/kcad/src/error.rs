@@ -51,6 +51,8 @@ pub enum Code {
     BlockCycle,
     /// Definitions nested deeper than `MAX_BLOCK_DEPTH`.
     BlockTooDeep,
+    /// A definition opening into more than `MAX_BLOCK_PIECES` pieces (docs/adr/0316 §4).
+    BlockTooLarge,
     /// A writer's own check (§12): the bytes it made did not read back to the drawing.
     VerifyFailed,
     /// Not the file's fault: the user stopped the work (`watch`, docs/adr/0030).
@@ -104,6 +106,7 @@ impl Code {
             Code::UnknownBlock => "unknown_block",
             Code::BlockCycle => "block_cycle",
             Code::BlockTooDeep => "block_too_deep",
+            Code::BlockTooLarge => "block_too_large",
             Code::VerifyFailed => "verify_failed",
             Code::Cancelled => "cancelled",
             Code::BadColumns => "bad_columns",

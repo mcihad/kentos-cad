@@ -1,0 +1,166 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.import.block",
+  "commandVersion": 1,
+  "title": "Dosyadan blok al: çizim tek blok, bloklar adlarıyla, yeniden tanımlama",
+  "note": "Written by scripts/fixtures/block_file_cases.py from docs/adr/0316 §3 and the exchange reference (exchange_cases.py); do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Blok al", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "drawingFont": "barlow"}, "origin": {"x": 0, "y": 0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kapilar", "name": "Kapılar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "#C8A165", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [{"kind": "insert", "id": 1, "layerId": "kapilar", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "p": {"x": 20, "y": 0}, "scale": 1, "rotation": 0}], "styles": {"items": [], "categories": []}, "blocks": [{"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]},
+  "cases": [
+    {
+      "name": "çizim tek blok olur: adı dosyanın adı, iç blokları ve katmanları yollarıyla; tek adımda geri alınır",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:ofis-bloklari"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:ofis-bloklari"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "ofis-bloklari", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}], "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Dosyadan blok: ofis-bloklari.kcad", "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "çizim tek blok olur: verilen adla",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "name": "Ofis"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:Ofis"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:Ofis"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "Ofis", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "çizimde olan ad “(2)” alır",
+      "note": "Dosyanın kendi Kapı 90'ı da gelir ve “Kapı 90 (2)” olur; yeni blok “(3)”.",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "name": "Kapı 90"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:Kapı 90 (3)"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:Kapı 90 (3)"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "Kapı 90 (3)", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "plan okur, hiçbir şey yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$any"], "changed": [], "layers": 4, "revision": "$current", "block": "$any"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "bloklar adlarıyla: yeni ad eklenir, katmanı yoluyla gelir",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Pencere"]}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102"], "changed": [], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "polygon", "id": 1, "layerId": "", "attrs": {}, "pts": [{"x": 0, "y": 0}, {"x": 1.2, "y": 0}, {"x": 1.2, "y": 0.2}, {"x": 0, "y": 0.2}]}]}]}}
+      ]
+    },
+    {
+      "name": "çizimde olan ad korunur ve söylenir",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Kapı 90", "Pencere"]}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102"], "changed": [], "layers": 0, "revision": "$current", "skipped": ["Kapı 90"]}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "polygon", "id": 1, "layerId": "", "attrs": {}, "pts": [{"x": 0, "y": 0}, {"x": 1.2, "y": 0}, {"x": 1.2, "y": 0.2}, {"x": 0, "y": 0.2}]}]}]}}
+      ]
+    },
+    {
+      "name": "replace: çizimdeki aynı adlı blok dosyanınkiyle yeniden tanımlanır, kimliği kalır; ad büyük harfle de bulunur",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["KAPI 90"], "replace": true}, "result": {"status": "completed", "output": {"added": [], "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201"], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}], "blockIds": {"Kapı 90": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201"}}}
+      ]
+    },
+    {
+      "name": "adlar verilmezse bütün bloklar, yerleştirdikleriyle",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103"], "changed": [], "layers": 0, "revision": "$current", "skipped": ["Kapı 90"]}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "polygon", "id": 1, "layerId": "", "attrs": {}, "pts": [{"x": 0, "y": 0}, {"x": 1.2, "y": 0}, {"x": 1.2, "y": 0.2}, {"x": 0, "y": 0.2}]}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}]}}
+      ]
+    },
+    {
+      "name": "bütün bloklar, replace ile",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "replace": true}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103"], "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201"], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "polygon", "id": 1, "layerId": "", "attrs": {}, "pts": [{"x": 0, "y": 0}, {"x": 1.2, "y": 0}, {"x": 1.2, "y": 0.2}, {"x": 0, "y": 0.2}]}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}]}}
+      ]
+    },
+    {
+      "name": "ad büyük küçük harfe bakmadan bulunur",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["PENCERE"]}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102"], "changed": [], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Pencere", "base": {"x": 0, "y": 0}, "entities": [{"kind": "polygon", "id": 1, "layerId": "", "attrs": {}, "pts": [{"x": 0, "y": 0}, {"x": 1.2, "y": 0}, {"x": 1.2, "y": 0.2}, {"x": 0, "y": 0.2}]}]}]}}
+      ]
+    },
+    {
+      "name": "iç blok getiren blok: çizimdeki aynı adlı iç blok korunur",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Kapı grubu"]}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103"], "changed": [], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}]}}
+      ]
+    },
+    {
+      "name": "iç blok getiren blok, replace ile: iç blok da dosyanınki olur",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Kapı grubu"], "replace": true}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103"], "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201"], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6201", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}]}}
+      ]
+    },
+    {
+      "name": "bloklar: plan yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Pencere"]}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102"], "changed": [], "layers": 0, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "aynı dosya iki kez: ikinci blok “(2)” alır, iç blokları da yeniden gelir",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:ofis-bloklari"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:ofis-bloklari"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}},
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad"}, "result": {"status": "completed", "output": {"added": ["$blockOf:Kapı 90 (3)", "$blockOf:Kapı grubu (2)", "$blockOf:ofis-bloklari (2)"], "changed": [], "layers": 0, "revision": "$current", "block": "$blockOf:ofis-bloklari (2)"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "ofis-bloklari", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}, {"name": "Kapı 90 (3)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu (2)", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "$blockOf:Kapı 90 (3)", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "ofis-bloklari (2)", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "$blockOf:Kapı grubu (2)", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "boş ad dosyanın adına döner",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "name": "  "}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:ofis-bloklari"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:ofis-bloklari"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}, "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "ofis-bloklari", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}]}}
+      ]
+    },
+    {
+      "name": "doğrulama dosyayı okur, hiçbir şey yazmaz",
+      "steps": [
+        {"op": "validate", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad"}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "geri alınan alma yinelenir",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "name": "Ofis"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:Ofis"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:Ofis"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}},
+        {"op": "undo", "returns": "Dosyadan blok: ofis-bloklari.kcad", "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}},
+        {"op": "redo", "returns": "Dosyadan blok: ofis-bloklari.kcad", "expect": {"blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}, {"name": "Kapı 90 (2)", "base": {"x": 0, "y": 0}, "units": "m", "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0.9}, "byLayer": ["color", "lineType", "lineWeight", "transparency"]}, {"kind": "arc", "id": 2, "layerId": "", "attrs": {}, "c": {"x": 0, "y": 0}, "r": 0.9, "a0": 0, "a1": 1.5707963267948966}]}, {"name": "Kapı grubu", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "p": {"x": 0, "y": 0}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": -1, "y": 0}, "b": {"x": 3, "y": 0}}]}, {"name": "Ofis", "base": {"x": 0, "y": 0}, "entities": [{"kind": "insert", "id": 1, "layerId": "kapi", "attrs": {}, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "p": {"x": 4, "y": 3}, "scale": 1, "rotation": 0}, {"kind": "line", "id": 2, "layerId": "duvar", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 10, "y": 0}}, {"kind": "line", "id": 3, "layerId": "duvar", "attrs": {}, "a": {"x": 10, "y": 0}, "b": {"x": 10, "y": 8}}, {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 2, "y": 6}, "text": "Ofis", "height": 0.5, "rotation": 0}]}], "canRedo": false}}
+      ]
+    },
+    {
+      "name": "doğru sürümle yazılır",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "name": "Ofis", "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"added": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103", "$blockOf:Ofis"], "changed": [], "layers": 4, "revision": "$current", "block": "$blockOf:Ofis"}, "warnings": [{"code": "objects_left_out", "message": "1 tablo bloğa konamadığı için alınmadı.", "path": "path"}]}}
+      ]
+    },
+    {
+      "name": "göreli yol",
+      "steps": [
+        {"op": "execute", "input": {"path": "ofis.kcad"}, "result": {"status": "failed", "error": {"code": "invalid_file_path", "message": "“ofis.kcad” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/ad.kcad).", "path": "path"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "olmayan dosya",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/yok.kcad"}, "result": {"status": "failed", "error": {"code": "file_not_found", "message": "$any", "path": "path"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "çizim olmayan dosya",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/attribute-table.json"}, "result": {"status": "failed", "error": {"code": "import_unreadable", "message": "$any", "path": "path"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm dosyadan sonra denetlenir",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "expectedRevision": "999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "expectedRevision": "dün"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "$any", "path": "expectedRevision"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "dosyada olmayan blok adı",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": ["Pencere", "Merdiven"]}, "result": {"status": "failed", "error": {"code": "unknown_block", "message": "“Merdiven” bloğu ofis-bloklari.kcad içinde yok.", "path": "names[1]"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    },
+    {
+      "name": "boş ad listesi",
+      "steps": [
+        {"op": "execute", "input": {"path": "$fixture:blocks/v1/ofis-bloklari.kcad", "mode": "blocks", "names": []}, "result": {"status": "failed", "error": {"code": "nothing_to_import", "message": "Alınacak blok adı verilmedi; names en az bir ad ister.", "path": "names"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "blocks": [{"name": "Kapı 90", "base": {"x": 0, "y": 0}, "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 1.0}}]}]}}
+      ]
+    }
+  ]
+}

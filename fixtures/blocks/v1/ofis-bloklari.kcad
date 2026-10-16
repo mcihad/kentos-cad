@@ -1,0 +1,279 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Ofis blokları",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 50,
+  "workspace": "cad",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 0,
+  "y": 0
+ },
+ "layers": [
+  {
+   "id": "mimari",
+   "name": "Mimari",
+   "type": "group",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [
+    {
+     "id": "kapi",
+     "name": "A-KAPI",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#C8A165",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "duvar",
+     "name": "A-DUVAR",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#E5484D",
+      "lineType": "continuous",
+      "lineWeight": 0.5
+     },
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "yazi",
+   "name": "Yazı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kapi",
+ "entities": [
+  {
+   "kind": "insert",
+   "id": 1,
+   "layerId": "kapi",
+   "attrs": {},
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103",
+   "p": {
+    "x": 4,
+    "y": 3
+   },
+   "scale": 1,
+   "rotation": 0
+  },
+  {
+   "kind": "line",
+   "id": 2,
+   "layerId": "duvar",
+   "attrs": {},
+   "a": {
+    "x": 0,
+    "y": 0
+   },
+   "b": {
+    "x": 10,
+    "y": 0
+   }
+  },
+  {
+   "kind": "line",
+   "id": 3,
+   "layerId": "duvar",
+   "attrs": {},
+   "a": {
+    "x": 10,
+    "y": 0
+   },
+   "b": {
+    "x": 10,
+    "y": 8
+   }
+  },
+  {
+   "kind": "text",
+   "id": 4,
+   "layerId": "yazi",
+   "attrs": {},
+   "p": {
+    "x": 2,
+    "y": 6
+   },
+   "text": "Ofis",
+   "height": 0.5,
+   "rotation": 0
+  },
+  {
+   "kind": "table",
+   "id": 5,
+   "layerId": "yazi",
+   "attrs": {},
+   "p": {
+    "x": 0,
+    "y": 10
+   },
+   "rotation": 0.0,
+   "height": 0.5,
+   "rows": [
+    1.0
+   ],
+   "columns": [
+    4.0
+   ],
+   "cells": [
+    [
+     "Oda"
+    ]
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "blocks": [
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101",
+   "name": "Kapı 90",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "units": "m",
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0,
+      "y": 0
+     },
+     "b": {
+      "x": 0,
+      "y": 0.9
+     },
+     "byLayer": [
+      "color",
+      "lineType",
+      "lineWeight",
+      "transparency"
+     ]
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0,
+      "y": 0
+     },
+     "r": 0.9,
+     "a0": 0,
+     "a1": 1.5707963267948966
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6102",
+   "name": "Pencere",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "duvar",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 1.2,
+       "y": 0
+      },
+      {
+       "x": 1.2,
+       "y": 0.2
+      },
+      {
+       "x": 0,
+       "y": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6103",
+   "name": "Kapı grubu",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "insert",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d6101",
+     "p": {
+      "x": 0,
+      "y": 0
+     },
+     "scale": 1,
+     "rotation": 0
+    },
+    {
+     "kind": "line",
+     "id": 2,
+     "layerId": "duvar",
+     "attrs": {},
+     "a": {
+      "x": -1,
+      "y": 0
+     },
+     "b": {
+      "x": 3,
+      "y": 0
+     }
+    }
+   ]
+  }
+ ]
+}

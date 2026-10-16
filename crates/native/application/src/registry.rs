@@ -19,7 +19,8 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::BlocksInsert;
+use kentos_contracts::{BlocksInsert, ImportBlock};
+use crate::file_import_block;
 use serde_json::Value;
 
 use crate::standards::{apply as standards_apply, check as standards_check};
@@ -155,6 +156,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
             kentos_contracts::CAD_STYLES_IMPACT => $then!(styles_impact, StylesImpact),
             kentos_contracts::CAD_BLOCKS_INSERT => $then!(blocks_insert, BlocksInsert),
+            kentos_contracts::FILE_IMPORT_BLOCK => $then!(file_import_block, ImportBlock),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),

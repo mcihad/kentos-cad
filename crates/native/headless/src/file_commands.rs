@@ -11,8 +11,9 @@ use std::path::{Path, PathBuf};
 
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
-    CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult, DxfExported,
-    ExportDxf, ExportPdf, FILE_COMMANDS, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION, FILE_EXPORT_PDF,
+    BlockFileExported, CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult,
+    DxfExported, ExportBlock, ExportDxf, ExportPdf, FILE_COMMANDS, FILE_EXPORT_BLOCK,
+    FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION, FILE_EXPORT_PDF,
     FILE_EXPORT_PDF_VERSION, FileEffect, LayerNodeType, PdfExported, ReplayOutcome, ReplayStep,
     codes,
 };
@@ -29,7 +30,7 @@ pub fn is_file_command(command: &str) -> bool {
 
 /// Why a file command writes nothing: its input or the file refused
 /// (`failed`). Boxed: a call is refused at most once.
-type Refused = Box<CommandError>;
+pub type Refused = Box<CommandError>;
 
 fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
     Box::new(CommandError {
@@ -196,6 +197,170 @@ fn pdf(
     Ok((path, exists, made.bytes, output))
 }
 
+/// WBLOCK's drawing (docs/adr/0316 §3): a block's objects, or the objects named, as a drawing of their own with the
+/// layers, blocks, styles, library items and settings they use (`exchange::selection`), `base` moved to the
+/// origin. A block's objects on its own layer (`""`) go onto a layer “0”. The desktop's Bloğu dosyaya yaz writes
+/// the same drawing.
+pub fn block_drawing(
+    doc: &Document,
+    input: &ExportBlock,
+) -> Result<(kentos_contracts::DocumentSnapshotV2, u32), Refused> {
+    use kentos_contracts::{EntityId, Vec2};
+    let mut whole = doc.to_snapshot_v2();
+    let (uids, name, base): (Vec<EntityId>, String, Option<Vec2>) = match (
+        &input.block,
+        &input.uids,
+    ) {
+        (Some(id), _) => {
+            let Some(def) = doc.block(*id) else {
+                return Err(refuse(
+                    codes::UNKNOWN_BLOCK,
+                    format!(
+                        "“{}” kimlikli blok çizimde tanımlı değil. Çizimde tanımlı bir bloğun kimliğini verin.",
+                        id.to_text()
+                    ),
+                    "block",
+                ));
+            };
+            if def.entities.is_empty() {
+                return Err(refuse(
+                    codes::NOTHING_TO_EXPORT,
+                    format!("“{}” bloğunda nesne yok: yazılacak bir şey yok.", def.name),
+                    "block",
+                ));
+            }
+            // The block's objects as the drawing's, on their layers or on “0”.
+            let known: std::collections::HashSet<String> =
+                doc.layers().leaves().iter().map(|n| n.id.clone()).collect();
+            let mut zero = false;
+            whole.entities = def
+                .entities
+                .iter()
+                .map(|e| {
+                    let mut e = e.clone();
+                    let b = e.base_mut();
+                    if b.layer_id.is_empty() || !known.contains(&b.layer_id) {
+                        b.layer_id = "0".into();
+                        zero = true;
+                    }
+                    b.look.by_layer.clear();
+                    e
+                })
+                .collect();
+            if zero && !known.contains("0") {
+                let layer: kentos_contracts::LayerNode = serde_json::from_value(serde_json::json!({
+                    "id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
+                    "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": []
+                }))
+                .map_err(|e| refuse(codes::FILE_UNWRITABLE, e.to_string(), "block"))?;
+                whole.layers.insert(0, layer);
+            }
+            // Ids of the block and its order, so the same block makes the same file (its plan's bytes).
+            whole.uids = (0..whole.entities.len())
+                .map(|i| {
+                    EntityId(kentos_contracts::uuid_v5(
+                        &id.0,
+                        format!("piece/{i}").as_bytes(),
+                    ))
+                })
+                .collect();
+            let uids = whole.uids.clone();
+            (uids, def.name.clone(), Some(input.base.unwrap_or(def.base)))
+        }
+        (None, Some(list)) => {
+            if list.is_empty() {
+                return Err(refuse(
+                    codes::NO_ENTITIES,
+                    "Yazılacak nesne verilmedi. Nesnelerin kalıcı kimliklerini verin.",
+                    "uids",
+                ));
+            }
+            let mut uids = Vec::with_capacity(list.len());
+            for (i, text) in list.iter().enumerate() {
+                let Ok(u) = kentos_domain::Uuid::parse_str(text) else {
+                    return Err(refuse(
+                        codes::INVALID_UID,
+                        format!("“{text}” geçerli bir nesne kimliği değil."),
+                        &format!("uids[{i}]"),
+                    ));
+                };
+                if doc.slot_of(u).is_none() {
+                    return Err(refuse(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{text}” kimlikli nesne çizimde yok."),
+                        &format!("uids[{i}]"),
+                    ));
+                }
+                uids.push(EntityId(*u.as_bytes()));
+            }
+            (uids, doc.name().to_owned(), input.base)
+        }
+        (None, None) => {
+            return Err(refuse(
+                codes::NO_BLOCK,
+                "Yazılacak blok ya da nesne verilmedi. block ile bir bloğu ya da uids ile nesneleri verin.",
+                "block",
+            ));
+        }
+    };
+    if let Some(b) = base
+        && !(b.x.is_finite() && b.y.is_finite())
+    {
+        return Err(refuse(
+            codes::NOT_FINITE,
+            "Taban noktası sonlu bir sayı değil. Koordinatı sonlu bir sayıyla verin.",
+            "base",
+        ));
+    }
+    let mut drawing = kentos_domain::exchange::selection(&whole, &uids, &name)
+        .map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "path"))?;
+    // The base point to the origin.
+    if let Some(b) = base.filter(|b| b.x != 0.0 || b.y != 0.0) {
+        let m = kentos_geometry_core::geom::affine::translation(-b.x, -b.y);
+        for e in &mut drawing.entities {
+            let moved = kentos_geometry_core::ops::transform::transform_shape(
+                &kentos_native_application::geometry::shape(e),
+                &m,
+            );
+            if let Some(next) = kentos_native_application::geometry::with_shape(e, moved) {
+                *e = next;
+            }
+        }
+    }
+    drawing.arrays.clear();
+    drawing.sheets = None;
+    drawing.requests.clear();
+    let objects = u32::try_from(drawing.entities.len()).unwrap_or(u32::MAX);
+    Ok((drawing, objects))
+}
+
+/// WBLOCK's bytes and what they hold, or the refusal (docs/adr/0316 §3).
+fn block_file(
+    doc: &Document,
+    input: &ExportBlock,
+) -> Result<(PathBuf, bool, Vec<u8>, BlockFileExported), Refused> {
+    let (path, exists) = target(&input.path, input.overwrite)?;
+    let (drawing, objects) = block_drawing(doc, input)?;
+    let bytes = kentos_kcad::encode_verified(&drawing)
+        .map_err(|e| refuse(codes::FILE_UNWRITABLE, e.to_string(), "path"))?;
+    let output = BlockFileExported {
+        path: path.display().to_string(),
+        bytes: bytes.len() as u64,
+        sha256: sha256_hex(&bytes),
+        objects,
+        blocks: u32::try_from(drawing.blocks.len()).unwrap_or(u32::MAX),
+        replaced: exists,
+    };
+    Ok((path, exists, bytes, output))
+}
+
+/// WBLOCK written whole, as `file.export.block` writes it: the desktop's Bloğu dosyaya yaz (docs/adr/0316 §3).
+pub fn export_block(doc: &Document, input: &ExportBlock) -> Result<BlockFileExported, Refused> {
+    let (path, _, bytes, output) = block_file(doc, input)?;
+    write(&path, &bytes)?;
+    Ok(output)
+}
+
 /// Writes `bytes` to `path` whole (`files::write_bytes`), or the refusal.
 fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
     files::write_bytes(bytes, path)
@@ -261,6 +426,7 @@ fn run_typed(
     match command {
         FILE_EXPORT_DXF => go!(ExportDxf, dxf),
         FILE_EXPORT_PDF => go!(ExportPdf, pdf),
+        FILE_EXPORT_BLOCK => go!(ExportBlock, block_file),
         other => Err(format!("“{other}” bir dosya komutu değil.")),
     }
 }
@@ -268,6 +434,7 @@ fn run_typed(
 fn version_of(command: &str) -> u32 {
     match command {
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
+        FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -279,6 +446,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
     };
     match command {
         FILE_EXPORT_DXF => serde_json::from_value::<ExportDxf>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_BLOCK => serde_json::from_value::<ExportBlock>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         _ => serde_json::from_value::<ExportPdf>(input.clone())

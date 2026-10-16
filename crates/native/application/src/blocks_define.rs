@@ -238,7 +238,7 @@ pub(crate) fn copies<'a>(objects: impl Iterator<Item = &'a Entity>) -> Vec<Entit
         .collect()
 }
 
-fn base_mut(e: &mut Entity) -> &mut EntityBase {
+pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
     match e {
         Entity::Point(x) => &mut x.base,
         Entity::Line(x) => &mut x.base,
@@ -330,6 +330,7 @@ pub(crate) fn block_rules(next: &[&BlockDefinition]) -> Result<(), Stop> {
             }
             rules::BlockFault::Cycle { .. } => (codes::BLOCK_CYCLE, "uids"),
             rules::BlockFault::TooDeep { .. } => (codes::BLOCK_TOO_DEEP, "uids"),
+            rules::BlockFault::TooLarge { .. } => (codes::BLOCK_TOO_LARGE, "uids"),
             rules::BlockFault::BadScale { .. } => (codes::INVALID_SCALE, "uids"),
             rules::BlockFault::UnknownBlock { .. } => (codes::UNKNOWN_BLOCK, "uids"),
             // `attributes` checks its list first: never expected.

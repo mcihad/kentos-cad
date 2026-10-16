@@ -767,6 +767,10 @@ impl App {
 
     /// The timers: the catalog's search, then the open project's.
     pub(crate) fn cloud_tick(&mut self, now: Instant) -> Task<Message> {
+        // The drawing set aside while Blok düzenleyici is open waits (block_editor.rs, docs/adr/0316 §1).
+        if self.block_editor.is_some() {
+            return Task::none();
+        }
         let due = match self.cloud.catalog.as_mut() {
             Some(c) if c.search_at.is_some_and(|at| now >= at) => {
                 c.search_at = None;

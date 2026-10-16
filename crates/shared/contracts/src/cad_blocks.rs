@@ -27,6 +27,10 @@ pub const CAD_BLOCKS_DEFINE_VERSION: u32 = 1;
 pub const CAD_BLOCKS_EDIT: &str = "cad.blocks.edit";
 pub const CAD_BLOCKS_EDIT_VERSION: u32 = 1;
 
+/// Blocks from a drawing file (docs/adr/0316 §3): Dosyadan blok ekle, Başka çizimden yeniden tanımla.
+pub const FILE_IMPORT_BLOCK: &str = "file.import.block";
+pub const FILE_IMPORT_BLOCK_VERSION: u32 = 1;
+
 /// Places a block (docs/adr/0315 §4): Blok ekle's command.
 pub const CAD_BLOCKS_INSERT: &str = "cad.blocks.insert";
 pub const CAD_BLOCKS_INSERT_VERSION: u32 = 1;
@@ -172,6 +176,10 @@ pub enum BlockEditOperation {
     /// meaning changes (a block drawn in millimetres in a drawing taken for metres is a thousandth of its size
     /// after); a block made unitless or real-size keeps its size in this drawing.
     Units,
+    /// Its objects given whole, in its own coordinates, each with its local id (“Blok düzenle”, the block editor's
+    /// save; docs/adr/0316 §1): an id it had is kept (a reference to that piece follows it), 0 is a new object
+    /// and takes the next id the definition never had; the base point and the attribute definitions when given.
+    Update,
 }
 
 /// The format of a block library file (docs/adr/0314 §3).
@@ -194,7 +202,8 @@ pub const BLOCKS_VERSION: u32 = 1;
 /// - `duplicate`: `block`, `name` (the copy's);
 /// - `export`: `blocks` (absent: every definition);
 /// - `import`: `library` (a `kentos.blocks` file's text), `replace`;
-/// - `units`: `block`, `units`, `rescale`.
+/// - `units`: `block`, `units`, `rescale`;
+/// - `update`: `block`, `entities` (its objects, local ids kept, 0 new), `base` and `attributes` when they change.
 ///
 /// What would change nothing (the same name, base point, objects or
 /// attributes; nothing unused to purge) writes nothing: the answer is
@@ -259,6 +268,11 @@ pub struct BlocksEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
+    /// `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
+    /// docs/adr/0316 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub entities: Option<Vec<Entity>>,
     /// `units`: the unit it is drawn in (docs/adr/0315 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -454,6 +468,81 @@ pub struct BlocksInsertPlan {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub unit_factor: f64,
     /// The document revision the plan was made against.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// How `file.import.block` takes a drawing (docs/adr/0316 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BlockFileMode {
+    /// The drawing's objects as one block (pictures and tables left out), its base the lower left of their extent.
+    #[default]
+    Drawing,
+    /// The drawing's blocks by name, with the blocks they place.
+    Blocks,
+}
+
+/// Input of `file.import.block` v1 (docs/adr/0316 §3): a `.kcad` drawing (v2, or v1 JSON) taken in, as one undo
+/// step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the file; a name the drawing has
+/// gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name the drawing has is kept,
+/// or with `replace` redefined: every insert shows the file's). The layers the objects are on come with them by
+/// path. Refusals, in order: `invalid_file_path` (empty, relative), `file_not_found`, `import_unreadable`,
+/// `invalid_revision`, `revision_conflict`, `nothing_to_import` (no object a block may hold; no block of the names),
+/// `unknown_block` (a name the file has not), `block_refused` (the drawing's block rules), `layer_locked`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImportBlock {
+    /// The drawing to read, an absolute path.
+    pub path: String,
+    #[serde(default)]
+    pub mode: BlockFileMode,
+    /// `drawing`: the block's name (absent: the file's name without its extension).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// `blocks`: the names to take (absent: every block of the file).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub names: Option<Vec<String>>,
+    /// `blocks`: a name the drawing has is redefined from the file's block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub replace: Option<bool>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `file.import.block` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockFileImported {
+    /// `drawing`: the new block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub block: Option<BlockId>,
+    /// The definitions added and redefined, in the drawing's order.
+    pub added: Vec<BlockId>,
+    pub changed: Vec<BlockId>,
+    /// The file's names the drawing has, kept as they are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub skipped: Vec<String>,
+    /// The layers and groups the import opened.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub layers: u32,
+    /// The document's revision after the write, as decimal text.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

@@ -571,6 +571,9 @@ fn command_tool(c: &Value) -> Value {
             // A file there is written over with `overwrite` (docs/adr/0253 §10).
             | "file.export.dxf"
             | "file.export.pdf"
+            | "file.export.block"
+            // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
+            | "file.import.block"
     );
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \

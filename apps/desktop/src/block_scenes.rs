@@ -9,16 +9,23 @@
 //! KENTOS_SHOTS_ONLY=blok-katman-kurali,blok-olcek,blok-olcek-oznitelik,blok-ekle-y cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0316's Blok düzenleyici: the door opened in it (its own layer “0 (blok)”, Duvar, the hidden
+//! Ayrıntı), a handle drawn, and the drawing after Kaydet, every door with its handle:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=blok-duzenleyici,blok-duzenleyici-cizim,blok-duzenleyici-kaydedildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
-use kentos_ui::widget::docking;
 use crate::files_testing::make_cad;
 use crate::tools_scenes::{E, N, Objects, hover, layer, open_edited, run, typed};
 use crate::tools_screens::Scene;
+use kentos_ui::widget::docking;
 
 const KAPI: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5101";
 const MASA: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5102";
@@ -69,7 +76,8 @@ fn blocks() -> Value {
 
 fn ground() -> Objects {
     let mut o = Objects::new();
-    let kapi = |o: &mut Objects, layer: &str, x: f64| o.insert(layer, KAPI, [x, 0.0], 1.0, 0.0, false);
+    let kapi =
+        |o: &mut Objects, layer: &str, x: f64| o.insert(layer, KAPI, [x, 0.0], 1.0, 0.0, false);
     kapi(&mut o, "kapilar", 0.0);
     kapi(&mut o, "mobilya", 2.5);
     let own = kapi(&mut o, "kapilar", 5.0);
@@ -89,7 +97,7 @@ fn ground() -> Objects {
     o
 }
 
-fn drawn(app: &mut App) {
+pub(crate) fn drawn(app: &mut App) {
     open_edited(app, ground(), |d| {
         d["layers"] = json!([
             layer("cizim", "Çizim", "fg", 0.25),
@@ -144,11 +152,56 @@ fn insert_y(app: &mut App) {
     hover(app, [11.5, 1.5]);
 }
 
+/// The door block's id.
+pub(crate) fn door() -> kentos_contracts::BlockId {
+    serde_json::from_value(json!(KAPI)).expect("an id")
+}
+
+/// The door opened in Blok düzenleyici.
+pub(crate) fn editing(app: &mut App) {
+    drawn(app);
+    let _ = app.update(Message::BlockEditor(crate::block_editor::Event::Open(
+        door(),
+    )));
+}
+
+/// A handle drawn on the block's layer, in the block's own coordinates.
+pub(crate) fn handle(app: &mut App) {
+    let doc = app.document.as_mut().expect("the editor's drawing");
+    let line: kentos_contracts::LineCreate = serde_json::from_value(json!({
+        "layerId": crate::block_editor::BLOCK_LAYER, "a": p(0.06, 0.45), "b": p(0.3, 0.45)
+    }))
+    .expect("a line");
+    let done = kentos_native_application::line::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        line,
+    );
+    assert!(
+        matches!(done, kentos_contracts::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
+    app.spatial
+        .reload(&app.document.as_ref().expect("a drawing").model);
+}
+
+fn editor_drawn(app: &mut App) {
+    editing(app);
+    handle(app);
+}
+
+fn editor_saved(app: &mut App) {
+    editor_drawn(app);
+    let _ = app.update(Message::BlockEditor(crate::block_editor::Event::Save));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("blok-katman-kurali", layers),
         ("blok-olcek", stretched),
         ("blok-olcek-oznitelik", properties),
         ("blok-ekle-y", insert_y),
+        ("blok-duzenleyici", editing),
+        ("blok-duzenleyici-cizim", editor_drawn),
+        ("blok-duzenleyici-kaydedildi", editor_saved),
     ]
 }

@@ -424,6 +424,8 @@ pub enum Message {
     LineTypes(crate::line_types_window::Event),
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4).
     StyleImpact(crate::style_impact::Event),
+    /// Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
+    BlockEditor(crate::block_editor::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -768,7 +770,7 @@ pub struct App {
     /// `cursorWorld`, which is the pointer's `world`).
     pub(crate) cursor_point: Option<(kentos_interaction::Vec2, kentos_interaction::Vec2)>,
     /// The drawing (its session) and generation the store and the selection last followed.
-    followed: Option<(u64, u64)>,
+    pub(crate) followed: Option<(u64, u64)>,
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
     /// Drafting aids for new points: ortho, polar tracking, the snap aperture
@@ -836,6 +838,8 @@ pub struct App {
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
     /// Değişikliğin etkisi's window (style_impact.rs, docs/adr/0314 §4).
     pub(crate) style_impact: Option<crate::style_impact::Window>,
+    /// Blok düzenleyici, while it is open (block_editor.rs, docs/adr/0316 §1).
+    pub(crate) block_editor: Option<crate::block_editor::BlockEditor>,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1134,6 +1138,7 @@ impl App {
             drawing_standard: None,
             line_types_window: None,
             style_impact: None,
+            block_editor: None,
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1656,6 +1661,7 @@ impl App {
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
+            Message::BlockEditor(event) => return self.block_editor_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -1780,6 +1786,9 @@ impl App {
                 // not the open drawing's file, which keeps its path and its state.
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
             },
+            Message::CloseRequested(_) if self.block_editor.is_some() => {
+                self.warn(crate::block_editor::OPEN);
+            }
             Message::CloseRequested(window) => {
                 // The layout is written now, not 250 ms later.
                 self.layout.write(Instant::now(), true);
@@ -2095,6 +2104,16 @@ impl App {
             }
         }
 
+        // While Blok düzenleyici is open the drawing set aside waits: its file, cloud and sheet commands are refused
+        // (block_editor.rs, docs/adr/0316 §1).
+        if self.block_editor.is_some()
+            && ["file.", "cloud.", "sheet.", "project."]
+                .iter()
+                .any(|p| id.starts_with(p))
+        {
+            self.warn(crate::block_editor::OPEN);
+            return Task::none();
+        }
         if let Some(tool) = id.strip_prefix("tool.")
             && Session::tools().contains(&tool)
         {
@@ -2459,6 +2478,19 @@ impl App {
             // The blocks (blocks_panel.rs, docs/adr/0144).
             "block.panel" => self.show_blocks_panel(),
             "block.purge" => self.purge_blocks(),
+            // Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
+            "block.edit" => self.block_editor_from_selection(),
+            // Bloğu dosyaya yaz and Başka çizimden yeniden tanımla (blocks_files.rs, docs/adr/0316 §3).
+            "block.writeFile" => {
+                if let Some(id) = self.block_at_hand() {
+                    return self.blocks_write_file(id);
+                }
+            }
+            "block.redefineFromFile" => {
+                if let Some(id) = self.block_at_hand() {
+                    return self.blocks_redefine_from(id);
+                }
+            }
             // Blokları dışa aktar and Blokları al (blocks_files.rs, docs/adr/0314 §3).
             "block.export" => return self.blocks_export(None),
             // Değişikliğin etkisi for the active layer (style_impact.rs, docs/adr/0314 §4).

@@ -1194,6 +1194,85 @@ edit.append({
     ],
 })
 
+# ── update: the block editor's save (docs/adr/0316 §1) ─────────────────
+
+def updated(block_id, entities, base=None, attributes=None):
+    """The definition after `update`: the objects given, a 0 id the next one the definition never had (past its own
+    and the given ones), in order; the base and attributes when given."""
+    b = without_id(B(block_id))
+    most = max([e["id"] for e in B(block_id)["entities"]] + [e["id"] for e in entities] + [0])
+    out = []
+    for e in entities:
+        e = json.loads(json.dumps(e))
+        if e["id"] == 0:
+            most += 1
+            e["id"] = most
+        out.append(e)
+    b["entities"] = out
+    if base is not None:
+        b["base"] = base
+    if attributes is not None:
+        b["attributes"] = attributes
+    return b
+
+
+def update_input(block_id, entities, **extra):
+    return {"operation": "update", "block": block_id, "entities": entities, **extra}
+
+
+DIREK_POLE = B(DIREK)["entities"]
+NO_PIECES = "Bloğun nesneleri verilmedi. Tanımın bütün nesnelerini yerel kimlikleriyle verin."
+
+# The pole's line made longer, its lamp kept, a base plate put first (a new object), its square removed: ids 2 and 3
+# stay, the plate takes 4 (the square's 1 is not given again).
+EDITED_POLE = [
+    piece("polygon", 0, pts=[P(-0.5, -0.5), P(0.5, -0.5), P(0.5, 0.5), P(-0.5, 0.5)]),
+    {**DIREK_POLE[1], "b": P(3.45, 0)},
+    {**DIREK_POLE[2], "p": P(3.8, 0)},
+]
+edit.append({
+    "name": "güncelle (blok düzenleyicinin kaydı): verilen kimlikler kalır, yeni nesne tanımın hiç almadığı sıradaki kimliği alır",
+    "steps": [
+        {"op": "execute", "input": update_input(DIREK, EDITED_POLE), "result": edited([DIREK]),
+         "expect": {"blocks": blocks_after((DIREK, updated(DIREK, EDITED_POLE))), "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Blok değiştir", "expect": {"blocks": SETUP_BLOCKS, "canUndo": False}},
+    ],
+})
+assert updated(DIREK, EDITED_POLE)["entities"][0]["id"] == 4
+edit.append({
+    "name": "güncelle: taban noktası ve öznitelikler verilirse değişir",
+    "steps": [
+        {"op": "execute", "input": update_input(LAMBA, B(LAMBA)["entities"], base=P(0.1, 0), attributes=[NO]),
+         "result": edited([LAMBA]),
+         "expect": {"blocks": blocks_after((LAMBA, updated(LAMBA, B(LAMBA)["entities"], P(0.1, 0), [NO])))}},
+    ],
+})
+edit.append({
+    "name": "güncelle: aynı nesneler hiçbir şey yazmaz",
+    "steps": [
+        {"op": "execute", "input": update_input(ROGAR, B(ROGAR)["entities"]), "result": edited(), "expect": NOTHING},
+    ],
+})
+edit.append({
+    "name": "güncelle: denetim sırası; nesneler, türleri, yerel kimlikler, sonra sürüm ve blok, sonra blok kuralları",
+    "steps": [
+        {"op": "execute", "input": update_input(ROGAR, []), "result": failed("no_entities", NO_PIECES, "entities"),
+         "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "update", "block": ROGAR}, "result": failed("no_entities", NO_PIECES, "entities"),
+         "expect": NOTHING},
+        {"op": "execute", "input": update_input(ROGAR, [{**B(ROGAR)["entities"][0], "id": 1}, {**B(ROGAR)["entities"][1], "id": 1}]),
+         "result": failed("duplicate_piece", "2. nesnenin yerel kimliği 1 daha önce verildi; her nesnenin kimliği bir kez olur, yeni nesneye 0 verin.",
+                          "entities[1].id"), "expect": NOTHING},
+        {"op": "execute", "input": update_input(MISSING_BLOCK, B(ROGAR)["entities"]), "result": unknown_block(MISSING_BLOCK),
+         "expect": NOTHING},
+        {"op": "execute", "input": update_input(LAMBA, [{**piece("insert", 0), "block": DIREK, "p": P(0, 0), "scale": 1, "rotation": 0}]),
+         "result": failed("block_cycle", "“Lamba” bloğu kendini içeremez (doğrudan ya da başka bloklar yoluyla).", "uids"),
+         "expect": NOTHING},
+        {"op": "execute", "input": update_input(LAMBA, [{**piece("insert", 0), "block": MISSING_BLOCK, "p": P(0, 0), "scale": 1, "rotation": 0}]),
+         "result": failed("unknown_block", "Yerleştirilen blok çizimde tanımlı değil.", "uids"), "expect": NOTHING},
+    ],
+})
+
 # White space other than the plain space, escaped so a reader sees it.
 INVISIBLE = "\u0085                 　﻿"
 

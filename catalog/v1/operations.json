@@ -524,10 +524,11 @@
       ]
     },
     "block.insertFile": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.blocks.define"
-      ]
+        "file.import.block"
+      ],
+      "was": "cad.blocks.define"
     },
     "block.panel": {
       "level": "host"
@@ -1090,6 +1091,27 @@
       "via": [
         "cad.styles.impact"
       ]
+    },
+    "block.edit": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.edit"
+      ],
+      "note": "Blok düzenleyicinin Kaydet'i: update işlemi, nesneler yerel kimlikleriyle (ADR 0316 §1)."
+    },
+    "block.writeFile": {
+      "level": "semantic",
+      "via": [
+        "file.export.block"
+      ],
+      "note": "WBLOCK: bloğun nesneleri taban noktası başlangıçta ayrı bir çizim (ADR 0316 §3)."
+    },
+    "block.redefineFromFile": {
+      "level": "semantic",
+      "via": [
+        "file.import.block"
+      ],
+      "note": "blocks kipi, replace (ADR 0316 §3)."
     }
   },
   "tools": {

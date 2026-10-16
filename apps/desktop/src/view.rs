@@ -91,7 +91,9 @@ impl App {
                     self.drawing_area(),
                     // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
                     self.time_bar(self.viewport.bounds.width),
-                    self.sheets.tabs().map(Message::Sheet),
+                    // Blok düzenleyici's bar in the tabs' place while it is open (block_editor.rs).
+                    self.block_editor_bar()
+                        .unwrap_or_else(|| self.sheets.tabs().map(Message::Sheet)),
                     self.bottom()
                 ],
                 ribbon_shade()

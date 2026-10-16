@@ -17,12 +17,69 @@ pub const FILE_EXPORT_DXF_VERSION: u32 = 1;
 pub const FILE_EXPORT_PDF: &str = "file.export.pdf";
 pub const FILE_EXPORT_PDF_VERSION: u32 = 1;
 
+/// A block, or objects, as a drawing file of its own (WBLOCK, docs/adr/0316 §3).
+pub const FILE_EXPORT_BLOCK: &str = "file.export.block";
+pub const FILE_EXPORT_BLOCK_VERSION: u32 = 1;
+
 /// The commands that write files, by name and version: the headless host
 /// runs them beside the document's (`DESKTOP_COMMANDS`).
 pub const FILE_COMMANDS: &[(&str, u32)] = &[
     (FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION),
     (FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION),
+    (FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION),
 ];
+
+/// Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their
+/// persistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;
+/// `base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:
+/// `invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,
+/// `entity_not_found`, `nothing_to_export` (a block without objects), `not_finite` (`base`), `file_unwritable`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExportBlock {
+    /// The file to write, an absolute path (`.kcad`).
+    pub path: String,
+    /// The block, by id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub block: Option<crate::identity::BlockId>,
+    /// Or the objects, by persistent id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub uids: Option<Vec<String>>,
+    /// The point that goes to the drawing's origin; a block's base point by default, none for objects.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub base: Option<crate::entity::Vec2>,
+    /// Write over a file that is there.
+    #[serde(default)]
+    pub overwrite: bool,
+}
+
+/// What `file.export.block` wrote, or with `plan` would write.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BlockFileExported {
+    pub path: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: u64,
+    /// SHA-256 of the bytes, 64 hex digits.
+    pub sha256: String,
+    /// The drawing's objects, and the blocks it carries.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub blocks: u32,
+    /// Whether a file was there (and is written over).
+    pub replaced: bool,
+}
 
 /// Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:
 /// `invalid_file_path` (empty, relative, a directory, no directory to go

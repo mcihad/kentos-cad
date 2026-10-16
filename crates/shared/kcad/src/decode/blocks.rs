@@ -57,7 +57,8 @@ pub(super) fn definitions(r: &mut Reader<'_>, has: Features) -> Result<Definitio
                 | BlockFault::EmptyTag { definition, .. }
                 | BlockFault::DuplicateTag { definition, .. }
                 | BlockFault::Cycle { definition }
-                | BlockFault::TooDeep { definition } => *definition,
+                | BlockFault::TooDeep { definition }
+                | BlockFault::TooLarge { definition } => *definition,
                 BlockFault::UnknownBlock { at } | BlockFault::BadScale { at } => {
                     at.definition.unwrap_or_default()
                 }

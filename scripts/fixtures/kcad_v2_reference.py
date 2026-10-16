@@ -2394,6 +2394,8 @@ def broken(minimal_content, minimal_file):
     files["duplicate-block-id.kcad"] = with_blocks([block(1, "Direk"), block(1, "Lamba")])
     files["blank-block-name.kcad"] = with_blocks([block(1, " \u3000")])
     files["block-cycle.kcad"] = with_blocks([block(1, "A", [content_insert(2)]), block(2, "B", [circle, content_insert(1)])])
+    # A thousand inserts of a block of a thousand circles is a million pieces; one more is too many (docs/adr/0316 §4).
+    files["block-too-large.kcad"] = with_blocks([block(1, "Bin", [circle] * 1000), block(2, "Milyon", [content_insert(1)] * 1001)], entities=[])
     files["block-too-deep.kcad"] = with_blocks([block(n, f"K{n}", [content_insert(n + 1)] if n < 17 else None) for n in range(1, 18)])
     files["block-object-uid.kcad"] = with_blocks([block(1, "Rögar", [cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "uid": blob(uid_bytes(m["uids"][0])), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5)})})])])
     files["insert-scale-zero.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(1, scale=f64(0.0))])

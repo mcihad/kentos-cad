@@ -14,8 +14,7 @@ use std::sync::atomic::AtomicBool;
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{BlockId, DocumentSnapshotV2, EntityId};
-use kentos_domain::Uuid;
+use kentos_contracts::{DocumentSnapshotV2, EntityId};
 use kentos_domain::exchange::{self, Picks, Same, TAKEN_SETTINGS};
 use kentos_interaction::Level;
 use kentos_native_application::exchange_write::{Counts, changes_tree, put_blocks, put_nodes};
@@ -705,68 +704,72 @@ impl App {
         true
     }
 
-    /// Dosyadan blok ekle (docs/adr/0193 §3): the drawing in `path` as one block, then Blok ekle with it.
+    /// Dosyadan blok ekle (docs/adr/0193 §3): the drawing in `path` as one block through `file.import.block`
+    /// (docs/adr/0316 §3), then Blok ekle with it.
     fn insert_file_block(&mut self, path: &Path) -> Task<Message> {
-        let Some(theirs) = self.read_other(path, BLOCK_TITLE) else {
-            return Task::none();
-        };
+        use kentos_contracts::{BlockFileMode, CommandResult, ImportBlock};
+        use kentos_native_application::{ExecutionContext, file_import_block};
         let locked = self.tree_locked();
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let id = BlockId(*Uuid::now_v7().as_bytes());
-        let made = match exchange::file_block(&doc.model.to_snapshot_v2(), &theirs, &stem(path), id)
-        {
-            Ok(made) => made,
-            Err(why) => {
-                self.warn(format!("{BLOCK_TITLE}: {why}"));
-                return Task::none();
-            }
+        let input = ImportBlock {
+            path: path.display().to_string(),
+            mode: BlockFileMode::Drawing,
+            name: None,
+            names: None,
+            replace: None,
+            expected_revision: None,
         };
-        if let Some(locked) = locked.filter(|_| made.layers > 0) {
+        // A project whose layer tree is not ours to change takes no new layer.
+        if let Some(locked) = locked
+            && let CommandResult::Completed { output, .. } =
+                file_import_block::plan(&ExecutionContext::new(&mut doc.model), &input)
+            && output.layers > 0
+        {
             self.warn(format!("{BLOCK_TITLE}: {locked}"));
             return Task::none();
         }
-        let model = &mut doc.model;
-        let group = model.begin_group(BLOCK_TITLE);
-        let mut counts = Counts::default();
-        let done = put_nodes(model, &made.drawing.layers, None, &mut counts, TAKE_TITLE)
-            .and_then(|()| put_blocks(model, &made.drawing.blocks, &mut counts));
-        if let Err(why) = done {
-            model.cancel_group(group);
-            self.warn(format!("{BLOCK_TITLE}: {why} Hiçbir şey eklenmedi."));
+        let (output, warnings) =
+            match file_import_block::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                CommandResult::Completed { output, warnings } => (output, warnings),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    self.warn(format!("{BLOCK_TITLE}: {}", error.message));
+                    return Task::none();
+                }
+                _ => return Task::none(),
+            };
+        let Some(id) = output.block else {
             return Task::none();
-        }
-        model.end_group(group);
-        self.put_settings(&made.drawing, false);
-        let left: Vec<String> = [
-            (made.images > 0).then(|| format!("{} resim", made.images)),
-            (made.tables > 0).then(|| format!("{} tablo", made.tables)),
-        ]
-        .into_iter()
-        .flatten()
-        .collect();
+        };
+        let (name, objects) = doc
+            .model
+            .block(id)
+            .map(|b| (b.name.clone(), b.entities.len()))
+            .unwrap_or_default();
+        let nested = output.added.len().saturating_sub(1);
+        let left: Vec<String> = warnings.into_iter().map(|w| w.message).collect();
         self.say(
             Level::Success,
             format!(
-                "“{}” blok oldu: “{}”, {} nesne{}{}{}. Yerleştirme noktasına tıklayın.",
+                "“{}” blok oldu: “{name}”, {objects} nesne{}{}{}. Yerleştirme noktasına tıklayın.",
                 file_name(path),
-                made.name,
-                made.objects,
-                if made.nested > 0 {
-                    format!(", {} iç blok", made.nested)
+                if nested > 0 {
+                    format!(", {nested} iç blok")
                 } else {
                     String::new()
                 },
-                if counts.layers > 0 {
-                    format!(", {} yeni katman", counts.layers)
+                if output.layers > 0 {
+                    format!(", {} yeni katman", output.layers)
                 } else {
                     String::new()
                 },
                 if left.is_empty() {
                     String::new()
                 } else {
-                    format!("; {} bloğa konamadığı için alınmadı", left.join(" ve "))
+                    format!("; {}", left.join(" ").trim_end_matches('.'))
                 }
             ),
         );

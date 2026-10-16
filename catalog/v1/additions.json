@@ -639,6 +639,46 @@
       "shortcuts": [],
       "category": "Yönet",
       "status": "implemented"
+    },
+    {
+      "id": "block.edit",
+      "title": "Bloğu düzenle",
+      "short": "Düzenle",
+      "icon": "blockEdit",
+      "description": "Seçili yerleştirmenin bloğunu blok düzenleyicide açar: tanımın nesneleri ayrı bir çizimde, bütün araçlarla düzenlenir; Kaydet çizime tek adımda yazar (cad.blocks.edit update), Vazgeç dokunmadan döner. Bloklar panelinde her bloğun menüsünde de.",
+      "aliases": [
+        "BEDIT",
+        "BLOKDUZENLE"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
+    },
+    {
+      "id": "block.writeFile",
+      "title": "Bloğu dosyaya yaz",
+      "short": "Dosyaya yaz",
+      "icon": "blockWrite",
+      "description": "Bir bloğun nesnelerini taban noktası başlangıçta, kullandığı katmanlar, iç bloklar ve stillerle ayrı bir .kcad çizimi olarak yazar (file.export.block). Seçili yerleştirmenin bloğu ya da Bloklar panelinde seçili blok.",
+      "aliases": [
+        "BLOKDOSYAYAZ"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
+    },
+    {
+      "id": "block.redefineFromFile",
+      "title": "Başka çizimden yeniden tanımla",
+      "short": "Yeniden tanımla",
+      "icon": "blockRedefineFile",
+      "description": "Bir bloğu başka bir çizimdeki aynı adlı bloğun tanımıyla değiştirir; kimliği kalır, bütün yerleştirmeleri yeni hâlini gösterir, tek adımda geri alınır (file.import.block, replace).",
+      "aliases": [
+        "BLOKYENILE"
+      ],
+      "shortcuts": [],
+      "category": "Blok",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -711,7 +751,10 @@
     "lineTypesManage": "<path d=\"M2.5 4.5h15\"/><path d=\"M2.5 10h3.6m2.4 0h3.6m2.4 0h3\"/><path d=\"M2.5 15.5h5m2 0h.5m2 0h5.5\"/>",
     "blockExport": "<rect x=\"2.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1.2\"/><circle cx=\"6.5\" cy=\"13.5\" r=\"1.8\"/><path d=\"M11 9 17 3M12.5 3H17v4.5\"/>",
     "blockImport": "<rect x=\"9.5\" y=\"9.5\" width=\"8\" height=\"8\" rx=\"1.2\"/><circle cx=\"13.5\" cy=\"13.5\" r=\"1.8\"/><path d=\"M3 3 9 9M9 4.5V9H4.5\"/>",
-    "styleImpact": "<path d=\"m7.5 3 5.6 2.9-5.6 2.9L1.9 5.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9.4 5.6 2.9 5.6-2.9\"/><path d=\"M14.6 12a3 3 0 0 1 0 4M16.8 10a6 6 0 0 1 0 8\"/>"
+    "styleImpact": "<path d=\"m7.5 3 5.6 2.9-5.6 2.9L1.9 5.9z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m1.9 9.4 5.6 2.9 5.6-2.9\"/><path d=\"M14.6 12a3 3 0 0 1 0 4M16.8 10a6 6 0 0 1 0 8\"/>",
+    "blockEdit": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M3 7.5h9M7.5 3v9\"/><path d=\"m11.5 16.8 5.6-5.6 1.9 1.9-5.6 5.6-2.4.5z\"/>",
+    "blockWrite": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M3 7.5h9M7.5 3v9\"/><path d=\"M17.5 10v7.5m-3-3 3 3 3-3\"/><path d=\"M13.5 21h8\"/>",
+    "blockRedefineFile": "<path d=\"M11 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7l4 4v3\"/><path d=\"M12 3v4h4\"/><path d=\"M14.5 15.5a3.5 3.5 0 0 1 6-1.5\"/><path d=\"M20.8 11.8v2.4h-2.4\"/><path d=\"M20.5 18.5a3.5 3.5 0 0 1-6 1.5\"/><path d=\"M14.2 22.2v-2.4h2.4\"/>"
   },
   "ribbon": [
     {
@@ -1198,6 +1241,18 @@
       "tab": "insert",
       "into": "Blok",
       "items": [
+        {
+          "command": "block.edit",
+          "size": "small"
+        },
+        {
+          "command": "block.writeFile",
+          "size": "small"
+        },
+        {
+          "command": "block.redefineFromFile",
+          "size": "small"
+        },
         {
           "command": "block.import",
           "size": "small"

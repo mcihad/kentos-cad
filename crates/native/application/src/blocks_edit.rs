@@ -136,7 +136,8 @@ pub fn label(operation: BlockEditOperation) -> &'static str {
         | BlockEditOperation::Redefine
         | BlockEditOperation::Rebase
         | BlockEditOperation::Attributes
-        | BlockEditOperation::Units => labels::BLOCK_CHANGE,
+        | BlockEditOperation::Units
+        | BlockEditOperation::Update => labels::BLOCK_CHANGE,
         BlockEditOperation::Remove => labels::BLOCK_REMOVE,
         BlockEditOperation::Purge => labels::BLOCK_PURGE,
         BlockEditOperation::Duplicate => crate::blocks_library::DUPLICATE,
@@ -229,6 +230,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             )));
         }
         BlockEditOperation::Units => {}
+        BlockEditOperation::Update => update_input(input)?,
         BlockEditOperation::Remove
         | BlockEditOperation::Purge
         | BlockEditOperation::Duplicate
@@ -284,6 +286,14 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             }
         }
         BlockEditOperation::Units => units(doc, old, &mut next, input)?,
+        BlockEditOperation::Update => {
+            next.entities = numbered(old, input.entities.clone().unwrap_or_default());
+            next.base = input.base.unwrap_or(old.base);
+            if let Some(a) = &input.attributes {
+                next.attributes = a.clone();
+            }
+            rules_with(doc, &next)?;
+        }
         BlockEditOperation::Remove => {
             if let Some(reason) = doc.block_removal_refused(old.id) {
                 return Err(Stop::failed(error(
@@ -468,4 +478,81 @@ pub(crate) fn rescaled(block: &mut BlockDefinition, s: kentos_contracts::units::
             i.y_scale = i.y_scale.map(|y| s.apply(y));
         }
     }
+}
+
+/// `update`'s input on its own (docs/adr/0316 §1): objects given, none a table, a picture, a raster or a point cloud,
+/// each a geometry `cad.entities.create` would take, no two with one local id but 0 (new); a finite base point; the
+/// attribute definitions as `attributes` checks them.
+fn update_input(input: &BlocksEdit) -> Result<(), Stop> {
+    let list = input.entities.as_deref().unwrap_or_default();
+    if list.is_empty() {
+        return Err(Stop::failed(error(
+            codes::NO_ENTITIES,
+            "Bloğun nesneleri verilmedi. Tanımın bütün nesnelerini yerel kimlikleriyle verin.".into(),
+            Some("entities".into()),
+        )));
+    }
+    for (i, e) in list.iter().enumerate() {
+        let refused = match e {
+            Entity::Table(_) => Some((codes::TABLE_IN_BLOCK, "tablo")),
+            Entity::Image(_) => Some((codes::IMAGE_IN_BLOCK, "resim")),
+            Entity::Raster(_) => Some((codes::RASTER_IN_BLOCK, "raster")),
+            Entity::PointCloud(_) => Some((codes::POINTCLOUD_IN_BLOCK, "nokta bulutu")),
+            _ => None,
+        };
+        if let Some((code, what)) = refused {
+            return Err(Stop::failed(error(
+                code,
+                format!("{}. nesne bir {what}; {what} bloğa konamaz.", i + 1),
+                Some(format!("entities[{i}]")),
+            )));
+        }
+        if let Some(g) = crate::geometry::edit_geometry(crate::geometry::shape(e)) {
+            crate::edit::check_geometry(&g, "entities", i, "nesnenin")?;
+        }
+    }
+    let mut seen = HashSet::new();
+    for (i, e) in list.iter().enumerate() {
+        let id = e.base().id;
+        if id != 0 && !seen.insert(id) {
+            return Err(Stop::failed(error(
+                codes::DUPLICATE_PIECE,
+                format!(
+                    "{}. nesnenin yerel kimliği {id} daha önce verildi; her nesnenin kimliği bir kez olur, yeni nesneye 0 verin.",
+                    i + 1
+                ),
+                Some(format!("entities[{i}].id")),
+            )));
+        }
+    }
+    if let Some(base) = input.base {
+        checks::point(base, "Taban noktasının", "base")?;
+    }
+    if input.attributes.is_some() {
+        attributes(input.attributes.as_deref())?;
+    }
+    Ok(())
+}
+
+/// The objects as the definition keeps them (docs/adr/0316 §1): a given local id kept, a 0 the next id the
+/// definition never had (past its own and the given ones), in the list's order; linked texts unlinked as a copy's.
+fn numbered(old: &BlockDefinition, list: Vec<Entity>) -> Vec<Entity> {
+    let most = old
+        .entities
+        .iter()
+        .chain(&list)
+        .map(|e| e.base().id)
+        .max()
+        .unwrap_or(0);
+    let mut next = most;
+    list.into_iter()
+        .map(|e| {
+            let mut e = crate::geometry::unlinked(e);
+            if e.base().id == 0 {
+                next = next.saturating_add(1);
+                crate::blocks_define::base_mut(&mut e).id = next;
+            }
+            e
+        })
+        .collect()
 }

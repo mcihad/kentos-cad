@@ -277,6 +277,7 @@ class BlockEditOperation(_StrEnum):
     - ``export``: Definitions as a `kentos.blocks` file's text, with the definitions they insert (“Blokları dışa aktar”);
     - ``import``: A `kentos.blocks` file's definitions taken in (“Blokları al”): a name the drawing has is kept, or with
     - ``units``: The unit it is drawn in (“Blok birimi”, docs/adr/0315 §4): with `rescale` its numbers are kept and their
+    - ``update``: Its objects given whole, in its own coordinates, each with its local id (“Blok düzenle”, the block editor's
     """
     RENAME = "rename"
     REDEFINE = "redefine"
@@ -288,10 +289,25 @@ class BlockEditOperation(_StrEnum):
     EXPORT = "export"
     IMPORT = "import"
     UNITS = "units"
+    UPDATE = "update"
 
 
-BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units"]
+BlockEditOperationName = Literal["rename", "redefine", "rebase", "remove", "purge", "attributes", "duplicate", "export", "import", "units", "update"]
 """The names of :class:`BlockEditOperation`, for a plain string."""
+
+
+class BlockFileMode(_StrEnum):
+    """How `file.import.block` takes a drawing (docs/adr/0316 §3).
+
+    - ``drawing``: The drawing's objects as one block (pictures and tables left out), its base the lower left of their extent.
+    - ``blocks``: The drawing's blocks by name, with the blocks they place.
+    """
+    DRAWING = "drawing"
+    BLOCKS = "blocks"
+
+
+BlockFileModeName = Literal["drawing", "blocks"]
+"""The names of :class:`BlockFileMode`, for a plain string."""
 
 
 class BlockUnits(_StrEnum):
@@ -3861,6 +3877,86 @@ class BlockDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BlockFileExported(_Model):
+    """What `file.export.block` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        sha256: SHA-256 of the bytes, 64 hex digits.
+        objects: The drawing's objects, and the blocks it carries. Unit: count.
+        blocks: Unit: count.
+        replaced: Whether a file was there (and is written over).
+    """
+    path: str
+    bytes: int
+    sha256: str
+    objects: int
+    blocks: int
+    replaced: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["objects"] = self.objects
+        out["blocks"] = self.blocks
+        out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockFileExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            objects=data["objects"],
+            blocks=data["blocks"],
+            replaced=data["replaced"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlockFileImported(_Model):
+    """Output of `file.import.block` v1.
+    Attributes:
+        added: The definitions added and redefined, in the drawing's order.
+        layers: The layers and groups the import opened. Unit: count.
+        revision: The document's revision after the write, as decimal text.
+        block: `drawing`: the new block.
+        skipped: The file's names the drawing has, kept as they are.
+    """
+    added: list[str]
+    changed: list[str]
+    layers: int
+    revision: str
+    block: str | None | Unset = UNSET
+    skipped: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = list(self.added)
+        out["changed"] = list(self.changed)
+        out["layers"] = self.layers
+        out["revision"] = self.revision
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.skipped is not UNSET:
+            out["skipped"] = list(self.skipped)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlockFileImported:
+        return cls(
+            added=list(data["added"]),
+            changed=list(data["changed"]),
+            layers=data["layers"],
+            revision=data["revision"],
+            block=data.get("block", UNSET),
+            skipped=list(data["skipped"]) if "skipped" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BlockInserted(_Model):
     """Output of `cad.blocks.insert` v1.
     Attributes:
@@ -4070,7 +4166,8 @@ class BlocksEdit(_Model):
     - `duplicate`: `block`, `name` (the copy's);
     - `export`: `blocks` (absent: every definition);
     - `import`: `library` (a `kentos.blocks` file's text), `replace`;
-    - `units`: `block`, `units`, `rescale`.
+    - `units`: `block`, `units`, `rescale`;
+    - `update`: `block`, `entities` (its objects, local ids kept, 0 new), `base` and `attributes` when they change.
 
     What would change nothing (the same name, base point, objects or
     attributes; nothing unused to purge) writes nothing: the answer is
@@ -4096,6 +4193,8 @@ class BlocksEdit(_Model):
         base: `rebase`: the new base point; `redefine`: the base point (absent: kept). Unit: length.
         block: The definition; every operation but `purge`.
         blocks: `export`: the definitions, by id (absent: every one).
+        entities: `update`: the definition's objects, in its own coordinates, each with its local id (0: a new one;
+            docs/adr/0316 §1).
         expected_revision: The document revision the input was prepared against, as decimal text.
         layer_id: `redefine` with `replace`: the layer the insert goes on.
         library: `import`: a `kentos.blocks` file's text.
@@ -4111,6 +4210,7 @@ class BlocksEdit(_Model):
     base: Vec2 | None | Unset = UNSET
     block: str | None | Unset = UNSET
     blocks: list[str] | None | Unset = UNSET
+    entities: list[Entity] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     library: str | None | Unset = UNSET
@@ -4131,6 +4231,8 @@ class BlocksEdit(_Model):
             out["block"] = self.block
         if self.blocks is not UNSET:
             out["blocks"] = None if self.blocks is None else list(self.blocks)
+        if self.entities is not UNSET:
+            out["entities"] = None if self.entities is None else [e0.to_json() for e0 in self.entities]
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.layer_id is not UNSET:
@@ -4157,6 +4259,7 @@ class BlocksEdit(_Model):
             base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
             block=data.get("block", UNSET),
             blocks=UNSET if "blocks" not in data else None if data["blocks"] is None else list(data["blocks"]),
+            entities=UNSET if "entities" not in data else None if data["entities"] is None else [Entity.from_json(e0) for e0 in data["entities"]],
             expected_revision=data.get("expectedRevision", UNSET),
             layer_id=data.get("layerId", UNSET),
             library=data.get("library", UNSET),
@@ -9371,6 +9474,49 @@ class EntitiesVertexed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportBlock(_Model):
+    """Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their
+    persistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;
+    `base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:
+    `invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,
+    `entity_not_found`, `nothing_to_export` (a block without objects), `not_finite` (`base`), `file_unwritable`.
+    Attributes:
+        path: The file to write, an absolute path (`.kcad`).
+        base: The point that goes to the drawing's origin; a block's base point by default, none for objects. Unit: length.
+        block: The block, by id.
+        overwrite: Write over a file that is there.
+        uids: Or the objects, by persistent id.
+    """
+    path: str
+    base: Vec2 | None | Unset = UNSET
+    block: str | None | Unset = UNSET
+    overwrite: bool = False
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else _vec2_out(self.base)
+        if self.block is not UNSET:
+            out["block"] = self.block
+        out["overwrite"] = self.overwrite
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportBlock:
+        return cls(
+            path=data["path"],
+            base=UNSET if "base" not in data else None if data["base"] is None else Vec2.from_json(data["base"]),
+            block=data.get("block", UNSET),
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportDxf(_Model):
     """Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:
     `invalid_file_path` (empty, relative, a directory, no directory to go
@@ -10235,6 +10381,55 @@ class ImpactOwn(_Model):
         return cls(
             property=data["property"],
             count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportBlock(_Model):
+    """Input of `file.import.block` v1 (docs/adr/0316 §3): a `.kcad` drawing (v2, or v1 JSON) taken in, as one undo
+    step “Dosyadan blok: ad.kcad”: as one block (`drawing`: named `name`, else after the file; a name the drawing has
+    gets “(2)”), or its blocks by name (`blocks`: `names`, every one when absent; a name the drawing has is kept,
+    or with `replace` redefined: every insert shows the file's). The layers the objects are on come with them by
+    path. Refusals, in order: `invalid_file_path` (empty, relative), `file_not_found`, `import_unreadable`,
+    `invalid_revision`, `revision_conflict`, `nothing_to_import` (no object a block may hold; no block of the names),
+    `unknown_block` (a name the file has not), `block_refused` (the drawing's block rules), `layer_locked`.
+    Attributes:
+        path: The drawing to read, an absolute path.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        name: `drawing`: the block's name (absent: the file's name without its extension).
+        names: `blocks`: the names to take (absent: every block of the file).
+        replace: `blocks`: a name the drawing has is redefined from the file's block.
+    """
+    path: str
+    expected_revision: str | None | Unset = UNSET
+    mode: BlockFileMode | BlockFileModeName = BlockFileMode.DRAWING
+    name: str | None | Unset = UNSET
+    names: list[str] | None | Unset = UNSET
+    replace: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["mode"] = _enum_out(self.mode)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else list(self.names)
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportBlock:
+        return cls(
+            path=data["path"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            mode=_enum_in(BlockFileMode, data["mode"]) if "mode" in data else BlockFileMode.DRAWING,
+            name=data.get("name", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
+            replace=data.get("replace", UNSET),
         )
 
 
@@ -25560,6 +25755,10 @@ __all__ = [
     "BlockDefinition",
     "BlockEditOperation",
     "BlockEditOperationName",
+    "BlockFileExported",
+    "BlockFileImported",
+    "BlockFileMode",
+    "BlockFileModeName",
     "BlockInserted",
     "BlockRecord",
     "BlockUnit",
@@ -25758,6 +25957,7 @@ __all__ = [
     "EntityEdit",
     "EntityGeometry",
     "ExplodeDensity",
+    "ExportBlock",
     "ExportDxf",
     "ExportPdf",
     "ExtensionPointConstruction",
@@ -25804,6 +26004,7 @@ __all__ = [
     "ImpactOwn",
     "ImpactTarget",
     "ImpactTargetName",
+    "ImportBlock",
     "ImportDxf",
     "ImportedLayer",
     "InfoCard",

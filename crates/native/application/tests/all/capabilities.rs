@@ -80,6 +80,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "*",
+        "block_too_large",
+        "milyon parçalı tanım ortak durum dosyasını megabaytlarca büyütür; kural kentos-contracts'ın blocks testinde ve KCAD'in broken/block-too-large.kcad'inde (ADR 0316 §4)",
+    ),
+    (
+        "*",
         "block_refused",
         "beklenmez: komutlar belgenin blok kurallarını önce kendileri denetler",
     ),

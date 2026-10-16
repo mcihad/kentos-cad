@@ -789,3 +789,89 @@ fn a_millimetre_detail_on_tm_coordinates_survives_measure_edits_and_files() {
         .collect();
     assert_eq!(back, want);
 }
+
+#[test]
+fn a_block_is_written_to_a_file_and_read_into_another_drawing() {
+    // WBLOCK and its reading back (docs/adr/0316 §3): the block's objects as a drawing, its base at the origin,
+    // brought into another drawing as one block; the objects named, with a base of their own; the refusals.
+    let dir = scratch("wblock");
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let uid = created(
+        &s.run("cad.polygon.create", None, Op::Execute, square(&layer))
+            .expect("runs"),
+    );
+    let defined = s
+        .call(json!({ "command": "cad.blocks.define", "input": {
+            "name": "Kare", "base": { "x": 423500.0, "y": 4512300.0 }, "uids": [uid], "replace": false } }))
+        .expect("answers");
+    assert_eq!(defined["status"], "completed", "{defined}");
+    let block = defined["output"]["block"].clone();
+    let path = dir.join("kare.kcad");
+    let p = path.display().to_string();
+    // Planned: nothing written; written: the plan's bytes.
+    let planned = s
+        .call(json!({ "command": "file.export.block", "op": "plan", "input": { "path": p, "block": block } }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(planned["output"]["objects"], 1);
+    assert!(!path.exists());
+    let written = s
+        .call(json!({ "command": "file.export.block", "input": { "path": p, "block": block } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(written["output"]["sha256"], planned["output"]["sha256"]);
+    let bytes = std::fs::read(&path).expect("written");
+    let drawing = kentos_kcad::decode(&bytes).expect("a .kcad v2 drawing");
+    assert_eq!(drawing.entities.len(), 1);
+    // The base at the origin: the square's corner is (0, 0) in the file.
+    let first = serde_json::to_value(&drawing.entities[0]).expect("JSON");
+    assert_eq!(first["pts"][0], json!({ "x": 0.0, "y": 0.0 }), "{first}");
+    // Read into another drawing as one block named after the file, one undo step.
+    let mut other = new_drawing();
+    let taken = other
+        .call(json!({ "command": "file.import.block", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(taken["status"], "completed", "{taken}");
+    let made = other
+        .blocks()
+        .into_iter()
+        .find(|b| b.name == "kare")
+        .expect("the block");
+    assert_eq!(made.entities.len(), 1);
+    assert_eq!(made.base, kentos_contracts::Vec2 { x: 0.0, y: 0.0 });
+    // A file there is kept unless asked.
+    let again = s
+        .call(json!({ "command": "file.export.block", "input": { "path": p, "block": block } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    // The objects named, with their own base.
+    let q = dir.join("secilen.kcad").display().to_string();
+    let chosen = s
+        .call(json!({ "command": "file.export.block", "input": {
+            "path": q, "uids": [], "base": { "x": 423510.0, "y": 4512300.0 } } }))
+        .expect("answers");
+    assert_eq!(chosen["error"]["code"], "no_entities", "{chosen}");
+    // Refusals: neither a block nor objects, an unknown block, an object not there.
+    for (input, code) in [
+        (json!({ "path": q }), "no_block"),
+        (
+            json!({ "path": q, "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999" }),
+            "unknown_block",
+        ),
+        (
+            json!({ "path": q, "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"] }),
+            "entity_not_found",
+        ),
+        (json!({ "path": "kare.kcad", "block": block }), "invalid_file_path"),
+    ] {
+        let answer = s
+            .call(json!({ "command": "file.export.block", "input": input }))
+            .expect("answers");
+        assert_eq!(answer["error"]["code"], code, "{answer}");
+    }
+    assert!(!std::path::Path::new(&q).exists());
+}

@@ -1034,7 +1034,7 @@ Motor anahtarı olan stil bütün kurallarıyla denetlenir (`kentos_contracts::l
 - **Kurallar** (okuyucu ve yazıcı aynı sırayla denetler; web ve masaüstü belgeleri de aynı kurallarla, `kentos_contracts::blocks`):
   1. Tanımlar sırasıyla: adı boş ya da yalnız boşluk olamaz (`bad_value`); kimliği (`duplicate_block`) ve adı (`duplicate_block`, Türkçe büyük/küçük harf ayrımı yapılmadan: I → ı, İ → i, öbür harfler Unicode'un küçük harfiyle) bir kezdir; öznitelik etiketi boş olamaz ve tanımda bir kezdir (`bad_value`).
   2. Tanımların nesnelerindeki yerleştirmeler bilinen bir tanımı gösterir (`unknown_block`); bir yerleştirme listede kendisinden sonra gelen bir tanımı da gösterebilir.
-  3. Hiçbir tanım kendini doğrudan ya da başka tanımlar yoluyla içeremez (`block_cycle`); iç içelik en çok 16 düzeydir, içinde yerleştirme olmayan tanım bir düzeydir (`block_too_deep`). Derinlik önce aranır ve yığın 16'yı geçmez: 16'dan uzun bir döngü `block_too_deep` olarak söylenir.
+  3. Hiçbir tanım kendini doğrudan ya da başka tanımlar yoluyla içeremez (`block_cycle`); iç içelik en çok 16 düzeydir, içinde yerleştirme olmayan tanım bir düzeydir (`block_too_deep`). Derinlik önce aranır ve yığın 16'yı geçmez: 16'dan uzun bir döngü `block_too_deep` olarak söylenir. Bir tanım iç içe yerleştirmeleriyle (öznitelik tanımları dahil) bir milyondan çok parçaya açılamaz (`block_too_large`, ADR 0316 §4); sayı sığdan derine, doymalı toplamla hesaplanır.
   4. Belgenin kendi nesnelerindeki her yerleştirme bir tanımı gösterir (`unknown_block`).
 - Hatanın yolu yerleştirmenin `…/insert/block` alanını ya da tanımın kendisini (`document/blocks/<sıra>`) gösterir.
 
@@ -1187,6 +1187,7 @@ Okuyucular kodu sabit tutar (programlar ve örnek dosyalar için); ileti Türkç
 | `unknown_block` | şema | yerleştirme tanımlı olmayan bir bloğu gösteriyor |
 | `block_cycle` | şema | blok kendini doğrudan ya da dolaylı içeriyor |
 | `block_too_deep` | şema | bloklar 16 düzeyden derin iç içe |
+| `block_too_large` | şema | bir blok iç içe yerleştirmeleriyle bir milyondan çok parçaya açılır |
 
 ## 10. Örnek: en küçük çizim
 

@@ -30,6 +30,8 @@ kentos-style-library = { path = "../style-library" }
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
 # DXF içe aktar (docs/adr/0257 §3): `file.import.dxf` reads the file with the shared reader, as the window does.
 kentos-formats = { path = "../../shared/formats" }
+# Blocks from a drawing file (file.import.block, docs/adr/0316 §3): the .kcad codec reads it.
+kentos-kcad = { path = "../../shared/kcad" }
 # The protocol's wrapper (docs/adr/0253) reads every command's input as the type it is.
 serde = { workspace = true }
 serde_json = { workspace = true }

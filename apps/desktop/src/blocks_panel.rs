@@ -43,7 +43,7 @@ const THUMB: f32 = 34.0;
 pub struct PanelState {
     query: String,
     /// The row chosen with the mouse or the keys: the keyboard's row.
-    focused: Option<BlockId>,
+    pub(crate) focused: Option<BlockId>,
     /// The last row pressed and when: a second press soon after places it.
     pressed: Option<(BlockId, Instant)>,
     /// The row renamed in place, and its text.
@@ -83,6 +83,12 @@ pub enum Event {
     /// Kopyasını oluştur, Dışa aktar… and Blokları al…'s file (blocks_files.rs, docs/adr/0314 §3).
     Duplicate(BlockId),
     Export(Option<BlockId>),
+    /// Bloğu dosyaya yaz… (WBLOCK, docs/adr/0316 §3): where, asked; then written.
+    WriteFile(BlockId),
+    FileChosen(BlockId, Option<std::path::PathBuf>),
+    /// Başka çizimden yeniden tanımla…: which drawing, asked; then its block of this name taken in.
+    RedefineFrom(BlockId),
+    RedefineChosen(BlockId, Option<std::path::PathBuf>),
     Exported(Option<BlockId>, Option<std::path::PathBuf>),
     Imported(Option<(String, String)>),
     /// The unit it is drawn in (blocks_files.rs, docs/adr/0315 §4): with `rescale` its numbers kept.
@@ -196,6 +202,10 @@ impl App {
             Event::Duplicate(id) => self.blocks_duplicate(id),
             Event::Units(id, units, rescale) => self.blocks_units(id, units, rescale),
             Event::Export(id) => return self.blocks_export(id),
+            Event::WriteFile(id) => return self.blocks_write_file(id),
+            Event::FileChosen(id, path) => self.blocks_file_chosen(id, path),
+            Event::RedefineFrom(id) => return self.blocks_redefine_from(id),
+            Event::RedefineChosen(id, path) => self.blocks_redefine_chosen(id, path),
             Event::Exported(id, path) => self.blocks_exported(id, path),
             Event::Imported(read) => self.blocks_imported(read),
         }
@@ -602,6 +612,11 @@ impl App {
             .item("Blok ekle", msg(Event::Insert(id)))
             .icon(crate::icons::from_web(Some("blockInsert")))
             .shortcut("Enter")
+            .item(
+                "Bloğu düzenle",
+                Message::BlockEditor(crate::block_editor::Event::Open(id)),
+            )
+            .icon(crate::icons::from_web(Some("blockEdit")))
             .item("Yeniden adlandır", msg(Event::Rename(id)))
             .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
@@ -611,6 +626,10 @@ impl App {
             .icon(crate::icons::from_web(Some("copy")))
             .item("Dışa aktar…", msg(Event::Export(Some(id))))
             .icon(crate::icons::from_web(Some("export")))
+            .item("Dosyaya yaz…", msg(Event::WriteFile(id)))
+            .icon(crate::icons::from_web(Some("blockWrite")))
+            .item("Başka çizimden yeniden tanımla…", msg(Event::RedefineFrom(id)))
+            .icon(crate::icons::from_web(Some("blockRedefineFile")))
             .submenu("Birim", self.units_menu(id))
             .icon(crate::icons::from_web(Some("units")));
         let attributes = model.block(id).map_or(0, |b| b.attributes.len());
