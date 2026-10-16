@@ -24,6 +24,8 @@ pub fn kind_of(f: &LayerField) -> Kind {
         LayerFieldKind::Text => Kind::Text,
         LayerFieldKind::Date => Kind::Date,
         LayerFieldKind::Boolean => Kind::Boolean,
+        // A date and time and a time of day count as their texts (docs/adr/0412 §3).
+        LayerFieldKind::DateTime | LayerFieldKind::Time => Kind::Text,
     }
 }
 
@@ -39,7 +41,13 @@ pub fn cell_of(f: &LayerField, raw: Option<&str>) -> Cell {
         // Only a value list, a date and yes or no show otherwise than their canonical text.
         Ok(v)
             if f.values.as_ref().is_none_or(Vec::is_empty)
-                && !matches!(f.kind, LayerFieldKind::Date | LayerFieldKind::Boolean) =>
+                && !matches!(
+                    f.kind,
+                    LayerFieldKind::Date
+                        | LayerFieldKind::Boolean
+                        | LayerFieldKind::DateTime
+                        | LayerFieldKind::Time
+                ) =>
         {
             Cell::Value(v, None)
         }

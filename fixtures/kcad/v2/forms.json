@@ -291,6 +291,14 @@
           ],
           "default": "konut; dukkan",
           "multiple": true
+        },
+        {
+          "name": "Tespit",
+          "kind": "datetime"
+        },
+        {
+          "name": "Vardiya",
+          "kind": "time"
         }
       ]
     }
@@ -311,7 +319,9 @@
       "attrs": {
         "Durum": "inceleme",
         "Kat": "3",
-        "Not": "Çatı arası ayrıca bakılmalı."
+        "Not": "Çatı arası ayrıca bakılmalı.",
+        "Tespit": "2026-10-16T14:30:00",
+        "Vardiya": "08:00:00"
       },
       "pts": [
         {

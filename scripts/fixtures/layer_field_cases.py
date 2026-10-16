@@ -28,6 +28,11 @@ when that is one character). Trimming takes JavaScript's white space.
   day of the calendar, year 1..9999; written YYYY-MM-DD.
 - Boolean: folded and trimmed evet, true, 1 or hayır, false, 0; written true
   or false.
+- Time (docs/adr/0412 §1): H:MM or HH:MM[:SS] (ASCII digits), hour 0..23,
+  minutes and seconds 0..59; written HH:MM:SS.
+- Date and time (docs/adr/0412 §1): a date as above, then — at the first 'T'
+  or space — a time as above (trimmed); a date alone is its midnight; written
+  YYYY-MM-DDTHH:MM:SS.
 - A value list: a label (folded, trimmed) gives its code; else the kind's
   canonical text (a text field's trimmed) must be a code.
 - A range: exact, ends included, after the value list.
@@ -44,7 +49,8 @@ OUT = ROOT / "fixtures/layer-fields/v1/cases.json"
 JS_SPACE = " \t\n\v\f\r                 　﻿"
 MAX_SAFE = 9007199254740991
 ALPHABET = "abcçdefgğhıijklmnoöpqrsştuüvwxyz"
-KIND_WORD = {"text": "metin", "integer": "tam sayı", "decimal": "ondalık sayı", "date": "tarih", "boolean": "evet ya da hayır"}
+KIND_WORD = {"text": "metin", "integer": "tam sayı", "decimal": "ondalık sayı", "date": "tarih", "boolean": "evet ya da hayır",
+             "datetime": "tarih ve saat", "time": "saat"}
 
 
 def fold(c):
@@ -153,6 +159,30 @@ def parse_date(s):
     return f"{y:04d}-{mo:02d}-{d:02d}"
 
 
+def parse_time(s):
+    m = re.fullmatch(r"([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?", s)
+    if m is None:
+        return None
+    h, mi, se = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
+    if h > 23 or mi > 59 or se > 59:
+        return None
+    return f"{h:02d}:{mi:02d}:{se:02d}"
+
+
+def parse_datetime(s):
+    cut = [i for i in (s.find("T"), s.find(" ")) if i >= 0]
+    if not cut:
+        day, clock = s, None
+    else:
+        i = min(cut)
+        day, clock = s[:i], trim(s[i + 1:])
+    d = parse_date(day)
+    if d is None:
+        return None
+    t = "00:00:00" if clock is None else parse_time(clock)
+    return None if t is None else f"{d}T{t}"
+
+
 def parse_boolean(s):
     f = folded(s)
     if f in ("evet", "true", "1"):
@@ -191,6 +221,16 @@ def kind_value(f, s, text):
         v = parse_date(s)
         if v is None:
             return err("type", f"“{L}” alanı tarih ister; “{text}” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın.")
+        return {"value": v}
+    if k == "datetime":
+        v = parse_datetime(s)
+        if v is None:
+            return err("type", f"“{L}” alanı tarih ve saat ister; “{text}” verildi. GG.AA.YYYY SS:DD ya da YYYY-AA-GG SS:DD yazın.")
+        return {"value": v}
+    if k == "time":
+        v = parse_time(s)
+        if v is None:
+            return err("type", f"“{L}” alanı saat ister; “{text}” verildi. SS:DD ya da SS:DD:SS yazın (00:00–23:59).")
         return {"value": v}
     if k == "boolean":
         v = parse_boolean(s)
@@ -377,6 +417,10 @@ def infer(rows):
                     f = {"name": k, "kind": "text"}
             elif all(parse_date(v) is not None for v in vs):
                 f = {"name": k, "kind": "date"}
+            elif all(":" in v and parse_datetime(v) is not None for v in vs):
+                f = {"name": k, "kind": "datetime"}
+            elif all(parse_time(v) is not None for v in vs):
+                f = {"name": k, "kind": "time"}
             elif all(folded(v) in ("evet", "hayır", "true", "false") for v in vs):
                 f = {"name": k, "kind": "boolean"}
         out.append(f)
@@ -395,6 +439,12 @@ def display(f, v):
         return {"true": "Evet", "false": "Hayır"}.get(v, v)
     if f["kind"] == "date" and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", v):
         return f"{v[8:10]}.{v[5:7]}.{v[0:4]}"
+    if f["kind"] == "datetime" and parse_datetime(v) == v:
+        clock = v[11:]
+        clock = clock[:-3] if clock.endswith(":00") else clock
+        return f"{v[8:10]}.{v[5:7]}.{v[0:4]} {clock}"
+    if f["kind"] == "time" and parse_time(v) == v:
+        return v[:-3] if v.endswith(":00") else v
     return v
 
 
@@ -406,6 +456,9 @@ DEC = {"name": "Alan", "kind": "decimal"}
 DEC2 = {"name": "Alan", "kind": "decimal", "scale": 2, "min": "0"}
 DATE = {"name": "Tarih", "kind": "date"}
 BOOL = {"name": "Ruhsat", "kind": "boolean"}
+# docs/adr/0412 §1: a date and time, a time of day.
+DT = {"name": "Tespit", "kind": "datetime"}
+TM = {"name": "Vardiya", "kind": "time"}
 TEXT5 = {"name": "Kod", "kind": "text", "length": 5}
 REQ = {"name": "Ada", "kind": "text", "required": True}
 LIST_T = {"name": "Kullanım", "kind": "text", "values": [{"code": "K", "label": "Konut"}, {"code": "T", "label": "Ticaret"}, {"code": "İ", "label": "İşyeri"}]}
@@ -431,6 +484,10 @@ CHECKS = [
     (MANY, "K"), (MANY, "T; K"), (MANY, "ticaret;konut; TİCARET"), (MANY, " İ ; ; K "), (MANY, "K; Sanayi"),
     (MANY, ";"), (MANY_REQ, " ; "), (MANY, "işyeri;İ"), (MANY, "K, T"),
     (FREE, "b; a; b"), (FREE, " x ;; y "), ({**FREE, "required": True}, ";"), (FREE, "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"),
+    (DT, "16.10.2026 14:30"), (DT, "2026-10-16T14:30:05"), (DT, "2026-10-16 9:05"), (DT, "2026-10-16"), (DT, "16.10.2026   14:30"),
+    (DT, "2026-10-16T24:00"), (DT, "2026-10-16T14:3"), (DT, "31.04.2026 10:00"), (DT, "14:30"), (DT, "2026-10-16T14:30:00Z"),
+    (TM, "8:05"), (TM, "08:05:09"), (TM, "23:59"), (TM, "24:00"), (TM, "7:5"), (TM, "12:60"), (TM, "12:30:60"), (TM, "12"),
+    (TM, "١٢:٣٠"), (TM, " 06:00 "),
 ]
 
 PROBLEMS = [
@@ -468,6 +525,10 @@ PROBLEMS = [
     ("çok-değerli-sayı", [{**LIST_N, "multiple": True}]),
     ("çok-değerli-noktalı-virgül", [{"name": "Kod", "kind": "text", "multiple": True, "values": [{"code": "a;b", "label": "AB"}]}]),
     ("çok-değerli-varsayılan-sırası", [{**MANY, "default": "T; K"}]),
+    ("tarih-saatte-aralık", [{**DT, "min": "2026-01-01T00:00:00"}]),
+    ("saatte-liste", [{**TM, "values": [{"code": "08:00:00", "label": "Sabah"}]}]),
+    ("saat-varsayılanı", [{**TM, "default": "08:30:00"}, {**DT, "default": "2026-10-16T08:30:00"}]),
+    ("saat-varsayılanı-tek-biçim", [{**TM, "default": "8:30"}]),
 ]
 
 INFER = [
@@ -479,10 +540,13 @@ INFER = [
     ("bir-ve-sıfır", [{"B": "1"}, {"B": "0"}]),
     ("doğal-sıra", [{"a10": "x", "a2": "y", "B": "z", "ç": "w"}]),
     ("çok-basamak", [{"V": "0.1234567890123456"}]),
+    ("tarih-ve-saat", [{"T": "16.10.2026 14:30", "S": "8:00"}, {"T": "2026-10-17T09:15:00", "S": "17:45:30"}]),
+    ("tarih-ile-tarih-saat", [{"T": "2026-10-16"}, {"T": "2026-10-16 10:00"}]),
 ]
 
 DISPLAY = [(BOOL, "true"), (BOOL, "false"), (BOOL, "evet"), (DATE, "2026-10-07"), (DATE, "07.10.2026"), (LIST_T, "T"), (LIST_T, "X"), (LIST_N, "2"), (DEC, "12.50"),
-           (MANY, "K; T"), (MANY, "K; X"), (MANY, "")]
+           (MANY, "K; T"), (MANY, "K; X"), (MANY, ""),
+           (DT, "2026-10-16T14:30:00"), (DT, "2026-10-16T14:30:05"), (DT, "16.10.2026 14:30"), (TM, "08:00:00"), (TM, "17:45:30"), (TM, "8:00")]
 
 
 def build():

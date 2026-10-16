@@ -786,7 +786,7 @@ def layer_snap(s):
     return cmap({"off": boolean(True)})
 
 
-FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean")
+FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "time")
 
 
 def layer_field(f):
@@ -1968,7 +1968,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
 
     # Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
     def keyed(nodes):
-        return any(any("id" in f for f in n.get("fields", [])) or keyed(n.get("children", [])) for n in nodes)
+        return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time") for f in n.get("fields", []))
+                   or keyed(n.get("children", [])) for n in nodes)
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
     if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or any(
@@ -3680,6 +3681,13 @@ def build():
     keyed_payload = document(keyed)
     assert keyed_payload.count(b"\x67version\x18\x3c") == 1, "a field's id alone is schema 60"
     out["broken/field-id-in-schema-59.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    # A date and time field alone is schema 60's (docs/adr/0412 §4).
+    timed = copy.deepcopy(load("forms.json"))
+    timed["settings"].pop("forms")
+    timed["layers"][0]["fields"] = [f for f in timed["layers"][0]["fields"] if f["kind"] == "datetime"]
+    timed_payload = document(timed)
+    assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
+    out["broken/field-datetime-in-schema-59.kcad"] = container(timed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
     form = lambda d: d["settings"]["forms"][0]  # noqa: E731
     out["broken/forms-empty.kcad"] = forms_broken(lambda d: d["settings"].update(forms=[]))
     out["broken/forms-digest.kcad"] = forms_broken(lambda d: form(d)["releases"][0]["body"].update(revision=9))

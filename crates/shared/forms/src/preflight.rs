@@ -104,7 +104,9 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
                 W::Number | W::List | W::Radio | W::Segmented | W::Slider
             )
         }
-        LayerFieldKind::Date => widget == W::Date,
+        LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => {
+            matches!(widget, W::Date | W::Text)
+        }
         LayerFieldKind::Boolean => matches!(widget, W::Check | W::Switch | W::Radio | W::Segmented),
     };
     // A listed multiple field is edited by its check list, a free one by text; the check list edits

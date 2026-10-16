@@ -1465,12 +1465,21 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401, 0408, 0410): a form of the project, a layer field's stable id or
-    // its several values, or a record without a geometry.
+    // Schema 60 (docs/adr/0401, 0408, 0410, 0412): a form of the project, a layer field's stable id,
+    // its several values or its date-and-time or time kind, or a record without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
+        let later = |f: &kentos_contracts::LayerField| {
+            f.id.is_some()
+                || f.multiple
+                || matches!(
+                    f.kind,
+                    kentos_contracts::LayerFieldKind::DateTime
+                        | kentos_contracts::LayerFieldKind::Time
+                )
+        };
         nodes
             .iter()
-            .any(|n| n.fields.iter().any(|f| f.id.is_some() || f.multiple) || keyed(&n.children))
+            .any(|n| n.fields.iter().any(later) || keyed(&n.children))
     }
     if !doc.settings.forms.is_empty()
         || keyed(&doc.layers)

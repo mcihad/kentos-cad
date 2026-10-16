@@ -38,15 +38,22 @@ pub enum LayerFieldKind {
     Decimal,
     Date,
     Boolean,
+    /// A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.
+    #[serde(rename = "datetime")]
+    DateTime,
+    /// A time of day (docs/adr/0412 §1): `SS:DD:SS`.
+    Time,
 }
 
 impl LayerFieldKind {
     /// Every kind, in the order the Alanlar window lists them.
-    pub const ALL: [LayerFieldKind; 5] = [
+    pub const ALL: [LayerFieldKind; 7] = [
         LayerFieldKind::Text,
         LayerFieldKind::Integer,
         LayerFieldKind::Decimal,
         LayerFieldKind::Date,
+        LayerFieldKind::DateTime,
+        LayerFieldKind::Time,
         LayerFieldKind::Boolean,
     ];
 
@@ -58,6 +65,8 @@ impl LayerFieldKind {
             LayerFieldKind::Decimal => "decimal",
             LayerFieldKind::Date => "date",
             LayerFieldKind::Boolean => "boolean",
+            LayerFieldKind::DateTime => "datetime",
+            LayerFieldKind::Time => "time",
         }
     }
 
@@ -74,12 +83,22 @@ impl LayerFieldKind {
             LayerFieldKind::Decimal => "Ondalık sayı",
             LayerFieldKind::Date => "Tarih",
             LayerFieldKind::Boolean => "Evet/hayır",
+            LayerFieldKind::DateTime => "Tarih ve saat",
+            LayerFieldKind::Time => "Saat",
         }
     }
 
     /// Whether its values are numbers (a range and a value list take them).
     pub fn is_number(self) -> bool {
         matches!(self, LayerFieldKind::Integer | LayerFieldKind::Decimal)
+    }
+
+    /// Whether its values are a date, a date and a time or a time of day (docs/adr/0412).
+    pub fn is_temporal(self) -> bool {
+        matches!(
+            self,
+            LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time
+        )
     }
 }
 
@@ -378,6 +397,46 @@ fn date(s: &str) -> Option<String> {
         .then(|| format!("{y:04}-{m:02}-{d:02}"))
 }
 
+/// A time of day's canonical text (SS:DD:SS) from SS:DD or SS:DD:SS (the hour one or two digits,
+/// 0–23; minutes and seconds two, 0–59).
+fn time_of_day(s: &str) -> Option<String> {
+    let mut parts = s.split(':');
+    let (h, m) = (parts.next()?, parts.next()?);
+    let sec = parts.next();
+    if parts.next().is_some() {
+        return None;
+    }
+    let number = |t: &str, lo: usize, hi: usize, most: u32| {
+        (lo..=hi)
+            .contains(&t.len())
+            .then_some(t)
+            .filter(|t| digits(t))
+            .and_then(|t| t.parse::<u32>().ok())
+            .filter(|v| *v <= most)
+    };
+    let (h, m) = (number(h, 1, 2, 23)?, number(m, 2, 2, 59)?);
+    let sec = match sec {
+        Some(t) => number(t, 2, 2, 59)?,
+        None => 0,
+    };
+    Some(format!("{h:02}:{m:02}:{sec:02}"))
+}
+
+/// A date and time's canonical text (YYYY-AA-GGTSS:DD:SS): a date as `date` reads it, then a `T`
+/// or a space and a time of day as `time_of_day` reads it; a date alone is its midnight.
+fn date_time(s: &str) -> Option<String> {
+    let (day, clock) = match s.find(['T', ' ']) {
+        Some(i) => (&s[..i], Some(js_trim(&s[i + 1..]))),
+        None => (s, None),
+    };
+    let day = date(day)?;
+    let clock = match clock {
+        Some(c) => time_of_day(c)?,
+        None => "00:00:00".to_owned(),
+    };
+    Some(format!("{day}T{clock}"))
+}
+
 fn boolean(s: &str) -> Option<&'static str> {
     match fold(s).as_str() {
         "evet" | "true" | "1" => Some("true"),
@@ -469,6 +528,20 @@ fn kind_value(field: &LayerField, s: &str, text: &str) -> Result<String, Refusal
             refusal(
                 "type",
                 format!("“{label}” alanı tarih ister; “{text}” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."),
+            )
+        }),
+        LayerFieldKind::DateTime => date_time(s).ok_or_else(|| {
+            refusal(
+                "type",
+                format!(
+                    "“{label}” alanı tarih ve saat ister; “{text}” verildi. GG.AA.YYYY SS:DD ya da YYYY-AA-GG SS:DD yazın."
+                ),
+            )
+        }),
+        LayerFieldKind::Time => time_of_day(s).ok_or_else(|| {
+            refusal(
+                "type",
+                format!("“{label}” alanı saat ister; “{text}” verildi. SS:DD ya da SS:DD:SS yazın (00:00–23:59)."),
             )
         }),
         LayerFieldKind::Boolean => boolean(s).map(str::to_owned).ok_or_else(|| {
@@ -845,6 +918,16 @@ pub fn infer_field<'a>(name: &str, values: impl IntoIterator<Item = &'a str>) ->
     if values.iter().all(|v| date(v).is_some()) {
         return field(LayerFieldKind::Date);
     }
+    // A date with a time of day, and a time of day alone (docs/adr/0412 §1).
+    if values
+        .iter()
+        .all(|v| v.contains(':') && date_time(v).is_some())
+    {
+        return field(LayerFieldKind::DateTime);
+    }
+    if values.iter().all(|v| time_of_day(v).is_some()) {
+        return field(LayerFieldKind::Time);
+    }
     if values
         .iter()
         .all(|v| matches!(fold(v).as_str(), "evet" | "hayır" | "true" | "false"))
@@ -915,6 +998,20 @@ pub fn display_value(field: &LayerField, value: &str) -> String {
                 && digits(&value[8..10]) =>
         {
             format!("{}.{}.{}", &value[8..10], &value[5..7], &value[0..4])
+        }
+        // GG.AA.YYYY SS:DD, the seconds when there are some (docs/adr/0412 §1).
+        LayerFieldKind::DateTime if date_time(value).as_deref() == Some(value) => {
+            let clock = &value[11..];
+            let clock = clock.strip_suffix(":00").unwrap_or(clock);
+            format!(
+                "{}.{}.{} {clock}",
+                &value[8..10],
+                &value[5..7],
+                &value[0..4]
+            )
+        }
+        LayerFieldKind::Time if time_of_day(value).as_deref() == Some(value) => {
+            value.strip_suffix(":00").unwrap_or(value).to_owned()
         }
         _ => value.to_owned(),
     }

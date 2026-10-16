@@ -47,7 +47,8 @@ pub fn order_of(f: &LayerField) -> &'static str {
     }
     match f.kind {
         LayerFieldKind::Integer | LayerFieldKind::Decimal => "number",
-        LayerFieldKind::Date => "date",
+        // ISO texts: their order is time's (docs/adr/0412 §3).
+        LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => "date",
         LayerFieldKind::Boolean => "boolean",
         LayerFieldKind::Text => "text",
     }
@@ -248,7 +249,9 @@ pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> Work
                     LayerFieldKind::Decimal => (CellKind::Number, f.scale),
                     LayerFieldKind::Date => (CellKind::Date, None),
                     LayerFieldKind::Boolean => (CellKind::Boolean, None),
-                    LayerFieldKind::Text => (CellKind::Text, None),
+                    LayerFieldKind::Text | LayerFieldKind::DateTime | LayerFieldKind::Time => {
+                        (CellKind::Text, None)
+                    }
                 },
                 None => (CellKind::Text, None),
             };

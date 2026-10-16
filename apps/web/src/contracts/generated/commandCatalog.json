@@ -6015,14 +6015,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -15099,14 +15113,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -23667,14 +23695,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -128348,14 +128390,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -136994,14 +137050,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -145763,14 +145833,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -303052,14 +303136,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerServiceOperation": {
             "description": "What `cad.layers.service` does; it names the undo step.",
@@ -304656,14 +304754,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -308624,14 +308736,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -310974,14 +311100,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -313085,14 +313225,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -315171,14 +315325,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -318033,14 +318201,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -320432,14 +320614,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerFilter": {
             "description": "A layer's filter (docs/adr/0211 §2): an object passes when the condition\nholds for it and, when there is a list, the list names it.",
@@ -321551,14 +321747,28 @@
           },
           "LayerFieldKind": {
             "description": "What a field holds (docs/adr/0199 §1).",
-            "enum": [
-              "text",
-              "integer",
-              "decimal",
-              "date",
-              "boolean"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
           },
           "LayerNodeType": {
             "enum": [

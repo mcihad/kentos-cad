@@ -3,4 +3,4 @@
 /**
  * What a field holds (docs/adr/0199 §1).
  */
-export type LayerFieldKind = "text" | "integer" | "decimal" | "date" | "boolean";
+export type LayerFieldKind = "text" | "integer" | "decimal" | "date" | "boolean" | "datetime" | "time";

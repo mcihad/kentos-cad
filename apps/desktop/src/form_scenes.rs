@@ -359,6 +359,49 @@ fn building_owners(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// A damage survey's moment and shift (docs/adr/0412): a date and time field and a time field, by
+/// their pickers in Formla düzenle.
+fn timed(app: &mut App) {
+    let mut o = Objects::new();
+    let id = o.path(
+        "bina",
+        &[[0.0, 0.0], [18.0, 0.0], [18.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.data(
+        id,
+        &[
+            ("Kod", "B-1"),
+            ("Tespit", "2026-10-16T14:30:00"),
+            ("Vardiya", "08:00:00"),
+        ],
+        Some("B-1"),
+    );
+    let form = published(
+        "tespit",
+        "Hasar tespiti",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "field", "id": "tespit", "field": "Tespit", "required": true },
+            { "type": "field", "id": "vardiya", "field": "Vardiya" }
+        ]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Tespit", "kind": "datetime" },
+                                { "name": "Vardiya", "kind": "time" }]);
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+    });
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
 /// The owners' table (docs/adr/0410 §4): records without a geometry in the Tablo tab.
 fn owner_table(app: &mut App) {
     owners(app);
@@ -900,6 +943,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-bina-malikler", building_owners),
         ("form-kayit-tablosu", owner_table),
         ("form-kayit-ekle", owner_added),
+        ("form-tarih-saat", timed),
     ]
 }
 
@@ -1520,6 +1564,44 @@ mod tests {
         assert_eq!(
             app.form_entry.as_ref().map(|e| e.uid_text()),
             Some(uid(&app, 6))
+        );
+    }
+
+    /// docs/adr/0412: a date and time and a time of day are written in their canonical texts through
+    /// the form, typed as people write them; a time out of the day is refused.
+    #[test]
+    fn a_date_and_time_and_a_time_are_written_through_the_form() {
+        let mut app = crate::files_testing::app_with_drawing();
+        timed(&mut app);
+        assert!(app.form_entry.is_some());
+        entry(
+            &mut app,
+            entry::Event::Value("Tespit".into(), "17.10.2026 9:05".into()),
+        );
+        entry(
+            &mut app,
+            entry::Event::Value("Vardiya".into(), "17:45".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        let got = attrs(&app, 1);
+        assert_eq!(
+            got.get("Tespit").map(String::as_str),
+            Some("2026-10-17T09:05:00")
+        );
+        assert_eq!(got.get("Vardiya").map(String::as_str), Some("17:45:00"));
+        run(&mut app, "data.formEdit");
+        entry(
+            &mut app,
+            entry::Event::Value("Vardiya".into(), "24:10".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(
+            app.form_entry.is_some(),
+            "the refused time keeps the window"
+        );
+        assert_eq!(
+            attrs(&app, 1).get("Vardiya").map(String::as_str),
+            Some("17:45:00")
         );
     }
 

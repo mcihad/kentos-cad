@@ -3237,7 +3237,8 @@ class _Schema:
                 **({"id": (self.text, False)} if self.forms else {}),
                 "max": (self.text, False),
                 "min": (self.text, False),
-                "kind": (self.enum(FIELD_KINDS), True),
+                # Schema 60 (docs/adr/0412 §4): a date and time, a time of day.
+                "kind": (self.enum(FIELD_KINDS + (("datetime", "time") if self.forms else ())), True),
                 "name": (self.text, True),
                 "alias": (self.text, False),
                 "scale": (self.uint(32), False),

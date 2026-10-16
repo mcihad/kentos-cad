@@ -316,7 +316,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [x] **FORM-DATA-01:** Geometrili layer ile bağımsız tablonun ortak DatasetSchema/record API'sini tasarla; ilişki için sahte geometri nesnesi üretme. — *Yapıldı (16 Ekim; ADR 0410: geometrisiz kayıt `record` geometrili nesnelerle aynı kayıt API'sinden; ilişki için sahte geometri yok).*
 - [x] **FORM-DATA-02:** Dataset/field immutable IDs ve current storage names ayrışsın; alias/rename ref migration gerektirmeden çalışsın. — *Yapıldı (16 Ekim; ADR 0401 §2).*
 - [ ] **FORM-DATA-03:** Primary/global UUID, unique keys, nullable, required, type, default, precision/length/range ve indexing alanlarını tanımla.
-- [ ] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle.
+- [x] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle. — *Yapıldı (16 Ekim; ADR 0412 tarih ve saat, saat; ADR 0409 başvuru/UUID ve çok değerli alan; ADR 0407 ekler; geometri nesnenin kendisi). Saat dilimi açık.*
 - [ ] **FORM-DATA-05:** Mevcut canonical string attributes için lossless migration; null/blank/absent, unknown attr ve geçmiş kaydı koru.
 - [ ] **FORM-DATA-06:** Kayıt oluştururken incomplete draft ile committed/submitted kayıt farklı validation profile kullansın; eksik zorunlu değeri sessizce kalıcı geçerli kayıt yapma.
 - [ ] **FORM-DATA-07:** Field rename/drop/type change için bağlı form/domain/relation/processing/expression kullanım grafını göster; breaking değişiklik planlı migration olsun.

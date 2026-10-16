@@ -92,8 +92,9 @@ fn type_of(kind: LayerFieldKind) -> FieldType {
     match kind {
         LayerFieldKind::Integer | LayerFieldKind::Decimal => FieldType::Number,
         LayerFieldKind::Boolean => FieldType::Bool,
-        LayerFieldKind::Date => FieldType::Date,
-        LayerFieldKind::Text => FieldType::Text,
+        // ISO text, which compares in time order: a date and time as a date (docs/adr/0412 §3).
+        LayerFieldKind::Date | LayerFieldKind::DateTime => FieldType::Date,
+        LayerFieldKind::Time | LayerFieldKind::Text => FieldType::Text,
     }
 }
 

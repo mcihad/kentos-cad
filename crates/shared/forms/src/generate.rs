@@ -73,7 +73,8 @@ pub fn widget_of(item: &FormField, field: &LayerField) -> FormWidget {
     }
     match field.kind {
         LayerFieldKind::Integer | LayerFieldKind::Decimal => FormWidget::Number,
-        LayerFieldKind::Date => FormWidget::Date,
+        // A date, a date and time or a time: the picker its kind opens (docs/adr/0412 §2).
+        LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => FormWidget::Date,
         LayerFieldKind::Boolean => FormWidget::Check,
         LayerFieldKind::Text if field.length.is_some_and(|n| n > 200) => FormWidget::TextArea,
         LayerFieldKind::Text => FormWidget::Text,

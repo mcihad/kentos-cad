@@ -191,6 +191,9 @@ Liste:
 - [ ] `FORM-N` geometrisiz kayıt (ADR 0410, 16 Ekim): web'de gerekenler: sözleşmenin `record` türü (TS türleri üretildi),
   `io/columns.ts`'in tür 20'si, `cad.records.create`'in TS işleyicisi (`fixtures/commands/v1/cad.records.create.json`), çizim
   ve seçimin kaydı atlaması, Öznitelik tablosunda Kayıt ekle, formun Yeni'si.
+- [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
+  (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
+  öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
 - [ ] `FORM-F` formların izinleri ve sunucunun bekçisi (ADR 0411, 16 Ekim): web'de gerekenler: `ProjectRole`/`GrantRole`'ün `entry`'si
   (`app/cloud/sharePlan.ts`'in rol adları, sırası, davet rolleri ve açıklamaları; `fixtures/cloud/v1/share.json` güncellendi),
   `ProjectPermission`'ın üç izni; sunucu bekçisi zaten bütün istemciler için.
@@ -1465,6 +1468,8 @@ burada aşamaları izlenir.
   [ADR 0411](docs/adr/0411-form-permissions-and-server-guard.md).**
 - [x] `FORM-Q` Veri girişi masaüstünde: belgenin nesne kuralı (yalnız öznitelik), eşitleme formla yazılanı gönderir. — **16 Ekim,
   ADR 0411 §5.**
+- [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
+  [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
 - [x] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez, yazmasında korunur, Veri girişi
   indiremez. — **16 Ekim, ADR 0411 §6.**
 

@@ -41,7 +41,7 @@ use kentos_native_application::forms::{
     RecordScreen, preview_screen, record_screen, unique_on_layer,
 };
 use kentos_native_application::{ExecutionContext, forms_fill, forms_submit};
-use kentos_ui::attribute::Date;
+use kentos_ui::attribute::{Date, DateTime, Time};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::form::Form;
@@ -49,7 +49,9 @@ use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tabs::{Tab, Tabs};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{DatePicker, Dialog as Frame, Segmented, Switch, focus_ring, overlay};
+use kentos_ui::widget::{
+    DatePicker, Dialog as Frame, Segmented, Switch, TimePicker, focus_ring, overlay,
+};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -1919,11 +1921,20 @@ fn entry_control<'a>(
     read_only: bool,
 ) -> Element<'a, Message> {
     let key = field.key().to_owned();
+    // The record's date and time or time of day as people write it (16.10.2026 14:30, 08:00;
+    // docs/adr/0412 §2); what is typed stays as typed.
     let value: String = e
         .values
         .get(&key)
         .cloned()
-        .or_else(|| e.after.get(&field.name).cloned())
+        .or_else(|| {
+            e.after.get(&field.name).map(|v| match field.kind {
+                LayerFieldKind::DateTime | LayerFieldKind::Time => {
+                    kentos_contracts::display_value(field, v)
+                }
+                _ => v.clone(),
+            })
+        })
         .unwrap_or_default();
     let set = {
         let key = key.clone();
@@ -2107,6 +2118,54 @@ fn entry_control<'a>(
             Segmented::optional(opts.clone(), at.map(|i| opts[i]), move |o: Opt<'_>| {
                 set(picks[o.0].0.clone())
             })
+            .into()
+        }
+        // A date and time, and a time of day, by their pickers (docs/adr/0412 §2).
+        FormWidget::Date if !read_only && field.kind == LayerFieldKind::DateTime => {
+            let at = code
+                .split_once('T')
+                .and_then(|(d, t)| Some(DateTime::new(parse_date(d)?, Time::parse(t)?)));
+            let set_at = set.clone();
+            DatePicker::date_time(at, move |d: Option<DateTime>| {
+                set_at(d.map_or_else(String::new, |d| {
+                    format!(
+                        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+                        d.date.year(),
+                        d.date.month(),
+                        d.date.day(),
+                        d.time.hour(),
+                        d.time.minute(),
+                        d.time.second()
+                    )
+                }))
+            })
+            .anchor(focus_ring(
+                text_input("GG.AA.YYYY SS:DD", &value)
+                    .size(typography::body())
+                    .id(input_id(&key))
+                    .on_input(set)
+                    .padding([5, 8])
+                    .style(style::field::input),
+            ))
+            .clearable(!field.required)
+            .into()
+        }
+        FormWidget::Date if !read_only && field.kind == LayerFieldKind::Time => {
+            let set_at = set.clone();
+            TimePicker::new(Time::parse(&code), move |t: Option<Time>| {
+                set_at(t.map_or_else(String::new, |t| {
+                    format!("{:02}:{:02}:{:02}", t.hour(), t.minute(), t.second())
+                }))
+            })
+            .anchor(focus_ring(
+                text_input("SS:DD", &value)
+                    .size(typography::body())
+                    .id(input_id(&key))
+                    .on_input(set)
+                    .padding([5, 8])
+                    .style(style::field::input),
+            ))
+            .clearable(!field.required)
             .into()
         }
         FormWidget::Date if !read_only => {

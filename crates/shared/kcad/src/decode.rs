@@ -1224,7 +1224,17 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "id" if ids => id = Some(text(r)?),
             "max" => max = Some(text(r)?),
             "min" => min = Some(text(r)?),
-            "kind" => kind = Some(named(r, &LayerFieldKind::ALL.map(|k| (k.name(), k)))?),
+            // A date and time and a time of day are schema 60's (docs/adr/0412 §4).
+            "kind" => {
+                let kinds: Vec<(&str, LayerFieldKind)> = LayerFieldKind::ALL
+                    .into_iter()
+                    .filter(|k| {
+                        ids || !matches!(k, LayerFieldKind::DateTime | LayerFieldKind::Time)
+                    })
+                    .map(|k| (k.name(), k))
+                    .collect();
+                kind = Some(named(r, &kinds)?)
+            }
             "name" => name = Some(text(r)?),
             "alias" => alias = Some(text(r)?),
             "scale" => scale = Some(count(r)?),

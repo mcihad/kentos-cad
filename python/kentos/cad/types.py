@@ -1174,15 +1174,26 @@ LayerEditOperationName = Literal["add", "style", "move", "remove", "duplicate", 
 
 
 class LayerFieldKind(_StrEnum):
-    """What a field holds (docs/adr/0199 §1)."""
+    """What a field holds (docs/adr/0199 §1).
+
+    - ``text``
+    - ``integer``
+    - ``decimal``
+    - ``date``
+    - ``boolean``
+    - ``datetime``: A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.
+    - ``time``: A time of day (docs/adr/0412 §1): `SS:DD:SS`.
+    """
     TEXT = "text"
     INTEGER = "integer"
     DECIMAL = "decimal"
     DATE = "date"
     BOOLEAN = "boolean"
+    DATETIME = "datetime"
+    TIME = "time"
 
 
-LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean"]
+LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean", "datetime", "time"]
 """The names of :class:`LayerFieldKind`, for a plain string."""
 
 
