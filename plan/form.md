@@ -633,7 +633,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 - [x] **FORM-API-12:** Generic command veya doğrudan table/attribute API üzerinden gönderilen patch aynı authoritative kuralları uygulasın; form/version ID seçmek mandatory constraint'i kaldıramasın. — *Yapıldı (16 Ekim; ADR 0401 §8, ADR 0402 §4).*
 - [ ] **FORM-API-13:** İsteğe bağlı plugin/form action için descriptor/release/executor/permission digest pinle; missing/offline executor sonucu açık pending/unavailable olsun.
 - [ ] **FORM-API-14:** Semantic recorder izinli tasarım/veri girişi adımlarından yeniden çalıştırılabilir Python/command örneği üretebilsin; secrets ve yasak field değerlerini kaydetmesin.
-- [ ] **FORM-API-15:** Geliştirici örnekleri: core bina formu, domain/subtype, 1:N master–detail, authorized lookup ve offline queue; her örneğin capability kapsamı belli olsun.
+- [x] **FORM-API-15:** Geliştirici örnekleri: core bina formu, domain/subtype, 1:N master–detail, authorized lookup ve offline queue; her örneğin capability kapsamı belli olsun. — *Yapıldı (17 Ekim; `python/examples/forms`: bina, alt tür ve bileşim, 1:N malikler, il-ilçe listesi; çevrimdışı kuyruk bulut işiyle açık).*
 - [ ] **FORM-API-16:** SDK/command version negotiation ve deprecation/migration süreci dokümante edilsin; form v1 profili yeni extension runtime kurulunca sessizce değişmesin.
 
 **Kabul:** Aynı tasarım ve veri girişi UI, Python ve MCP ile yürütülür; aynı kaynak/sürüm/izin altında aynı validation ve semantic result oluşur. Formu kullanan normal kullanıcıya Python/uv kurulumu gerekmez.

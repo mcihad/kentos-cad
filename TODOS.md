@@ -1500,6 +1500,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AG` Formların geliştirici örnekleri: `python/examples/forms` (bina formu baştan sona; alt türler ve değer bileşimleri; malikler
+  ilişkisi ve geometrisiz kayıtlar; il ve ilçe listesi), kapsamları README'de, `python/tests/test_examples.py` hepsini çalıştırır. — **17 Ekim.**
 - [x] `FORM-AF` Büyük form ve katmanda süreler: 100 000 kayıt, 200 öğe, alt türler ve 2 000 bileşimle ölçüm ve bütçeleri; Kayıtları denetle
   2,7 s'den 0,9 s'ye, tuş 0,16'dan 0,12 ms'ye. — **17 Ekim, [ADR 0424](docs/adr/0424-form-performance.md).**
 - [x] `FORM-AE` Değer bileşimleri: değer listeli alanların birlikte geçerli bileşimleri (herhangi, boş, alt türe özel); kısıtlayıcı grup
