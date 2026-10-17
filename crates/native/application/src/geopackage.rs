@@ -19,7 +19,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::identity::uuid_v5;
 use kentos_contracts::{Entity, LayerField, LayerFieldKind, MAX_INTEGER};
 use kentos_domain::{Document, Uuid};
@@ -400,7 +399,10 @@ fn value_text(
 
 /// Reads the tables `wanted` names (every feature and attribute table when none).
 pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
-    let bytes = std::fs::read(path).map_err(|e| format!("“{}” okunamadı: {e}", path.display()))?;
+    // The file's digest read a piece at a time: a large file is not held whole beside its rows (plan/gis.md CBS-42).
+    let (size, sha256) = std::fs::File::open(path)
+        .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+        .map_err(|e| format!("“{}” okunamadı: {e}", path.display()))?;
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let layers = gp.layers().map_err(|e| e.0)?;
     if let Some(w) = wanted
@@ -440,8 +442,8 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default(),
-        bytes: bytes.len() as u64,
-        sha256: sha256_hex(&bytes),
+        bytes: size,
+        sha256,
         tables,
         systems,
     })

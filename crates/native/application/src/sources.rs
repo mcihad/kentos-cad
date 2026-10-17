@@ -11,8 +11,6 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::canonical::digest_of;
-use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LayerNodeType, MAX_SOURCES,
     SourceCapabilities, SourceColumn, SourceKind, SourceLink, SourceState, SourceTable,
@@ -21,7 +19,7 @@ use kentos_contracts::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geopackage::{self as gpkg, DataType, Edits, GeoPackage, Geometry, Query, Value};
-use serde_json::{Value as J, json};
+use serde_json::json;
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -80,23 +78,35 @@ fn completed<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
     }
 }
 
-/// The layer's digest: the SHA-256 of its objects' kinds, geometries and attributes by lasting id (not their look).
+/// The layer's digest: the SHA-256 of its objects' kinds, geometries and attributes by lasting id (not their look):
+/// the canonical JSON of `[[uid, essence], …]` in the ids' order, hashed one object at a time (plan/gis.md CBS-42: a
+/// million objects' JSON is not built at once; the bytes, and so the digest, are those of `digest_of` on the list).
 pub fn layer_digest(doc: &Document, layer: &str) -> String {
-    let mut items: Vec<(Uuid, J)> = doc
-        .by_layer_with_uids(layer)
-        .map(|(uid, e)| (uid, gp::essence(e)))
-        .collect();
+    use sha2::{Digest, Sha256};
+    let mut items: Vec<(Uuid, &kentos_contracts::Entity)> = doc.by_layer_with_uids(layer).collect();
     items.sort_by_key(|(u, _)| *u);
-    let list: Vec<J> = items
-        .into_iter()
-        .map(|(u, e)| json!([u.to_string(), e]))
-        .collect();
-    digest_of(&J::Array(list), 64)
+    let mut hasher = Sha256::new();
+    hasher.update(b"[");
+    for (i, (u, e)) in items.into_iter().enumerate() {
+        if i > 0 {
+            hasher.update(b",");
+        }
+        let item = json!([u.to_string(), gp::essence(e)]);
+        hasher.update(kentos_contracts::canonical::canonical_json(&item).as_bytes());
+    }
+    hasher.update(b"]");
+    hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
+/// The file's SHA-256, read a piece at a time.
 fn file_sha(path: &Path) -> Result<String, String> {
-    std::fs::read(path)
-        .map(|b| sha256_hex(&b))
+    std::fs::File::open(path)
+        .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+        .map(|(_, sha)| sha)
         .map_err(|e| format!("{} okunamadı: {e}", path.display()))
 }
 
@@ -212,7 +222,6 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
 /// A table's rows by lasting id, as read (`t`) and as stored (`raw`, taken by fid).
 fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::TableRead) -> Stored {
     let mut rows = HashMap::with_capacity(t.fids.len());
-    let objects = t.objects.clone();
     for ((uid, _), fid) in t.objects.iter().zip(&t.fids) {
         let Some(r) = raw.remove(fid) else { continue };
         let g = match r.geometry {
@@ -228,7 +237,7 @@ fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::Table
         layer,
         srid: None,
         rows,
-        objects,
+        objects: t.objects,
         fields: t.fields,
         losses: t.losses,
         writable: false,
@@ -364,6 +373,41 @@ fn load_database(address: &str, table: &str, at: At<'_>) -> Result<Stored, Stop>
     })
 }
 
+/// A file's table without its rows (plan/gis.md CBS-42): linking it onto a new layer reads the rows once, through
+/// the import; the table, its system, whether it is writable and the file's SHA-256 are all the link needs.
+fn load_meta(path: &Path, table: &str) -> Result<Stored, String> {
+    let file = GeoPackage::open(path, false).map_err(|e| e.0)?;
+    let Some(layer) = file
+        .layers()
+        .map_err(|e| e.0)?
+        .into_iter()
+        .find(|l| l.name == table)
+    else {
+        return Err(format!("“{table}” tablosu dosyada yok"));
+    };
+    let srid = match layer.srs_id {
+        Some(id) if id > 0 => file
+            .srs(id)
+            .map_err(|e| e.0)?
+            .filter(|s| s.definition != "undefined" && s.organization.eq_ignore_ascii_case("EPSG"))
+            .and_then(|s| u32::try_from(s.organization_id).ok()),
+        _ => None,
+    };
+    let writable =
+        matches!(layer.data_type, DataType::Features | DataType::Attributes) && !readonly(path);
+    drop(file);
+    Ok(Stored {
+        layer,
+        srid,
+        rows: HashMap::new(),
+        objects: Vec::new(),
+        fields: Vec::new(),
+        losses: BTreeSet::new(),
+        writable,
+        sha256: file_sha(path)?,
+    })
+}
+
 fn load_at(origin: Origin<'_>, table: &str, at: At<'_>) -> Result<Stored, Stop> {
     match origin {
         Origin::File(path) => load_or_refuse(path, table, at.table),
@@ -372,7 +416,16 @@ fn load_at(origin: Origin<'_>, table: &str, at: At<'_>) -> Result<Stored, Stop> 
 }
 
 fn load_or_refuse(path: &Path, table: &str, at: &str) -> Result<Stored, Stop> {
-    load(path, table).map_err(|why| {
+    refused_load(path, table, at, load(path, table))
+}
+
+fn refused_load(
+    path: &Path,
+    table: &str,
+    at: &str,
+    loaded: Result<Stored, String>,
+) -> Result<Stored, Stop> {
+    loaded.map_err(|why| {
         if why == format!("“{table}” tablosu dosyada yok") {
             refuse(
                 codes::TABLE_NOT_FOUND,
@@ -880,14 +933,20 @@ fn link_table(
             "edit.table",
         ));
     }
-    let mut stored = load_at(
-        at,
-        table,
-        At {
-            address: "edit.path",
-            table: "edit.table",
-        },
-    )?;
+    // Onto a new layer from a file the import reads the rows; the table's own rows are read only to compare a layer.
+    let mut stored = match at {
+        Origin::File(p) if layer.is_none() => {
+            refused_load(p, table, "edit.table", load_meta(p, table))?
+        }
+        _ => load_at(
+            at,
+            table,
+            At {
+                address: "edit.path",
+                table: "edit.table",
+            },
+        )?,
+    };
     let project = doc.settings().srid;
     if let Some(s) = stored.srid.filter(|&s| s != project && !reproject) {
         return Err(refuse(
@@ -964,6 +1023,13 @@ fn link_table(
             (layer, out.objects, layers)
         }
     };
+    // The table's rows are in the drawing now: let them go before the layer is digested.
+    let Stored {
+        sha256: revision,
+        srid,
+        writable,
+        ..
+    } = stored;
     let link = SourceLink {
         id: next_id(doc),
         kind: at.kind(),
@@ -972,9 +1038,9 @@ fn link_table(
         table: table.to_owned(),
         digest: layer_digest(doc, &layer),
         layer,
-        revision: stored.sha256,
-        srid: stored.srid,
-        writable: stored.writable,
+        revision,
+        srid,
+        writable,
     };
     set_link(doc, Some(link.clone()), None);
     Ok((

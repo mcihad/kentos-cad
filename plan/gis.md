@@ -470,6 +470,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-42 — Yeni provider akışında sınırlı bellek ve performans bütçelerini doğrula — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0509](../docs/adr/0509-provider-baseline-and-link-memory.md), [ölçüm](../docs/perf/provider-2026-10-18.md)): 1 milyon parsel ve 10 milyon köşelik GeoPackage'da ölçüm tabanı (makine, release derleme, verinin SHA-256'sı, sıcak önbellek). Sağlayıcının ilk sayfası 0,1 ms, anahtarla sonraki sayfa 0,1 ms, mekânsal dizinle görünen kutu 0,6 ms; bellek veriyle büyümüyor. Bağlamanın belleği düzeltildi: katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar bir kez okunuyor; 100 000 parselde 1,3 GB'tan 323 MB'a. Kalan: bağlı katman bugün çalışma kopyası (1 milyonda 13,7 s, 3 GB): görünür küme ve sayfa sayfa okuma; çizim alanında kenet, seçim ve kare süreleri; soğuk önbellek, yavaş ağ; 10 milyon satır ve 20 GB stres.*
+
   **Mevcut:** Spatial index, kirli güncelleme, GPU batching, tablo sanallaştırma, raster/cloud range ve arka plan işi temelleri var [K01/K09…K12]. Bunlar korunur; tüm belgeyi dolaşma/indirme varsayımı provider katmanında kaldırılır.
 
   **Yapılacak kalan iş:** Visible set, bbox/kolon/filtre pushdown, kararlı paging, index ve bounded CPU/RAM/VRAM/disk cache ortak planlansın. Render LOD yalnız görüntü maliyetini düşürür; source query, snap, ölçüm ve final analiz hassasiyeti ayrı kalsın. UI thread'de I/O/decode/analiz olmasın; kaynak sayfası ve GPU upload artımlı gelsin. Baseline; cihaz/driver, release build, veri hash'i, cold/warm cache, ağ ve kalite ayarıyla kaydedilsin. Sentetik veri yanında yoğun parsel, karmaşık geometri ve yavaş ağ verisi kullanılsın.

@@ -1802,6 +1802,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-42` ölçüm tabanı ve bağlamada bellek (ilk dilim): 1 milyon parsellik GeoPackage'da `provider_timing` (ilk sayfa 0,1 ms,
+  kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar
+  bir kez (100 000 parselde 1,3 GB'tan 323 MB'a). Kalan: görünür küme ve sayfalar, çizim alanının süreleri, soğuk önbellek, ağ,
+  stres. — **18 Ekim, [ADR 0509](docs/adr/0509-provider-baseline-and-link-memory.md).**
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
