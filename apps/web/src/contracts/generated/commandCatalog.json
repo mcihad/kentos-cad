@@ -505064,6 +505064,443 @@
       ]
     },
     {
+      "id": "cad.fields.write",
+      "version": 1,
+      "title": "Alanlara toplu yaz",
+      "summary": "Bir katmanın nesnelerine öznitelik değerlerini tek geri alma adımında yazar. calculate (Alan hesapla): expression'ın (İfadeyle seç'in dili; geometri değerleri projenin çizim biriminde, $sıra nesnelerin sırası) her nesnedeki değeri field'a; uids boşsa katmanın bütün nesneleri; boş sonuçta değer kalır (empty: keep) ya da kalkar (clear). values (Yapıştır): her satırın değerleri kendi nesnesine, null değeri kaldırır. Her değer cad.entities.set'in kurallarıyla denetlenir: alanın türü ve kuralları (kanonik metne çevrilir), zorunlu alan, alt türler, değer bileşimleri, kayıt kuralları, tekil alanlar (yazılanlar birlikte). Alanı olan katmanda alanların adlarıyla yazılır (field_not_found). policy all (varsayılan): uymayan bir değer bütün yazmayı reddeder (invalid_values); policy valid: uyanlar yazılır, öbürleri values_skipped ile söylenir. Bir değeri gösteren etiket yeni değeri gösterir. plan yazmadan değişecekleri (nesne, alan, eski ve yeni değer; ilk 200) ve sorunları (nesne, alan, değer, kod, ileti) sayılarıyla verir; policy all'da da reddetmez, sorunları listeler. Adım “Alan hesapla: alan” ya da “Yapıştır”.",
+      "aliases": [
+        "alanhesapla",
+        "toplu-yaz"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "EmptyResult": {
+            "description": "What an empty result of the expression does.",
+            "oneOf": [
+              {
+                "const": "keep",
+                "description": "The old value stays.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The value is taken away.",
+                "type": "string"
+              }
+            ]
+          },
+          "FieldRow": {
+            "description": "One object's pasted values: field → value (null takes the value away).",
+            "properties": {
+              "uid": {
+                "description": "The object's persistent id.",
+                "type": "string"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "uid",
+              "values"
+            ],
+            "type": "object"
+          },
+          "FieldsWriteOp": {
+            "description": "What is written.",
+            "oneOf": [
+              {
+                "description": "Alan hesapla: the expression's value (İfadeyle seç's language, the layer's fields typed, geometry values in\nthe project's drawing unit) into `field` of each object, as text in the field's canonical form.",
+                "properties": {
+                  "empty": {
+                    "$ref": "#/$defs/EmptyResult"
+                  },
+                  "expression": {
+                    "type": "string"
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "calculate",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "description": "The objects (persistent ids); empty: every object of the layer.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "field",
+                  "expression"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yapıştır: the values of each row into its object.",
+                "properties": {
+                  "kind": {
+                    "const": "values",
+                    "type": "string"
+                  },
+                  "rows": {
+                    "items": {
+                      "$ref": "#/$defs/FieldRow"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "rows"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "WritePolicy": {
+            "description": "What to do when a value does not fit.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every value or none (`invalid_values`).",
+                "type": "string"
+              },
+              {
+                "const": "valid",
+                "description": "The values that fit; the others reported (`values_skipped`).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.fields.write` v1. Refusals, in order: `layer_not_found`, `not_a_layer`, `layer_locked`,\n`nothing_to_set` (no rows, or a row without values), `invalid_attribute` (a field's name empty), `invalid_uid`,\n`entity_not_found` (an object not in the drawing or not on the layer), `field_not_found` (a field the layer's\nfields do not name, on a layer with fields), `invalid_expression`, `invalid_values` (with `policy: all`, a value\nthat does not fit: the answer's first problem, every one in the plan). Warning: `values_skipped` (with\n`policy: valid`).",
+        "properties": {
+          "layer": {
+            "description": "The layer (its id).",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/WritePolicy"
+          },
+          "write": {
+            "$ref": "#/$defs/FieldsWriteOp"
+          }
+        },
+        "required": [
+          "layer",
+          "write"
+        ],
+        "title": "FieldsWrite",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FieldChange": {
+            "description": "A value changed.",
+            "properties": {
+              "after": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "before": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "field": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "field"
+            ],
+            "type": "object"
+          },
+          "ValueProblem": {
+            "description": "A value that does not fit.",
+            "properties": {
+              "code": {
+                "description": "The code `cad.entities.set` would refuse it with (`invalid_attribute`, `attribute_required`, `rule_broken`,\n`not_unique`, `subtype_misfit`, `invalid_combination`).",
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "field",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.fields.write` wrote, or with `plan` would write.",
+        "properties": {
+          "changed": {
+            "description": "Objects whose values change, objects already as asked, empty results kept, objects with a problem.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changes": {
+            "description": "The first changes and problems, in the objects' order.",
+            "items": {
+              "$ref": "#/$defs/FieldChange"
+            },
+            "type": "array"
+          },
+          "invalid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/ValueProblem"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unchanged": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "changed",
+          "unchanged",
+          "kept",
+          "invalid",
+          "revision"
+        ],
+        "title": "FieldsWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FieldChange": {
+            "description": "A value changed.",
+            "properties": {
+              "after": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "before": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "field": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "field"
+            ],
+            "type": "object"
+          },
+          "ValueProblem": {
+            "description": "A value that does not fit.",
+            "properties": {
+              "code": {
+                "description": "The code `cad.entities.set` would refuse it with (`invalid_attribute`, `attribute_required`, `rule_broken`,\n`not_unique`, `subtype_misfit`, `invalid_combination`).",
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "field",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.fields.write` wrote, or with `plan` would write.",
+        "properties": {
+          "changed": {
+            "description": "Objects whose values change, objects already as asked, empty results kept, objects with a problem.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changes": {
+            "description": "The first changes and problems, in the objects' order.",
+            "items": {
+              "$ref": "#/$defs/FieldChange"
+            },
+            "type": "array"
+          },
+          "invalid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "kept": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/ValueProblem"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unchanged": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "changed",
+          "unchanged",
+          "kept",
+          "invalid",
+          "revision"
+        ],
+        "title": "FieldsWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "nothing_to_set",
+          "invalid_attribute",
+          "invalid_uid",
+          "entity_not_found",
+          "field_not_found",
+          "invalid_expression",
+          "invalid_values"
+        ],
+        "warnings": [
+          "values_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsellerin alanını iki ondalıkla yaz",
+          "input": {
+            "layer": "parsel",
+            "write": {
+              "expression": "metin($alan, 2)",
+              "field": "Alan",
+              "kind": "calculate"
+            }
+          }
+        },
+        {
+          "title": "Elektronik tablodan yapıştır",
+          "input": {
+            "layer": "parsel",
+            "policy": "valid",
+            "write": {
+              "kind": "values",
+              "rows": [
+                {
+                  "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401",
+                  "values": {
+                    "Ada": "101",
+                    "Parsel": "5"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sources.sync",
       "version": 1,
       "title": "Kaynakla eşitle",
@@ -537480,6 +537917,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bir projede en çok 1000 bağlı katman olur."
+    },
+    {
+      "code": "invalid_values",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bazı değerler alanların kurallarına uymuyor; hiçbiri yazılmadı. Sorunlar nesne ve alanıyla plan'da."
+    },
+    {
+      "code": "values_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı."
     },
     {
       "code": "package_left",

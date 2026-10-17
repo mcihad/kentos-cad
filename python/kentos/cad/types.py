@@ -1059,6 +1059,20 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class EmptyResult(_StrEnum):
+    """What an empty result of the expression does.
+
+    - ``keep``: The old value stays.
+    - ``clear``: The value is taken away.
+    """
+    KEEP = "keep"
+    CLEAR = "clear"
+
+
+EmptyResultName = Literal["keep", "clear"]
+"""The names of :class:`EmptyResult`, for a plain string."""
+
+
 class FeedKind(_StrEnum):
     """What a layer's objects were taken from (docs/adr/0208 §10).
 
@@ -3038,6 +3052,20 @@ WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
 
 
+class WritePolicy(_StrEnum):
+    """What to do when a value does not fit.
+
+    - ``all``: Every value or none (`invalid_values`).
+    - ``valid``: The values that fit; the others reported (`values_skipped`).
+    """
+    ALL = "all"
+    VALID = "valid"
+
+
+WritePolicyName = Literal["all", "valid"]
+"""The names of :class:`WritePolicy`, for a plain string."""
+
+
 #: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
 #: or a name (a visibility state, a lookup row).
 ParamValue = Union[bool, float, str, dict[str, float]]
@@ -3690,6 +3718,27 @@ class FieldSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> FieldSource:
         return _variant(_FIELD_SOURCE, "FieldSource", "kind", data).from_json(data)
+
+
+class FieldsWriteOp(_Union):
+    """What is written.
+
+    One of:
+
+    - :class:`CalculateFieldsWriteOp` (``kind: calculate``)
+    - :class:`ValuesFieldsWriteOp` (``kind: values``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWriteOp:
+        return _variant(_FIELDS_WRITE_OP, "FieldsWriteOp", "kind", data).from_json(data)
 
 
 class FormItem(_Union):
@@ -12788,6 +12837,34 @@ class FieldBinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldChange(_Model):
+    """A value changed."""
+    uid: str
+    field: str
+    after: str | None | Unset = UNSET
+    before: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        if self.after is not UNSET:
+            out["after"] = self.after
+        if self.before is not UNSET:
+            out["before"] = self.before
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldChange:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            after=data.get("after", UNSET),
+            before=data.get("before", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldChoice(_Model):
     """One value of a field's value list: the code written to the attribute
     and the label shown for it.
@@ -13056,6 +13133,29 @@ class FieldRename(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldRow(_Model):
+    """One object's pasted values: field → value (null takes the value away).
+    Attributes:
+        uid: The object's persistent id.
+    """
+    uid: str
+    values: dict[str, str | None]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldRow:
+        return cls(
+            uid=data["uid"],
+            values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldUse(_Model):
     """One place that names a field.
     Attributes:
@@ -13254,6 +13354,82 @@ class FieldsUsed(_Model):
             field=data["field"],
             uses=[FieldUse.from_json(e0) for e0 in data["uses"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsWrite(_Model):
+    """Input of `cad.fields.write` v1. Refusals, in order: `layer_not_found`, `not_a_layer`, `layer_locked`,
+    `nothing_to_set` (no rows, or a row without values), `invalid_attribute` (a field's name empty), `invalid_uid`,
+    `entity_not_found` (an object not in the drawing or not on the layer), `field_not_found` (a field the layer's
+    fields do not name, on a layer with fields), `invalid_expression`, `invalid_values` (with `policy: all`, a value
+    that does not fit: the answer's first problem, every one in the plan). Warning: `values_skipped` (with
+    `policy: valid`).
+    Attributes:
+        layer: The layer (its id).
+    """
+    layer: str
+    write: FieldsWriteOp
+    policy: WritePolicy | WritePolicyName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["write"] = self.write.to_json()
+        if self.policy is not UNSET:
+            out["policy"] = _enum_out(self.policy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWrite:
+        return cls(
+            layer=data["layer"],
+            write=FieldsWriteOp.from_json(data["write"]),
+            policy=_enum_in(WritePolicy, data["policy"]) if "policy" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsWritten(_Model):
+    """What `cad.fields.write` wrote, or with `plan` would write.
+    Attributes:
+        changed: Objects whose values change, objects already as asked, empty results kept, objects with a problem. Unit: count.
+        unchanged: Unit: count.
+        kept: Unit: count.
+        invalid: Unit: count.
+        changes: The first changes and problems, in the objects' order.
+    """
+    changed: int
+    unchanged: int
+    kept: int
+    invalid: int
+    revision: str
+    changes: list[FieldChange] | Unset = UNSET
+    problems: list[ValueProblem] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["unchanged"] = self.unchanged
+        out["kept"] = self.kept
+        out["invalid"] = self.invalid
+        out["revision"] = self.revision
+        if self.changes is not UNSET:
+            out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.problems is not UNSET:
+            out["problems"] = [e0.to_json() for e0 in self.problems]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWritten:
+        return cls(
+            changed=data["changed"],
+            unchanged=data["unchanged"],
+            kept=data["kept"],
+            invalid=data["invalid"],
+            revision=data["revision"],
+            changes=[FieldChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
+            problems=[ValueProblem.from_json(e0) for e0 in data["problems"]] if "problems" in data else UNSET,
         )
 
 
@@ -29229,6 +29405,40 @@ class UnusedResource(_Model):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class ValueProblem(_Model):
+    """A value that does not fit.
+    Attributes:
+        code: The code `cad.entities.set` would refuse it with (`invalid_attribute`, `attribute_required`, `rule_broken`,
+            `not_unique`, `subtype_misfit`, `invalid_combination`).
+    """
+    uid: str
+    field: str
+    code: str
+    message: str
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        out["code"] = self.code
+        out["message"] = self.message
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValueProblem:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            code=data["code"],
+            message=data["message"],
+            value=data.get("value", UNSET),
+        )
+
+
 class Vec2(NamedTuple):
     """A point in world units: x = east (Y, sağa), y = north (X, yukarı)."""
 
@@ -33376,6 +33586,57 @@ class ProjectFieldSource(FieldSource):
         return cls(
             value=_enum_in(ProjectValue, data["value"]),
             name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CalculateFieldsWriteOp(FieldsWriteOp):
+    """Alan hesapla: the expression's value (İfadeyle seç's language, the layer's fields typed, geometry values in
+    the project's drawing unit) into `field` of each object, as text in the field's canonical form.
+    Attributes:
+        uids: The objects (persistent ids); empty: every object of the layer.
+    """
+    TAG_VALUE: ClassVar[str] = "calculate"
+    field: str
+    expression: str
+    empty: EmptyResult | EmptyResultName | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "calculate"}
+        out["field"] = self.field
+        out["expression"] = self.expression
+        if self.empty is not UNSET:
+            out["empty"] = _enum_out(self.empty)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CalculateFieldsWriteOp:
+        return cls(
+            field=data["field"],
+            expression=data["expression"],
+            empty=_enum_in(EmptyResult, data["empty"]) if "empty" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ValuesFieldsWriteOp(FieldsWriteOp):
+    """Yapıştır: the values of each row into its object."""
+    TAG_VALUE: ClassVar[str] = "values"
+    rows: list[FieldRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "values"}
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValuesFieldsWriteOp:
+        return cls(
+            rows=[FieldRow.from_json(e0) for e0 in data["rows"]],
         )
 
 
@@ -37544,6 +37805,9 @@ _FIELD_EDIT: dict[str, type[FieldEdit]] = {"insert": InsertFieldEdit, "remove": 
 _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "project": ProjectFieldSource}
 
 
+_FIELDS_WRITE_OP: dict[str, type[FieldsWriteOp]] = {"calculate": CalculateFieldsWriteOp, "values": ValuesFieldsWriteOp}
+
+
 _FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem, "divider": DividerFormItem, "action": ActionFormItem}
 
 
@@ -37786,6 +38050,7 @@ __all__ = [
     "BreakDimensionEdit",
     "BreakLine",
     "BreakLineName",
+    "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",
     "Cell",
@@ -37966,6 +38231,8 @@ __all__ = [
     "Ellipsoid",
     "EmptyCell",
     "EmptyInput",
+    "EmptyResult",
+    "EmptyResultName",
     "EndSubPlace",
     "EnforceFormsOp",
     "EntitiesArray",
@@ -38044,6 +38311,7 @@ __all__ = [
     "FieldBinding",
     "FieldBroken",
     "FieldBrokenName",
+    "FieldChange",
     "FieldChoice",
     "FieldCount",
     "FieldDomain",
@@ -38054,6 +38322,7 @@ __all__ = [
     "FieldMigration",
     "FieldNetworkDirection",
     "FieldRename",
+    "FieldRow",
     "FieldSource",
     "FieldTableEdit",
     "FieldUnit",
@@ -38067,6 +38336,9 @@ __all__ = [
     "FieldsMigrated",
     "FieldsUsage",
     "FieldsUsed",
+    "FieldsWrite",
+    "FieldsWriteOp",
+    "FieldsWritten",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -38825,6 +39097,8 @@ __all__ = [
     "UpdateFieldEdit",
     "UpdateFormsOp",
     "UpdateRelationsOp",
+    "ValueProblem",
+    "ValuesFieldsWriteOp",
     "VariableKind",
     "VariableKindName",
     "VariableValue",
@@ -38848,6 +39122,8 @@ __all__ = [
     "WorkspaceName",
     "WorldHatchOrigin",
     "WorldUcsTo",
+    "WritePolicy",
+    "WritePolicyName",
     "XlineEntity",
     "XlineEntityGeometry",
 ]

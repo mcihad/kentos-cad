@@ -611,6 +611,8 @@ fn command_tool(c: &Value) -> Value {
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
             | "cad.sources.edit"
             | "cad.sources.sync"
+            // It writes over the attributes of many objects (docs/adr/0507).
+            | "cad.fields.write"
     );
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \

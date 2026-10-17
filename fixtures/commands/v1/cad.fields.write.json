@@ -1,0 +1,2788 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.fields.write",
+ "commandVersion": 1,
+ "title": "Alanlara toplu yaz: Alan hesapla ve Yapıştır",
+ "note": "ADR 0507. İfadenin değeri dilin bağımsız başvurusundan (expression_language.py), alana yazılan değerin denetimi ve kanonik metni alanların bağımsız başvurusundan (layer_field_cases.py'nin check'i); tekil alanlar, izleyen etiket, bütün ya da hiç ve listeleme ADR'nin kuralları. Bağımsız başvuru: scripts/fixtures/fields_write_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Toplu yazma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#0090FF",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer",
+      "required": true
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     },
+     {
+      "name": "Nitelik",
+      "kind": "text",
+      "length": 10
+     },
+     {
+      "name": "Kod",
+      "kind": "text",
+      "unique": true
+     }
+    ]
+   },
+   {
+    "id": "serbest",
+    "name": "Serbest",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#0090FF",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "#0090FF",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#0090FF",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "İç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.35
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "1",
+     "Alan": "120.50",
+     "Nitelik": "Arsa",
+     "Kod": "A1"
+    },
+    "label": "1",
+    "pts": [
+     {
+      "x": 500000,
+      "y": 4400000
+     },
+     {
+      "x": 500020,
+      "y": 4400000
+     },
+     {
+      "x": 500020,
+      "y": 4400020
+     },
+     {
+      "x": 500000,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "2",
+     "Alan": "80",
+     "Nitelik": "Tarla",
+     "Kod": "A2"
+    },
+    "pts": [
+     {
+      "x": 500030,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400020
+     },
+     {
+      "x": 500030,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "3",
+     "Nitelik": "Arsa",
+     "Kod": "A3"
+    },
+    "pts": [
+     {
+      "x": 500060,
+      "y": 4400000
+     },
+     {
+      "x": 500080,
+      "y": 4400000
+     },
+     {
+      "x": 500080,
+      "y": 4400020
+     },
+     {
+      "x": 500060,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "4",
+     "Alan": "15.25",
+     "Kod": "A4"
+    },
+    "pts": [
+     {
+      "x": 500090,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400020
+     },
+     {
+      "x": 500090,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "serbest",
+    "attrs": {
+     "Ad": "kuyu"
+    },
+    "p": {
+     "x": 500000,
+     "y": 4400100
+    }
+   },
+   {
+    "kind": "line",
+    "id": 6,
+    "layerId": "serbest",
+    "attrs": {},
+    "a": {
+     "x": 500010,
+     "y": 4400100
+    },
+    "b": {
+     "x": 500020,
+     "y": 4400100
+    }
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "kilitli",
+    "attrs": {
+     "Ad": "eski"
+    },
+    "p": {
+     "x": 500000,
+     "y": 4400200
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Alan hesapla: Ada || '/' || Parsel Nitelik'e; adımı “Alan hesapla: Nitelik”, geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Nitelik",
+       "expression": "Ada || '/' || Parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 4,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Nitelik",
+         "before": "Arsa",
+         "after": "101/1"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Nitelik",
+         "before": "Tarla",
+         "after": "101/2"
+        },
+        {
+         "uid": "$uidOf:3",
+         "field": "Nitelik",
+         "before": "Arsa",
+         "after": "102/3"
+        },
+        {
+         "uid": "$uidOf:4",
+         "field": "Nitelik",
+         "after": "102/4"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "101/1",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "80",
+         "Nitelik": "101/2",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "3",
+         "Nitelik": "102/3",
+         "Kod": "A3"
+        },
+        "pts": [
+         {
+          "x": 500060,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400020
+         },
+         {
+          "x": 500060,
+          "y": 4400020
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Alan": "15.25",
+         "Kod": "A4",
+         "Nitelik": "102/4"
+        },
+        "pts": [
+         {
+          "x": 500090,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400020
+         },
+         {
+          "x": 500090,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Alan hesapla: Nitelik",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "80",
+         "Nitelik": "Tarla",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "3",
+         "Nitelik": "Arsa",
+         "Kod": "A3"
+        },
+        "pts": [
+         {
+          "x": 500060,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400020
+         },
+         {
+          "x": 500060,
+          "y": 4400020
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Alan": "15.25",
+         "Kod": "A4"
+        },
+        "pts": [
+         {
+          "x": 500090,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400020
+         },
+         {
+          "x": 500090,
+          "y": 4400020
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: Alan * 2 ondalık alana, kanonik metniyle; boş sonuçta değer kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Alan",
+       "expression": "Alan * 2"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 3,
+       "unchanged": 0,
+       "kept": 1,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "before": "120.50",
+         "after": "241"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Alan",
+         "before": "80",
+         "after": "160"
+        },
+        {
+         "uid": "$uidOf:4",
+         "field": "Alan",
+         "before": "15.25",
+         "after": "30.5"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "241",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "160",
+         "Nitelik": "Tarla",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Alan": "30.5",
+         "Kod": "A4"
+        },
+        "pts": [
+         {
+          "x": 500090,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400020
+         },
+         {
+          "x": 500090,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: boş sonuç clear ile değeri kaldırır (zaten yoksa değişmez)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Alan",
+       "expression": "Alan * 2",
+       "empty": "clear"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 3,
+       "unchanged": 1,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "before": "120.50",
+         "after": "241"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Alan",
+         "before": "80",
+         "after": "160"
+        },
+        {
+         "uid": "$uidOf:4",
+         "field": "Alan",
+         "before": "15.25",
+         "after": "30.5"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "241",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "160",
+         "Nitelik": "Tarla",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "4",
+         "Alan": "30.5",
+         "Kod": "A4"
+        },
+        "pts": [
+         {
+          "x": 500090,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400000
+         },
+         {
+          "x": 500110,
+          "y": 4400020
+         },
+         {
+          "x": 500090,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: yalnız verilen nesneler; değeri gösteren etiket yenisini gösterir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Parsel",
+       "expression": "Parsel * 10",
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 2,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Parsel",
+         "before": "1",
+         "after": "10"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Parsel",
+         "before": "2",
+         "after": "20"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "10",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "10",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "20",
+         "Alan": "80",
+         "Nitelik": "Tarla",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: ölçeğe sığmayan ondalıklar bütün yazmayı reddeder (policy all)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Alan",
+       "expression": "Alan / 3"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "3 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “Alan” alanı en çok 2 ondalık basamak alır; “40.1666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın. (Alan). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: sığmayanlar listelenir, reddedilmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Alan",
+       "expression": "Alan / 3"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 0,
+       "kept": 1,
+       "invalid": 3,
+       "problems": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "value": "40.1666666667",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “40.1666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Alan",
+         "value": "26.6666666667",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “26.6666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        },
+        {
+         "uid": "$uidOf:4",
+         "field": "Alan",
+         "value": "5.08333333333",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “5.08333333333” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "policy valid: hiçbiri uymazsa yazılmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Alan",
+       "expression": "Alan / 3"
+      },
+      "policy": "valid"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 0,
+       "kept": 1,
+       "invalid": 3,
+       "problems": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "value": "40.1666666667",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “40.1666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Alan",
+         "value": "26.6666666667",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “26.6666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        },
+        {
+         "uid": "$uidOf:4",
+         "field": "Alan",
+         "value": "5.08333333333",
+         "code": "invalid_attribute",
+         "message": "“Alan” alanı en çok 2 ondalık basamak alır; “5.08333333333” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_skipped",
+        "path": "write",
+        "message": "3 nesnenin değeri kurallara uymadığı için yazılmadı. İlki: “Alan” alanı en çok 2 ondalık basamak alır; “40.1666666667” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın. (Alan)."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: zorunlu alana boş değer clear ile reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Parsel",
+       "expression": "''",
+       "empty": "clear"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "4 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “Parsel” alanı zorunlu; boş bırakılamaz. (Parsel). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla: 10 karakteri aşan metin reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Nitelik",
+       "expression": "Nitelik || ' ve bahçe'"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "3 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “Nitelik” alanı en çok 10 karakter alır; 13 karakter verildi. (Nitelik). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "policy valid: uyanlar yazılır, uzun olanlar atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Nitelik",
+       "expression": "Nitelik || ' ve bahçe'",
+       "uids": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ]
+      },
+      "policy": "valid"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 2,
+       "problems": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Nitelik",
+         "value": "Arsa ve bahçe",
+         "code": "invalid_attribute",
+         "message": "“Nitelik” alanı en çok 10 karakter alır; 13 karakter verildi."
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Nitelik",
+         "value": "Tarla ve bahçe",
+         "code": "invalid_attribute",
+         "message": "“Nitelik” alanı en çok 10 karakter alır; 14 karakter verildi."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_skipped",
+        "path": "write",
+        "message": "2 nesnenin değeri kurallara uymadığı için yazılmadı. İlki: “Nitelik” alanı en çok 10 karakter alır; 13 karakter verildi. (Nitelik)."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alanı olmayan katmanda öznitelik adıyla yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "serbest",
+      "write": {
+       "kind": "calculate",
+       "field": "Ad",
+       "expression": "Ad || '-x'"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 2,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:5",
+         "field": "Ad",
+         "before": "kuyu",
+         "after": "kuyu-x"
+        },
+        {
+         "uid": "$uidOf:6",
+         "field": "Ad",
+         "after": "-x"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "5": {
+        "kind": "point",
+        "id": 5,
+        "layerId": "serbest",
+        "attrs": {
+         "Ad": "kuyu-x"
+        },
+        "p": {
+         "x": 500000,
+         "y": 4400100
+        }
+       },
+       "6": {
+        "kind": "line",
+        "id": 6,
+        "layerId": "serbest",
+        "attrs": {
+         "Ad": "-x"
+        },
+        "a": {
+         "x": 500010,
+         "y": 4400100
+        },
+        "b": {
+         "x": 500020,
+         "y": 4400100
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır: iki satır, adımı “Yapıştır”, geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Ada": "201"
+         }
+        },
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Ada": "202",
+          "Nitelik": "Bahçe"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 2,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Ada",
+         "before": "101",
+         "after": "201"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Ada",
+         "before": "101",
+         "after": "202"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Nitelik",
+         "before": "Tarla",
+         "after": "Bahçe"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "201",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "202",
+         "Parsel": "2",
+         "Alan": "80",
+         "Nitelik": "Bahçe",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yapıştır",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "80",
+         "Nitelik": "Tarla",
+         "Kod": "A2"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır: tam sayı alanına harfli değer bütün yazmayı reddeder",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Ada": "201"
+         }
+        },
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Ada": "12a"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "1 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “Ada” alanı tam sayı ister; “12a” verildi. Rakamlarla, ondalıksız yazın. (Ada). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır policy valid: uyan satır yazılır, harfli değer atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Ada": "201"
+         }
+        },
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Ada": "12a"
+         }
+        }
+       ]
+      },
+      "policy": "valid"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Ada",
+         "before": "101",
+         "after": "201"
+        }
+       ],
+       "problems": [
+        {
+         "uid": "$uidOf:2",
+         "field": "Ada",
+         "value": "12a",
+         "code": "invalid_attribute",
+         "message": "“Ada” alanı tam sayı ister; “12a” verildi. Rakamlarla, ondalıksız yazın."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_skipped",
+        "path": "write",
+        "message": "1 nesnenin değeri kurallara uymadığı için yazılmadı. İlki: “Ada” alanı tam sayı ister; “12a” verildi. Rakamlarla, ondalıksız yazın. (Ada)."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "201",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır: null değeri kaldırır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Alan": null
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "before": "120.50"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Nitelik": "Arsa",
+         "Kod": "A1"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır: değer kanonik metnine çevrilir (+007 → 7, 15,5 → 15.5)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:3",
+         "values": {
+          "Ada": "+007",
+          "Alan": "15,5"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:3",
+         "field": "Ada",
+         "before": "102",
+         "after": "7"
+        },
+        {
+         "uid": "$uidOf:3",
+         "field": "Alan",
+         "after": "15.5"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "3": {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "7",
+         "Parsel": "3",
+         "Nitelik": "Arsa",
+         "Kod": "A3",
+         "Alan": "15.5"
+        },
+        "pts": [
+         {
+          "x": 500060,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400020
+         },
+         {
+          "x": 500060,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır: aynı değer değişiklik değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Ada": "101"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 1,
+       "kept": 0,
+       "invalid": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tekil alan: iki kaydın kodu yer değiştirebilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Kod": "A2"
+         }
+        },
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Kod": "A1"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 2,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Kod",
+         "before": "A1",
+         "after": "A2"
+        },
+        {
+         "uid": "$uidOf:2",
+         "field": "Kod",
+         "before": "A2",
+         "after": "A1"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "1": {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Alan": "120.50",
+         "Nitelik": "Arsa",
+         "Kod": "A2"
+        },
+        "label": "1",
+        "pts": [
+         {
+          "x": 500000,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400000
+         },
+         {
+          "x": 500020,
+          "y": 4400020
+         },
+         {
+          "x": 500000,
+          "y": 4400020
+         }
+        ]
+       },
+       "2": {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Alan": "80",
+         "Nitelik": "Tarla",
+         "Kod": "A1"
+        },
+        "pts": [
+         {
+          "x": 500030,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400000
+         },
+         {
+          "x": 500050,
+          "y": 4400020
+         },
+         {
+          "x": 500030,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tekil alan: başka kaydın değeri reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Kod": "A1"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "1 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “Kod” alanı katmanda tekil; “A1” başka bir kayıtta var. Başka bir değer verin. (Kod). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tekil alan, policy valid: çakışan atlanır, öbürü yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "Kod": "A1"
+         }
+        },
+        {
+         "uid": "$uidOf:3",
+         "values": {
+          "Nitelik": "Bahçe"
+         }
+        }
+       ]
+      },
+      "policy": "valid"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:3",
+         "field": "Nitelik",
+         "before": "Arsa",
+         "after": "Bahçe"
+        }
+       ],
+       "problems": [
+        {
+         "uid": "$uidOf:2",
+         "field": "Kod",
+         "value": "A1",
+         "code": "not_unique",
+         "message": "“Kod” alanı katmanda tekil; “A1” başka bir kayıtta var. Başka bir değer verin."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_skipped",
+        "path": "write",
+        "message": "1 nesnenin değeri kurallara uymadığı için yazılmadı. İlki: “Kod” alanı katmanda tekil; “A1” başka bir kayıtta var. Başka bir değer verin. (Kod)."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "entities": {
+       "3": {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "3",
+         "Nitelik": "Bahçe",
+         "Kod": "A3"
+        },
+        "pts": [
+         {
+          "x": 500060,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400000
+         },
+         {
+          "x": 500080,
+          "y": 4400020
+         },
+         {
+          "x": 500060,
+          "y": 4400020
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: değişecekler eski ve yeni değerleriyle",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Ada": "201",
+          "Alan": null
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 0,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "field": "Ada",
+         "before": "101",
+         "after": "201"
+        },
+        {
+         "uid": "$uidOf:1",
+         "field": "Alan",
+         "before": "120.50"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok",
+      "write": {
+       "kind": "calculate",
+       "field": "Ad",
+       "expression": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman yok.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup katman değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup",
+      "write": {
+       "kind": "calculate",
+       "field": "Ad",
+       "expression": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; nesneleri katmanlardadır.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kilitli",
+      "write": {
+       "kind": "calculate",
+       "field": "Ad",
+       "expression": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; önce kilidini açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "satırsız yapıştırma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_set",
+       "message": "Yazılacak satır yok.",
+       "path": "write.rows"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "değersiz satır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {}
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_set",
+       "message": "1. satırda değer yok.",
+       "path": "write.rows[0].values"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "adı boş alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": " ",
+       "expression": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "Alanın adı boş.",
+       "path": "write.field"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bozuk kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Ada",
+       "expression": "1",
+       "uids": [
+        "abc"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“abc” bir nesne kimliği değil.",
+       "path": "write.uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "0192f5a0-0000-7000-8000-000000000099",
+         "values": {
+          "Ada": "1"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-0000-7000-8000-000000000099” kimlikli nesne “Parsel” katmanında yok.",
+       "path": "write.rows[0].uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanın alanlarında olmayan alan (hesap)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Yok",
+       "expression": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“Parsel” katmanında “Yok” alanı yok; Alanlar penceresinden ekleyin.",
+       "path": "write.field"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanın alanlarında olmayan alan (yapıştırma)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:1",
+         "values": {
+          "Yok": "1"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“Parsel” katmanında “Yok” alanı yok; Alanlar penceresinden ekleyin.",
+       "path": "write.rows[0].values.Yok"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "$ölçek alan hesabında kullanılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "Ada",
+       "expression": "1 + $ölçek"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "Alan hesabında $ölçek kullanılamaz: değer çizimin ölçeğine göre değişmemeli.",
+       "path": "write.expression"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

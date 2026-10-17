@@ -5292,6 +5292,43 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Toplu yazma of the attribute table (docs/adr/0507), held together by fixtures/commands/v1/cad.fields.write.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_WRITE.into(),
+            version: crate::CAD_FIELDS_WRITE_VERSION,
+            title: "Alanlara toplu yaz".into(),
+            summary: "Bir katmanın nesnelerine öznitelik değerlerini tek geri alma adımında yazar. calculate (Alan hesapla): expression'ın (İfadeyle seç'in dili; geometri değerleri projenin çizim biriminde, $sıra nesnelerin sırası) her nesnedeki değeri field'a; uids boşsa katmanın bütün nesneleri; boş sonuçta değer kalır (empty: keep) ya da kalkar (clear). values (Yapıştır): her satırın değerleri kendi nesnesine, null değeri kaldırır. \
+                      Her değer cad.entities.set'in kurallarıyla denetlenir: alanın türü ve kuralları (kanonik metne çevrilir), zorunlu alan, alt türler, değer bileşimleri, kayıt kuralları, tekil alanlar (yazılanlar birlikte). Alanı olan katmanda alanların adlarıyla yazılır (field_not_found). \
+                      policy all (varsayılan): uymayan bir değer bütün yazmayı reddeder (invalid_values); policy valid: uyanlar yazılır, öbürleri values_skipped ile söylenir. Bir değeri gösteren etiket yeni değeri gösterir. \
+                      plan yazmadan değişecekleri (nesne, alan, eski ve yeni değer; ilk 200) ve sorunları (nesne, alan, değer, kod, ileti) sayılarıyla verir; policy all'da da reddetmez, sorunları listeler. Adım “Alan hesapla: alan” ya da “Yapıştır”."
+                .into(),
+            aliases: vec!["alanhesapla".into(), "toplu-yaz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::FieldsWrite>(),
+            output: schema::<crate::FieldsWritten>(),
+            plan: Some(schema::<crate::FieldsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin alanını iki ondalıkla yaz".into(),
+                    input: json!({ "layer": "parsel", "write": { "kind": "calculate", "field": "Alan", "expression": "metin($alan, 2)" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Elektronik tablodan yapıştır".into(),
+                    input: json!({ "layer": "parsel", "write": { "kind": "values", "rows": [
+                        { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401", "values": { "Ada": "101", "Parsel": "5" } }
+                    ] }, "policy": "valid" }),
+                    output: None,
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_SOURCES_SYNC.into(),
             version: crate::CAD_SOURCES_SYNC_VERSION,
@@ -6567,6 +6604,9 @@ mod tests {
                     }
                     crate::CAD_SOURCES_SYNC => {
                         serde_json::from_value::<crate::SourcesSync>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FIELDS_WRITE => {
+                        serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())

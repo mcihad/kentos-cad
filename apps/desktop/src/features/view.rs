@@ -198,6 +198,22 @@ impl App {
                 (!self.selection.is_empty()).then(|| msg(Event::Duplicate)),
             ),
             bar_button(
+                "fieldCalc",
+                texts::CALCULATE,
+                texts::CALCULATE_HINT,
+                rows.layer
+                    .is_some()
+                    .then(|| msg(Event::Write(super::write::WriteEvent::Open))),
+            ),
+            bar_button(
+                "paste",
+                texts::PASTE,
+                texts::PASTE_HINT,
+                rows.layer
+                    .is_some()
+                    .then(|| msg(Event::Write(super::write::WriteEvent::Paste))),
+            ),
+            bar_button(
                 "layerFields",
                 texts::FIELDS,
                 texts::FIELDS_HINT,

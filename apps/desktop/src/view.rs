@@ -1792,6 +1792,7 @@ impl App {
             Asking::StyleImpact => self.style_impact_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
+            Asking::FieldsWrite => self.features_write_view(),
             Asking::Attachment => self.attachment_form_view(),
             Asking::PhotoViewer => self.photo_viewer_view(),
             Asking::LayerInfo => self.layer_info_view(),

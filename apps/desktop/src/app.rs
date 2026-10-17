@@ -186,6 +186,8 @@ pub enum Dialog {
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
     LayerFilter,
+    /// Alan hesapla and Yapıştır (features/write.rs, docs/adr/0507); the window is `App::features.write`.
+    FieldsWrite,
     /// Etiketler (labelling/, docs/adr/0212 §4); the window is `App::labelling`.
     Labelling,
     /// Bağlantılar (services/connections.rs).

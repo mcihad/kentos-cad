@@ -203,6 +203,8 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-20` toplu yazma (ADR 0507, 18 Ekim): web'de gerekenler: `cad.fields.write` işleyicisi, Öznitelik tablosunda Alan
+  hesapla penceresi ve Yapıştır (tarayıcının panosu); TS türleri üretildi.
 - [ ] `CBS-36` göreli kaynak ve Paketle (ADR 0506, 17 Ekim): web'de gerekenler: `.kcad` okumasında `sources`'ın `relative`'i,
   açılışta yeniden bulma (web'de dosya yolu yok: File System Access ya da sunucu yolu kararı), Yeniden bağla, `file.package`
   (tarayıcıda klasör yazımı ya da sunucunun paketi); TS türleri üretildi.
@@ -1790,6 +1792,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   her kopya SHA-256'sıyla; veritabanı, adres ve eksik dosya `package_left`); başsız uçtan uca test ve bağımsız
   `package_cases.py`. Kalan: PostGIS tablosunun çevrimdışı kopyası, lisans ve erişim süzgeci, bağı gömülü kopyaya
   çevirme. — **17 Ekim, [ADR 0506](docs/adr/0506-relative-sources-and-package.md).**
+- [ ] `CBS-20` toplu yazma (ilk dilim): `cad.fields.write` (Alan hesapla ve Yapıştır; değerler `cad.entities.set`'in kurallarıyla,
+  tekil alan birlikte; bütün ya da hiç ya da uyanlar; plan önizleme ve satır satır sorunlar); masaüstünde tablonun çubuğunda Alan
+  hesapla… ve Yapıştır; 32 ortak durum `fields_write_cases.py`'den. Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli
+  sayfalar, gizli sütunun süzülmesi. — **18 Ekim, [ADR 0507](docs/adr/0507-attribute-table-bulk-writes.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

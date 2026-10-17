@@ -122,3 +122,105 @@ fn screens() {
         }
     }
 }
+
+fn write(app: &mut App, e: super::write::WriteEvent) {
+    ev(app, Event::Write(e));
+}
+
+#[test]
+fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_not_fit() {
+    // docs/adr/0507: the window over cad.fields.write; plan first, the write one undo step.
+    use super::write::{Scope, WriteEvent as W};
+    let mut app = app_with_table();
+    let _ = app.update(Message::Run("data.featureTable"));
+    write(&mut app, W::Open);
+    assert_eq!(app.dialog, Some(crate::app::Dialog::FieldsWrite));
+    write(&mut app, W::Field("Alan".into()));
+    write(&mut app, W::Expression("Alan * 2".into()));
+    write(&mut app, W::Scope(Scope::All));
+    write(&mut app, W::Preview);
+    let plan = app
+        .features
+        .write
+        .as_ref()
+        .and_then(|w| w.plan.clone())
+        .expect("planned")
+        .expect("a plan");
+    // “12,5” is no number to the language: its result is empty and the old value stays.
+    assert_eq!((plan.changed, plan.kept), (4, 1), "{plan:?}");
+    write(&mut app, W::Run(kentos_contracts::WritePolicy::All));
+    assert!(app.features.write.is_none());
+    assert!(rows(&app)[0].contains("| 801 |"), "{:?}", rows(&app));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert!(rows(&app)[0].contains("| 400.50 |"), "{:?}", rows(&app));
+    // A paste: a header row names the fields; the second row's Parsel is refused.
+    app.selection.set([kentos_domain::Slot(1)]);
+    write(
+        &mut app,
+        W::Pasted(Some("Parsel\tKullanım\n8\tTicaret\nx\tKonut\n".into())),
+    );
+    let plan = app
+        .features
+        .write
+        .as_ref()
+        .and_then(|w| w.plan.clone())
+        .expect("planned")
+        .expect("a plan");
+    assert_eq!((plan.changed, plan.invalid), (1, 1), "{plan:?}");
+    write(&mut app, W::Run(kentos_contracts::WritePolicy::Valid));
+    assert!(rows(&app)[0].contains("| 8 |"), "{:?}", rows(&app));
+    assert!(rows(&app)[1].contains("| 12 |"), "{:?}", rows(&app));
+}
+
+/// Alan hesapla's preview and a paste's problems, dark and light (`.run/shots/alan-hesapla-*`):
+///
+/// ```text
+/// cargo test -p kentos-desktop features::tests::write_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn write_screens() {
+    use super::write::{Scope, WriteEvent as W};
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for mode in ["dark", "light"] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for scene in ["hesap", "yapistir"] {
+                let mut app = app_with_table();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let _ = app.update(Message::Run("data.featureTable"));
+                let _ = app.update(Message::WindowResized(Size::new(width, height)));
+                if scene == "hesap" {
+                    write(&mut app, W::Open);
+                    write(&mut app, W::Field("Alan".into()));
+                    write(&mut app, W::Expression("Alan / 3".into()));
+                    write(&mut app, W::Scope(Scope::All));
+                } else {
+                    app.selection.set([kentos_domain::Slot(1)]);
+                    write(
+                        &mut app,
+                        W::Pasted(Some("Parsel\tKullanım\n8\tTicaret\nx\tKonut\n".into())),
+                    );
+                }
+                write(&mut app, W::Preview);
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("alan-hesapla-{mode}-{scene}-{width}x{height}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}

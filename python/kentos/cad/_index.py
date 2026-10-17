@@ -66,6 +66,7 @@ COMMANDS: dict[str, Any] = {
     "cad.fields.edit": fields.edit,
     "cad.fields.migrate": fields.migrate,
     "cad.fields.usage": fields.usage,
+    "cad.fields.write": fields.write,
     "cad.fonts.report": fonts.report,
     "cad.forms.audit": forms.audit,
     "cad.forms.compare": forms.compare,

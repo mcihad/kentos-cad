@@ -59,6 +59,7 @@ pub mod blocks_sync;
 pub mod file_import_block;
 pub mod file_import_gpkg;
 pub mod provider;
+pub mod fields_write;
 pub mod source_places;
 pub mod sources;
 pub mod geopackage;
@@ -740,6 +741,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_DXF,
         kentos_contracts::FILE_IMPORT_DXF_VERSION,
+    ),
+    // Toplu yazma of the attribute table ([`fields_write`], docs/adr/0507).
+    (
+        kentos_contracts::CAD_FIELDS_WRITE,
+        kentos_contracts::CAD_FIELDS_WRITE_VERSION,
     ),
     // Bound layers ([`sources`], docs/adr/0503).
     (

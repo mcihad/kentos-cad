@@ -274,6 +274,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-20 — Öznitelik tablosunda provider paging/sıralama/toplu yazmayı tamamla — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0507](../docs/adr/0507-attribute-table-bulk-writes.md)): toplu yazma komutu `cad.fields.write` (Alan hesapla: ifade, kapsam, boş sonuç; Yapıştır: satır başına değerler), değerler `cad.entities.set`'in kurallarıyla denetlenir (tür, kanonik metin, zorunlu, alt tür, bileşim, kayıt kuralı, tekil alan birlikte), bütün ya da hiç (`invalid_values`) ya da uyanlar (`values_skipped`), plan önizleme ve satır satır sorun raporu; masaüstünde tablonun çubuğunda Alan hesapla… (kapsam sayılarıyla) ve Yapıştır (başlık satırı, ilk seçili satırdan). Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar, gizli sütunun kopya ve dışa aktarmada süzülmesi, grafiklerin aynı süzgeçle çalışması.*
+
   **Mevcut:** Arama, ifade, türüne göre sıralama, harita seçimi, hücre düzenleme ve spreadsheet export var [K06]. PR de geometrisiz kayıt, koşullu tablo görünüşü ve ilişkili tablo ekliyor [P25-B].
 
   **Yapılacak kalan iş:** Mevcut sanallaştırma, hücre düzenleme, filtre/arama, seçim ve tablo export'unu yeniden yazma. Sıralama/filtre/aggregate'i provider'a it; tabloyu source revision'ına bağlı kararlı cursor sayfalarıyla besle. Yüklü, seçili, filtreli ve tüm dataset kapsamlarını açık sayılarla ayır. Provider'a toplu yapıştırma/alan hesaplama için önizleme, hedef tip kontrolü ve atomik yazma adapter'ı ekle. Grafik/istatistik aynı kaynak filtresini kullansın; yetkisiz kolon daha sonra kopya/export'tan okunamasın. QGIS 4.2 kolon başlığından alan hesabı mevcut araca erişim örneğidir. [Q02]

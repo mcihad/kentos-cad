@@ -2227,6 +2227,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.fields.write",
+        refusals: &[
+            LAYER,
+            &["nothing_to_set", "invalid_attribute", "invalid_uid", "entity_not_found", "field_not_found"],
+            &["invalid_expression", "invalid_values"],
+        ],
+        warnings: &["values_skipped"],
+        targets: none,
+    },
+    Entry {
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
