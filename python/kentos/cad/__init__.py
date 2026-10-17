@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -778,6 +778,7 @@ __all__ = [
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LinkDomainsOp",
+    "LinkSourcesEditOp",
     "LinkTablesOperation",
     "LocalCommand",
     "LocalCrsSystem",
@@ -1036,6 +1037,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkSourcesEditOp",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
@@ -1118,8 +1120,22 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SourceCapabilities",
+    "SourceColumn",
+    "SourceKind",
+    "SourceKindName",
+    "SourceLink",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourceState",
+    "SourceTable",
+    "SourcesDescribe",
+    "SourcesDescribed",
+    "SourcesEdit",
+    "SourcesEditOp",
+    "SourcesEdited",
+    "SourcesSync",
+    "SourcesSynced",
     "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
@@ -1162,6 +1178,8 @@ __all__ = [
     "SubtypeField",
     "Summary",
     "SurveySettings",
+    "SyncDirection",
+    "SyncDirectionName",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
@@ -1248,6 +1266,7 @@ __all__ = [
     "UnitsChanged",
     "UnknownObject",
     "UnknownSystem",
+    "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
     "UnmergeTableEdit",
@@ -1333,6 +1352,7 @@ __all__ = [
     "settings",
     "sheets",
     "snap",
+    "sources",
     "standards",
     "styles",
     "tables",

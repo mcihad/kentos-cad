@@ -21,6 +21,7 @@ import type { ProjectForm } from "./ProjectForm";
 import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
+import type { SourceLink } from "./SourceLink";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
@@ -53,6 +54,10 @@ lineTypes?: Array<LineTypeDef>,
  * The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
  */
 hatchPatterns?: Array<HatchPatternDef>, 
+/**
+ * The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
+ */
+sources?: Array<SourceLink>, 
 /**
  * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.

@@ -196,6 +196,9 @@ Liste:
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
 - [ ] `CBS-03` GeoPackage (ADR 0502, 17 Ekim): web'de gerekenler: `file.import.gpkg` ve `file.export.gpkg` (web'de SQLite
   yok: sqlite-wasm ya da sunucu yolu kararı), içe aktarma penceresi; TS türleri üretildi.
+- [ ] `CBS-01/02/11/36` bağlı katman (ADR 0503, 17 Ekim): web'de gerekenler: `cad.sources.describe`, `.edit`, `.sync`
+  işleyicileri (web'de SQLite ve dosya yazma yok: sunucu yolu ya da File System Access kararı), `.kcad` şema 73'ün
+  `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi.
 - [ ] `CBS-22` standart ilişkiler (ADR 0501, 17 Ekim): web'de gerekenler: `cad.entities.relate` işleyicisi (çekirdeğin
   `ops::de9im`'i WASM'a bağlanır; TS türleri üretildi), `too_many_pairs` kodu ve `invalid_pattern`'ın genişleyen metni.
 - [ ] `FORM-BB` yayından kaldırma (ADR 0445, 17 Ekim): web'de gerekenler: formun `withdrawn`'ı ve `cad.forms.edit`'in `withdraw`'ı
@@ -1755,8 +1758,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-03` GeoPackage (kısmen): kendi crate'i `kentos-geopackage` (rusqlite, gömülü SQLite; geometri ikilisi Z/M ve eğrilerle,
   R-tree, `kentos_uids`), `file.import.gpkg` ve `file.export.gpkg` (Python, MCP), masaüstünde içe aktarma penceresi ve
   dışa aktarma; QGIS 4.2.3'ün dosyası GDAL'ın okuduğu gibi okunur, KentOS'unki QGIS'te açılır ve GDAL'ın
-  doğrulayıcısından geçer; 23 ortak durum. Kalan: dosyada yerinde düzenleme (CBS-01/02/11/36), raster ve ilişki
+  doğrulayıcısından geçer; 23 ortak durum. Dosyada yerinde düzenleme ADR 0503'le geldi. Kalan: raster ve ilişki
   profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).**
+- [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 73; dosyanın
+  SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
+  işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;
+  masaüstünde Bağlı katman olarak aç, Katmanlar'da rozet ve Kaynak ▸, şeritte Veri › Dosya alışverişi; Python ve MCP; 71 ortak durum,
+  yazma geçici kopyada ve OGR'la. Kalan: PostGIS (CBS-04), kaynak gezgininde önizleme, kaynağa itilen sorgu, üç yollu
+  birleştirme, taşınabilir paket. — **17 Ekim, [ADR 0503](docs/adr/0503-bound-layers.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

@@ -5223,6 +5223,107 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Bound layers (docs/adr/0503), held together by fixtures/commands/v1/cad.sources.*.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_DESCRIBE.into(),
+            version: crate::CAD_SOURCES_DESCRIBE_VERSION,
+            title: "Kaynakları tanı".into(),
+            summary: "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). \
+                      path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. \
+                      Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["kaynaklar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesDescribe>(),
+            output: schema::<crate::SourcesDescribed>(),
+            plan: Some(schema::<crate::SourcesDescribed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir dosyanın tabloları".into(),
+                    input: json!({ "path": "/veri/kadastro.gpkg" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin bağlı katmanları".into(),
+                    input: json!({}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_EDIT.into(),
+            version: crate::CAD_SOURCES_EDIT_VERSION,
+            title: "Kaynağa bağla".into(),
+            summary: "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). \
+                      Tablo projenin sisteminde olmalıdır (crs_mismatch): bağlı katman çevrilmez. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. \
+                      unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ."
+                .into(),
+            aliases: vec!["kaynakbagla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesEdit>(),
+            output: schema::<crate::SourcesEdited>(),
+            plan: Some(schema::<crate::SourcesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel tablosunu yeni katman olarak bağla".into(),
+                    input: json!({ "edit": { "kind": "link", "path": "/veri/kadastro.gpkg", "table": "parsel" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taşınan dosyanın yeni yeri".into(),
+                    input: json!({ "edit": { "kind": "relink", "id": "kaynak-1", "path": "/arsiv/kadastro.gpkg" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_SYNC.into(),
+            version: crate::CAD_SOURCES_SYNC_VERSION,
+            title: "Kaynakla eşitle".into(),
+            summary: "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. \
+                      Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
+                      read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). \
+                      plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler."
+                .into(),
+            aliases: vec!["kaynakesitle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesSync>(),
+            output: schema::<crate::SourcesSynced>(),
+            plan: Some(schema::<crate::SourcesSynced>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanının değişikliklerini dosyaya yaz".into(),
+                    input: json!({ "layer": "import-parsel", "direction": "write" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Başkasının değiştirdiği tabloyu yeniden oku".into(),
+                    input: json!({ "layer": "import-parsel", "direction": "read" }),
+                    output: None,
+                },
+            ],
+        },
         // A GeoPackage into the drawing (docs/adr/0502), held together by fixtures/commands/v1/file.import.gpkg.json.
         CommandDescriptor {
             id: crate::FILE_IMPORT_GPKG.into(),
@@ -6426,6 +6527,15 @@ mod tests {
                     }
                     crate::FILE_IMPORT_GPKG => {
                         serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_DESCRIBE => {
+                        serde_json::from_value::<crate::SourcesDescribe>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_EDIT => {
+                        serde_json::from_value::<crate::SourcesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_SYNC => {
+                        serde_json::from_value::<crate::SourcesSync>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())

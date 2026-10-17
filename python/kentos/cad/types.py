@@ -2593,6 +2593,15 @@ SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant",
 """The names of :class:`SnapKindName`, for a plain string."""
 
 
+class SourceKind(_StrEnum):
+    """What a source is."""
+    GEOPACKAGE = "geopackage"
+
+
+SourceKindName = Literal["geopackage"]
+"""The names of :class:`SourceKind`, for a plain string."""
+
+
 class SourceOverrides(_StrEnum):
     """What Tabloyu güncelle does with a cell changed by hand since its file was last read (docs/adr/0327 §5).
 
@@ -2697,6 +2706,20 @@ class StyleEditOperation(_StrEnum):
 
 StyleEditOperationName = Literal["create", "update", "rename", "remove", "export", "import"]
 """The names of :class:`StyleEditOperation`, for a plain string."""
+
+
+class SyncDirection(_StrEnum):
+    """Which way a sync goes.
+
+    - ``write``: The layer's changes into its table.
+    - ``read``: The table's rows into the layer.
+    """
+    WRITE = "write"
+    READ = "read"
+
+
+SyncDirectionName = Literal["write", "read"]
+"""The names of :class:`SyncDirection`, for a plain string."""
 
 
 class TableAlign(_StrEnum):
@@ -4063,6 +4086,28 @@ class SelectRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SelectRegion:
         return _variant(_SELECT_REGION, "SelectRegion", "kind", data).from_json(data)
+
+
+class SourcesEditOp(_Union):
+    """An edit of the project's bound layers.
+
+    One of:
+
+    - :class:`LinkSourcesEditOp` (``kind: link``)
+    - :class:`UnlinkSourcesEditOp` (``kind: unlink``)
+    - :class:`RelinkSourcesEditOp` (``kind: relink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEditOp:
+        return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
 
 
 class SubPlace(_Union):
@@ -23656,6 +23701,7 @@ class ProjectSettings(_Model):
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
             the project's own system, never a local project's. Unit: epsg.
+        sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
@@ -23695,6 +23741,7 @@ class ProjectSettings(_Model):
     relations: list[ProjectRelation] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
+    sources: list[SourceLink] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -23754,6 +23801,8 @@ class ProjectSettings(_Model):
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
+        if self.sources is not UNSET:
+            out["sources"] = [e0.to_json() for e0 in self.sources]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.text_styles is not UNSET:
@@ -23799,6 +23848,7 @@ class ProjectSettings(_Model):
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
+            sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -25999,6 +26049,390 @@ class SnapFound(_Model):
         return cls(
             snaps=[FoundSnap.from_json(e0) for e0 in data["snaps"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceCapabilities(_Model):
+    """What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.
+    Attributes:
+        transaction: Every write of a sync in one transaction.
+        curves: Arcs kept as arcs.
+    """
+    read: bool
+    insert: bool
+    update: bool
+    delete: bool
+    transaction: bool
+    z: bool
+    m: bool
+    curves: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["read"] = self.read
+        out["insert"] = self.insert
+        out["update"] = self.update
+        out["delete"] = self.delete
+        out["transaction"] = self.transaction
+        out["z"] = self.z
+        out["m"] = self.m
+        out["curves"] = self.curves
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceCapabilities:
+        return cls(
+            read=data["read"],
+            insert=data["insert"],
+            update=data["update"],
+            delete=data["delete"],
+            transaction=data["transaction"],
+            z=data["z"],
+            m=data["m"],
+            curves=data["curves"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceColumn(_Model):
+    """A column of a table and the field kind it reads as; none for one that is not read (a blob).
+    Attributes:
+        declared: As the file declares it (`MEDIUMINT`, `TEXT(40)` …).
+    """
+    name: str
+    declared: str
+    kind: LayerFieldKind | LayerFieldKindName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["declared"] = self.declared
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceColumn:
+        return cls(
+            name=data["name"],
+            declared=data["declared"],
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerFieldKind, data["kind"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceLink(_Model):
+    """A layer bound to a table of a file.
+    Attributes:
+        id: Its own id, `kaynak-N`.
+        path: The file, an absolute path.
+        table: The table in it.
+        layer: The drawing's layer that is its working copy.
+        revision: The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.
+        digest: The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries
+            and attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to
+            tell the layer's own edits from the file's.
+        writable: Whether the table can be written: a feature or attribute table of a file KentOS may write.
+        srid: The EPSG code the table declares, none for an undefined system. Unit: epsg.
+    """
+    id: str
+    kind: SourceKind | SourceKindName
+    path: str
+    table: str
+    layer: str
+    revision: str
+    digest: str
+    writable: bool
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["path"] = self.path
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        out["digest"] = self.digest
+        out["writable"] = self.writable
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceLink:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(SourceKind, data["kind"]),
+            path=data["path"],
+            table=data["table"],
+            layer=data["layer"],
+            revision=data["revision"],
+            digest=data["digest"],
+            writable=data["writable"],
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceState(_Model):
+    """A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
+    how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
+    and the layer lacks).
+    Attributes:
+        changed: The file changed since the layer last matched it.
+        edited: The layer changed since it last matched the file.
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+    """
+    link: SourceLink
+    found: bool
+    changed: bool
+    edited: bool
+    added: int
+    modified: int
+    removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["link"] = self.link.to_json()
+        out["found"] = self.found
+        out["changed"] = self.changed
+        out["edited"] = self.edited
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceState:
+        return cls(
+            link=SourceLink.from_json(data["link"]),
+            found=data["found"],
+            changed=data["changed"],
+            edited=data["edited"],
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceTable(_Model):
+    """A table of a file.
+    Attributes:
+        data: `features` or `attributes`.
+        rows: Unit: count.
+        geometry: The geometry column's type, none for an attribute table.
+        srid: Unit: epsg.
+    """
+    name: str
+    data: str
+    rows: int
+    columns: list[SourceColumn]
+    capabilities: SourceCapabilities
+    geometry: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["data"] = self.data
+        out["rows"] = self.rows
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["capabilities"] = self.capabilities.to_json()
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceTable:
+        return cls(
+            name=data["name"],
+            data=data["data"],
+            rows=data["rows"],
+            columns=[SourceColumn.from_json(e0) for e0 in data["columns"]],
+            capabilities=SourceCapabilities.from_json(data["capabilities"]),
+            geometry=data.get("geometry", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesDescribe(_Model):
+    """Input of `cad.sources.describe` v1: a file's tables (`path`), or the project's bound layers' state (none). Refusals:
+    `invalid_file_path`, `file_not_found`, `import_unreadable`.
+    """
+    path: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.path is not UNSET:
+            out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesDescribe:
+        return cls(
+            path=data.get("path", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesDescribed(_Model):
+    """Output of `cad.sources.describe` v1, and its plan.
+    Attributes:
+        links: The project's bound layers (without `path`).
+        tables: The file's tables (with `path`).
+    """
+    revision: str
+    links: list[SourceState] | Unset = UNSET
+    tables: list[SourceTable] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        if self.links is not UNSET:
+            out["links"] = [e0.to_json() for e0 in self.links]
+        if self.tables is not UNSET:
+            out["tables"] = [e0.to_json() for e0 in self.tables]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesDescribed:
+        return cls(
+            revision=data["revision"],
+            links=[SourceState.from_json(e0) for e0 in data["links"]] if "links" in data else UNSET,
+            tables=[SourceTable.from_json(e0) for e0 in data["tables"]] if "tables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesEdit(_Model):
+    """Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
+    `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
+    the table is bound already), `source_differs` (the layer given does not hold the table's objects),
+    `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`.
+    """
+    edit: SourcesEditOp
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEdit:
+        return cls(
+            edit=SourcesEditOp.from_json(data["edit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesEdited(_Model):
+    """Output of `cad.sources.edit` v1, and its plan.
+    Attributes:
+        objects: The objects taken in, and the layers made (linking onto a new layer). Unit: count.
+        link: The binding as it is now; none after unlinking.
+    """
+    objects: int
+    revision: str
+    layers: list[ImportedLayer] | Unset = UNSET
+    link: SourceLink | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = self.objects
+        out["revision"] = self.revision
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.link is not UNSET:
+            out["link"] = None if self.link is None else self.link.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEdited:
+        return cls(
+            objects=data["objects"],
+            revision=data["revision"],
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
+            link=UNSET if "link" not in data else None if data["link"] is None else SourceLink.from_json(data["link"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesSync(_Model):
+    """Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
+    `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
+    `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
+    the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
+    for stay in the drawing only).
+    Attributes:
+        layer: The bound layer, by id.
+        discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+    """
+    layer: str
+    direction: SyncDirection | SyncDirectionName
+    discard: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["direction"] = _enum_out(self.direction)
+        if self.discard is not UNSET:
+            out["discard"] = self.discard
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesSync:
+        return cls(
+            layer=data["layer"],
+            direction=_enum_in(SyncDirection, data["direction"]),
+            discard=data.get("discard", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesSynced(_Model):
+    """Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,
+    the columns a write added to the table, and the file's revision after.
+    Attributes:
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+        source: The file's SHA-256 after (plan: before).
+    """
+    added: int
+    modified: int
+    removed: int
+    source: str
+    revision: str
+    columns: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        out["source"] = self.source
+        out["revision"] = self.revision
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesSynced:
+        return cls(
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+            source=data["source"],
+            revision=data["revision"],
+            columns=list(data["columns"]) if "columns" in data else UNSET,
         )
 
 
@@ -35121,6 +35555,72 @@ class SimilarSelectRegion(SelectRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class LinkSourcesEditOp(SourcesEditOp):
+    """Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
+    `layer` given, which must hold the table's objects as they are.
+    """
+    TAG_VALUE: ClassVar[str] = "link"
+    path: str
+    table: str
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "link"}
+        out["path"] = self.path
+        out["table"] = self.table
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinkSourcesEditOp:
+        return cls(
+            path=data["path"],
+            table=data["table"],
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnlinkSourcesEditOp(SourcesEditOp):
+    """Unbinds a layer; its objects stay."""
+    TAG_VALUE: ClassVar[str] = "unlink"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unlink"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnlinkSourcesEditOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkSourcesEditOp(SourcesEditOp):
+    """The file moved: binds the layer to the file at `path`, which must be the same file (the revision's)."""
+    TAG_VALUE: ClassVar[str] = "relink"
+    id: str
+    path: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "relink"}
+        out["id"] = self.id
+        out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkSourcesEditOp:
+        return cls(
+            id=data["id"],
+            path=data["path"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
     """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Attributes:
@@ -36900,6 +37400,9 @@ _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "upd
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
+_SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
+
+
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
@@ -37645,6 +38148,7 @@ __all__ = [
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LinkDomainsOp",
+    "LinkSourcesEditOp",
     "LinkTablesOperation",
     "LocalCrsSystem",
     "LocalDefinition",
@@ -37888,6 +38392,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkSourcesEditOp",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
@@ -37963,8 +38468,22 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SourceCapabilities",
+    "SourceColumn",
+    "SourceKind",
+    "SourceKindName",
+    "SourceLink",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourceState",
+    "SourceTable",
+    "SourcesDescribe",
+    "SourcesDescribed",
+    "SourcesEdit",
+    "SourcesEditOp",
+    "SourcesEdited",
+    "SourcesSync",
+    "SourcesSynced",
     "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
@@ -38005,6 +38524,8 @@ __all__ = [
     "Subtype",
     "SubtypeField",
     "SurveySettings",
+    "SyncDirection",
+    "SyncDirectionName",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
@@ -38085,6 +38606,7 @@ __all__ = [
     "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
+    "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
     "UnmergeTableEdit",

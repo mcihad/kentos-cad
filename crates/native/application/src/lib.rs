@@ -58,6 +58,7 @@ pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
 pub mod file_import_gpkg;
+pub mod sources;
 pub mod geopackage;
 pub mod blocks_library;
 pub mod break_join;
@@ -737,6 +738,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_DXF,
         kentos_contracts::FILE_IMPORT_DXF_VERSION,
+    ),
+    // Bound layers ([`sources`], docs/adr/0503).
+    (
+        kentos_contracts::CAD_SOURCES_DESCRIBE,
+        kentos_contracts::CAD_SOURCES_DESCRIBE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SOURCES_EDIT,
+        kentos_contracts::CAD_SOURCES_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SOURCES_SYNC,
+        kentos_contracts::CAD_SOURCES_SYNC_VERSION,
     ),
     // A GeoPackage into the drawing ([`file_import_gpkg`], docs/adr/0502).
     (

@@ -118,6 +118,7 @@ fn target(
     doc: &Document,
     input: &ImportGpkg,
     t: &geopackage::TableRead,
+    fresh: bool,
 ) -> Result<LayerTarget, Stop> {
     if let Some(id) = input.layers.get(&t.name) {
         let at = format!("layers.{}", t.name);
@@ -150,7 +151,7 @@ fn target(
         };
     }
     let name = t.title.clone().unwrap_or_else(|| t.name.clone());
-    if let Some(node) = layer_named(doc, &name) {
+    if let Some(node) = layer_named(doc, &name).filter(|_| !fresh) {
         if doc.layers().is_locked(&node.id) {
             return Err(refuse(
                 codes::LAYER_LOCKED,
@@ -247,6 +248,15 @@ fn run(
     doc: &mut Document,
     input: &ImportGpkg,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
+    run_with(doc, input, false)
+}
+
+/// The import; `fresh` puts every table onto a new layer (a bound layer holds its table's objects only, docs/adr/0503).
+pub(crate) fn run_with(
+    doc: &mut Document,
+    input: &ImportGpkg,
+    fresh: bool,
+) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let mut read = read_file(input)?;
     let mut warnings = Vec::new();
     let mut losses: BTreeSet<String> = read
@@ -302,13 +312,13 @@ fn run(
     let mut layers = Vec::new();
     let mut objects: Vec<(Uuid, Entity)> = Vec::new();
     for t in &read.tables {
-        if t.objects.is_empty() {
+        if t.objects.is_empty() && !fresh {
             continue;
         }
-        layers.push((t.name.clone(), target(doc, input, t)?));
+        layers.push((t.name.clone(), target(doc, input, t, fresh)?));
         objects.extend(t.objects.iter().cloned());
     }
-    if objects.is_empty() {
+    if objects.is_empty() && !fresh {
         return Err(refuse(
             codes::NOTHING_TO_IMPORT,
             format!(
@@ -372,7 +382,7 @@ fn run(
     let tables = read
         .tables
         .iter()
-        .filter(|t| !t.objects.is_empty())
+        .filter(|t| fresh || !t.objects.is_empty())
         .map(|t| GpkgTableImported {
             table: t.name.clone(),
             layer: targets

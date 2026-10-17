@@ -165,6 +165,64 @@ def qgis_counts(path, names):
     return out
 
 
+def edited_problems(path):
+    """The parcels edited in place by the crate (crates/native/geopackage/tests/all.rs): fid 1 gone, fid 2 renamed and
+    moved, fid 4 added with its id, a `durum` column; OGR's spatial filter (the R-tree) finds them where they are."""
+    from osgeo import ogr
+    ds = ogr.Open(str(path))
+    lyr = ds.GetLayerByName("parsel")
+    out = []
+    names = [lyr.GetLayerDefn().GetFieldDefn(i).GetName() for i in range(lyr.GetLayerDefn().GetFieldCount())]
+    if names[-1:] != ["durum"]:
+        out.append(f"sütunlar {names}")
+    rows = {f.GetFID(): f for f in lyr}
+    if sorted(rows) != [2, 3, 4]:
+        out.append(f"fid'ler {sorted(rows)}")
+    elif rows[2].GetField("ada") != "Yeni Mahalle" or rows[2].GetField("durum") != "onaylı":
+        out.append("2. satırın değerleri")
+    lyr.SetSpatialFilterRect(487299, 4419999, 487306, 4420006)
+    found = [f.GetFID() for f in lyr]
+    lyr.SetSpatialFilterRect(486999, 4419999, 487021, 4420021)
+    gone = [f.GetFID() for f in lyr]
+    if found != [2] or gone:
+        out.append(f"mekânsal süzgeç {found} {gone}")
+    rs = ds.ExecuteSQL("SELECT uid FROM kentos_uids WHERE table_name = 'parsel' AND fid = 4")
+    uid = [r.GetField(0) for r in rs]
+    ds.ReleaseResultSet(rs)
+    if uid != ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7999"]:
+        out.append(f"kentos_uids {uid}")
+    return out
+
+
+def synced_problems(path):
+    """The bound layer written back (crates/native/application/tests/all/sources.rs): parcel 1 renamed with a new
+    `durum` column, parcel 2 deleted, a triangle added with its lasting id, then parcel 3 deleted by another program."""
+    from osgeo import ogr
+    ds = ogr.Open(str(path))
+    lyr = ds.GetLayerByName("parsel")
+    out = []
+    names = [lyr.GetLayerDefn().GetFieldDefn(i).GetName() for i in range(lyr.GetLayerDefn().GetFieldCount())]
+    if names[-1:] != ["durum"]:
+        out.append(f"sütunlar {names}")
+    rows = {f.GetFID(): f for f in lyr}
+    if sorted(rows) != [1, 4]:
+        out.append(f"fid'ler {sorted(rows)}")
+    else:
+        if rows[1].GetField("ada") != "Yeni Mahalle" or rows[1].GetField("durum") != "onaylı":
+            out.append("1. satırın değerleri")
+        g = rows[4].GetGeometryRef()
+        if g is None or abs(g.GetArea() - 50.0) > 1e-9:
+            out.append(f"eklenen üçgen {g}")
+    lyr.SetSpatialFilterRect(487499, 4419999, 487511, 4420011)
+    if [f.GetFID() for f in lyr] != [4]:
+        out.append("mekânsal süzgeç eklenen üçgeni bulmuyor")
+    rs = ds.ExecuteSQL("SELECT COUNT(*) FROM kentos_uids WHERE table_name = 'parsel' AND fid = 4")
+    if [r.GetField(0) for r in rs] != [1]:
+        out.append("eklenen üçgenin kalıcı kimliği yok")
+    ds.ReleaseResultSet(rs)
+    return out
+
+
 def findings(path):
     """GDAL's validator's findings of a file."""
     from osgeo_utils.samples import validate_gpkg
@@ -244,8 +302,24 @@ def main():
         if problems or extra:
             print(f"{exported.relative_to(ROOT)}: " + "; ".join(problems + [str(e) for e in extra]), file=sys.stderr)
             return 1
+        edited = DIR / "kentos-edited.gpkg"
+        if not edited.exists():
+            print(f"{edited.relative_to(ROOT)} yok: KENTOS_WRITE_GPKG=1 cargo test -p kentos-geopackage", file=sys.stderr)
+            return 1
+        problems += edited_problems(edited)
+        synced = DIR / "kentos-synced.gpkg"
+        if not synced.exists():
+            print(f"{synced.relative_to(ROOT)} yok: KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application "
+                  "--test all sources::", file=sys.stderr)
+            return 1
+        problems += synced_problems(synced)
+        problems += [str(e) for e in findings(synced) if e not in findings(QGIS_FILE)]
+        problems += [str(e) for e in findings(edited) if e not in findings(QGIS_FILE)]
+        if problems:
+            print(f"{edited.relative_to(ROOT)}: " + "; ".join(problems), file=sys.stderr)
+            return 1
         print(f"GeoPackage durumları tutarlı: {len(want['layers'])} katman; kentos.gpkg QGIS'inkiyle aynı okunuyor, "
-              "kentos-export.gpkg (QGIS'inki çizime alınıp yazılmış) aynı anlamda ve QGIS 4.2 onu açıyor; ikisi de GDAL'ın doğrulayıcısından geçiyor")
+              "kentos-export.gpkg (QGIS'inki çizime alınıp yazılmış) aynı anlamda ve QGIS 4.2 onu açıyor; ikisi de GDAL'ın doğrulayıcısından geçiyor; yerinde düzenlenen kentos-edited.gpkg'yi ve bağlı katmanın yazdığı kentos-synced.gpkg'yi OGR doğru okuyor")
         return 0
     doc = {
         "format": "kentos.geopackage-cases",

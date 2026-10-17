@@ -182,6 +182,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "beklenmez: çekirdek yalnız boş zinciri reddeder, komut onu nothing_to_join ile önce yakalar (ADR 0254 §4)",
     ),
     (
+        "cad.sources.sync",
+        "file_unwritable",
+        "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada sources.rs sınar",
+    ),
+    (
+        "cad.sources.edit",
+        "too_many_sources",
+        "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
+    ),
+    (
         "cad.sheets.edit",
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",

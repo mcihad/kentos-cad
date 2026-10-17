@@ -6763,6 +6763,86 @@
    "tests": 0
   },
   {
+   "id": "source.link",
+   "kind": "command",
+   "title": "Kaynağa bağla…",
+   "level": "semantic",
+   "via": [
+    "cad.sources.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.edit",
+   "mcp": "cad.sources.edit",
+   "note": "GeoPackage penceresinin Bağlı katman olarak aç'ı her tabloyu cad.sources.edit link ile bağlar (ADR 0503).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "source.read",
+   "kind": "command",
+   "title": "Kaynaktan oku",
+   "level": "semantic",
+   "via": [
+    "cad.sources.sync"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.sync",
+   "mcp": "cad.sources.sync",
+   "note": "cad.sources.sync read; katman değiştiyse soru ve discard (ADR 0503).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "source.status",
+   "kind": "command",
+   "title": "Kaynak durumu",
+   "level": "query",
+   "via": [
+    "cad.sources.describe"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "source.unlink",
+   "kind": "command",
+   "title": "Bağı çöz",
+   "level": "semantic",
+   "via": [
+    "cad.sources.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.edit",
+   "mcp": "cad.sources.edit",
+   "note": "cad.sources.edit unlink (ADR 0503).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "source.write",
+   "kind": "command",
+   "title": "Kaynağa yaz",
+   "level": "semantic",
+   "via": [
+    "cad.sources.sync"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.sync",
+   "mcp": "cad.sources.sync",
+   "note": "Katmanın değişiklikleri cad.sources.sync write ile tabloya (ADR 0503).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "standards.apply",
    "kind": "command",
    "title": "Standardı uygula",

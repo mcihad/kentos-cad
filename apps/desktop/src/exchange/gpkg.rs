@@ -2,13 +2,17 @@
 //! tables with their rows and kinds and the file's coordinate system against the project's, and takes the chosen ones
 //! with `file.import.gpkg`; a file in another system goes in only with Projenin sistemine çevir ticked (no silent
 //! move). Dışa aktar asks where and writes the layers with `file.export.gpkg`. Both write through the commands, so a
-//! script and the window do the same.
+//! script and the window do the same. Bağlı katman olarak aç (docs/adr/0503) binds each chosen table to a new layer
+//! with `cad.sources.edit` instead: the layer is the table's working copy (bound.rs); a file in another system is not
+//! bound, a bound layer is never moved.
 
 use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{CallOp, CommandResult, ExportGpkg, GpkgImported};
+use kentos_contracts::{
+    CallOp, CommandResult, ExportGpkg, GpkgImported, SourcesEdit, SourcesEditOp,
+};
 use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
 use kentos_interaction::Level;
@@ -38,14 +42,18 @@ pub struct State {
     /// The EPSG code the file declares, none for an undefined system.
     pub srid: Option<u32>,
     pub reproject: bool,
+    /// Bağlı katman olarak aç: each table bound to its layer (`cad.sources.edit`).
+    pub bind: bool,
     pub status: Option<(bool, String)>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Picked(Option<PathBuf>),
+    /// The file picked; whether the window opens with Bağlı katman olarak aç ticked.
+    Picked(Option<PathBuf>, bool),
     Toggle(usize),
     Reproject,
+    Bind,
     Run,
     Save(Option<PathBuf>),
 }
@@ -88,26 +96,31 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         chosen,
         srid,
         reproject: false,
+        bind: false,
         status: None,
     })
 }
 
 impl App {
-    pub(super) fn gpkg_pick(&mut self) -> Task<Message> {
+    pub(super) fn gpkg_pick(&mut self, bind: bool) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
-            return Task::done(event(Event::Picked(Some(path))));
+            return Task::done(event(Event::Picked(Some(path), bind)));
         }
         Task::perform(
             async move {
                 let file = rfd::AsyncFileDialog::new()
-                    .set_title("GeoPackage içe aktar")
+                    .set_title(if bind {
+                        "Kaynağa bağla"
+                    } else {
+                        "GeoPackage içe aktar"
+                    })
                     .add_filter("GeoPackage", &["gpkg"])
                     .pick_file()
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            |p| event(Event::Picked(p)),
+            move |p| event(Event::Picked(p, bind)),
         )
     }
 
@@ -137,9 +150,9 @@ impl App {
 
     pub(super) fn gpkg_event(&mut self, e: Event) -> Task<Message> {
         match e {
-            Event::Picked(None) | Event::Save(None) => {}
-            Event::Picked(Some(path)) => match describe(&path) {
-                Ok(state) => self.open_window(Window::Gpkg(state)),
+            Event::Picked(None, _) | Event::Save(None) => {}
+            Event::Picked(Some(path), bind) => match describe(&path) {
+                Ok(state) => self.open_window(Window::Gpkg(State { bind, ..state })),
                 Err(why) => self.say(Level::Error, format!("{} açılamadı: {why}", path.display())),
             },
             Event::Save(Some(path)) => self.gpkg_write(path),
@@ -155,6 +168,11 @@ impl App {
                     s.reproject = !s.reproject;
                 }
             }
+            Event::Bind => {
+                if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                    s.bind = !s.bind;
+                }
+            }
             Event::Run => self.gpkg_run(),
         }
         Task::none()
@@ -164,6 +182,9 @@ impl App {
         let Some(Window::Gpkg(s)) = &self.exchange else {
             return;
         };
+        if s.bind {
+            return self.gpkg_bind();
+        }
         let tables: Vec<&str> = s
             .tables
             .iter()
@@ -230,6 +251,91 @@ impl App {
                     ));
                 }
             }
+        }
+    }
+
+    /// Bağlı katman olarak aç: each chosen table onto a new layer bound to it, one `cad.sources.edit` each.
+    fn gpkg_bind(&mut self) {
+        let Some(Window::Gpkg(s)) = &self.exchange else {
+            return;
+        };
+        let path = s.path.display().to_string();
+        let file = s.file.clone();
+        let tables: Vec<String> = s
+            .tables
+            .iter()
+            .zip(&s.chosen)
+            .filter(|(_, c)| **c)
+            .map(|(t, _)| t.name.clone())
+            .collect();
+        let Some(doc) = &mut self.document else {
+            return;
+        };
+        let first = doc.model.next_slot();
+        let (mut bound, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
+        for table in &tables {
+            let input = SourcesEdit {
+                edit: SourcesEditOp::Link {
+                    path: path.clone(),
+                    table: table.clone(),
+                    layer: None,
+                },
+            };
+            match kentos_native_application::sources::edit::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                input,
+            ) {
+                CommandResult::Completed {
+                    output,
+                    warnings: w,
+                } => {
+                    objects += output.objects;
+                    bound.push(table.clone());
+                    warnings.extend(w);
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                        s.status = Some((
+                            true,
+                            if bound.is_empty() {
+                                error.message
+                            } else {
+                                format!(
+                                    "{} bağlandı; “{table}” bağlanamadı: {}",
+                                    bound.join(", "),
+                                    error.message
+                                )
+                            },
+                        ));
+                    }
+                    return;
+                }
+                _ => return,
+            }
+        }
+        let last = doc.model.next_slot();
+        let slots: Vec<Slot> = (first..last)
+            .filter_map(|n| u32::try_from(n).ok())
+            .map(Slot)
+            .filter(|s| doc.model.get(*s).is_some())
+            .collect();
+        self.close_exchange();
+        self.zoom_to(&slots);
+        self.announce(
+            if warnings.is_empty() {
+                Level::Success
+            } else {
+                Level::Warn
+            },
+            format!(
+                "“{file}” bağlandı: {} tablo bağlı katman oldu, {objects} nesne. Değişiklikleri Kaynağa yaz ile dosyaya yazın.",
+                bound.len()
+            ),
+        );
+        for w in warnings {
+            self.say(Level::Warn, w.message);
         }
     }
 
@@ -316,6 +422,8 @@ impl App {
             if chosen == 0 { Line::Warn } else { Line::Info },
             if chosen == 0 {
                 "Alınacak tablo seçilmedi.".to_owned()
+            } else if s.bind {
+                format!("{chosen} tablo, {rows} satır bağlanacak; her tablo kendi bağlı katmanı olur, sütunları alan.")
             } else {
                 format!("{chosen} tablo, {rows} satır alınacak; her tablo bir katman, sütunları alan olur.")
             },
@@ -324,7 +432,20 @@ impl App {
             .spacing(12)
             .push(words::file_line(&s.file, s.path.display().to_string()))
             .push(words::field("Tablolar", list, None));
-        if mismatch {
+        body = body.push(words::field(
+            "Bağ",
+            words::check(
+                s.bind && !mismatch,
+                "Bağlı katman olarak aç".to_owned(),
+                (!mismatch).then(|| event(Event::Bind)),
+            ),
+            Some(if mismatch {
+                "Bağlı katman çevrilmez: dosya projenin sisteminde olmalı.".to_owned()
+            } else {
+                "Katman tablonun çalışma kopyası olur: değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir.".to_owned()
+            }),
+        ));
+        if mismatch && !s.bind {
             body = body.push(words::field(
                 "Koordinat sistemi",
                 words::check(
@@ -342,17 +463,21 @@ impl App {
                 text.clone(),
             ));
         }
-        let ready = chosen > 0 && (!mismatch || s.reproject);
+        let ready = chosen > 0 && (!mismatch || (s.reproject && !s.bind));
         overlay::blocking(
-            Dialog::new("GeoPackage içe aktar")
-                .scroll(body)
-                .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary(
-                    "İçe aktar",
-                    ready.then(|| event(Event::Run)),
-                ))
-                .width(640.0)
-                .max_height(720.0),
+            Dialog::new(if s.bind {
+                "Kaynağa bağla"
+            } else {
+                "GeoPackage içe aktar"
+            })
+            .scroll(body)
+            .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
+            .action(words::primary(
+                if s.bind { "Bağla" } else { "İçe aktar" },
+                ready.then(|| event(Event::Run)),
+            ))
+            .width(640.0)
+            .max_height(720.0),
         )
     }
 }

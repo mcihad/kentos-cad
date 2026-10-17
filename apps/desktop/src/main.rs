@@ -30,6 +30,7 @@ mod assoc_array_scenes;
 #[cfg(test)]
 mod attachment_scenes;
 mod attachments;
+mod bound;
 #[cfg(test)]
 mod attachments_tests;
 mod attribute_table;

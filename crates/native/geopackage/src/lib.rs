@@ -268,6 +268,15 @@ pub struct NewRow {
     pub values: Vec<Value>,
 }
 
+/// The edits of a table: columns to add, rows to update by fid, rows to insert with their lasting ids, fids to delete.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Edits {
+    pub add_columns: Vec<Column>,
+    pub update: Vec<(i64, NewRow)>,
+    pub insert: Vec<(String, NewRow)>,
+    pub delete: Vec<i64>,
+}
+
 /// A GeoPackage file open.
 pub struct GeoPackage {
     conn: Connection,
@@ -805,6 +814,123 @@ impl GeoPackage {
                 st.execute(params![def.name, fid, uid])?;
             }
         }
+        tx.commit()?;
+        Ok(fids)
+    }
+
+    /// Edits a table of the file in place, in one transaction (docs/adr/0503): its missing columns added (as
+    /// declared), rows updated by fid (their geometry, when the table has a column for it, and every value in the
+    /// layer's column order, the added ones last), rows inserted with their lasting ids (`kentos_uids`, made when the
+    /// file lacks it), rows deleted with theirs. The spatial index follows by its triggers; unknown tables and
+    /// extensions are not touched. Returns the inserted rows' fids. Nothing is written when any step fails.
+    pub fn edit(&mut self, layer: &Layer, edits: &Edits) -> Result<Vec<i64>> {
+        let tx = self.conn.transaction()?;
+        let t = quote(&layer.name);
+        for c in &edits.add_columns {
+            let decl = if c.decl.trim().is_empty() {
+                c.kind.decl()
+            } else {
+                c.decl.clone()
+            };
+            tx.execute_batch(&format!(
+                "ALTER TABLE {t} ADD COLUMN {} {decl};",
+                quote(&c.name)
+            ))?;
+        }
+        let mut cols: Vec<String> = layer.columns.iter().map(|c| quote(&c.name)).collect();
+        cols.extend(edits.add_columns.iter().map(|c| quote(&c.name)));
+        let geom = layer.geometry.as_ref().map(|g| quote(&g.name));
+        let srs = layer.srs_id.unwrap_or(-1);
+        let width = cols.len();
+        let values = |row: &NewRow| -> Result<Vec<Value>> {
+            if row.values.len() != width {
+                return Err(Error(format!(
+                    "“{}” tablosunun satırında {} değer var, {width} sütun bekleniyor",
+                    layer.name,
+                    row.values.len()
+                )));
+            }
+            let mut v = Vec::with_capacity(width + 2);
+            if geom.is_some() {
+                v.push(
+                    row.geometry
+                        .as_ref()
+                        .map_or(Value::Null, |g| Value::Blob(write_blob(srs, g))),
+                );
+            }
+            v.extend(row.values.iter().cloned());
+            Ok(v)
+        };
+        let mut names: Vec<String> = Vec::new();
+        if let Some(g) = &geom {
+            names.push(g.clone());
+        }
+        names.extend(cols.iter().cloned());
+        if !edits.update.is_empty() && !names.is_empty() {
+            let sets = names
+                .iter()
+                .map(|n| format!("{n} = ?"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let mut st = tx.prepare(&format!(
+                "UPDATE {t} SET {sets} WHERE {} = ?",
+                quote(&layer.fid)
+            ))?;
+            for (fid, row) in &edits.update {
+                let mut v = values(row)?;
+                v.push(Value::Integer(*fid));
+                if st.execute(rusqlite::params_from_iter(v.iter()))? != 1 {
+                    return Err(Error(format!(
+                        "“{}” tablosunda {fid} numaralı satır yok",
+                        layer.name
+                    )));
+                }
+            }
+        }
+        let mut fids = Vec::with_capacity(edits.insert.len());
+        if !edits.insert.is_empty() {
+            let marks = vec!["?"; names.len()].join(", ");
+            let sql = if names.is_empty() {
+                format!("INSERT INTO {t} DEFAULT VALUES")
+            } else {
+                format!("INSERT INTO {t} ({}) VALUES ({marks})", names.join(", "))
+            };
+            let mut st = tx.prepare(&sql)?;
+            for (_, row) in &edits.insert {
+                st.execute(rusqlite::params_from_iter(values(row)?.iter()))?;
+                fids.push(tx.last_insert_rowid());
+            }
+        }
+        if !edits.delete.is_empty() {
+            let mut st = tx.prepare(&format!("DELETE FROM {t} WHERE {} = ?", quote(&layer.fid)))?;
+            for fid in &edits.delete {
+                st.execute([fid])?;
+            }
+        }
+        if !edits.insert.is_empty() || !edits.delete.is_empty() {
+            tx.execute_batch(
+                "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
+                 PRIMARY KEY (table_name, fid));",
+            )?;
+            tx.execute(
+                "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
+                [UIDS_EXTENSION],
+            )?;
+            let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
+            for (fid, (uid, _)) in fids.iter().zip(&edits.insert) {
+                put.execute(params![layer.name, fid, uid])?;
+            }
+            let mut gone =
+                tx.prepare("DELETE FROM kentos_uids WHERE table_name = ?1 AND fid = ?2")?;
+            for fid in &edits.delete {
+                gone.execute(params![layer.name, fid])?;
+            }
+        }
+        // The contents' box and time: what changed is said where other programs look.
+        tx.execute(
+            "UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
+            [&layer.name],
+        )?;
         tx.commit()?;
         Ok(fids)
     }

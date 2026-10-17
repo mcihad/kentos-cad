@@ -241,6 +241,8 @@ pub(super) struct Features {
     pub(super) hatch_extras: bool,
     /// Schema 72: the settings' `forms` and a layer field's `id` (docs/adr/0401).
     pub(super) forms: bool,
+    /// Schema 73: the settings' `sources` (docs/adr/0503).
+    pub(super) sources: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -328,6 +330,7 @@ impl Features {
             hatch_gaps: schema >= crate::SCHEMA_WITH_HATCH_GAPS,
             hatch_extras: schema >= crate::SCHEMA_WITH_HATCH_EXTRAS,
             forms: schema >= crate::SCHEMA_WITH_FORMS,
+            sources: schema >= crate::SCHEMA_WITH_SOURCES,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,

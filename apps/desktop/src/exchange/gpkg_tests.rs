@@ -94,6 +94,108 @@ fn the_drawing_goes_out_as_a_geopackage() {
     );
 }
 
+/// Whether a line says `part` anywhere.
+fn says(app: &App, part: &str) -> bool {
+    app.log.lines().any(|l| l.text.contains(part))
+}
+
+/// The tables after the first unticked: only the parcels taken.
+fn parcels_only(app: &mut App) {
+    for i in 1..window(app).tables.len() {
+        send(app, Event::Gpkg(G::Toggle(i)));
+    }
+}
+
+fn delete_first(app: &mut App, layer: &str) {
+    let doc = app.document.as_mut().expect("a drawing");
+    let slot = doc
+        .model
+        .by_layer_with_uids(layer)
+        .next()
+        .and_then(|(u, _)| doc.model.slot_of(u))
+        .expect("an object");
+    doc.model.remove(&[slot]);
+}
+
+#[test]
+fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
+    let dir = scratch("gpkg-bound");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(file.clone());
+    run(&mut app, "source.link");
+    assert!(
+        window(&app).bind,
+        "Kaynağa bağla opens with the binding ticked"
+    );
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none());
+    assert!(
+        said(&app, "“kadastro.gpkg” bağlandı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let link = app.bound_link("import-parsel").expect("bound");
+    assert_eq!(link.table, "parsel");
+    let node = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().get("import-parsel").cloned())
+        .expect("the layer");
+    assert!(format!("{:?}", app.layer_menu(&node, false)).contains("Kaynağa yaz"));
+    // An edit written back: the file changes, the binding follows it.
+    delete_first(&mut app, "import-parsel");
+    let before = std::fs::read(&file).expect("read");
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(
+        says(&app, "tablosuna yazıldı: 1 silindi"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    assert_ne!(std::fs::read(&file).expect("read"), before);
+    assert_ne!(
+        app.bound_link("import-parsel").expect("bound").revision,
+        link.revision
+    );
+    // A reload over the layer's own edit asks first; Değişiklikleri at ve oku brings the table's rows back.
+    delete_first(&mut app, "import-parsel");
+    let _ = app.update(Message::Bound(crate::bound::Event::Read(Some(
+        "import-parsel".into(),
+    ))));
+    assert_eq!(app.dialog, Some(crate::app::Dialog::SourceDiscard));
+    let _ = app.update(Message::DialogConfirmed);
+    assert!(
+        says(&app, "tablosundan okundu: 1 eklendi"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Run("source.status"));
+    assert!(
+        says(&app, "ile aynı."),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Unlink(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(app.bound_link("import-parsel").is_none());
+}
+
+#[test]
+fn a_file_in_another_system_is_not_bound() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gpkg("wgs84.gpkg"));
+    run(&mut app, "source.link");
+    send(&mut app, Event::Gpkg(G::Reproject));
+    let before = count(&app);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before, "a bound layer is never moved");
+}
+
 #[test]
 #[ignore = "pictures, run by hand"]
 fn screens() {
@@ -142,6 +244,18 @@ fn screens() {
             run(&mut app, "file.import.gpkg");
             send(&mut app, Event::Gpkg(G::Reproject));
             picture(&mut app, &format!("gpkg-{mode}-2-cevir"));
+            // Bağlı katman (docs/adr/0503): the window, the badge, the question over the layer's own edit.
+            let mut app = fresh();
+            app.picker = Picker::File(gpkg("qgis.gpkg"));
+            run(&mut app, "source.link");
+            picture(&mut app, &format!("gpkg-{mode}-4-bagla"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-5-bagli"));
+            delete_first(&mut app, "import-parsel");
+            let _ = app.update(Message::Bound(crate::bound::Event::Read(Some(
+                "import-parsel".into(),
+            ))));
+            picture(&mut app, &format!("gpkg-{mode}-6-soru"));
         }
     }
 }

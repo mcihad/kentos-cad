@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 84 | 138 | 38 | 46 | 306 |
+| semantic | 84 | 138 | 39 | 49 | 310 |
 | geometry | 16 | 59 | 0 | 8 | 83 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 3 | 23 | 1 | 4 | 31 |
+| query | 3 | 23 | 2 | 4 | 32 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 103 | 346 | 103 | 213 | 765 |
+| **toplam** | 103 | 346 | 105 | 216 | 770 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 552 satırdan 131'i: geometry 75, none 20, processing 13, query 23.
+CBS'ye özgü olmayan 554 satırdan 132'i: geometry 75, none 20, processing 13, query 24.
 
 ### Sonucu çağıran hesaplar (geometry) — 75
 
@@ -156,7 +156,7 @@ CBS'ye özgü olmayan 552 satırdan 131'i: geometry 75, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 23
+### Okuma, Python'da yok (query) — 24
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -176,6 +176,7 @@ CBS'ye özgü olmayan 552 satırdan 131'i: geometry 75, none 20, processing 13, 
 | `layer.impact` | Değişikliğin etkisi | shared | cad.styles.impact |  |
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
+| `source.status` | Kaynak durumu | none | cad.sources.describe | cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503). |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |
 | `text.check` | Yazı denetimi | cad | cad.texts.check | Pencere komutun bulgularını gösterir (ADR 0325). |
 | `text.fonts` | Yazı tipleri | cad | cad.fonts.report | Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324). |

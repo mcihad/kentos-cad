@@ -50,6 +50,8 @@ pub struct TableRead {
     pub fields: Vec<LayerField>,
     /// The objects with their lasting ids; their layer is the table's name.
     pub objects: Vec<(Uuid, Entity)>,
+    /// Each object's row, by fid, in the objects' order.
+    pub fids: Vec<i64>,
     /// How many rows were read, and of them records.
     pub read: u32,
     pub records: u32,
@@ -443,6 +445,7 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
             }
         }
         let mut objects = Vec::with_capacity(rows.len());
+        let mut fids = Vec::with_capacity(rows.len());
         let mut skipped = Vec::new();
         let mut records = 0;
         for row in &rows {
@@ -492,6 +495,7 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
                 .and_then(|u| Uuid::parse_str(u).ok())
                 .unwrap_or_else(|| row_uid(&layer.name, row.fid));
             objects.push((uid, entity));
+            fids.push(row.fid);
         }
         tables.push(TableRead {
             title: layer.identifier.clone().filter(|i| i != &layer.name),
@@ -499,6 +503,7 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
             srs_id: layer.srs_id,
             fields,
             objects,
+            fids,
             read: rows.len() as u32,
             records,
             skipped,
@@ -807,7 +812,7 @@ fn fit(geoms: &mut [Option<Geometry>]) -> Option<String> {
     Some(name.into())
 }
 
-fn column_of(f: &LayerField) -> gpkg::Column {
+pub(crate) fn column_of(f: &LayerField) -> gpkg::Column {
     let kind = match f.kind {
         LayerFieldKind::Text => ColumnKind::Text(f.length),
         LayerFieldKind::Integer => ColumnKind::Integer,
@@ -1032,4 +1037,142 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
     }
     gp.close().map_err(|e| e.0)?;
     Ok(out)
+}
+
+// ── One object against a table (docs/adr/0503) ─────────────────────────────
+
+/// What a layer and its table are compared on: an object's kind, geometry and attributes (not its look).
+pub fn essence(e: &Entity) -> J {
+    const KEYS: [&str; 11] = [
+        "kind", "attrs", "p", "z", "parts", "pts", "bulges", "zs", "ms", "holes", "closed",
+    ];
+    let mut out = serde_json::Map::new();
+    if let J::Object(m) = serde_json::to_value(e).unwrap_or(J::Null) {
+        for (k, v) in m {
+            if KEYS.contains(&k.as_str()) {
+                out.insert(k, v);
+            }
+        }
+    }
+    J::Object(out)
+}
+
+/// `e` with `from`'s kind, geometry and attributes, its look kept (a row read again into a bound layer).
+pub fn with_essence(e: &Entity, from: &Entity) -> Option<Entity> {
+    let J::Object(mut old) = serde_json::to_value(e).ok()? else {
+        return None;
+    };
+    let J::Object(new) = essence(from) else {
+        return None;
+    };
+    for k in [
+        "kind", "attrs", "p", "z", "parts", "pts", "bulges", "zs", "ms", "holes", "closed",
+        "widths", "a", "b", "za", "zb", "c", "r", "a0", "a1",
+    ] {
+        old.remove(k);
+    }
+    old.extend(new);
+    serde_json::from_value(J::Object(old)).ok()
+}
+
+/// A geometry fitted to a column of type `name`: a single made multi where the column is, an arc's curve a compound
+/// curve; the reason when the column cannot hold it (another family, or an arc in a straight-edged column).
+pub fn fit_one(g: Geometry, name: &str) -> Result<Geometry, String> {
+    let name = name.to_ascii_uppercase();
+    if name == "GEOMETRY" {
+        return Ok(g);
+    }
+    let (fam, _, curved) = family(&g);
+    let (want, linear) = match name.as_str() {
+        "POINT" | "MULTIPOINT" => (0, true),
+        "LINESTRING" | "MULTILINESTRING" => (1, true),
+        "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => (1, false),
+        "POLYGON" | "MULTIPOLYGON" => (2, true),
+        "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" => (2, false),
+        _ => return Ok(g),
+    };
+    if fam != want {
+        return Err(format!(
+            "{} geometrisi {name} sütununa yazılamaz",
+            g.type_name()
+        ));
+    }
+    if curved && linear {
+        return Err(format!(
+            "yaylı {} {name} sütununa kesin yazılamaz",
+            g.type_name()
+        ));
+    }
+    let mut one = [Some(g)];
+    let multi = name.starts_with("MULTI");
+    if let Some(g) = one[0].take() {
+        one[0] = Some(match (multi, g) {
+            (true, Geometry::Point(Some(p))) => Geometry::MultiPoint(vec![p]),
+            (true, Geometry::Curve(c)) => Geometry::MultiCurve(vec![c]),
+            (true, Geometry::Polygon(r)) => Geometry::MultiPolygon(vec![r]),
+            (false, Geometry::MultiPoint(mut p)) if p.len() == 1 => Geometry::Point(p.pop()),
+            (false, Geometry::MultiCurve(mut c)) if c.len() == 1 => {
+                Geometry::Curve(c.pop().unwrap_or(Curve::Line(Vec::new())))
+            }
+            (false, Geometry::MultiPolygon(mut p)) if p.len() == 1 => {
+                Geometry::Polygon(p.pop().unwrap_or_default())
+            }
+            (
+                false,
+                g @ (Geometry::MultiPoint(_) | Geometry::MultiCurve(_) | Geometry::MultiPolygon(_)),
+            ) => {
+                return Err(format!(
+                    "çok parçalı {} {name} sütununa yazılamaz",
+                    g.type_name()
+                ));
+            }
+            (_, Geometry::Curve(c @ (Curve::Line(_) | Curve::Arc(_))))
+                if name == "COMPOUNDCURVE" =>
+            {
+                Geometry::Curve(Curve::Compound(vec![c]))
+            }
+            (_, g) => g,
+        });
+    }
+    one[0].take().ok_or_else(|| "geometri yok".to_owned())
+}
+
+/// An object as a row of a table with `columns` and a geometry column of type `geometry`: its geometry fitted, its
+/// attributes by column (the name, else the name in another case). `Ok(None)`: a kind the table has no geometry for.
+pub fn row_for(
+    e: &Entity,
+    columns: &[gpkg::Column],
+    geometry: Option<&str>,
+) -> Result<Option<gpkg::NewRow>, String> {
+    let g = match row_of(e) {
+        Row::Left(_) => return Ok(None),
+        Row::Record => None,
+        Row::Geometry(g, _) => match geometry {
+            Some(t) => Some(fit_one(g, t)?),
+            None => return Err("öznitelik tablosuna geometrili nesne yazılamaz".into()),
+        },
+    };
+    let attrs = &e.base().attrs;
+    let values = columns
+        .iter()
+        .map(|c| {
+            let v = attrs.get(&c.name).or_else(|| {
+                attrs
+                    .iter()
+                    .find(|(k, _)| k.eq_ignore_ascii_case(&c.name))
+                    .map(|(_, v)| v)
+            });
+            cell(v, &c.kind)
+        })
+        .collect();
+    Ok(Some(gpkg::NewRow {
+        fid: None,
+        geometry: g,
+        values,
+    }))
+}
+
+/// A column's field kind, as the import reads it (none for a blob).
+pub fn column_kind(c: &gpkg::Column) -> Option<LayerFieldKind> {
+    field_of(c, false).map(|f| f.kind)
 }

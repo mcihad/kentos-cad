@@ -136,7 +136,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 17] = [
+pub const COMMANDS: [&str; 18] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -154,6 +154,7 @@ pub const COMMANDS: [&str; 17] = [
     "file.import.photos",
     "file.import.gpkg",
     "file.export.gpkg",
+    "source.link",
 ];
 
 fn message(event: Event) -> Message {
@@ -186,7 +187,8 @@ impl App {
             "file.import.gnss" => self.pick(Kind::Gnss),
             "file.import.kml" => self.pick(Kind::Kml),
             "file.import.photos" => self.pick_photos(),
-            "file.import.gpkg" => self.gpkg_pick(),
+            "file.import.gpkg" => self.gpkg_pick(false),
+            "source.link" => self.gpkg_pick(true),
             "file.export.gpkg" => self.gpkg_save(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {

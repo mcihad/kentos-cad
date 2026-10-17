@@ -30,6 +30,7 @@ mod protocol;
 mod protocol_cases;
 mod python_calls;
 mod reassociate;
+mod sources;
 mod standards_cmd;
 mod stretch_ties;
 mod tables_cmd;

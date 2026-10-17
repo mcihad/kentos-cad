@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{SourcesDescribe, SourcesEdit, SourcesSync, AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -30,6 +30,7 @@ use crate::{
 use serde_json::Value;
 
 use crate::blocks_insert;
+use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, blocks_define,
@@ -118,6 +119,9 @@ macro_rules! by_command {
             kentos_contracts::CAD_ENTITIES_SELECT => $then!(entities_select, EntitiesSelect),
             kentos_contracts::CAD_ENTITIES_PICK => $then!(entities_pick, EntitiesPick),
             kentos_contracts::CAD_ENTITIES_RELATE => $then!(entities_relate, EntitiesRelate),
+            kentos_contracts::CAD_SOURCES_DESCRIBE => $then!(sources_describe, SourcesDescribe),
+            kentos_contracts::CAD_SOURCES_EDIT => $then!(sources_edit, SourcesEdit),
+            kentos_contracts::CAD_SOURCES_SYNC => $then!(sources_sync, SourcesSync),
             kentos_contracts::CAD_ENTITIES_VERTEX => $then!(entities_vertex, EntitiesVertex),
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),

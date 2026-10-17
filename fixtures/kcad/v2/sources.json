@@ -1,0 +1,93 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Bağlı kaynak",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis",
+  "sources": [
+   {
+    "id": "kaynak-1",
+    "kind": "geopackage",
+    "path": "/veri/kadastro.gpkg",
+    "table": "parsel",
+    "layer": "parsel",
+    "revision": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+    "digest": "4b1d0c6e2f8a7d3c5e9b1a2f4c6e8d0b2a4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f",
+    "srid": 5256,
+    "writable": true
+   },
+   {
+    "id": "kaynak-2",
+    "kind": "geopackage",
+    "path": "/veri/kadastro.gpkg",
+    "table": "malik",
+    "layer": "malik",
+    "revision": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
+    "digest": "0e2d4c6b8a0f1e3d5c7b9a1f3e5d7c9b1a3f5e7d9c1b3a5f7e9d1c3b5a7f9e1d",
+    "writable": false
+   }
+  ]
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "malik",
+   "name": "Malik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "parsel",
+ "uids": [
+  "0192f5a1-25a0-7000-8000-000000000401"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "ada": "101"
+   },
+   "p": {
+    "x": 487000.0,
+    "y": 4420000.0
+   }
+  }
+ ]
+}

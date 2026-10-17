@@ -328,3 +328,107 @@ fn a_file_that_is_not_a_geopackage_is_said() {
     assert!(e.0.contains("SQLite") || e.0.contains("GeoPackage"), "{e}");
     let _ = std::fs::remove_file(&tmp);
 }
+
+#[test]
+fn a_table_is_edited_in_place_and_its_index_follows() {
+    use kentos_geopackage::{Column, Edits};
+    let tmp = std::env::temp_dir().join(format!("kentos-gpkg-edit-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let mut gp = GeoPackage::open(&tmp, true).expect("opens");
+    let parsel = gp
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .expect("parsel");
+    let rows = gp.rows(&parsel, &Query::default()).expect("rows");
+    let second = &rows[1];
+    let mut values = second.values.clone();
+    values[0] = Value::Text("Yeni Mahalle".into());
+    values.push(Value::Text("onaylı".into()));
+    let square = |x: f64| {
+        Geometry::MultiPolygon(vec![vec![Curve::Line(vec![
+            Coord::xy(x, 4420000.0),
+            Coord::xy(x + 5.0, 4420000.0),
+            Coord::xy(x + 5.0, 4420005.0),
+            Coord::xy(x, 4420000.0),
+        ])]])
+    };
+    let mut fresh = vec![Value::Null; parsel.columns.len() + 1];
+    fresh[0] = Value::Text("eklenen".into());
+    let edits = Edits {
+        add_columns: vec![Column {
+            name: "durum".into(),
+            decl: "TEXT".into(),
+            kind: ColumnKind::Text(None),
+            not_null: false,
+            default: None,
+        }],
+        update: vec![(
+            2,
+            NewRow {
+                fid: None,
+                geometry: Some(square(487300.0)),
+                values,
+            },
+        )],
+        insert: vec![(
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7999".into(),
+            NewRow {
+                fid: None,
+                geometry: Some(square(487500.0)),
+                values: fresh,
+            },
+        )],
+        delete: vec![1],
+    };
+    let fids = gp.edit(&parsel, &edits).expect("edited");
+    assert_eq!(fids, vec![4]);
+    drop(gp);
+    let gp = GeoPackage::open(&tmp, false).expect("opens");
+    let parsel = gp
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .expect("parsel");
+    assert_eq!(
+        parsel.columns.last().map(|c| c.name.as_str()),
+        Some("durum")
+    );
+    let rows = gp.rows(&parsel, &Query::default()).expect("rows");
+    assert_eq!(
+        rows.iter().map(|r| r.fid).collect::<Vec<_>>(),
+        vec![2, 3, 4]
+    );
+    assert_eq!(rows[0].values[0], Value::Text("Yeni Mahalle".into()));
+    assert_eq!(
+        gp.uids("parsel").expect("uids").get(&4).map(String::as_str),
+        Some("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7999")
+    );
+    // GDAL's own triggers moved the index: the edited parcel is found at its new place, the deleted one nowhere.
+    let at = |b: [f64; 4]| {
+        gp.rows(
+            &parsel,
+            &Query {
+                bbox: Some(b),
+                ..Query::default()
+            },
+        )
+        .expect("rows")
+        .iter()
+        .map(|r| r.fid)
+        .collect::<Vec<_>>()
+    };
+    assert_eq!(at([487299.0, 4419999.0, 487306.0, 4420006.0]), vec![2]);
+    assert_eq!(
+        at([486999.0, 4419999.0, 487021.0, 4420021.0]),
+        Vec::<i64>::new()
+    );
+    assert_eq!(at([487499.0, 4419999.0, 487506.0, 4420006.0]), vec![4]);
+    drop(gp);
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-edited.gpkg")).expect("copied");
+    }
+    let _ = std::fs::remove_file(&tmp);
+}

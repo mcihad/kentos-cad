@@ -608,6 +608,9 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.gpkg"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"
+            // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
+            | "cad.sources.edit"
+            | "cad.sources.sync"
     );
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \
@@ -627,7 +630,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe"), destructive),
     })
 }
 

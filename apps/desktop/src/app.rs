@@ -147,6 +147,8 @@ pub enum Dialog {
     RemoveLayer,
     /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
     RemoveTemplate,
+    /// Kaynaktan oku over the layer's own edits (bound.rs); the layer is `App::bound_pending`.
+    SourceDiscard,
     /// Şablon düzenleyici (template_editor.rs); its form is `App::template_editor`.
     TemplateEditor,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
@@ -516,6 +518,8 @@ pub enum Message {
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
     Services(crate::services::app::Event),
+    /// Bağlı katmanlar (bound.rs, docs/adr/0503).
+    Bound(crate::bound::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// Resim ekle's file: its name, path and bytes, or none (cancelled).
@@ -1000,6 +1004,8 @@ pub struct App {
     pub(crate) ribbon_peek: bool,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
+    /// The bound layer Kaynaktan oku asks about (bound.rs, `Dialog::SourceDiscard`).
+    pub bound_pending: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -1290,6 +1296,7 @@ impl App {
             alt_armed: false,
             ribbon_peek: false,
             removing_layer: None,
+            bound_pending: None,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -1720,6 +1727,7 @@ impl App {
             }
             Message::PointClouds(event) => return self.pointclouds_event(event),
             Message::Services(event) => return self.services_event(event),
+            Message::Bound(event) => self.bound_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -1953,6 +1961,7 @@ impl App {
                     }
                 }
                 Some(Dialog::RemoveTemplate) => self.remove_template(),
+                Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
             Message::DialogClosed => self.close_dialog(),
@@ -2595,6 +2604,11 @@ impl App {
             // Harita servisleri (services/, docs/adr/0208 §14).
             "basemap.remove" => self.remove_basemap(),
             "service.connections" => self.open_connections(None),
+            // Bağlı katmanlar (bound.rs, docs/adr/0503): the layer selected in the tree, else the active one.
+            "source.write" => self.bound_event(crate::bound::Event::Write(None)),
+            "source.read" => self.bound_event(crate::bound::Event::Read(None)),
+            "source.status" => self.bound_event(crate::bound::Event::Status),
+            "source.unlink" => self.bound_event(crate::bound::Event::Unlink(None)),
             "service.add" => self.open_service_window(None),
             "service.feed" => self.open_feed_window(),
             "service.info" => self.start_service_info(),

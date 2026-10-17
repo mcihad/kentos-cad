@@ -1,0 +1,3379 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.describe",
+ "commandVersion": 1,
+ "title": "Kaynakları tanı: dosyanın tabloları ve bağlı katmanların durumu",
+ "note": "ADR 0503. Tablolar sqlite3 ile dosyanın kendi tablolarından okunur (gpkg_contents, gpkg_geometry_columns, gpkg_spatial_ref_sys, PRAGMA table_info); satırlar gpkg_import_cases.py'nin OGR okuyucusuyla ADR 0502'nin nesneleri. Dosyanın sürümü hashlib'in SHA-256'sı. Katmanın tablodan farkı durumun kuruluşundan gelir; özetin değeri $any, anlamı edited'dır. Dosyaya yazan execute ortak durumlarda yoktur (fixture dosyası değişirdi): geçici kopyada crates/native/application/tests/all/sources.rs sınar, sonucu geopackage_cases.py OGR'la okur. Bağımsız başvuru: scripts/fixtures/bound_sources_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "qgis.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "parsel",
+         "data": "features",
+         "rows": 3,
+         "geometry": "MULTIPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ada",
+           "declared": "TEXT(40)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel_no",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          },
+          {
+           "name": "alan",
+           "declared": "REAL",
+           "kind": "decimal"
+          },
+          {
+           "name": "kimlik",
+           "declared": "INTEGER",
+           "kind": "integer"
+          },
+          {
+           "name": "tescil",
+           "declared": "DATE",
+           "kind": "date"
+          },
+          {
+           "name": "guncelleme",
+           "declared": "DATETIME",
+           "kind": "datetime"
+          },
+          {
+           "name": "tapulu",
+           "declared": "BOOLEAN",
+           "kind": "boolean"
+          },
+          {
+           "name": "not",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "yol",
+         "data": "features",
+         "rows": 2,
+         "geometry": "LINESTRING",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": true,
+          "curves": true
+         }
+        },
+        {
+         "name": "nokta",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "kot",
+           "declared": "REAL",
+           "kind": "decimal"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri",
+         "data": "features",
+         "rows": 1,
+         "geometry": "CURVEPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri_yol",
+         "data": "features",
+         "rows": 1,
+         "geometry": "COMPOUNDCURVE",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "malik",
+         "data": "attributes",
+         "rows": 2,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "pay",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kentos.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/kentos.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "parsel",
+         "data": "features",
+         "rows": 3,
+         "geometry": "MULTIPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ada",
+           "declared": "TEXT(40)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel_no",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          },
+          {
+           "name": "alan",
+           "declared": "REAL",
+           "kind": "decimal"
+          },
+          {
+           "name": "kimlik",
+           "declared": "INTEGER",
+           "kind": "integer"
+          },
+          {
+           "name": "tescil",
+           "declared": "DATE",
+           "kind": "date"
+          },
+          {
+           "name": "guncelleme",
+           "declared": "DATETIME",
+           "kind": "datetime"
+          },
+          {
+           "name": "tapulu",
+           "declared": "BOOLEAN",
+           "kind": "boolean"
+          },
+          {
+           "name": "not",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "yol",
+         "data": "features",
+         "rows": 2,
+         "geometry": "LINESTRING",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": true,
+          "curves": true
+         }
+        },
+        {
+         "name": "nokta",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "kot",
+           "declared": "REAL",
+           "kind": "decimal"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri",
+         "data": "features",
+         "rows": 1,
+         "geometry": "CURVEPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri_yol",
+         "data": "features",
+         "rows": 1,
+         "geometry": "COMPOUNDCURVE",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "malik",
+         "data": "attributes",
+         "rows": 2,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "pay",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kentos-export.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/kentos-export.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "parsel",
+         "data": "features",
+         "rows": 3,
+         "geometry": "MULTIPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ada",
+           "declared": "TEXT(40)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel_no",
+           "declared": "INTEGER",
+           "kind": "integer"
+          },
+          {
+           "name": "alan",
+           "declared": "DOUBLE",
+           "kind": "decimal"
+          },
+          {
+           "name": "kimlik",
+           "declared": "TEXT",
+           "kind": "text"
+          },
+          {
+           "name": "tescil",
+           "declared": "DATE",
+           "kind": "date"
+          },
+          {
+           "name": "guncelleme",
+           "declared": "DATETIME",
+           "kind": "datetime"
+          },
+          {
+           "name": "tapulu",
+           "declared": "BOOLEAN",
+           "kind": "boolean"
+          },
+          {
+           "name": "not",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "yol",
+         "data": "features",
+         "rows": 2,
+         "geometry": "LINESTRING",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": true,
+          "curves": true
+         }
+        },
+        {
+         "name": "nokta",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "kot",
+           "declared": "DOUBLE",
+           "kind": "decimal"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri",
+         "data": "features",
+         "rows": 1,
+         "geometry": "CURVEPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri_yol",
+         "data": "features",
+         "rows": 1,
+         "geometry": "COMPOUNDCURVE",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "malik",
+         "data": "attributes",
+         "rows": 2,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "pay",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel",
+           "declared": "INTEGER",
+           "kind": "integer"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kentos-edited.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/kentos-edited.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "parsel",
+         "data": "features",
+         "rows": 3,
+         "geometry": "MULTIPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ada",
+           "declared": "TEXT(40)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel_no",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          },
+          {
+           "name": "alan",
+           "declared": "REAL",
+           "kind": "decimal"
+          },
+          {
+           "name": "kimlik",
+           "declared": "INTEGER",
+           "kind": "integer"
+          },
+          {
+           "name": "tescil",
+           "declared": "DATE",
+           "kind": "date"
+          },
+          {
+           "name": "guncelleme",
+           "declared": "DATETIME",
+           "kind": "datetime"
+          },
+          {
+           "name": "tapulu",
+           "declared": "BOOLEAN",
+           "kind": "boolean"
+          },
+          {
+           "name": "not",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "durum",
+           "declared": "TEXT",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "yol",
+         "data": "features",
+         "rows": 2,
+         "geometry": "LINESTRING",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": true,
+          "curves": true
+         }
+        },
+        {
+         "name": "nokta",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "kot",
+           "declared": "REAL",
+           "kind": "decimal"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri",
+         "data": "features",
+         "rows": 1,
+         "geometry": "CURVEPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri_yol",
+         "data": "features",
+         "rows": 1,
+         "geometry": "COMPOUNDCURVE",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "malik",
+         "data": "attributes",
+         "rows": 2,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "pay",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "wgs84.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/wgs84.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "yer",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 4326,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sistemsiz.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/sistemsiz.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "yer",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bos.gpkg dosyasının tabloları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/bos.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "yer",
+         "data": "features",
+         "rows": 0,
+         "geometry": "POINT",
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/bozuk.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:geopackage/v1/bozuk.gpkg GeoPackage olarak okunamadı: “$fixture:geopackage/v1/bozuk.gpkg” bir SQLite dosyası değil",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "veri/kadastro.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“veri/kadastro.gpkg” mutlak bir dosya yolu değil; GeoPackage dosyasının tam yolunu verin (/klasör/ad.gpkg).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$fixture:geopackage/v1 bir klasör; GeoPackage dosyasının adını da verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/yok.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:geopackage/v1/yok.gpkg yok; dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynısını söyler",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tables": [
+        {
+         "name": "parsel",
+         "data": "features",
+         "rows": 3,
+         "geometry": "MULTIPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ada",
+           "declared": "TEXT(40)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel_no",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          },
+          {
+           "name": "alan",
+           "declared": "REAL",
+           "kind": "decimal"
+          },
+          {
+           "name": "kimlik",
+           "declared": "INTEGER",
+           "kind": "integer"
+          },
+          {
+           "name": "tescil",
+           "declared": "DATE",
+           "kind": "date"
+          },
+          {
+           "name": "guncelleme",
+           "declared": "DATETIME",
+           "kind": "datetime"
+          },
+          {
+           "name": "tapulu",
+           "declared": "BOOLEAN",
+           "kind": "boolean"
+          },
+          {
+           "name": "not",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "yol",
+         "data": "features",
+         "rows": 2,
+         "geometry": "LINESTRING",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": true,
+          "curves": true
+         }
+        },
+        {
+         "name": "nokta",
+         "data": "features",
+         "rows": 1,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "kot",
+           "declared": "REAL",
+           "kind": "decimal"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": true,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri",
+         "data": "features",
+         "rows": 1,
+         "geometry": "CURVEPOLYGON",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "egri_yol",
+         "data": "features",
+         "rows": 1,
+         "geometry": "COMPOUNDCURVE",
+         "srid": 5256,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        },
+        {
+         "name": "malik",
+         "data": "attributes",
+         "rows": 2,
+         "columns": [
+          {
+           "name": "ad",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "pay",
+           "declared": "TEXT(255)",
+           "kind": "text"
+          },
+          {
+           "name": "parsel",
+           "declared": "MEDIUMINT",
+           "kind": "integer"
+          }
+         ],
+         "capabilities": {
+          "read": true,
+          "insert": true,
+          "update": true,
+          "delete": true,
+          "transaction": true,
+          "z": false,
+          "m": false,
+          "curves": true
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağ yokken liste boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlanan katman tablosuyla aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "import-parsel",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": false,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değişen nesne: katman değişti, bir nesne farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "Yeni Mahalle"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "import-parsel",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 1,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "silinen nesne tabloda kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "import-parsel",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 1
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmana eklenen nokta tabloda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "nokta"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "nokta",
+        "layer": "import-nokta",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-nokta",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "nokta",
+         "layer": "import-nokta",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-nokta",
+      "p": {
+       "x": 487600.0,
+       "y": 4420600.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.point.create"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "nokta",
+          "layer": "import-nokta",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 1,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı olmayan öznitelik katmanı değiştirir ama satırı değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "durum": "x"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "import-parsel",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosya değişmiş, katman boş: bütün satırlar katmanda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "bagli",
+          "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": true,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 3
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dosya yerinde değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/tasindi.gpkg",
+          "table": "parsel",
+          "layer": "bagli",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": false,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/tasindi.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "tablo dosyada yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "bina",
+          "layer": "bagli",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "bina",
+       "layer": "bagli",
+       "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "tablonun tutmadığı nesne sayılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "bagli",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": true,
+         "added": 0,
+         "modified": 0,
+         "removed": 3
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "bagli",
+      "attrs": {},
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "iki bağ sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "nokta"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-2",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "nokta",
+        "layer": "import-nokta",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        },
+        {
+         "id": "kaynak-2",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "nokta",
+         "layer": "import-nokta",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "links": [
+        {
+         "link": {
+          "id": "kaynak-1",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "parsel",
+          "layer": "import-parsel",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": false,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        },
+        {
+         "link": {
+          "id": "kaynak-2",
+          "kind": "geopackage",
+          "path": "$fixture:geopackage/v1/qgis.gpkg",
+          "table": "nokta",
+          "layer": "import-nokta",
+          "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+          "digest": "$any",
+          "srid": 5256,
+          "writable": true
+         },
+         "found": true,
+         "changed": false,
+         "edited": false,
+         "added": 0,
+         "modified": 0,
+         "removed": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

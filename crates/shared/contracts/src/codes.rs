@@ -1069,6 +1069,24 @@ codes! {
     CRS_UNDECLARED = "crs_undeclared", Warning, false, "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı.";
     /// A row's lasting id is an object of the drawing already (docs/adr/0502).
     ENTITY_EXISTS = "entity_exists", Failed, false, "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz.";
+    /// A layer or a table bound already (docs/adr/0503).
+    SOURCE_BOUND = "source_bound", Failed, false, "Katman ya da tablo zaten bir kaynağa bağlı.";
+    /// The layer given does not hold the table's objects as they are (docs/adr/0503).
+    SOURCE_DIFFERS = "source_differs", Failed, false, "Verilen katman tablonun nesnelerini olduğu gibi taşımıyor; bağlanamaz.";
+    /// No bound layer of the id or the layer given (docs/adr/0503).
+    SOURCE_NOT_FOUND = "source_not_found", Failed, false, "Bu kimlikte ya da bu katmanda bir bağ yok.";
+    /// The file changed since the layer last matched it (docs/adr/0503).
+    SOURCE_CHANGED = "source_changed", Conflict, true, "Dosya, katman onunla son eşleştiğinden beri değişti.";
+    /// A bound layer's file is not where it was (docs/adr/0503).
+    SOURCE_GONE = "source_gone", Failed, false, "Bağlı katmanın dosyası yerinde yok; yeniden bağlayın.";
+    /// The table cannot be written (docs/adr/0503).
+    SOURCE_READONLY = "source_readonly", Failed, false, "Bu tabloya yazılamaz.";
+    /// An object whose geometry the table's column cannot hold (docs/adr/0503).
+    GEOMETRY_MISMATCH = "geometry_mismatch", Failed, false, "Nesnenin geometrisi tablonun geometri sütununa uymuyor.";
+    /// The layer differs from its table; reading would replace it (docs/adr/0503).
+    PENDING_CHANGES = "pending_changes", Conflict, true, "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür.";
+    /// More bound layers than a project keeps (docs/adr/0503).
+    TOO_MANY_SOURCES = "too_many_sources", Failed, false, "Bir projede en çok 1000 bağlı katman olur.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.

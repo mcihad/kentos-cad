@@ -333,6 +333,8 @@ def settings(s):
                 "lineTypeScale": (line_type_scale, False),
                 # Schema 72 (docs/adr/0401 §3): the project's forms, as their JSON.
                 "forms": (opaque, False),
+                # Schema 73 (docs/adr/0503): the layers bound to their sources, as their JSON.
+                "sources": (opaque, False),
                 # Schema 72 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2061,6 +2063,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 73 (docs/adr/0503): a layer bound to its source.
+    if "sources" in (settings or {}):
+        return 73
+
     # Schema 72 (docs/adr/0401): a form of the project, or a layer field's stable id.
     def keyed(nodes):
         return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
@@ -2485,7 +2491,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-73.kcad"] = container(root(cmap(parts), version=uint(73)))
+    files["schema-version-74.kcad"] = container(root(cmap(parts), version=uint(74)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3970,6 +3976,22 @@ def build():
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
     out["forms.kcad"] = container(document(load("forms.json")))
+    # The layers bound to their sources (docs/adr/0503): schema 73's; in schema 72 an unknown field; an empty list, an id
+    # twice, a short revision and a relative path refused.
+    out["sources.kcad"] = container(document(load("sources.json")))
+    src_payload = document(load("sources.json"))
+    assert src_payload.count(b"\x67version\x18\x49") == 1, "the sources alone are schema 73"
+    out["broken/sources-in-schema-72.kcad"] = container(src_payload.replace(b"\x67version\x18\x49", b"\x67version\x18\x48"))
+
+    def sources_broken(change):
+        d = copy.deepcopy(load("sources.json"))
+        change(d["settings"]["sources"])
+        return container(document(d))
+
+    out["broken/sources-empty.kcad"] = sources_broken(lambda s: s.clear())
+    out["broken/sources-id-twice.kcad"] = sources_broken(lambda s: s[1].update(id="kaynak-1"))
+    out["broken/sources-revision-short.kcad"] = sources_broken(lambda s: s[0].update(revision="9f2c"))
+    out["broken/sources-relative-path.kcad"] = sources_broken(lambda s: s[0].update(path="veri/kadastro.gpkg"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))

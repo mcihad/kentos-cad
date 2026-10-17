@@ -89,6 +89,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         address_locators: Vec::new(),
         domains: Vec::new(),
         hatch_patterns: Vec::new(),
+        sources: Vec::new(),
     }
 }
 
