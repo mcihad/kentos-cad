@@ -1,0 +1,859 @@
+{
+  "$defs": {
+    "AttachmentAccept": {
+      "description": "What an attachments item counts and adds.",
+      "oneOf": [
+        {
+          "const": "any",
+          "description": "Photos, files and addresses.",
+          "type": "string"
+        },
+        {
+          "const": "photo",
+          "description": "Only photos (a PNG or JPEG asset, or a link ending in one).",
+          "type": "string"
+        },
+        {
+          "const": "document",
+          "description": "Only what is not a photo: documents and addresses.",
+          "type": "string"
+        }
+      ]
+    },
+    "FormBody": {
+      "additionalProperties": false,
+      "description": "A form's content: its items and the draft's revision (each kept change adds one).",
+      "properties": {
+        "clearHidden": {
+          "description": "A write through the form empties the fields the record hides (docs/adr/0402 §3); written only\nas `true`. Without it a hidden field keeps its value.",
+          "type": "boolean"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/FormItem"
+          },
+          "type": "array"
+        },
+        "revision": {
+          "description": "Raised by one with every saved change to the draft: an update names the revision it was made on.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "tests": {
+          "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
+          "items": {
+            "$ref": "#/$defs/FormTest"
+          },
+          "type": "array"
+        },
+        "workflow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormWorkflow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
+        }
+      },
+      "required": [
+        "revision",
+        "items"
+      ],
+      "type": "object"
+    },
+    "FormCheck": {
+      "additionalProperties": false,
+      "description": "A check of a field: an expression that must be true when the field is shown and filled, and what\nthe form says when it is not.",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "warning": {
+          "description": "A soft check: when not true it warns and the record is still written; written only as `true`.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule",
+        "message"
+      ],
+      "type": "object"
+    },
+    "FormItem": {
+      "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
+      "oneOf": [
+        {
+          "description": "A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds\nnothing but tabs.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/FormItem"
+              },
+              "type": "array"
+            },
+            "label": {
+              "type": "string"
+            },
+            "type": {
+              "const": "tab",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "The tab is shown while it holds (docs/adr/0426): a record's kind may have tabs of its own.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "items"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
+          "properties": {
+            "collapsed": {
+              "description": "It opens closed (its title opens it); written only as `true`.",
+              "type": "boolean"
+            },
+            "columns": {
+              "description": "1 or 2; none: 1.",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "id": {
+              "type": "string"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/FormItem"
+              },
+              "type": "array"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "group",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "items"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A field of the layer.",
+          "properties": {
+            "calculate": {
+              "description": "The field's value, worked out from the record at every write; the field is read-only. Not\nwith `default`, `defaultExpr` or `readOnlyWhen`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "checks": {
+              "description": "What the record must satisfy, in order.",
+              "items": {
+                "$ref": "#/$defs/FormCheck"
+              },
+              "type": "array"
+            },
+            "choiceFilter": {
+              "description": "Asked of each of the field's listed values: `@secenek` is its code, `@secenek_etiketi` its\nlabel; a value it is not true for is not offered.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "default": {
+              "description": "The value an empty field shows when the form opens, in the field's canonical text; written\nonly when the record is saved.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "defaultExpr": {
+              "description": "The value of a new record's empty field: an expression over the record (its plain defaults\nin), evaluated in the form's order. Not with `default`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "field": {
+              "description": "The layer field's key ([`LayerField::key`](crate::LayerField::key)): its stable id or its name.",
+              "type": "string"
+            },
+            "help": {
+              "description": "A line under the field.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "description": "The item's id, unique in the form.",
+              "type": "string"
+            },
+            "label": {
+              "description": "The label; none: the field's alias or name.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "lookup": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/FormLookup"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+            },
+            "overridable": {
+              "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
+              "type": "boolean"
+            },
+            "placeholder": {
+              "description": "The empty box's hint.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "readOnly": {
+              "description": "Shown, never edited; written only as `true`.",
+              "type": "boolean"
+            },
+            "readOnlyWhen": {
+              "description": "Locked when this expression is true.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Required when this expression is true (and the field is shown).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "reuseLast": {
+              "description": "A new record's field opens with the value last written through the form in the session (the\nform's interface keeps it); written only as `true`.",
+              "type": "boolean"
+            },
+            "suggest": {
+              "description": "The layer's values of the field offered while typing, the value staying free (docs/adr/0407\n§3): text fields without a list; written only as `true`.",
+              "type": "boolean"
+            },
+            "type": {
+              "const": "field",
+              "type": "string"
+            },
+            "unique": {
+              "description": "No two objects of the layer have the same value (empty ones aside); written only as `true`.",
+              "type": "boolean"
+            },
+            "visibleWhen": {
+              "description": "Shown only when this expression is true (the record's fields by name).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "widget": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/FormWidget"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "How it is edited; none: the field kind's own."
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "field"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A line of text: a hint for whoever fills the form. A `{…}` in it is an expression put in with\nthe record's value (docs/adr/0225 §6's templates; docs/adr/0402 §1).",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "const": "note",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
+          "properties": {
+            "columns": {
+              "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "field": {
+              "description": "Its field's key that holds this record's id.",
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "layer": {
+              "description": "The other layer's id.",
+              "type": "string"
+            },
+            "type": {
+              "const": "related",
+              "type": "string"
+            },
+            "view": {
+              "$ref": "#/$defs/RelatedView",
+              "description": "How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`."
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "layer",
+            "field"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added\nand removed in the form; their count may be bounded.",
+          "properties": {
+            "accept": {
+              "$ref": "#/$defs/AttachmentAccept",
+              "description": "What counts and is added: every attachment, only photos or only documents and addresses."
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "max": {
+              "description": "The most (0–100).",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "min": {
+              "description": "The fewest (0–100) the record holds while the item is shown.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "type": {
+              "const": "attachments",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "location",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "FormLookup": {
+      "additionalProperties": false,
+      "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+      "properties": {
+        "filter": {
+          "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "Its field's key whose value is written; `$uid`: the object's persistent id (a reference).",
+          "type": "string"
+        },
+        "label": {
+          "description": "Its field's key shown; none: the key's.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "description": "The list's layer id.",
+          "type": "string"
+        },
+        "matches": {
+          "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
+          "items": {
+            "$ref": "#/$defs/LookupMatch"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "layer",
+        "key"
+      ],
+      "type": "object"
+    },
+    "FormRelease": {
+      "additionalProperties": false,
+      "description": "A frozen copy of a form's body: what data entry and the write profile use.",
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/FormBody"
+        },
+        "digest": {
+          "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
+          "type": "string"
+        },
+        "note": {
+          "description": "What changed, as the publisher wrote it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "1, 2, …: one more than the release before.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "version",
+        "digest",
+        "body"
+      ],
+      "type": "object"
+    },
+    "FormTest": {
+      "additionalProperties": false,
+      "description": "A scenario of a form (docs/adr/0420): a record's typed values and what the form showed, required,\nlocked, wrote and said for them.",
+      "properties": {
+        "expect": {
+          "$ref": "#/$defs/FormTestExpect"
+        },
+        "name": {
+          "description": "Unique in the form; trimmed, 1–64 characters.",
+          "type": "string"
+        },
+        "new": {
+          "description": "A new record: the form's defaults fill it. Written only as `true`.",
+          "type": "boolean"
+        },
+        "values": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The values typed, by the layer fields' keys, onto an empty record.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "expect"
+      ],
+      "type": "object"
+    },
+    "FormTestExpect": {
+      "additionalProperties": false,
+      "description": "What a scenario expects.",
+      "properties": {
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The record after the form: its attributes by the fields' names.",
+          "type": "object"
+        },
+        "issues": {
+          "description": "What the form said: each issue's code, `@` and its item when it has one (`form_required@not`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "readOnly": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "required": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shown": {
+          "description": "The items shown, required and read-only, by their ids in the form's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "FormWidget": {
+      "description": "How a field is edited.",
+      "oneOf": [
+        {
+          "const": "text",
+          "description": "One line of text.",
+          "type": "string"
+        },
+        {
+          "const": "textArea",
+          "description": "Several lines of text.",
+          "type": "string"
+        },
+        {
+          "const": "number",
+          "description": "A number: integer or decimal fields.",
+          "type": "string"
+        },
+        {
+          "const": "date",
+          "description": "A date (YYYY-AA-GG).",
+          "type": "string"
+        },
+        {
+          "const": "check",
+          "description": "A check box: yes or no fields.",
+          "type": "string"
+        },
+        {
+          "const": "switch",
+          "description": "A switch: yes or no fields.",
+          "type": "string"
+        },
+        {
+          "const": "list",
+          "description": "A drop-down list: fields with a value list.",
+          "type": "string"
+        },
+        {
+          "const": "radio",
+          "description": "Radio buttons: fields with a value list.",
+          "type": "string"
+        },
+        {
+          "const": "segmented",
+          "description": "A segmented choice: fields with a short value list.",
+          "type": "string"
+        },
+        {
+          "const": "slider",
+          "description": "A slider between the field's least and most (docs/adr/0406 §2): number fields with both.",
+          "type": "string"
+        },
+        {
+          "const": "color",
+          "description": "A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.",
+          "type": "string"
+        },
+        {
+          "const": "checkList",
+          "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+          "type": "string"
+        },
+        {
+          "const": "search",
+          "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+          "type": "string"
+        },
+        {
+          "const": "chips",
+          "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+          "type": "string"
+        }
+      ]
+    },
+    "FormWorkflow": {
+      "additionalProperties": false,
+      "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+      "properties": {
+        "drafts": {
+          "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "field": {
+          "description": "The state field's key: a single-valued field with a value list.",
+          "type": "string"
+        },
+        "initial": {
+          "description": "The state a new record starts in: a code of its list.",
+          "type": "string"
+        },
+        "locked": {
+          "description": "The states whose records are read-only.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "log": {
+          "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "steps": {
+          "description": "The steps, in their order (the editor's buttons).",
+          "items": {
+            "$ref": "#/$defs/WorkflowStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "field",
+        "initial",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "LookupMatch": {
+      "additionalProperties": false,
+      "description": "A field of the list's layer that must equal a field of the record.",
+      "properties": {
+        "field": {
+          "description": "The list's field's key.",
+          "type": "string"
+        },
+        "record": {
+          "description": "The record's field's key.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "record"
+      ],
+      "type": "object"
+    },
+    "RelatedView": {
+      "description": "How a related item shows its objects (docs/adr/0425).",
+      "oneOf": [
+        {
+          "const": "list",
+          "description": "Their names, one a line.",
+          "type": "string"
+        },
+        {
+          "const": "table",
+          "description": "A table of the item's columns, the numbers totalled under them.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkflowStep": {
+      "additionalProperties": false,
+      "description": "One step of a workflow.",
+      "properties": {
+        "from": {
+          "description": "The states it is taken from; empty: any state.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "label": {
+          "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "A text field's key the step writes its reason to; it must be given.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "description": "The state it leads to.",
+          "type": "string"
+        },
+        "valid": {
+          "description": "The record must be valid by the form (no error) to take it.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
+        "to"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://kentos.dev/schemas/kentos.form/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları (docs/adr/0401, 0434). Bilinmeyen alan reddedilir; yayının özeti gövdesinin kanonik JSON'unun SHA-256'sıdır.",
+  "properties": {
+    "draft": {
+      "$ref": "#/$defs/FormBody",
+      "description": "The draft the designer edits."
+    },
+    "enforce": {
+      "description": "The latest release's rules hold for every attribute write on the layer (the write profile);\nwritten only as `true`, and only with a release.",
+      "type": "boolean"
+    },
+    "id": {
+      "description": "Stable, unique in the project: letters, digits, `-`, `_` and `.`; 1–64 characters.",
+      "type": "string"
+    },
+    "layer": {
+      "description": "The layer the form edits: a layer's id (not a group's).",
+      "type": "string"
+    },
+    "name": {
+      "description": "What the lists show; trimmed, 1–64 characters.",
+      "type": "string"
+    },
+    "releases": {
+      "description": "The frozen releases, oldest first; data entry uses the last.",
+      "items": {
+        "$ref": "#/$defs/FormRelease"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "layer",
+    "draft"
+  ],
+  "title": "KentOS formu, sürüm 1",
+  "type": "object"
+}

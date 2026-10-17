@@ -1520,6 +1520,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AQ` Formun şeması ve biçim kuralları: `kentos.form` v1'in JSON Schema'sı sözleşmeden (`catalog/v1/forms/form-v1.schema.json`),
+  `docs/specs/forms-v1.md`, bağımsız `jsonschema` denetimi. — **17 Ekim, [ADR 0434](docs/adr/0434-form-schema.md).**
 - [x] `FORM-AP` Formda konum: kaydın şekli küçük haritada, merkezinin koordinatları, alanı ve çevresi ya da uzunluğu. —
   **17 Ekim, [ADR 0433](docs/adr/0433-location-item.md).**
 - [x] `FORM-AO` Taslak durumlar: iş akışının taslak durumundaki kayıt eksik kaydedilir (formun zorunluluğu uyarı; katmanın ve alt türün

@@ -292,8 +292,8 @@ Yeni kaydın identity UUID'si host tarafından oluşturulur; kullanıcı input'u
 
 ### 4.6 Standart uygulama işleri
 
-- [ ] **FORM-STD-01:** FormBundle/FormDefinition ve ilgili bütün resource şemaları için sürümlü sözleşme ve JSON Schema oluştur.
-- [ ] **FORM-STD-02:** Format/version/digest, unknown-property/version, compatibility ve migration kurallarını yaz.
+- [ ] **FORM-STD-01:** FormBundle/FormDefinition ve ilgili bütün resource şemaları için sürümlü sözleşme ve JSON Schema oluştur. — *17 Ekim, kısmen: formun sürümlü sözleşmesi ve JSON Schema'sı (`kentos.form` v1, ADR 0434); alanlar, değer listeleri ve ilişkilerle paket açık.*
+- [x] **FORM-STD-02:** Format/version/digest, unknown-property/version, compatibility ve migration kurallarını yaz. — *17 Ekim: biçim ve sürüm, yayının özeti, bilinmeyen alanın reddi, uyumluluk ve göç kuralları `docs/specs/forms-v1.md`'de (ADR 0434).*
 - [x] **FORM-STD-03:** JSON'u önce validate/compile et; bozuk field/domain/relation/action binding'leri UI açılmadan raporla. — *Yapıldı (16 Ekim; ADR 0401 §4, ön denetim).*
 - [ ] **FORM-STD-04:** Shared compiled form model ve expression profile; native/WASM/server ortak fixture'larla aynı sonuç versin.
 - [x] **FORM-STD-05:** Stable node/field/rule IDs, deterministic ordering ve dependency graph korunmalı; rename/move binding'i bozmasın. — *Yapıldı (16 Ekim; ADR 0401 §2, ADR 0402 §2 (hesapların bağımlılık grafı)).*
