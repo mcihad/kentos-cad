@@ -458,6 +458,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-41 — Yeni GIS provider ve Processing seçeneklerini komut/Python/MCP'ye aç — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0508](../docs/adr/0508-processing-tools-as-commands.md)): İşlemler'in yerleşik araçları `cad.processing.tools` (araçlar, parametreleri, çizimin varsayılanları) ve `cad.processing.run` (pencerenin çalıştırıcısı, açık değerler, nesneler kalıcı kimliklerle ya da girdinin açık `selection` ve `view`'u; retler sırayla, eklenen, değişen, seçilen, katmanlar, çıktılar, notlar; plan kopyada) ile Python'a ve MCP'ye açık; ev sahipleri araçları kaydeder (`processing_host`). Kalan: başsız dosya erişimi (raster, bulut, NetCDF araçları), modeller, pencerenin yazmasının komut kaydına girmesi, uzun iş yolu, işlem + seçenek + veri türü + ev sahibi kapsam matrisi, doğal dil başarısının ayrı ölçümü.*
+
   **Mevcut:** Headless/native registry, Python ve MCP mevcut; ağ/servis/zaman için de Python yolları bulunuyor [K13]. Bütün GIS veri kaynaklarının ve Processing seçeneklerinin ortak yüzeyi ayrıca kapatılmalı.
 
   **Yapılacak kalan iş:** Source discovery/query, schema/domain, feature edit, form/ilişki, CRS, analiz/model, job ve export sürümlü tipli command/query sözleşmesiyle erişilsin. `validate/plan/execute`, etki sayıları, scope, unit, expected revision, uyarı, cancellation ve artifact cevabı ortak olsun. UI hesaplarını Python/AI kullanıcısına yeniden yazdırma; doğrudan SQL/repository ile iş kuralı atlatma. Ekrana ait locator/selection etkileşimleri session ID ile yönetilsin; headless yolu fare istemesin. `.kek` ve üçüncü taraf Processing/widget lifecycle'i `python.md`'yi kullansın; yerleşik GIS araçları Python kurulmadan çalışsın.

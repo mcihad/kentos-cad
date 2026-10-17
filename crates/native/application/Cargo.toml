@@ -45,3 +45,6 @@ serde_json = { workspace = true }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+# The processing commands' shared cases run İşlemler's tools (docs/adr/0508); the crate is above this one, so only the
+# integration tests (one copy of this crate) link it.
+kentos-processing = { path = "../processing" }

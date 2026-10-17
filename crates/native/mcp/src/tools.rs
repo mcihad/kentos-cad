@@ -613,6 +613,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.sources.sync"
             // It writes over the attributes of many objects (docs/adr/0507).
             | "cad.fields.write"
+            // A processing tool writes what it computes (docs/adr/0508).
+            | "cad.processing.run"
     );
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \

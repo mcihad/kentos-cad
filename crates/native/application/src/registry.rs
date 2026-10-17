@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{FieldsWrite, SourcesDescribe, SourcesEdit, SourcesSync, AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -31,6 +31,7 @@ use serde_json::Value;
 
 use crate::blocks_insert;
 use crate::fields_write;
+use crate::{processing_run, processing_tools};
 use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
@@ -124,6 +125,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_SOURCES_EDIT => $then!(sources_edit, SourcesEdit),
             kentos_contracts::CAD_SOURCES_SYNC => $then!(sources_sync, SourcesSync),
             kentos_contracts::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
+            kentos_contracts::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
+            kentos_contracts::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
             kentos_contracts::CAD_ENTITIES_VERTEX => $then!(entities_vertex, EntitiesVertex),
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),

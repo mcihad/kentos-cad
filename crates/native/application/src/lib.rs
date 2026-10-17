@@ -60,6 +60,9 @@ pub mod file_import_block;
 pub mod file_import_gpkg;
 pub mod provider;
 pub mod fields_write;
+pub mod processing_host;
+pub mod processing_run;
+pub mod processing_tools;
 pub mod source_places;
 pub mod sources;
 pub mod geopackage;
@@ -746,6 +749,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FIELDS_WRITE,
         kentos_contracts::CAD_FIELDS_WRITE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_PROCESSING_TOOLS,
+        kentos_contracts::CAD_PROCESSING_TOOLS_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_PROCESSING_RUN,
+        kentos_contracts::CAD_PROCESSING_RUN_VERSION,
     ),
     // Bound layers ([`sources`], docs/adr/0503).
     (

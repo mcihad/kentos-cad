@@ -5329,6 +5329,66 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // İşlemler's tools as commands (docs/adr/0508).
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_TOOLS.into(),
+            version: crate::CAD_PROCESSING_TOOLS_VERSION,
+            title: "İşlem araçları".into(),
+            summary: "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. \
+                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez."
+                .into(),
+            aliases: vec!["islemler".into(), "araclar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingTools>(),
+            output: schema::<crate::ProcessingToolsListed>(),
+            plan: Some(schema::<crate::ProcessingToolsListed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Geometri araçları".into(),
+                input: json!({ "category": "geometry" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_RUN.into(),
+            version: crate::CAD_PROCESSING_RUN_VERSION,
+            title: "İşlem aracını çalıştır".into(),
+            summary: "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. \
+                      Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
+                      Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
+                      Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed."
+                .into(),
+            aliases: vec!["islem".into(), "process".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingRun>(),
+            output: schema::<crate::ProcessingRan>(),
+            plan: Some(schema::<crate::ProcessingRan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Seçili parsellerin köşelerini numarala".into(),
+                    input: json!({ "tool": "points.numberVertices", "selection": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir katmanın nesnelerine tampon".into(),
+                    input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "distance": 5 } }),
+                    output: None,
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_SOURCES_SYNC.into(),
             version: crate::CAD_SOURCES_SYNC_VERSION,
@@ -6607,6 +6667,12 @@ mod tests {
                     }
                     crate::CAD_FIELDS_WRITE => {
                         serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_TOOLS => {
+                        serde_json::from_value::<crate::ProcessingTools>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_RUN => {
+                        serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())

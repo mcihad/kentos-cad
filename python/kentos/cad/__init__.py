@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, processing, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -956,6 +956,11 @@ __all__ = [
     "PolylineEntityGeometry",
     "PolylinePlan",
     "Printed",
+    "ProcessingRan",
+    "ProcessingRun",
+    "ProcessingTool",
+    "ProcessingTools",
+    "ProcessingToolsListed",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -1248,6 +1253,8 @@ __all__ = [
     "ToSplineCurveEdit",
     "ToleranceKind",
     "ToleranceKindName",
+    "ToolNote",
+    "ToolParameter",
     "TopologyException",
     "TopologyRule",
     "TopologyRuleKind",
@@ -1362,6 +1369,7 @@ __all__ = [
     "points",
     "polygon",
     "polyline",
+    "processing",
     "project",
     "records",
     "rectangle",

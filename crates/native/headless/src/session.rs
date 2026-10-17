@@ -71,6 +71,8 @@ impl Session {
     }
 
     fn of(doc: Document, path: Option<PathBuf>, legacy: bool) -> Self {
+        // İşlemler's tools for cad.processing.tools and .run (docs/adr/0508).
+        kentos_processing::command::register();
         Self {
             doc,
             path,

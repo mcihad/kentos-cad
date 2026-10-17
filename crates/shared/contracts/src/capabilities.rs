@@ -2237,6 +2237,25 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.processing.tools",
+        refusals: &[&["tools_unavailable", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.processing.run",
+        refusals: &[&[
+            "tools_unavailable",
+            "unknown_tool",
+            "invalid_uid",
+            "entity_not_found",
+            "invalid_parameters",
+            "tool_failed",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],

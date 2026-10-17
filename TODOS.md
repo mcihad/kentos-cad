@@ -203,6 +203,8 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-41` işlem araçları komut olarak (ADR 0508, 18 Ekim): web'de gerekenler: `cad.processing.tools` ve `.run`'ın işleyicisi
+  (web'in `processing/` çalıştırıcısıyla); TS türleri üretildi.
 - [ ] `CBS-20` toplu yazma (ADR 0507, 18 Ekim): web'de gerekenler: `cad.fields.write` işleyicisi, Öznitelik tablosunda Alan
   hesapla penceresi ve Yapıştır (tarayıcının panosu); TS türleri üretildi.
 - [ ] `CBS-36` göreli kaynak ve Paketle (ADR 0506, 17 Ekim): web'de gerekenler: `.kcad` okumasında `sources`'ın `relative`'i,
@@ -1796,6 +1798,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   tekil alan birlikte; bütün ya da hiç ya da uyanlar; plan önizleme ve satır satır sorunlar); masaüstünde tablonun çubuğunda Alan
   hesapla… ve Yapıştır; 32 ortak durum `fields_write_cases.py`'den. Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli
   sayfalar, gizli sütunun süzülmesi. — **18 Ekim, [ADR 0507](docs/adr/0507-attribute-table-bulk-writes.md).**
+- [ ] `CBS-41` işlem araçları komut olarak (ilk dilim): `cad.processing.tools` ve `cad.processing.run` (pencerenin çalıştırıcısı,
+  açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
+  ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
+  modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

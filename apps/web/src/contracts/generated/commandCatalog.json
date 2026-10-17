@@ -505501,6 +505501,554 @@
       ]
     },
     {
+      "id": "cad.processing.tools",
+      "version": 1,
+      "title": "İşlem araçları",
+      "summary": "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez.",
+      "aliases": [
+        "islemler",
+        "araclar"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`\n(case and Turkish marks aside), or one category's (`category`, its id).",
+        "properties": {
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ProcessingTools",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ProcessingTool": {
+            "description": "A tool.",
+            "properties": {
+              "aliases": {
+                "default": [],
+                "description": "The names the command line takes for it.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "category": {
+                "description": "Its category's path (“Geometri › Tampon”).",
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "parameters": {
+                "items": {
+                  "$ref": "#/$defs/ToolParameter"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "category",
+              "description",
+              "parameters"
+            ],
+            "type": "object"
+          },
+          "ToolParameter": {
+            "description": "A parameter of a tool.",
+            "properties": {
+              "advanced": {
+                "default": false,
+                "description": "Shown under the window's Gelişmiş ayarlar.",
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Its value when not given, for this drawing (null: none)."
+              },
+              "description": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "description": "What it takes: `features`, `number`, `text`, `boolean`, `choice`, `layer`, `point`, `expression`, `field`,\n`file`, `saveFile`, `network`, `addressSource`, `rasterValues`, `rasterPairs`, `fieldMap`, `layers`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "optional": {
+                "default": false,
+                "type": "boolean"
+              },
+              "options": {
+                "default": [],
+                "description": "A choice's values (empty for another kind).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "label",
+              "kind"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.tools` lists.",
+        "properties": {
+          "tools": {
+            "items": {
+              "$ref": "#/$defs/ProcessingTool"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "tools"
+        ],
+        "title": "ProcessingToolsListed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ProcessingTool": {
+            "description": "A tool.",
+            "properties": {
+              "aliases": {
+                "default": [],
+                "description": "The names the command line takes for it.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "category": {
+                "description": "Its category's path (“Geometri › Tampon”).",
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "parameters": {
+                "items": {
+                  "$ref": "#/$defs/ToolParameter"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "category",
+              "description",
+              "parameters"
+            ],
+            "type": "object"
+          },
+          "ToolParameter": {
+            "description": "A parameter of a tool.",
+            "properties": {
+              "advanced": {
+                "default": false,
+                "description": "Shown under the window's Gelişmiş ayarlar.",
+                "type": "boolean"
+              },
+              "default": {
+                "description": "Its value when not given, for this drawing (null: none)."
+              },
+              "description": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "description": "What it takes: `features`, `number`, `text`, `boolean`, `choice`, `layer`, `point`, `expression`, `field`,\n`file`, `saveFile`, `network`, `addressSource`, `rasterValues`, `rasterPairs`, `fieldMap`, `layers`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "optional": {
+                "default": false,
+                "type": "boolean"
+              },
+              "options": {
+                "default": [],
+                "description": "A choice's values (empty for another kind).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "label",
+              "kind"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.tools` lists.",
+        "properties": {
+          "tools": {
+            "items": {
+              "$ref": "#/$defs/ProcessingTool"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "tools"
+        ],
+        "title": "ProcessingToolsListed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "tools_unavailable",
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Geometri araçları",
+          "input": {
+            "category": "geometry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.processing.run",
+      "version": 1,
+      "title": "İşlem aracını çalıştır",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed.",
+      "aliases": [
+        "islem",
+        "process"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`; a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and\nstopped: a locked layer, nothing to do, its own refusal; nothing written).",
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "selection": {
+            "description": "The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "view": {
+            "description": "The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "ProcessingRun",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ToolNote": {
+            "description": "A note the tool made while it ran.",
+            "properties": {
+              "level": {
+                "description": "`info` or `warn`.",
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "level",
+              "text"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
+        "properties": {
+          "added": {
+            "description": "The objects it made and changed (persistent ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers it made (ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "description": "Its notes (what resolving left out, what it skipped).",
+            "items": {
+              "$ref": "#/$defs/ToolNote"
+            },
+            "type": "array"
+          },
+          "outputs": {
+            "additionalProperties": true,
+            "description": "Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "selected": {
+            "description": "The objects it chose (a selecting tool's result; persistent ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "step": {
+            "description": "The undo step's name; none when the drawing did not change.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "description": "The tool's sentence of what it did.",
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "summary",
+          "revision"
+        ],
+        "title": "ProcessingRan",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ToolNote": {
+            "description": "A note the tool made while it ran.",
+            "properties": {
+              "level": {
+                "description": "`info` or `warn`.",
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "level",
+              "text"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
+        "properties": {
+          "added": {
+            "description": "The objects it made and changed (persistent ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers it made (ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "description": "Its notes (what resolving left out, what it skipped).",
+            "items": {
+              "$ref": "#/$defs/ToolNote"
+            },
+            "type": "array"
+          },
+          "outputs": {
+            "additionalProperties": true,
+            "description": "Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "selected": {
+            "description": "The objects it chose (a selecting tool's result; persistent ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "step": {
+            "description": "The undo step's name; none when the drawing did not change.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "description": "The tool's sentence of what it did.",
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "summary",
+          "revision"
+        ],
+        "title": "ProcessingRan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "tools_unavailable",
+          "unknown_tool",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_parameters",
+          "tool_failed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Seçili parsellerin köşelerini numarala",
+          "input": {
+            "selection": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"
+            ],
+            "tool": "points.numberVertices"
+          }
+        },
+        {
+          "title": "Bir katmanın nesnelerine tampon",
+          "input": {
+            "parameters": {
+              "distance": 5,
+              "input": {
+                "layerId": "parsel",
+                "scope": "layer"
+              }
+            },
+            "tool": "geometry.buffer"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sources.sync",
       "version": 1,
       "title": "Kaynakla eşitle",
@@ -537929,6 +538477,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı."
+    },
+    {
+      "code": "unknown_tool",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta."
+    },
+    {
+      "code": "invalid_parameters",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aracın parametrelerinden birinin değeri uymuyor; ileti parametreyi ve nedenini söyler."
+    },
+    {
+      "code": "tool_failed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Araç çalıştı ama bitiremedi; çizim değişmedi. İleti nedenini söyler."
+    },
+    {
+      "code": "tools_unavailable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır."
     },
     {
       "code": "package_left",

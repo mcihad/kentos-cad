@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views
+from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, processing, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -109,6 +109,8 @@ COMMANDS: dict[str, Any] = {
     "cad.polygon.create": polygon.create,
     "cad.polygon.regular": polygon.regular,
     "cad.polyline.create": polyline.create,
+    "cad.processing.run": processing.run,
+    "cad.processing.tools": processing.tools,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,
     "cad.rectangle.create": rectangle.create,
@@ -163,4 +165,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "standards", "styles", "tables", "texts", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "processing", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "standards", "styles", "tables", "texts", "ucs", "units", "views",)

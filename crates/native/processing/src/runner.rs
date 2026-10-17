@@ -88,7 +88,10 @@ pub enum Outcome {
     Ok {
         result: RunResult,
         added: Vec<Slot>,
+        /// The objects it changed and those it chose, without repeats.
         touched: Vec<Slot>,
+        /// The objects it changed (not those it only chose).
+        updated: Vec<Slot>,
         edited: bool,
         record: RunRecord,
     },
@@ -1055,10 +1058,18 @@ impl Runner {
             target,
         );
         release(owned);
+        let updated = {
+            let doc = host.doc();
+            distinct(updated)
+                .into_iter()
+                .filter(|id| doc.get(*id).is_some())
+                .collect()
+        };
         Outcome::Ok {
             result,
             added,
             touched,
+            updated,
             edited,
             record,
         }

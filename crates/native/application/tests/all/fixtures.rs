@@ -35,6 +35,7 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
+use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -1647,6 +1648,18 @@ impl Input for kentos_domain::contracts::SourcesEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::ProcessingTools {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::ProcessingRun {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::FieldsWrite {
     /// No number: a layer, fields and values as text.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2485,6 +2498,8 @@ fn run_op(
         kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
         kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
+        kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
+        kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -3019,6 +3034,8 @@ fn setup_paths(value: &Value) -> Value {
 }
 
 fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()> {
+    // İşlemler's tools, as every host that has them registers them (docs/adr/0508).
+    kentos_processing::command::register();
     let setup = &setup_paths(setup);
     let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
         .map_err(|e| format!("{at}: kurulum: {e}"))?;

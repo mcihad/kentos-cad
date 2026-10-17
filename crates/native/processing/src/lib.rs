@@ -30,6 +30,7 @@
 pub mod address;
 pub mod builtin;
 pub mod categories;
+pub mod command;
 pub mod designer;
 pub mod expression;
 pub mod features;

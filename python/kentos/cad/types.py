@@ -23146,6 +23146,184 @@ class PolylinePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProcessingRan(_Model):
+    """What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).
+    Attributes:
+        summary: The tool's sentence of what it did.
+        added: The objects it made and changed (persistent ids).
+        layers: The layers it made (ids).
+        notes: Its notes (what resolving left out, what it skipped).
+        outputs: Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).
+        selected: The objects it chose (a selecting tool's result; persistent ids).
+        step: The undo step's name; none when the drawing did not change.
+    """
+    tool: str
+    summary: str
+    revision: str
+    added: list[str] | Unset = UNSET
+    changed: list[str] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    notes: list[ToolNote] | Unset = UNSET
+    outputs: dict[str, Any] | None | Unset = UNSET
+    selected: list[str] | Unset = UNSET
+    step: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["summary"] = self.summary
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.changed is not UNSET:
+            out["changed"] = list(self.changed)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.notes is not UNSET:
+            out["notes"] = [e0.to_json() for e0 in self.notes]
+        if self.outputs is not UNSET:
+            out["outputs"] = None if self.outputs is None else dict(self.outputs)
+        if self.selected is not UNSET:
+            out["selected"] = list(self.selected)
+        if self.step is not UNSET:
+            out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRan:
+        return cls(
+            tool=data["tool"],
+            summary=data["summary"],
+            revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
+            changed=list(data["changed"]) if "changed" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            notes=[ToolNote.from_json(e0) for e0 in data["notes"]] if "notes" in data else UNSET,
+            outputs=UNSET if "outputs" not in data else None if data["outputs"] is None else dict(data["outputs"]),
+            selected=list(data["selected"]) if "selected" in data else UNSET,
+            step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingRun(_Model):
+    """Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes
+    its default for the drawing. A features input is `{ "scope": "all" }` (the visible layers), `{ "scope": "layer",
+    "layerId": … }`, `{ "scope": "uids", "uids": [ … ] }`, `{ "scope": "selection" }` (the objects `selection` names)
+    or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`; a features input's default is the
+    selection, so a run on chosen objects gives `selection`. A file parameter is `{ "path": … }` (a table file read
+    as the dialog reads it) or `{ "name": …, "rows": [[…]] }`. Refusals, in order: `tools_unavailable`,
+    `unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has
+    not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
+    stopped: a locked layer, nothing to do, its own refusal; nothing written).
+    Attributes:
+        selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
+        view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
+    """
+    tool: str
+    parameters: dict[str, Any] | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRun:
+        return cls(
+            tool=data["tool"],
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingTool(_Model):
+    """A tool.
+    Attributes:
+        category: Its category's path (“Geometri › Tampon”).
+        aliases: The names the command line takes for it.
+    """
+    id: str
+    label: str
+    category: str
+    description: str
+    parameters: list[ToolParameter]
+    aliases: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["category"] = self.category
+        out["description"] = self.description
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        out["aliases"] = list(self.aliases)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingTool:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            category=data["category"],
+            description=data["description"],
+            parameters=[ToolParameter.from_json(e0) for e0 in data["parameters"]],
+            aliases=list(data["aliases"]) if "aliases" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingTools(_Model):
+    """Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
+    (case and Turkish marks aside), or one category's (`category`, its id).
+    """
+    category: str | None | Unset = UNSET
+    query: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.query is not UNSET:
+            out["query"] = self.query
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingTools:
+        return cls(
+            category=data.get("category", UNSET),
+            query=data.get("query", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingToolsListed(_Model):
+    """What `cad.processing.tools` lists."""
+    tools: list[ProcessingTool]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tools"] = [e0.to_json() for e0 in self.tools]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingToolsListed:
+        return cls(
+            tools=[ProcessingTool.from_json(e0) for e0 in data["tools"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectAccessChange(_Model):
     """The result of `project.share` and `project.access.revoke`; a retry with the
     same idempotency key gets the same one (`replayed`).
@@ -28919,6 +29097,75 @@ class TmDefinition(_Model):
             custom_datum=UNSET if "customDatum" not in data else None if data["customDatum"] is None else CustomDatum.from_json(data["customDatum"]),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else _enum_in(RegistryDatum, data["datum"]),
             latitude_of_origin=UNSET if "latitudeOfOrigin" not in data else None if data["latitudeOfOrigin"] is None else float(data["latitudeOfOrigin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToolNote(_Model):
+    """A note the tool made while it ran.
+    Attributes:
+        level: `info` or `warn`.
+    """
+    level: str
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolNote:
+        return cls(
+            level=data["level"],
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToolParameter(_Model):
+    """A parameter of a tool.
+    Attributes:
+        kind: What it takes: `features`, `number`, `text`, `boolean`, `choice`, `layer`, `point`, `expression`, `field`,
+            `file`, `saveFile`, `network`, `addressSource`, `rasterValues`, `rasterPairs`, `fieldMap`, `layers`.
+        advanced: Shown under the window's Gelişmiş ayarlar.
+        default: Its value when not given, for this drawing (null: none).
+        options: A choice's values (empty for another kind).
+    """
+    name: str
+    label: str
+    kind: str
+    advanced: bool = False
+    default: Any | Unset = UNSET
+    description: str | None = None
+    optional: bool = False
+    options: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["label"] = self.label
+        out["kind"] = self.kind
+        out["advanced"] = self.advanced
+        if self.default is not UNSET:
+            out["default"] = self.default
+        out["description"] = self.description
+        out["optional"] = self.optional
+        out["options"] = list(self.options)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolParameter:
+        return cls(
+            name=data["name"],
+            label=data["label"],
+            kind=data["kind"],
+            advanced=data["advanced"] if "advanced" in data else False,
+            default=data.get("default", UNSET),
+            description=data["description"] if "description" in data else None,
+            optional=data["optional"] if "optional" in data else False,
+            options=list(data["options"]) if "options" in data else list(),
         )
 
 
@@ -38776,6 +39023,11 @@ __all__ = [
     "PolylineEntity",
     "PolylineEntityGeometry",
     "PolylinePlan",
+    "ProcessingRan",
+    "ProcessingRun",
+    "ProcessingTool",
+    "ProcessingTools",
+    "ProcessingToolsListed",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -39055,6 +39307,8 @@ __all__ = [
     "ToSplineCurveEdit",
     "ToleranceKind",
     "ToleranceKindName",
+    "ToolNote",
+    "ToolParameter",
     "TopologyException",
     "TopologyRule",
     "TopologyRuleKind",

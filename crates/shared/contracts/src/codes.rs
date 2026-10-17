@@ -1095,6 +1095,14 @@ codes! {
     INVALID_VALUES = "invalid_values", Failed, false, "Bazı değerler alanların kurallarına uymuyor; hiçbiri yazılmadı. Sorunlar nesne ve alanıyla plan'da.";
     /// Values a write left out, the others written (docs/adr/0507).
     VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı.";
+    /// A processing tool not among İşlemler's (docs/adr/0508).
+    UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
+    /// A processing tool's values do not fit its parameters (docs/adr/0508).
+    INVALID_PARAMETERS = "invalid_parameters", Failed, false, "Aracın parametrelerinden birinin değeri uymuyor; ileti parametreyi ve nedenini söyler.";
+    /// A processing tool ran and stopped: nothing written (docs/adr/0508).
+    TOOL_FAILED = "tool_failed", Failed, false, "Araç çalıştı ama bitiremedi; çizim değişmedi. İleti nedenini söyler.";
+    /// The host has not registered İşlemler's tools (docs/adr/0508).
+    TOOLS_UNAVAILABLE = "tools_unavailable", Failed, false, "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
