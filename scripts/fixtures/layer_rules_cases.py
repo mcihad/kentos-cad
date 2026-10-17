@@ -465,6 +465,7 @@ def validate_file():
         issues = fc.preflight(body, FIELDS, variables) + found + f.unique_issues(after, obj, others)
         out = {"issues": fc.shown_issues(issues), "valid": not fc.errors(issues), "items": f.described(after, obj),
                "version": 1, "attrs": after}
+        fc.with_requires(out, body)
         inp = {"form": "ruhsat", "uid": f"$uidOf:{slot}"}
         if values:
             inp["values"] = values

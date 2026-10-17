@@ -400,6 +400,8 @@ fn main() -> iced::Result {
             app.sheet_store = sheets::default_store();
             // The device's NTv2 grids for the projects' datum choices (docs/adr/0168 §4).
             app.grids.library = grids::Library::device();
+            // The forms designer's section library and kept drafts (docs/adr/0441 §1, §5).
+            app.form_files = forms::library::FormFiles::device();
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);

@@ -22,7 +22,9 @@ fn check_input(input: &FormsEdit) -> Result<(), Stop> {
         | FormsOp::Rename { id, .. }
         | FormsOp::Remove { id }
         | FormsOp::Publish { id, .. }
-        | FormsOp::Enforce { id, .. } => Some(id.as_str()),
+        | FormsOp::Enforce { id, .. }
+        | FormsOp::Comment { id, .. }
+        | FormsOp::Resolve { id, .. } => Some(id.as_str()),
     };
     if let Some(id) = id
         && !form_id_ok(id)
@@ -41,6 +43,33 @@ fn check_input(input: &FormsEdit) -> Result<(), Stop> {
             "Form adı boş olamaz, en çok 64 karakterdir ve denetim karakteri içermez. Başka bir ad yazın.".into(),
             "edit.name",
         ));
+    }
+    // A comment's words (docs/adr/0441 §5).
+    if let FormsOp::Comment {
+        text, author, at, ..
+    } = &input.edit
+    {
+        if text.trim().is_empty()
+            || text.chars().count() > MOST_FORM_TEXT
+            || text.chars().any(|c| c.is_control() && c != '\n')
+        {
+            return Err(fail(
+                codes::INVALID_FORM,
+                format!(
+                    "Yorum boş olamaz, en çok {MOST_FORM_TEXT} karakterdir ve denetim karakteri içermez."
+                ),
+                "edit.text",
+            ));
+        }
+        for (v, path) in [(author, "edit.author"), (at, "edit.at")] {
+            if v.as_deref().is_some_and(|v| !form_name_ok(v)) {
+                return Err(fail(
+                    codes::INVALID_FORM,
+                    "Yorumun yazarı ve anı boş olamaz, en çok 64 karakterdir.".into(),
+                    path,
+                ));
+            }
+        }
     }
     let body = match &input.edit {
         FormsOp::Create { body, .. } => body.as_ref(),
@@ -84,6 +113,7 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
     let mut s = doc.settings().clone();
     let mut warnings = Vec::new();
     let at = |s: &ProjectSettings, id: &str| s.forms.iter().position(|f| f.id == id);
+    let at_of = at;
     let kept = match &input.edit {
         FormsOp::Create {
             id,
@@ -150,6 +180,7 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                 draft,
                 releases: Vec::new(),
                 enforce: false,
+                comments: Vec::new(),
             };
             s.forms.push(form.clone());
             Some(form)
@@ -241,6 +272,62 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                 ));
             }
             form.enforce = *on;
+            Some(form.clone())
+        }
+        FormsOp::Comment {
+            id,
+            item,
+            text,
+            author,
+            at,
+        } => {
+            let i = at_of(&s, id).ok_or_else(|| unknown(id))?;
+            let form = &mut s.forms[i];
+            if let Some(item) = item
+                && !form.draft.walk().iter().any(|(_, x)| x.id() == item)
+            {
+                return Err(fail(
+                    codes::FORM_ITEM_UNKNOWN,
+                    format!("“{}” formunun taslağında “{item}” öğesi yok.", form.name),
+                    "edit.item",
+                ));
+            }
+            if form.comments.len() >= kentos_contracts::MOST_FORM_COMMENTS {
+                return Err(fail(
+                    codes::INVALID_FORM,
+                    format!(
+                        "Bir formda en çok {} yorum olur; çözülenlerden birini silin.",
+                        kentos_contracts::MOST_FORM_COMMENTS
+                    ),
+                    "edit",
+                ));
+            }
+            let next_id = form.comments.iter().map(|c| c.id).max().unwrap_or(0) + 1;
+            form.comments.push(kentos_contracts::FormComment {
+                id: next_id,
+                item: item.clone(),
+                author: author.clone(),
+                at: at.clone(),
+                text: text.trim().to_owned(),
+                resolved: false,
+            });
+            Some(form.clone())
+        }
+        FormsOp::Resolve {
+            id,
+            comment,
+            resolved,
+        } => {
+            let i = at_of(&s, id).ok_or_else(|| unknown(id))?;
+            let form = &mut s.forms[i];
+            let Some(c) = form.comments.iter_mut().find(|c| c.id == *comment) else {
+                return Err(fail(
+                    codes::FORM_COMMENT_UNKNOWN,
+                    format!("“{}” formunda {comment} numaralı yorum yok.", form.name),
+                    "edit.comment",
+                ));
+            };
+            c.resolved = *resolved;
             Some(form.clone())
         }
     };

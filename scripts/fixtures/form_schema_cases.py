@@ -56,6 +56,9 @@ def main() -> int:
         "bilinmeyen giriş biçimi": lambda f: next(i for i in walk(f["draft"]["items"]) if i["type"] == "field").update(widget="harita"),
         "özetsiz yayın": lambda f: f["releases"][0].pop("digest"),
         "adımsız iş akışı": lambda f: f["draft"].update(workflow={"field": "Durum", "initial": "x"}),
+        # docs/adr/0441 §6: an action names a tool by its id; an address is none.
+        "adresli eylem": lambda f: f["draft"]["items"].append(
+            {"type": "action", "id": "git", "label": "Git", "tool": "https://ornek.org/x"}),
     }
     for name, change in broken.items():
         f = copy.deepcopy(base)

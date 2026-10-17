@@ -17,6 +17,7 @@ pub(crate) mod designer_view;
 pub mod domains;
 pub mod entry;
 pub mod layer_rules;
+pub mod library;
 pub mod location;
 pub mod package;
 pub mod relations;

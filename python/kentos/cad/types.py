@@ -2022,13 +2022,15 @@ class RelatedView(_StrEnum):
     - ``list``: Their names, one a line.
     - ``table``: A table of the item's columns, the numbers totalled under them.
     - ``cards``: A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).
+    - ``chart``: A bar for each value of its first column, as long as the children holding it are many
     """
     LIST = "list"
     TABLE = "table"
     CARDS = "cards"
+    CHART = "chart"
 
 
-RelatedViewName = Literal["list", "table", "cards"]
+RelatedViewName = Literal["list", "table", "cards", "chart"]
 """The names of :class:`RelatedView`, for a plain string."""
 
 
@@ -3030,6 +3032,8 @@ class FormItem(_Union):
     - :class:`RelatedFormItem` (``type: related``)
     - :class:`AttachmentsFormItem` (``type: attachments``)
     - :class:`LocationFormItem` (``type: location``)
+    - :class:`DividerFormItem` (``type: divider``)
+    - :class:`ActionFormItem` (``type: action``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -3059,6 +3063,8 @@ class FormsOp(_Union):
     - :class:`RemoveFormsOp` (``kind: remove``)
     - :class:`PublishFormsOp` (``kind: publish``)
     - :class:`EnforceFormsOp` (``kind: enforce``)
+    - :class:`CommentFormsOp` (``kind: comment``)
+    - :class:`ResolveFormsOp` (``kind: resolve``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -11485,6 +11491,48 @@ class FormChild(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormComment(_Model):
+    """A reviewer's comment on a form or one of its items (docs/adr/0441 §5).
+    Attributes:
+        id: 1, 2, …: one more than the form's last. Unit: count.
+        author: Who wrote it and when (as the command was given them).
+        item: The item it is about; none: the form.
+        resolved: Settled; written only as `true`.
+    """
+    id: int
+    text: str
+    at: str | None | Unset = UNSET
+    author: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    resolved: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["text"] = self.text
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.resolved is not UNSET:
+            out["resolved"] = self.resolved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormComment:
+        return cls(
+            id=data["id"],
+            text=data["text"],
+            at=data.get("at", UNSET),
+            author=data.get("author", UNSET),
+            item=data.get("item", UNSET),
+            resolved=data.get("resolved", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormIssue(_Model):
     """What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,
     where (the item, the field's key, the rule) and the sentence that says it.
@@ -12113,7 +12161,8 @@ class FormsEdit(_Model):
     Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
     `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
     `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
-    `conflict`), `form_preflight`, `form_unpublished`. Warnings: `form_release_dropped`.
+    `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:
+    `form_release_dropped`.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -12823,12 +12872,15 @@ class FormsValidated(_Model):
         valid: Whether the record (or the form alone) has no error.
         items: The record's items, in the form's order; empty without a record.
         attrs: The record's attributes afterwards; none without a record.
+        requires: What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
+            `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
         version: The release asked; none: the draft. Unit: version.
     """
     issues: list[FormIssue]
     valid: bool
     items: list[FormItemState]
     attrs: dict[str, str] | None | Unset = UNSET
+    requires: list[str] | Unset = UNSET
     version: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12838,6 +12890,8 @@ class FormsValidated(_Model):
         out["items"] = [e0.to_json() for e0 in self.items]
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.requires is not UNSET:
+            out["requires"] = list(self.requires)
         if self.version is not UNSET:
             out["version"] = self.version
         return out
@@ -12849,6 +12903,7 @@ class FormsValidated(_Model):
             valid=data["valid"],
             items=[FormItemState.from_json(e0) for e0 in data["items"]],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            requires=list(data["requires"]) if "requires" in data else UNSET,
             version=data.get("version", UNSET),
         )
 
@@ -20113,6 +20168,7 @@ class ProjectForm(_Model):
         name: What the lists show; trimmed, 1–64 characters.
         layer: The layer the form edits: a layer's id (not a group's).
         draft: The draft the designer edits.
+        comments: The reviewers' comments on the form, oldest first (docs/adr/0441 §5).
         enforce: The latest release's rules hold for every attribute write on the layer (the write profile);
             written only as `true`, and only with a release.
         releases: The frozen releases, oldest first; data entry uses the last.
@@ -20121,6 +20177,7 @@ class ProjectForm(_Model):
     name: str
     layer: str
     draft: FormBody
+    comments: list[FormComment] | Unset = UNSET
     enforce: bool | Unset = UNSET
     releases: list[FormRelease] | Unset = UNSET
 
@@ -20130,6 +20187,8 @@ class ProjectForm(_Model):
         out["name"] = self.name
         out["layer"] = self.layer
         out["draft"] = self.draft.to_json()
+        if self.comments is not UNSET:
+            out["comments"] = [e0.to_json() for e0 in self.comments]
         if self.enforce is not UNSET:
             out["enforce"] = self.enforce
         if self.releases is not UNSET:
@@ -20143,6 +20202,7 @@ class ProjectForm(_Model):
             name=data["name"],
             layer=data["layer"],
             draft=FormBody.from_json(data["draft"]),
+            comments=[FormComment.from_json(e0) for e0 in data["comments"]] if "comments" in data else UNSET,
             enforce=data.get("enforce", UNSET),
             releases=[FormRelease.from_json(e0) for e0 in data["releases"]] if "releases" in data else UNSET,
         )
@@ -28916,6 +28976,64 @@ class LocationFormItem(FormItem):
 
 
 @dataclass(kw_only=True, slots=True)
+class DividerFormItem(FormItem):
+    """A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide."""
+    TAG_VALUE: ClassVar[str] = "divider"
+    id: str
+    label: str | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "divider"}
+        out["id"] = self.id
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DividerFormItem:
+        return cls(
+            id=data["id"],
+            label=data.get("label", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ActionFormItem(FormItem):
+    """An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,
+    by the tool's id; no address, query or script.
+    Attributes:
+        tool: The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.
+    """
+    TAG_VALUE: ClassVar[str] = "action"
+    id: str
+    label: str
+    tool: str
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "action"}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["tool"] = self.tool
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ActionFormItem:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            tool=data["tool"],
+            visible_when=data.get("visibleWhen", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFormsOp(FormsOp):
     """Yeni form: a form of a layer. No body: one made of the layer's fields; no id: one made of the
     name.
@@ -29050,6 +29168,66 @@ class EnforceFormsOp(FormsOp):
         return cls(
             id=data["id"],
             on=data["on"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CommentFormsOp(FormsOp):
+    """Yorum (docs/adr/0441 §5): a reviewer's comment on the form or an item of its draft."""
+    TAG_VALUE: ClassVar[str] = "comment"
+    id: str
+    text: str
+    at: str | None | Unset = UNSET
+    author: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "comment"}
+        out["id"] = self.id
+        out["text"] = self.text
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.author is not UNSET:
+            out["author"] = self.author
+        if self.item is not UNSET:
+            out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CommentFormsOp:
+        return cls(
+            id=data["id"],
+            text=data["text"],
+            at=data.get("at", UNSET),
+            author=data.get("author", UNSET),
+            item=data.get("item", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResolveFormsOp(FormsOp):
+    """A comment settled or opened again.
+    Attributes:
+        comment: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "resolve"
+    id: str
+    comment: int
+    resolved: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resolve"}
+        out["id"] = self.id
+        out["comment"] = self.comment
+        out["resolved"] = self.resolved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResolveFormsOp:
+        return cls(
+            id=data["id"],
+            comment=data["comment"],
+            resolved=data["resolved"],
         )
 
 
@@ -31103,10 +31281,10 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem}
+_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem, "divider": DividerFormItem, "action": ActionFormItem}
 
 
-_FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp}
+_FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp, "comment": CommentFormsOp, "resolve": ResolveFormsOp}
 
 
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
@@ -31166,6 +31344,7 @@ _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameView
 __all__ = [
     "AccessSource",
     "AccessSourceName",
+    "ActionFormItem",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddressLocator",
@@ -31330,6 +31509,7 @@ __all__ = [
     "CloudSource",
     "CodeCell",
     "Combination",
+    "CommentFormsOp",
     "CommitResult",
     "ConstructedCurve",
     "ConstructionEntity",
@@ -31391,6 +31571,7 @@ __all__ = [
     "DivideBlock",
     "DivideEnds",
     "DivideEndsName",
+    "DividerFormItem",
     "Division",
     "DomainField",
     "DomainsEdit",
@@ -31525,6 +31706,7 @@ __all__ = [
     "FormChangeKindName",
     "FormCheck",
     "FormChild",
+    "FormComment",
     "FormIssue",
     "FormItem",
     "FormItemState",
@@ -31972,6 +32154,7 @@ __all__ = [
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ResetArrayEdit",
+    "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
     "RingGeometry",

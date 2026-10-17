@@ -24,6 +24,7 @@ mod lookup;
 mod object;
 mod preflight;
 mod record;
+mod requirements;
 pub mod scenario;
 mod session;
 
@@ -33,6 +34,7 @@ pub use lookup::{OtherLayer, World, labels_of};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attached, Attrs, Object, schema_in, schema_of};
+pub use requirements::{requirements, unsupported};
 pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Moment, Prepared};
 
 use kentos_contracts::{FormIssue, FormSeverity};
@@ -48,6 +50,9 @@ pub mod codes {
     pub const FIELD_TWICE: &str = "form_field_twice";
     /// A mirror whose field has no item of its own (docs/adr/0437).
     pub const MIRROR_ALONE: &str = "form_mirror_alone";
+    /// An action's processing tool the host has not (docs/adr/0441 §6): the host adds it, the core
+    /// does not know the host's tools.
+    pub const ACTION_UNKNOWN: &str = "form_action_unknown";
     /// A mirror with a rule that writes, requires or checks (docs/adr/0437).
     pub const MIRROR_RULES: &str = "form_mirror_rules";
     /// The widget does not take the field's kind.

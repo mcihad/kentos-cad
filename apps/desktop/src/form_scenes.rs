@@ -17,6 +17,7 @@
 //!
 //! Test code only.
 
+use kentos_contracts::FormItem;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -1404,6 +1405,116 @@ fn meters_snapshot(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// The meters' building form with new items (docs/adr/0441): its draft and release replaced by `items`.
+fn meters_rebodied(app: &mut App, items: Value) {
+    meters(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    let form = settings
+        .forms
+        .iter_mut()
+        .find(|f| f.id == "bina")
+        .expect("the form");
+    let mut body = form.draft.clone();
+    body.items = serde_json::from_value(items).expect("items");
+    form.draft = body.clone();
+    form.releases = vec![kentos_contracts::FormRelease {
+        version: 1,
+        digest: kentos_contracts::body_digest(&body),
+        body,
+        note: None,
+    }];
+    doc.model.set_settings(settings);
+    app.form_memory.clock = Some("2026-10-17T10:00:00".into());
+    app.form_memory.person = Some("Ayşe Yılmaz".into());
+}
+
+/// The building items of ADR 0441's pictures: a divider, the meters as a chart by kind, an action.
+fn meters_items() -> Value {
+    json!([
+        { "type": "field", "id": "ad", "field": "Ad" },
+        { "type": "divider", "id": "sayac-bolumu", "label": "Sayaçlar" },
+        { "type": "related", "id": "sayaclar", "label": "Türlerine göre sayaçlar", "layer": "sayac", "field": "bina",
+          "view": "chart", "columns": ["tur"] },
+        { "type": "action", "id": "hesapla", "label": "Öznitelik hesapla", "tool": "attributes.calculate" }
+    ])
+}
+
+/// Formla düzenle on the first building: a divider, its meters as bars by kind, an action's button
+/// (docs/adr/0441 §2, §3, §6).
+fn meters_chart(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// Formlar on the building form, İlişkiler's palette shown (docs/adr/0441 §1).
+fn meters_palette(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    run(app, "data.forms");
+    designer(app, designer::Event::Palette(designer::Palette::Relations));
+}
+
+/// The action chosen: its button's words and the processing tool picked from the registered ones.
+fn meters_action(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("hesapla".into()));
+}
+
+/// A section library in a folder of its own for the pictures and tests.
+pub(crate) fn scene_library(app: &mut App, name: &str) {
+    let dir = std::env::temp_dir().join(format!("kentos-form-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    app.form_files = crate::forms::library::FormFiles::at(&dir);
+}
+
+/// The chart kept twice in the section library, the meter form's palette showing how it binds there.
+fn meters_sections(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    scene_library(app, "bolumler");
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("sayaclar".into()));
+    designer(app, designer::Event::SectionName("Sayaç grafiği".into()));
+    designer(app, designer::Event::SaveSection);
+    designer(app, designer::Event::SectionName("Sayaç grafiği".into()));
+    designer(app, designer::Event::SaveSection);
+    designer(app, designer::Event::SelectItem("ad".into()));
+    designer(app, designer::Event::SectionName("Bina adı".into()));
+    designer(app, designer::Event::SaveSection);
+    designer(app, designer::Event::Choose("sayac".into()));
+    designer(app, designer::Event::Palette(designer::Palette::Sections));
+}
+
+/// No item chosen: what the form needs of its host and the reviewers' comments, one settled.
+fn meters_review(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    run(app, "data.forms");
+    designer(
+        app,
+        designer::Event::CommentText("Sayaçların türleri değer listesine bağlansın.".into()),
+    );
+    designer(app, designer::Event::AddComment);
+    designer(
+        app,
+        designer::Event::CommentText("Bölücünün başlığı uygun.".into()),
+    );
+    designer(app, designer::Event::AddComment);
+    designer(app, designer::Event::ResolveComment(2, true));
+}
+
+/// The designer lost with a change in it (the program closed), opened again: the draft offered back.
+fn meters_kept(app: &mut App) {
+    meters_rebodied(app, meters_items());
+    scene_library(app, "taslak");
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("ad".into()));
+    designer(app, designer::Event::AddDivider);
+    app.forms_window = None;
+    app.dialog = None;
+    run(app, "data.forms");
+}
+
 /// The province being searched: “an” typed, typing paused.
 fn searched_list(app: &mut App) {
     chosen_facilities(app);
@@ -2596,6 +2707,12 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-iliski-yigini", meters_nested),
         ("form-iliski-tasarim", meters_designer),
         ("form-onay-goruntusu", meters_snapshot),
+        ("form-bolucu-grafik-eylem", meters_chart),
+        ("form-tasarim-iliski-paleti", meters_palette),
+        ("form-tasarim-eylem", meters_action),
+        ("form-tasarim-bolumler", meters_sections),
+        ("form-tasarim-yorumlar", meters_review),
+        ("form-tasarim-kalan-taslak", meters_kept),
         ("form-deger-paketi", sources_domains),
         ("form-degerleri-bicime", sources_migrated),
         ("deger-listeleri", domains_window),
@@ -2611,6 +2728,95 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use super::*;
     use crate::app::App;
+
+    #[test]
+    fn a_divider_and_an_action_show_and_the_action_opens_its_tool_on_the_record() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_chart(&mut app);
+        assert!(app.form_entry.is_some(), "the form");
+        entry(
+            &mut app,
+            entry::Event::RunAction("attributes.calculate".into()),
+        );
+        assert_eq!(
+            app.selection.ids(),
+            [Slot(1)],
+            "the record is the tool's input"
+        );
+        assert!(app.processing.dialog.is_some(), "the tool's window opened");
+    }
+
+    #[test]
+    fn comments_go_through_cad_forms_edit_and_are_settled() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_review(&mut app);
+        let form = &app.project_forms()[0];
+        assert_eq!(form.comments.len(), 2);
+        assert_eq!(form.comments[0].author.as_deref(), Some("Ayşe Yılmaz"));
+        assert!(!form.comments[0].resolved && form.comments[1].resolved);
+        // An item's comment names the item.
+        designer(&mut app, designer::Event::SelectItem("hesapla".into()));
+        designer(
+            &mut app,
+            designer::Event::CommentText("Araç doğru mu?".into()),
+        );
+        designer(&mut app, designer::Event::AddComment);
+        assert_eq!(
+            app.project_forms()[0].comments[2].item.as_deref(),
+            Some("hesapla")
+        );
+    }
+
+    #[test]
+    fn a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_kept(&mut app);
+        let w = app.forms_window.as_ref().expect("the window");
+        assert!(w.kept.is_some(), "the kept draft is offered");
+        designer(&mut app, designer::Event::RestoreDraft);
+        let w = app.forms_window.as_ref().expect("the window");
+        assert!(w.dirty);
+        assert!(
+            w.body
+                .as_ref()
+                .unwrap()
+                .walk()
+                .iter()
+                .filter(|(_, i)| matches!(i, FormItem::Divider { .. }))
+                .count()
+                == 2
+        );
+        designer(&mut app, designer::Event::Save);
+        let key = app.form_project_key();
+        assert_eq!(
+            app.form_files.kept_draft(&key, "bina"),
+            None,
+            "saved: nothing kept"
+        );
+    }
+
+    #[test]
+    fn a_section_goes_into_the_library_and_comes_back_into_another_form_with_its_fields_bound() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_sections(&mut app);
+        let sections = app.form_files.sections();
+        assert_eq!(
+            sections
+                .iter()
+                .map(|s| (s.name.as_str(), s.version))
+                .collect::<Vec<_>>(),
+            [("Sayaç grafiği", 1), ("Sayaç grafiği", 2), ("Bina adı", 1)]
+        );
+        // Bina adı into the meter form: its Ad field is not on the meter layer, the item goes in, said.
+        designer(&mut app, designer::Event::InsertSection(2));
+        let w = app.forms_window.as_ref().expect("the window");
+        assert!(w.dirty);
+        assert!(
+            app.log
+                .lines()
+                .any(|l| l.text.contains("katmanda olmayan alanlar: Ad"))
+        );
+    }
 
     #[test]
     fn a_tables_rules_are_written_through_the_window_in_one_step() {

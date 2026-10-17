@@ -902,6 +902,8 @@ pub struct App {
     /// Formlar's window (forms/designer.rs, docs/adr/0401).
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
     /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
+    /// The designer's section library and kept drafts on this device (forms/library.rs, docs/adr/0441).
+    pub(crate) form_files: crate::forms::library::FormFiles,
     pub(crate) form_clipboard: Option<(
         kentos_contracts::FormItem,
         Vec<kentos_contracts::LayerField>,
@@ -1221,6 +1223,7 @@ impl App {
             views_window: None,
             forms_window: None,
             form_clipboard: None,
+            form_files: crate::forms::library::FormFiles::default(),
             form_entry: None,
             form_stack: Vec::new(),
             relations_window: None,

@@ -46,4 +46,8 @@ min?: number,
 /**
  * The most (0–100).
  */
-max?: number, visibleWhen?: string, } | { "type": "location", id: string, label?: string, visibleWhen?: string, };
+max?: number, visibleWhen?: string, } | { "type": "location", id: string, label?: string, visibleWhen?: string, } | { "type": "divider", id: string, label?: string, visibleWhen?: string, } | { "type": "action", id: string, label: string, 
+/**
+ * The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.
+ */
+tool: string, visibleWhen?: string, };

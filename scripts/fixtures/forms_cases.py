@@ -626,7 +626,7 @@ def preflight(body, fields, variables=(), world=None):
                 field(x, hideable)
             elif x["type"] == "related":
                 related(x)
-            elif x["type"] in ("attachments", "location"):
+            elif x["type"] in ("attachments", "location", "divider", "action"):
                 if "visibleWhen" in x:
                     rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
             else:
@@ -927,7 +927,8 @@ class Form:
     def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
-            rule = x.get("visibleWhen") if x["type"] in ("tab", "group", "field", "related", "attachments", "location") \
+            rule = x.get("visibleWhen") if x["type"] in ("tab", "group", "field", "related", "attachments", "location",
+                                                         "divider", "action") \
                 else None
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
@@ -2169,6 +2170,58 @@ def mismatch(name):
     return failed("form_layer_mismatch", f"Nesne “{name}” formunun katmanında değil. Formun katmanındaki bir nesneyi seçin.", "uid")
 
 
+def requirements(body):
+    """What a form needs of its host (docs/adr/0441 §4), written from the ADR: the moment and the user its rules read,
+    other layers, the record's geometry, attachments, a workflow, then each action's tool once."""
+    texts, layers, geometry, attachments, tools = [], False, False, False, []
+
+    def walk(xs):
+        nonlocal layers, geometry, attachments
+        for x in xs:
+            kind = x["type"]
+            if kind == "note":
+                texts.append(x["text"])
+            elif kind == "field":
+                for k in ("visibleWhen", "requiredWhen", "readOnlyWhen", "defaultExpr", "calculate", "choiceFilter"):
+                    if k in x:
+                        texts.append(x[k])
+                texts.extend(c["rule"] for c in x.get("checks", []))
+                if "lookup" in x:
+                    layers = True
+                    geometry = geometry or "spatial" in x["lookup"]
+                    if "filter" in x["lookup"]:
+                        texts.append(x["lookup"]["filter"])
+            else:
+                if "visibleWhen" in x:
+                    texts.append(x["visibleWhen"])
+                if kind == "related":
+                    layers = True
+                elif kind == "attachments":
+                    attachments = True
+                elif kind == "location":
+                    geometry = True
+                elif kind == "action" and x["tool"] not in tools:
+                    tools.append(x["tool"])
+            walk(x.get("items", []))
+
+    walk(body["items"])
+    plain = str.maketrans("İIıŞşÇçĞğÖöÜü", "iiissccggoouu")
+    folded = [t.translate(plain).lower() for t in texts]
+    reads = lambda name: any(name in t for t in folded)
+    keys = [k for k, on in [("moment", reads("@tarih") or reads("@simdi")), ("user", reads("@kullanici")),
+                            ("layers", layers), ("geometry", geometry), ("attachments", attachments),
+                            ("workflow", "workflow" in body)] if on]
+    return keys + [f"tool:{x}" for x in tools]
+
+
+def with_requires(out, body):
+    """A validate answer with its form's requirements (docs/adr/0441 §4), written only when there are any."""
+    r = requirements(body)
+    if r:
+        out["requires"] = r
+    return out
+
+
 def shown_issues(issues):
     return [{**i, "message": ANY} for i in issues]
 
@@ -2258,6 +2311,25 @@ class Project:
             else:
                 f.pop("enforce", None)
             kept = f
+        elif k == "comment":
+            # docs/adr/0441 §5: numbered one past the form's last, its text trimmed.
+            f = self.find(op["id"])
+            cs = f.setdefault("comments", [])
+            c = {"id": max([x["id"] for x in cs], default=0) + 1}
+            for key in ("item", "author", "at"):
+                if key in op:
+                    c[key] = op[key]
+            c["text"] = op["text"].strip()
+            cs.append(c)
+            kept = f
+        elif k == "resolve":
+            f = self.find(op["id"])
+            c = next(x for x in f["comments"] if x["id"] == op["comment"])
+            if op["resolved"]:
+                c["resolved"] = True
+            else:
+                c.pop("resolved", None)
+            kept = f
         changed = self.forms != old
         output = {"forms": [summary(f) for f in self.forms], "changed": changed, "revision": "$current",
                   "issues": shown_issues(preflight(kept["draft"], FIELDS_OF[kept["layer"]])) if kept else []}
@@ -2338,6 +2410,10 @@ def edit_cases():
         p.refused(create("   "), failed("invalid_form_name", NAME_TEXT, "edit.name")),
         p.refused(create("A\tB"), failed("invalid_form_name", NAME_TEXT, "edit.name")),
         p.refused(create("A", body={"revision": 1, "items": [{"type": "note", "id": "x y", "text": "n"}]}), failed("invalid_form", ANY, "edit.body")),
+        # docs/adr/0441 §6: an action names a registered tool by its id; an address is none.
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
+                                                              "tool": "https://ornek.org/x"}]}),
+                  failed("invalid_form", ANY, "edit.body")),
         p.refused({"kind": "publish", "id": "denetim", "note": "a\u0007"}, failed("invalid_form", NOTE_TEXT, "edit.note")),
     ]})
 
@@ -2443,6 +2519,26 @@ def edit_cases():
     steps = [p.step({"kind": "update", "id": "denetim", "body": added})]
     cases.append({"name": "taslağın sorunları çıktıda: olmayan alan hata, katmanda olmayan ad uyarı", "setup": setup([FORM]), "steps": steps})
 
+    # docs/adr/0441 §5: the reviewers' comments.
+    p = Project([FORM])
+    steps = [p.step({"kind": "comment", "id": "denetim", "text": "  Kat alanı zorunlu olmalı.  ", "item": "kat",
+                     "author": "Ayşe", "at": "2026-10-17 10:00"}),
+             p.step({"kind": "comment", "id": "denetim", "text": "Formun adı uygun."}),
+             p.step({"kind": "resolve", "id": "denetim", "comment": 1, "resolved": True}),
+             p.step({"kind": "resolve", "id": "denetim", "comment": 1, "resolved": True}),
+             p.step({"kind": "resolve", "id": "denetim", "comment": 1, "resolved": False})]
+    cases.append({"name": "yorumlar: numaralı, öğeye ya da forma; çözülür ve yeniden açılır", "setup": setup([FORM]),
+                  "steps": steps})
+    p = Project([FORM])
+    cases.append({"name": "yorumun öğesi taslakta olmalı, numarası formda", "setup": setup([FORM]), "steps": [
+        p.refused({"kind": "comment", "id": "denetim", "text": "x", "item": "yok"},
+                  failed("form_item_unknown", "“Bina denetimi” formunun taslağında “yok” öğesi yok.", "edit.item")),
+        p.refused({"kind": "resolve", "id": "denetim", "comment": 7, "resolved": True},
+                  failed("form_comment_unknown", "“Bina denetimi” formunda 7 numaralı yorum yok.", "edit.comment")),
+        p.refused({"kind": "comment", "id": "denetim", "text": "   "},
+                  failed("invalid_form", "Yorum boş olamaz, en çok 1000 karakterdir ve denetim karakteri içermez.", "edit.text")),
+        p.refused({"kind": "comment", "id": "yok", "text": "x"}, failed("unknown_form", ANY, "edit.id"))]})
+
     return cases
 
 
@@ -2468,7 +2564,7 @@ def validate_cases():
             out["attrs"] = after
         out["issues"] = shown_issues(issues)
         out["valid"] = not errors(issues)
-        return {"status": "completed", "output": out, "warnings": []}
+        return {"status": "completed", "output": with_requires(out, body), "warnings": []}
 
     S = setup([PUBLISHED])
     cases.append({"name": "form tek başına: son yayının ön denetimi", "setup": S, "steps": [
@@ -2498,6 +2594,14 @@ def validate_cases():
     cases.append({"name": "taslak ile son yayın ayrıdır: varsayılan son yayındır", "setup": setup([changed]), "steps": [
         run({"form": "denetim", "uid": "$uidOf:1", "values": {"Durum": "iyi"}}, answer(changed, BODY, 1, FIRST, {"Durum": "iyi"})),
         run({"form": "denetim", "draft": True, "uid": "$uidOf:1", "values": {"Durum": "iyi"}}, answer(changed, changed["draft"], None, FIRST, {"Durum": "iyi"}))]})
+    # docs/adr/0441 §2, §4, §6: a divider and an action shown as items; what the form needs of its host.
+    acted = body_with(lambda b: b["items"][0]["items"].extend([
+        {"type": "divider", "id": "cizgi", "label": "Onay", "visibleWhen": "@kullanıcı = 'Ayşe'"},
+        {"type": "action", "id": "hesapla", "label": "Öznitelik hesapla", "tool": "attributes.calculate"},
+        {"type": "location", "id": "yer"}]))
+    acting = {**copy.deepcopy(FORM), "draft": acted}
+    cases.append({"name": "bölücü ve eylem öğe olarak; formun gerektirdikleri: kullanıcı, şekil, araç", "setup": setup([acting]),
+                  "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(acting, acted, None, FIRST))]})
     broken = {**copy.deepcopy(FORM), "draft": BROKEN}
     cases.append({"name": "ön denetimde hata olan form reddedilmez: kaydı sorulmaz", "setup": setup([broken]), "steps": [
         run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(broken, BROKEN, None, FIRST))]})
@@ -3093,8 +3197,8 @@ def look_command_cases():
         f = Form(LOOK_BODY, LOOK_FIELDS, (), world)
         after, found = f.assess(dict(attrs), utf8_sorted(dict(values)), obj, False)
         issues = preflight(LOOK_BODY, LOOK_FIELDS, (), world) + found
-        return {"status": "completed", "output": {"issues": shown_issues(issues), "valid": not errors(issues),
-                                                  "items": f.described(after, obj), "version": 1, "attrs": after},
+        return {"status": "completed", "output": with_requires({"issues": shown_issues(issues), "valid": not errors(issues),
+                                                  "items": f.described(after, obj), "version": 1, "attrs": after}, LOOK_BODY),
                 "warnings": []}
 
     def ask(name, attrs, values, steps_before=(), meters=None):
@@ -3504,7 +3608,7 @@ def tree_validate_cases():
             out["attrs"] = after
         out["issues"] = shown_issues(issues)
         out["valid"] = not errors(issues)
-        return {"status": "completed", "output": out, "warnings": []}
+        return {"status": "completed", "output": with_requires(out, TREE_BODY), "warnings": []}
 
     for name, slot, values in [
         ("ağaç: öneriler en çok kullanılandan, fotoğraf ve ek sayıları", 1, ()),

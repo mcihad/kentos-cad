@@ -72,6 +72,7 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         issues,
         items,
         attrs,
+        requires: kentos_forms::requirements(body),
     })
 }
 

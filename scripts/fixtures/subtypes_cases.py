@@ -662,6 +662,7 @@ def validate_file():
         after, found = f.assess(dict(before), fc.utf8_sorted(dict(inp.get("values", {}))), {}, bool(inp.get("defaults")))
         out = {"issues": fc.shown_issues(found), "valid": not fc.errors(found), "items": f.described(after, {}),
                "version": 1, "attrs": after}
+        fc.with_requires(out, body)
         if slot:
             inp = {**inp, "uid": f"$uidOf:{slot}"}
         else:

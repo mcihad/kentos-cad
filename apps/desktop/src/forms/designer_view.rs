@@ -15,16 +15,28 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT,
-    CANCEL, CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit,
-    NAME, NEW_FORM, PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM,
-    REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    ADD_ACTION, ADD_ATTACHMENTS, ADD_COMMENT, ADD_DIVIDER, ADD_GROUP, ADD_LOCATION, ADD_NOTE,
+    ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, COPY_ITEM, CREATE, DOMAINS_WINDOW,
+    DOWN, DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME, NEW_FORM,
+    PALETTE_DOMAINS, PALETTE_FIELDS, PALETTE_RELATIONS, PALETTE_SECTIONS, PASTE_ITEM, PREVIEW,
+    PROPERTIES, PUBLISH, Palette, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, RESTORE_DRAFT, Rule,
+    SAVE, SAVE_SECTION, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
 /// The item's properties' scroll, which a picture moves to the list's extras.
 pub(crate) const PROPERTIES_SCROLL: &str = "forms-properties";
 use crate::exchange::words::{self, Kind};
+
+/// An item's words as the tree shows them (a section's name by default).
+pub(crate) fn item_words(item: &FormItem) -> String {
+    let words = item_face(item, &[]).1;
+    if words.trim().is_empty() {
+        item.id().to_owned()
+    } else {
+        words
+    }
+}
 
 /// A row of the item tree: its depth, its icon and words.
 fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
@@ -67,6 +79,20 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
             label.clone().unwrap_or_else(|| "Konum".into()),
             visible_when.is_some(),
         ),
+        FormItem::Divider {
+            label,
+            visible_when,
+            ..
+        } => (
+            Icon::Minus,
+            label.clone().unwrap_or_else(|| "Bölücü".into()),
+            visible_when.is_some(),
+        ),
+        FormItem::Action {
+            label,
+            visible_when,
+            ..
+        } => (Icon::Play, label.clone(), visible_when.is_some()),
         FormItem::Field(f) => {
             let layer = fields.iter().find(|l| l.key() == f.field);
             let name = f
@@ -131,8 +157,9 @@ impl App {
             match (&w.body, &w.item) {
                 (Some(body), Some(id)) => match find(&body.items, id) {
                     Some(item) => self.forms_inspector(item, &fields, &issues),
-                    None => empty_inspector(),
+                    None => self.form_overview(body),
                 },
+                (Some(body), None) => self.form_overview(body),
                 _ => empty_inspector(),
             }
         };
@@ -176,6 +203,28 @@ impl App {
         let mut body = Column::new().spacing(12);
         if let Some(why) = locked {
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
+        }
+        // A draft kept on this device that is not the form's (docs/adr/0441 §5).
+        if let Some(k) = &w.kept {
+            body = body.push(
+                container(
+                    row![
+                        icon(Icon::Info).size(14.0),
+                        label::body(format!(
+                            "Bu cihazda “{}” formunun kaydedilmemiş bir taslağı kaldı.",
+                            k.name
+                        )),
+                        space::horizontal().width(Fill),
+                        words::secondary(DROP_KEPT, Some(msg(Event::DropKept))),
+                        words::primary(RESTORE_DRAFT, Some(msg(Event::RestoreDraft))),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                )
+                .padding([6, 10])
+                .style(style::container::field_box)
+                .width(Fill),
+            );
         }
         body = body.push(main);
         if form.is_some() {
@@ -269,6 +318,40 @@ impl App {
                 ));
             }
         }
+        if w.body.is_some() {
+            let tabs = Segmented::new(
+                [
+                    PALETTE_FIELDS,
+                    PALETTE_RELATIONS,
+                    PALETTE_DOMAINS,
+                    PALETTE_SECTIONS,
+                ],
+                match w.palette {
+                    Palette::Fields => PALETTE_FIELDS,
+                    Palette::Relations => PALETTE_RELATIONS,
+                    Palette::Domains => PALETTE_DOMAINS,
+                    Palette::Sections => PALETTE_SECTIONS,
+                },
+                |t| {
+                    msg(Event::Palette(match t {
+                        PALETTE_RELATIONS => Palette::Relations,
+                        PALETTE_DOMAINS => Palette::Domains,
+                        PALETTE_SECTIONS => Palette::Sections,
+                        _ => Palette::Fields,
+                    }))
+                },
+            )
+            .compact();
+            col = col.push(tabs);
+            match w.palette {
+                Palette::Fields => {}
+                Palette::Relations => return col.push(self.relations_palette(editable)).into(),
+                Palette::Domains => return col.push(self.domains_palette(fields)).into(),
+                Palette::Sections => {
+                    return col.push(self.sections_palette(editable, fields)).into();
+                }
+            }
+        }
         // The layer's fields the form does not show yet: a press puts one where the chosen item is.
         if let Some(body) = &w.body {
             let on_form = bound(&body.items);
@@ -298,9 +381,7 @@ impl App {
                         .style(style::button::row(false)),
                 );
             }
-            col = col
-                .push(label::strong("Katmanın alanları"))
-                .push(scrollable(palette).height(Fill));
+            col = col.push(scrollable(palette).height(Fill));
         }
         col.into()
     }
@@ -326,6 +407,333 @@ impl App {
         }
         walk(doc.model.layers().nodes(), "", &mut out);
         out
+    }
+
+    /// A palette row: a press adds what it names.
+    fn palette_row<'a>(
+        glyph: Icon,
+        words: String,
+        detail: String,
+        press: Option<Message>,
+    ) -> Element<'a, Message> {
+        button(
+            row![
+                icon(glyph).size(12.0).tone(Tone::Muted),
+                column![
+                    Elided::new(words)
+                        .size(typography::body())
+                        .font(typography::ui())
+                        .width(Fill),
+                    label::caption(detail).style(muted),
+                ]
+                .spacing(1),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .on_press_maybe(press)
+        .padding([3, 8])
+        .width(Fill)
+        .style(style::button::row(false))
+        .into()
+    }
+
+    /// İlişkiler (docs/adr/0441 §1): the project's relations of the form's layer; a press adds a related
+    /// item (the layer is the parent) or a reference (it is the child).
+    fn relations_palette(&self, editable: bool) -> Element<'_, Message> {
+        let layer = self
+            .chosen_form()
+            .map(|f| f.layer.clone())
+            .unwrap_or_default();
+        let relations = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().relations.clone())
+            .unwrap_or_default();
+        let mut list = Column::new().spacing(2);
+        for r in relations
+            .iter()
+            .filter(|r| r.parent == layer || r.child == layer)
+        {
+            let (glyph, detail) = if r.parent == layer {
+                (
+                    Icon::Link,
+                    format!("Alt kayıtlar: {}", self.form_layer_name(&r.child)),
+                )
+            } else {
+                (
+                    Icon::Target,
+                    format!("Üst kayda başvuru: {}", self.form_layer_name(&r.parent)),
+                )
+            };
+            list = list.push(Self::palette_row(
+                glyph,
+                r.name.clone(),
+                detail,
+                editable.then(|| msg(Event::AddRelationItem(r.id.clone()))),
+            ));
+        }
+        if relations
+            .iter()
+            .all(|r| r.parent != layer && r.child != layer)
+        {
+            list = list.push(
+                label::caption("Bu katmanın ilişkisi yok. İlişkiler penceresinden kurun.")
+                    .style(muted),
+            );
+        }
+        scrollable(list).height(Fill).into()
+    }
+
+    /// Değer listeleri (docs/adr/0441 §1): the project's lists, the layer's fields using each.
+    fn domains_palette(&self, fields: &[LayerField]) -> Element<'_, Message> {
+        let domains = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().domains.clone())
+            .unwrap_or_default();
+        let mut list = Column::new().spacing(2);
+        for d in &domains {
+            let users: Vec<String> = fields
+                .iter()
+                .filter(|f| f.domain.as_deref() == Some(d.id.as_str()))
+                .map(|f| f.label().to_owned())
+                .collect();
+            let size = match &d.values {
+                Some(v) => format!("{} değer", v.len()),
+                None => "aralık".to_owned(),
+            };
+            let detail = if users.is_empty() {
+                format!("{size} · bu katmanda kullanılmıyor")
+            } else {
+                format!("{size} · {}", users.join(", "))
+            };
+            list = list.push(Self::palette_row(
+                Icon::ViewRows,
+                d.name.clone(),
+                detail,
+                Some(msg(Event::OpenDomains)),
+            ));
+        }
+        if domains.is_empty() {
+            list = list.push(label::caption("Projede değer listesi yok.").style(muted));
+        }
+        column![
+            scrollable(list).height(Fill),
+            words::secondary(DOMAINS_WINDOW, Some(msg(Event::OpenDomains))),
+        ]
+        .spacing(6)
+        .into()
+    }
+
+    /// Bölümler (docs/adr/0441 §1): the section library on this device, each version with how its
+    /// fields bind to the form's layer.
+    fn sections_palette<'a>(
+        &'a self,
+        editable: bool,
+        fields: &[LayerField],
+    ) -> Element<'a, Message> {
+        let sections = self.form_files.sections();
+        let mut list = Column::new().spacing(2);
+        for (i, s) in sections.iter().enumerate().rev() {
+            let binds = crate::forms::library::bindings(s, fields);
+            let missing = binds.iter().filter(|(_, to)| to.is_none()).count();
+            let detail = if binds.is_empty() {
+                format!("{}. sürüm · alansız", s.version)
+            } else if missing == 0 {
+                format!("{}. sürüm · {} alan bağlanır", s.version, binds.len())
+            } else {
+                format!(
+                    "{}. sürüm · {} alan, bu katmanda olmayan: {}",
+                    s.version,
+                    binds.len(),
+                    missing
+                )
+            };
+            list = list.push(Self::palette_row(
+                Icon::Layout,
+                s.name.clone(),
+                detail,
+                editable.then(|| msg(Event::InsertSection(i))),
+            ));
+        }
+        if sections.is_empty() {
+            list = list.push(
+                label::caption("Kitaplık boş. Bir öğe seçip özelliklerinin altında Bölüm kitaplığına koy’a basın.")
+                    .style(muted),
+            );
+        }
+        scrollable(list).height(Fill).into()
+    }
+
+    /// The chosen item into the section library under the name typed (its own by default).
+    fn section_save_row(&self) -> Element<'_, Message> {
+        let name = self
+            .forms_window
+            .as_ref()
+            .map_or("", |w| w.section_name.as_str());
+        let input = text_input("Bölümün adı (boşsa öğenin)", name)
+            .size(typography::body())
+            .on_input(|t| msg(Event::SectionName(t)))
+            .on_submit(msg(Event::SaveSection))
+            .padding([5, 8])
+            .style(style::field::input);
+        column![
+            label::strong("Bölüm kitaplığı"),
+            row![
+                focus_ring(input),
+                words::secondary(SAVE_SECTION, Some(msg(Event::SaveSection))),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        ]
+        .spacing(6)
+        .into()
+    }
+
+    /// The review comments on an item (else on the form), with one to add (docs/adr/0441 §5).
+    fn comments_box(&self, item: Option<&str>) -> Element<'_, Message> {
+        let comments: Vec<kentos_contracts::FormComment> = self
+            .chosen_form()
+            .map(|f| {
+                f.comments
+                    .iter()
+                    .filter(|c| c.item.as_deref() == item)
+                    .cloned()
+                    .collect()
+            })
+            .unwrap_or_default();
+        let open = comments.iter().filter(|c| !c.resolved).count();
+        let title = if comments.is_empty() {
+            "Yorumlar".to_owned()
+        } else {
+            format!("Yorumlar · {open} açık")
+        };
+        let mut col = Column::new().spacing(6).push(label::strong(title));
+        for c in comments {
+            let who = [
+                c.author.clone(),
+                c.at.as_ref().map(|a| a.replacen('T', " ", 1)),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join(" · ");
+            let mut text = column![label::body(c.text.clone())].spacing(2);
+            if !who.is_empty() {
+                text = text.push(label::caption(who).style(muted));
+            }
+            let toggle = kentos_ui::widget::tip(
+                button(icon(if c.resolved { Icon::Undo } else { Icon::Check }).size(13.0))
+                    .on_press(msg(Event::ResolveComment(c.id, !c.resolved)))
+                    .padding([3, 6])
+                    .style(style::button::tool(false)),
+                if c.resolved {
+                    "Yeniden aç"
+                } else {
+                    "Çözüldü"
+                }
+                .into(),
+                iced::widget::tooltip::Position::Left,
+            );
+            col = col.push(
+                container(row![text.width(Fill), toggle].spacing(6).align_y(Center))
+                    .padding([6, 8])
+                    .style(if c.resolved {
+                        style::container::surface
+                    } else {
+                        style::container::field_box
+                    })
+                    .width(Fill),
+            );
+        }
+        let typed = self
+            .forms_window
+            .as_ref()
+            .map_or("", |w| w.comment_text.as_str());
+        let input = text_input(
+            if item.is_some() {
+                "Bu öğeye yorum yazın"
+            } else {
+                "Forma yorum yazın"
+            },
+            typed,
+        )
+        .size(typography::body())
+        .on_input(|t| msg(Event::CommentText(t)))
+        .on_submit(msg(Event::AddComment))
+        .padding([5, 8])
+        .style(style::field::input);
+        col.push(
+            row![
+                focus_ring(input),
+                words::secondary(
+                    ADD_COMMENT,
+                    (!typed.trim().is_empty()).then(|| msg(Event::AddComment))
+                ),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .into()
+    }
+
+    /// The form with no item chosen (docs/adr/0441 §4, §5): what it needs of its host and the form's
+    /// own comments.
+    fn form_overview<'a>(&'a self, body: &FormBody) -> Element<'a, Message> {
+        let requires = kentos_forms::requirements(body);
+        let words_of = |r: &str| -> String {
+            match r {
+                "moment" => "Anın tarihi ve saati".into(),
+                "user" => "Kullanıcının adı".into(),
+                "layers" => "Başka katmanlar".into(),
+                "geometry" => "Kaydın şekli".into(),
+                "attachments" => "Ekler".into(),
+                "workflow" => "İş akışı".into(),
+                tool => {
+                    let id = tool.trim_start_matches("tool:");
+                    match self.processing.registry.get(id) {
+                        Some(t) => format!("İşlem aracı: {}", t.label),
+                        None => format!("İşlem aracı: {id} (kayıtlı değil)"),
+                    }
+                }
+            }
+        };
+        let mut col = Column::new()
+            .spacing(10)
+            .push(label::strong("Formun gerektirdikleri"));
+        if requires.is_empty() {
+            col = col.push(
+                label::caption(
+                    "Saf form: yalnız kaydın değerleriyle çalışır; her ortamda aynı açılır.",
+                )
+                .style(muted),
+            );
+        } else {
+            let mut chips = Row::new().spacing(4);
+            for r in &requires {
+                chips = chips.push(
+                    container(label::caption(words_of(r)))
+                        .padding([2, 8])
+                        .style(style::container::token),
+                );
+            }
+            col = col.push(chips.wrap()).push(
+                label::caption(
+                    "Bunları sağlamayan bir ortam formu salt okunur açar ve hangisinin eksik olduğunu söyler. Masaüstü hepsini sağlar.",
+                )
+                .style(muted),
+            );
+        }
+        col = col.push(self.comments_box(None));
+        scrollable(col.padding(iced::Padding {
+            top: 0.0,
+            right: 14.0,
+            bottom: 0.0,
+            left: 4.0,
+        }))
+        .height(Fill)
+        .into()
     }
 
     fn forms_tree(
@@ -357,22 +765,25 @@ impl App {
             )
         };
         let has_item = chosen.is_some();
+        // The components (docs/adr/0441 §1): the common three named, the rest by their icons.
         let toolbar = row![
             tool(ADD_TAB, Icon::Tabs, Some(Event::AddTab)),
             tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
             tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
-            tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
-            tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
-            tool(
+            icon_tool(ADD_DIVIDER, Icon::Minus, Some(Event::AddDivider)),
+            icon_tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
+            icon_tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
+            icon_tool(
                 ADD_ATTACHMENTS,
                 crate::icons::from_web(Some("photo")),
                 Some(Event::AddAttachments)
             ),
-            tool(
+            icon_tool(
                 ADD_LOCATION,
                 crate::icons::from_web(Some("pin")),
                 Some(Event::AddLocation)
             ),
+            icon_tool(ADD_ACTION, Icon::Play, Some(Event::AddAction)),
             space::horizontal().width(Fill),
             icon_tool(
                 UNDO,
@@ -713,6 +1124,77 @@ impl App {
                         .style(muted),
                     );
             }
+            FormItem::Divider {
+                label: text,
+                visible_when,
+                ..
+            } => {
+                col = col
+                    .push(label::strong("Bölücü"))
+                    .push(words::field(
+                        "Başlık",
+                        input(
+                            "Başlıksız çizgi",
+                            text.as_deref().unwrap_or(""),
+                            Text::Label,
+                        ),
+                        None,
+                    ))
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ))
+                    .push(
+                        label::caption(
+                            "Formu bölen bir çizgi; başlığı üstünde. Hiçbir şey yazmaz.",
+                        )
+                        .style(muted),
+                    );
+            }
+            FormItem::Action {
+                label: text,
+                tool,
+                visible_when,
+                ..
+            } => {
+                // Only a registered tool is offered (docs/adr/0441 §6): no address, query or script.
+                let tools: Vec<(String, String)> = self
+                    .processing
+                    .registry
+                    .tools()
+                    .iter()
+                    .map(|t| (t.id.clone(), t.label.clone()))
+                    .collect();
+                let at = tools.iter().position(|(i, _)| i == tool);
+                let ids: Vec<String> = tools.iter().map(|(i, _)| i.clone()).collect();
+                let pick = Select::new(
+                    tools
+                        .iter()
+                        .map(|(i, l)| Choice::new(l.clone()).detail(i.clone())),
+                    at,
+                    move |i| msg(Event::ActionTool(ids[i].clone())),
+                )
+                .placeholder("İşlem aracı");
+                let missing = at
+                    .is_none()
+                    .then(|| format!("“{tool}” kayıtlı bir işlem aracı değil; listeden seçin."));
+                col = col
+                    .push(label::strong("Eylem"))
+                    .push(words::field("Düğme", input("Düğmenin adı", text, Text::Label), None))
+                    .push(words::field("Araç", pick, missing))
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ))
+                    .push(
+                        label::caption(
+                            "Formda bir düğme: kayıt seçili olarak İşlemler'in aracını açar. Yalnız kayıtlı araçlar seçilir.",
+                        )
+                        .style(muted),
+                    );
+            }
             FormItem::Attachments {
                 label: text,
                 accept,
@@ -1031,6 +1513,10 @@ impl App {
         {
             col = col.push(row);
         }
+        // The item into the section library and its review comments (docs/adr/0441 §1, §5).
+        col = col
+            .push(self.section_save_row())
+            .push(self.comments_box(Some(&id)));
         scrollable(col.padding(iced::Padding {
             top: 0.0,
             right: 16.0,
@@ -1054,7 +1540,9 @@ impl App {
             | FormItem::Group { visible_when, .. }
             | FormItem::Related { visible_when, .. }
             | FormItem::Attachments { visible_when, .. }
-            | FormItem::Location { visible_when, .. } => visible_when.clone(),
+            | FormItem::Location { visible_when, .. }
+            | FormItem::Divider { visible_when, .. }
+            | FormItem::Action { visible_when, .. } => visible_when.clone(),
             FormItem::Field(f) => f.visible_when.clone(),
             FormItem::Note { .. } => None,
         };

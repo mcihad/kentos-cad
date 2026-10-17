@@ -489,6 +489,7 @@ def validate_file():
         after, found = f.assess(dict(RECORDS[slot]), fc.utf8_sorted(dict(values or {})), {}, defaults)
         out = {"issues": fc.shown_issues(found), "valid": not fc.errors(found), "items": f.described(after, {}),
                "version": 1, "attrs": after}
+        fc.with_requires(out, body)
         inp = {"form": "bina", "uid": f"$uidOf:{slot}"}
         if values:
             inp["values"] = values

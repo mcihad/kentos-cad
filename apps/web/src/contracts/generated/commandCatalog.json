@@ -4004,6 +4004,51 @@
             ],
             "type": "object"
           },
+          "FormComment": {
+            "additionalProperties": false,
+            "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "description": "Who wrote it and when (as the command was given them).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "1, 2, …: one more than the form's last.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "item": {
+                "description": "The item it is about; none: the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resolved": {
+                "description": "Settled; written only as `true`.",
+                "type": "boolean"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "type": "object"
+          },
           "FormItem": {
             "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
             "oneOf": [
@@ -4404,6 +4449,68 @@
                 "required": [
                   "type",
                   "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
                 ],
                 "type": "object"
               }
@@ -9382,6 +9489,13 @@
             "additionalProperties": false,
             "description": "A form of the project.",
             "properties": {
+              "comments": {
+                "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+                "items": {
+                  "$ref": "#/$defs/FormComment"
+                },
+                "type": "array"
+              },
               "draft": {
                 "$ref": "#/$defs/FormBody",
                 "description": "The draft the designer edits."
@@ -10466,6 +10580,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -14831,6 +14950,51 @@
             ],
             "type": "object"
           },
+          "FormComment": {
+            "additionalProperties": false,
+            "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "description": "Who wrote it and when (as the command was given them).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "1, 2, …: one more than the form's last.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "item": {
+                "description": "The item it is about; none: the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resolved": {
+                "description": "Settled; written only as `true`.",
+                "type": "boolean"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "type": "object"
+          },
           "FormItem": {
             "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
             "oneOf": [
@@ -15231,6 +15395,68 @@
                 "required": [
                   "type",
                   "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
                 ],
                 "type": "object"
               }
@@ -17954,6 +18180,13 @@
             "additionalProperties": false,
             "description": "A form of the project.",
             "properties": {
+              "comments": {
+                "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+                "items": {
+                  "$ref": "#/$defs/FormComment"
+                },
+                "type": "array"
+              },
               "draft": {
                 "$ref": "#/$defs/FormBody",
                 "description": "The draft the designer edits."
@@ -18440,6 +18673,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -23608,6 +23846,51 @@
             ],
             "type": "object"
           },
+          "FormComment": {
+            "additionalProperties": false,
+            "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "description": "Who wrote it and when (as the command was given them).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "1, 2, …: one more than the form's last.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "item": {
+                "description": "The item it is about; none: the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resolved": {
+                "description": "Settled; written only as `true`.",
+                "type": "boolean"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "type": "object"
+          },
           "FormItem": {
             "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
             "oneOf": [
@@ -24008,6 +24291,68 @@
                 "required": [
                   "type",
                   "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
                 ],
                 "type": "object"
               }
@@ -29009,6 +29354,13 @@
             "additionalProperties": false,
             "description": "A form of the project.",
             "properties": {
+              "comments": {
+                "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+                "items": {
+                  "$ref": "#/$defs/FormComment"
+                },
+                "type": "array"
+              },
               "draft": {
                 "$ref": "#/$defs/FormBody",
                 "description": "The draft the designer edits."
@@ -30155,6 +30507,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -348340,7 +348697,7 @@
       "id": "cad.forms.edit",
       "version": 1,
       "title": "Formlar",
-      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -348874,6 +349231,68 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -349314,6 +349733,73 @@
                   "on"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Yorum (docs/adr/0441 §5): a reviewer's comment on the form or an item of its draft.",
+                "properties": {
+                  "at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "author": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "item": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "comment",
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "text"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A comment settled or opened again.",
+                "properties": {
+                  "comment": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "resolve",
+                    "type": "string"
+                  },
+                  "resolved": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "comment",
+                  "resolved"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -349461,6 +349947,11 @@
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
                 "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
+                "type": "string"
               }
             ]
           },
@@ -349504,7 +349995,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.forms.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,\n`invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,\n`form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status\n`conflict`), `form_preflight`, `form_unpublished`. Warnings: `form_release_dropped`.",
+        "description": "Input of `cad.forms.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,\n`invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,\n`form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status\n`conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:\n`form_release_dropped`.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/FormsOp"
@@ -349640,6 +350131,51 @@
             "required": [
               "rule",
               "message"
+            ],
+            "type": "object"
+          },
+          "FormComment": {
+            "additionalProperties": false,
+            "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "description": "Who wrote it and when (as the command was given them).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "1, 2, …: one more than the form's last.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "item": {
+                "description": "The item it is about; none: the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resolved": {
+                "description": "Settled; written only as `true`.",
+                "type": "boolean"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
             ],
             "type": "object"
           },
@@ -350086,6 +350622,68 @@
                 "required": [
                   "type",
                   "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
                 ],
                 "type": "object"
               }
@@ -350598,6 +351196,13 @@
             "additionalProperties": false,
             "description": "A form of the project.",
             "properties": {
+              "comments": {
+                "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+                "items": {
+                  "$ref": "#/$defs/FormComment"
+                },
+                "type": "array"
+              },
               "draft": {
                 "$ref": "#/$defs/FormBody",
                 "description": "The draft the designer edits."
@@ -350650,6 +351255,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -350858,6 +351468,51 @@
             ],
             "type": "object"
           },
+          "FormComment": {
+            "additionalProperties": false,
+            "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "author": {
+                "description": "Who wrote it and when (as the command was given them).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "1, 2, …: one more than the form's last.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "item": {
+                "description": "The item it is about; none: the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resolved": {
+                "description": "Settled; written only as `true`.",
+                "type": "boolean"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "type": "object"
+          },
           "FormIssue": {
             "additionalProperties": false,
             "description": "What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,\nwhere (the item, the field's key, the rule) and the sentence that says it.",
@@ -351301,6 +351956,68 @@
                 "required": [
                   "type",
                   "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
                 ],
                 "type": "object"
               }
@@ -351813,6 +352530,13 @@
             "additionalProperties": false,
             "description": "A form of the project.",
             "properties": {
+              "comments": {
+                "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+                "items": {
+                  "$ref": "#/$defs/FormComment"
+                },
+                "type": "array"
+              },
               "draft": {
                 "$ref": "#/$defs/FormBody",
                 "description": "The draft the designer edits."
@@ -351865,6 +352589,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -351968,7 +352697,9 @@
           "not_a_layer",
           "form_draft_changed",
           "form_preflight",
-          "form_unpublished"
+          "form_unpublished",
+          "form_item_unknown",
+          "form_comment_unknown"
         ],
         "warnings": [
           "form_release_dropped"
@@ -352316,6 +353047,13 @@
             },
             "type": "array"
           },
+          "requires": {
+            "description": "What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,\n`geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "valid": {
             "description": "Whether the record (or the form alone) has no error.",
             "type": "boolean"
@@ -352575,6 +353313,13 @@
             "description": "The record's items, in the form's order; empty without a record.",
             "items": {
               "$ref": "#/$defs/FormItemState"
+            },
+            "type": "array"
+          },
+          "requires": {
+            "description": "What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,\n`geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.",
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
@@ -355528,6 +356273,68 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -356160,6 +356967,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -356903,6 +357715,68 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -357535,6 +358409,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -358310,6 +359189,68 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "divider",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tool": {
+                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "action",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "label",
+                  "tool"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -358987,6 +359928,11 @@
               {
                 "const": "cards",
                 "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
+              },
+              {
+                "const": "chart",
+                "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
                 "type": "string"
               }
             ]
@@ -391544,6 +392490,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Form en çok 50 yayın tutar; en eskisi kaldırıldı."
+    },
+    {
+      "code": "form_item_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun taslağında bu öğe yok."
+    },
+    {
+      "code": "form_comment_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formda bu numaralı yorum yok."
     },
     {
       "code": "invalid_moment",

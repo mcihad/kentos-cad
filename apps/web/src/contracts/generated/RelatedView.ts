@@ -3,4 +3,4 @@
 /**
  * How a related item shows its objects (docs/adr/0425).
  */
-export type RelatedView = "list" | "table" | "cards";
+export type RelatedView = "list" | "table" | "cards" | "chart";

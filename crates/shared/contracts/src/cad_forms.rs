@@ -91,6 +91,27 @@ pub enum FormsOp {
     },
     /// Kuralları uygula: whether the latest release is the layer's write profile.
     Enforce { id: String, on: bool },
+    /// Yorum (docs/adr/0441 §5): a reviewer's comment on the form or an item of its draft.
+    Comment {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        item: Option<String>,
+        text: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        at: Option<String>,
+    },
+    /// A comment settled or opened again.
+    Resolve {
+        id: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        comment: u32,
+        resolved: bool,
+    },
 }
 
 /// Input of `cad.forms.edit` v1.
@@ -98,7 +119,8 @@ pub enum FormsOp {
 /// Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
 /// `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
 /// `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
-/// `conflict`), `form_preflight`, `form_unpublished`. Warnings: `form_release_dropped`.
+/// `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:
+/// `form_release_dropped`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -222,6 +244,11 @@ pub struct FormsValidated {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
+    /// `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub requires: Vec<String>,
 }
 
 /// Input of `cad.forms.submit` v1.

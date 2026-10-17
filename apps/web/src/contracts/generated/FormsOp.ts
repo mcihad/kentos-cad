@@ -8,4 +8,4 @@ export type FormsOp = { "kind": "create", id?: string, name: string,
 /**
  * The layer's id.
  */
-layer: string, body?: FormBody, } | { "kind": "update", id: string, body: FormBody, } | { "kind": "rename", id: string, name: string, } | { "kind": "remove", id: string, } | { "kind": "publish", id: string, note?: string, } | { "kind": "enforce", id: string, on: boolean, };
+layer: string, body?: FormBody, } | { "kind": "update", id: string, body: FormBody, } | { "kind": "rename", id: string, name: string, } | { "kind": "remove", id: string, } | { "kind": "publish", id: string, note?: string, } | { "kind": "enforce", id: string, on: boolean, } | { "kind": "comment", id: string, item?: string, text: string, author?: string, at?: string, } | { "kind": "resolve", id: string, comment: number, resolved: boolean, };

@@ -25,4 +25,9 @@ items: Array<FormItemState>,
 /**
  * The record's attributes afterwards; none without a record.
  */
-attrs?: { [key in string]: string }, };
+attrs?: { [key in string]: string }, 
+/**
+ * What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
+ * `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
+ */
+requires?: Array<string>, };

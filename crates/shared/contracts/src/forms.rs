@@ -60,7 +60,42 @@ pub struct ProjectForm {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub enforce: bool,
+    /// The reviewers' comments on the form, oldest first (docs/adr/0441 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormComment>>", optional))]
+    pub comments: Vec<FormComment>,
 }
+
+/// A reviewer's comment on a form or one of its items (docs/adr/0441 §5).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormComment {
+    /// 1, 2, …: one more than the form's last.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub id: u32,
+    /// The item it is about; none: the form.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub item: Option<String>,
+    /// Who wrote it and when (as the command was given them).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub author: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    pub text: String,
+    /// Settled; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub resolved: bool,
+}
+
+/// The most comments a form keeps.
+pub const MOST_FORM_COMMENTS: usize = 200;
 
 /// A form's content: its items and the draft's revision (each kept change adds one).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -368,6 +403,9 @@ pub enum RelatedView {
     Table,
     /// A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).
     Cards,
+    /// A bar for each value of its first column, as long as the children holding it are many
+    /// (docs/adr/0441 §3).
+    Chart,
 }
 
 impl RelatedView {
@@ -487,6 +525,43 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
+    /// A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.
+    Divider {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        label: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
+    },
+    /// An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,
+    /// by the tool's id; no address, query or script.
+    Action {
+        id: String,
+        label: String,
+        /// The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = ACTION_TOOL_TEXT)))]
+        tool: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
+    },
+}
+
+/// An action's tool id as a pattern (the schema's; [`action_tool_ok`] also bounds its length).
+pub const ACTION_TOOL_TEXT: &str = r"^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$";
+
+/// Whether `tool` can name a registered processing tool (docs/adr/0441 §6): two or more dotted parts of
+/// ASCII letters and digits, each starting with a letter, at most 64 characters. An address, a query or
+/// a script is none.
+pub fn action_tool_ok(tool: &str) -> bool {
+    tool.len() <= MOST_FORM_NAME
+        && tool.split('.').count() >= 2
+        && tool.split('.').all(|part| {
+            part.chars().next().is_some_and(|c| c.is_ascii_alphabetic())
+                && part.chars().all(|c| c.is_ascii_alphanumeric())
+        })
 }
 
 /// What an attachments item counts and adds.
@@ -1101,7 +1176,9 @@ impl FormItem {
             | FormItem::Note { id, .. }
             | FormItem::Related { id, .. }
             | FormItem::Attachments { id, .. }
-            | FormItem::Location { id, .. } => id,
+            | FormItem::Location { id, .. }
+            | FormItem::Divider { id, .. }
+            | FormItem::Action { id, .. } => id,
             FormItem::Field(f) => &f.id,
         }
     }
@@ -1360,6 +1437,40 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     return Some(rule_problem(id));
                 }
             }
+            FormItem::Divider {
+                label,
+                visible_when,
+                ..
+            } => {
+                if label.as_deref().is_some_and(|l| !form_name_ok(l)) {
+                    return Some(format!(
+                        "“{id}” öğesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
+                }
+            }
+            FormItem::Action {
+                label,
+                tool,
+                visible_when,
+                ..
+            } => {
+                if !form_name_ok(label) {
+                    return Some(format!(
+                        "“{id}” eyleminin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
+                    ));
+                }
+                if !action_tool_ok(tool) {
+                    return Some(format!(
+                        "“{id}” eylemi kayıtlı bir işlem aracını kimliğiyle anar (attributes.calculate gibi); “{tool}” bir araç kimliği değil. Adres, sorgu ya da betik yazılmaz."
+                    ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
+                }
+            }
             FormItem::Note { text, .. } => {
                 if text.trim().is_empty() || !text_ok(text, MOST_FORM_TEXT) {
                     return Some(format!(
@@ -1563,6 +1674,21 @@ pub fn forms_problem(forms: &[ProjectForm]) -> Option<String> {
                 f.name
             ));
         }
+        // The reviewers' comments (docs/adr/0441 §5): at most 200, numbered once, with a text.
+        let mut numbers: Vec<u32> = f.comments.iter().map(|c| c.id).collect();
+        numbers.sort_unstable();
+        numbers.dedup();
+        if f.comments.len() > MOST_FORM_COMMENTS
+            || numbers.len() != f.comments.len()
+            || f.comments
+                .iter()
+                .any(|c| c.id == 0 || c.text.trim().is_empty() || !text_ok(&c.text, MOST_FORM_TEXT))
+        {
+            return Some(format!(
+                "“{}” formunun yorumları kurala uymuyor: en çok {MOST_FORM_COMMENTS}, her biri bir kez numaralı ve metinli.",
+                f.name
+            ));
+        }
     }
     None
 }
@@ -1606,6 +1732,7 @@ mod tests {
             },
             releases: Vec::new(),
             enforce: false,
+            comments: Vec::new(),
         }
     }
 

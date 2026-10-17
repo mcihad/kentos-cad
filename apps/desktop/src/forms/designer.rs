@@ -56,6 +56,19 @@ pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
 /// A field referring to the record's parent through a project relation (docs/adr/0440 §6).
 pub(super) const ADD_REFERENCE: &str = "Başvuru";
+/// A divider and an action (docs/adr/0441 §2, §6).
+pub(super) const ADD_DIVIDER: &str = "Bölücü";
+pub(super) const ADD_ACTION: &str = "Eylem";
+/// The palettes, the section library, the comments and the kept draft (docs/adr/0441 §1, §5).
+pub(super) const PALETTE_FIELDS: &str = "Alan";
+pub(super) const PALETTE_RELATIONS: &str = "İlişki";
+pub(super) const PALETTE_DOMAINS: &str = "Liste";
+pub(super) const PALETTE_SECTIONS: &str = "Bölüm";
+pub(super) const DOMAINS_WINDOW: &str = "Değer listeleri…";
+pub(super) const SAVE_SECTION: &str = "Kitaplığa koy";
+pub(super) const ADD_COMMENT: &str = "Yorum ekle";
+pub(super) const RESTORE_DRAFT: &str = "Geri yükle";
+pub(super) const DROP_KEPT: &str = "Bırak";
 pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
@@ -169,6 +182,24 @@ pub struct Window {
     pub(crate) changes: bool,
     /// The third column shows the records' workflow (docs/adr/0428).
     pub(crate) flow: bool,
+    /// The left column's palette (docs/adr/0441 §1).
+    pub(crate) palette: Palette,
+    /// The name the chosen item is kept under in the section library, and a review comment typed.
+    pub(crate) section_name: String,
+    pub(crate) comment_text: String,
+    /// The draft kept on this device that differs from the form's (docs/adr/0441 §5): offered back.
+    pub(crate) kept: Option<crate::forms::library::KeptDraft>,
+}
+
+/// The left column's palettes (docs/adr/0441 §1): the layer's fields, the project's relations and
+/// value lists, and the section library.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Palette {
+    #[default]
+    Fields,
+    Relations,
+    Domains,
+    Sections,
 }
 
 #[derive(Debug, Clone)]
@@ -193,6 +224,28 @@ pub enum Event {
     /// A reference to the parent through a project relation whose child is the form's layer
     /// (docs/adr/0440 §6).
     AddReference,
+    /// The palette shown; an item made of a project relation (a related item where the form's layer is
+    /// the parent, a reference where it is the child); the value lists' window (docs/adr/0441 §1).
+    Palette(Palette),
+    AddRelationItem(String),
+    OpenDomains,
+    /// The section library (docs/adr/0441 §1): the chosen item kept under the name typed, a kept
+    /// section put where the chosen item is.
+    SectionName(String),
+    SaveSection,
+    InsertSection(usize),
+    /// Review comments (docs/adr/0441 §5): the text typed, kept on the chosen item (else the form),
+    /// one settled or opened again.
+    CommentText(String),
+    AddComment,
+    ResolveComment(u32, bool),
+    /// The draft kept on this device taken back, or let go.
+    RestoreDraft,
+    DropKept,
+    /// Bölücü and Eylem (docs/adr/0441 §2, §6); an action's processing tool by its id.
+    AddDivider,
+    AddAction,
+    ActionTool(String),
     /// A related item made of a project relation: its layer and field.
     RelatedFrom(String),
     /// An attachments item (docs/adr/0407 §1) where the chosen item is.
@@ -535,7 +588,9 @@ fn pasted(
             FormItem::Note { id: own, .. }
             | FormItem::Related { id: own, .. }
             | FormItem::Attachments { id: own, .. }
-            | FormItem::Location { id: own, .. } => *own = id,
+            | FormItem::Location { id: own, .. }
+            | FormItem::Divider { id: own, .. }
+            | FormItem::Action { id: own, .. } => *own = id,
         }
     }
     let mut item = item;
@@ -686,7 +741,26 @@ impl App {
             .as_ref()
             .map(|d| d.model.form_world(body))
             .unwrap_or_default();
-        kentos_forms::preflight_in(body, fields, &self.expression_variables(), &world)
+        let mut issues =
+            kentos_forms::preflight_in(body, fields, &self.expression_variables(), &world);
+        // An action's tool this host does not have (docs/adr/0441 §6): the host's check, not the core's.
+        for (_, item) in body.walk() {
+            if let FormItem::Action { id, tool, .. } = item
+                && self.processing.registry.get(tool).is_none()
+            {
+                issues.push(FormIssue {
+                    code: kentos_forms::codes::ACTION_UNKNOWN.into(),
+                    severity: kentos_contracts::FormSeverity::Warning,
+                    item: Some(id.clone()),
+                    field: None,
+                    rule: None,
+                    message: format!(
+                        "“{tool}” bu bilgisayarda kayıtlı bir işlem aracı değil; düğme formda kapalı görünür."
+                    ),
+                });
+            }
+        }
+        issues
     }
 
     /// Formlar (`data.forms`): the window, on `form` or the first.
@@ -732,7 +806,26 @@ impl App {
             w.undo.clear();
             w.redo.clear();
             w.typing = None;
+            // A draft kept on this device that is not the form's: offered back (docs/adr/0441 §5).
+            w.kept = self
+                .form_files
+                .kept_draft(&self.form_project_key(), &f.id)
+                .filter(|k| k.body.items != f.draft.items || k.name != f.name);
         }
+    }
+
+    /// The key the open project's drafts are kept under on this device: its id, else its file's name,
+    /// else the session's.
+    pub(crate) fn form_project_key(&self) -> String {
+        let doc = self.document.as_ref();
+        doc.and_then(|d| d.model.project_id())
+            .map(|id| id.to_string())
+            .or_else(|| {
+                doc.and_then(|d| d.path.as_ref())
+                    .and_then(|p| p.file_name())
+                    .map(|n| n.to_string_lossy().into_owned())
+            })
+            .unwrap_or_else(|| format!("oturum-{}", doc.map_or(0, |d| d.session)))
     }
 
     /// The chosen form's layer's subtype field (its name) and its subtypes' codes, in their order.
@@ -848,7 +941,8 @@ impl App {
         {
             return false;
         }
-        // The copy follows the draft as it was kept.
+        // The copy follows the draft as it was kept; the device's copy is no longer needed.
+        self.form_files.drop_draft(&self.form_project_key(), &id);
         let mut fresh = w;
         self.choose_into(&mut fresh, &id);
         fresh.item = self.forms_window.as_ref().and_then(|w| w.item.clone());
@@ -1176,6 +1270,223 @@ impl App {
                             if label.as_deref().is_none_or(|l| l == "İlişkili kayıtlar") {
                                 *label = Some(r.name.clone());
                             }
+                        }
+                    });
+                }
+            }
+            Event::Palette(p) => w.palette = p,
+            Event::OpenDomains => {
+                self.forms_window = Some(w);
+                return self.open_domains();
+            }
+            Event::AddRelationItem(relation) => {
+                let form_layer = self.chosen_form().map(|f| f.layer.clone());
+                let r = self.document.as_ref().and_then(|d| {
+                    d.model
+                        .settings()
+                        .relations
+                        .iter()
+                        .find(|r| r.id == relation)
+                        .cloned()
+                });
+                let Some(r) = r else {
+                    return Task::none();
+                };
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                if Some(&r.parent) == form_layer.as_ref() {
+                    let id = kentos_forms::item_id_of(&r.id, &taken);
+                    let item = FormItem::Related {
+                        id: id.clone(),
+                        label: Some(r.name.clone()),
+                        layer: r.child.clone(),
+                        field: r.field.clone(),
+                        visible_when: None,
+                        view: kentos_contracts::RelatedView::List,
+                        columns: Vec::new(),
+                    };
+                    edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                    w.item = Some(id);
+                } else if Some(&r.child) == form_layer.as_ref() {
+                    let label = self
+                        .layer_fields_of(&r.parent)
+                        .iter()
+                        .find(|f| f.kind == kentos_contracts::LayerFieldKind::Text)
+                        .map(|f| f.key().to_owned());
+                    let id = kentos_forms::item_id_of(&r.field, &taken);
+                    let mut field = FormField::new(id.clone(), r.field.clone());
+                    field.label = Some(r.name.clone());
+                    field.lookup = Some(kentos_contracts::FormLookup {
+                        layer: r.parent.clone(),
+                        key: kentos_contracts::LOOKUP_UID.into(),
+                        label,
+                        ..kentos_contracts::FormLookup::default()
+                    });
+                    let item = FormItem::Field(field);
+                    edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                    w.item = Some(id);
+                }
+            }
+            Event::SectionName(text) => w.section_name = text,
+            Event::SaveSection => {
+                let item = chosen_item
+                    .as_deref()
+                    .and_then(|id| w.body.as_ref().and_then(|b| find(&b.items, id)))
+                    .cloned();
+                let Some(item) = item else {
+                    self.warn("Bölüm kitaplığına koymak için bir öğe seçin.");
+                    self.forms_window = Some(w);
+                    return Task::none();
+                };
+                let name = if w.section_name.trim().is_empty() {
+                    crate::forms::designer_view::item_words(&item)
+                } else {
+                    w.section_name.trim().to_owned()
+                };
+                let saved = self.form_moment().0.unwrap_or_default();
+                match self.form_files.save_section(&name, &item, &fields, saved) {
+                    Ok(v) => {
+                        self.say(
+                            Level::Success,
+                            format!("“{name}” bölüm kitaplığına {v}. sürüm olarak kondu."),
+                        );
+                        w.section_name.clear();
+                        w.palette = Palette::Sections;
+                    }
+                    Err(why) => self.warn(format!("Bölüm kaydedilemedi: {why}")),
+                }
+            }
+            Event::InsertSection(i) => {
+                let section = self.form_files.sections().into_iter().nth(i);
+                if let (Some(s), Some(body)) = (section, w.body.as_ref()) {
+                    let missing: Vec<String> = crate::forms::library::bindings(&s, &fields)
+                        .into_iter()
+                        .filter(|(_, to)| to.is_none())
+                        .map(|(from, _)| from)
+                        .collect();
+                    match pasted(body, s.item.clone(), &s.fields, &fields) {
+                        Ok(item) => {
+                            let id = item.id().to_owned();
+                            let tab = matches!(item, FormItem::Tab { .. });
+                            edited(&mut w, &|b| {
+                                if tab {
+                                    b.items.push(item.clone());
+                                } else {
+                                    place(b, chosen_item.as_deref(), item.clone());
+                                }
+                            });
+                            w.item = Some(id);
+                            if missing.is_empty() {
+                                self.say(
+                                    Level::Success,
+                                    format!(
+                                        "“{}” ({}. sürüm) eklendi; alanları bağlandı.",
+                                        s.name, s.version
+                                    ),
+                                );
+                            } else {
+                                self.say(
+                                    Level::Warn,
+                                    format!(
+                                        "“{}” ({}. sürüm) eklendi; katmanda olmayan alanlar: {}. Ön denetim onları gösterir.",
+                                        s.name,
+                                        s.version,
+                                        missing.join(", ")
+                                    ),
+                                );
+                            }
+                        }
+                        Err(why) => self.warn(why),
+                    }
+                }
+            }
+            Event::CommentText(text) => w.comment_text = text,
+            Event::AddComment => {
+                let Some(form) = w.chosen.clone() else {
+                    return Task::none();
+                };
+                if w.comment_text.trim().is_empty() {
+                    self.forms_window = Some(w);
+                    return Task::none();
+                }
+                let (at, author) = self.form_moment();
+                let item = chosen_item.clone().filter(|id| {
+                    self.chosen_form()
+                        .is_some_and(|f| find(&f.draft.items, id).is_some())
+                });
+                let text = std::mem::take(&mut w.comment_text);
+                self.forms_window = Some(w);
+                if self
+                    .edit_forms(FormsOp::Comment {
+                        id: form,
+                        item,
+                        text,
+                        author,
+                        at,
+                    })
+                    .is_some()
+                {
+                    self.say(Level::Success, "Yorum forma eklendi.");
+                }
+                return Task::none();
+            }
+            Event::ResolveComment(comment, resolved) => {
+                let Some(form) = w.chosen.clone() else {
+                    return Task::none();
+                };
+                self.forms_window = Some(w);
+                self.edit_forms(FormsOp::Resolve {
+                    id: form,
+                    comment,
+                    resolved,
+                });
+                return Task::none();
+            }
+            Event::RestoreDraft => {
+                if let Some(k) = w.kept.take() {
+                    w.undo.push(w.body.clone().unwrap_or_default());
+                    w.body = Some(k.body);
+                    w.name = k.name;
+                    w.dirty = true;
+                    self.say(
+                        Level::Info,
+                        "Bu cihazda kalan taslak geri yüklendi; kaydetmek için Kaydet’e basın.",
+                    );
+                }
+            }
+            Event::DropKept => {
+                if let (Some(_), Some(form)) = (w.kept.take(), w.chosen.as_deref()) {
+                    self.form_files.drop_draft(&self.form_project_key(), form);
+                }
+            }
+            Event::AddDivider => {
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of("bolucu", &taken);
+                let item = FormItem::Divider {
+                    id: id.clone(),
+                    label: None,
+                    visible_when: None,
+                };
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
+            Event::AddAction => {
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of("eylem", &taken);
+                let item = FormItem::Action {
+                    id: id.clone(),
+                    label: "Öznitelik hesapla".into(),
+                    tool: "attributes.calculate".into(),
+                    visible_when: None,
+                };
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
+            Event::ActionTool(tool) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Action { tool: t, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            *t = tool.clone();
                         }
                     });
                 }
@@ -1907,11 +2218,28 @@ impl App {
                 }
             }
             Event::Cancel => {
+                // Vazgeç lets the window's changes go, the draft kept on this device with them.
+                if let Some(form) = w.chosen.as_deref() {
+                    self.form_files.drop_draft(&self.form_project_key(), form);
+                }
                 self.forms_window = None;
                 self.form_preview = None;
                 self.dialog = None;
                 return Task::none();
             }
+        }
+        // The draft kept on this device as it is edited (docs/adr/0441 §5): a crash does not lose it.
+        if w.dirty
+            && let (Some(form), Some(body)) = (w.chosen.clone(), w.body.clone())
+        {
+            self.form_files.keep_draft(
+                &self.form_project_key(),
+                &crate::forms::library::KeptDraft {
+                    form,
+                    name: w.name.clone(),
+                    body,
+                },
+            );
         }
         self.forms_window = Some(w);
         Task::none()
@@ -1934,6 +2262,18 @@ impl App {
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
             Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
             Control::Press(ADD_REFERENCE) => Some(msg(Event::AddReference)),
+            Control::Press(ADD_DIVIDER) => Some(msg(Event::AddDivider)),
+            Control::Press(SAVE_SECTION) => Some(msg(Event::SaveSection)),
+            Control::Press(ADD_COMMENT) => Some(msg(Event::AddComment)),
+            Control::Press(RESTORE_DRAFT) => Some(msg(Event::RestoreDraft)),
+            Control::Press(DROP_KEPT) => Some(msg(Event::DropKept)),
+            Control::Press(PALETTE_RELATIONS) => Some(msg(Event::Palette(Palette::Relations))),
+            Control::Press(PALETTE_SECTIONS) => Some(msg(Event::Palette(Palette::Sections))),
+            Control::Fill("Yorum", text) => Some(msg(Event::CommentText(text.to_owned()))),
+            Control::Fill("Bölümün adı", text) => {
+                Some(msg(Event::SectionName(text.to_owned())))
+            }
+            Control::Press(ADD_ACTION) => Some(msg(Event::AddAction)),
             Control::Press(ADD_ATTACHMENTS) => Some(msg(Event::AddAttachments)),
             Control::Press(AUDIT) => Some(msg(Event::Audit)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),
@@ -1986,7 +2326,9 @@ fn item_named(items: &[FormItem], words: &str) -> Option<String> {
             FormItem::Note { .. } => None,
             FormItem::Related { label, .. }
             | FormItem::Attachments { label, .. }
-            | FormItem::Location { label, .. } => label.as_deref(),
+            | FormItem::Location { label, .. }
+            | FormItem::Divider { label, .. } => label.as_deref(),
+            FormItem::Action { label, .. } => Some(label.as_str()),
         };
         if i.id() == words || label == Some(words) {
             Some(i.id().to_owned())
@@ -2001,11 +2343,14 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
     match find_mut(&mut body.items, id) {
         Some(FormItem::Tab { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Group { label, .. }) if *which == Text::Label => *label = some(text),
-        Some(FormItem::Related { label, .. }) | Some(FormItem::Location { label, .. })
+        Some(FormItem::Related { label, .. })
+        | Some(FormItem::Location { label, .. })
+        | Some(FormItem::Divider { label, .. })
             if *which == Text::Label =>
         {
             *label = some(text)
         }
+        Some(FormItem::Action { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Attachments {
             label, min, max, ..
         }) => {
@@ -2079,7 +2424,9 @@ fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
         | (FormItem::Tab { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Related { visible_when, .. }, Rule::Visible(_))
         | (FormItem::Attachments { visible_when, .. }, Rule::Visible(_))
-        | (FormItem::Location { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        | (FormItem::Location { visible_when, .. }, Rule::Visible(_))
+        | (FormItem::Divider { visible_when, .. }, Rule::Visible(_))
+        | (FormItem::Action { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Field(f), Rule::LookupFilter(_)) => f.lookup.as_ref()?.filter.clone(),
         (FormItem::Field(f), Rule::Visible(_)) => f.visible_when.clone(),
         (FormItem::Field(f), Rule::Required(_)) => f.required_when.clone(),
@@ -2099,9 +2446,9 @@ fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
         | (Some(FormItem::Tab { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
         (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_))
         | (Some(FormItem::Attachments { visible_when, .. }), Rule::Visible(_))
-        | (Some(FormItem::Location { visible_when, .. }), Rule::Visible(_)) => {
-            *visible_when = value
-        }
+        | (Some(FormItem::Location { visible_when, .. }), Rule::Visible(_))
+        | (Some(FormItem::Divider { visible_when, .. }), Rule::Visible(_))
+        | (Some(FormItem::Action { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
         (Some(FormItem::Field(f)), Rule::LookupFilter(_)) => {
             if let Some(l) = f.lookup.as_mut() {
                 l.filter = value;

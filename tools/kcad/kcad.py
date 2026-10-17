@@ -1749,6 +1749,17 @@ def body_problem(body):
                 return f"“{iid}” öğesinin sayıları geçersiz"
             if "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
                 return f"“{iid}” öğesinin kuralı geçersiz"
+        if t in ("location", "divider") and "label" in i and not _form_name_ok(i["label"]):
+            return f"“{iid}” öğesinin adı geçersiz"
+        if t in ("location", "divider", "action") and "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
+            return f"“{iid}” öğesinin kuralı geçersiz"
+        if t == "action":
+            # docs/adr/0441 §6: a registered processing tool by its id; no address, query or script.
+            parts = i["tool"].split(".")
+            if not _form_name_ok(i["label"]) or len(i["tool"]) > MOST_FORM_NAME or len(parts) < 2 or any(
+                    not p or not p[0].isascii() or not p[0].isalpha() or not all(c.isascii() and c.isalnum() for c in p)
+                    for p in parts):
+                return f"“{iid}” eylemi geçersiz"
         if t == "field":
             if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
                 return f"“{iid}” öğesinin alanı yazılmamış"
@@ -1847,6 +1858,11 @@ def forms_problem(forms):
                 return f"“{f['name']}” formunun yayın notu çok uzun"
         if f.get("enforce") and not releases:
             return f"“{f['name']}” formu yayınlanmadan kuralları uygulanamaz"
+        # docs/adr/0441 §5: at most 200 comments, numbered once, with a text.
+        comments = f.get("comments", [])
+        if len(comments) > 200 or len({c["id"] for c in comments}) != len(comments) or any(
+                c["id"] == 0 or not c["text"].strip() or not _form_text_ok(c["text"], MOST_FORM_TEXT) for c in comments):
+            return f"“{f['name']}” formunun yorumları geçersiz"
     return None
 
 
@@ -3747,7 +3763,7 @@ class _Schema:
                     "field": (self.text, True),
                     "visibleWhen": (self.text, False),
                     # docs/adr/0425: a table of the other layer's fields; a list is not written.
-                    "view": (self.enum(("table", "cards")), False),
+                    "view": (self.enum(("table", "cards", "chart")), False),
                     "columns": (self.array(self.text), False),
                 },
                 # docs/adr/0407 §1: the record's photos and documents.
@@ -3763,6 +3779,18 @@ class _Schema:
                 "location": {
                     "id": (self.text, True),
                     "label": (self.text, False),
+                    "visibleWhen": (self.text, False),
+                },
+                # docs/adr/0441 §2, §6: a divider and an action opening a registered processing tool.
+                "divider": {
+                    "id": (self.text, True),
+                    "label": (self.text, False),
+                    "visibleWhen": (self.text, False),
+                },
+                "action": {
+                    "id": (self.text, True),
+                    "label": (self.text, True),
+                    "tool": (self.text, True),
                     "visibleWhen": (self.text, False),
                 },
             }
@@ -3805,6 +3833,10 @@ class _Schema:
                 "draft": (body, True),
                 "releases": (nonempty(self.array(release)), False),
                 "enforce": (true_, False),
+                # docs/adr/0441 §5: the reviewers' comments.
+                "comments": (nonempty(self.array(self.fields({
+                    "id": (self.uint(32), True), "item": (self.text, False), "author": (self.text, False),
+                    "at": (self.text, False), "text": (self.text, True), "resolved": (true_, False)}))), False),
             }
         )
         all_ = nonempty(self.array(form))(v)

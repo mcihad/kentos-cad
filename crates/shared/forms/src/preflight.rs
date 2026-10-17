@@ -243,6 +243,12 @@ impl Preflight<'_> {
                 }
                 | FormItem::Location {
                     id, visible_when, ..
+                }
+                | FormItem::Divider {
+                    id, visible_when, ..
+                }
+                | FormItem::Action {
+                    id, visible_when, ..
                 } => {
                     if let Some(rule) = visible_when {
                         self.rule(id, None, None, "visibleWhen", rule);

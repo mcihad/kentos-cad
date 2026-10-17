@@ -1675,6 +1675,8 @@ const ENTRIES: &[Entry] = &[
                 "form_draft_changed",
                 "form_preflight",
                 "form_unpublished",
+                "form_item_unknown",
+                "form_comment_unknown",
             ],
         ],
         warnings: &["form_release_dropped"],

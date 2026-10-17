@@ -296,6 +296,10 @@ codes! {
     RELATION_MISMATCH = "relation_mismatch", Failed, false, "İlişkinin üst katmanı formun katmanı değil.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
+    /// A comment on an item the form's draft has not (docs/adr/0441 §5).
+    FORM_ITEM_UNKNOWN = "form_item_unknown", Failed, false, "Formun taslağında bu öğe yok.";
+    /// A comment number the form has not.
+    FORM_COMMENT_UNKNOWN = "form_comment_unknown", Failed, false, "Formda bu numaralı yorum yok.";
     /// A moment that is not a date or a date and a local time (`cad.forms.validate`, `.submit`).
     INVALID_MOMENT = "invalid_moment", Failed, false, "An bir tarih ya da tarih ve yerel saat değil (2026-10-16T14:30:00 gibi).";
     /// A user's name empty, longer than 64 characters or with control characters.

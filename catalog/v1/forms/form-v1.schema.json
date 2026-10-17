@@ -117,6 +117,51 @@
       ],
       "type": "object"
     },
+    "FormComment": {
+      "additionalProperties": false,
+      "description": "A reviewer's comment on a form or one of its items (docs/adr/0441 §5).",
+      "properties": {
+        "at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "description": "Who wrote it and when (as the command was given them).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "1, 2, …: one more than the form's last.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "item": {
+          "description": "The item it is about; none: the form.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolved": {
+          "description": "Settled; written only as `true`.",
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "type": "object"
+    },
     "FormItem": {
       "description": "An item of a form: a tab (only at the top), a group, a field or a note.",
       "oneOf": [
@@ -517,6 +562,68 @@
           "required": [
             "type",
             "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A divider (docs/adr/0441 §2): a line across the form, its title on it, that a rule may hide.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "const": "divider",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "tool": {
+              "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
+              "type": "string"
+            },
+            "type": {
+              "const": "action",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "tool"
           ],
           "type": "object"
         }
@@ -993,6 +1100,11 @@
           "const": "cards",
           "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
           "type": "string"
+        },
+        {
+          "const": "chart",
+          "description": "A bar for each value of its first column, as long as the children holding it are many\n(docs/adr/0441 §3).",
+          "type": "string"
         }
       ]
     },
@@ -1039,6 +1151,13 @@
   "additionalProperties": false,
   "description": "Projenin bir formu: kimliği, adı, katmanı, taslağı ve yayınları (docs/adr/0401, 0434). Bilinmeyen alan reddedilir; yayının özeti gövdesinin kanonik JSON'unun SHA-256'sıdır.",
   "properties": {
+    "comments": {
+      "description": "The reviewers' comments on the form, oldest first (docs/adr/0441 §5).",
+      "items": {
+        "$ref": "#/$defs/FormComment"
+      },
+      "type": "array"
+    },
     "draft": {
       "$ref": "#/$defs/FormBody",
       "description": "The draft the designer edits."

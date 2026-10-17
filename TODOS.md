@@ -194,6 +194,10 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AX` tasarımcı ekleri (ADR 0441, 17 Ekim): web'de gerekenler: `FormItem`'ın `divider` ve `action`'ı, `RelatedView.chart`,
+  `ProjectForm.comments`, `FormsOp`'un `comment` ve `resolve`'u, `FormsValidated.requires` (TS türleri üretildi); web'in formunda
+  bölücü, eylem düğmesi (web'in işlem aracını açar; kayıtlı olmayan araç kapalı) ve ilişkili kayıtların grafiği; tasarımcıda
+  paletler (alan, ilişki, liste, bölüm), bölüm kitaplığı (IndexedDB'de), yorumlar, kalan taslağın sunulması ve formun gerektirdikleri.
 - [ ] `FORM-AW` ilişkilerin grafı ve gönderim (ADR 0440, 17 Ekim): web'de gerekenler: `FormsSubmit.children`, `FormsSubmitted`'ın
   `children`, `changes`, `snapshot`, `undo`'su, `FormsTransitioned.snapshot`, `cad.entities.delete`'in `followed` ve `attachments`'ı,
   `RelationsEdited.links`, `RelatedView.cards` (TS türleri üretildi); web'in silme işleyicisinde `relation_locked` ve sayılar,
@@ -1541,6 +1545,10 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AX` Tasarımcı ekleri: alan, ilişki, liste ve bölüm paletleri, bölücü, ilişkili kayıtların grafiği, cihazdaki sürümlü
+  bölüm kitaplığı, gözden geçirenin yorumları ve kendiliğinden saklanan taslak, formun ortamdan istedikleri (saf form), kayıtlı işlem
+  aracını açan eylem ve tasarımcının bilinmeyen araç uyarısı, biçimin profili. — **17 Ekim,
+  [ADR 0441](docs/adr/0441-designer-extras.md).**
 - [x] `FORM-AW` İlişkilerin grafı ve gönderim: silmenin ilişki etkisi ve kilitli alt kaydın reddi, kayıt alt kayıtlarıyla tek
   gönderimde (istemcinin kimliğiyle yeni kayıt), ilişkinin kullanımı ve bileşik döngü, anlık görüntü ve gözden geçirenin satırı,
   gönderimin ayrıntılı cevabı, Kartlar ve sayfa, iç içe form, tasarımcıda İlişki ve Başvuru. — **17 Ekim,

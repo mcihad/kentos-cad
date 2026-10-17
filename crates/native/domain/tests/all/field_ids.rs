@@ -36,6 +36,7 @@ fn bind(doc: &mut Document, key: &str) {
         },
         releases: Vec::new(),
         enforce: false,
+        comments: Vec::new(),
     }];
     doc.set_settings(settings);
 }

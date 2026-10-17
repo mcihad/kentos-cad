@@ -289,6 +289,7 @@ fn check(doc: &Document, input: &FormsImport) -> Result<Planned, Stop> {
         draft: body,
         releases: Vec::new(),
         enforce: false,
+        comments: Vec::new(),
     };
     let (fields_after, _) = kentos_contracts::follow_domains(&fields_after, &domains);
     let errors = kentos_forms::preflight_in(

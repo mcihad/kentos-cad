@@ -5089,6 +5089,472 @@
    ]
   },
   {
+   "name": "bölücü ve eylem öğe olarak; formun gerektirdikleri: kullanıcı, şekil, araç",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "denetim",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "tab",
+          "id": "genel",
+          "label": "Genel",
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi",
+            "label": "Kat sayısı",
+            "help": "Zemin kat dahil."
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "widget": "textArea",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           },
+           {
+            "type": "divider",
+            "id": "cizgi",
+            "label": "Onay",
+            "visibleWhen": "@kullanıcı = 'Ayşe'"
+           },
+           {
+            "type": "action",
+            "id": "hesapla",
+            "label": "Öznitelik hesapla",
+            "tool": "attributes.calculate"
+           },
+           {
+            "type": "location",
+            "id": "yer"
+           }
+          ]
+         },
+         {
+          "type": "tab",
+          "id": "ayrinti",
+          "label": "Ayrıntı",
+          "items": [
+           {
+            "type": "group",
+            "id": "denetim",
+            "label": "Denetim",
+            "columns": 2,
+            "visibleWhen": "Kat >= 1",
+            "items": [
+             {
+              "type": "field",
+              "id": "tarih",
+              "field": "Tarih",
+              "default": "2026-10-16"
+             },
+             {
+              "type": "field",
+              "id": "onay",
+              "field": "Onaylı",
+              "widget": "switch",
+              "readOnlyWhen": "Durum = 'iyi'"
+             }
+            ]
+           },
+           {
+            "type": "note",
+            "id": "bilgi",
+            "text": "Denetimi yapan kişi kaydeder."
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "inceleme",
+       "Kat": "3",
+       "Açıklama": "Çatı arası ayrıca bakılmalı.",
+       "Kod": "B-12"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+       "Ad": "Atatürk Caddesi"
+      },
+      "a": {
+       "x": 486990,
+       "y": 4419995
+      },
+      "b": {
+       "x": 487060,
+       "y": 4419995
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "draft": true,
+      "uid": "$uidOf:1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "genel",
+         "shown": true
+        },
+        {
+         "id": "durum",
+         "shown": true,
+         "required": true
+        },
+        {
+         "id": "kat",
+         "shown": true
+        },
+        {
+         "id": "aciklama",
+         "shown": true,
+         "required": true
+        },
+        {
+         "id": "cizgi",
+         "shown": false
+        },
+        {
+         "id": "hesapla",
+         "shown": true
+        },
+        {
+         "id": "yer",
+         "shown": true
+        },
+        {
+         "id": "ayrinti",
+         "shown": true
+        },
+        {
+         "id": "denetim",
+         "shown": true
+        },
+        {
+         "id": "tarih",
+         "shown": true
+        },
+        {
+         "id": "onay",
+         "shown": true
+        },
+        {
+         "id": "bilgi",
+         "shown": true
+        }
+       ],
+       "attrs": {
+        "Durum": "inceleme",
+        "Kat": "3",
+        "Açıklama": "Çatı arası ayrıca bakılmalı.",
+        "Kod": "B-12"
+       },
+       "requires": [
+        "user",
+        "geometry",
+        "tool:attributes.calculate"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "ön denetimde hata olan form reddedilmez: kaydı sorulmaz",
    "setup": {
     "format": "kentos.document",
@@ -8067,7 +8533,10 @@
         "Kat": "1",
         "Durum": "inceleme",
         "Tarih": "2026-10-16"
-       }
+       },
+       "requires": [
+        "workflow"
+       ]
       },
       "warnings": []
      },
@@ -8625,7 +9094,10 @@
         "Kat": "3",
         "Açıklama": "Çatı arası ayrıca bakılmalı.",
         "Kod": "B-12"
-       }
+       },
+       "requires": [
+        "workflow"
+       ]
       },
       "warnings": []
      },
@@ -12455,7 +12927,11 @@
         "Taban": "100",
         "Riskli": "false",
         "Puan": "3"
-       }
+       },
+       "requires": [
+        "moment",
+        "user"
+       ]
       },
       "warnings": []
      },
@@ -13168,7 +13644,11 @@
         "Taban": "100",
         "Riskli": "false",
         "Puan": "2"
-       }
+       },
+       "requires": [
+        "moment",
+        "user"
+       ]
       },
       "warnings": []
      },
@@ -14665,7 +15145,10 @@
         }
        ],
        "version": 1,
-       "attrs": {}
+       "attrs": {},
+       "requires": [
+        "layers"
+       ]
       },
       "warnings": []
      }
@@ -15556,7 +16039,10 @@
        "attrs": {
         "İl": "06",
         "İlçe": "0601"
-       }
+       },
+       "requires": [
+        "layers"
+       ]
       },
       "warnings": []
      }
@@ -16451,7 +16937,10 @@
        "attrs": {
         "İl": "34",
         "İlçe": "0601"
-       }
+       },
+       "requires": [
+        "layers"
+       ]
       },
       "warnings": []
      }
@@ -17383,7 +17872,10 @@
        "version": 1,
        "attrs": {
         "İl": "06"
-       }
+       },
+       "requires": [
+        "layers"
+       ]
       },
       "warnings": []
      }
@@ -17961,7 +18453,11 @@
         "Renk": "#2E7D32",
         "Cins": "agac",
         "Boy": "12"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -18560,7 +19056,11 @@
        "attrs": {
         "Ad": "Çınar",
         "Boy": "8"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -19159,7 +19659,11 @@
        "attrs": {
         "Ad": "Ihlamur",
         "Boy": "4"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -19758,7 +20262,11 @@
        "attrs": {
         "Ad": " Ihlamur ",
         "Renk": "yeşil"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -20349,7 +20857,11 @@
        "attrs": {
         "Ad": "Meşe",
         "Boy": "15"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -20942,7 +21454,11 @@
        "attrs": {
         "Ad": " Ihlamur ",
         "Renk": "#2e7d32cc"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -21545,7 +22061,11 @@
         "Renk": "kırmızı",
         "Cins": "agac",
         "Boy": "12"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -22140,7 +22660,11 @@
         "Renk": "#2E7D32",
         "Cins": "agac",
         "Boy": "6"
-       }
+       },
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },
@@ -22688,7 +23212,11 @@
        "version": 1,
        "issues": [],
        "valid": true,
-       "items": []
+       "items": [],
+       "requires": [
+        "geometry",
+        "attachments"
+       ]
       },
       "warnings": []
      },

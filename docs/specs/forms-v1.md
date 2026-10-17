@@ -15,9 +15,12 @@ Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.k
 | `draft` | Taslağın gövdesi (`FormBody`): `revision`, `items`, isteğe bağlı `clearHidden`, `tests`, `workflow` |
 | `releases` | Yayınlar, eskiden yeniye: `version` (1, 2, …), `digest`, `body`, isteğe bağlı `note` |
 | `enforce` | Son yayın katmanın yazma kuralıdır (yalnız `true` yazılır) |
+| `comments` | Gözden geçirenlerin yorumları (ADR 0441 §5): `id` (1, 2, …), isteğe bağlı `item`, `author`, `at`, `text`, `resolved`; en çok 200 |
 
-Öğeler (`items`) `type` ile ayrılır: `tab`, `group`, `field`, `note`, `related`, `attachments`, `location`. Alan öğesi katmanın
-alanını anahtarıyla (alanın `id`'si, yoksa adı) anar.
+Öğeler (`items`) `type` ile ayrılır: `tab`, `group`, `field`, `note`, `related`, `attachments`, `location`, `divider`, `action`.
+Alan öğesi katmanın alanını anahtarıyla (alanın `id`'si, yoksa adı) anar. Eylem (`action`) kayıtlı bir işlem aracını yalnız
+kimliğiyle anar (`tool`, `attributes.calculate` gibi noktalı parçalar); adres, sorgu ya da betik bir araç kimliği değildir ve
+şema onu reddeder.
 
 ## 2. Özet
 
@@ -38,8 +41,34 @@ Yayın değişmez: taslak değişir, yayın yeni sürümdür.
 - Bir alanın anlamı değişmez; anlam değişecekse yeni adla gelir ve eski ad göçle çevrilir (göç yazıcının değil okuyucunun işidir).
 - Formun alana bağı alanın kararlı `id`'siyledir (ADR 0401 §2): alan yeniden adlandırılınca form kırılmaz.
 
-## 5. Denetim
+## 5. Profil: formun ortamdan istedikleri
+
+Bir formu gösteren her ortam (masaüstü, ileride web ve mobil, Python) aynı biçimi okur ama her ortam her şeyi sağlamaz. Formun
+ortamdan istedikleri gövdesinden hesaplanır (`kentos_forms::requirements`, `cad.forms.validate`'in `requires`'ı; ADR 0441 §4):
+
+| Anahtar | Ne zaman |
+|---|---|
+| `moment` | Kurallardan biri `@tarih` ya da `@simdi` okur |
+| `user` | Kurallardan biri `@kullanici` okur |
+| `layers` | Başka katmandan liste ya da ilişkili kayıtlar öğesi var |
+| `geometry` | Konum öğesi ya da mekânsal süzgeçli liste var |
+| `attachments` | Ekler öğesi var |
+| `workflow` | Kaydın iş akışı var |
+| `tool:<kimlik>` | Eylem öğesi o işlem aracını açar |
+
+Hiçbiri yoksa form **saftır**: yalnız kaydın değerleriyle çalışır, her ortamda aynı açılır.
+
+- Bir ortam formun istediklerinden birini sağlamıyorsa formu **salt okunur** açar ve hangisinin eksik olduğunu söyler; kaydı
+  eksik kurallarla yazmaz, eksik öğeyi sessizce gizlemez (`kentos_forms::unsupported`). Eylemin aracı ortamda yoksa düğme kapalı
+  görünür ve tasarımcının ön denetimi uyarır (`form_action_unknown`).
+- Masaüstü bütün anahtarları sağlar. Tasarımcı formun istediklerini öğe seçilmemişken gösterir.
+- Erişilebilirlik: her alan öğesi etiketini taşır (öğenin `label`'ı, yoksa alanın adı ya da takma adı); yardım metni (`help`)
+  alanın açıklamasıdır; odak sırası formdaki sıradır (Tab), hata alanının altında ve özetinde, alana gider.
+- Yerelleştirme: biçim 1 tek dillidir (formun dili projenin dilidir). Çok dilli etiketler biçimin sonraki sürümünün işidir; okuyucu
+  bilmediği bir dil alanını reddeder (§3).
+
+## 6. Denetim
 
 - `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-contracts form_schema` şemayı yeniden yazar; test dosyanın güncel olduğunu denetler.
 - `python3 scripts/fixtures/form_schema_cases.py --check` deponun ortak dosyalarındaki her formu `jsonschema` ile şemaya karşı
-  sınar ve bilerek bozulmuş beş formun reddedildiğini görür (KentOS kodu olmadan).
+  sınar ve bilerek bozulmuş altı formun reddedildiğini görür (KentOS kodu olmadan).

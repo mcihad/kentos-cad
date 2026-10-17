@@ -321,12 +321,33 @@ fn items(
                 id,
                 label,
                 visible_when,
+            }
+            | FormItem::Divider {
+                id,
+                label,
+                visible_when,
             } => {
                 if let Some(v) = visible_when.as_mut().filter(|v| !v.is_empty()) {
                     let w = format!(
-                        "{words}{SEP}“{}” konumu",
+                        "{words}{SEP}“{}” öğesi",
                         label.as_deref().filter(|l| !l.is_empty()).unwrap_or(id)
                     );
+                    put(
+                        layer,
+                        FieldUseHow::Expression,
+                        format!("{p}/visibleWhen"),
+                        format!("{w}{SEP}Görünme koşulu"),
+                        v,
+                    );
+                }
+            }
+            FormItem::Action {
+                label,
+                visible_when,
+                ..
+            } => {
+                if let Some(v) = visible_when.as_mut().filter(|v| !v.is_empty()) {
+                    let w = format!("{words}{SEP}“{label}” eylemi");
                     put(
                         layer,
                         FieldUseHow::Expression,

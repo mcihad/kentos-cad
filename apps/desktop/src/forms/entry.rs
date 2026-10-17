@@ -214,6 +214,8 @@ pub enum Event {
     Value(String, String),
     /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
     Query(String, String),
+    /// An action's tool opened on the record (docs/adr/0441 §6).
+    RunAction(String),
     /// A related item's page (docs/adr/0440 §6): its id and the page, from 0.
     RelatedPage(String, usize),
     /// A searched list's turn came (docs/adr/0439 §6): the field's key and the search's number.
@@ -1408,6 +1410,17 @@ impl App {
                 }
             }
             Event::OpenRelated(uid) => return self.open_related(&uid),
+            Event::RunAction(tool) => {
+                // The record selected, the tool's window opened with it (a registered tool only).
+                let slot = record_slot(&doc.model, &e.uid);
+                if let Some(slot) = slot {
+                    self.selection.set([slot]);
+                }
+                if self.processing.registry.get(&tool).is_some() {
+                    self.open_processing(&tool, None);
+                }
+                return Task::none();
+            }
             Event::Link(item, uid) => return self.link_related(&item, &uid, true),
             Event::Unlink(item, uid) => return self.link_related(&item, &uid, false),
             Event::AttachAdd(_)
@@ -2281,6 +2294,44 @@ impl App {
                     let uid = if e.preview { "" } else { e.uid.as_str() };
                     out = out.push(self.location_box(uid, title.as_deref()));
                 }
+                // A divider (docs/adr/0441 §2): a line across, its title on it.
+                FormItem::Divider { label: title, .. } => {
+                    out = flush(&mut run, out);
+                    let line = || {
+                        container(iced::widget::rule::horizontal(1).style(style::field::hairline))
+                            .width(Fill)
+                    };
+                    out = out.push(match title {
+                        Some(t) => Element::from(
+                            row![label::caption(t.clone()).style(muted), line()]
+                                .spacing(8)
+                                .align_y(Center),
+                        ),
+                        None => line().into(),
+                    });
+                }
+                // An action (docs/adr/0441 §6): a registered processing tool on the record.
+                FormItem::Action { label: title, tool, .. } => {
+                    out = flush(&mut run, out);
+                    let known = self.processing.registry.get(tool).is_some();
+                    let can = known && !e.preview && e.members.is_empty();
+                    let button = iced::widget::button(
+                        row![icon(Icon::Play).size(12.0), label::body(title.clone())]
+                            .spacing(6)
+                            .align_y(Center),
+                    )
+                    .padding([4, 10])
+                    .style(style::button::secondary)
+                    .on_press_maybe(can.then(|| e.msg(Event::RunAction(tool.clone()))));
+                    out = out.push(if known {
+                        Element::from(button)
+                    } else {
+                        row![button, label::caption(format!("“{tool}” kayıtlı bir araç değil.")).style(muted)]
+                            .spacing(8)
+                            .align_y(Center)
+                            .into()
+                    });
+                }
                 FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
                     let text = e
@@ -2434,7 +2485,9 @@ impl App {
                 FormItem::Group { .. }
                 | FormItem::Related { .. }
                 | FormItem::Attachments { .. }
-                | FormItem::Location { .. } => {
+                | FormItem::Location { .. }
+                | FormItem::Divider { .. }
+                | FormItem::Action { .. } => {
                     form = form.row(self.entry_block(e, std::slice::from_ref(*item), locked));
                 }
                 FormItem::Tab { .. } => {}
@@ -2614,6 +2667,18 @@ impl App {
             };
         // A table of the other layer's fields, its numbers totalled (docs/adr/0425), or a card for each
         // (docs/adr/0440 §6), a page at a time.
+        // A bar for each value of the first column (docs/adr/0441 §3).
+        if let (Some(d), Some(FormItem::Related {
+            layer,
+            field,
+            view: kentos_contracts::RelatedView::Chart,
+            columns,
+            ..
+        })) = (doc, crate::forms::designer::find(&e.body.items, id))
+        {
+            col = col.push(related_chart(d, layer, field, columns, &uids));
+            return self.related_footer(e, id, col, live, candidates);
+        }
         if let (Some(d), Some(FormItem::Related {
             layer,
             field,
@@ -3574,6 +3639,71 @@ fn related_table<'a>(
         }
         foot = foot.push(space::horizontal().width(84));
         rows = rows.push(container(foot).padding(iced::Padding { top: 4.0, ..iced::Padding::ZERO }));
+    }
+    rows.into()
+}
+
+/// The related objects as bars (docs/adr/0441 §3): each value of the first column (else the first field
+/// that is not the link) with how many objects hold it, the most first; an empty value last.
+fn related_chart<'a>(
+    d: &crate::document::Document,
+    layer: &str,
+    link: &str,
+    columns: &[String],
+    uids: &[String],
+) -> Element<'a, Message> {
+    let fields: Vec<kentos_contracts::LayerField> = d
+        .model
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    let by = columns
+        .first()
+        .and_then(|c| fields.iter().find(|f| f.key() == c))
+        .or_else(|| fields.iter().find(|f| f.key() != link))
+        .cloned();
+    let Some(by) = by else {
+        return label::caption("Grafik için alt katmanın bir alanı gerekir.").style(muted).into();
+    };
+    let mut counts: Vec<(String, usize)> = Vec::new();
+    for uid in uids {
+        let Some(x) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| d.model.slot_of(u))
+            .and_then(|s| d.model.get(s))
+        else {
+            continue;
+        };
+        let v = x.base().attrs.get(&by.name).cloned().unwrap_or_default();
+        match counts.iter_mut().find(|(k, _)| *k == v) {
+            Some((_, n)) => *n += 1,
+            None => counts.push((v, 1)),
+        }
+    }
+    counts.sort_by(|a, b| {
+        (a.0.is_empty(), std::cmp::Reverse(a.1), &a.0).cmp(&(b.0.is_empty(), std::cmp::Reverse(b.1), &b.0))
+    });
+    let most = counts.iter().map(|(_, n)| *n).max().unwrap_or(1).max(1) as f32;
+    let mut rows = Column::new()
+        .spacing(4)
+        .push(label::caption(format!("{} sayısı", by.label())).style(muted));
+    for (value, n) in counts {
+        let words = if value.is_empty() {
+            "(boş)".to_owned()
+        } else {
+            kentos_contracts::display_value(&by, &value)
+        };
+        let share = n as f32 / most;
+        rows = rows.push(
+            row![
+                container(label::caption(words)).width(140),
+                kentos_ui::widget::progress::bar(Some(share)).width(Fill).height(10.0),
+                container(label::caption(n.to_string())).width(40).align_x(iced::alignment::Horizontal::Right),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
     }
     rows.into()
 }
