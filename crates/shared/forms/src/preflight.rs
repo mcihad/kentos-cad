@@ -223,6 +223,9 @@ impl Preflight<'_> {
                 }
                 FormItem::Attachments {
                     id, visible_when, ..
+                }
+                | FormItem::Location {
+                    id, visible_when, ..
                 } => {
                     if let Some(rule) = visible_when {
                         self.rule(id, None, None, "visibleWhen", rule);

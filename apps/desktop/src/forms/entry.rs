@@ -1903,6 +1903,11 @@ impl App {
                         *max,
                     ));
                 }
+                FormItem::Location { label: title, .. } => {
+                    out = flush(&mut run, out);
+                    let uid = if e.preview { "" } else { e.uid.as_str() };
+                    out = out.push(self.location_box(uid, title.as_deref()));
+                }
                 FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
                     let text = e
@@ -2009,7 +2014,8 @@ impl App {
                 }
                 FormItem::Group { .. }
                 | FormItem::Related { .. }
-                | FormItem::Attachments { .. } => {
+                | FormItem::Attachments { .. }
+                | FormItem::Location { .. } => {
                     form = form.row(self.entry_block(e, std::slice::from_ref(*item), locked));
                 }
                 FormItem::Tab { .. } => {}

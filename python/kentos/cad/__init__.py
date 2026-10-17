@@ -620,6 +620,7 @@ __all__ = [
     "LocalCommand",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LocationFormItem",
     "LookPart",
     "LookPartName",
     "LookupBlockParameter",

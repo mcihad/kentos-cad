@@ -16254,13 +16254,19 @@
           "label": "Belgeler",
           "accept": "document",
           "visibleWhen": "Boy > 10"
+         },
+         {
+          "type": "location",
+          "id": "konum",
+          "label": "Konum",
+          "visibleWhen": "Boy > 5"
          }
         ]
        },
        "releases": [
         {
          "version": 1,
-         "digest": "2c17fe48a444c28eddda2ceb1c0a17dc",
+         "digest": "aeac5c4ddc4637415cacb8f3285e5c18",
          "body": {
           "revision": 1,
           "items": [
@@ -16301,6 +16307,12 @@
             "label": "Belgeler",
             "accept": "document",
             "visibleWhen": "Boy > 10"
+           },
+           {
+            "type": "location",
+            "id": "konum",
+            "label": "Konum",
+            "visibleWhen": "Boy > 5"
            }
           ]
          }

@@ -4297,6 +4297,35 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -14774,6 +14803,35 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -23187,6 +23245,35 @@
                   },
                   "type": {
                     "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
                     "type": "string"
                   },
                   "visibleWhen": {
@@ -343965,6 +344052,35 @@
                   "id"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -344917,6 +345033,35 @@
                   },
                   "type": {
                     "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
                     "type": "string"
                   },
                   "visibleWhen": {
@@ -345884,6 +346029,35 @@
                   },
                   "type": {
                     "const": "attachments",
+                    "type": "string"
+                  },
+                  "visibleWhen": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its\narea or length; nothing is written.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "const": "location",
                     "type": "string"
                   },
                   "visibleWhen": {

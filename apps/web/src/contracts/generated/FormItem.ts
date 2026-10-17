@@ -46,4 +46,4 @@ min?: number,
 /**
  * The most (0–100).
  */
-max?: number, visibleWhen?: string, };
+max?: number, visibleWhen?: string, } | { "type": "location", id: string, label?: string, visibleWhen?: string, };

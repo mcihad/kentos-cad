@@ -1188,7 +1188,9 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                 });
                 (compile(visible_when), None, None)
             }
-            FormItem::Group { visible_when, .. } => (compile(visible_when), None, None),
+            FormItem::Group { visible_when, .. } | FormItem::Location { visible_when, .. } => {
+                (compile(visible_when), None, None)
+            }
             FormItem::Related {
                 layer,
                 field,

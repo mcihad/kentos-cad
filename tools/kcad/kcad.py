@@ -3610,6 +3610,12 @@ class _Schema:
                     "max": (self.uint(32), False),
                     "visibleWhen": (self.text, False),
                 },
+                # docs/adr/0433: the record's place.
+                "location": {
+                    "id": (self.text, True),
+                    "label": (self.text, False),
+                    "visibleWhen": (self.text, False),
+                },
             }
             kind = x.get("type")
             if kind not in shapes:

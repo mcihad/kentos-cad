@@ -5720,6 +5720,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -5800,6 +5806,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -5895,6 +5907,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -5990,6 +6008,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Yaş > 3"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -6082,6 +6106,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -6166,6 +6196,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13367,6 +13403,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13412,6 +13454,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 1
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": []
@@ -13490,6 +13536,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13535,6 +13587,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": [
@@ -13620,6 +13676,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13665,6 +13727,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": [
@@ -13750,6 +13816,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13795,6 +13867,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 2
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": [
@@ -13880,6 +13956,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -13925,6 +14007,10 @@
      "id": "belgeler",
      "shown": false,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": false
     }
    ],
    "issues": []
@@ -14003,6 +14089,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -14041,6 +14133,10 @@
     },
     {
      "id": "belgeler",
+     "shown": true
+    },
+    {
+     "id": "konum",
      "shown": true
     }
    ],
@@ -14120,6 +14216,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -14165,6 +14267,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": [
@@ -14250,6 +14356,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -14295,6 +14407,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": [
@@ -14380,6 +14496,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -14425,6 +14547,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": []
@@ -14504,6 +14630,12 @@
       "label": "Belgeler",
       "accept": "document",
       "visibleWhen": "Boy > 10"
+     },
+     {
+      "type": "location",
+      "id": "konum",
+      "label": "Konum",
+      "visibleWhen": "Boy > 5"
      }
     ]
    },
@@ -14549,6 +14681,10 @@
      "id": "belgeler",
      "shown": true,
      "attachments": 0
+    },
+    {
+     "id": "konum",
+     "shown": true
     }
    ],
    "issues": []

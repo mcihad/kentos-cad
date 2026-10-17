@@ -2976,6 +2976,7 @@ class FormItem(_Union):
     - :class:`NoteFormItem` (``type: note``)
     - :class:`RelatedFormItem` (``type: related``)
     - :class:`AttachmentsFormItem` (``type: attachments``)
+    - :class:`LocationFormItem` (``type: location``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "type"
@@ -27910,6 +27911,34 @@ class AttachmentsFormItem(FormItem):
 
 
 @dataclass(kw_only=True, slots=True)
+class LocationFormItem(FormItem):
+    """The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its
+    area or length; nothing is written.
+    """
+    TAG_VALUE: ClassVar[str] = "location"
+    id: str
+    label: str | None | Unset = UNSET
+    visible_when: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"type": "location"}
+        out["id"] = self.id
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.visible_when is not UNSET:
+            out["visibleWhen"] = self.visible_when
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LocationFormItem:
+        return cls(
+            id=data["id"],
+            label=data.get("label", UNSET),
+            visible_when=data.get("visibleWhen", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFormsOp(FormsOp):
     """Yeni form: a form of a layer. No body: one made of the layer's fields; no id: one made of the
     name.
@@ -30097,7 +30126,7 @@ _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensit
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
 
 
-_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem}
+_FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem}
 
 
 _FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp}
@@ -30719,6 +30748,7 @@ __all__ = [
     "LinkDomainsOp",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LocationFormItem",
     "LookPart",
     "LookPartName",
     "LookupBlockParameter",

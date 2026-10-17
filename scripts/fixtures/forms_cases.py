@@ -524,7 +524,7 @@ def preflight(body, fields, variables=(), world=None):
                 field(x, hideable)
             elif x["type"] == "related":
                 related(x)
-            elif x["type"] == "attachments":
+            elif x["type"] in ("attachments", "location"):
                 if "visibleWhen" in x:
                     rule(x["id"], None, None, "visibleWhen", x["visibleWhen"])
             else:
@@ -670,7 +670,8 @@ class Form:
     def states(self, attrs, obj=None):
         shown, out = [], []
         for x, parent in self.nodes:
-            rule = x.get("visibleWhen") if x["type"] in ("tab", "group", "field", "related", "attachments") else None
+            rule = x.get("visibleWhen") if x["type"] in ("tab", "group", "field", "related", "attachments", "location") \
+                else None
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}
@@ -2808,6 +2809,8 @@ EXTRA_BODY = {"revision": 1, "items": [
     {"type": "field", "id": "boy", "field": "Boy"},
     {"type": "attachments", "id": "fotograflar", "label": "Fotoğraflar", "accept": "photo", "min": 1, "max": 3},
     {"type": "attachments", "id": "belgeler", "label": "Belgeler", "accept": "document", "visibleWhen": "Boy > 10"},
+    # docs/adr/0433: the record's place, shown by its rule.
+    {"type": "location", "id": "konum", "label": "Konum", "visibleWhen": "Boy > 5"},
 ]}
 
 

@@ -55,6 +55,7 @@ pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
 pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
+pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const RECOMPUTE: &str = "Hesapları yenile";
 pub(super) const UNDO: &str = "Geri al";
@@ -185,6 +186,8 @@ pub enum Event {
     AddRelated,
     /// An attachments item (docs/adr/0407 §1) where the chosen item is.
     AddAttachments,
+    /// Konum (docs/adr/0433): the record's place.
+    AddLocation,
     /// What an attachments item counts and adds.
     Accept(kentos_contracts::AttachmentAccept),
     /// A text field offers the layer's values (docs/adr/0407 §3).
@@ -913,6 +916,17 @@ impl App {
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
             }
+            Event::AddLocation => {
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of("konum", &taken);
+                let item = FormItem::Location {
+                    id: id.clone(),
+                    label: Some("Konum".into()),
+                    visible_when: None,
+                };
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
             Event::Accept(to) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1592,9 +1606,9 @@ fn item_named(items: &[FormItem], words: &str) -> Option<String> {
             FormItem::Group { label, .. } => label.as_deref(),
             FormItem::Field(f) => f.label.as_deref().or(Some(f.field.as_str())),
             FormItem::Note { .. } => None,
-            FormItem::Related { label, .. } | FormItem::Attachments { label, .. } => {
-                label.as_deref()
-            }
+            FormItem::Related { label, .. }
+            | FormItem::Attachments { label, .. }
+            | FormItem::Location { label, .. } => label.as_deref(),
         };
         if i.id() == words || label == Some(words) {
             Some(i.id().to_owned())
@@ -1609,7 +1623,11 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
     match find_mut(&mut body.items, id) {
         Some(FormItem::Tab { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Group { label, .. }) if *which == Text::Label => *label = some(text),
-        Some(FormItem::Related { label, .. }) if *which == Text::Label => *label = some(text),
+        Some(FormItem::Related { label, .. }) | Some(FormItem::Location { label, .. })
+            if *which == Text::Label =>
+        {
+            *label = some(text)
+        }
         Some(FormItem::Attachments {
             label, min, max, ..
         }) => {
@@ -1682,7 +1700,8 @@ fn rule_text(body: &FormBody, rule: &Rule) -> Option<String> {
         (FormItem::Group { visible_when, .. }, Rule::Visible(_))
         | (FormItem::Tab { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Related { visible_when, .. }, Rule::Visible(_))
-        | (FormItem::Attachments { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
+        | (FormItem::Attachments { visible_when, .. }, Rule::Visible(_))
+        | (FormItem::Location { visible_when, .. }, Rule::Visible(_)) => visible_when.clone(),
         (FormItem::Field(f), Rule::LookupFilter(_)) => f.lookup.as_ref()?.filter.clone(),
         (FormItem::Field(f), Rule::Visible(_)) => f.visible_when.clone(),
         (FormItem::Field(f), Rule::Required(_)) => f.required_when.clone(),
@@ -1701,7 +1720,8 @@ fn set_rule(body: &mut FormBody, rule: &Rule, text: &str) {
         (Some(FormItem::Group { visible_when, .. }), Rule::Visible(_))
         | (Some(FormItem::Tab { visible_when, .. }), Rule::Visible(_)) => *visible_when = value,
         (Some(FormItem::Related { visible_when, .. }), Rule::Visible(_))
-        | (Some(FormItem::Attachments { visible_when, .. }), Rule::Visible(_)) => {
+        | (Some(FormItem::Attachments { visible_when, .. }), Rule::Visible(_))
+        | (Some(FormItem::Location { visible_when, .. }), Rule::Visible(_)) => {
             *visible_when = value
         }
         (Some(FormItem::Field(f)), Rule::LookupFilter(_)) => {

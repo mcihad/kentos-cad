@@ -15,9 +15,10 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_ATTACHMENTS, ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, CREATE,
-    DOWN, ENFORCE, Event, FLOW, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO,
-    REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL,
+    CHANGES, CREATE, DOWN, ENFORCE, Event, FLOW, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH,
+    RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound,
+    find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -52,6 +53,15 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
         } => (
             crate::icons::from_web(Some("photo")),
             label.clone().unwrap_or_else(|| "Ekler".into()),
+            visible_when.is_some(),
+        ),
+        FormItem::Location {
+            label,
+            visible_when,
+            ..
+        } => (
+            crate::icons::from_web(Some("pin")),
+            label.clone().unwrap_or_else(|| "Konum".into()),
             visible_when.is_some(),
         ),
         FormItem::Field(f) => {
@@ -348,6 +358,11 @@ impl App {
                 ADD_ATTACHMENTS,
                 crate::icons::from_web(Some("photo")),
                 Some(Event::AddAttachments)
+            ),
+            tool(
+                ADD_LOCATION,
+                crate::icons::from_web(Some("pin")),
+                Some(Event::AddLocation)
             ),
             space::horizontal().width(8),
             icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
@@ -653,6 +668,30 @@ impl App {
                     visible_when.as_deref().unwrap_or(""),
                 ));
             }
+            FormItem::Location {
+                label: text,
+                visible_when,
+                ..
+            } => {
+                col = col
+                    .push(label::strong("Konum"))
+                    .push(words::field(
+                        "Başlık",
+                        input("Konum", text.as_deref().unwrap_or(""), Text::Label),
+                        None,
+                    ))
+                    .push(rule_row(
+                        "Görünürlük",
+                        Rule::Visible(id.clone()),
+                        visible_when.as_deref().unwrap_or(""),
+                    ))
+                    .push(
+                        label::caption(
+                            "Kaydın şekli küçük bir haritada, kuzey yukarı; merkezinin koordinatları ve alanı ya da uzunluğuyla. Hiçbir şey yazmaz.",
+                        )
+                        .style(muted),
+                    );
+            }
             FormItem::Attachments {
                 label: text,
                 accept,
@@ -927,7 +966,8 @@ impl App {
             FormItem::Tab { visible_when, .. }
             | FormItem::Group { visible_when, .. }
             | FormItem::Related { visible_when, .. }
-            | FormItem::Attachments { visible_when, .. } => visible_when.clone(),
+            | FormItem::Attachments { visible_when, .. }
+            | FormItem::Location { visible_when, .. } => visible_when.clone(),
             FormItem::Field(f) => f.visible_when.clone(),
             FormItem::Note { .. } => None,
         };

@@ -1003,6 +1003,54 @@ fn workflow_draft(app: &mut App) {
     )));
 }
 
+/// A parcel's form with its place (docs/adr/0433): an L-shaped parcel on the small map, its centre's
+/// coordinates, area and perimeter.
+fn located_parcel(app: &mut App) {
+    let mut o = Objects::new();
+    let id = o.path(
+        "kadastro",
+        &[
+            [0.0, 0.0],
+            [32.0, 0.0],
+            [32.0, 14.0],
+            [18.0, 14.0],
+            [18.0, 26.0],
+            [0.0, 26.0],
+        ],
+        true,
+    );
+    o.data(
+        id,
+        &[("Ada", "112"), ("Parsel", "7"), ("Nitelik", "Arsa")],
+        Some("112/7"),
+    );
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut kadastro = crate::tools_scenes::layer("kadastro", "Kadastro", "#E5484D", 0.35);
+        kadastro["fields"] = json!([{ "name": "Ada", "kind": "text" }, { "name": "Parsel", "kind": "text" },
+                                  { "name": "Nitelik", "kind": "text" }]);
+        layers.push(kadastro);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("kadastro");
+    });
+    let body = json!({ "revision": 1, "items": [
+        { "type": "group", "id": "kimlik", "label": "Parsel", "columns": 2, "items": [
+            { "type": "field", "id": "ada", "field": "Ada" }, { "type": "field", "id": "parsel", "field": "Parsel" },
+            { "type": "field", "id": "nitelik", "field": "Nitelik" }] },
+        { "type": "location", "id": "konum", "label": "Konum" }
+    ] });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "parsel", "name": "Parsel kaydı", "layer": "kadastro", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("kadastro".into());
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1811,6 +1859,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-kilitli", workflow_locked),
         ("form-is-akisi-gecmis", workflow_log),
         ("form-taslak", workflow_draft),
+        ("form-konum", located_parcel),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),

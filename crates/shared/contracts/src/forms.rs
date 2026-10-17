@@ -469,6 +469,17 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
+    /// The record's place (docs/adr/0433): its shape on a small map, its centre's coordinates and its
+    /// area or length; nothing is written.
+    Location {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        label: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        visible_when: Option<String>,
+    },
 }
 
 /// What an attachments item counts and adds.
@@ -844,7 +855,8 @@ impl FormItem {
             | FormItem::Group { id, .. }
             | FormItem::Note { id, .. }
             | FormItem::Related { id, .. }
-            | FormItem::Attachments { id, .. } => id,
+            | FormItem::Attachments { id, .. }
+            | FormItem::Location { id, .. } => id,
             FormItem::Field(f) => &f.id,
         }
     }
@@ -1080,6 +1092,20 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 {
                     return Some(format!(
                         "“{id}” öğesinin en az ve en çok sayısı 0 ile {MOST_FORM_ATTACHMENTS} arasındadır, en az en çoktan büyük olamaz."
+                    ));
+                }
+                if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {
+                    return Some(rule_problem(id));
+                }
+            }
+            FormItem::Location {
+                label,
+                visible_when,
+                ..
+            } => {
+                if label.as_deref().is_some_and(|l| !form_name_ok(l)) {
+                    return Some(format!(
+                        "“{id}” öğesinin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
                     ));
                 }
                 if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {

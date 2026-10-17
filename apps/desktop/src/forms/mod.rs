@@ -16,6 +16,7 @@ pub mod designer;
 mod designer_view;
 pub mod domains;
 pub mod entry;
+pub mod location;
 pub mod relations;
 pub mod subtypes;
 pub mod table_styles;
