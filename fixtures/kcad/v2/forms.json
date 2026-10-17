@@ -146,7 +146,29 @@
                 ]
               }
             }
-          ]
+          ],
+          "workflow": {
+            "field": "Durum",
+            "initial": "iyi",
+            "locked": [
+              "inceleme"
+            ],
+            "steps": [
+              {
+                "label": "İncelemeye al",
+                "from": [
+                  "iyi"
+                ],
+                "to": "inceleme",
+                "valid": true
+              },
+              {
+                "label": "Geri al",
+                "to": "iyi",
+                "reason": "Not"
+              }
+            ]
+          }
         },
         "releases": [
           {

@@ -3845,6 +3845,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -4442,6 +4453,40 @@
                 "type": "string"
               }
             ]
+          },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
           },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
@@ -12270,6 +12315,43 @@
             ],
             "type": "object"
           },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
+            ],
+            "type": "object"
+          },
           "Workspace": {
             "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
             "oneOf": [
@@ -14149,6 +14231,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -14746,6 +14839,40 @@
                 "type": "string"
               }
             ]
+          },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
           },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
@@ -18512,6 +18639,43 @@
             "required": [
               "x",
               "y"
+            ],
+            "type": "object"
+          },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
             ],
             "type": "object"
           },
@@ -22403,6 +22567,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -23000,6 +23175,40 @@
                 "type": "string"
               }
             ]
+          },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
           },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
@@ -30926,6 +31135,43 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
             ],
             "type": "object"
           },
@@ -342942,6 +343188,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -343506,6 +343763,40 @@
                 "type": "string"
               }
             ]
+          },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
           },
           "FormsOp": {
             "description": "What `cad.forms.edit` does.",
@@ -343686,6 +343977,43 @@
                 "type": "string"
               }
             ]
+          },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -343759,6 +344087,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -344449,6 +344788,40 @@
               }
             ]
           },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
+          },
           "LookupMatch": {
             "additionalProperties": false,
             "description": "A field of the list's layer that must equal a field of the record.",
@@ -344522,6 +344895,43 @@
                 "type": "string"
               }
             ]
+          },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -344620,6 +345030,17 @@
                   "$ref": "#/$defs/FormTest"
                 },
                 "type": "array"
+              },
+              "workflow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FormWorkflow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The records' workflow (docs/adr/0428): their state, the steps between states, the states that\nlock a record."
               }
             },
             "required": [
@@ -345310,6 +345731,40 @@
               }
             ]
           },
+          "FormWorkflow": {
+            "additionalProperties": false,
+            "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
+            "properties": {
+              "field": {
+                "description": "The state field's key: a single-valued field with a value list.",
+                "type": "string"
+              },
+              "initial": {
+                "description": "The state a new record starts in: a code of its list.",
+                "type": "string"
+              },
+              "locked": {
+                "description": "The states whose records are read-only.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "steps": {
+                "description": "The steps, in their order (the editor's buttons).",
+                "items": {
+                  "$ref": "#/$defs/WorkflowStep"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "field",
+              "initial",
+              "steps"
+            ],
+            "type": "object"
+          },
           "LookupMatch": {
             "additionalProperties": false,
             "description": "A field of the list's layer that must equal a field of the record.",
@@ -345383,6 +345838,43 @@
                 "type": "string"
               }
             ]
+          },
+          "WorkflowStep": {
+            "additionalProperties": false,
+            "description": "One step of a workflow.",
+            "properties": {
+              "from": {
+                "description": "The states it is taken from; empty: any state.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "label": {
+                "description": "The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "A text field's key the step writes its reason to; it must be given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "description": "The state it leads to.",
+                "type": "string"
+              },
+              "valid": {
+                "description": "The record must be valid by the form (no error) to take it.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "label",
+              "to"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -346698,6 +347190,209 @@
           "title": "Bina formunun hesaplarını bütün kayıtlarda yenile",
           "input": {
             "form": "bina-denetimi"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.forms.transition",
+      "version": 1,
+      "title": "İş akışı adımı",
+      "summary": "Kaydı formun iş akışında bir adım ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla yazılır (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. Tek geri alma adımı “Form: <adım>”.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.transition` v1 (İş akışı adımı, docs/adr/0428): a record taken a step of its form's\nworkflow, one undo step (“Form: <adım>”): its state field set to the step's state, with the values\ngiven (on a locked record only the step's reason); the form valid when the step asks so, its reason\nwritten when it names one.\n\nRefusals, in this order: `invalid_uid`, `invalid_moment`, `invalid_user`, `invalid_revision`,\n`revision_conflict` (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`,\n`no_workflow`, `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `unknown_step`,\n`step_not_allowed`, `record_locked`, `form_invalid`, `reason_required`.",
+        "properties": {
+          "draft": {
+            "description": "Through its draft instead of its latest release.",
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "moment": {
+            "description": "The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "step": {
+            "description": "The step's label.",
+            "type": "string"
+          },
+          "uid": {
+            "description": "The record (lowercase UUID text with hyphens).",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "user": {
+            "description": "The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Values by the layer fields' keys written with the step (the reason among them).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "form",
+          "uid",
+          "step"
+        ],
+        "title": "FormsTransition",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.transition` v1, and what plan says it would do.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards.",
+            "type": "object"
+          },
+          "from": {
+            "description": "The state it was in and the state it is in.",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release used; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "uid",
+          "from",
+          "to",
+          "attrs",
+          "revision"
+        ],
+        "title": "FormsTransitioned",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.transition` v1, and what plan says it would do.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The record's attributes afterwards.",
+            "type": "object"
+          },
+          "from": {
+            "description": "The state it was in and the state it is in.",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "version": {
+            "description": "The release used; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "uid",
+          "from",
+          "to",
+          "attrs",
+          "revision"
+        ],
+        "title": "FormsTransitioned",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "invalid_moment",
+          "invalid_user",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_form",
+          "form_unpublished",
+          "form_preflight",
+          "no_workflow",
+          "entity_not_found",
+          "form_layer_mismatch",
+          "layer_locked",
+          "unknown_step",
+          "step_not_allowed",
+          "record_locked",
+          "form_invalid",
+          "reason_required"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Denetimi tamamlanan binayı onaya gönder",
+          "input": {
+            "form": "bina-denetimi",
+            "step": "Gönder",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
           }
         }
       ]
@@ -378581,6 +379276,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu kimlikle bir form yok."
+    },
+    {
+      "code": "no_workflow",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun iş akışı yok."
+    },
+    {
+      "code": "unknown_step",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İş akışında bu adım yok."
+    },
+    {
+      "code": "step_not_allowed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adım kaydın durumundan atılmaz."
+    },
+    {
+      "code": "record_locked",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kayıt durumu gereği değiştirilemez."
+    },
+    {
+      "code": "reason_required",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adımın gerekçesi yazılmalı."
     },
     {
       "code": "unknown_release",

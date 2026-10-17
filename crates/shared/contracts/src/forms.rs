@@ -83,6 +83,157 @@ pub struct FormBody {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormTest>>", optional))]
     pub tests: Vec<FormTest>,
+    /// The records' workflow (docs/adr/0428): their state, the steps between states, the states that
+    /// lock a record.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub workflow: Option<FormWorkflow>,
+}
+
+/// A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step
+/// (`cad.forms.transition`) takes a record from one state to another, the form valid when the step
+/// says so and a reason written when it names one; a locked state's record is read-only until a step
+/// takes it out.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormWorkflow {
+    /// The state field's key: a single-valued field with a value list.
+    pub field: String,
+    /// The state a new record starts in: a code of its list.
+    pub initial: String,
+    /// The states whose records are read-only.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub locked: Vec<String>,
+    /// The steps, in their order (the editor's buttons).
+    pub steps: Vec<WorkflowStep>,
+}
+
+/// One step of a workflow.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkflowStep {
+    /// The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.
+    pub label: String,
+    /// The states it is taken from; empty: any state.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub from: Vec<String>,
+    /// The state it leads to.
+    pub to: String,
+    /// The record must be valid by the form (no error) to take it.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub valid: bool,
+    /// A text field's key the step writes its reason to; it must be given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reason: Option<String>,
+}
+
+/// The most steps a workflow holds.
+pub const MOST_WORKFLOW_STEPS: usize = 20;
+
+impl FormWorkflow {
+    /// The steps a record in `state` may take, in their order.
+    pub fn steps_from(&self, state: &str) -> impl Iterator<Item = &WorkflowStep> {
+        let state = state.to_owned();
+        self.steps
+            .iter()
+            .filter(move |s| s.from.is_empty() || s.from.contains(&state))
+    }
+
+    /// Whether a record in `state` is read-only.
+    pub fn locks(&self, state: &str) -> bool {
+        self.locked.iter().any(|l| l == state)
+    }
+}
+
+/// Why `workflow` cannot be a form's over a layer with `fields` (docs/adr/0428 §1); none when it can.
+pub fn workflow_problem(workflow: &FormWorkflow, fields: &[crate::LayerField]) -> Option<String> {
+    let Some(f) = fields.iter().find(|f| f.key() == workflow.field) else {
+        return Some(format!(
+            "İş akışının durum alanı (“{}”) katmanda yok.",
+            workflow.field
+        ));
+    };
+    let Some(codes) = f.values.as_ref().filter(|_| !f.holds_many()) else {
+        return Some(format!(
+            "“{}” iş akışının durum alanı olamaz: değer listeli, tek değerli bir alan olmalı.",
+            f.label()
+        ));
+    };
+    let listed = |c: &str| codes.iter().any(|v| v.code == c);
+    if !listed(&workflow.initial) {
+        return Some(format!(
+            "İlk durum “{}”, “{}” alanının listesinde yok.",
+            workflow.initial,
+            f.label()
+        ));
+    }
+    if let Some(c) = workflow.locked.iter().find(|c| !listed(c)) {
+        return Some(format!(
+            "Kilitli durum “{c}”, “{}” alanının listesinde yok.",
+            f.label()
+        ));
+    }
+    if workflow.steps.is_empty() {
+        return Some("İş akışında adım yok; en az bir adım verin.".into());
+    }
+    if workflow.steps.len() > MOST_WORKFLOW_STEPS {
+        return Some(format!(
+            "Bir iş akışında en çok {MOST_WORKFLOW_STEPS} adım olur; {} var.",
+            workflow.steps.len()
+        ));
+    }
+    for (i, s) in workflow.steps.iter().enumerate() {
+        if !form_name_ok(&s.label) {
+            return Some(format!(
+                "{}. adımın adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir.",
+                i + 1
+            ));
+        }
+        if workflow.steps[..i].iter().any(|o| o.label == s.label) {
+            return Some(format!("“{}” adımı iki kez var.", s.label));
+        }
+        if let Some(c) = s
+            .from
+            .iter()
+            .chain(std::iter::once(&s.to))
+            .find(|c| !listed(c))
+        {
+            return Some(format!(
+                "“{}” adımının durumu “{c}”, “{}” alanının listesinde yok.",
+                s.label,
+                f.label()
+            ));
+        }
+        if let Some(r) = &s.reason {
+            match fields.iter().find(|x| x.key() == r) {
+                None => {
+                    return Some(format!(
+                        "“{}” adımının gerekçe alanı (“{r}”) katmanda yok.",
+                        s.label
+                    ));
+                }
+                Some(x) if x.kind != crate::LayerFieldKind::Text || x.values.is_some() => {
+                    return Some(format!(
+                        "“{}” adımının gerekçe alanı “{}” serbest metin alanı olmalı.",
+                        s.label,
+                        x.label()
+                    ));
+                }
+                Some(_) => {}
+            }
+        }
+    }
+    None
 }
 
 /// The most scenarios a form keeps.

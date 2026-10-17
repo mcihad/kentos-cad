@@ -50,6 +50,21 @@ pub fn preflight_in(
     };
     p.items(&body.items, false);
     p.calc_cycle();
+    // The workflow over the layer's fields (docs/adr/0428 §1).
+    if let Some(problem) = body
+        .workflow
+        .as_ref()
+        .and_then(|w| kentos_contracts::workflow_problem(w, fields))
+    {
+        p.issues.push(issue(
+            codes::WORKFLOW_INVALID,
+            FormSeverity::Error,
+            None,
+            None,
+            Some("workflow"),
+            problem,
+        ));
+    }
     if p.bound.is_empty() {
         p.issues.push(issue(
             codes::EMPTY,

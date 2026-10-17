@@ -41,6 +41,9 @@ pub const CAD_FORMS_FILL_VERSION: u32 = 1;
 /// Completes every record of a form's layer by the form's rules today (docs/adr/0421).
 pub const CAD_FORMS_RECOMPUTE: &str = "cad.forms.recompute";
 pub const CAD_FORMS_RECOMPUTE_VERSION: u32 = 1;
+/// Takes a record a step in its form's workflow (docs/adr/0428).
+pub const CAD_FORMS_TRANSITION: &str = "cad.forms.transition";
+pub const CAD_FORMS_TRANSITION_VERSION: u32 = 1;
 /// Compares two versions of a form (docs/adr/0427).
 pub const CAD_FORMS_COMPARE: &str = "cad.forms.compare";
 pub const CAD_FORMS_COMPARE_VERSION: u32 = 1;
@@ -664,4 +667,72 @@ pub struct FormsCompared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub to: Option<u32>,
     pub changes: Vec<FormChange>,
+}
+
+/// Input of `cad.forms.transition` v1 (İş akışı adımı, docs/adr/0428): a record taken a step of its form's
+/// workflow, one undo step (“Form: <adım>”): its state field set to the step's state, with the values
+/// given (on a locked record only the step's reason); the form valid when the step asks so, its reason
+/// written when it names one.
+///
+/// Refusals, in this order: `invalid_uid`, `invalid_moment`, `invalid_user`, `invalid_revision`,
+/// `revision_conflict` (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`,
+/// `no_workflow`, `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `unknown_step`,
+/// `step_not_allowed`, `record_locked`, `form_invalid`, `reason_required`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsTransition {
+    /// The form's id.
+    pub form: String,
+    /// Through its draft instead of its latest release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// The record (lowercase UUID text with hyphens).
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// The step's label.
+    pub step: String,
+    /// Values by the layer fields' keys written with the step (the reason among them).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub values: BTreeMap<String, String>,
+    /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moment: Option<String>,
+    /// The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub user: Option<String>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.forms.transition` v1, and what plan says it would do.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsTransitioned {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// The state it was in and the state it is in.
+    pub from: String,
+    pub to: String,
+    /// The record's attributes afterwards.
+    pub attrs: BTreeMap<String, String>,
+    /// The release used; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: Option<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
 }

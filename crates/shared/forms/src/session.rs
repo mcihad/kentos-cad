@@ -51,6 +51,8 @@ pub struct Prepared {
     subtypes: Option<kentos_contracts::LayerSubtypes>,
     /// The layer's value groups (docs/adr/0423 §2).
     groups: Vec<kentos_contracts::FieldGroup>,
+    /// The form's workflow (docs/adr/0428) and its state field's place in `fields`.
+    workflow: Option<(kentos_contracts::FormWorkflow, usize)>,
 }
 
 /// An item's state for the record, without its id.
@@ -164,7 +166,36 @@ impl Prepared {
             clear_hidden: body.clear_hidden,
             subtypes: None,
             groups: Vec::new(),
+            workflow: body.workflow.clone().and_then(|w| {
+                let at = fields.iter().position(|f| f.key() == w.field)?;
+                Some((w, at))
+            }),
         })
+    }
+
+    /// The form's workflow (docs/adr/0428).
+    pub fn workflow(&self) -> Option<&kentos_contracts::FormWorkflow> {
+        self.workflow.as_ref().map(|(w, _)| w)
+    }
+
+    /// The record's state in the workflow: its state field's value, else the initial state.
+    pub fn state_of(&self, attrs: &Attrs) -> Option<String> {
+        let (w, at) = self.workflow.as_ref()?;
+        Some(
+            attrs
+                .get(&self.fields[*at].name)
+                .map(|v| js_trim(v).to_owned())
+                .filter(|v| !v.is_empty())
+                .unwrap_or_else(|| w.initial.clone()),
+        )
+    }
+
+    /// Whether the record is read-only by its state (docs/adr/0428 §2).
+    pub fn locked_by_state(&self, attrs: &Attrs) -> bool {
+        match (self.workflow(), self.state_of(attrs)) {
+            (Some(w), Some(s)) => w.locks(&s),
+            _ => false,
+        }
     }
 
     /// The form over a layer with value groups (docs/adr/0423 §2): a restrictive group narrows its
@@ -268,6 +299,18 @@ impl Prepared {
         let mut out: Vec<Flags> = Vec::with_capacity(self.items.len());
         // The record's subtype, once (docs/adr/0422 §2).
         let subtype = self.subtype(attrs);
+        // A workflow's state field changes by its steps only; a locked state locks the whole record
+        // (docs/adr/0428 §2).
+        let state_field = self.workflow.as_ref().map(|(_, at)| *at);
+        let locked = self.locked_by_state(attrs);
+        // On a locked record the reasons of the steps out of its state stay open, to be written.
+        let reasons: Vec<&str> = match (locked, self.workflow(), self.state_of(attrs)) {
+            (true, Some(w), Some(state)) => w
+                .steps_from(&state)
+                .filter_map(|s| s.reason.as_deref())
+                .collect(),
+            _ => Vec::new(),
+        };
         for node in &self.items {
             let here = node.parent.is_none_or(|p| out[p].shown)
                 && node
@@ -287,6 +330,8 @@ impl Prepared {
                             .as_ref()
                             .is_some_and(|e| holds(e, attrs, object)));
                 let read_only = b.item.read_only
+                    || (locked && !reasons.contains(&self.fields[b.index].key()))
+                    || state_field == Some(b.index)
                     || (b.calculate.is_some() && !b.item.overridable)
                     || b.read_only_when
                         .as_ref()
@@ -412,6 +457,12 @@ impl Prepared {
         let mut out = attrs.clone();
         let mut issues = Vec::new();
         if new {
+            // A new record starts in the workflow's initial state (docs/adr/0428 §2).
+            if let Some((w, at)) = &self.workflow
+                && is_empty(&out, &self.fields[*at].name)
+            {
+                out.insert(self.fields[*at].name.clone(), w.initial.clone());
+            }
             self.defaults(&mut out, object, &mut issues);
         }
         for round in 0..ROUNDS {

@@ -202,6 +202,8 @@ pub enum Event {
     FirstIssue,
     /// Uymayanları boşalt (docs/adr/0422 §2): the values the record's subtype does not offer emptied.
     ClearMisfits,
+    /// A step of the form's workflow, by its label (docs/adr/0428): `cad.forms.transition`.
+    Transition(String),
     Save,
     Cancel,
 }
@@ -1224,8 +1226,82 @@ impl App {
                 self.dialog = None;
             }
             Event::Save => return self.save_entry(),
+            Event::Transition(label) => return self.take_step(label),
         }
         Task::none()
+    }
+
+    /// A workflow step (docs/adr/0428): the record with the values typed, through `cad.forms.transition`;
+    /// the window closes when it went in.
+    fn take_step(&mut self, label: String) -> Task<Message> {
+        let Some(e) = self.form_entry.as_ref() else {
+            return Task::none();
+        };
+        if !e.members.is_empty() || e.preview || e.uid.is_empty() {
+            return Task::none();
+        }
+        let values: BTreeMap<String, String> = e
+            .written()
+            .into_iter()
+            .filter(|(k, _)| {
+                let name = e
+                    .fields
+                    .iter()
+                    .find(|f| f.key() == k.as_str())
+                    .map(|f| f.name.clone());
+                name.is_some_and(|n| e.after.get(&n) != e.before.get(&n))
+            })
+            .collect();
+        let input = kentos_contracts::FormsTransition {
+            form: e.form.clone(),
+            draft: e.draft,
+            uid: e.uid.clone(),
+            step: label.clone(),
+            values,
+            moment: e.moment.clone(),
+            user: e.user.clone(),
+            expected_revision: Some(e.revision.clone()),
+        };
+        let form = e.form.clone();
+        let docked = e.docked.then(|| e.uid.clone());
+        let state_words = |code: &str| -> String {
+            e.screen
+                .prepared
+                .workflow()
+                .and_then(|w| e.fields.iter().find(|f| f.key() == w.field))
+                .and_then(|f| f.values.as_ref())
+                .and_then(|v| v.iter().find(|c| c.code == code))
+                .map_or_else(|| code.to_owned(), |c| c.label.clone())
+        };
+        if let Some(locked) = self.forms_locked() {
+            self.warn(locked);
+            return Task::none();
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = kentos_native_application::forms_transition::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        // The words of the new state, read before the entry is closed.
+        let words_of = |done: &kentos_contracts::FormsTransitioned| state_words(&done.to);
+        match result {
+            kentos_contracts::CommandResult::Completed { output, .. } => {
+                let to = words_of(&output);
+                self.form_entry = None;
+                self.dialog = None;
+                if let Some(uid) = &docked {
+                    let _ = self.redock(uid, &form);
+                }
+                self.say(Level::Success, format!("“{label}”: kayıt “{to}” durumunda."));
+                Task::none()
+            }
+            other => {
+                let _ = self.answered(other);
+                self.go_to_first_issue()
+            }
+        }
     }
 
     fn go_to_first_issue(&mut self) -> Task<Message> {
@@ -1482,6 +1558,24 @@ impl App {
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
         }
+        // The record's state locks it (docs/adr/0428 §2): a step takes it out.
+        if !locked && e.screen.prepared.locked_by_state(&e.before) {
+            let state = e.screen.prepared.state_of(&e.before).unwrap_or_default();
+            let words_of = e
+                .screen
+                .prepared
+                .workflow()
+                .and_then(|w| e.fields.iter().find(|f| f.key() == w.field))
+                .and_then(|f| f.values.as_ref())
+                .and_then(|v| v.iter().find(|c| c.code == state))
+                .map_or(state.clone(), |c| c.label.clone());
+            body = body.push(words::summary(vec![words::text_line(
+                Kind::Info,
+                format!(
+                    "Kayıt “{words_of}” durumunda; değiştirilemez. İş akışının bir adımı onu düzenlemeye açar."
+                ),
+            )]));
+        }
         // The record's kind changed under values it does not offer (docs/adr/0422 §2): kept until the
         // user chooses, never emptied silently.
         let misfits = e.misfits();
@@ -1531,9 +1625,24 @@ impl App {
         }
         footer = footer
             .push(space::horizontal().width(Fill))
-            .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
-            .push(words::primary(SAVE, (!locked).then(|| e.msg(Event::Save))));
-        footer
+            .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))));
+        // The workflow's steps from the record's state (docs/adr/0428), before Kaydet.
+        let live = !e.preview && !e.uid.is_empty() && e.members.is_empty();
+        let by_state = e.screen.prepared.locked_by_state(&e.after);
+        if let (Some(w), Some(state), true) =
+            (e.screen.prepared.workflow(), e.screen.prepared.state_of(&e.before), live)
+        {
+            for step in w.steps_from(&state) {
+                footer = footer.push(words::secondary(
+                    step.label.as_str(),
+                    (!locked).then(|| e.msg(Event::Transition(step.label.clone()))),
+                ));
+            }
+        }
+        footer.push(words::primary(
+            SAVE,
+            (!locked && !by_state).then(|| e.msg(Event::Save)),
+        ))
     }
 
     fn entry_locked(&self, e: &Entry) -> bool {

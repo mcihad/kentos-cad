@@ -1,0 +1,2513 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.transition",
+ "commandVersion": 1,
+ "title": "İş akışı adımı",
+ "note": "ADR 0428: kaydın formun iş akışında bir adım ilerlemesi. Written by scripts/fixtures/forms_transition_cases.py with the form twin of forms_cases.py, without KentOS code; the form's sentences are the core's ($any).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "İş akışı",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "forms": [
+    {
+     "id": "denetim",
+     "name": "Bina denetimi",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ]
+      }
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "ed6ed9a4005a19256d658bd140f796c6",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "taslak",
+         "locked": [
+          "onaylandi"
+         ],
+         "steps": [
+          {
+           "label": "Gönder",
+           "from": [
+            "taslak",
+            "iade"
+           ],
+           "to": "gonderildi",
+           "valid": true
+          },
+          {
+           "label": "Onayla",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "onaylandi",
+           "valid": true
+          },
+          {
+           "label": "Geri gönder",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Düzelt",
+           "from": [
+            "onaylandi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Taslağa al",
+           "to": "taslak"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    },
+    {
+     "id": "basit",
+     "name": "Basit",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "29e6e95a5175486219e1b83d76c74bb5",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "taslak",
+     "name": "Taslak akış",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "id": "kilitli",
+     "name": "Kilitli katman",
+     "layer": "kilit",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ]
+      }
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "ed6ed9a4005a19256d658bd140f796c6",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "taslak",
+         "locked": [
+          "onaylandi"
+         ],
+         "steps": [
+          {
+           "label": "Gönder",
+           "from": [
+            "taslak",
+            "iade"
+           ],
+           "to": "gonderildi",
+           "valid": true
+          },
+          {
+           "label": "Onayla",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "onaylandi",
+           "valid": true
+          },
+          {
+           "label": "Geri gönder",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Düzelt",
+           "from": [
+            "onaylandi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Taslağa al",
+           "to": "taslak"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    },
+    {
+     "id": "bozuk",
+     "name": "Bozuk akış",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ],
+      "workflow": {
+       "field": "Yok",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "taslak",
+        "label": "Taslak"
+       },
+       {
+        "code": "gonderildi",
+        "label": "Gönderildi"
+       },
+       {
+        "code": "onaylandi",
+        "label": "Onaylandı"
+       },
+       {
+        "code": "iade",
+        "label": "İade edildi"
+       }
+      ]
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Yükseklik",
+      "kind": "decimal",
+      "scale": 1
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     },
+     {
+      "name": "Gerekçe",
+      "kind": "text",
+      "length": 200
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "taslak",
+        "label": "Taslak"
+       },
+       {
+        "code": "gonderildi",
+        "label": "Gönderildi"
+       },
+       {
+        "code": "onaylandi",
+        "label": "Onaylandı"
+       },
+       {
+        "code": "iade",
+        "label": "İade edildi"
+       }
+      ]
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Yükseklik",
+      "kind": "decimal",
+      "scale": 1
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     },
+     {
+      "name": "Gerekçe",
+      "kind": "text",
+      "length": 200
+     }
+    ]
+   },
+   {
+    "id": "kilit",
+    "name": "Kilit",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "taslak",
+        "label": "Taslak"
+       },
+       {
+        "code": "gonderildi",
+        "label": "Gönderildi"
+       },
+       {
+        "code": "onaylandi",
+        "label": "Onaylandı"
+       },
+       {
+        "code": "iade",
+        "label": "İade edildi"
+       }
+      ]
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Yükseklik",
+      "kind": "decimal",
+      "scale": 1
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     },
+     {
+      "name": "Gerekçe",
+      "kind": "text",
+      "length": 200
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "taslak",
+     "Kat": "3"
+    },
+    "pts": [
+     {
+      "x": 500020,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400010
+     },
+     {
+      "x": 500020,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "taslak"
+    },
+    "pts": [
+     {
+      "x": 500040,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400010
+     },
+     {
+      "x": 500040,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "gonderildi",
+     "Kat": "2",
+     "Yükseklik": "6"
+    },
+    "pts": [
+     {
+      "x": 500060,
+      "y": 4400000
+     },
+     {
+      "x": 500070,
+      "y": 4400000
+     },
+     {
+      "x": 500070,
+      "y": 4400010
+     },
+     {
+      "x": 500060,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "onaylandi",
+     "Kat": "4",
+     "Yükseklik": "12"
+    },
+    "pts": [
+     {
+      "x": 500080,
+      "y": 4400000
+     },
+     {
+      "x": 500090,
+      "y": 4400000
+     },
+     {
+      "x": 500090,
+      "y": 4400010
+     },
+     {
+      "x": 500080,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500100,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400010
+     },
+     {
+      "x": 500100,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {
+     "Kat": "1"
+    },
+    "pts": [
+     {
+      "x": 500120,
+      "y": 4400000
+     },
+     {
+      "x": 500130,
+      "y": 4400000
+     },
+     {
+      "x": 500130,
+      "y": 4400010
+     },
+     {
+      "x": 500120,
+      "y": 4400010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "kilit",
+    "attrs": {
+     "Durum": "taslak",
+     "Kat": "2"
+    },
+    "pts": [
+     {
+      "x": 500160,
+      "y": 4400000
+     },
+     {
+      "x": 500170,
+      "y": 4400000
+     },
+     {
+      "x": 500170,
+      "y": 4400010
+     },
+     {
+      "x": 500160,
+      "y": 4400010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "geçerli taslak gönderilir; hesap tamamlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Yükseklik": "9"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zorunlu katı eksik taslak gönderilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:2",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "$any",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "taslak"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksik kat değeriyle birlikte gönderilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:2",
+      "step": "Gönder",
+      "values": {
+       "Kat": "5"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:2",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "5",
+        "Yükseklik": "15"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "5",
+         "Yükseklik": "15"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taslak onaylanamaz: adım bu durumdan atılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Onayla"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "step_not_allowed",
+       "message": "“Onayla” adımı “Taslak” durumundaki kayıttan atılmaz.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "gönderilen onaylanır ve kilitlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Onayla"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "onaylandi",
+       "attrs": {
+        "Durum": "onaylandi",
+        "Kat": "2",
+        "Yükseklik": "6"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "onaylandi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri göndermenin gerekçesi yazılmalı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "reason_required",
+       "message": "“Geri gönder” adımının gerekçesi (“Gerekçe”) yazılmalı.",
+       "path": "values.Gerekçe"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "gerekçeyle geri gönderilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "Kat sayısı yanlış."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Kat sayısı yanlış."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Kat sayısı yanlış."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "onaylı kayıt gerekçeyle düzeltmeye açılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:4",
+      "step": "Düzelt",
+      "values": {
+       "Gerekçe": "Kat yeniden ölçülecek."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:4",
+       "from": "onaylandi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "4",
+        "Yükseklik": "12",
+        "Gerekçe": "Kat yeniden ölçülecek."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "4": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "4",
+         "Yükseklik": "12",
+         "Gerekçe": "Kat yeniden ölçülecek."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "onaylı kayda başka değer yazılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:4",
+      "step": "Düzelt",
+      "values": {
+       "Gerekçe": "x",
+       "Kat": "5"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "record_locked",
+       "message": "“Onaylandı” durumundaki kayıt değiştirilemez; bu adımla yalnız gerekçe yazılır.",
+       "path": "values.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "4": {
+        "attrs": {
+         "Durum": "onaylandi",
+         "Kat": "4",
+         "Yükseklik": "12"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "her durumdan taslağa: kilitli kayıt değer almadan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:4",
+      "step": "Taslağa al"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:4",
+       "from": "onaylandi",
+       "to": "taslak",
+       "attrs": {
+        "Durum": "taslak",
+        "Kat": "4",
+        "Yükseklik": "12"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "4": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "4",
+         "Yükseklik": "12"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "durumu boş kayıt ilk durumdadır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:5",
+      "step": "Gönder",
+      "values": {
+       "Kat": "7"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:5",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Kat": "7",
+        "Yükseklik": "21",
+        "Durum": "gonderildi"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "5": {
+        "attrs": {
+         "Kat": "7",
+         "Yükseklik": "21",
+         "Durum": "gonderildi"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "durum alanı değerlerle verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "values": {
+       "Durum": "onaylandi"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "“Durum” alanı iş akışının adımlarıyla değişir; değerlerden çıkarın.",
+       "path": "values.Durum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan adım",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Yayınla"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_step",
+       "message": "“Bina denetimi” formunun iş akışında “Yayınla” adımı yok.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kurala uymayan değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "values": {
+       "Kat": "kırk"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "$any",
+       "path": "values.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçerlilik istemeyen adım eksik kaydı da alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:2",
+      "step": "Taslağa al"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:2",
+       "from": "taslak",
+       "to": "taslak",
+       "attrs": {
+        "Durum": "taslak"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "taslak"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklama adımla birlikte yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "values": {
+       "Açıklama": "Ön cephe yenilendi."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Açıklama": "Ön cephe yenilendi.",
+        "Yükseklik": "9"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Açıklama": "Ön cephe yenilendi.",
+         "Yükseklik": "9"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri gönderilen düzeltilmeden yeniden gönderilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "Eksik ölçü."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Eksik ölçü."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Eksik ölçü."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "iade",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Eksik ölçü."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Eksik ölçü."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma adımı geri getirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Yükseklik": "9"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış formun taslağıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Yükseklik": "9"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iş akışı olmayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "basit",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_workflow",
+       "message": "“Basit” formunun iş akışı yok; tasarımcının İş akışı penceresinden tanımlayın.",
+       "path": "step"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "B-1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“B-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "formun katmanında olmayan kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:6",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_layer_mismatch",
+       "message": "Nesne “Bina denetimi” formunun katmanında değil. Formun katmanındaki bir nesneyi seçin.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kilitli",
+      "uid": "$uidOf:7",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilit” katmanı kilitli; kayıt değiştirilemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış form taslaksız",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Taslak akış” formu hiç yayınlanmadı. Önce yayınlayın ya da taslağıyla çalışın.",
+       "path": "draft"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "expectedRevision": "07"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "iş akışı katmana uymayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bozuk",
+      "draft": true,
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_preflight",
+       "message": "“Bozuk akış” formu kullanılamıyor: İş akışının durum alanı (“Yok”) katmanda yok. Formu tasarımcıda düzeltin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz an",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "moment": "dün"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“dün” bir an değil. Bir tarih (2026-10-16) ya da tarih ve yerel saat (2026-10-16T14:30:00) yazın.",
+       "path": "moment"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kullanıcı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "user": " Ayşe"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_user",
+       "message": "Kullanıcının adı boş olamaz, başında ve sonunda boşluk olmaz, en çok 64 karakterdir.",
+       "path": "user"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çakışan beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  }
+ ]
+}

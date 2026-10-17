@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AK` kayıt iş akışı (ADR 0428, 17 Ekim): web'de gerekenler: formun `workflow`'u (TS türleri üretildi), `cad.forms.transition`'ın TS
+  işleyicisi (`fixtures/commands/v1/cad.forms.transition.json`), form çekirdeğinin web bağlayıcısında durum alanının ve kilitli
+  durumun kuralı, Formla düzenle'de adım düğmeleri, tasarımcıda İş akışı.
 - [ ] `FORM-AJ` sürümleri karşılaştır (ADR 0427, 17 Ekim): web'de gerekenler: `cad.forms.compare`'ın TS işleyicisi
   (`fixtures/commands/v1/cad.forms.compare.json`), tasarımcıda Değişiklikler.
 - [ ] `FORM-AI` alt türe göre görünüm (ADR 0426, 17 Ekim): web'de gerekenler: sekmenin `visibleWhen`'i (TS türleri üretildi), formun
@@ -1506,6 +1509,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AK` Kayıt iş akışı: formun durum alanı, ilk durumu, kilitli durumları ve adımları (geçerli kayıt, gerekçe); Formla düzenle'de adım
+  düğmeleri, kilitli kayıt salt okunur; tasarımcıda İş akışı; `cad.forms.transition`. Roller bulut kararıyla açık. —
+  **17 Ekim, [ADR 0428](docs/adr/0428-record-workflow.md).**
 - [x] `FORM-AJ` Sürümleri karşılaştır: iki sürümün (yoksa son yayınla taslağın) farkı, öğe öğe eklendi, kaldırıldı, taşındı, değişti;
   tasarımcıda Değişiklikler; `cad.forms.compare`. — **17 Ekim, [ADR 0427](docs/adr/0427-form-versions-compared.md).**
 - [x] `FORM-AI` Alt türe göre görünüm: sekmenin görünürlük kuralı; tasarımcıda öğelerin Alt türlerde göster çipleri kuralı yazar. —

@@ -10845,11 +10845,14 @@ class FormBody(_Model):
             as `true`. Without it a hidden field keeps its value.
         tests: The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
             them, run again whenever the form changes.
+        workflow: The records' workflow (docs/adr/0428): their state, the steps between states, the states that
+            lock a record.
     """
     revision: int
     items: list[FormItem]
     clear_hidden: bool | Unset = UNSET
     tests: list[FormTest] | Unset = UNSET
+    workflow: FormWorkflow | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10859,6 +10862,8 @@ class FormBody(_Model):
             out["clearHidden"] = self.clear_hidden
         if self.tests is not UNSET:
             out["tests"] = [e0.to_json() for e0 in self.tests]
+        if self.workflow is not UNSET:
+            out["workflow"] = None if self.workflow is None else self.workflow.to_json()
         return out
 
     @classmethod
@@ -10868,6 +10873,7 @@ class FormBody(_Model):
             items=[FormItem.from_json(e0) for e0 in data["items"]],
             clear_hidden=data.get("clearHidden", UNSET),
             tests=[FormTest.from_json(e0) for e0 in data["tests"]] if "tests" in data else UNSET,
+            workflow=UNSET if "workflow" not in data else None if data["workflow"] is None else FormWorkflow.from_json(data["workflow"]),
         )
 
 
@@ -11239,6 +11245,42 @@ class FormTestResult(_Model):
             name=data["name"],
             passed=data["passed"],
             differences=list(data["differences"]) if "differences" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormWorkflow(_Model):
+    """A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step
+    (`cad.forms.transition`) takes a record from one state to another, the form valid when the step
+    says so and a reason written when it names one; a locked state's record is read-only until a step
+    takes it out.
+    Attributes:
+        field: The state field's key: a single-valued field with a value list.
+        initial: The state a new record starts in: a code of its list.
+        steps: The steps, in their order (the editor's buttons).
+        locked: The states whose records are read-only.
+    """
+    field: str
+    initial: str
+    steps: list[WorkflowStep]
+    locked: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["initial"] = self.initial
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.locked is not UNSET:
+            out["locked"] = list(self.locked)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormWorkflow:
+        return cls(
+            field=data["field"],
+            initial=data["initial"],
+            steps=[WorkflowStep.from_json(e0) for e0 in data["steps"]],
+            locked=list(data["locked"]) if "locked" in data else UNSET,
         )
 
 
@@ -11781,6 +11823,105 @@ class FormsTested(_Model):
             results=[FormTestResult.from_json(e0) for e0 in data["results"]],
             passed=data["passed"],
             total=data["total"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsTransition(_Model):
+    """Input of `cad.forms.transition` v1 (İş akışı adımı, docs/adr/0428): a record taken a step of its form's
+    workflow, one undo step (“Form: <adım>”): its state field set to the step's state, with the values
+    given (on a locked record only the step's reason); the form valid when the step asks so, its reason
+    written when it names one.
+
+    Refusals, in this order: `invalid_uid`, `invalid_moment`, `invalid_user`, `invalid_revision`,
+    `revision_conflict` (status `conflict`), `unknown_form`, `form_unpublished`, `form_preflight`,
+    `no_workflow`, `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `unknown_step`,
+    `step_not_allowed`, `record_locked`, `form_invalid`, `reason_required`.
+    Attributes:
+        form: The form's id.
+        uid: The record (lowercase UUID text with hyphens).
+        step: The step's label.
+        draft: Through its draft instead of its latest release.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        moment: The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+        user: The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
+        values: Values by the layer fields' keys written with the step (the reason among them).
+    """
+    form: str
+    uid: str
+    step: str
+    draft: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    moment: str | None | Unset = UNSET
+    user: str | None | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        out["uid"] = self.uid
+        out["step"] = self.step
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.moment is not UNSET:
+            out["moment"] = self.moment
+        if self.user is not UNSET:
+            out["user"] = self.user
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsTransition:
+        return cls(
+            form=data["form"],
+            uid=data["uid"],
+            step=data["step"],
+            draft=data.get("draft", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            moment=data.get("moment", UNSET),
+            user=data.get("user", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsTransitioned(_Model):
+    """Output of `cad.forms.transition` v1, and what plan says it would do.
+    Attributes:
+        from_: The state it was in and the state it is in.
+        attrs: The record's attributes afterwards.
+        version: The release used; none: the draft. Unit: version.
+    """
+    uid: str
+    from_: str
+    to: str
+    attrs: dict[str, str]
+    revision: str
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["attrs"] = dict(self.attrs)
+        out["revision"] = self.revision
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsTransitioned:
+        return cls(
+            uid=data["uid"],
+            from_=data["from"],
+            to=data["to"],
+            attrs=dict(data["attrs"]),
+            revision=data["revision"],
+            version=data.get("version", UNSET),
         )
 
 
@@ -23817,6 +23958,45 @@ class Wipeout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkflowStep(_Model):
+    """One step of a workflow.
+    Attributes:
+        label: The button's words, unique in the workflow: “Gönder”, “Onayla”, “Geri gönder”.
+        to: The state it leads to.
+        from_: The states it is taken from; empty: any state.
+        reason: A text field's key the step writes its reason to; it must be given.
+        valid: The record must be valid by the form (no error) to take it.
+    """
+    label: str
+    to: str
+    from_: list[str] | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    valid: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["to"] = self.to
+        if self.from_ is not UNSET:
+            out["from"] = list(self.from_)
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.valid is not UNSET:
+            out["valid"] = self.valid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkflowStep:
+        return cls(
+            label=data["label"],
+            to=data["to"],
+            from_=list(data["from"]) if "from" in data else UNSET,
+            reason=data.get("reason", UNSET),
+            valid=data.get("valid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayoutArrayEdit(ArrayEdit):
     """The rows, columns, count, spacing, fill or path: every item is laid out again. An item keeps its number
     (a grid's its row and column); a removed one stays removed, a kept one where it is; the places that are new
@@ -29984,6 +30164,7 @@ __all__ = [
     "FormTestResult",
     "FormWidget",
     "FormWidgetName",
+    "FormWorkflow",
     "FormsAudit",
     "FormsAudited",
     "FormsCompare",
@@ -29999,6 +30180,8 @@ __all__ = [
     "FormsSubmitted",
     "FormsTest",
     "FormsTested",
+    "FormsTransition",
+    "FormsTransitioned",
     "FormsValidate",
     "FormsValidated",
     "FoundSnap",
@@ -30554,6 +30737,7 @@ __all__ = [
     "WeightCurveEdit",
     "WindowSelectRegion",
     "Wipeout",
+    "WorkflowStep",
     "Workspace",
     "WorkspaceName",
     "WorldUcsTo",

@@ -185,6 +185,7 @@ mod tests {
             items: vec![field("a", "A"), field("b", "B"), field("c", "C")],
             clear_hidden: false,
             tests: Vec::new(),
+            workflow: None,
         };
         let mut changed = FormField::new("b", "B");
         changed.required = true;
@@ -193,6 +194,7 @@ mod tests {
             items: vec![field("c", "C"), FormItem::Field(changed), field("d", "D")],
             clear_hidden: true,
             tests: Vec::new(),
+            workflow: None,
         };
         let words: Vec<String> = compare(&old, &new).into_iter().map(|c| c.words).collect();
         assert_eq!(

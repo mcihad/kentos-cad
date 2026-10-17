@@ -16,7 +16,7 @@ use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
     ADD_ATTACHMENTS, ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, CREATE,
-    DOWN, ENFORCE, Event, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO,
+    DOWN, ENFORCE, Event, FLOW, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO,
     REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
@@ -103,7 +103,9 @@ impl App {
             .padding(16)
             .into(),
         };
-        let inspector = if w.changes {
+        let inspector = if w.flow {
+            self.forms_flow(w)
+        } else if w.changes {
             self.forms_changes(w)
         } else if w.previewing {
             self.forms_preview(w)
@@ -118,8 +120,10 @@ impl App {
         };
         // Özellikler | Önizleme | Değişiklikler over the third column (docs/adr/0403 §3, 0427).
         let side = Segmented::new(
-            [PROPERTIES, PREVIEW, CHANGES],
-            if w.changes {
+            [PROPERTIES, PREVIEW, CHANGES, FLOW],
+            if w.flow {
+                FLOW
+            } else if w.changes {
                 CHANGES
             } else if w.previewing {
                 PREVIEW
@@ -127,7 +131,9 @@ impl App {
                 PROPERTIES
             },
             |t| {
-                if t == CHANGES {
+                if t == FLOW {
+                    msg(Event::Flow)
+                } else if t == CHANGES {
                     msg(Event::Changes)
                 } else {
                     msg(Event::Preview(t == PREVIEW))
@@ -139,7 +145,11 @@ impl App {
             container(left).width(220).height(Fill),
             container(center).width(Fill).height(Fill),
             container(inspector)
-                .width(if w.previewing || w.changes { 400 } else { 340 })
+                .width(if w.previewing || w.changes || w.flow {
+                    400
+                } else {
+                    340
+                })
                 .height(Fill),
         ]
         .spacing(12)
@@ -1314,6 +1324,164 @@ impl App {
 }
 
 impl App {
+    /// İş akışı (docs/adr/0428): the state field, the first state, the locking states and the steps.
+    fn forms_flow<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+        let Some(body) = &w.body else {
+            return empty_inspector();
+        };
+        let layer = self
+            .chosen_form()
+            .map(|f| f.layer.clone())
+            .unwrap_or_default();
+        let fields = self.layer_fields_of(&layer);
+        let Some(flow) = &body.workflow else {
+            return column![
+                label::caption(
+                    "İş akışı yok. Kayıtlar bir durum alanıyla (Taslak, Gönderildi, Onaylandı gibi) adım adım ilerlesin: \
+                     her adım bir düğme olur, geçerli kayıt ya da gerekçe isteyebilir, onaylı kayıt kilitlenebilir.",
+                )
+                .style(muted),
+                words::secondary("İş akışı ekle", Some(msg(Event::WorkflowAdd))),
+            ]
+            .spacing(10)
+            .into();
+        };
+        let listed: Vec<&LayerField> = fields
+            .iter()
+            .filter(|f| f.values.as_ref().is_some_and(|v| !v.is_empty()) && !f.holds_many())
+            .collect();
+        let keys: Vec<String> = listed.iter().map(|f| f.key().to_owned()).collect();
+        let state_field = Select::new(
+            listed.iter().map(|f| Choice::new(f.label().to_owned())),
+            keys.iter().position(|k| *k == flow.field),
+            move |i| msg(Event::WorkflowField(keys[i].clone())),
+        );
+        let states: Vec<(String, String)> = fields
+            .iter()
+            .find(|f| f.key() == flow.field)
+            .and_then(|f| f.values.as_ref())
+            .map(|v| {
+                v.iter()
+                    .map(|c| (c.code.clone(), c.label.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let codes: Vec<String> = states.iter().map(|(c, _)| c.clone()).collect();
+        let initial_codes = codes.clone();
+        let initial = Select::new(
+            states.iter().map(|(_, l)| Choice::new(l.clone())),
+            codes.iter().position(|c| *c == flow.initial),
+            move |i| msg(Event::WorkflowInitial(initial_codes[i].clone())),
+        );
+        let chips = |on: &[String], each: &dyn Fn(String) -> Event| {
+            let mut row = Row::new().spacing(4);
+            for (code, words) in &states {
+                row = row.push(
+                    button(label::caption(words.clone()))
+                        .on_press(msg(each(code.clone())))
+                        .padding([2, 8])
+                        .style(style::button::chip(on.contains(code))),
+                );
+            }
+            row.wrap()
+        };
+        let reasons: Vec<&LayerField> = fields
+            .iter()
+            .filter(|f| f.kind == kentos_contracts::LayerFieldKind::Text && f.values.is_none())
+            .collect();
+        let mut col = Column::new()
+            .spacing(10)
+            .push(words::field("Durum alanı", state_field, None))
+            .push(words::field("İlk durum", initial, None))
+            .push(words::field(
+                "Kilitli durumlar",
+                chips(&flow.locked, &Event::WorkflowLocked),
+                Some("Bu durumdaki kayıt değiştirilemez; yalnız bir adım onu açar.".into()),
+            ))
+            .push(label::strong("Adımlar"));
+        for (i, step) in flow.steps.iter().enumerate() {
+            let reason_keys: Vec<String> = reasons.iter().map(|f| f.key().to_owned()).collect();
+            let mut reason_choices = vec![Choice::new("—")];
+            reason_choices.extend(reasons.iter().map(|f| Choice::new(f.label().to_owned())));
+            let reason_at = match &step.reason {
+                None => Some(0),
+                Some(k) => reason_keys.iter().position(|x| x == k).map(|p| p + 1),
+            };
+            let label_input = text_input("Adımın adı", &step.label)
+                .size(typography::body())
+                .on_input(move |t| msg(Event::StepLabel(i, t)))
+                .padding([4, 8])
+                .style(style::field::input);
+            let to_codes = codes.clone();
+            let to = Select::new(
+                states.iter().map(|(_, l)| Choice::new(l.clone())),
+                codes.iter().position(|c| *c == step.to),
+                move |k| msg(Event::StepTo(i, to_codes[k].clone())),
+            );
+            let reason = Select::new(reason_choices, reason_at, move |k| {
+                msg(Event::StepReason(
+                    i,
+                    k.checked_sub(1).map(|k| reason_keys[k].clone()),
+                ))
+            });
+            let boxed = column![
+                row![
+                    container(focus_ring(label_input)).width(Fill),
+                    button(icon(Icon::Close).size(12.0))
+                        .on_press(msg(Event::StepRemove(i)))
+                        .padding([3, 6])
+                        .style(style::button::tool(false)),
+                ]
+                .spacing(6)
+                .align_y(Center),
+                words::field(
+                    "Şu durumlardan",
+                    chips(&step.from, &move |c| Event::StepFrom(i, c)),
+                    Some(if step.from.is_empty() {
+                        "Seçilmezse her durumdan.".into()
+                    } else {
+                        "Yalnız seçilen durumlardaki kayıtta görünür.".into()
+                    }),
+                ),
+                words::field("Şu duruma", to, None),
+                words::check(
+                    step.valid,
+                    "Geçerli kayıt ister",
+                    Some(msg(Event::StepValid(i, !step.valid)))
+                ),
+                words::field(
+                    "Gerekçe alanı",
+                    reason,
+                    Some("Seçilirse adım gerekçe yazılmadan atılmaz.".into())
+                ),
+            ]
+            .spacing(8);
+            col = col.push(
+                container(boxed)
+                    .padding(10)
+                    .style(style::container::field_box)
+                    .width(Fill),
+            );
+        }
+        col = col.push(
+            row![
+                words::secondary("Adım ekle", Some(msg(Event::StepAdd))),
+                space::horizontal().width(Fill),
+                words::ghost("İş akışını kaldır", Some(msg(Event::WorkflowRemove))),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+        scrollable(col.padding(iced::Padding {
+            top: 0.0,
+            right: 14.0,
+            bottom: 0.0,
+            left: 2.0,
+        }))
+        .height(Fill)
+        .into()
+    }
+
     /// Değişiklikler (docs/adr/0427): the window's copy against the form's last release, item by item;
     /// pressing a change chooses its item.
     fn forms_changes<'a>(&self, w: &'a Window) -> Element<'a, Message> {

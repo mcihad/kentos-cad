@@ -579,6 +579,7 @@ fn command_tool(c: &Value) -> Value {
             // It writes over many records' attributes (docs/adr/0403 §5).
             | "cad.forms.fill"
             | "cad.forms.recompute"
+            | "cad.forms.transition"
             // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
             | "cad.relations.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).

@@ -3586,8 +3586,13 @@ class _Schema:
                               "issues": (self.array(self.text), False)})
         scenario = self.fields({"name": (self.text, True), "values": (strings, False), "new": (true_, False),
                                 "expect": (expect, True)})
+        # docs/adr/0428: the records' workflow; its fit to the layer's fields is the preflight's.
+        step = self.fields({"label": (self.text, True), "from": (nonempty(self.array(self.text)), False),
+                            "to": (self.text, True), "valid": (true_, False), "reason": (self.text, False)})
+        workflow = self.fields({"field": (self.text, True), "initial": (self.text, True),
+                                "locked": (nonempty(self.array(self.text)), False), "steps": (nonempty(self.array(step)), True)})
         body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
-                            "tests": (nonempty(self.array(scenario)), False)})
+                            "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False)})
         release = self.fields(
             {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
         )

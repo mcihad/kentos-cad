@@ -721,6 +721,86 @@ fn form_changes(app: &mut App) {
     designer(app, designer::Event::Changes);
 }
 
+/// Buildings through an inspection workflow (docs/adr/0428): drafted, sent, approved (locked) and
+/// returned with a reason; the published form's steps Gönder, Onayla, Geri gönder, Düzelt.
+fn workflow_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let rows = [
+        ("B-1", "taslak", "3"),
+        ("B-2", "gonderildi", "5"),
+        ("B-3", "onaylandi", "2"),
+        ("B-4", "iade", "4"),
+    ];
+    for (i, (code, state, floors)) in rows.iter().enumerate() {
+        let x = (i % 2) as f64 * 24.0;
+        let y = (i / 2) as f64 * 20.0;
+        let id = o.path(
+            "bina",
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        );
+        o.data(
+            id,
+            &[("Kod", code), ("Durum", state), ("Kat", floors)],
+            Some(code),
+        );
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Durum", "kind": "text", "values": [
+                                    { "code": "taslak", "label": "Taslak" }, { "code": "gonderildi", "label": "Gönderildi" },
+                                    { "code": "onaylandi", "label": "Onaylandı" }, { "code": "iade", "label": "İade edildi" }] },
+                                { "name": "Kat", "kind": "integer" },
+                                { "name": "Gerekçe", "kind": "text" }]);
+        layers.push(bina);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+    });
+    let body = json!({ "revision": 1, "items": [
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "field", "id": "durum", "field": "Durum" },
+            { "type": "field", "id": "kat", "field": "Kat", "required": true },
+            { "type": "field", "id": "gerekce", "field": "Gerekçe" }
+        ],
+        "workflow": { "field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "steps": [
+            { "label": "Gönder", "from": ["taslak", "iade"], "to": "gonderildi", "valid": true },
+            { "label": "Onayla", "from": ["gonderildi"], "to": "onaylandi", "valid": true },
+            { "label": "Geri gönder", "from": ["gonderildi"], "to": "iade", "reason": "Gerekçe" },
+            { "label": "Düzelt", "from": ["onaylandi"], "to": "iade", "reason": "Gerekçe" }
+        ] } });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "denetim", "name": "Bina denetimi", "layer": "bina", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("bina".into());
+}
+
+/// Formlar's İş akışı on the inspection form (docs/adr/0428 §4).
+fn workflow_designer(app: &mut App) {
+    workflow_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::Flow);
+}
+
+/// A sent building's form: its steps Onayla and Geri gönder beside Kaydet.
+fn workflow_steps(app: &mut App) {
+    workflow_buildings(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+}
+
+/// An approved building's form: read-only, Düzelt its only step (docs/adr/0428 §2).
+fn workflow_locked(app: &mut App) {
+    workflow_buildings(app);
+    app.selection.set([Slot(3)]);
+    run(app, "data.formEdit");
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1524,6 +1604,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-iliskili-tasarim", units_designer),
         ("form-alt-tur-sekme", kind_tabs),
         ("form-degisiklikler", form_changes),
+        ("form-is-akisi-tasarim", workflow_designer),
+        ("form-is-akisi-adim", workflow_steps),
+        ("form-is-akisi-kilitli", workflow_locked),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1728,6 +1811,51 @@ mod tests {
         assert_eq!(
             rule.default, None,
             "steel is no longer offered, nor its default"
+        );
+    }
+
+    #[test]
+    fn a_step_of_the_workflow_writes_the_state_and_closes_the_editor() {
+        let mut app = crate::files_testing::app_with_drawing();
+        workflow_steps(&mut app);
+        assert!(app.form_entry.is_some());
+        let _ = app.update(Message::FormEntry(entry::Event::Transition(
+            "Onayla".into(),
+        )));
+        assert!(
+            app.form_entry.is_none(),
+            "the editor closes when the step went in"
+        );
+        let doc = &app.document.as_ref().unwrap().model;
+        let held = doc.get(Slot(2)).unwrap();
+        assert_eq!(
+            held.base().attrs.get("Durum").map(String::as_str),
+            Some("onaylandi")
+        );
+        // The approved building is locked: Kaydet is off, Düzelt asks for a reason.
+        workflow_locked(&mut app);
+        let _ = app.update(Message::FormEntry(entry::Event::Transition(
+            "Düzelt".into(),
+        )));
+        assert!(
+            app.form_entry.is_some(),
+            "no reason: the step is refused, the editor stays"
+        );
+        // Its reason stays open on the locked record; written, Düzelt opens it again.
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Gerekçe".into(),
+            "Kat yeniden ölçülecek.".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Transition(
+            "Düzelt".into(),
+        )));
+        assert!(app.form_entry.is_none());
+        let doc = &app.document.as_ref().unwrap().model;
+        let attrs = &doc.get(Slot(3)).unwrap().base().attrs;
+        assert_eq!(attrs.get("Durum").map(String::as_str), Some("iade"));
+        assert_eq!(
+            attrs.get("Gerekçe").map(String::as_str),
+            Some("Kat yeniden ölçülecek.")
         );
     }
 

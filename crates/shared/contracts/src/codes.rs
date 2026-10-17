@@ -241,6 +241,16 @@ codes! {
     INVALID_FORM = "invalid_form", Failed, false, "Formun yapısı kurallarına uymuyor (öğe kimlikleri, sekmeler, derinlik, uzunluklar).";
     /// A form the project has not.
     UNKNOWN_FORM = "unknown_form", Failed, false, "Bu kimlikle bir form yok.";
+    /// A form without a workflow asked for a step (docs/adr/0428).
+    NO_WORKFLOW = "no_workflow", Failed, false, "Formun iş akışı yok.";
+    /// A step the workflow has not (docs/adr/0428).
+    UNKNOWN_STEP = "unknown_step", Failed, false, "İş akışında bu adım yok.";
+    /// A step not taken from the record's state (docs/adr/0428).
+    STEP_NOT_ALLOWED = "step_not_allowed", Failed, false, "Bu adım kaydın durumundan atılmaz.";
+    /// Values written to a record its state locks (docs/adr/0428).
+    RECORD_LOCKED = "record_locked", Failed, false, "Kayıt durumu gereği değiştirilemez.";
+    /// A step's reason not given (docs/adr/0428).
+    REASON_REQUIRED = "reason_required", Failed, false, "Adımın gerekçesi yazılmalı.";
     /// A release version the form has not (docs/adr/0427).
     UNKNOWN_RELEASE = "unknown_release", Failed, false, "Formun bu sürümde bir yayını yok.";
     /// A scenario name the form's body has not (docs/adr/0420).

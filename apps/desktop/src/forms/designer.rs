@@ -60,6 +60,7 @@ pub(super) const RECOMPUTE: &str = "Hesapları yenile";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
 pub(super) const CHANGES: &str = "Değişiklikler";
+pub(super) const FLOW: &str = "İş akışı";
 pub(super) const PROPERTIES: &str = "Özellikler";
 pub(super) const REDO: &str = "Yinele";
 /// The steps the copy's history keeps.
@@ -159,6 +160,8 @@ pub struct Window {
     pub(crate) scenario_name: String,
     /// The third column shows what changed since the last release (docs/adr/0427).
     pub(crate) changes: bool,
+    /// The third column shows the records' workflow (docs/adr/0428).
+    pub(crate) flow: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -216,6 +219,21 @@ pub enum Event {
     Preview(bool),
     /// The third column: what changed since the last release (docs/adr/0427).
     Changes,
+    /// The third column: the records' workflow (docs/adr/0428).
+    Flow,
+    /// İş akışı: made (with the first listed field and its first two states) or taken away.
+    WorkflowAdd,
+    WorkflowRemove,
+    WorkflowField(String),
+    WorkflowInitial(String),
+    WorkflowLocked(String),
+    StepAdd,
+    StepRemove(usize),
+    StepLabel(usize, String),
+    StepFrom(usize, String),
+    StepTo(usize, String),
+    StepValid(usize, bool),
+    StepReason(usize, Option<String>),
     /// Hesapları yenile on the chosen form (docs/adr/0421).
     Recompute,
     /// Kayıtları denetle on the chosen form (docs/adr/0406 §1).
@@ -1118,11 +1136,130 @@ impl App {
             }
             Event::Changes => {
                 w.changes = true;
+                w.flow = false;
                 w.previewing = false;
                 self.form_preview = None;
             }
+            Event::Flow => {
+                w.flow = true;
+                w.changes = false;
+                w.previewing = false;
+                self.form_preview = None;
+            }
+            Event::WorkflowAdd => {
+                let layer = self
+                    .chosen_form()
+                    .map(|f| f.layer.clone())
+                    .unwrap_or_default();
+                let fields = self.layer_fields_of(&layer);
+                let listed = fields
+                    .iter()
+                    .find(|f| f.values.as_ref().is_some_and(|v| v.len() >= 2) && !f.holds_many());
+                match listed {
+                    None => self.say(
+                        Level::Warn,
+                        "İş akışı için katmanda iki ya da daha çok değerli, tek değerli bir liste alanı gerekir (Taslak, Gönderildi, Onaylandı gibi).",
+                    ),
+                    Some(f) => {
+                        let codes: Vec<String> =
+                            f.values.iter().flatten().map(|c| c.code.clone()).collect();
+                        let workflow = kentos_contracts::FormWorkflow {
+                            field: f.key().to_owned(),
+                            initial: codes[0].clone(),
+                            locked: Vec::new(),
+                            steps: vec![kentos_contracts::WorkflowStep {
+                                label: "Gönder".into(),
+                                from: vec![codes[0].clone()],
+                                to: codes[1].clone(),
+                                valid: true,
+                                reason: None,
+                            }],
+                        };
+                        edited(&mut w, &|b| b.workflow = Some(workflow.clone()));
+                    }
+                }
+            }
+            Event::WorkflowRemove => edited(&mut w, &|b| b.workflow = None),
+            Event::WorkflowField(key) => {
+                let layer = self
+                    .chosen_form()
+                    .map(|f| f.layer.clone())
+                    .unwrap_or_default();
+                let first = self
+                    .layer_fields_of(&layer)
+                    .iter()
+                    .find(|f| f.key() == key)
+                    .and_then(|f| f.values.as_ref()?.first().map(|c| c.code.clone()))
+                    .unwrap_or_default();
+                edited(&mut w, &|b| {
+                    if let Some(wf) = b.workflow.as_mut() {
+                        wf.field = key.clone();
+                        wf.initial = first.clone();
+                        wf.locked.clear();
+                        for s in &mut wf.steps {
+                            s.from.clear();
+                            s.to = first.clone();
+                        }
+                    }
+                });
+            }
+            Event::WorkflowInitial(code) => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut() {
+                    wf.initial = code.clone();
+                }
+            }),
+            Event::WorkflowLocked(code) => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut() {
+                    toggle(&mut wf.locked, &code);
+                }
+            }),
+            Event::StepAdd => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut() {
+                    let n = wf.steps.len() + 1;
+                    wf.steps.push(kentos_contracts::WorkflowStep {
+                        label: format!("Adım {n}"),
+                        from: Vec::new(),
+                        to: wf.initial.clone(),
+                        valid: false,
+                        reason: None,
+                    });
+                }
+            }),
+            Event::StepRemove(i) => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut()
+                    && i < wf.steps.len()
+                {
+                    wf.steps.remove(i);
+                }
+            }),
+            Event::StepLabel(i, text) => edited(&mut w, &|b| {
+                if let Some(s) = b.workflow.as_mut().and_then(|wf| wf.steps.get_mut(i)) {
+                    s.label = text.clone();
+                }
+            }),
+            Event::StepFrom(i, code) => edited(&mut w, &|b| {
+                if let Some(s) = b.workflow.as_mut().and_then(|wf| wf.steps.get_mut(i)) {
+                    toggle(&mut s.from, &code);
+                }
+            }),
+            Event::StepTo(i, code) => edited(&mut w, &|b| {
+                if let Some(s) = b.workflow.as_mut().and_then(|wf| wf.steps.get_mut(i)) {
+                    s.to = code.clone();
+                }
+            }),
+            Event::StepValid(i, on) => edited(&mut w, &|b| {
+                if let Some(s) = b.workflow.as_mut().and_then(|wf| wf.steps.get_mut(i)) {
+                    s.valid = on;
+                }
+            }),
+            Event::StepReason(i, key) => edited(&mut w, &|b| {
+                if let Some(s) = b.workflow.as_mut().and_then(|wf| wf.steps.get_mut(i)) {
+                    s.reason = key.clone();
+                }
+            }),
             Event::Preview(on) => {
                 w.changes = false;
+                w.flow = false;
                 w.previewing = on;
                 if !on {
                     self.form_preview = None;
@@ -1483,6 +1620,15 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
             _ => {}
         },
         _ => {}
+    }
+}
+
+/// `code` in `list`, or out of it.
+fn toggle(list: &mut Vec<String>, code: &str) {
+    if let Some(i) = list.iter().position(|c| c == code) {
+        list.remove(i);
+    } else {
+        list.push(code.to_owned());
     }
 }
 

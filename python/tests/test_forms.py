@@ -390,6 +390,37 @@ class FormsTests(unittest.TestCase):
             revision=1, items=[body.items[0], item(["No", "Pay"])])))
         self.assertEqual([i.code for i in saved.issues], ["form_lookup_field"])
 
+    def test_a_record_moves_through_its_workflow(self) -> None:
+        """docs/adr/0428: drafted, sent, approved (locked), returned with a reason."""
+        doc, layer = drawing()
+        states = [cad.FieldChoice(code=c, label=w) for c, w in (("taslak", "Taslak"), ("gonderildi", "Gönderildi"),
+                                                               ("onaylandi", "Onaylandı"), ("iade", "İade edildi"))]
+        cad.layers.edit(doc, operation="fields", layer=layer, fields=[
+            cad.LayerField(name="Aşama", kind="text", values=states), cad.LayerField(name="Kat", kind="integer"),
+            cad.LayerField(name="Gerekçe", kind="text")])
+        flow = cad.FormWorkflow(field="Aşama", initial="taslak", locked=["onaylandi"], steps=[
+            cad.WorkflowStep(label="Gönder", from_=["taslak", "iade"], to="gonderildi", valid=True),
+            cad.WorkflowStep(label="Onayla", from_=["gonderildi"], to="onaylandi", valid=True),
+            cad.WorkflowStep(label="Düzelt", from_=["onaylandi"], to="iade", reason="Gerekçe"),
+        ])
+        body = cad.FormBody(revision=1, items=[
+            cad.FieldFormItem(id="asama", field="Aşama"), cad.FieldFormItem(id="kat", field="Kat", required=True),
+            cad.FieldFormItem(id="gerekce", field="Gerekçe")], workflow=flow)
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Denetim", layer=layer, id="denetim", body=body))
+        cad.forms.edit(doc, edit=cad.PublishFormsOp(id="denetim"))
+        uid = cad.polygon.create(doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(10.0, 0.0), cad.Vec2(10.0, 8.0)], layer_id=layer).uid
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.forms.transition(doc, form="denetim", uid=uid, step="Gönder")
+        self.assertEqual(refused.exception.code, "form_invalid", "the floor count is required")
+        sent = cad.forms.transition(doc, form="denetim", uid=uid, step="Gönder", values={"Kat": "3"})
+        self.assertEqual((sent.from_, sent.to), ("taslak", "gonderildi"))
+        cad.forms.transition(doc, form="denetim", uid=uid, step="Onayla")
+        with self.assertRaises(cad.CommandFailed) as locked:
+            cad.forms.transition(doc, form="denetim", uid=uid, step="Düzelt", values={"Kat": "4"})
+        self.assertEqual(locked.exception.code, "record_locked")
+        back = cad.forms.transition(doc, form="denetim", uid=uid, step="Düzelt", values={"Gerekçe": "Kat yanlış."})
+        self.assertEqual(back.attrs["Aşama"], "iade")
+
     def test_a_relation_keeps_its_children(self) -> None:
         """docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a
         restricting relation keeps a building with meters."""

@@ -4250,6 +4250,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A record's workflow step (docs/adr/0428), held together by fixtures/commands/v1/cad.forms.transition.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_TRANSITION.into(),
+            version: crate::CAD_FORMS_TRANSITION_VERSION,
+            title: "İş akışı adımı".into(),
+            summary: "Kaydı formun iş akışında bir adım ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla yazılır \
+                      (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt \
+                      istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. Tek geri alma adımı “Form: <adım>”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsTransition>(),
+            output: schema::<crate::FormsTransitioned>(),
+            plan: Some(schema::<crate::FormsTransitioned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Denetimi tamamlanan binayı onaya gönder".into(),
+                input: json!({ "form": "bina-denetimi", "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "step": "Gönder" }),
+                output: None,
+            }],
+        },
         // A form's versions compared (docs/adr/0427), held together by fixtures/commands/v1/cad.forms.compare.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_COMPARE.into(),
@@ -5490,6 +5517,9 @@ mod tests {
                     crate::CAD_FORMS_TEST => {
                         serde_json::from_value::<crate::FormsTest>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_TRANSITION => {
+                        serde_json::from_value::<crate::FormsTransition>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_COMPARE => {
                         serde_json::from_value::<crate::FormsCompare>(e.input.clone()).map(|_| ())
                     }
@@ -5824,6 +5854,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_TEST => {
                             serde_json::from_value::<crate::FormsTested>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_TRANSITION => {
+                            serde_json::from_value::<crate::FormsTransitioned>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_COMPARE => {

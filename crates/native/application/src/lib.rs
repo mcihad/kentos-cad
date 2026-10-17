@@ -177,6 +177,7 @@ pub mod forms_fill;
 pub mod forms_submit;
 pub mod forms_recompute;
 pub mod forms_test;
+pub mod forms_transition;
 pub mod forms_validate;
 pub mod relations_edit;
 pub mod widths;
@@ -253,6 +254,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_COMPARE,
         kentos_contracts::CAD_FORMS_COMPARE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_TRANSITION,
+        kentos_contracts::CAD_FORMS_TRANSITION_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_RECOMPUTE,
