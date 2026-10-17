@@ -505773,7 +505773,7 @@
       "id": "cad.processing.run",
       "version": 1,
       "title": "İşlem aracını çalıştır",
-      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed.",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar ve bağlı katmanların kaynak sürümleri.",
       "aliases": [
         "islem",
         "process"
@@ -505790,6 +505790,24 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "RunSink": {
+            "description": "A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. The file is written whole or not at all; one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete.",
+            "properties": {
+              "overwrite": {
+                "type": "boolean"
+              },
+              "path": {
+                "description": "The GeoPackage's path (`.gpkg`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`; a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and\nstopped: a locked layer, nothing to do, its own refusal; nothing written).",
         "properties": {
@@ -505806,6 +505824,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunSink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage."
           },
           "tool": {
             "type": "string"
@@ -505833,6 +505862,108 @@
       },
       "output": {
         "$defs": {
+          "GpkgExported": {
+            "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+            "properties": {
+              "approximated": {
+                "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "left": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Objects not written, by kind.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/GpkgTableExported"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "bytes",
+              "sha256",
+              "tables",
+              "approximated"
+            ],
+            "type": "object"
+          },
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "RunInput": {
+            "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
           "ToolNote": {
             "description": "A note the tool made while it ran.",
             "properties": {
@@ -505867,6 +505998,13 @@
             },
             "type": "array"
           },
+          "inputs": {
+            "description": "The layers the features inputs read, in the inputs' order.",
+            "items": {
+              "$ref": "#/$defs/RunInput"
+            },
+            "type": "array"
+          },
           "layers": {
             "description": "The layers it made (ids).",
             "items": {
@@ -505898,6 +506036,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -505924,6 +506073,108 @@
       },
       "plan": {
         "$defs": {
+          "GpkgExported": {
+            "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+            "properties": {
+              "approximated": {
+                "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "left": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Objects not written, by kind.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/GpkgTableExported"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "bytes",
+              "sha256",
+              "tables",
+              "approximated"
+            ],
+            "type": "object"
+          },
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "RunInput": {
+            "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
           "ToolNote": {
             "description": "A note the tool made while it ran.",
             "properties": {
@@ -505958,6 +506209,13 @@
             },
             "type": "array"
           },
+          "inputs": {
+            "description": "The layers the features inputs read, in the inputs' order.",
+            "items": {
+              "$ref": "#/$defs/RunInput"
+            },
+            "type": "array"
+          },
           "layers": {
             "description": "The layers it made (ids).",
             "items": {
@@ -505989,6 +506247,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -506020,7 +506289,14 @@
           "invalid_uid",
           "entity_not_found",
           "invalid_parameters",
-          "tool_failed"
+          "tool_failed",
+          "invalid_file_path",
+          "file_exists",
+          "file_unwritable",
+          "nothing_to_export"
+        ],
+        "warnings": [
+          "export_losses"
         ]
       },
       "examples": [
@@ -506031,6 +506307,25 @@
               "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"
             ],
             "tool": "points.numberVertices"
+          }
+        },
+        {
+          "title": "Parsel ve imar kesişimi dosyaya",
+          "input": {
+            "parameters": {
+              "input": {
+                "layerId": "parsel",
+                "scope": "layer"
+              },
+              "overlay": {
+                "layerId": "imar",
+                "scope": "layer"
+              }
+            },
+            "sink": {
+              "path": "/is/kesisim.gpkg"
+            },
+            "tool": "geometry.intersection"
           }
         },
         {

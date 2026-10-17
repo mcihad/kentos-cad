@@ -26,6 +26,7 @@ mod match_props;
 mod object_policy;
 mod order_cmd;
 mod polygon;
+mod processing_sink;
 mod protocol;
 mod protocol_cases;
 mod python_calls;

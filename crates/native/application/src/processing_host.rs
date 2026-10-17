@@ -6,7 +6,8 @@
 use std::sync::OnceLock;
 
 use kentos_contracts::{
-    CommandError, ProcessingRan, ProcessingRun, ProcessingTools, ProcessingToolsListed, codes,
+    CommandError, CommandWarning, ProcessingRan, ProcessingRun, ProcessingTools,
+    ProcessingToolsListed, codes,
 };
 use kentos_domain::Document;
 
@@ -20,12 +21,14 @@ pub trait ToolHost: Send + Sync {
     ) -> Result<ProcessingToolsListed, Box<CommandError>>;
     /// The refusals a run would meet before it runs: an unknown tool, an id, a value.
     fn check(&self, doc: &Document, input: &ProcessingRun) -> Result<(), Box<CommandError>>;
-    /// The run on `doc`, written as one undo step named by the tool.
+    /// The run on `doc`, written as one undo step named by the tool; with a sink the run is made on a copy and its
+    /// result written to the file (only when `write`: a plan writes nothing). Its warnings beside it.
     fn run(
         &self,
         doc: &mut Document,
         input: &ProcessingRun,
-    ) -> Result<ProcessingRan, Box<CommandError>>;
+        write: bool,
+    ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>>;
 }
 
 static TOOLS: OnceLock<Box<dyn ToolHost>> = OnceLock::new();

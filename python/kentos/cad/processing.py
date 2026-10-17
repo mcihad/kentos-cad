@@ -15,6 +15,7 @@ from .types import (  # noqa: F401
     ProcessingRun,
     ProcessingTools,
     ProcessingToolsListed,
+    RunSink,
 )
 
 if TYPE_CHECKING:
@@ -40,6 +41,13 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını
     söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun
     dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed.
+    sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç
+    kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı,
+    alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp
+    tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler
+    invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın
+    tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve
+    tabloları, inputs'u okunan katmanlar ve bağlı katmanların kaynak sürümleri.
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -58,6 +66,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -79,13 +88,21 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin
         bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin
         kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev
-        sahibinin dosyalarını ister; başsız ortamda tool_failed.
+        sahibinin dosyalarını ister; başsız ortamda tool_failed. sink { path, overwrite }
+        sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı
+        nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler
+        kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur,
+        var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists,
+        file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses;
+        cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar ve
+        bağlı katmanların kaynak sürümleri.
 
         Args:
             doc: The drawing it works on.
             tool:
             parameters:
             selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
+            sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
             view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -103,6 +120,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -114,6 +132,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
     ) -> ProcessingRan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -123,6 +142,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ))
 
@@ -134,6 +154,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -143,6 +164,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ))
 
@@ -154,6 +176,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
+        sink: RunSink | None | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -168,6 +191,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
+            sink=sink,
             view=_opt(view, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

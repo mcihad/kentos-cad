@@ -2,13 +2,16 @@
 //! `cad.processing.tools` and `.run` reach the tools through [`register`]. A run is the window's run without a
 //! screen: the values are the input's (a features input names its objects by persistent ids, or takes the input's
 //! explicit `selection` and `view`), the drawing's defaults fill the rest, the runner checks and writes them as the
-//! window does, one undo step named by the tool.
+//! window does, one undo step named by the tool. With a sink (docs/adr/0508 §4) the run is made on a copy and the
+//! objects it made go to a new GeoPackage; the drawing does not change.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::path::{Path, PathBuf};
 
 use kentos_contracts::{
-    CommandError, ProcessingRan, ProcessingRun, ProcessingTool, ProcessingTools,
-    ProcessingToolsListed, ToolNote, ToolParameter, codes,
+    CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingRan, ProcessingRun,
+    ProcessingTool, ProcessingTools, ProcessingToolsListed, RunInput, RunSink, ToolNote,
+    ToolParameter, codes,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
@@ -412,94 +415,350 @@ impl ToolHost for Tools {
         &self,
         doc: &mut Document,
         input: &ProcessingRun,
-    ) -> Result<ProcessingRan, Box<CommandError>> {
+        write: bool,
+    ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>> {
         let registry = Registry::builtin();
-        let Ready {
-            tool,
-            values,
-            selection,
-            view,
-        } = ready(&registry, doc, input)?;
-        let before = layer_ids(doc);
-        let mut host = Headless {
-            doc,
-            selection,
-            view,
-            chosen: None,
+        let ready = ready(&registry, doc, input)?;
+        let inputs = inputs_of(doc, &ready);
+        let Some(sink) = &input.sink else {
+            let (mut ran, _) = run_on(doc, ready)?;
+            ran.inputs = inputs;
+            return Ok((ran, Vec::new()));
         };
-        let mut log = Vec::new();
-        let mut runner = Runner::new();
-        let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
-        let Headless { doc, chosen, .. } = host;
-        let notes: Vec<ToolNote> = log
-            .iter()
-            .map(|l| ToolNote {
-                level: match l.level {
-                    Level::Info => "info",
-                    Level::Warn => "warn",
-                }
-                .to_owned(),
-                text: l.text.clone(),
-            })
-            .collect();
-        match outcome {
-            Outcome::Ok {
-                result,
-                added,
-                updated,
-                edited,
-                record,
-                ..
-            } => {
-                let kinds: BTreeMap<&str, OutputKind> = tool
-                    .outputs
-                    .iter()
-                    .map(|o| (o.name.as_str(), o.kind))
-                    .collect();
-                let outputs = result
-                    .outputs
-                    .iter()
-                    .map(|(k, v)| {
-                        (
-                            k.clone(),
-                            output_value(doc, kinds.get(k.as_str()).copied(), v),
-                        )
-                    })
-                    .collect();
-                let added_set: BTreeSet<Slot> = added.iter().copied().collect();
-                let changed: Vec<Slot> = updated
-                    .into_iter()
-                    .filter(|s| !added_set.contains(s))
-                    .collect();
-                let layers = layer_ids(doc).difference(&before).cloned().collect();
-                Ok(ProcessingRan {
-                    tool: tool.id.clone(),
-                    summary: record.summary,
-                    added: uids(doc, &added),
-                    changed: uids(doc, &changed),
-                    selected: chosen.map(|c| uids(doc, &c)).unwrap_or_default(),
-                    layers,
-                    outputs,
-                    notes,
-                    step: edited.then(|| tool.label.clone()),
-                    revision: doc.revision().to_string(),
+        let target = sink_target(sink)?;
+        // The run is made on a copy: the drawing does not change, the file takes the result.
+        let mut copy = doc.reading_copy();
+        let (mut ran, added) = run_on(&mut copy, ready)?;
+        let (exported, warnings) = write_sink(&mut copy, &added, &target, write)?;
+        ran.inputs = inputs;
+        ran.sink = Some(exported);
+        ran.step = None;
+        ran.revision = doc.revision().to_string();
+        Ok((ran, warnings))
+    }
+}
+
+/// Runs a made-ready tool on `doc` (the drawing or a copy): what it did and the objects it made.
+fn run_on(
+    doc: &mut Document,
+    ready: Ready,
+) -> Result<(ProcessingRan, Vec<Slot>), Box<CommandError>> {
+    let Ready {
+        tool,
+        values,
+        selection,
+        view,
+    } = ready;
+    let before = layer_ids(doc);
+    let mut host = Headless {
+        doc,
+        selection,
+        view,
+        chosen: None,
+    };
+    let mut log = Vec::new();
+    let mut runner = Runner::new();
+    let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+    let Headless { doc, chosen, .. } = host;
+    let notes: Vec<ToolNote> = log
+        .iter()
+        .map(|l| ToolNote {
+            level: match l.level {
+                Level::Info => "info",
+                Level::Warn => "warn",
+            }
+            .to_owned(),
+            text: l.text.clone(),
+        })
+        .collect();
+    match outcome {
+        Outcome::Ok {
+            result,
+            added,
+            updated,
+            edited,
+            record,
+            ..
+        } => {
+            let kinds: BTreeMap<&str, OutputKind> = tool
+                .outputs
+                .iter()
+                .map(|o| (o.name.as_str(), o.kind))
+                .collect();
+            let outputs = result
+                .outputs
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        k.clone(),
+                        output_value(doc, kinds.get(k.as_str()).copied(), v),
+                    )
                 })
-            }
-            Outcome::Invalid { issues } => {
-                let first = issues.into_iter().next();
-                Err(refused(
-                    codes::INVALID_PARAMETERS,
-                    first
-                        .as_ref()
-                        .map_or_else(|| "Değerler uymuyor.".to_owned(), |i| i.message.clone()),
-                    first
-                        .and_then(|i| i.param)
-                        .map(|p| format!("parameters.{p}")),
-                ))
-            }
-            Outcome::Stopped { message, .. } => {
-                Err(refused(codes::TOOL_FAILED, message, Some("tool".into())))
-            }
+                .collect();
+            let added_set: BTreeSet<Slot> = added.iter().copied().collect();
+            let changed: Vec<Slot> = updated
+                .into_iter()
+                .filter(|s| !added_set.contains(s))
+                .collect();
+            let layers = layer_ids(doc).difference(&before).cloned().collect();
+            let ran = ProcessingRan {
+                tool: tool.id.clone(),
+                summary: record.summary,
+                added: uids(doc, &added),
+                changed: uids(doc, &changed),
+                selected: chosen.map(|c| uids(doc, &c)).unwrap_or_default(),
+                layers,
+                outputs,
+                notes,
+                inputs: Vec::new(),
+                sink: None,
+                step: edited.then(|| tool.label.clone()),
+                revision: doc.revision().to_string(),
+            };
+            Ok((ran, added))
+        }
+        Outcome::Invalid { issues } => {
+            let first = issues.into_iter().next();
+            Err(refused(
+                codes::INVALID_PARAMETERS,
+                first
+                    .as_ref()
+                    .map_or_else(|| "Değerler uymuyor.".to_owned(), |i| i.message.clone()),
+                first
+                    .and_then(|i| i.param)
+                    .map(|p| format!("parameters.{p}")),
+            ))
+        }
+        Outcome::Stopped { message, .. } => {
+            Err(refused(codes::TOOL_FAILED, message, Some("tool".into())))
         }
     }
+}
+
+/// The layers the features inputs read, in the inputs' order: a layer named, or the layers of the objects named or
+/// chosen; a bound layer with its source and the revision it read. The visible layers (`all`) and the view are not
+/// listed one by one.
+fn inputs_of(doc: &Document, ready: &Ready) -> Vec<RunInput> {
+    let mut layers: Vec<String> = Vec::new();
+    let mut add = |id: &str| {
+        if !layers.iter().any(|l| l == id) {
+            layers.push(id.to_owned());
+        }
+    };
+    let layer_of = |s: Slot| doc.get(s).map(|e| e.base().layer_id.clone());
+    for p in &ready.tool.parameters {
+        let (ParamKind::Features { .. }, Some(v)) = (&p.kind, ready.values.get(&p.name)) else {
+            continue;
+        };
+        match v.get("scope").and_then(Value::as_str) {
+            Some("layer") => {
+                if let Some(id) = v.get("layerId").and_then(Value::as_str) {
+                    add(id);
+                }
+            }
+            Some("ids") => {
+                for n in v.get("ids").and_then(Value::as_array).into_iter().flatten() {
+                    if let Some(id) = n
+                        .as_u64()
+                        .and_then(|n| u32::try_from(n).ok())
+                        .and_then(|n| layer_of(Slot(n)))
+                    {
+                        add(&id);
+                    }
+                }
+            }
+            Some("selection") => {
+                for s in &ready.selection {
+                    if let Some(id) = layer_of(*s) {
+                        add(&id);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    let sources = &doc.settings().sources;
+    layers
+        .into_iter()
+        .map(|layer| {
+            let link = sources.iter().find(|s| s.layer == layer);
+            RunInput {
+                source: link.map(|s| s.id.clone()),
+                revision: link.map(|s| s.revision.clone()),
+                layer,
+            }
+        })
+        .collect()
+}
+
+/// Where a sink writes, or why not there: an absolute `.gpkg` path in a folder that is there; a file that is there
+/// only with `overwrite`.
+fn sink_target(sink: &RunSink) -> Result<(PathBuf, bool), Box<CommandError>> {
+    let at = Some("sink.path".to_owned());
+    let path = sink.path.trim();
+    let p = Path::new(path);
+    if path.is_empty() || !p.is_absolute() {
+        return Err(refused(
+            codes::INVALID_FILE_PATH,
+            format!(
+                "“{path}” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/sonuç.gpkg)."
+            ),
+            at,
+        ));
+    }
+    if !p
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("gpkg"))
+    {
+        return Err(refused(
+            codes::INVALID_FILE_PATH,
+            format!("{path} bir GeoPackage adı değil; sonucun dosyası .gpkg ile biter."),
+            at,
+        ));
+    }
+    if p.is_dir() || !p.parent().is_some_and(Path::is_dir) {
+        return Err(refused(
+            codes::INVALID_FILE_PATH,
+            format!("{path} dosyasının klasörü yok; önce klasörü açın ya da başka bir yol verin."),
+            at,
+        ));
+    }
+    let exists = p.exists();
+    if exists && !sink.overwrite {
+        return Err(refused(
+            codes::FILE_EXISTS,
+            format!("{path} var; üzerine yazmak için overwrite: true verin."),
+            at,
+        ));
+    }
+    Ok((p.to_path_buf(), exists))
+}
+
+/// The objects a run made on `copy` written to the sink's GeoPackage, each layer they are on a table; the other
+/// objects of the copy are left out first. The file is made beside the target under a passing name and, with
+/// `write`, put in its place in one step; a plan removes it. What it holds, and what it could not hold.
+fn write_sink(
+    copy: &mut Document,
+    added: &[Slot],
+    (path, _): &(PathBuf, bool),
+    write: bool,
+) -> Result<(GpkgExported, Vec<CommandWarning>), Box<CommandError>> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    let at = Some("sink.path".to_owned());
+    let keep: HashSet<Slot> = added.iter().copied().collect();
+    let others: Vec<Slot> = copy
+        .entities()
+        .map(|e| Slot(e.base().id))
+        .filter(|s| !keep.contains(s))
+        .collect();
+    copy.remove(&others);
+    let mut layers: Vec<String> = Vec::new();
+    for s in added {
+        if let Some(e) = copy.get(*s)
+            && !layers.contains(&e.base().layer_id)
+        {
+            layers.push(e.base().layer_id.clone());
+        }
+    }
+    if layers.is_empty() {
+        return Err(refused(
+            codes::NOTHING_TO_EXPORT,
+            "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir)."
+                .into(),
+            at,
+        ));
+    }
+    let tmp = path.with_extension(format!(
+        "gpkg.kentos-{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    let _ = std::fs::remove_file(&tmp);
+    let written = kentos_native_application::geopackage::write(copy, &layers, &tmp);
+    let bytes = std::fs::read(&tmp);
+    let unwritable = |why: String| {
+        refused(
+            codes::FILE_UNWRITABLE,
+            format!("GeoPackage yazılamadı: {why}. Eski dosya olduğu gibi kaldı."),
+            Some("sink.path".to_owned()),
+        )
+    };
+    let (written, bytes) = match (written, bytes) {
+        (Ok(w), Ok(b)) => (w, b),
+        (Err(why), _) => {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(unwritable(why));
+        }
+        (_, Err(e)) => {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(unwritable(e.to_string()));
+        }
+    };
+    if written.tables.is_empty() {
+        let _ = std::fs::remove_file(&tmp);
+        return Err(refused(
+            codes::NOTHING_TO_EXPORT,
+            "Aracın yaptığı nesnelerin GeoPackage'da geometrisi yok (yazı, ölçü, blok, tarama); dosyaya yazılacak sonuç yok."
+                .into(),
+            at,
+        ));
+    }
+    if write {
+        if let Err(e) = std::fs::rename(&tmp, path) {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(unwritable(e.to_string()));
+        }
+    } else {
+        let _ = std::fs::remove_file(&tmp);
+    }
+    let mut warnings = Vec::new();
+    let mut said: Vec<String> = Vec::new();
+    if !written.left.is_empty() {
+        let parts: Vec<String> = written
+            .left
+            .iter()
+            .map(|(k, n)| format!("{n} {k}"))
+            .collect();
+        said.push(format!(
+            "GeoPackage'da karşılığı olmayan nesneler yazılmadı: {}.",
+            parts.join(", ")
+        ));
+    }
+    if written.approximated > 0 {
+        said.push(format!(
+            "{} eğri (elips, eğri, NURBS) 0,1 mm'lik kirişlerle yazıldı.",
+            written.approximated
+        ));
+    }
+    for (table, from, to) in &written.renamed {
+        said.push(format!(
+            "“{table}” tablosunda “{from}” özniteliği “{to}” sütununa yazıldı: aynı adda (büyük küçük harf ayrı) bir sütun vardı."
+        ));
+    }
+    if !said.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: said.join(" "),
+            path: Some("sink".into()),
+        });
+    }
+    let exported = GpkgExported {
+        path: path.display().to_string(),
+        bytes: bytes.len() as u64,
+        sha256: kentos_contracts::encoding::sha256_hex(&bytes),
+        tables: written
+            .tables
+            .into_iter()
+            .map(|t| GpkgTableExported {
+                table: t.table,
+                layer: t.layer,
+                rows: t.rows,
+                geometry: t.geometry,
+            })
+            .collect(),
+        left: written.left,
+        approximated: written.approximated,
+    };
+    Ok((exported, warnings))
 }

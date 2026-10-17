@@ -2251,8 +2251,12 @@ const ENTRIES: &[Entry] = &[
             "entity_not_found",
             "invalid_parameters",
             "tool_failed",
+            "invalid_file_path",
+            "file_exists",
+            "file_unwritable",
+            "nothing_to_export",
         ]],
-        warnings: &[],
+        warnings: &["export_losses"],
         targets: none,
     },
     Entry {

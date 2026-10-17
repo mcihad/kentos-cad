@@ -304,6 +304,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-23 — Mevcut geoprocessing'e provider girdisi ve parça parça çıktı bağla — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0508](../docs/adr/0508-processing-tools-as-commands.md) §4): `cad.processing.run`'ın `sink`'i sonucu çizim yerine yeni bir GeoPackage'a yazar (araç kopyada, yaptığı nesnelerin katmanları birer tablo, alanlar sütun, kimlikler `kentos_uids`'te, yaylar kesin, kalanlar `export_losses`; dosya bütün ya da hiç, var olan yalnız `overwrite` ile); cevabın `inputs`'u okunan katmanlar ve bağlı katmanın kaynak sürümü. G1'in kesişimi, yola tamponu ve Ada'ya göre birleştirmesi dosyaya yazılıp OGR'la bağımsız denetlenir (alanlar, öznitelik soyu, geçerlilik). Kalan: var olan GeoPackage'a tablo ekleme, kaynaktan sayfa sayfa okuma ve parça parça yazma, disk üstünde ara depo, iptalin dosyaya etkisi, PostGIS'e yazma.*
+
   **Mevcut:** Buffer, clip, dissolve, union/intersection/difference, repair, simplify, yakınlık, grid ve genelleştirme zaten var [K09]. Yapılacak iş bu algoritmaları yeniden listelemek değil, gerçek dataset ve çıktı kurallarıyla tamamlamaktır.
 
   **Yapılacak kalan iş:** Mevcut buffer/clip/dissolve/overlay/repair/simplify/yakınlık araçlarını yeniden geliştirme. Girdiyi tam source revision ve sorgu kapsamıyla provider'dan al; kolon/geometri akışını parça parça hedef sink'e yaz. Yeni adapter'da alan eşleme, kaynak kimliği, çoğalan satır, Z/M/eğri kaybı, boş sonuç ve iptal politikası görünür olsun. Var olan precision/ölçü ve öznitelik dağıtım kurallarını kullan. Global veri isteyen araçlar için uygun disk staging uygula; görünür alt kümede çalışıp tüm dataset işlendi deme. GEO-01 düzeltmesi CBS-13'tedir.

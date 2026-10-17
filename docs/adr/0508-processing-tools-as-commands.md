@@ -76,9 +76,36 @@ işleyicisi araçları doğrudan çağıramaz.
 - Python `kentos.cad.processing.run` ve `.tools` katalogdan üretilir. MCP'de araçlar katalogdan gelir;
   `cad.processing.run` yıkıcı listededir.
 
+### 4. Sonucu dosyaya yazma (`sink`, CBS-23'ün ilk dilimi)
+
+- `sink: { path, overwrite }` verilince araç çizimin okuma kopyasında çalışır. Kopyada aracın yaptığı nesneler dışındakiler
+  bırakılır; yaptıklarının katmanları yeni bir GeoPackage'a yazılır (`geopackage::write`, `file.export.gpkg`'nin
+  dönüşümü):
+  - her katman bir tablo, katmanın adıyla;
+  - katmanın alanları sütun, kalıcı kimlikler `kentos_uids`'te;
+  - yaylar dairesel eğri olarak kesin;
+  - yazı, ölçü, blok ve tarama türlerine göre sayılır (`export_losses`).
+- Çizim değişmez, geri alma adımı yoktur. Cevabın `sink`'i `file.export.gpkg`'ninkidir: yol, boy, SHA-256, tablolar ve
+  satırları, kalanlar.
+- **Dosya bütün yazılır ya da hiç:** hedefin yanında geçici adla yazılır, tek adımla yerine konur. Var olan dosya yalnız
+  `overwrite` ile değişir ve yenisi tamamlanana dek eski dosya kalır. `plan` dosyayı yazar, sayar ve siler.
+- **Retler:**
+  - `invalid_file_path`: mutlak değil, `.gpkg` değil ya da klasörü yok;
+  - `file_exists`;
+  - `file_unwritable`;
+  - `nothing_to_export`: araç yeni nesne yapmadı ya da yaptıklarının GeoPackage'da geometrisi yok.
+- **Soy:** cevabın `inputs`'u aracın okuduğu katmanları sırasıyla verir. Bağlı katmanda kaynağın kimliği ve okunan
+  sürümü de yazılır (ADR 0503).
+- **Sonraya kalan:**
+  - var olan GeoPackage'a tablo eklemek;
+  - kaynağı sayfa sayfa okuyan, sonucu parça parça yazan akış;
+  - disk üstünde ara depo;
+  - işin iptalinin dosyaya etkisi (bugün iş tek parçadır, iptal yalnız İşlemler penceresindedir);
+  - PostGIS'e yazmak.
+
 ## Doğrulama
 
-- `fixtures/commands/v1/cad.processing.run.json`: 40 durum, `scripts/fixtures/processing_command_cases.py`'den. Aracın
+- `fixtures/commands/v1/cad.processing.run.json`: 49 durum, `scripts/fixtures/processing_command_cases.py`'den. Aracın
   hesabı ikinci kez yazılmaz:
   - 30 durum İşlemler'in kendi bağımsız ortak durumlarıdır (`fixtures/processing/v1/cases.json`, `queries.json`,
     `generate.json`, `geometry.json`), komutun sözleriyle: seçim kimliklerle, nesne çıktıları kimliklerle, değişen ve
@@ -93,3 +120,12 @@ işleyicisi araçları doğrudan çağıramaz.
 - Yetenek testi: her kod bir durumda. `tools_unavailable` uygulamanın kendi testindedir (`processing_run.rs`: orada
   araçlar kaydedilmez).
 - Python ortak durumları SDK'dan da koşar (`test_command_cases.py`).
+- **Dosyaya yazma:**
+  - planlı dört durum aynı üreticiden: G1'in parsel × imar kesişimi, tampon, Ada'ya göre birleştirme ve yazısı kalan
+    numaralama; beş ret;
+  - uygulamanın `processing_sink` testi G1'i gerçekten yazar: dosya cevabın boyu ve SHA-256'sıyla aynı, çizim
+    değişmez, geçici dosya kalmaz, var olan dosya `overwrite`'sız değişmez;
+  - `KENTOS_WRITE_GPKG=1` ile yazılan `fixtures/geopackage/v1/kentos-run-*.gpkg` dosyalarını
+    `processing_sink_cases.py` GDAL'ın OGR'ıyla okur. Parçaların alanları kaynakların OGR kesişimi, tamponlar OGR'ın
+    1024 parçalı tamponu (%0,05), birleşimler grubun OGR birleşimi; öznitelikler İşlemler'in durumlarının dediği gibi
+    (iki yanın soyu, paylaştırılan Değer); sistem EPSG:5254, her satır geçerli, `kentos_uids` her satırı adlandırır.

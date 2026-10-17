@@ -23151,10 +23151,12 @@ class ProcessingRan(_Model):
     Attributes:
         summary: The tool's sentence of what it did.
         added: The objects it made and changed (persistent ids).
+        inputs: The layers the features inputs read, in the inputs' order.
         layers: The layers it made (ids).
         notes: Its notes (what resolving left out, what it skipped).
         outputs: Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).
         selected: The objects it chose (a selecting tool's result; persistent ids).
+        sink: The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
         step: The undo step's name; none when the drawing did not change.
     """
     tool: str
@@ -23162,10 +23164,12 @@ class ProcessingRan(_Model):
     revision: str
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
+    inputs: list[RunInput] | Unset = UNSET
     layers: list[str] | Unset = UNSET
     notes: list[ToolNote] | Unset = UNSET
     outputs: dict[str, Any] | None | Unset = UNSET
     selected: list[str] | Unset = UNSET
+    sink: GpkgExported | None | Unset = UNSET
     step: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -23177,6 +23181,8 @@ class ProcessingRan(_Model):
             out["added"] = list(self.added)
         if self.changed is not UNSET:
             out["changed"] = list(self.changed)
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         if self.notes is not UNSET:
@@ -23185,6 +23191,8 @@ class ProcessingRan(_Model):
             out["outputs"] = None if self.outputs is None else dict(self.outputs)
         if self.selected is not UNSET:
             out["selected"] = list(self.selected)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
         if self.step is not UNSET:
             out["step"] = self.step
         return out
@@ -23197,10 +23205,12 @@ class ProcessingRan(_Model):
             revision=data["revision"],
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
+            inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
             layers=list(data["layers"]) if "layers" in data else UNSET,
             notes=[ToolNote.from_json(e0) for e0 in data["notes"]] if "notes" in data else UNSET,
             outputs=UNSET if "outputs" not in data else None if data["outputs"] is None else dict(data["outputs"]),
             selected=list(data["selected"]) if "selected" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
             step=data.get("step", UNSET),
         )
 
@@ -23218,11 +23228,13 @@ class ProcessingRun(_Model):
     stopped: a locked layer, nothing to do, its own refusal; nothing written).
     Attributes:
         selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
+        sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
         view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
     """
     tool: str
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
+    sink: RunSink | None | Unset = UNSET
     view: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -23232,6 +23244,8 @@ class ProcessingRun(_Model):
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
             out["selection"] = list(self.selection)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
         if self.view is not UNSET:
             out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
         return out
@@ -23242,6 +23256,7 @@ class ProcessingRun(_Model):
             tool=data["tool"],
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),
             view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
         )
 
@@ -25634,6 +25649,58 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RunInput(_Model):
+    """A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503)."""
+    layer: str
+    revision: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RunInput:
+        return cls(
+            layer=data["layer"],
+            revision=data.get("revision", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RunSink(_Model):
+    """A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
+    the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
+    drawing does not change. The file is written whole or not at all; one that is there is replaced only with
+    `overwrite`, and the old file stays until the new one is complete.
+    Attributes:
+        path: The GeoPackage's path (`.gpkg`).
+    """
+    path: str
+    overwrite: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RunSink:
+        return cls(
+            path=data["path"],
+            overwrite=data.get("overwrite", UNSET),
         )
 
 
@@ -39151,6 +39218,8 @@ __all__ = [
     "RowHeightTableEdit",
     "RubberLink",
     "RubbersheetTransform",
+    "RunInput",
+    "RunSink",
     "SaveUcsTo",
     "SaveViewsOp",
     "ScaleBasis",

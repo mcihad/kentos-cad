@@ -21,15 +21,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProcessingRun) -> CommandResult<P
     let ran = host().and_then(|h| {
         h.check(cx.doc, input)?;
         let mut copy = cx.doc.reading_copy();
-        h.run(&mut copy, input)
+        h.run(&mut copy, input, false)
     });
     match ran {
-        Ok(mut output) => {
+        Ok((mut output, warnings)) => {
             output.revision = cx.doc.revision().to_string();
-            CommandResult::Completed {
-                output,
-                warnings: Vec::new(),
-            }
+            CommandResult::Completed { output, warnings }
         }
         Err(error) => CommandResult::Failed { error: *error },
     }
@@ -41,13 +38,10 @@ pub fn execute(
 ) -> CommandResult<ProcessingRan> {
     let ran = host().and_then(|h| {
         h.check(cx.doc, &input)?;
-        h.run(cx.doc, &input)
+        h.run(cx.doc, &input, true)
     });
     match ran {
-        Ok(output) => CommandResult::Completed {
-            output,
-            warnings: Vec::new(),
-        },
+        Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(error) => CommandResult::Failed { error: *error },
     }
 }
@@ -75,6 +69,7 @@ mod tests {
             parameters: Default::default(),
             selection: Vec::new(),
             view: None,
+            sink: None,
         };
         let CommandResult::Failed { error } = super::validate(&cx, &run) else {
             panic!("refused");

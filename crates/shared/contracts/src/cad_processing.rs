@@ -121,6 +121,43 @@ pub struct ProcessingRun {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub view: Option<[f64; 4]>,
+    /// Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<RunSink>,
+}
+
+/// A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
+/// the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
+/// drawing does not change. The file is written whole or not at all; one that is there is replaced only with
+/// `overwrite`, and the old file stays until the new one is complete.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RunSink {
+    /// The GeoPackage's path (`.gpkg`).
+    pub path: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub overwrite: bool,
+}
+
+/// A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RunInput {
+    pub layer: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub revision: Option<String>,
 }
 
 /// A note the tool made while it ran.
@@ -172,6 +209,14 @@ pub struct ProcessingRan {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ToolNote>>", optional))]
     pub notes: Vec<ToolNote>,
+    /// The layers the features inputs read, in the inputs' order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RunInput>>", optional))]
+    pub inputs: Vec<RunInput>,
+    /// The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<crate::GpkgExported>,
     /// The undo step's name; none when the drawing did not change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

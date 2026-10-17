@@ -27,6 +27,7 @@ PROCESSING = ROOT / "fixtures/processing/v1"
 OUT = ROOT / "fixtures/commands/v1"
 INVENTORY = ROOT / "docs/inventory/web.json"
 
+WEB_TOOLS = ROOT / "apps/web/src/processing/builtin"
 INVENTORY_TOOLS = {t["id"]: t for t in json.loads(INVENTORY.read_text(encoding="utf-8"))["processing"]}
 
 
@@ -57,6 +58,52 @@ def restated_value(v):
         out["uids"] = [uid(n) for n in v["ids"]]
         return out
     return v
+
+
+def default_scope(tool: str, param: str) -> str:
+    """A features parameter's default scope, from the web's definition of the tool (its `default: { scope: … }`);
+    none written is the selection."""
+    import re
+
+    for f in sorted(WEB_TOOLS.rglob("*.ts")):
+        text = f.read_text(encoding="utf-8")
+        if f"id: '{tool}'" not in text:
+            continue
+        for line in text.splitlines():
+            if f"name: '{param}'" in line and "type: 'features'" in line:
+                m = re.search(r"default: \{ scope: '(\w+)'", line)
+                return m.group(1) if m else "selection"
+    return "selection"
+
+
+def inputs_of(c: dict, doc: dict) -> list[dict]:
+    """The layers a run read, as the command lists them: a features input's layer, or the layers of the objects named
+    or chosen, in the inputs' order (ADR 0508 §3). A tool's features parameters come from the web's definitions; one left
+    at its default reads the selection."""
+    t = INVENTORY_TOOLS.get(c["run"]["tool"], {})
+    layer_of = {e["id"]: e["layerId"] for e in doc["entities"]}
+    sources = {s["layer"]: s for s in (doc.get("settings", {}).get("sources") or [])}
+    out: list[str] = []
+    for p in t.get("parameters", []):
+        if p["type"] != "features":
+            continue
+        v = (c.get("values") or {}).get(p["name"], {"scope": default_scope(c["run"]["tool"], p["name"])})
+        scope = v.get("scope")
+        if scope == "layer":
+            found = [v["layerId"]]
+        elif scope == "ids":
+            found = [layer_of[n] for n in v["ids"] if n in layer_of]
+        elif scope == "selection":
+            found = [layer_of[n] for n in c.get("selection") or [] if n in layer_of]
+        else:
+            found = []
+        for l in found:
+            if l not in out:
+                out.append(l)
+    return [
+        {"layer": l, **({"source": sources[l]["id"], "revision": sources[l]["revision"]} if l in sources else {})}
+        for l in out
+    ]
 
 
 def run_case(c: dict, fixture_doc: str) -> dict:
@@ -95,6 +142,9 @@ def run_case(c: dict, fixture_doc: str) -> dict:
             }
         if want.get("log"):
             output["notes"] = want["log"]
+        inputs = inputs_of(c, doc)
+        if inputs:
+            output["inputs"] = inputs
         if want.get("undo"):
             output["step"] = want["undo"]
         output["revision"] = "$current"
@@ -149,6 +199,91 @@ def usable(c: dict) -> bool:
         return True
     declared = INVENTORY_TOOLS.get(c["run"]["tool"], {}).get("outputs", [])
     return not declared or set(want.get("outputs") or {}) == {o["name"] for o in declared}
+
+
+LEFT_KINDS = {"text": "yazı", "dimension": "ölçü", "insert": "blok", "hatch": "tarama", "leader": "kılavuz", "table": "tablo"}
+
+
+def sink_case(c: dict, inputs: list[str]) -> dict:
+    """One of İşlemler's cases planned with a sink (docs/adr/0508 §4): the same run on a copy, its new objects as one
+    table named by the new layer's name, the drawing unchanged. A plan writes no file; the file's own bytes are the
+    sink test's (processing_sink_cases.py)."""
+    run = run_case(c, "parcels.kcad")
+    step = run["steps"][0]
+    step["op"] = "plan"
+    step["input"]["sink"] = {"path": "$fixture:processing/v1/sonuc-plan.gpkg"}
+    out = step["result"]["output"]
+    want = c["expect"]
+    layer = want["layers"][0]
+    made = want.get("addedShapes") or want.get("added") or []
+    # GeoPackage holds no texts, dimensions, blocks or hatches: they are counted by kind (ADR 0502 §3).
+    left: dict[str, int] = {}
+    for a in made:
+        word = LEFT_KINDS.get(a.get("kind", ""))
+        if word:
+            left[word] = left.get(word, 0) + 1
+    rows = len(made) - sum(left.values())
+    out.pop("step", None)
+    out["inputs"] = [{"layer": l} for l in inputs]
+    out["sink"] = {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [{"table": layer["name"], "layer": layer["id"], "rows": rows, "geometry": "$any"}],
+        **({"left": left} if left else {}),
+        "approximated": 0,
+    }
+    if left:
+        parts = ", ".join(f"{n} {k}" for k, n in sorted(left.items()))
+        step["result"]["warnings"] = [{
+            "code": "export_losses",
+            "message": f"GeoPackage'da karşılığı olmayan nesneler yazılmadı: {parts}.",
+            "path": "sink",
+        }]
+    out.pop("layers", None)
+    out["layers"] = [layer["id"]]
+    step["expect"] = {"canUndo": False, "dirty": False, "revision": "same"}
+    return {"name": f"Dosyaya (GeoPackage), plan: {c['title']} ({c['id']})", "setup": document(c["document"]), "steps": [step]}
+
+
+SINK_REFUSALS = [
+    ("göreli yol", "sonuc.gpkg", "invalid_file_path",
+     "“sonuc.gpkg” mutlak bir dosya yolu değil; dosyanın tam yolunu verin (/klasör/sonuç.gpkg)."),
+    ("GeoPackage olmayan ad", "$fixture:processing/v1/sonuc.shp", "invalid_file_path",
+     "$fixture:processing/v1/sonuc.shp bir GeoPackage adı değil; sonucun dosyası .gpkg ile biter."),
+    ("olmayan klasör", "$fixture:processing/v1/yok/sonuc.gpkg", "invalid_file_path",
+     "$fixture:processing/v1/yok/sonuc.gpkg dosyasının klasörü yok; önce klasörü açın ya da başka bir yol verin."),
+    ("var olan dosya, overwrite yok", "$fixture:geopackage/v1/qgis.gpkg", "file_exists",
+     "$fixture:geopackage/v1/qgis.gpkg var; üzerine yazmak için overwrite: true verin."),
+]
+
+
+def sink_refusals() -> list[dict]:
+    out = []
+    for name, path, code, message in SINK_REFUSALS:
+        out.append({
+            "name": f"Dosyaya yazma reddi: {name} ({code})",
+            "steps": [{
+                "op": "execute",
+                "input": {"tool": "attributes.calculate", "selection": ["$uidOf:1"], "sink": {"path": path}},
+                "result": failed(code, message, "sink.path"),
+                "expect": UNCHANGED,
+            }],
+        })
+    out.append({
+        "name": "Dosyaya yazma: seçen araç yeni nesne yapmaz (nothing_to_export), çizim değişmez",
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": "selection.byExpression", "sink": {"path": "$fixture:processing/v1/sonuc.gpkg"}},
+            "result": failed(
+                "nothing_to_export",
+                "Araç yeni nesne yapmadı; dosyaya yazılacak sonuç yok (değiştiren ya da seçen araçların sonucu çizimdedir).",
+                "sink.path",
+            ),
+            "expect": UNCHANGED,
+        }],
+    })
+    return out
 
 
 def failed(code: str, message: str, path: str) -> dict:
@@ -290,6 +425,7 @@ def own_run_from(cases: dict) -> list[dict]:
                             "summary": area["summary"].replace("3 nesnede", "1 nesnede"),
                             "changed": ["$uidOf:1"],
                             "outputs": {"count": 1, "changed": ["$uidOf:1"]},
+                            "inputs": [{"layer": "parsel"}],
                             "step": area["undo"],
                             "revision": "$current",
                         },
@@ -477,6 +613,15 @@ def main() -> int:
     ):
         listed = {c["id"]: c for c in json.loads((PROCESSING / file).read_text(encoding="utf-8"))["cases"]}
         run_cases += [run_case(listed[i], "parcels.kcad") for i in ids]
+    # The result to a GeoPackage (docs/adr/0508 §4): G1's parcels × zoning, a buffer, a dissolve by Ada.
+    geometry = {c["id"]: c for c in json.loads((PROCESSING / "geometry.json").read_text(encoding="utf-8"))["cases"]}
+    run_cases += [
+        sink_case(geometry["intersection"], ["parsel", "imar"]),
+        sink_case(geometry["buffer-points"], ["agac"]),
+        sink_case(geometry["dissolve-ada"], ["parsel"]),
+        sink_case(cases["number-vertices-both"], ["parsel"]),
+    ]
+    run_cases += sink_refusals()
     run_cases += own_run_from(cases)
     run_cases += OWN_RUN
     run = {

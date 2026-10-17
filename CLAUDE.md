@@ -390,7 +390,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
   CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0508 İşlemler'in araçları komut olarak: `cad.processing.tools` ve
   `cad.processing.run` (pencerenin çalıştırıcısı, açık değerler, nesneler kalıcı kimliklerle ya da girdinin `selection` ve
-  `view`'u, plan kopyada), ev sahipleri araçları kaydeder (`processing_host::register_tools`, `kentos_processing::command`);
+  `view`'u, plan kopyada; `sink` sonucu yeni bir GeoPackage'a yazar, çizim değişmez, soy `inputs`), ev sahipleri araçları
+  kaydeder (`processing_host::register_tools`, `kentos_processing::command`);
   0507 toplu yazma: `cad.fields.write` (Alan hesapla: ifade, kapsam, boş
   sonuç; Yapıştır: satır başına değerler; değerler `cad.entities.set`'in kurallarıyla, tekil alan birlikte; bütün ya da hiç ya da
   uyanlar, plan önizleme ve sorunlar), Öznitelik tablosunda Alan hesapla… ve Yapıştır; 0506 taşınabilir proje: kaynağın göreli yolu (`SourceLink.relative`,
@@ -1106,6 +1107,7 @@ python3 scripts/fixtures/overlay_cases.py --check   # bindirmenin doğruluk korp
 /usr/bin/python3 scripts/fixtures/relate_cases.py --check   # cad.entities.relate durumlarını (DE-9IM matrisleri, on yüklem, desen, daire, okunmayan nesne, retler) GEOS'la QGIS 4.2'nin Python'u üzerinden denetle (ADR 0501)
 /usr/bin/python3 scripts/fixtures/geopackage_cases.py --check   # GeoPackage crate'inin okuduğunu QGIS 4.2.3'ün yazdığı qgis.gpkg'nin GDAL/OGR okuyuşuyla, KentOS'un yazdığı kentos.gpkg ve kentos-export.gpkg'yi OGR, QGIS 4.2 ve GDAL'ın validate_gpkg.py'siyle denetle; yazmak için KENTOS_WRITE_GPKG=1 cargo test -p kentos-geopackage ve -p kentos-headless --test headless geopackage (ADR 0502)
 /usr/bin/python3 scripts/fixtures/gpkg_import_cases.py --check   # file.import.gpkg durumlarını OGR'ın okuduğundan ADR'nin kuralıyla kurulan nesnelerle denetle; --files küçük GeoPackage'ları GDAL'la yeniden yazar (ADR 0502)
+/usr/bin/python3 scripts/fixtures/processing_sink_cases.py --check   # cad.processing.run'ın sink'iyle yazılan G1 GeoPackage'larını (kesişim, tampon, birleştirme; KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application --test all processing_sink yazar) OGR'la, KentOS kodu olmadan denetle: alanlar, öznitelik soyu, geçerlilik, sistem (ADR 0508 §4)
 python3 scripts/fixtures/processing_command_cases.py --check   # cad.processing.run ve .tools durumlarını İşlemler'in kendi ortak durumlarından (komutun sözleriyle) ve web'in donmuş envanterinden, KentOS kodu olmadan üret ve denetle (ADR 0508)
 python3 scripts/fixtures/fields_write_cases.py --check   # cad.fields.write durumlarını (Alan hesapla, Yapıştır, tür ve tekil alan denetimi, policy, plan, retler) dilin ve alanların bağımsız Python başvurularıyla, KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.fields.write.json (ADR 0507)
 cargo test -p kentos-desktop features::tests::write_screens -- --ignored --nocapture   # Alan hesapla ve Yapıştır pencerelerinin resimleri, .run/shots/alan-hesapla-* (ADR 0507)
