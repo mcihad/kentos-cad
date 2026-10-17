@@ -779,6 +779,8 @@ impl App {
                 let lift = if credits.is_empty() { 0.0 } else { crate::services::app::scale_bar_lift() };
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
                 // The text being edited in place is hidden meanwhile (text_field.rs).
+                // The turned texts' pictures in the window's own pixels (label_picture.rs).
+                crate::label_picture::set_device_scale(self.viewport.scale_factor());
                 let labels = crate::labels::layer(
                     &doc.model,
                     doc.session,

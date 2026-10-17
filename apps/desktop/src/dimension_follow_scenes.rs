@@ -1,11 +1,11 @@
 //! The pictures of docs/adr/0320: associative dimensions of every kind made with `cad.dimensions.create` (a radius, a
 //! diameter past its arc's end, an arc length, an angle between two edges, a room's side with a Zincir and a Baz
 //! ölçü from it), what a selected one is bound to (olcu-bag), the same after their objects moved, turned and grew
-//! (olcu-izleme), and the chain after the room moved (olcu-zincir). `tools_screens` takes them in both themes at
-//! 1440×900 and 1100×650:
+//! (olcu-izleme), the chain after the room moved (olcu-zincir), and the bonds near on paper (olcu-yakin).
+//! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=olcu-bag,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=olcu-bag,olcu-yakin,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -148,6 +148,23 @@ fn chained(app: &mut App) {
     hover(app, [20.0, 12.0]);
 }
 
+/// The same near on paper, the text at its true size and the pointer on the radius's value (docs/adr/0055's and
+/// 0320's 17 Ekim ekleri): the turned values' letters and halos, and the dashes on the circle itself.
+fn near(app: &mut App) {
+    bonds(app);
+    let _ = app.settings.choose(&[
+        ("graphics.annotationSize", serde_json::Value::from("true")),
+        ("appearance.drawingBackground", serde_json::Value::from("paper")),
+    ]);
+    app.apply_settings();
+    app.backdrop = crate::appearance::Backdrop::Paper;
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E + 2.5, min_y: N + 2.5, max_x: E + 5.0, max_y: N + 4.5 },
+        24.0,
+    );
+    hover(app, [3.42, 3.3]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("olcu-bag", bonds), ("olcu-izleme", followed), ("olcu-zincir", chained)]
+    vec![("olcu-bag", bonds), ("olcu-yakin", near), ("olcu-izleme", followed), ("olcu-zincir", chained)]
 }

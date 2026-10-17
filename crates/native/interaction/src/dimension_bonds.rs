@@ -71,12 +71,13 @@ fn bonds_of(
     }
 }
 
-/// An edge as a run of points: a segment's two ends, an arc's chords of at most 10°.
+/// An edge as a run of points: a segment's two ends, an arc's chords of at most 1° (a chord of 10° stood 5.7 mm
+/// inside a 1.5 m circle, beside the circle the scene draws when zoomed in).
 fn chords(edge: &Edge) -> Vec<Vec2> {
     match *edge {
         Edge::Seg { a, b } => vec![a, b],
         Edge::Arc { c, r, a0, sweep } => {
-            let n = ((sweep.abs() / 10f64.to_radians()).ceil() as usize).clamp(2, 72);
+            let n = ((sweep.abs() / 1f64.to_radians()).ceil() as usize).clamp(2, 720);
             (0..=n)
                 .map(|i| {
                     let t = a0 + sweep * i as f64 / n as f64;

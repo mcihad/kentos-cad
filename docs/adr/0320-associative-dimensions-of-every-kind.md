@@ -72,3 +72,16 @@ kesikli, yeri dolu elmas (`kentos_interaction::dimension_bonds`, masaüstünde `
   ortası, Uzat, Zincir ve Baz'ın izlemesi). Aşkın değerli adımlar `within` ile; çalıştırıcılar nesne beklentisinde de `within`'i okur.
 - KCAD: `dimension-rules.kcad`, `broken/dimension-rule-in-schema-59.kcad`, `broken/dimension-rule-unknown.kcad`; bağımsız yazıcı ve okuyucu.
 - Resimler: `KENTOS_SHOTS_ONLY=olcu-bag,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`.
+
+## 17 Ekim eki: bağın çizgisi nesnenin üstünde
+
+Sahibin bildirimi (17 Ekim): seçili ölçünün bağlı olduğu çizginin çevresi kirliydi. Yayın 10°'lik kirişleri 1,5 m'lik dairede eğrinin
+5,7 mm içine düşüyordu; yakında kesikli çizgi dairenin 2–3 piksel yanında, iki çizgi yan yana görünüyordu. 4 piksellik hale de nesneyi
+yer yer örtüyor, kenarı tuvalin MSAA'sıyla kirli kalıyordu (ADR 0055'in 17 Ekim eki).
+
+- Kirişler en çok 1°tir (`dimension_bonds::chords`; aynı dairede sapma 0,06 mm).
+- Bağlar (kesikler, altlarında kesiklerden yarım piksel geniş hale ve yerin elması) tek resim olarak kesin kaplamayla çizilir
+  (`marks.rs`'in `bonds`'u, `label_picture::draw_on_screen`). Görünümün dışı kırpılır (`clipped`), yalnız son resim tutulur.
+- Resim ekrandan büyükse eski tuval yolu kullanılır.
+- Resim: `olcu-yakin` (kâğıt zeminde, yakın, yazılar gerçek boyunda).
+

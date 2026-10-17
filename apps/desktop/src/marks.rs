@@ -582,7 +582,9 @@ fn problem(
 }
 
 /// What a selected associative dimension is bound to (docs/adr/0320 §4): the object's edges dashed in the accent
-/// colour on a halo, under the grips, and the place a filled diamond; only what is in the view.
+/// colour on a halo half a pixel wider each side, and the place a filled diamond on a halo; only what is in the
+/// view. One picture with exact coverage (label_picture.rs): the canvas's four samples left a rim round its
+/// wider halo, and its arcs' long chords fell beside the object.
 fn bonds(
     frame: &mut canvas::Frame,
     bonds: &[kentos_interaction::dimension_bonds::Bond],
@@ -590,33 +592,82 @@ fn bonds(
     colors: &MarkColors,
     accent: iced::Color,
 ) {
+    if bonds.is_empty() {
+        return;
+    }
     let size = frame.size();
     let screen = |p: Vec2| {
         let [x, y] = camera.world_to_screen(p);
         Point::new(x as f32, y as f32)
     };
-    let dash = [6.0f32, 4.0];
+    let room = (-20.0, -20.0, size.width + 20.0, size.height + 20.0);
+    let mut runs: Vec<Vec<Point>> = Vec::new();
+    let mut diamonds: Vec<Point> = Vec::new();
     for b in bonds {
-        let path = Path::new(|p| {
-            for run in &b.edges {
-                let mut first = true;
-                for q in run {
-                    let at = screen(*q);
-                    if first {
-                        p.move_to(at);
-                        first = false;
-                    } else {
-                        p.line_to(at);
-                    }
+        for run in &b.edges {
+            let pts: Vec<Point> = run.iter().map(|q| screen(*q)).collect();
+            runs.extend(clipped(&pts, room));
+        }
+        let at = screen(b.at);
+        if at.x >= -10.0 && at.y >= -10.0 && at.x <= size.width + 10.0 && at.y <= size.height + 10.0
+        {
+            diamonds.push(Point::new(at.x.round() + 0.5, at.y.round() + 0.5));
+        }
+    }
+    let lines: Vec<Path> = runs
+        .iter()
+        .map(|run| {
+            Path::new(|p| {
+                p.move_to(run[0]);
+                for q in &run[1..] {
+                    p.line_to(*q);
                 }
-            }
-        });
+            })
+        })
+        .collect();
+    let shapes: Vec<Path> = diamonds
+        .iter()
+        .map(|&Point { x, y }| {
+            Path::new(|p| {
+                p.move_to(Point::new(x, y - 6.0));
+                p.line_to(Point::new(x + 6.0, y));
+                p.line_to(Point::new(x, y + 6.0));
+                p.line_to(Point::new(x - 6.0, y));
+                p.close();
+            })
+        })
+        .collect();
+    let dash = [6.0f32, 4.0];
+    let bits = |c: iced::Color| [c.r.to_bits(), c.g.to_bits(), c.b.to_bits(), c.a.to_bits()];
+    let mut numbers: Vec<u32> = bits(accent).into_iter().chain(bits(colors.halo)).collect();
+    for run in &runs {
+        numbers.push(run.len() as u32);
+        numbers.extend(run.iter().flat_map(|q| [q.x.to_bits(), q.y.to_bits()]));
+    }
+    numbers.extend(diamonds.iter().flat_map(|q| [q.x.to_bits(), q.y.to_bits()]));
+    let key = crate::label_picture::Key {
+        what: "bonds".to_owned(),
+        numbers,
+    };
+    use crate::label_picture::{Local, Part};
+    let plain = Local { width_factor: 1.0 };
+    let pictured = crate::label_picture::draw_on_screen(frame, key, |add| {
+        add(Part::Stroke(&lines, plain, colors.halo, 3.0));
+        add(Part::Dash(&lines, plain, accent, 2.0, &dash));
+        add(Part::Stroke(&shapes, plain, colors.halo, 3.0));
+        add(Part::Fill(&shapes, plain, accent));
+    });
+    if pictured {
+        return;
+    }
+    // Too large for a picture: the canvas's paths.
+    for line in &lines {
         frame.stroke(
-            &path,
-            Stroke::default().with_color(colors.halo).with_width(4.0),
+            line,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
         );
         frame.stroke(
-            &path,
+            line,
             Stroke {
                 line_dash: canvas::LineDash {
                     segments: &dash,
@@ -625,24 +676,65 @@ fn bonds(
                 ..Stroke::default().with_color(accent).with_width(2.0)
             },
         );
-        let at = screen(b.at);
-        if at.x < -10.0 || at.y < -10.0 || at.x > size.width + 10.0 || at.y > size.height + 10.0 {
-            continue;
-        }
-        let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
-        let diamond = Path::new(|p| {
-            p.move_to(Point::new(x, y - 6.0));
-            p.line_to(Point::new(x + 6.0, y));
-            p.line_to(Point::new(x, y + 6.0));
-            p.line_to(Point::new(x - 6.0, y));
-            p.close();
-        });
+    }
+    for diamond in &shapes {
         frame.stroke(
-            &diamond,
+            diamond,
             Stroke::default().with_color(colors.halo).with_width(3.0),
         );
-        frame.fill(&diamond, accent);
+        frame.fill(diamond, accent);
     }
+}
+
+/// A run of screen points cut to the box `(left, top, right, bottom)`: the pieces inside, each of two or more
+/// points (Liang–Barsky on every segment).
+fn clipped(run: &[Point], (l, t, r, b): (f32, f32, f32, f32)) -> Vec<Vec<Point>> {
+    let mut out: Vec<Vec<Point>> = Vec::new();
+    let mut current: Vec<Point> = Vec::new();
+    for w in run.windows(2) {
+        let (p, q) = (w[0], w[1]);
+        let (dx, dy) = (q.x - p.x, q.y - p.y);
+        let (mut t0, mut t1) = (0.0f32, 1.0f32);
+        let mut inside = true;
+        for (pp, qq) in [(-dx, p.x - l), (dx, r - p.x), (-dy, p.y - t), (dy, b - p.y)] {
+            if pp == 0.0 {
+                if qq < 0.0 {
+                    inside = false;
+                }
+            } else {
+                let u = qq / pp;
+                if pp < 0.0 {
+                    t0 = t0.max(u);
+                } else {
+                    t1 = t1.min(u);
+                }
+            }
+        }
+        if !inside || t0 > t1 {
+            if current.len() >= 2 {
+                out.push(std::mem::take(&mut current));
+            }
+            current.clear();
+            continue;
+        }
+        let a = Point::new(p.x + t0 * dx, p.y + t0 * dy);
+        let c = Point::new(p.x + t1 * dx, p.y + t1 * dy);
+        if current.last() != Some(&a) {
+            if current.len() >= 2 {
+                out.push(std::mem::take(&mut current));
+            }
+            current.clear();
+            current.push(a);
+        }
+        current.push(c);
+        if t1 < 1.0 {
+            out.push(std::mem::take(&mut current));
+        }
+    }
+    if current.len() >= 2 {
+        out.push(current);
+    }
+    out
 }
 
 /// A broken reference of an associative dimension (docs/adr/0249 §3): a small warning triangle, its tip over the
@@ -1173,6 +1265,40 @@ impl crate::app::App {
             }
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod bond_tests {
+    use super::*;
+
+    #[test]
+    fn a_run_is_cut_to_the_box() {
+        let p = |x: f32, y: f32| Point::new(x, y);
+        let room = (0.0, 0.0, 100.0, 100.0);
+        // Inside: as it is.
+        assert_eq!(
+            clipped(&[p(10.0, 10.0), p(20.0, 10.0), p(20.0, 30.0)], room),
+            vec![vec![p(10.0, 10.0), p(20.0, 10.0), p(20.0, 30.0)]]
+        );
+        // Across the box: the inside piece only.
+        assert_eq!(
+            clipped(&[p(-50.0, 50.0), p(150.0, 50.0)], room),
+            vec![vec![p(0.0, 50.0), p(100.0, 50.0)]]
+        );
+        // Out and back in: two pieces.
+        assert_eq!(
+            clipped(
+                &[p(50.0, 50.0), p(50.0, 200.0), p(60.0, 200.0), p(60.0, 50.0)],
+                room
+            ),
+            vec![
+                vec![p(50.0, 50.0), p(50.0, 100.0)],
+                vec![p(60.0, 100.0), p(60.0, 50.0)]
+            ]
+        );
+        // Wholly outside: nothing.
+        assert!(clipped(&[p(-10.0, -10.0), p(-20.0, 300.0)], room).is_empty());
     }
 }
 

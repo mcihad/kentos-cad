@@ -860,6 +860,7 @@ impl canvas::Program<Message> for Labels<'_> {
             state.key.set(self.key);
         }
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
+            crate::label_picture::set_twisted(self.turned.is_some());
             let Some(area) = self.turned else {
                 self.paint(frame);
                 return;
@@ -2206,6 +2207,10 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         underline(frame, piece, Point::new(piece.at.x + dx, piece.at.y), halo);
         return;
     }
+    // As a picture with exact coverage (label_picture.rs); a text too large for one as paths.
+    if pictured(frame, piece, halo, dx, dy) {
+        return;
+    }
     frame.with_save(|frame| {
         frame.translate(Vector::new(piece.at.x, piece.at.y));
         frame.rotate(piece.angle);
@@ -2266,6 +2271,89 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         }
         underline(frame, piece, Point::new(dx, 0.0), halo);
     });
+}
+
+/// A turned (leaning, narrowed or masked) text as a picture: its mask, its glyphs' halo, its glyphs and its
+/// underline as the paths below draw them. False when it is too large for a picture.
+fn pictured(frame: &mut Frame, piece: &Piece<'_>, halo: Color, dx: f32, dy: f32) -> bool {
+    use crate::label_picture::{Key, Local, Part};
+    let bits = |c: Color| [c.r.to_bits(), c.g.to_bits(), c.b.to_bits(), c.a.to_bits()];
+    let mut numbers = vec![
+        piece.size.to_bits(),
+        dx.to_bits(),
+        dy.to_bits(),
+        piece.lean.to_bits(),
+        piece.width_factor.to_bits(),
+        piece.mask.to_bits(),
+        piece.underline.to_bits(),
+    ];
+    numbers.extend(bits(piece.color));
+    numbers.extend(bits(halo));
+    let key = Key {
+        what: format!("{}\u{0}{:?}", piece.text, piece.font),
+        numbers,
+    };
+    crate::label_picture::draw(frame, key, piece.at, piece.angle, |add| {
+        let sheared = |path: Path, lean: f32| {
+            if lean == 0.0 {
+                path
+            } else {
+                path.transform(&canvas::path::lyon_path::math::Transform::new(
+                    1.0, 0.0, -lean, 1.0, 0.0, 0.0,
+                ))
+            }
+        };
+        let plain = Local { width_factor: 1.0 };
+        let narrow = Local {
+            width_factor: piece.width_factor,
+        };
+        if piece.mask > 0.0 {
+            let m = piece.size * 0.1;
+            let v = if piece.anchor == Anchor::CenterBaseline {
+                0.0
+            } else {
+                m
+            };
+            let mask = sheared(
+                Path::rectangle(
+                    Point::new(dx - m, -piece.size * 1.15 - v),
+                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * v),
+                ),
+                piece.lean,
+            );
+            add(Part::Fill(std::slice::from_ref(&mask), plain, halo));
+        }
+        let lean = piece.lean / piece.width_factor;
+        let glyphs = outlines(piece, dx, dy, || {
+            let mut glyphs: Vec<Path> = Vec::new();
+            canvas::Text {
+                content: piece.text.to_owned(),
+                position: Point::new(dx, dy),
+                max_width: f32::INFINITY,
+                color: piece.color,
+                size: Pixels(piece.size),
+                line_height: text::LineHeight::Relative(1.0),
+                font: piece.font,
+                align_x: text::Alignment::Left,
+                align_y: Vertical::Top,
+                shaping: text::Shaping::Advanced,
+            }
+            .draw_with(|path, _| glyphs.push(sheared(path, lean)));
+            glyphs
+        });
+        add(Part::Halo(&glyphs, narrow, halo, HALO));
+        add(Part::Fill(&glyphs, narrow, piece.color));
+        if piece.underline > 0.0 {
+            let (top, thick) = (piece.size * 0.12, (piece.size * 0.06).max(1.0));
+            let back = Path::rectangle(
+                Point::new(dx - HALO, top - HALO),
+                Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
+            );
+            let bar = Path::rectangle(Point::new(dx, top), Size::new(piece.underline, thick));
+            add(Part::Fill(std::slice::from_ref(&back), narrow, halo));
+            add(Part::Fill(std::slice::from_ref(&bar), narrow, piece.color));
+        }
+    })
 }
 
 /// Turned texts' glyph outlines kept at most (a view at 1:1000 over a
