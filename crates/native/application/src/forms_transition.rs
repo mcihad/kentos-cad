@@ -102,7 +102,7 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             "form",
         ));
     };
-    let words = |code: &str| {
+    let words_state = |code: &str| {
         state_field
             .values
             .iter()
@@ -118,7 +118,7 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             format!(
                 "“{}” adımı “{}” durumundaki kayıttan atılmaz.",
                 step.label,
-                words(&from)
+                words_state(&from)
             ),
             "step",
         ));
@@ -138,6 +138,22 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
         .reason
         .as_ref()
         .and_then(|k| fields.iter().find(|f| f.key() == k));
+    let log = workflow
+        .log
+        .as_ref()
+        .and_then(|k| fields.iter().find(|f| f.key() == k));
+    if let Some(l) = log
+        && input.values.contains_key(l.key())
+    {
+        return Err(fail(
+            codes::FORM_INVALID,
+            format!(
+                "“{}” alanını iş akışının adımları yazar; değerlerden çıkarın.",
+                l.label()
+            ),
+            &format!("values.{}", l.key()),
+        ));
+    }
     let mut after = if prepared.locked_by_state(before) {
         // A locked record takes only the step's reason.
         if let Some(k) = input
@@ -149,7 +165,7 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
                 codes::RECORD_LOCKED,
                 format!(
                     "“{}” durumundaki kayıt değiştirilemez; bu adımla yalnız gerekçe yazılır.",
-                    words(&from)
+                    words_state(&from)
                 ),
                 &format!("values.{k}"),
             ));
@@ -216,6 +232,42 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             ),
             &format!("values.{}", r.key()),
         ));
+    }
+    // The step's line in the log (docs/adr/0429): the oldest lines go when the field's length is full.
+    let mut after = after;
+    if let Some(l) = log {
+        let mut words: Vec<String> = Vec::new();
+        words.extend(input.moment.clone());
+        words.extend(input.user.clone());
+        words.push(format!(
+            "{} ({} → {})",
+            step.label,
+            words_state(&from),
+            words_state(&step.to)
+        ));
+        let mut line = words.join(" · ");
+        if let Some(text) = reason
+            .and_then(|r| after.get(&r.name))
+            .filter(|t| !t.trim().is_empty())
+        {
+            line.push_str(&format!(": {}", text.trim()));
+        }
+        let mut lines: Vec<String> = after
+            .get(&l.name)
+            .map(|t| t.lines().map(str::to_owned).collect())
+            .unwrap_or_default();
+        lines.push(line);
+        if let Some(most) = l.length.map(|n| n as usize) {
+            while lines.len() > 1 && lines.join("\n").chars().count() > most {
+                lines.remove(0);
+            }
+            if let Some(last) = lines.last_mut()
+                && last.chars().count() > most
+            {
+                *last = last.chars().take(most).collect();
+            }
+        }
+        after.insert(l.name.clone(), lines.join("\n"));
     }
     let mut entity = e.clone();
     entity.base_mut().attrs = after;

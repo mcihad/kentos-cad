@@ -4473,6 +4473,13 @@
                 },
                 "type": "array"
               },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -14859,6 +14866,13 @@
                 },
                 "type": "array"
               },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -23194,6 +23208,13 @@
                   "type": "string"
                 },
                 "type": "array"
+              },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
@@ -343783,6 +343804,13 @@
                 },
                 "type": "array"
               },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -344807,6 +344835,13 @@
                 },
                 "type": "array"
               },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -345749,6 +345784,13 @@
                   "type": "string"
                 },
                 "type": "array"
+              },
+              "log": {
+                "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",

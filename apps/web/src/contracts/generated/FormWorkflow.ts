@@ -23,4 +23,9 @@ locked?: Array<string>,
 /**
  * The steps, in their order (the editor's buttons).
  */
-steps: Array<WorkflowStep>, };
+steps: Array<WorkflowStep>, 
+/**
+ * A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
+ * the states and the reason; read-only in the form.
+ */
+log?: string, };

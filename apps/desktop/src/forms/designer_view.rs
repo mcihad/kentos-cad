@@ -1397,6 +1397,24 @@ impl App {
                 "Kilitli durumlar",
                 chips(&flow.locked, &Event::WorkflowLocked),
                 Some("Bu durumdaki kayıt değiştirilemez; yalnız bir adım onu açar.".into()),
+            ));
+        // Geçmiş alanı (docs/adr/0429): each step's line, read-only in the form.
+        let log_keys: Vec<String> = reasons.iter().map(|f| f.key().to_owned()).collect();
+        let mut log_choices = vec![Choice::new("—")];
+        log_choices.extend(reasons.iter().map(|f| Choice::new(f.label().to_owned())));
+        let log_at = match &flow.log {
+            None => Some(0),
+            Some(k) => log_keys.iter().position(|x| x == k).map(|p| p + 1),
+        };
+        col = col
+            .push(words::field(
+                "Geçmiş alanı",
+                Select::new(log_choices, log_at, move |k| {
+                    msg(Event::WorkflowLog(
+                        k.checked_sub(1).map(|k| log_keys[k].clone()),
+                    ))
+                }),
+                Some("Her adım tarih, kişi, adım ve gerekçeyle bir satır ekler.".into()),
             ))
             .push(label::strong("Adımlar"));
         for (i, step) in flow.steps.iter().enumerate() {

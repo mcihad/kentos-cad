@@ -512,6 +512,185 @@
      ]
     },
     {
+     "id": "kayitli",
+     "name": "Kayıtlı akış",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       },
+       {
+        "type": "field",
+        "id": "gecmis",
+        "field": "Geçmiş"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ],
+       "log": "Geçmiş"
+      }
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "51b121d9b9b87ffa058316a7973c67a0",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         },
+         {
+          "type": "field",
+          "id": "gecmis",
+          "field": "Geçmiş"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "taslak",
+         "locked": [
+          "onaylandi"
+         ],
+         "steps": [
+          {
+           "label": "Gönder",
+           "from": [
+            "taslak",
+            "iade"
+           ],
+           "to": "gonderildi",
+           "valid": true
+          },
+          {
+           "label": "Onayla",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "onaylandi",
+           "valid": true
+          },
+          {
+           "label": "Geri gönder",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Düzelt",
+           "from": [
+            "onaylandi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Taslağa al",
+           "to": "taslak"
+          }
+         ],
+         "log": "Geçmiş"
+        }
+       }
+      }
+     ]
+    },
+    {
      "id": "bozuk",
      "name": "Bozuk akış",
      "layer": "bina",
@@ -656,6 +835,11 @@
       "name": "Gerekçe",
       "kind": "text",
       "length": 200
+     },
+     {
+      "name": "Geçmiş",
+      "kind": "text",
+      "length": 120
      }
     ]
    },
@@ -714,6 +898,11 @@
       "name": "Gerekçe",
       "kind": "text",
       "length": 200
+     },
+     {
+      "name": "Geçmiş",
+      "kind": "text",
+      "length": 120
      }
     ]
    },
@@ -772,6 +961,11 @@
       "name": "Gerekçe",
       "kind": "text",
       "length": 200
+     },
+     {
+      "name": "Geçmiş",
+      "kind": "text",
+      "length": 120
      }
     ]
    }
@@ -2060,6 +2254,396 @@
          "Durum": "gonderildi",
          "Kat": "3",
          "Yükseklik": "9"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmiş: an ve kişiyle bir satır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "moment": "2026-10-17T14:30:00",
+      "user": "Ayşe Yılmaz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9",
+        "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi)"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Yükseklik": "9",
+         "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi)"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmiş: anı ve kişisi verilmeyen adım",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:1",
+      "step": "Gönder"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:1",
+       "from": "taslak",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "3",
+        "Yükseklik": "9",
+        "Geçmiş": "Gönder (Taslak → Gönderildi)"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "3",
+         "Yükseklik": "9",
+         "Geçmiş": "Gönder (Taslak → Gönderildi)"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmiş: gerekçe satırda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "Kat eksik."
+      },
+      "user": "Mehmet Kaya"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Kat eksik.",
+        "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Kat eksik.",
+         "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmiş alanı değerlerle yazılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:1",
+      "step": "Gönder",
+      "values": {
+       "Geçmiş": "elle"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "“Geçmiş” alanını iş akışının adımları yazar; değerlerden çıkarın.",
+       "path": "values.Geçmiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "taslak",
+         "Kat": "3"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçmiş: alan dolunca en eski satırlar gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli."
+      },
+      "moment": "2026-10-17T09:00:00",
+      "user": "Ayşe Yılmaz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+        "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli."
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+         "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli."
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:3",
+      "step": "Gönder",
+      "moment": "2026-10-17T11:00:00",
+      "user": "Mehmet Kaya"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "iade",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+        "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi)"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+         "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi)"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "kayitli",
+      "uid": "$uidOf:3",
+      "step": "Onayla",
+      "moment": "2026-10-18T08:15:00",
+      "user": "Zeynep Arslan"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "onaylandi",
+       "attrs": {
+        "Durum": "onaylandi",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+        "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı)"
+       },
+       "version": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "onaylandi",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
+         "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı)"
         }
        }
       },

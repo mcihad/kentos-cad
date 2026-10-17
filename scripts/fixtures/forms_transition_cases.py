@@ -23,6 +23,7 @@ FIELDS = [
     {"name": "Yükseklik", "kind": "decimal", "scale": 1},
     {"name": "Açıklama", "kind": "text"},
     {"name": "Gerekçe", "kind": "text", "length": 200},
+    {"name": "Geçmiş", "kind": "text", "length": 120},
 ]
 WORKFLOW = {"field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "steps": [
     {"label": "Gönder", "from": ["taslak", "iade"], "to": "gonderildi", "valid": True},
@@ -39,6 +40,9 @@ ITEMS = [
     {"type": "field", "id": "gerekce", "field": "Gerekçe"},
 ]
 BODY = {"revision": 1, "items": ITEMS, "workflow": WORKFLOW}
+# docs/adr/0429: the same workflow logging its steps.
+LOGGED_FLOW = {**WORKFLOW, "log": "Geçmiş"}
+LOGGED = {"revision": 1, "items": ITEMS + [{"type": "field", "id": "gecmis", "field": "Geçmiş"}], "workflow": LOGGED_FLOW}
 PLAIN = {"revision": 1, "items": ITEMS}
 TWIN_BODY = {"revision": 1, "items": ITEMS}  # the twin is told of the workflow below, not by the body
 
@@ -52,6 +56,7 @@ FORMS = [
     {"id": "basit", "name": "Basit", "layer": "bina", "draft": copy.deepcopy(PLAIN), "releases": release(PLAIN)},
     {"id": "taslak", "name": "Taslak akış", "layer": "bina", "draft": copy.deepcopy(BODY)},
     {"id": "kilitli", "name": "Kilitli katman", "layer": "kilit", "draft": copy.deepcopy(BODY), "releases": release(BODY)},
+    {"id": "kayitli", "name": "Kayıtlı akış", "layer": "bina", "draft": copy.deepcopy(LOGGED), "releases": release(LOGGED)},
     {"id": "bozuk", "name": "Bozuk akış", "layer": "bina",
      "draft": {**copy.deepcopy(BODY), "workflow": {**copy.deepcopy(WORKFLOW), "field": "Yok"}}},
 ]
@@ -105,9 +110,11 @@ class Refused(Exception):
         self.error = {"code": code, "message": message, "path": path}
 
 
-def take(slot, step_label, values, attrs=None):
+def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=None):
     """The record afterwards, by the rule; or Refused."""
     before = dict(attrs if attrs is not None else ATTRS[slot])
+    if logged and "Geçmiş" in values:
+        raise Refused("form_invalid", "“Geçmiş” alanını iş akışının adımları yazar; değerlerden çıkarın.", "values.Geçmiş")
     step = next((s for s in WORKFLOW["steps"] if s["label"] == step_label), None)
     if step is None:
         raise Refused("unknown_step", f"“Bina denetimi” formunun iş akışında “{step_label}” adımı yok.", "step")
@@ -145,10 +152,24 @@ def take(slot, step_label, values, attrs=None):
             raise Refused("form_invalid", ANY, f"values.{first['field']}" if first.get("field") in values else "step")
     if reason and not (after.get(reason) or "").strip():
         raise Refused("reason_required", f"“{step_label}” adımının gerekçesi (“{reason}”) yazılmalı.", f"values.{reason}")
+    if logged:
+        # docs/adr/0429: the moment, the person, the step and its states, the reason; the oldest lines go.
+        line = " · ".join([*([moment] if moment else []), *([user] if user else []),
+                           f"{step_label} ({words(state)} → {words(step['to'])})"])
+        if reason and (after.get(reason) or "").strip():
+            line += f": {after[reason].strip()}"
+        lines = (after.get("Geçmiş") or "").splitlines() if after.get("Geçmiş") else []
+        lines.append(line)
+        while len(lines) > 1 and len("\n".join(lines)) > 120:
+            lines.pop(0)
+        if len(lines[-1]) > 120:
+            lines[-1] = lines[-1][:120]
+        after["Geçmiş"] = "\n".join(lines)
     return state, step["to"], after
 
 
-def step(slot, label, values=None, now=None, op="execute", undo=False, form="denetim", draft=False):
+def step(slot, label, values=None, now=None, op="execute", undo=False, form="denetim", draft=False, moment=None,
+         user=None):
     values = values or {}
     now = dict(now or ATTRS)
     inp = {"form": form, "uid": f"$uidOf:{slot}", "step": label}
@@ -156,8 +177,12 @@ def step(slot, label, values=None, now=None, op="execute", undo=False, form="den
         inp["draft"] = True
     if values:
         inp["values"] = values
+    if moment:
+        inp["moment"] = moment
+    if user:
+        inp["user"] = user
     try:
-        frm, to, after = take(slot, label, values, now[slot])
+        frm, to, after = take(slot, label, values, now[slot], logged=form == "kayitli", moment=moment, user=user)
     except Refused as r:
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": now[slot]}}, "canUndo": undo, "canRedo": False,
                   "revision": "same"}
@@ -218,6 +243,16 @@ def cases():
         "ids": IDS, "fields": {"1": {"attrs": ATTRS[1]}}, "canUndo": False, "canRedo": True}}]})
     s, _ = step(1, "Gönder", form="taslak", draft=True)
     out.append({"name": "yayınlanmamış formun taslağıyla", "steps": [s]})
+    # docs/adr/0429: the log.
+    one("geçmiş: an ve kişiyle bir satır", 1, "Gönder", form="kayitli", moment="2026-10-17T14:30:00", user="Ayşe Yılmaz")
+    one("geçmiş: anı ve kişisi verilmeyen adım", 1, "Gönder", form="kayitli")
+    one("geçmiş: gerekçe satırda", 3, "Geri gönder", {"Gerekçe": "Kat eksik."}, form="kayitli", user="Mehmet Kaya")
+    one("geçmiş alanı değerlerle yazılamaz", 1, "Gönder", {"Geçmiş": "elle"}, form="kayitli")
+    a, now = step(3, "Geri gönder", {"Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli."}, form="kayitli",
+                  moment="2026-10-17T09:00:00", user="Ayşe Yılmaz")
+    b, now = step(3, "Gönder", now=now, undo=True, form="kayitli", moment="2026-10-17T11:00:00", user="Mehmet Kaya")
+    c, _ = step(3, "Onayla", now=now, undo=True, form="kayitli", moment="2026-10-18T08:15:00", user="Zeynep Arslan")
+    out.append({"name": "geçmiş: alan dolunca en eski satırlar gider", "steps": [a, b, c]})
     out.append(refused("iş akışı olmayan form", {"form": "basit", "uid": "$uidOf:1", "step": "Gönder"}, "no_workflow",
                        "“Basit” formunun iş akışı yok; tasarımcının İş akışı penceresinden tanımlayın.", "step"))
     out.append(refused("olmayan form", {"form": "yok", "uid": "$uidOf:1", "step": "Gönder"}, "unknown_form",

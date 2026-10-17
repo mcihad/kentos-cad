@@ -110,6 +110,11 @@ pub struct FormWorkflow {
     pub locked: Vec<String>,
     /// The steps, in their order (the editor's buttons).
     pub steps: Vec<WorkflowStep>,
+    /// A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
+    /// the states and the reason; read-only in the form.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub log: Option<String>,
 }
 
 /// One step of a workflow.
@@ -182,6 +187,25 @@ pub fn workflow_problem(workflow: &FormWorkflow, fields: &[crate::LayerField]) -
             "Kilitli durum “{c}”, “{}” alanının listesinde yok.",
             f.label()
         ));
+    }
+    if let Some(k) = &workflow.log {
+        match fields.iter().find(|x| x.key() == k) {
+            None => return Some(format!("İş akışının geçmiş alanı (“{k}”) katmanda yok.")),
+            Some(x) if x.kind != crate::LayerFieldKind::Text || x.values.is_some() => {
+                return Some(format!(
+                    "İş akışının geçmiş alanı “{}” serbest metin alanı olmalı.",
+                    x.label()
+                ));
+            }
+            Some(_) => {}
+        }
+        if workflow
+            .steps
+            .iter()
+            .any(|s| s.reason.as_deref() == Some(k))
+        {
+            return Some("Geçmiş alanı bir adımın gerekçe alanı olamaz.".into());
+        }
     }
     if workflow.steps.is_empty() {
         return Some("İş akışında adım yok; en az bir adım verin.".into());

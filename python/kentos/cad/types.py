@@ -11259,11 +11259,14 @@ class FormWorkflow(_Model):
         initial: The state a new record starts in: a code of its list.
         steps: The steps, in their order (the editor's buttons).
         locked: The states whose records are read-only.
+        log: A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
+            the states and the reason; read-only in the form.
     """
     field: str
     initial: str
     steps: list[WorkflowStep]
     locked: list[str] | Unset = UNSET
+    log: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11272,6 +11275,8 @@ class FormWorkflow(_Model):
         out["steps"] = [e0.to_json() for e0 in self.steps]
         if self.locked is not UNSET:
             out["locked"] = list(self.locked)
+        if self.log is not UNSET:
+            out["log"] = self.log
         return out
 
     @classmethod
@@ -11281,6 +11286,7 @@ class FormWorkflow(_Model):
             initial=data["initial"],
             steps=[WorkflowStep.from_json(e0) for e0 in data["steps"]],
             locked=list(data["locked"]) if "locked" in data else UNSET,
+            log=data.get("log", UNSET),
         )
 
 

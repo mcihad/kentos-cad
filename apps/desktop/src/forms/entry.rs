@@ -2620,6 +2620,12 @@ fn entry_control<'a>(
             .into()
         }
         FormWidget::Color if !read_only => colour_control(&value, placeholder, &key, set),
+        // A read-only text of several lines shows them all (a workflow's log, docs/adr/0429).
+        FormWidget::TextArea if read_only => container(label::body(value.clone()))
+            .padding([5, 8])
+            .width(Fill)
+            .style(style::container::field_box)
+            .into(),
         FormWidget::TextArea if !read_only => {
             let k = key.clone();
             match e.notes.get(&key) {

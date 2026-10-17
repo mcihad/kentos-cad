@@ -739,11 +739,16 @@ fn workflow_buildings(app: &mut App) {
             &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
             true,
         );
-        o.data(
-            id,
-            &[("Kod", code), ("Durum", state), ("Kat", floors)],
-            Some(code),
-        );
+        let mut attrs = vec![("Kod", *code), ("Durum", *state), ("Kat", *floors)];
+        if *state == "iade" {
+            attrs.push((
+                "Geçmiş",
+                "2026-10-15T09:20:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi)\n\
+                 2026-10-16T16:05:00 · Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat sayısı yanlış.",
+            ));
+            attrs.push(("Gerekçe", "Kat sayısı yanlış."));
+        }
+        o.data(id, &attrs, Some(code));
     }
     open_edited(app, o, |d| {
         let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
@@ -753,7 +758,8 @@ fn workflow_buildings(app: &mut App) {
                                     { "code": "taslak", "label": "Taslak" }, { "code": "gonderildi", "label": "Gönderildi" },
                                     { "code": "onaylandi", "label": "Onaylandı" }, { "code": "iade", "label": "İade edildi" }] },
                                 { "name": "Kat", "kind": "integer" },
-                                { "name": "Gerekçe", "kind": "text" }]);
+                                { "name": "Gerekçe", "kind": "text" },
+                                { "name": "Geçmiş", "kind": "text" }]);
         layers.push(bina);
         d["layers"] = Value::Array(layers);
         d["activeLayer"] = json!("bina");
@@ -762,9 +768,10 @@ fn workflow_buildings(app: &mut App) {
             { "type": "field", "id": "kod", "field": "Kod" },
             { "type": "field", "id": "durum", "field": "Durum" },
             { "type": "field", "id": "kat", "field": "Kat", "required": true },
-            { "type": "field", "id": "gerekce", "field": "Gerekçe" }
+            { "type": "field", "id": "gerekce", "field": "Gerekçe" },
+            { "type": "field", "id": "gecmis", "field": "Geçmiş", "widget": "textArea" }
         ],
-        "workflow": { "field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "steps": [
+        "workflow": { "field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "log": "Geçmiş", "steps": [
             { "label": "Gönder", "from": ["taslak", "iade"], "to": "gonderildi", "valid": true },
             { "label": "Onayla", "from": ["gonderildi"], "to": "onaylandi", "valid": true },
             { "label": "Geri gönder", "from": ["gonderildi"], "to": "iade", "reason": "Gerekçe" },
@@ -798,6 +805,13 @@ fn workflow_steps(app: &mut App) {
 fn workflow_locked(app: &mut App) {
     workflow_buildings(app);
     app.selection.set([Slot(3)]);
+    run(app, "data.formEdit");
+}
+
+/// A returned building's form: its log of steps, read-only, and Gönder again (docs/adr/0429).
+fn workflow_log(app: &mut App) {
+    workflow_buildings(app);
+    app.selection.set([Slot(4)]);
     run(app, "data.formEdit");
 }
 
@@ -1607,6 +1621,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-tasarim", workflow_designer),
         ("form-is-akisi-adim", workflow_steps),
         ("form-is-akisi-kilitli", workflow_locked),
+        ("form-is-akisi-gecmis", workflow_log),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1856,6 +1871,12 @@ mod tests {
         assert_eq!(
             attrs.get("Gerekçe").map(String::as_str),
             Some("Kat yeniden ölçülecek.")
+        );
+        // The step wrote its line to the log (docs/adr/0429).
+        let log = attrs.get("Geçmiş").cloned().unwrap_or_default();
+        assert!(
+            log.ends_with("Düzelt (Onaylandı → İade edildi): Kat yeniden ölçülecek."),
+            "{log}"
         );
     }
 

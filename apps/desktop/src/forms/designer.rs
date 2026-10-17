@@ -227,6 +227,8 @@ pub enum Event {
     WorkflowField(String),
     WorkflowInitial(String),
     WorkflowLocked(String),
+    /// The text field each step appends its line to (docs/adr/0429); none: no log.
+    WorkflowLog(Option<String>),
     StepAdd,
     StepRemove(usize),
     StepLabel(usize, String),
@@ -1174,6 +1176,7 @@ impl App {
                                 valid: true,
                                 reason: None,
                             }],
+                            log: None,
                         };
                         edited(&mut w, &|b| b.workflow = Some(workflow.clone()));
                     }
@@ -1211,6 +1214,11 @@ impl App {
             Event::WorkflowLocked(code) => edited(&mut w, &|b| {
                 if let Some(wf) = b.workflow.as_mut() {
                     toggle(&mut wf.locked, &code);
+                }
+            }),
+            Event::WorkflowLog(key) => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut() {
+                    wf.log = key.clone();
                 }
             }),
             Event::StepAdd => edited(&mut w, &|b| {

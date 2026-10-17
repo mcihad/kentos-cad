@@ -588,7 +588,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 
 - [ ] **FORM-WORK-01:** Veri workflow state graph'ı draft/submitted/in_review/approved/rejected/returned gibi açık sürümlü tanım taşısın; form publication state ile karışmasın. — *17 Ekim, kısmen: yerel iş akışı (ADR 0428: durumlar, adımlar, kilitli durumlar; yayından ayrı); rollerle bulutta açık.*
 - [ ] **FORM-WORK-02:** Her transition actor/task/record izinleri, required fields ve domain/relation validation ile denetlensin. — *17 Ekim, kısmen: adım kaydın durumundan, geçerlilik ve gerekçeyle denetlenir (ADR 0428); aktör ve görev yetkileri bulutta açık.*
-- [ ] **FORM-WORK-03:** Saha personeli submitted kaydı kendisi approved yapamasın; reviewer kararı audit/history ve beklenen record revision taşısın.
+- [ ] **FORM-WORK-03:** Saha personeli submitted kaydı kendisi approved yapamasın; reviewer kararı audit/history ve beklenen record revision taşısın. — *17 Ekim, kısmen: adımlar kaydın geçmiş alanına an, kişi, adım ve gerekçeyle yazılır (ADR 0429); kendi kaydını onaylamanın yasağı rollerle bulutta açık.*
 - [x] **FORM-WORK-04:** Onaylanan kayıt read-only veya correction workflow'da düzenlenebilir olsun; user seçimi sunucu politikasını değiştiremesin. — *17 Ekim: onaylı kayıt kilitli durumda salt okunur, düzeltme adımıyla açılır (ADR 0428).*
 - [ ] **FORM-WORK-05:** Return/reject; field/path bazlı geri bildirim ve düzeltilebilir taslak üretsin; eski submission snapshot'ı kaybolmasın. — *17 Ekim, kısmen: geri gönderme gerekçe alanıyla (ADR 0428); alan bazlı geri bildirim ve eski anlık görüntü açık.*
 - [ ] **FORM-WORK-06:** Parent/child/attachment ve calculated fields aynı submission revision'a bağlansın; reviewer hangi snapshot'ı onayladığını bilsin.
