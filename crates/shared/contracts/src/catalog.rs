@@ -4250,6 +4250,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A form's versions compared (docs/adr/0427), held together by fixtures/commands/v1/cad.forms.compare.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_COMPARE.into(),
+            version: crate::CAD_FORMS_COMPARE_VERSION,
+            title: "Sürümleri karşılaştır".into(),
+            summary: "Formun iki sürümü arasındaki değişiklikleri verir, hiçbir şey yazmaz: from (yoksa son yayın) ile to (yoksa taslak) arasında \
+                      her öğe eklendi, kaldırıldı, taşındı (başka sekme ya da gruba, ya da kardeşleri arasında) ya da değişti (değişen özellikleriyle); \
+                      ardından formun Gizlenenleri sil'i ve senaryoları. Değişiklikler yeni sürümün sırasıyla, kaldırılanlar sonda."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsCompare>(),
+            output: schema::<crate::FormsCompared>(),
+            plan: Some(schema::<crate::FormsCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Taslak son yayından ne kadar farklı".into(),
+                input: json!({ "form": "bina-denetimi" }),
+                output: None,
+            }],
+        },
         // A form's scenarios (docs/adr/0420), held together by fixtures/commands/v1/cad.forms.test.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_TEST.into(),
@@ -5463,6 +5490,9 @@ mod tests {
                     crate::CAD_FORMS_TEST => {
                         serde_json::from_value::<crate::FormsTest>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_COMPARE => {
+                        serde_json::from_value::<crate::FormsCompare>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_RECOMPUTE => {
                         serde_json::from_value::<crate::FormsRecompute>(e.input.clone()).map(|_| ())
                     }
@@ -5794,6 +5824,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_TEST => {
                             serde_json::from_value::<crate::FormsTested>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_COMPARE => {
+                            serde_json::from_value::<crate::FormsCompared>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_RECOMPUTE => {

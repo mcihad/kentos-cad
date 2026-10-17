@@ -448,7 +448,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-14:** Role/task preview sunucunun effective grant modelini simüle etsin; designer rolü gerçek saha kullanıcısına impersonation yetkisi vermesin.
 - [ ] **FORM-DESIGN-15:** Validation preflight; missing field/domain/action, unsupported mobile widget, rule cycle, required-hidden conflict ve source izin ihtiyaçlarını listelesin.
 - [ ] **FORM-DESIGN-16:** Theme tokens, accessibility labels, error location, tab/focus order ve localization editörü olsun.
-- [ ] **FORM-DESIGN-17:** Tasarım undo/redo, draft autosave, source diff, version compare ve review comments desteklesin.
+- [ ] **FORM-DESIGN-17:** Tasarım undo/redo, draft autosave, source diff, version compare ve review comments desteklesin. — *17 Ekim, kısmen: geri alma ve yineleme (ADR 0403), sürüm karşılaştırması (ADR 0427: `cad.forms.compare`, Değişiklikler); kendiliğinden kayıt ve yorumlar açık.*
 - [x] **FORM-DESIGN-18:** Schema/domain değişikliği form kullanımını etkilediğinde impact view ve migration önerisi sun. — *Yapıldı (16 Ekim; ADR 0414: Alanlar penceresinde alanın kullanıldığı yerler, yeniden adlandırmada kuralların izlenmesi, silmede uyarı).*
 - [ ] **FORM-DESIGN-19:** Pure form ile extension/Python-dependent form ayrımı tasarımcıda görülsün; mandatory mobile executor eksikliği yayın engeli olsun.
 - [ ] **FORM-DESIGN-20:** Form şablonu import/export veya `.kek` içinden alındığında source refs ve ACL yeniden bağlansın; başka tenant'ın grant'i kopyalanmasın.

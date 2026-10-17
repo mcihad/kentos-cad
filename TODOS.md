@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AJ` sürümleri karşılaştır (ADR 0427, 17 Ekim): web'de gerekenler: `cad.forms.compare`'ın TS işleyicisi
+  (`fixtures/commands/v1/cad.forms.compare.json`), tasarımcıda Değişiklikler.
 - [ ] `FORM-AI` alt türe göre görünüm (ADR 0426, 17 Ekim): web'de gerekenler: sekmenin `visibleWhen`'i (TS türleri üretildi), formun
   gizli sekmesi, tasarımcıda Alt türlerde göster.
 - [ ] `FORM-AH` ilişkili kayıtların tablosu (ADR 0425, 17 Ekim): web'de gerekenler: ilişkili kayıtlar öğesinin `view` ve `columns`'ı
@@ -1504,6 +1506,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AJ` Sürümleri karşılaştır: iki sürümün (yoksa son yayınla taslağın) farkı, öğe öğe eklendi, kaldırıldı, taşındı, değişti;
+  tasarımcıda Değişiklikler; `cad.forms.compare`. — **17 Ekim, [ADR 0427](docs/adr/0427-form-versions-compared.md).**
 - [x] `FORM-AI` Alt türe göre görünüm: sekmenin görünürlük kuralı; tasarımcıda öğelerin Alt türlerde göster çipleri kuralı yazar. —
   **17 Ekim, [ADR 0426](docs/adr/0426-views-by-kind.md).**
 - [x] `FORM-AH` İlişkili kayıtların tablosu: öğenin Liste ya da Tablo görünümü, sütunları (alt katmanın alanları), ondalık

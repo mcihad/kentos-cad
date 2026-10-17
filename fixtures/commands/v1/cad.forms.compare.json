@@ -1,0 +1,1371 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.compare",
+ "commandVersion": 1,
+ "title": "Sürümleri karşılaştır",
+ "note": "ADR 0427: formun iki sürümü arasındaki değişiklikler. Written by scripts/fixtures/forms_compare_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Sürümler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "forms": [
+    {
+     "id": "bina",
+     "name": "Bina denetimi",
+     "layer": "bina",
+     "draft": {
+      "revision": 4,
+      "items": [
+       {
+        "type": "tab",
+        "id": "genel",
+        "label": "Genel",
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true,
+          "label": "Durumu"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat {Kat}."
+         }
+        ]
+       },
+       {
+        "type": "tab",
+        "id": "olcu",
+        "label": "Ölçü",
+        "items": [
+         {
+          "type": "group",
+          "id": "ayrinti",
+          "label": "Ölçüler",
+          "items": [
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "Kat"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "tests": [
+       {
+        "name": "boş",
+        "expect": {
+         "shown": [
+          "genel",
+          "durum"
+         ]
+        }
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "60899e71fa0d7828716c1523dd53e4ee",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not"
+         }
+        ]
+       }
+      },
+      {
+       "version": 2,
+       "digest": "aa99942e05031cb9fa75395feead8ec2",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "group",
+          "id": "ayrinti",
+          "label": "Ayrıntı",
+          "items": [
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "Kat"
+           },
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not",
+            "visibleWhen": "Kat > 2"
+           }
+          ]
+         }
+        ]
+       }
+      },
+      {
+       "version": 3,
+       "digest": "d99af125eca011dee56677761d459046",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "tab",
+          "id": "genel",
+          "label": "Genel",
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true,
+            "label": "Durumu"
+           }
+          ]
+         },
+         {
+          "type": "tab",
+          "id": "olcu",
+          "label": "Ölçü",
+          "items": [
+           {
+            "type": "group",
+            "id": "ayrinti",
+            "label": "Ölçüler",
+            "items": [
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "Kat"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "clearHidden": true
+       }
+      }
+     ]
+    },
+    {
+     "id": "taslak",
+     "name": "Taslak form",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat"
+       },
+       {
+        "type": "field",
+        "id": "not",
+        "field": "Not"
+       }
+      ]
+     }
+    },
+    {
+     "id": "ayni",
+     "name": "Aynı form",
+     "layer": "bina",
+     "draft": {
+      "revision": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "group",
+        "id": "ayrinti",
+        "label": "Ayrıntı",
+        "items": [
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "aa99942e05031cb9fa75395feead8ec2",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "group",
+          "id": "ayrinti",
+          "label": "Ayrıntı",
+          "items": [
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "Kat"
+           },
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not",
+            "visibleWhen": "Kat > 2"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi"
+       },
+       {
+        "code": "inceleme",
+        "label": "İnceleme"
+       }
+      ]
+     },
+     {
+      "name": "Kat",
+      "kind": "integer"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Yükseklik",
+      "kind": "decimal",
+      "scale": 1
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "taslak son yayından: not eklendi, senaryolar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 3,
+       "changes": [
+        {
+         "item": "bilgi",
+         "kind": "added",
+         "words": "“bilgi” eklendi."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler artık silinmez."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "tests"
+         ],
+         "words": "Senaryolar değişti: 1 senaryo, önce 0."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilk yayından ikinciye: grup eklendi, alanlar taşındı, kural ve zorunluluk",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 1,
+      "to": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "to": 2,
+       "changes": [
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "required"
+         ],
+         "words": "“Durum” değişti: zorunlu."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "added",
+         "words": "“Ayrıntı” eklendi."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "moved",
+         "words": "“Not” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "changed",
+         "properties": [
+          "visibleWhen"
+         ],
+         "words": "“Not” değişti: görünme koşulu."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinciden üçüncüye: sekmeler, grubun adı, yeni hesap, gizlenenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 2,
+      "to": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 2,
+       "to": 3,
+       "changes": [
+        {
+         "item": "genel",
+         "kind": "added",
+         "words": "“Genel” eklendi."
+        },
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durumu” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Durumu” değişti: ad."
+        },
+        {
+         "item": "olcu",
+         "kind": "added",
+         "words": "“Ölçü” eklendi."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "moved",
+         "words": "“Ölçüler” taşındı."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Ölçüler” değişti: ad."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "added",
+         "words": "“Yükseklik” eklendi."
+        },
+        {
+         "item": "not",
+         "kind": "removed",
+         "words": "“Not” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler silinir."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "üçüncüden birinciye: geriye doğru",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 3,
+      "to": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 3,
+       "to": 1,
+       "changes": [
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durum” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label",
+          "required"
+         ],
+         "words": "“Durum” değişti: ad, zorunlu."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "added",
+         "words": "“Not” eklendi."
+        },
+        {
+         "item": "genel",
+         "kind": "removed",
+         "words": "“Genel” kaldırıldı."
+        },
+        {
+         "item": "olcu",
+         "kind": "removed",
+         "words": "“Ölçü” kaldırıldı."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "removed",
+         "words": "“Ölçüler” kaldırıldı."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "removed",
+         "words": "“Yükseklik” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler artık silinmez."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilk yayından taslağa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "changes": [
+        {
+         "item": "genel",
+         "kind": "added",
+         "words": "“Genel” eklendi."
+        },
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durumu” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label",
+          "required"
+         ],
+         "words": "“Durumu” değişti: ad, zorunlu."
+        },
+        {
+         "item": "bilgi",
+         "kind": "added",
+         "words": "“bilgi” eklendi."
+        },
+        {
+         "item": "olcu",
+         "kind": "added",
+         "words": "“Ölçü” eklendi."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "added",
+         "words": "“Ölçüler” eklendi."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "added",
+         "words": "“Yükseklik” eklendi."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "removed",
+         "words": "“Not” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "tests"
+         ],
+         "words": "Senaryolar değişti: 1 senaryo, önce 0."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı yayın: değişiklik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 2,
+      "to": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 2,
+       "to": 2,
+       "changes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taslak son yayınla aynı: değişiklik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "ayni"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "changes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "bina",
+      "from": 1,
+      "to": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "to": 3,
+       "changes": [
+        {
+         "item": "genel",
+         "kind": "added",
+         "words": "“Genel” eklendi."
+        },
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durumu” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label",
+          "required"
+         ],
+         "words": "“Durumu” değişti: ad, zorunlu."
+        },
+        {
+         "item": "olcu",
+         "kind": "added",
+         "words": "“Ölçü” eklendi."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "added",
+         "words": "“Ölçüler” eklendi."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "added",
+         "words": "“Yükseklik” eklendi."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "removed",
+         "words": "“Not” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler silinir."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinciden taslağa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 2,
+       "changes": [
+        {
+         "item": "genel",
+         "kind": "added",
+         "words": "“Genel” eklendi."
+        },
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durumu” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Durumu” değişti: ad."
+        },
+        {
+         "item": "bilgi",
+         "kind": "added",
+         "words": "“bilgi” eklendi."
+        },
+        {
+         "item": "olcu",
+         "kind": "added",
+         "words": "“Ölçü” eklendi."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "moved",
+         "words": "“Ölçüler” taşındı."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Ölçüler” değişti: ad."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "added",
+         "words": "“Yükseklik” eklendi."
+        },
+        {
+         "item": "not",
+         "kind": "removed",
+         "words": "“Not” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "tests"
+         ],
+         "words": "Senaryolar değişti: 1 senaryo, önce 0."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birinciden üçüncüye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 1,
+      "to": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "to": 3,
+       "changes": [
+        {
+         "item": "genel",
+         "kind": "added",
+         "words": "“Genel” eklendi."
+        },
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durumu” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label",
+          "required"
+         ],
+         "words": "“Durumu” değişti: ad, zorunlu."
+        },
+        {
+         "item": "olcu",
+         "kind": "added",
+         "words": "“Ölçü” eklendi."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "added",
+         "words": "“Ölçüler” eklendi."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "added",
+         "words": "“Yükseklik” eklendi."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "removed",
+         "words": "“Not” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler silinir."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taslaktan değil, yayından yayına: to verilince",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "to": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 3,
+       "to": 3,
+       "changes": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinciden birinciye: grup kaldırıldı, alanlar geri taşındı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 2,
+      "to": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 2,
+       "to": 1,
+       "changes": [
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "required"
+         ],
+         "words": "“Durum” değişti: zorunlu."
+        },
+        {
+         "item": "kat",
+         "kind": "moved",
+         "words": "“Kat” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "moved",
+         "words": "“Not” taşındı."
+        },
+        {
+         "item": "not",
+         "kind": "changed",
+         "properties": [
+          "visibleWhen"
+         ],
+         "words": "“Not” değişti: görünme koşulu."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "removed",
+         "words": "“Ayrıntı” kaldırıldı."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "üçüncüden ikinciye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 3,
+      "to": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 3,
+       "to": 2,
+       "changes": [
+        {
+         "item": "durum",
+         "kind": "moved",
+         "words": "“Durum” taşındı."
+        },
+        {
+         "item": "durum",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Durum” değişti: ad."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "moved",
+         "words": "“Ayrıntı” taşındı."
+        },
+        {
+         "item": "ayrinti",
+         "kind": "changed",
+         "properties": [
+          "label"
+         ],
+         "words": "“Ayrıntı” değişti: ad."
+        },
+        {
+         "item": "not",
+         "kind": "added",
+         "words": "“Not” eklendi."
+        },
+        {
+         "item": "genel",
+         "kind": "removed",
+         "words": "“Genel” kaldırıldı."
+        },
+        {
+         "item": "olcu",
+         "kind": "removed",
+         "words": "“Ölçü” kaldırıldı."
+        },
+        {
+         "item": "yukseklik",
+         "kind": "removed",
+         "words": "“Yükseklik” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "clearHidden"
+         ],
+         "words": "Gizlenenler artık silinmez."
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "bina",
+      "from": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış form: karşılaştırılacak yayın yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Taslak form” formu hiç yayınlanmadı; karşılaştırılacak yayın yok.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış formun verilen yayını",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak",
+      "from": 1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_release",
+       "message": "“Taslak form” formunun 1. yayını yok.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan yayından",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 9
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_release",
+       "message": "“Bina denetimi” formunun 9. yayını yok.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan yayına",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 1,
+      "to": 7
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_release",
+       "message": "“Bina denetimi” formunun 7. yayını yok.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "önce from denetlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "bina",
+      "from": 8,
+      "to": 7
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_release",
+       "message": "“Bina denetimi” formunun 8. yayını yok.",
+       "path": "from"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form, yayın da yanlış: önce form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok",
+      "from": 3
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

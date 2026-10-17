@@ -241,6 +241,8 @@ codes! {
     INVALID_FORM = "invalid_form", Failed, false, "Formun yapısı kurallarına uymuyor (öğe kimlikleri, sekmeler, derinlik, uzunluklar).";
     /// A form the project has not.
     UNKNOWN_FORM = "unknown_form", Failed, false, "Bu kimlikle bir form yok.";
+    /// A release version the form has not (docs/adr/0427).
+    UNKNOWN_RELEASE = "unknown_release", Failed, false, "Formun bu sürümde bir yayını yok.";
     /// A scenario name the form's body has not (docs/adr/0420).
     UNKNOWN_TEST = "unknown_test", Failed, false, "Formda bu adla bir senaryo yok.";
     /// A new form with the id of another.

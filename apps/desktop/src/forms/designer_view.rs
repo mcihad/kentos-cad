@@ -15,9 +15,9 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_ATTACHMENTS, ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CREATE, DOWN,
-    ENFORCE, Event, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM,
-    REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    ADD_ATTACHMENTS, ADD_GROUP, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, CREATE,
+    DOWN, ENFORCE, Event, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO,
+    REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -103,7 +103,9 @@ impl App {
             .padding(16)
             .into(),
         };
-        let inspector = if w.previewing {
+        let inspector = if w.changes {
+            self.forms_changes(w)
+        } else if w.previewing {
             self.forms_preview(w)
         } else {
             match (&w.body, &w.item) {
@@ -114,18 +116,30 @@ impl App {
                 _ => empty_inspector(),
             }
         };
-        // Özellikler | Önizleme over the third column (docs/adr/0403 §3).
+        // Özellikler | Önizleme | Değişiklikler over the third column (docs/adr/0403 §3, 0427).
         let side = Segmented::new(
-            [PROPERTIES, PREVIEW],
-            if w.previewing { PREVIEW } else { PROPERTIES },
-            |t| msg(Event::Preview(t == PREVIEW)),
+            [PROPERTIES, PREVIEW, CHANGES],
+            if w.changes {
+                CHANGES
+            } else if w.previewing {
+                PREVIEW
+            } else {
+                PROPERTIES
+            },
+            |t| {
+                if t == CHANGES {
+                    msg(Event::Changes)
+                } else {
+                    msg(Event::Preview(t == PREVIEW))
+                }
+            },
         );
         let inspector: Element<'_, Message> = column![side, inspector].spacing(8).into();
         let main = row![
             container(left).width(220).height(Fill),
             container(center).width(Fill).height(Fill),
             container(inspector)
-                .width(if w.previewing { 400 } else { 340 })
+                .width(if w.previewing || w.changes { 400 } else { 340 })
                 .height(Fill),
         ]
         .spacing(12)
@@ -1295,6 +1309,70 @@ impl App {
             .spacing(6)
             .align_y(Center),
         )
+        .into()
+    }
+}
+
+impl App {
+    /// Değişiklikler (docs/adr/0427): the window's copy against the form's last release, item by item;
+    /// pressing a change chooses its item.
+    fn forms_changes<'a>(&self, w: &'a Window) -> Element<'a, Message> {
+        let Some(body) = &w.body else {
+            return empty_inspector();
+        };
+        let Some(last) = self.chosen_form().and_then(|f| f.releases.last()) else {
+            return container(label::caption(
+                "Form hiç yayınlanmadı: karşılaştırılacak yayın yok. İlk yayından sonra taslağın farkı burada görünür.",
+            ))
+            .padding(12)
+            .into();
+        };
+        let changes = kentos_forms::compare::compare(&last.body, body);
+        let mut col = Column::new().spacing(4).push(label::caption(format!(
+            "{}. yayından bu yana {} değişiklik.",
+            last.version,
+            changes.len()
+        )));
+        if changes.is_empty() {
+            col = col.push(label::caption("Taslak son yayınla aynı.").style(muted));
+        }
+        for c in changes {
+            use kentos_contracts::FormChangeKind as K;
+            // A mark of the change's kind: added green, removed red, moved and changed in the accent.
+            let (mark, tone): (&str, fn(&Tokens) -> iced::Color) = match c.kind {
+                K::Added => ("+", |t| t.success),
+                K::Removed => ("−", |t| t.danger),
+                K::Moved => ("↕", |t| t.accent),
+                K::Changed => ("•", |t| t.accent),
+            };
+            let line = row![
+                container(label::strong(mark).style(move |theme: &iced::Theme| {
+                    iced::widget::text::Style {
+                        color: Some(tone(&Tokens::of(theme))),
+                    }
+                }))
+                .width(14),
+                label::body(c.words.clone()).width(Fill)
+            ]
+            .spacing(6)
+            .align_y(Center);
+            col = col.push(match c.item.filter(|_| c.kind != K::Removed) {
+                Some(id) => button(line)
+                    .on_press(msg(Event::SelectItem(id)))
+                    .padding([3, 6])
+                    .width(Fill)
+                    .style(style::button::row(false))
+                    .into(),
+                None => Element::from(container(line).padding([3, 6])),
+            });
+        }
+        scrollable(col.padding(iced::Padding {
+            top: 0.0,
+            right: 14.0,
+            bottom: 0.0,
+            left: 2.0,
+        }))
+        .height(Fill)
         .into()
     }
 }

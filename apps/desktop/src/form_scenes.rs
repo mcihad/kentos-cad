@@ -708,6 +708,19 @@ fn kind_tabs(app: &mut App) {
     designer(app, designer::Event::ShowInKind("depo".into()));
 }
 
+/// Formlar's Değişiklikler (docs/adr/0427): the survey form's draft against its release after the
+/// floor count became required, a group was added and the note removed.
+fn form_changes(app: &mut App) {
+    buildings_with_a_form(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("kat".into()));
+    designer(app, designer::Event::Required(true));
+    designer(app, designer::Event::SelectItem("bilgi".into()));
+    designer(app, designer::Event::RemoveItem);
+    designer(app, designer::Event::AddGroup);
+    designer(app, designer::Event::Changes);
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1510,6 +1523,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-iliskili-tablo", units_table),
         ("form-iliskili-tasarim", units_designer),
         ("form-alt-tur-sekme", kind_tabs),
+        ("form-degisiklikler", form_changes),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1714,6 +1728,25 @@ mod tests {
         assert_eq!(
             rule.default, None,
             "steel is no longer offered, nor its default"
+        );
+    }
+
+    #[test]
+    fn the_designer_says_what_changed_since_the_release() {
+        let mut app = crate::files_testing::app_with_drawing();
+        form_changes(&mut app);
+        let w = app.forms_window.as_ref().unwrap();
+        assert!(w.changes);
+        let form = app.chosen_form().unwrap();
+        let changes = kentos_forms::compare::compare(
+            &form.releases.last().unwrap().body,
+            w.body.as_ref().unwrap(),
+        );
+        let kinds: Vec<_> = changes.iter().map(|c| c.kind).collect();
+        use kentos_contracts::FormChangeKind as K;
+        assert!(
+            kinds.contains(&K::Added) && kinds.contains(&K::Removed) && kinds.contains(&K::Changed),
+            "{changes:?}"
         );
     }
 

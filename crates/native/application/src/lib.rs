@@ -171,6 +171,7 @@ pub mod forms;
 pub mod forms_audit;
 pub mod records;
 pub mod records_duplicate;
+pub mod forms_compare;
 pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
@@ -248,6 +249,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FORMS_TEST,
         kentos_contracts::CAD_FORMS_TEST_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_COMPARE,
+        kentos_contracts::CAD_FORMS_COMPARE_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_RECOMPUTE,

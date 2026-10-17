@@ -59,6 +59,7 @@ pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const RECOMPUTE: &str = "Hesapları yenile";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
+pub(super) const CHANGES: &str = "Değişiklikler";
 pub(super) const PROPERTIES: &str = "Özellikler";
 pub(super) const REDO: &str = "Yinele";
 /// The steps the copy's history keeps.
@@ -156,6 +157,8 @@ pub struct Window {
     pub(crate) preview_error: Option<String>,
     /// The name a new scenario takes (docs/adr/0420).
     pub(crate) scenario_name: String,
+    /// The third column shows what changed since the last release (docs/adr/0427).
+    pub(crate) changes: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -211,6 +214,8 @@ pub enum Event {
     Redo,
     /// The third column: the properties (`false`) or the preview.
     Preview(bool),
+    /// The third column: what changed since the last release (docs/adr/0427).
+    Changes,
     /// Hesapları yenile on the chosen form (docs/adr/0421).
     Recompute,
     /// Kayıtları denetle on the chosen form (docs/adr/0406 §1).
@@ -1111,7 +1116,13 @@ impl App {
                     return Task::none();
                 }
             }
+            Event::Changes => {
+                w.changes = true;
+                w.previewing = false;
+                self.form_preview = None;
+            }
             Event::Preview(on) => {
+                w.changes = false;
                 w.previewing = on;
                 if !on {
                     self.form_preview = None;

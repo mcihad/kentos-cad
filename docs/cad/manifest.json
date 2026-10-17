@@ -1209,12 +1209,13 @@
     "cad.forms.edit",
     "cad.forms.validate",
     "cad.forms.test",
-    "cad.forms.recompute"
+    "cad.forms.recompute",
+    "cad.forms.compare"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute",
-   "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test, cad.forms.recompute",
-   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421).",
+   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute, kentos.cad.forms.compare",
+   "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test, cad.forms.recompute, cad.forms.compare",
+   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421); Değişiklikler cad.forms.compare'in farkıdır (ADR 0427).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

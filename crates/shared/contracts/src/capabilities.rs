@@ -1718,6 +1718,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.compare",
+        refusals: &[&["unknown_form", "form_unpublished", "unknown_release"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.test",
         refusals: &[&[
             "unknown_form",

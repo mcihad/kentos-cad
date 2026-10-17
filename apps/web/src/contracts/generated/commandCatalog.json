@@ -346703,6 +346703,253 @@
       ]
     },
     {
+      "id": "cad.forms.compare",
+      "version": 1,
+      "title": "Sürümleri karşılaştır",
+      "summary": "Formun iki sürümü arasındaki değişiklikleri verir, hiçbir şey yazmaz: from (yoksa son yayın) ile to (yoksa taslak) arasında her öğe eklendi, kaldırıldı, taşındı (başka sekme ya da gruba, ya da kardeşleri arasında) ya da değişti (değişen özellikleriyle); ardından formun Gizlenenleri sil'i ve senaryoları. Değişiklikler yeni sürümün sırasıyla, kaldırılanlar sonda.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.compare` v1 (Sürümleri karşılaştır, docs/adr/0427): what changed from one version of\na form to another; nothing is written.\n\nRefusals, in this order: `unknown_form`, `form_unpublished` (no release to compare from),\n`unknown_release` (a version the form has not, at `from` or `to`).",
+        "properties": {
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "from": {
+            "description": "The release compared from; none: the latest.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          },
+          "to": {
+            "description": "The release compared to; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsCompare",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "FormChange": {
+            "description": "One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).",
+            "properties": {
+              "item": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FormChangeKind"
+              },
+              "properties": {
+                "description": "The properties that changed, by their names in the form's JSON, in their order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "words": {
+                "description": "Turkish, for people.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "words"
+            ],
+            "type": "object"
+          },
+          "FormChangeKind": {
+            "description": "What happened to an item from one version to the other.",
+            "oneOf": [
+              {
+                "enum": [
+                  "added",
+                  "removed"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "moved",
+                "description": "Under another tab or group, or elsewhere among its siblings.",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Its own properties (its items aside).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.compare` v1.",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/FormChange"
+            },
+            "type": "array"
+          },
+          "from": {
+            "description": "The release compared from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "version"
+          },
+          "to": {
+            "description": "The release compared to; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "from",
+          "changes"
+        ],
+        "title": "FormsCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "FormChange": {
+            "description": "One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).",
+            "properties": {
+              "item": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/FormChangeKind"
+              },
+              "properties": {
+                "description": "The properties that changed, by their names in the form's JSON, in their order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "words": {
+                "description": "Turkish, for people.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "words"
+            ],
+            "type": "object"
+          },
+          "FormChangeKind": {
+            "description": "What happened to an item from one version to the other.",
+            "oneOf": [
+              {
+                "enum": [
+                  "added",
+                  "removed"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "moved",
+                "description": "Under another tab or group, or elsewhere among its siblings.",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Its own properties (its items aside).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.compare` v1.",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/FormChange"
+            },
+            "type": "array"
+          },
+          "from": {
+            "description": "The release compared from.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "version"
+          },
+          "to": {
+            "description": "The release compared to; none: the draft.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "version"
+          }
+        },
+        "required": [
+          "from",
+          "changes"
+        ],
+        "title": "FormsCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_form",
+          "form_unpublished",
+          "unknown_release"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Taslak son yayından ne kadar farklı",
+          "input": {
+            "form": "bina-denetimi"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.test",
       "version": 1,
       "title": "Form senaryolarını çalıştır",
@@ -378334,6 +378581,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu kimlikle bir form yok."
+    },
+    {
+      "code": "unknown_release",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun bu sürümde bir yayını yok."
     },
     {
       "code": "unknown_test",

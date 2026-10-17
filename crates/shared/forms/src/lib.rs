@@ -16,6 +16,7 @@
 //! fields, each read as its kind (a yes/no field is true or false). A hidden field keeps its value;
 //! a rule decides only what the form shows and asks.
 
+pub mod compare;
 pub mod field_refs;
 mod generate;
 mod lookup;

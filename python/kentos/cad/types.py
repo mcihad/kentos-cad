@@ -902,6 +902,24 @@ FileUnitName = Literal["mm", "cm", "dm", "m", "km", "yd", "mi", "in", "ft", "usF
 """The names of :class:`FileUnit`, for a plain string."""
 
 
+class FormChangeKind(_StrEnum):
+    """What happened to an item from one version to the other.
+
+    - ``added``
+    - ``removed``
+    - ``moved``: Under another tab or group, or elsewhere among its siblings.
+    - ``changed``: Its own properties (its items aside).
+    """
+    ADDED = "added"
+    REMOVED = "removed"
+    MOVED = "moved"
+    CHANGED = "changed"
+
+
+FormChangeKindName = Literal["added", "removed", "moved", "changed"]
+"""The names of :class:`FormChangeKind`, for a plain string."""
+
+
 class FormSeverity(_StrEnum):
     """How much an issue weighs: an error stops a save or a publish, a warning is said."""
     ERROR = "error"
@@ -10854,6 +10872,38 @@ class FormBody(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormChange(_Model):
+    """One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
+    Attributes:
+        words: Turkish, for people.
+        properties: The properties that changed, by their names in the form's JSON, in their order.
+    """
+    kind: FormChangeKind | FormChangeKindName
+    words: str
+    item: str | None | Unset = UNSET
+    properties: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["words"] = self.words
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.properties is not UNSET:
+            out["properties"] = list(self.properties)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormChange:
+        return cls(
+            kind=_enum_in(FormChangeKind, data["kind"]),
+            words=data["words"],
+            item=data.get("item", UNSET),
+            properties=list(data["properties"]) if "properties" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormCheck(_Model):
     """A check of a field: an expression that must be true when the field is shown and filled, and what
     the form says when it is not.
@@ -11280,6 +11330,68 @@ class FormsAudited(_Model):
             records=[AuditedRecord.from_json(e0) for e0 in data["records"]],
             more=data.get("more", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsCompare(_Model):
+    """Input of `cad.forms.compare` v1 (Sürümleri karşılaştır, docs/adr/0427): what changed from one version of
+    a form to another; nothing is written.
+
+    Refusals, in this order: `unknown_form`, `form_unpublished` (no release to compare from),
+    `unknown_release` (a version the form has not, at `from` or `to`).
+    Attributes:
+        form: The form's id.
+        from_: The release compared from; none: the latest. Unit: version.
+        to: The release compared to; none: the draft. Unit: version.
+    """
+    form: str
+    from_: int | None | Unset = UNSET
+    to: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsCompare:
+        return cls(
+            form=data["form"],
+            from_=data.get("from", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsCompared(_Model):
+    """Output of `cad.forms.compare` v1.
+    Attributes:
+        from_: The release compared from. Unit: version.
+        to: The release compared to; none: the draft. Unit: version.
+    """
+    from_: int
+    changes: list[FormChange]
+    to: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsCompared:
+        return cls(
+            from_=data["from"],
+            changes=[FormChange.from_json(e0) for e0 in data["changes"]],
+            to=data.get("to", UNSET),
         )
 
 
@@ -29855,6 +29967,9 @@ __all__ = [
     "FlipBlockAction",
     "FlipBlockParameter",
     "FormBody",
+    "FormChange",
+    "FormChangeKind",
+    "FormChangeKindName",
     "FormCheck",
     "FormIssue",
     "FormItem",
@@ -29871,6 +29986,8 @@ __all__ = [
     "FormWidgetName",
     "FormsAudit",
     "FormsAudited",
+    "FormsCompare",
+    "FormsCompared",
     "FormsEdit",
     "FormsEdited",
     "FormsFill",

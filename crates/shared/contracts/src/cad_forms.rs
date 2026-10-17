@@ -41,6 +41,9 @@ pub const CAD_FORMS_FILL_VERSION: u32 = 1;
 /// Completes every record of a form's layer by the form's rules today (docs/adr/0421).
 pub const CAD_FORMS_RECOMPUTE: &str = "cad.forms.recompute";
 pub const CAD_FORMS_RECOMPUTE_VERSION: u32 = 1;
+/// Compares two versions of a form (docs/adr/0427).
+pub const CAD_FORMS_COMPARE: &str = "cad.forms.compare";
+pub const CAD_FORMS_COMPARE_VERSION: u32 = 1;
 /// Runs a form's scenarios (docs/adr/0420).
 pub const CAD_FORMS_TEST: &str = "cad.forms.test";
 pub const CAD_FORMS_TEST_VERSION: u32 = 1;
@@ -584,4 +587,81 @@ pub struct FormsRecomputed {
     pub version: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// Input of `cad.forms.compare` v1 (Sürümleri karşılaştır, docs/adr/0427): what changed from one version of
+/// a form to another; nothing is written.
+///
+/// Refusals, in this order: `unknown_form`, `form_unpublished` (no release to compare from),
+/// `unknown_release` (a version the form has not, at `from` or `to`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsCompare {
+    /// The form's id.
+    pub form: String,
+    /// The release compared from; none: the latest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub from: Option<u32>,
+    /// The release compared to; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub to: Option<u32>,
+}
+
+/// What happened to an item from one version to the other.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FormChangeKind {
+    Added,
+    Removed,
+    /// Under another tab or group, or elsewhere among its siblings.
+    Moved,
+    /// Its own properties (its items aside).
+    Changed,
+}
+
+/// One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormChange {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub item: Option<String>,
+    pub kind: FormChangeKind,
+    /// The properties that changed, by their names in the form's JSON, in their order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub properties: Vec<String>,
+    /// Turkish, for people.
+    pub words: String,
+}
+
+/// Output of `cad.forms.compare` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsCompared {
+    /// The release compared from.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub from: u32,
+    /// The release compared to; none: the draft.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub to: Option<u32>,
+    pub changes: Vec<FormChange>,
 }
