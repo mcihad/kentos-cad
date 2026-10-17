@@ -2577,6 +2577,22 @@
    "tests": 2
   },
   {
+   "id": "file.export.gpkg",
+   "kind": "command",
+   "title": "GeoPackage dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.gpkg"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.gpkg",
+   "mcp": "file.export.gpkg",
+   "note": "Kaydet penceresinden sonra komut dosyayı bütün yazar; yazılamayanlar export_losses ile sayılır (ADR 0502).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.gpx",
    "kind": "command",
    "title": "GPX…",
@@ -2675,6 +2691,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "file.import.gpkg",
+   "kind": "command",
+   "title": "GeoPackage…",
+   "level": "semantic",
+   "via": [
+    "file.import.gpkg"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.gpkg",
+   "mcp": "file.import.gpkg",
+   "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "file.import.kml",

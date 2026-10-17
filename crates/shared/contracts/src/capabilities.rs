@@ -2211,6 +2211,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.import.gpkg",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "nothing_to_import"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.dxf",
         refusals: &[
             &["invalid_file_path"],
@@ -2402,6 +2412,18 @@ const ENTRIES: &[Entry] = &[
         id: "cad.snap.find",
         refusals: &[&["not_finite", "invalid_aperture", "no_snap_kinds"]],
         warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.gpkg",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
         targets: none,
     },
     Entry {

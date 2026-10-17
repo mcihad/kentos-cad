@@ -29,7 +29,7 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, MeasuredPoint,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, MeasuredPoint,
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -49,7 +49,7 @@ use kentos_native_application::{
     arrays_edit, changeset, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, stretch,
+    entities_reverse, file_import, file_import_gpkg, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -1624,6 +1624,13 @@ impl Input for ImportDxf {
     }
 }
 
+impl Input for ImportGpkg {
+    /// No number: a path, table names and a choice.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for NetworkDefine {
     /// `network.tolerance` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -2443,6 +2450,7 @@ fn run_op(
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
+        kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),

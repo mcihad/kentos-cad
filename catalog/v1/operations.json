@@ -269,6 +269,13 @@
     "file.export.geojson": {
       "level": "none"
     },
+    "file.export.gpkg": {
+      "level": "semantic",
+      "via": [
+        "file.export.gpkg"
+      ],
+      "note": "Kaydet penceresinden sonra komut dosyayı bütün yazar; yazılamayanlar export_losses ile sayılır (ADR 0502)."
+    },
     "file.export.gpx": {
       "level": "none"
     },
@@ -290,6 +297,13 @@
     },
     "file.import.gnss": {
       "level": "none"
+    },
+    "file.import.gpkg": {
+      "level": "semantic",
+      "via": [
+        "file.import.gpkg"
+      ],
+      "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502)."
     },
     "file.import.kml": {
       "level": "none"

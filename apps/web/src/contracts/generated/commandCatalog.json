@@ -503708,6 +503708,364 @@
       ]
     },
     {
+      "id": "file.import.gpkg",
+      "version": 1,
+      "title": "GeoPackage içe aktar",
+      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "gpkgin",
+        "geopackage"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.gpkg` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `file_not_found`,\n`import_unreadable` (not a GeoPackage, or broken), `table_not_found` (a table of `tables`), `layer_not_found` and\n`not_a_layer` (a target of `layers`), `layer_locked`, `crs_mismatch` (the file's system is not the project's and\n`reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),\n`nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.",
+        "properties": {
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer\nof the same name (case and Turkish marks aside), else onto a new layer with the table's fields.",
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "reproject": {
+            "description": "Move the coordinates from the file's system into the project's (the project's datum choices taken); without\nit a file in another system is refused.",
+            "type": "boolean"
+          },
+          "tables": {
+            "description": "The tables to take; empty: every feature and attribute table.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportGpkg",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "entity_exists",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Belediyenin parsel ve bina GeoPackage'ı",
+          "input": {
+            "path": "/veri/kadastro.gpkg",
+            "tables": [
+              "parsel",
+              "bina"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.dxf",
       "version": 1,
       "title": "DXF içe aktar",
@@ -531511,6 +531869,243 @@
       ]
     },
     {
+      "id": "file.export.gpkg",
+      "version": 1,
+      "title": "GeoPackage dışa aktar",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "gpkg",
+        "gpkgout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object\na row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves\nwritten as chords).",
+        "properties": {
+          "layers": {
+            "description": "The layers, by id; empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "The file to write, an absolute path (`.gpkg`).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGpkg",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "tables",
+          "approximated"
+        ],
+        "title": "GpkgExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "tables",
+          "approximated"
+        ],
+        "title": "GpkgExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel ve yol katmanları",
+          "input": {
+            "layers": [
+              "parsel",
+              "yol"
+            ],
+            "overwrite": true,
+            "path": "/veri/teslim.gpkg"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -534840,6 +535435,36 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler."
+    },
+    {
+      "code": "table_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adı verilen tablo dosyada yok."
+    },
+    {
+      "code": "crs_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyanın koordinat sistemi projeninkinden başka; çevirmeyi isteyin ya da projeyi o sistemde açın."
+    },
+    {
+      "code": "crs_undeclared",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı."
+    },
+    {
+      "code": "entity_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz."
+    },
+    {
+      "code": "export_losses",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir."
     },
     {
       "code": "pdf_unwritable",

@@ -1,0 +1,16 @@
+[package]
+name = "kentos-geopackage"
+description = "GeoPackage (OGC 12-128r19) over SQLite: its tables, geometry blobs and spatial index, read and written without GDAL"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only (scripts/arch/deps.mjs, group `geopackage`; docs/adr/0502): SQLite compiled in by rusqlite, no KentOS
+# type, no runtime, network or interface. The product commands turn its rows into a drawing's objects.
+[dependencies]
+rusqlite = { workspace = true }
+
+
+[dev-dependencies]
+serde_json = { workspace = true }

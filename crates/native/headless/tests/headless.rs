@@ -1009,3 +1009,107 @@ fn dxf_hatches_go_round() {
         }
     }
 }
+
+/// Every object of the drawing as the wire carries it, by persistent id, without its slot.
+fn objects_by_uid(s: &Session) -> std::collections::BTreeMap<String, Value> {
+    let page = s
+        .entities(None, None, None, None, Some(10_000))
+        .expect("a page");
+    let page = serde_json::to_value(&page).expect("JSON");
+    let mut out = std::collections::BTreeMap::new();
+    for item in page["items"].as_array().expect("items") {
+        let mut e = item.clone();
+        let uid = e["uid"].as_str().expect("a uid").to_owned();
+        if let Some(o) = e.as_object_mut() {
+            o.remove("id");
+            if let Some(entity) = o.get_mut("entity").and_then(Value::as_object_mut) {
+                entity.remove("id");
+            }
+        }
+        out.insert(uid, e);
+    }
+    out
+}
+
+#[test]
+fn a_geopackage_goes_in_and_out_keeping_ids_values_and_arcs() {
+    // docs/adr/0502: QGIS's file into a drawing, the drawing out as a GeoPackage, that into another drawing: the same
+    // objects with the same lasting ids; plan writes nothing; the refusals.
+    let dir = scratch("gpkg");
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    assert_eq!(took["output"]["objects"], 10, "{took}");
+    let first = objects_by_uid(&s);
+    let out = dir.join("teslim.gpkg");
+    let p = out.display().to_string();
+    let planned = s
+        .call(json!({ "command": "file.export.gpkg", "op": "plan", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(!out.exists());
+    let written = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(
+        written["output"]["tables"].as_array().map(Vec::len),
+        Some(6),
+        "{written}"
+    );
+    assert!(
+        written["warnings"].as_array().is_some_and(Vec::is_empty),
+        "{written}"
+    );
+    assert!(out.exists());
+    let again = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let unknown = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p, "layers": ["yok"], "overwrite": true } }))
+        .expect("answers");
+    assert_eq!(unknown["error"]["code"], "layer_not_found", "{unknown}");
+    let mut t = new_drawing();
+    let back = t
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(back["status"], "completed", "{back}");
+    let second = objects_by_uid(&t);
+    assert_eq!(first.len(), second.len());
+    for (uid, a) in &first {
+        let b = second
+            .get(uid)
+            .unwrap_or_else(|| panic!("{uid} geri gelmedi"));
+        // An arc's bulge goes out through its middle point and back: within a few units in the last place.
+        let (sa, sb) = (a.to_string(), b.to_string());
+        if sa != sb {
+            let (ea, eb) = (&a["entity"], &b["entity"]);
+            assert_eq!(ea["kind"], eb["kind"], "{uid}");
+            assert_eq!(ea["attrs"], eb["attrs"], "{uid}");
+            assert_eq!(ea["pts"], eb["pts"], "{uid}");
+            for (x, y) in ea["bulges"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .zip(eb["bulges"].as_array().into_iter().flatten())
+            {
+                let (x, y) = (x.as_f64().expect("bulge"), y.as_f64().expect("bulge"));
+                assert!((x - y).abs() <= 1e-12, "{uid}: {x} ≠ {y}");
+            }
+        }
+    }
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        let keep = format!(
+            "{}/../../../fixtures/geopackage/v1/kentos-export.gpkg",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        std::fs::copy(&out, keep).expect("copied");
+    }
+}

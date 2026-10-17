@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `CBS-03` GeoPackage (ADR 0502, 17 Ekim): web'de gerekenler: `file.import.gpkg` ve `file.export.gpkg` (web'de SQLite
+  yok: sqlite-wasm ya da sunucu yolu kararı), içe aktarma penceresi; TS türleri üretildi.
 - [ ] `CBS-22` standart ilişkiler (ADR 0501, 17 Ekim): web'de gerekenler: `cad.entities.relate` işleyicisi (çekirdeğin
   `ops::de9im`'i WASM'a bağlanır; TS türleri üretildi), `too_many_pairs` kodu ve `invalid_pattern`'ın genişleyen metni.
 - [ ] `FORM-BB` yayından kaldırma (ADR 0445, 17 Ekim): web'de gerekenler: formun `withdrawn`'ı ve `cad.forms.edit`'in `withdraw`'ı
@@ -1750,6 +1752,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [x] `CBS-22` Standart ilişkiler: kesin DE-9IM matrisi (`ops::de9im`), on yüklem ve desen, `cad.entities.relate`
   (Python, MCP; 33 durum GEOS'la). Konuma göre seç'te seçenek ve PostGIS karşılaştırması CBS-40 ve CBS-04'te. — **17 Ekim,
   [ADR 0501](docs/adr/0501-standard-relations-de9im.md).**
+- [ ] `CBS-03` GeoPackage (kısmen): kendi crate'i `kentos-geopackage` (rusqlite, gömülü SQLite; geometri ikilisi Z/M ve eğrilerle,
+  R-tree, `kentos_uids`), `file.import.gpkg` ve `file.export.gpkg` (Python, MCP), masaüstünde içe aktarma penceresi ve
+  dışa aktarma; QGIS 4.2.3'ün dosyası GDAL'ın okuduğu gibi okunur, KentOS'unki QGIS'te açılır ve GDAL'ın
+  doğrulayıcısından geçer; 23 ortak durum. Kalan: dosyada yerinde düzenleme (CBS-01/02/11/36), raster ve ilişki
+  profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

@@ -388,7 +388,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   fotoğrafları ve belgeleri, en az ve en çok), renk öğesi ve katmanın değerlerinden öneri (`suggest`); çok değerli alan
   (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶; çoktan çoğa
   ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
-  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0501 standart ilişkiler: kesin DE-9IM `ops::de9im`, on yüklem ve desen,
+  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0502 GeoPackage: kendi crate'i `kentos-geopackage` (rusqlite, gömülü SQLite), `file.import.gpkg`,
+  `file.export.gpkg`, masaüstünde içe aktarma penceresi; 0501 standart ilişkiler: kesin DE-9IM `ops::de9im`, on yüklem ve desen,
   `cad.entities.relate`; 0500 bindirmenin doğruluk korpusu `fixtures/overlay/v1`, GEO-01 kapandı);
   görünümler: adlı görünümler projenin ayarı (`.kcad` şema 52 `namedViews`, `cad.views.edit`: keep, rename, remove; Görünümler penceresi;
   Python, MCP), Görünümü döndür (iki nokta ya da açı, UCS'e göre, Kuzey yukarı; kamera dönüşü `crates/render/wgpu` kamerasında, dönmüş
@@ -1091,6 +1092,9 @@ python3 scripts/fixtures/layer_rules_cases.py --check   # kayıt kurallarının,
 python3 scripts/fixtures/forms_withdraw_cases.py --check   # formu yayından kaldırmanın durumlarını (dört yazma komutunun reddi, yeniden yayına alma, kuralları uygulanan form) formun ikiziyle, KentOS kodu olmadan denetle (ADR 0445)
 python3 scripts/fixtures/overlay_cases.py --check   # bindirmenin doğruluk korpusunu (birleşim, kesişim, farklar; teğet ve zincirli tamponlar, delikler, şeritler, TM koordinatları) GEOS (GDAL OGR) ve 50 basamaklı kapalı formüllerle, KentOS kodu olmadan denetle; durumlar fixtures/overlay/v1/cases.json, Rust tarafı geometry-core'un overlay_cases testi (ADR 0500)
 /usr/bin/python3 scripts/fixtures/relate_cases.py --check   # cad.entities.relate durumlarını (DE-9IM matrisleri, on yüklem, desen, daire, okunmayan nesne, retler) GEOS'la QGIS 4.2'nin Python'u üzerinden denetle (ADR 0501)
+/usr/bin/python3 scripts/fixtures/geopackage_cases.py --check   # GeoPackage crate'inin okuduğunu QGIS 4.2.3'ün yazdığı qgis.gpkg'nin GDAL/OGR okuyuşuyla, KentOS'un yazdığı kentos.gpkg ve kentos-export.gpkg'yi OGR, QGIS 4.2 ve GDAL'ın validate_gpkg.py'siyle denetle; yazmak için KENTOS_WRITE_GPKG=1 cargo test -p kentos-geopackage ve -p kentos-headless --test headless geopackage (ADR 0502)
+/usr/bin/python3 scripts/fixtures/gpkg_import_cases.py --check   # file.import.gpkg durumlarını OGR'ın okuduğundan ADR'nin kuralıyla kurulan nesnelerle denetle; --files küçük GeoPackage'ları GDAL'la yeniden yazar (ADR 0502)
+KENTOS_SHOTS_ONLY=gpkg cargo test -p kentos-desktop exchange::gpkg_tests::screens -- --ignored --nocapture   # GeoPackage içe aktar penceresi, çevirme onayı ve alınmış çizim, .run/shots/gpkg-* (ADR 0502)
 python3 scripts/fixtures/related_count_cases.py --check   # ilişkili kayıtlar öğesinin en az ve en çok sayısını cad.forms.submit'in alt kayıtlarıyla (bağla, kopar, yeni, gizli öğe, çoktan çoğa) KentOS kodu olmadan denetle (ADR 0444)
 python3 scripts/fixtures/schema_describe_cases.py --check   # cad.schema.describe durumlarını (türler, katman, sözcük, tanımlar, sayfalar, imleç, retler) domains_cases.py'nin katmanlarıyla, KentOS kodu olmadan denetle (ADR 0443)
 python3 scripts/fixtures/forms_publish_cases.py --check; python3 scripts/fixtures/attachments_inspect_cases.py --check   # yayının senaryolarını ve kırdığı kayıtları (cad.forms.edit.publish.json) ve eklerin bilgisini (cad.attachments.inspect.json, okuduğu dosyalar fixtures/attachments/v1, EXIF fixtures/exif/v1/cases.json'dan) formun ve senaryoların ikizleriyle, KentOS kodu olmadan denetle (ADR 0442)

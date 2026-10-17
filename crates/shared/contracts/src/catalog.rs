@@ -5223,6 +5223,34 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A GeoPackage into the drawing (docs/adr/0502), held together by fixtures/commands/v1/file.import.gpkg.json.
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_GPKG.into(),
+            version: crate::FILE_IMPORT_GPKG_VERSION,
+            title: "GeoPackage içe aktar".into(),
+            summary: "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. \
+                      Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. \
+                      NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). \
+                      Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["gpkgin".into(), "geopackage".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportGpkg>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Belediyenin parsel ve bina GeoPackage'ı".into(),
+                input: json!({ "path": "/veri/kadastro.gpkg", "tables": ["parsel", "bina"] }),
+                output: None,
+            }],
+        },
         // A DXF into the drawing, its unit decided by one rule (docs/adr/0257), held together by
         // fixtures/commands/v1/file.import.dxf.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5689,6 +5717,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                     output: None,
                 },
             ],
+        },
+        // The drawing's layers as a GeoPackage (docs/adr/0502).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GPKG.into(),
+            version: crate::FILE_EXPORT_GPKG_VERSION,
+            title: "GeoPackage dışa aktar".into(),
+            summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). \
+                      Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. \
+                      Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). \
+                      Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["gpkg".into(), "gpkgout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGpkg>(),
+            output: schema::<crate::GpkgExported>(),
+            plan: Some(schema::<crate::GpkgExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel ve yol katmanları".into(),
+                input: json!({ "path": "/veri/teslim.gpkg", "layers": ["parsel", "yol"], "overwrite": true }),
+                output: None,
+            }],
         },
         CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
@@ -6368,11 +6424,17 @@ mod tests {
                     crate::FILE_IMPORT_DXF => {
                         serde_json::from_value::<crate::ImportDxf>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_IMPORT_GPKG => {
+                        serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_DXF => {
                         serde_json::from_value::<crate::ExportDxf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_GPKG => {
+                        serde_json::from_value::<crate::ExportGpkg>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())

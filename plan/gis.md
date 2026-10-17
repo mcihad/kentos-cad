@@ -114,6 +114,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-03 — GeoPackage feature ve tablolarını doğrudan oku/yaz — P0; uzantılar P1**
 
+  *Kısmen (17 Ekim 2026; [ADR 0502](../docs/adr/0502-geopackage.md)): GDAL'sız kendi crate'i `kentos-geopackage` (keşif, tipli sütunlar, geometri Z/M ve eğrilerle, R-tree, tek işlemde toplu yazma, `kentos_uids` ile fid ↔ UUID); `file.import.gpkg`/`file.export.gpkg` ve masaüstü penceresi; QGIS 4.2.3'ün gerçek dosyası okunur, KentOS'un yazdığı QGIS'te açılır, GDAL'ın doğrulayıcısından geçer. Kalan: dosyada yerinde düzenleme ve bilinmeyen uzantıları koruyarak geri yazma (CBS-02 sağlayıcısıyla), raster karo ve ilişki profilleri.*
+
   **Mevcut:** GeoJSON/Shapefile temeli var; kaynakta GeoPackage provider/codec bulunamadı [K03]. Kullanılabilir bir açık GIS için en büyük günlük veri alışverişi boşluklarından biridir.
 
   **Yapılacak kalan iş:** `.gpkg` keşfetme, feature ve geometrisiz tablo okuma/oluşturma/düzenleme, CRS ve tipli kolonlar, spatial index, tek işlemde toplu yazma ve güvenli dosya kapatma uygula. Desteklenen geometry type, empty/null geometry, Z/M ve extension'ları açıkça bildir. Kaynak `fid` ile KentOS kalıcı UUID eşlemesi korunmalı; aç/kapa veya VACUUM sonrası rastgele yeni kimlik üretilmemeli. Bilinmeyen extension silinmesin. İlişki/stil/form paketinin GeoPackage standardı mı KentOS uzantısı mı olduğu belgeli olsun. SQLite native adapter ile GDAL/OGR adapter seçeneklerini gerçek round-trip ve paketleme denemesiyle seç; kendi SQLite motorunu yazma. [S01], [F01]
@@ -130,6 +132,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-05 — Eksik açık biçim aktarımlarını ve kayıp raporlu ETL'yi tamamla — P0/P1**
 
+  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage iki yönde, kayıplar türlerine göre (`import_losses`, `export_losses`), başka sistemdeki dosya açık onayla çevrilir. Kalan: CSV/XYZ ve Shapefile dışa aktarımı, GML, FlatGeobuf, GeoParquet, staging ve upsert.*
+
   **Mevcut:** Ortak okuyucular, GeoJSON, Shapefile okuma, KML/GPX, DXF ve tablo dosyaları var [K03/K11]. “Desteklenen uzantı” listesi yerine okuma/yazma ve semantik kayıp matrisi gerekir.
 
   **Yapılacak kalan iş:** İlk olarak GeoPackage, GeoJSON ve CSV/XYZ çift yönlü; Shapefile dışa aktarımı kodlama, alan adı/tür/boyut kayıplarıyla tamamla. Sonra GML, FlatGeobuf ve GeoParquet'i ihtiyaç sırasıyla ekle; büyük dağıtım/sorgu biçimi ile işlem yapılabilen kaynak ayrımını koru. OpenFileGDB, MapInfo gibi uyumluluklar açık kaynak adapter ve belgeli alt kapsamla genişler. İçe alma; kaynak CRS/birim, alan türü/kimlik/domain eşleme, önizleme, reddedilen satır dosyası, staging ve atomik commit içersin. Artırımlı yükleme/upsert için doğal anahtar ve yinelenen kayıt politikası açık olsun. [F03], [F04], [F05]
@@ -139,6 +143,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 ## B — Veri anlamı, koordinat doğruluğu ve sorgu
 
 - [ ] **CBS-06 — Provider'da null/boş ayrımı, geniş tipler ve kararlı field eşlemesini tamamla — P0/P1**
+
+  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage yolunda NULL özniteliğin yokluğu, boş metin boş metin; 2⁵³'ü aşan tam sayı her basamağıyla metin alanına, söylenerek; UTC zamanın dilimi söylenir. Kalan: int64/decimal/UUID/zaman dilimli anın kendi türleri ve dosya↔Python yolu.*
 
   **Mevcut:** `attrs: BTreeMap<String,String>` korunuyor. PR #25 stable field binding, tarih-saat/saat, domain, alt tür ve göç ekliyor; `MAX_INTEGER` hâlâ `2^53−1`, boş değer alanın yokluğu [K02/P25-A]. Bunları “tam tipli GIS veri modeli bitti” diye kabul etme.
 
@@ -461,6 +467,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/38/39/42. Limitli/sayfalı servis eksik sonucu “tam veri” saymamalı; expires/ETag, token yenileme, kesilen ağ ve attribution çalışmalı. **P2'de ayrıca seçilirse** açık OGC API/tiles yayın servisi veya açık kaynak server adapter'ı; immutable yayın revision'ı, stil/metadata, erişim ve cache izolasyonuyla eklenir. Ticari servis/DB bağımlılığı oluşmaz; kaynak CAD/GIS ile yayın tile'ı ayrı kalır. İlgili OGC standardının yazma kısmı taslaksa bu durum sürüm profilinde açıkça yazılır.
 
 - [ ] **CBS-44 — Yeni provider'lar için QGIS 4.2 round-trip ve uçtan uca kabul korpusu ekle — P0**
+
+  *Kısmen (17 Ekim 2026; ADR 0502): `fixtures/geopackage/v1` — QGIS 4.2.3'ün yazdığı GeoPackage → KentOS → GeoPackage → GDAL/OGR ve QGIS 4.2; kimlik, Türkçe metin, NULL/boş, delik, çok parça, Z/M, eğri korunumu; GDAL doğrulayıcısı. Kalan: PostGIS, yetki, restore ve performans kabulü.*
 
   **Mevcut:** Bağımsız Python referansları, ortak fixture'lar, interaction izleri, hata testleri ve performans kayıtları mevcut [K01/K08/K09]. Yeni GIS kabiliyeti bu altyapıya bağlanır; ekran veya komut ismi tamamlandı sayılmaz.
 

@@ -1061,6 +1061,16 @@ codes! {
     BLOCK_UNITS_DIFFER = "block_units_differ", Warning, false, "Bazı blokların birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır.";
     /// What the reader could not take (the report says each).
     IMPORT_LOSSES = "import_losses", Warning, false, "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler.";
+    /// A table the input names that the GeoPackage lacks (docs/adr/0502).
+    TABLE_NOT_FOUND = "table_not_found", Failed, false, "Adı verilen tablo dosyada yok.";
+    /// The file's coordinate system is not the project's, and moving was not asked (docs/adr/0502).
+    CRS_MISMATCH = "crs_mismatch", Failed, false, "Dosyanın koordinat sistemi projeninkinden başka; çevirmeyi isteyin ya da projeyi o sistemde açın.";
+    /// The file declares no coordinate system: its numbers went in as they are (docs/adr/0502).
+    CRS_UNDECLARED = "crs_undeclared", Warning, false, "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı.";
+    /// A row's lasting id is an object of the drawing already (docs/adr/0502).
+    ENTITY_EXISTS = "entity_exists", Failed, false, "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz.";
+    /// Objects a file format has no place for, or written approximately (docs/adr/0502).
+    EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 

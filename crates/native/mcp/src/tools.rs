@@ -605,6 +605,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.dxf"
             | "file.export.pdf"
             | "file.export.block"
+            | "file.export.gpkg"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"
     );

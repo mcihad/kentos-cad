@@ -57,6 +57,8 @@ pub mod blocks_query;
 pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
+pub mod file_import_gpkg;
+pub mod geopackage;
 pub mod blocks_library;
 pub mod break_join;
 pub mod call;
@@ -735,6 +737,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_DXF,
         kentos_contracts::FILE_IMPORT_DXF_VERSION,
+    ),
+    // A GeoPackage into the drawing ([`file_import_gpkg`], docs/adr/0502).
+    (
+        kentos_contracts::FILE_IMPORT_GPKG,
+        kentos_contracts::FILE_IMPORT_GPKG_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

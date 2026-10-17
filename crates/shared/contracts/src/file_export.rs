@@ -27,6 +27,7 @@ pub const FILE_COMMANDS: &[(&str, u32)] = &[
     (FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION),
     (FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION),
     (FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION),
+    (crate::FILE_EXPORT_GPKG, crate::FILE_EXPORT_GPKG_VERSION),
 ];
 
 /// Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their

@@ -12548,6 +12548,39 @@ class ExportDxf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGpkg(_Model):
+    """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
+    a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
+    coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
+    `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
+    written as chords).
+    Attributes:
+        path: The file to write, an absolute path (`.gpkg`).
+        layers: The layers, by id; empty: every layer with objects.
+        overwrite: Write over a file that is there.
+    """
+    path: str
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGpkg:
+        return cls(
+            path=data["path"],
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportPdf(_Model):
     """Input of `file.export.pdf` v1. Refusals: `invalid_file_path`,
     `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
@@ -15018,6 +15051,170 @@ class GeographicDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GpkgExported(_Model):
+    """What `file.export.gpkg` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        approximated: Curves (ellipses, splines, NURBS) written as chords within 0.1 mm. Unit: count.
+        left: Objects not written, by kind. Unit: count.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    tables: list[GpkgTableExported]
+    approximated: int
+    left: dict[str, int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["approximated"] = self.approximated
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            tables=[GpkgTableExported.from_json(e0) for e0 in data["tables"]],
+            approximated=data["approximated"],
+            left=dict(data["left"]) if "left" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgImported(_Model):
+    """What `file.import.gpkg` took in, or with `plan` would take.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256.
+        bytes: Unit: bytes.
+        objects: Unit: count.
+        layers: The layers made, in the tree's order, and the group they went into.
+        revision: The drawing's revision after the step (plan: before it).
+        moved: Whether the coordinates were moved into the project's system.
+        srid: The EPSG code the tables declare, none for an undefined system. Unit: epsg.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    objects: int
+    tables: list[GpkgTableImported]
+    layers: list[ImportedLayer]
+    revision: str
+    group: str | None | Unset = UNSET
+    moved: bool | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["objects"] = self.objects
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.moved is not UNSET:
+            out["moved"] = self.moved
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            objects=data["objects"],
+            tables=[GpkgTableImported.from_json(e0) for e0 in data["tables"]],
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
+            group=data.get("group", UNSET),
+            moved=data.get("moved", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgTableExported(_Model):
+    """A table written.
+    Attributes:
+        rows: Unit: count.
+        geometry: Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
+    """
+    table: str
+    layer: str
+    rows: int
+    geometry: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["rows"] = self.rows
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTableExported:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            rows=data["rows"],
+            geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgTableImported(_Model):
+    """A table taken.
+    Attributes:
+        layer: The drawing's layer its rows went onto.
+        read: Rows read, objects taken (records among them), rows left out. Unit: count.
+        objects: Unit: count.
+        records: Unit: count.
+        skipped: Unit: count.
+    """
+    table: str
+    layer: str
+    read: int
+    objects: int
+    records: int
+    skipped: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["read"] = self.read
+        out["objects"] = self.objects
+        out["records"] = self.records
+        out["skipped"] = self.skipped
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTableImported:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            read=data["read"],
+            objects=data["objects"],
+            records=data["records"],
+            skipped=data["skipped"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridChoice(_Model):
     """An NTv2 grid the project's datum choice names: its SHA-256 (the
     device's grid library keeps it by that), the file's name and size, the
@@ -16007,6 +16204,47 @@ class ImportDxf(_Model):
             group=data.get("group", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportGpkg(_Model):
+    """Input of `file.import.gpkg` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `file_not_found`,
+    `import_unreadable` (not a GeoPackage, or broken), `table_not_found` (a table of `tables`), `layer_not_found` and
+    `not_a_layer` (a target of `layers`), `layer_locked`, `crs_mismatch` (the file's system is not the project's and
+    `reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),
+    `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.
+    Attributes:
+        path: The file to read, an absolute path.
+        layers: A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer
+            of the same name (case and Turkish marks aside), else onto a new layer with the table's fields.
+        reproject: Move the coordinates from the file's system into the project's (the project's datum choices taken); without
+            it a file in another system is refused.
+        tables: The tables to take; empty: every feature and attribute table.
+    """
+    path: str
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
+    tables: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        if self.tables is not UNSET:
+            out["tables"] = list(self.tables)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportGpkg:
+        return cls(
+            path=data["path"],
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
+            tables=list(data["tables"]) if "tables" in data else UNSET,
         )
 
 
@@ -37094,6 +37332,7 @@ __all__ = [
     "ExplodeDensity",
     "ExportBlock",
     "ExportDxf",
+    "ExportGpkg",
     "ExportPdf",
     "ExtensionPointConstruction",
     "FeatureChange",
@@ -37196,6 +37435,10 @@ __all__ = [
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
+    "GpkgExported",
+    "GpkgImported",
+    "GpkgTableExported",
+    "GpkgTableImported",
     "GradientShape",
     "GradientShapeName",
     "GrantRole",
@@ -37242,6 +37485,7 @@ __all__ = [
     "ImportBlock",
     "ImportDomainsOp",
     "ImportDxf",
+    "ImportGpkg",
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",

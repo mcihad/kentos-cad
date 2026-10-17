@@ -1,0 +1,233 @@
+{
+ "format": "kentos.geopackage-cases",
+ "version": 1,
+ "note": "qgis.gpkg QGIS 4.2.3'ün yazdığı gerçek GeoPackage; layers GDAL'ın OGR'ının onu okuyuşu (docs/adr/0502). Rust okuyucusu aynısını okur, kentos.gpkg aynı okunur ve validate_gpkg.py'den geçer.",
+ "layers": [
+  {
+   "name": "parsel",
+   "geometryColumn": "geom",
+   "geometryType": "Multi Polygon",
+   "srid": 5256,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ada",
+     "kind": "String"
+    },
+    {
+     "name": "parsel_no",
+     "kind": "Integer"
+    },
+    {
+     "name": "alan",
+     "kind": "Real"
+    },
+    {
+     "name": "kimlik",
+     "kind": "Integer64"
+    },
+    {
+     "name": "tescil",
+     "kind": "Date"
+    },
+    {
+     "name": "guncelleme",
+     "kind": "DateTime"
+    },
+    {
+     "name": "tapulu",
+     "kind": "Boolean"
+    },
+    {
+     "name": "not",
+     "kind": "String"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": "MULTIPOLYGON (((487000 4420000,487020 4420000,487020 4420020,487000 4420020,487000 4420000),(487005 4420005,487005 4420010,487010 4420010,487010 4420005,487005 4420005)),((487030 4420000,487040 4420000,487040 4420010,487030 4420000)))",
+     "values": {
+      "ada": "Çağlayan",
+      "parsel_no": 5,
+      "alan": 1234.56,
+      "kimlik": "9007199254740993",
+      "tescil": "2024-02-29",
+      "guncelleme": "2024-03-01T10:20:30Z",
+      "tapulu": 1,
+      "not": ""
+     }
+    },
+    {
+     "fid": 2,
+     "wkt": "MULTIPOLYGON (((487100 4420000,487110 4420000,487110 4420010,487100 4420010,487100 4420000)))",
+     "values": {
+      "ada": "Işık-Ğüşöç",
+      "parsel_no": null,
+      "alan": null,
+      "kimlik": null,
+      "tescil": null,
+      "guncelleme": null,
+      "tapulu": 0,
+      "not": null
+     }
+    },
+    {
+     "fid": 3,
+     "wkt": "MULTIPOLYGON EMPTY",
+     "values": {
+      "ada": "geometrisiz",
+      "parsel_no": 7,
+      "alan": null,
+      "kimlik": null,
+      "tescil": null,
+      "guncelleme": null,
+      "tapulu": null,
+      "not": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "yol",
+   "geometryColumn": "geom",
+   "geometryType": "3D Measured Line String",
+   "srid": 5256,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ad",
+     "kind": "String"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": "LINESTRING ZM (487000 4420050 10 0,487050 4420050 12 50,487100 4420060 15 101)",
+     "values": {
+      "ad": "Atatürk Cd."
+     }
+    },
+    {
+     "fid": 2,
+     "wkt": "LINESTRING ZM (487000 4420070 0 0,487010 4420070 1 10)",
+     "values": {
+      "ad": null
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta",
+   "geometryColumn": "geom",
+   "geometryType": "3D Point",
+   "srid": 5256,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ad",
+     "kind": "String"
+    },
+    {
+     "name": "kot",
+     "kind": "Real"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": "POINT Z (487001.25 4420001.5 101.75)",
+     "values": {
+      "ad": "N1",
+      "kot": 101.75
+     }
+    }
+   ]
+  },
+  {
+   "name": "egri",
+   "geometryColumn": "geom",
+   "geometryType": "Curve Polygon",
+   "srid": 5256,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ad",
+     "kind": "String"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": "CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (487200 4420000,487210 4420010,487220 4420000),(487220 4420000,487200 4420000)))",
+     "values": {
+      "ad": "yay ve kiriş"
+     }
+    }
+   ]
+  },
+  {
+   "name": "egri_yol",
+   "geometryColumn": "geom",
+   "geometryType": "Compound Curve",
+   "srid": 5256,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ad",
+     "kind": "String"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": "COMPOUNDCURVE ((487300 4420000,487310 4420000),CIRCULARSTRING (487310 4420000,487315 4420005,487320 4420000))",
+     "values": {
+      "ad": "dönemeç"
+     }
+    }
+   ]
+  },
+  {
+   "name": "malik",
+   "geometryColumn": null,
+   "geometryType": null,
+   "srid": null,
+   "fid": "fid",
+   "columns": [
+    {
+     "name": "ad",
+     "kind": "String"
+    },
+    {
+     "name": "pay",
+     "kind": "String"
+    },
+    {
+     "name": "parsel",
+     "kind": "Integer"
+    }
+   ],
+   "rows": [
+    {
+     "fid": 1,
+     "wkt": null,
+     "values": {
+      "ad": "Ayşe Öz",
+      "pay": "1/2",
+      "parsel": 1
+     }
+    },
+    {
+     "fid": 2,
+     "wkt": null,
+     "values": {
+      "ad": "Ömer Çelik",
+      "pay": "1/2",
+      "parsel": 1
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -538,6 +538,35 @@ pub fn apply_styled_import(
     styles: Styles,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
+    apply_inner(doc, entities, None, blocks, styles, plan)
+}
+
+/// As [`apply_import`], each object with the lasting id given (a GeoPackage's rows, docs/adr/0502): refused when an
+/// id is an object of the drawing already.
+pub fn apply_import_with_uids(
+    doc: &mut Document,
+    objects: Vec<(Uuid, Entity)>,
+    plan: &ImportPlan,
+) -> Result<Applied, String> {
+    let (uids, entities): (Vec<Uuid>, Vec<Entity>) = objects.into_iter().unzip();
+    apply_inner(
+        doc,
+        entities,
+        Some(uids),
+        Vec::new(),
+        Styles::default(),
+        plan,
+    )
+}
+
+fn apply_inner(
+    doc: &mut Document,
+    entities: Vec<Entity>,
+    uids: Option<Vec<Uuid>>,
+    blocks: Vec<BlockDefinition>,
+    styles: Styles,
+    plan: &ImportPlan,
+) -> Result<Applied, String> {
     let mut prepared = prepare(doc, plan)?;
     let mut styles = ImportedStyles::new(doc.settings(), styles);
     let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -555,9 +584,17 @@ pub fn apply_styled_import(
     let slots = doc.transact(&plan.label, |doc| {
         made = make_layers(doc, plan, &mut prepared)?;
         imported.add(doc)?;
-        let slots = doc
-            .add_many(chosen, &plan.label)
-            .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))?;
+        let slots = match &uids {
+            None => doc
+                .add_many(chosen, &plan.label)
+                .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))?,
+            Some(uids) => doc
+                .add_many_with_uids(
+                    places.iter().map(|&i| uids[i]).zip(chosen).collect(),
+                    &plan.label,
+                )
+                .map_err(|e| format!("{}. Hiçbir nesne eklenmedi.", e.0))?,
+        };
         let placed: Vec<(usize, Slot)> =
             places.iter().copied().zip(slots.iter().copied()).collect();
         tie_placeholders(doc, &placed);
