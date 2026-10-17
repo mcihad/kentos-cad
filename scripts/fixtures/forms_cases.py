@@ -574,6 +574,8 @@ class Form:
         self.fields = fields
         self.variables = {v["name"]: v["value"] for v in variables}
         self.clear_hidden = bool(body.get("clearHidden"))
+        # docs/adr/0432: a record in a draft state of the workflow keeps the form's own requirements as warnings.
+        self.workflow = body.get("workflow")
         self.nodes = []
 
         def walk(xs, parent):
@@ -678,6 +680,7 @@ class Form:
                              or ("requiredWhen" in x and holds(x["requiredWhen"], self.fields, attrs, self.ctx(obj)))):
                     state["required"] = True
                 if x.get("readOnly") or ("calculate" in x and not x.get("overridable")) or (
+                        self.workflow and key_of(f) == self.workflow["field"]) or (
                         "readOnlyWhen" in x and holds(x["readOnlyWhen"], self.fields, attrs, self.ctx(obj))):
                     state["readOnly"] = True
             out.append(state)
@@ -723,6 +726,11 @@ class Form:
     def complete(self, attrs, obj=None, new=False):
         out, issues = dict(attrs), []
         if new:
+            # docs/adr/0428 §2: a new record starts in the workflow's initial state.
+            if self.workflow:
+                sf = next(f for f in self.fields if key_of(f) == self.workflow["field"])
+                if empty(out, sf["name"]):
+                    out[sf["name"]] = self.workflow["initial"]
             for x, _ in self.bound():
                 f = self.layer(x)
                 if "default" in x and empty(out, f["name"]):
@@ -777,8 +785,16 @@ class Form:
                 return out, issues + round_issues + [issue("form_unstable", True)]
         return out, issues
 
+    def in_draft(self, attrs):
+        wf = self.workflow
+        if not wf or not wf.get("drafts"):
+            return False
+        state_field = next(f for f in self.fields if key_of(f) == wf["field"])
+        return (attrs.get(state_field["name"], "").strip(JS_SPACE) or wf["initial"]) in wf["drafts"]
+
     def validate(self, attrs, obj=None):
         issues = []
+        draft = self.in_draft(attrs)
         for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
             if x["type"] == "attachments" and state["shown"]:
                 n = counted(obj, x.get("accept", "any"))
@@ -792,7 +808,7 @@ class Form:
             value = attrs.get(f["name"], "").strip(JS_SPACE)
             if not value:
                 if state.get("required"):
-                    issues.append(issue("form_required", True, x["id"], key_of(f)))
+                    issues.append(issue("form_required", not draft or bool(f.get("required")), x["id"], key_of(f)))
                 continue
             canonical, why = check_value(f, value)
             if why:
@@ -1717,6 +1733,11 @@ ENFORCED = {**copy.deepcopy(PUBLISHED), "enforce": True}
 BROKEN = body_with(lambda b: item(b, "kat").update(field="Yok"))
 LOCKED_FORM = {"id": "kilitli", "name": "Kilitli bina", "layer": "kilitli", "draft": copy.deepcopy(BODY),
                "releases": [release_of(BODY, 1)]}
+# docs/adr/0432: the same form through a workflow whose “inceleme” state is a draft.
+DRAFT_BODY = {**copy.deepcopy(BODY), "workflow": {"field": "Durum", "initial": "inceleme", "drafts": ["inceleme"], "steps": [
+    {"label": "Onayla", "from": ["inceleme"], "to": "iyi", "valid": True}]}}
+DRAFT_FORM = {"id": "taslakli", "name": "Taslaklı denetim", "layer": "bina", "draft": copy.deepcopy(DRAFT_BODY),
+              "releases": [release_of(DRAFT_BODY, 1)]}
 
 
 CALC_FORM = {"id": "hesap", "name": "Bina hesabı", "layer": "bina", "draft": copy.deepcopy(CALC_BODY),
@@ -1938,6 +1959,12 @@ def validate_cases():
     cases.append({"name": "koşullu zorunlu: Durum inceleme yapılınca açıklama ister", "setup": S, "steps": [
         run({"form": "denetim", "uid": "$uidOf:2", "values": {"Durum": "inceleme", "kat-sayisi": "1"}},
             answer(PUBLISHED, BODY, 1, {}, {"Durum": "inceleme", "kat-sayisi": "1"}))]})
+    D = setup([DRAFT_FORM])
+    cases.append({"name": "taslak durumdaki kayıtta formun zorunluluğu uyarıdır (ADR 0432)", "setup": D, "steps": [
+        run({"form": "taslakli", "uid": "$uidOf:2", "defaults": True, "values": {"kat-sayisi": "1"}},
+            answer(DRAFT_FORM, DRAFT_BODY, 1, {}, {"kat-sayisi": "1"}, defaults=True))]})
+    cases.append({"name": "taslakta durum alanı adımlarla değişir: yazmak sorundur", "setup": D, "steps": [
+        run({"form": "taslakli", "uid": "$uidOf:1", "values": {"Durum": "iyi"}}, answer(DRAFT_FORM, DRAFT_BODY, 1, FIRST, {"Durum": "iyi"}))]})
     cases.append({"name": "boş değer özniteliği kaldırır: zorunlu Durum boşalınca sorun", "setup": S, "steps": [
         run({"form": "denetim", "uid": "$uidOf:1", "values": {"Durum": ""}}, answer(PUBLISHED, BODY, 1, FIRST, {"Durum": ""}))]})
     for k, (name, values) in enumerate([
@@ -2016,6 +2043,12 @@ def submit_cases():
     v = {"Durum": "iyi", "kat-sayisi": "1"}
     one, _ = write({"form": "denetim", "uid": "$uidOf:2", "values": v, "defaults": True}, {}, v, defaults=True, slot=2)
     cases.append({"name": "varsayılanlar boş alanlara yazılır (yeni kayıt)", "setup": S, "steps": [one]})
+    # docs/adr/0432: a new record in the workflow's draft state is kept incomplete, the form's requirement a warning.
+    v = {"kat-sayisi": "1"}
+    one, _ = write({"form": "taslakli", "uid": "$uidOf:2", "values": v, "defaults": True}, {}, v, defaults=True, slot=2,
+                   form=DRAFT_FORM, body=DRAFT_BODY)
+    cases.append({"name": "taslak durumdaki yeni kayıt eksik kaydedilir, zorunluluk uyarıdır", "setup": setup([DRAFT_FORM]),
+                  "steps": [one]})
 
     v = {"Açıklama": ""}
     cases.append({"name": "koşullu zorunlu boşaltılamaz: form_invalid, path değerin", "setup": S, "steps": [

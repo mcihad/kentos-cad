@@ -1588,6 +1588,23 @@ impl App {
                 ),
             )]));
         }
+        // A draft (docs/adr/0432): kept incomplete; the form's requirements warn until a step that
+        // asks for a valid record.
+        if !locked && e.screen.prepared.in_draft(&e.after) {
+            let missing = e
+                .issues
+                .iter()
+                .filter(|i| i.code == kentos_forms::codes::REQUIRED && i.severity == FormSeverity::Warning)
+                .count();
+            if missing > 0 {
+                body = body.push(words::summary(vec![words::text_line(
+                    Kind::Info,
+                    format!(
+                        "Taslak: {missing} zorunlu alan boş; kayıt böyle kaydedilir, ilerletmeden önce doldurun."
+                    ),
+                )]));
+            }
+        }
         // The record's kind changed under values it does not offer (docs/adr/0422 §2): kept until the
         // user chooses, never emptied silently.
         let misfits = e.misfits();

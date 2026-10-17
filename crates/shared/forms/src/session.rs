@@ -190,6 +190,14 @@ impl Prepared {
         )
     }
 
+    /// Whether the record is in a draft state (docs/adr/0432): the form's own requirements warn.
+    pub fn in_draft(&self, attrs: &Attrs) -> bool {
+        match (self.workflow(), self.state_of(attrs)) {
+            (Some(w), Some(s)) => w.drafts_in(&s),
+            _ => false,
+        }
+    }
+
     /// Whether the record is read-only by its state (docs/adr/0428 §2).
     pub fn locked_by_state(&self, attrs: &Attrs) -> bool {
         match (self.workflow(), self.state_of(attrs)) {
@@ -626,6 +634,8 @@ impl Prepared {
     /// record is judged as it is; [`Prepared::complete`] it first.
     pub fn validate(&self, attrs: &Attrs, object: &Object) -> Vec<FormIssue> {
         let states = self.flags(attrs, object);
+        let draft = self.in_draft(attrs);
+        let subtype = self.subtype(attrs);
         let mut issues = Vec::new();
         for (node, state) in self.items.iter().zip(&states) {
             if let (Some(bounds), Some(held), true) =
@@ -656,12 +666,29 @@ impl Prepared {
             let value = attrs.get(&field.name).map_or("", |v| js_trim(v));
             if value.is_empty() {
                 if state.required {
-                    issues.push(at(
-                        codes::REQUIRED,
-                        FormSeverity::Error,
-                        None,
-                        format!("“{label}” zorunlu; doldurun."),
-                    ));
+                    // A draft keeps the form's own requirements as warnings; the layer's and the
+                    // subtype's refuse all the same (docs/adr/0432).
+                    let dataset = field.required
+                        || subtype.is_some_and(|t| {
+                            t.fields
+                                .iter()
+                                .any(|r| r.required && r.field == field.key())
+                        });
+                    if draft && !dataset {
+                        issues.push(at(
+                            codes::REQUIRED,
+                            FormSeverity::Warning,
+                            None,
+                            format!("“{label}” zorunlu; taslakta boş kalabilir, ilerletmeden önce doldurun."),
+                        ));
+                    } else {
+                        issues.push(at(
+                            codes::REQUIRED,
+                            FormSeverity::Error,
+                            None,
+                            format!("“{label}” zorunlu; doldurun."),
+                        ));
+                    }
                 }
                 continue;
             }

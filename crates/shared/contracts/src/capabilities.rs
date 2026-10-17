@@ -1690,7 +1690,7 @@ const ENTRIES: &[Entry] = &[
                 "form_invalid",
             ],
         ],
-        warnings: &["form_check_warning"],
+        warnings: &["form_check_warning", "form_required"],
         targets: none,
     },
     Entry {

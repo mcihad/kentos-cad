@@ -1397,6 +1397,14 @@ impl App {
                 "Kilitli durumlar",
                 chips(&flow.locked, &Event::WorkflowLocked),
                 Some("Bu durumdaki kayıt değiştirilemez; yalnız bir adım onu açar.".into()),
+            ))
+            .push(words::field(
+                "Taslak durumlar",
+                chips(&flow.drafts, &Event::WorkflowDraft),
+                Some(
+                    "Bu durumdaki kayıt eksik kaydedilebilir: formun zorunlu alanları uyarır."
+                        .into(),
+                ),
             ));
         // Geçmiş alanı (docs/adr/0429): each step's line, read-only in the form.
         let log_keys: Vec<String> = reasons.iter().map(|f| f.key().to_owned()).collect();

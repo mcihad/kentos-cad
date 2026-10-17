@@ -4521,6 +4521,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -14991,6 +14998,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -23411,6 +23425,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -344135,6 +344156,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -345176,6 +345204,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -346136,6 +346171,13 @@
             "additionalProperties": false,
             "description": "A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step\n(`cad.forms.transition`) takes a record from one state to another, the form valid when the step\nsays so and a reason written when it names one; a locked state's record is read-only until a step\ntakes it out.",
             "properties": {
+              "drafts": {
+                "description": "The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own\nrequirements warn; the layer's and the subtype's still refuse.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "field": {
                 "description": "The state field's key: a single-valued field with a value list.",
                 "type": "string"
@@ -347065,7 +347107,8 @@
           "form_invalid"
         ],
         "warnings": [
-          "form_check_warning"
+          "form_check_warning",
+          "form_required"
         ]
       },
       "examples": [
@@ -380295,6 +380338,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı."
+    },
+    {
+      "code": "form_required",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taslak kaydın formca zorunlu bir alanı boş; kayıt yine yazıldı."
     },
     {
       "code": "empty_text",

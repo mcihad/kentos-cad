@@ -227,6 +227,8 @@ pub enum Event {
     WorkflowField(String),
     WorkflowInitial(String),
     WorkflowLocked(String),
+    /// A draft state taken in or out (docs/adr/0432).
+    WorkflowDraft(String),
     /// The text field each step appends its line to (docs/adr/0429); none: no log.
     WorkflowLog(Option<String>),
     StepAdd,
@@ -1177,6 +1179,7 @@ impl App {
                                 reason: None,
                             }],
                             log: None,
+                            drafts: Vec::new(),
                         };
                         edited(&mut w, &|b| b.workflow = Some(workflow.clone()));
                     }
@@ -1214,6 +1217,11 @@ impl App {
             Event::WorkflowLocked(code) => edited(&mut w, &|b| {
                 if let Some(wf) = b.workflow.as_mut() {
                     toggle(&mut wf.locked, &code);
+                }
+            }),
+            Event::WorkflowDraft(code) => edited(&mut w, &|b| {
+                if let Some(wf) = b.workflow.as_mut() {
+                    toggle(&mut wf.drafts, &code);
                 }
             }),
             Event::WorkflowLog(key) => edited(&mut w, &|b| {

@@ -783,7 +783,7 @@ fn workflow_buildings(app: &mut App) {
             { "type": "field", "id": "gerekce", "field": "Gerekçe" },
             { "type": "field", "id": "gecmis", "field": "Geçmiş", "widget": "textArea" }
         ],
-        "workflow": { "field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "log": "Geçmiş", "steps": [
+        "workflow": { "field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "drafts": ["taslak", "iade"], "log": "Geçmiş", "steps": [
             { "label": "Gönder", "from": ["taslak", "iade"], "to": "gonderildi", "valid": true },
             { "label": "Onayla", "from": ["gonderildi"], "to": "onaylandi", "valid": true },
             { "label": "Geri gönder", "from": ["gonderildi"], "to": "iade", "reason": "Gerekçe" },
@@ -989,6 +989,17 @@ fn searched_list(app: &mut App) {
     let _ = app.update(Message::FormEntry(entry::Event::Query(
         "İl".into(),
         "an".into(),
+    )));
+}
+
+/// A drafted building with its floor count emptied: kept incomplete, Gönder asks for it (docs/adr/0432).
+fn workflow_draft(app: &mut App) {
+    workflow_buildings(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    let _ = app.update(Message::FormEntry(entry::Event::Value(
+        "Kat".into(),
+        String::new(),
     )));
 }
 
@@ -1799,6 +1810,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-adim", workflow_steps),
         ("form-is-akisi-kilitli", workflow_locked),
         ("form-is-akisi-gecmis", workflow_log),
+        ("form-taslak", workflow_draft),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),
@@ -2123,6 +2135,33 @@ mod tests {
         let doc = &app.document.as_ref().unwrap().model;
         assert!(
             !doc.can_undo() || doc.settings().domains[0].values.as_ref().map(Vec::len) == Some(4)
+        );
+    }
+
+    #[test]
+    fn a_draft_is_kept_incomplete_and_a_valid_step_refuses_it() {
+        let mut app = crate::files_testing::app_with_drawing();
+        workflow_draft(&mut app);
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        assert!(app.form_entry.is_none(), "a draft saves with its warning");
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(doc.get(Slot(1)).unwrap().base().attrs.get("Kat"), None);
+        // Gönder asks for a valid record: refused, nothing written.
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        let _ = app.update(Message::FormEntry(entry::Event::Transition(
+            "Gönder".into(),
+        )));
+        assert!(app.form_entry.is_some());
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(
+            doc.get(Slot(1))
+                .unwrap()
+                .base()
+                .attrs
+                .get("Durum")
+                .map(String::as_str),
+            Some("taslak")
         );
     }
 

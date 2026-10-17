@@ -318,7 +318,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [ ] **FORM-DATA-03:** Primary/global UUID, unique keys, nullable, required, type, default, precision/length/range ve indexing alanlarını tanımla.
 - [x] **FORM-DATA-04:** Date/time/datetime/timezone, reference/UUID, enum/collection, attachment ve geometry desteklerini aşamalı şema genişletmesiyle ekle. — *Yapıldı (16 Ekim; ADR 0412 tarih ve saat, saat; ADR 0409 başvuru/UUID ve çok değerli alan; ADR 0407 ekler; geometri nesnenin kendisi). Saat dilimi açık.*
 - [ ] **FORM-DATA-05:** Mevcut canonical string attributes için lossless migration; null/blank/absent, unknown attr ve geçmiş kaydı koru.
-- [ ] **FORM-DATA-06:** Kayıt oluştururken incomplete draft ile committed/submitted kayıt farklı validation profile kullansın; eksik zorunlu değeri sessizce kalıcı geçerli kayıt yapma.
+- [x] **FORM-DATA-06:** Kayıt oluştururken incomplete draft ile committed/submitted kayıt farklı validation profile kullansın; eksik zorunlu değeri sessizce kalıcı geçerli kayıt yapma. — *17 Ekim: iş akışının taslak durumundaki kayıt eksik kaydedilir, formun zorunluluğu uyarı olur; geçerli kayıt isteyen adım tamlığı zorlar; katmanın zorunluluğu hep hata (ADR 0432).*
 - [x] **FORM-DATA-07:** Field rename/drop/type change için bağlı form/domain/relation/processing/expression kullanım grafını göster; breaking değişiklik planlı migration olsun. — *Yapıldı (16 Ekim; ADR 0414: `cad.fields.usage`, Alanlar penceresinde kullanıldığı yerler ve silme uyarısı; yeniden adlandırmada ifade, şablon ve adlar aynı adımda izler, anahtar kalır. Tür değişimi ve işleme modelleri açık).*
 - [x] **FORM-DATA-08:** Schema owner/design/publish izinleri data edit'ten ayrışsın; saha personeli feature.write ile şemayı değiştiremesin. — *Yapıldı (16 Ekim; ADR 0411: `forms.design`, `forms.publish` ayrı izin; Veri girişi şemayı değiştiremez).*
 - [ ] **FORM-DATA-09:** Local `.kcad`, cloud dataset ve offline replica aynı schema/version/value codec'ini taşısın.
@@ -424,7 +424,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-RULE-15:** Form submission expected versions, accepted schema/domain/form releases ve idempotency ile doğrulansın.
 - [ ] **FORM-RULE-16:** Tüm doğrulama ve related writes DB transaction'da veya güvenilir staged commit'te birlikte uygulansın; network/attachment upload beklenirken DB transaction açık kalmasın.
 - [ ] **FORM-RULE-17:** Validation için gerekli kaynağa erişim yoksa veya snapshot değişmişse stale/needs_input/conflict sonucu dönsün; eski computed değer final gerçek gibi kaydedilmesin.
-- [ ] **FORM-RULE-18:** Form draft, workflow submit ve approved state ayrı olsun; geçerli veri automatically approved veri değildir.
+- [ ] **FORM-RULE-18:** Form draft, workflow submit ve approved state ayrı olsun; geçerli veri automatically approved veri değildir. — *17 Ekim, kısmen: taslak, gönderilmiş ve onaylı durumlar iş akışıyla ayrı; taslakta eksik kayıt, ilerlemede tamlık (ADR 0428, 0432); rollerle onay bulutta açık.*
 
 **Kabul:** “Ek inceleme gerekli ise not zorunlu” kuralı sunucuya bağlanmış authoritative write profile'da uygulanır. UI kuralını silen veya generic feature command kullanan istemci bu veriyi notsuz final kaydedemez.
 

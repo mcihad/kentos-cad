@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AO` taslak durumlar (ADR 0432, 17 Ekim): web'de gerekenler: iş akışının `drafts`'ı (TS türleri üretildi), form çekirdeğinin web
+  bağlayıcısında taslakta zorunluluğun uyarı olması, Formla düzenle'de taslak şeridi, tasarımcıda Taslak durumlar.
 - [ ] `FORM-AN` aranır liste ve etiketler (ADR 0431, 17 Ekim): web'de gerekenler: `search` ve `chips` giriş biçimleri (TS türleri üretildi),
   form çekirdeğinin web bağlayıcısında uyum kuralı, formun iki bileşeni.
 - [ ] `FORM-AM` projenin değer listeleri (ADR 0430, 17 Ekim): web'de gerekenler: ayarların `domains`'i ve alanın `domain`'i (TS türleri
@@ -1516,6 +1518,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AO` Taslak durumlar: iş akışının taslak durumundaki kayıt eksik kaydedilir (formun zorunluluğu uyarı; katmanın ve alt türün
+  hata), geçerli kayıt isteyen adım tamlığı zorlar. — **17 Ekim, [ADR 0432](docs/adr/0432-draft-states.md).**
 - [x] `FORM-AN` Aranır liste ve etiketler: uzun listede yazarak seçim (Türkçe katlamayla), çok değerli alanın kodları çip olarak. —
   **17 Ekim, [ADR 0431](docs/adr/0431-search-and-chip-widgets.md).**
 - [x] `FORM-AM` Projenin değer listeleri: kod listesi ya da aralık projede bir kez, birçok katmanın alanı bağlanır, liste değişince bağlı

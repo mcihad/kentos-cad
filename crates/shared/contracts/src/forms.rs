@@ -115,6 +115,11 @@ pub struct FormWorkflow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub log: Option<String>,
+    /// The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own
+    /// requirements warn; the layer's and the subtype's still refuse.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub drafts: Vec<String>,
 }
 
 /// One step of a workflow.
@@ -154,6 +159,11 @@ impl FormWorkflow {
             .filter(move |s| s.from.is_empty() || s.from.contains(&state))
     }
 
+    /// Whether a record in `state` may be kept incomplete (docs/adr/0432).
+    pub fn drafts_in(&self, state: &str) -> bool {
+        self.drafts.iter().any(|c| c == state)
+    }
+
     /// Whether a record in `state` is read-only.
     pub fn locks(&self, state: &str) -> bool {
         self.locked.iter().any(|l| l == state)
@@ -187,6 +197,15 @@ pub fn workflow_problem(workflow: &FormWorkflow, fields: &[crate::LayerField]) -
             "Kilitli durum “{c}”, “{}” alanının listesinde yok.",
             f.label()
         ));
+    }
+    if let Some(c) = workflow.drafts.iter().find(|c| !listed(c)) {
+        return Some(format!(
+            "Taslak durum “{c}”, “{}” alanının listesinde yok.",
+            f.label()
+        ));
+    }
+    if let Some(c) = workflow.drafts.iter().find(|c| workflow.locked.contains(c)) {
+        return Some(format!("“{c}” hem taslak hem kilitli durum olamaz."));
     }
     if let Some(k) = &workflow.log {
         match fields.iter().find(|x| x.key() == k) {

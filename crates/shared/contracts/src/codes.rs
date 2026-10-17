@@ -292,6 +292,8 @@ codes! {
     INVALID_USER = "invalid_user", Failed, false, "Kullanıcının adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// A soft check of the form that is not true: the record is written all the same.
     FORM_CHECK_WARNING = "form_check_warning", Warning, false, "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı.";
+    /// A draft's field the form requires left empty (docs/adr/0432): the record is written.
+    FORM_REQUIRED = "form_required", Warning, false, "Taslak kaydın formca zorunlu bir alanı boş; kayıt yine yazıldı.";
 
     // ── Properties, texts, links ────────────────────────────────────────
     /// A text whose text is empty or only white space.

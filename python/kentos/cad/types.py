@@ -11418,6 +11418,8 @@ class FormWorkflow(_Model):
         field: The state field's key: a single-valued field with a value list.
         initial: The state a new record starts in: a code of its list.
         steps: The steps, in their order (the editor's buttons).
+        drafts: The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own
+            requirements warn; the layer's and the subtype's still refuse.
         locked: The states whose records are read-only.
         log: A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
             the states and the reason; read-only in the form.
@@ -11425,6 +11427,7 @@ class FormWorkflow(_Model):
     field: str
     initial: str
     steps: list[WorkflowStep]
+    drafts: list[str] | Unset = UNSET
     locked: list[str] | Unset = UNSET
     log: str | None | Unset = UNSET
 
@@ -11433,6 +11436,8 @@ class FormWorkflow(_Model):
         out["field"] = self.field
         out["initial"] = self.initial
         out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.drafts is not UNSET:
+            out["drafts"] = list(self.drafts)
         if self.locked is not UNSET:
             out["locked"] = list(self.locked)
         if self.log is not UNSET:
@@ -11445,6 +11450,7 @@ class FormWorkflow(_Model):
             field=data["field"],
             initial=data["initial"],
             steps=[WorkflowStep.from_json(e0) for e0 in data["steps"]],
+            drafts=list(data["drafts"]) if "drafts" in data else UNSET,
             locked=list(data["locked"]) if "locked" in data else UNSET,
             log=data.get("log", UNSET),
         )

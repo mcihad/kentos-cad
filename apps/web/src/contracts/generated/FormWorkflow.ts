@@ -28,4 +28,9 @@ steps: Array<WorkflowStep>,
  * A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
  * the states and the reason; read-only in the form.
  */
-log?: string, };
+log?: string, 
+/**
+ * The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own
+ * requirements warn; the layer's and the subtype's still refuse.
+ */
+drafts?: Array<string>, };

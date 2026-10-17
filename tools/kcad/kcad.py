@@ -3633,7 +3633,9 @@ class _Schema:
         workflow = self.fields({"field": (self.text, True), "initial": (self.text, True),
                                 "locked": (nonempty(self.array(self.text)), False), "steps": (nonempty(self.array(step)), True),
                                 # docs/adr/0429: the field each step appends its line to.
-                                "log": (self.text, False)})
+                                "log": (self.text, False),
+                                # docs/adr/0432: the states a record may be kept incomplete in.
+                                "drafts": (nonempty(self.array(self.text)), False)})
         body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
                             "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False)})
         release = self.fields(
