@@ -1024,6 +1024,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             holes,
             pattern,
             assoc,
+            ..
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))

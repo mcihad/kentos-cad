@@ -408,6 +408,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             holes,
             pattern,
             assoc,
+            boundary,
         } => {
             let pattern = match pattern.kind.as_str() {
                 // A pattern or a gradient turns with `m`, grows with its length scale and
@@ -430,6 +431,10 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 }
             };
             Shape::Hatch {
+                // The exact boundary goes along (docs/adr/0328 §1): arcs, ellipses and curves by `m`.
+                boundary: boundary.as_ref().and_then(|b| {
+                    crate::geom::hatch_boundary::mapped(b, &|p| Some(apply(m, p)), [m[0], m[1], m[2], m[3]])
+                }),
                 ring: ring.iter().map(|&p| apply(m, p)).collect(),
                 holes: holes.as_ref().map(|hs| {
                     hs.iter()

@@ -40,6 +40,7 @@ mod external;
 pub mod fields;
 mod followers;
 mod hash;
+pub mod hatch_boundaries;
 mod hatch_ties;
 mod history;
 mod identity;

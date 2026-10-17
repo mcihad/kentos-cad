@@ -77,12 +77,10 @@ fn drop_links(e: &mut Entity, keep: &HashSet<EntityId>) {
             }
         }
         Entity::Hatch(h) => {
-            let kept = h.assoc.as_ref().is_none_or(|a| {
-                std::iter::once(&a.outer)
-                    .chain(&a.islands)
-                    .chain(&a.cutouts)
-                    .all(|u| keep.contains(u))
-            });
+            let kept = h
+                .assoc
+                .as_ref()
+                .is_none_or(|a| a.objects().all(|u| keep.contains(u)));
             if !kept {
                 h.assoc = None;
             }

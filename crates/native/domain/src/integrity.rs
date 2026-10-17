@@ -90,9 +90,8 @@ impl Document {
                 Entity::Hatch(hatch) => {
                     let new = !matches!(before, Some(Entity::Hatch(b)) if b.assoc == hatch.assoc);
                     if new && let Some(assoc) = &hatch.assoc {
-                        let gone = std::iter::once(&assoc.outer)
-                            .chain(&assoc.islands)
-                            .chain(&assoc.cutouts)
+                        let gone = assoc
+                            .objects()
                             .any(|id| self.store.slot_of(Uuid::from_bytes(id.0)).is_none());
                         if gone {
                             out.push(Fault {

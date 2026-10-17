@@ -15,6 +15,7 @@ import type { DimensionTextPlace } from "./DimensionTextPlace";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { HatchAssoc } from "./HatchAssoc";
+import type { HatchLoop } from "./HatchLoop";
 import type { HatchPattern } from "./HatchPattern";
 import type { ImageFields } from "./ImageFields";
 import type { LeaderArrow } from "./LeaderArrow";
@@ -274,7 +275,12 @@ overrides?: Array<string>, } | { "kind": "hatch", ring: Array<Vec2>, holes?: Arr
 /**
  * The objects its region follows (docs/adr/0186 §6).
  */
-assoc?: HatchAssoc, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, yScale?: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
+assoc?: HatchAssoc, 
+/**
+ * Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
+ * drawn from it and may be left empty.
+ */
+boundary?: Array<HatchLoop>, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, yScale?: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
 /**
  * At least two: the arrow's tip first.
  */

@@ -281,7 +281,15 @@ fn a_donut_is_a_solid_hatch_with_its_hole() {
     assert_eq!(h.pattern.kind, HatchPatternType::Solid);
     assert_eq!(
         (h.ring.len(), h.holes.as_ref().map(Vec::len)),
-        (96, Some(1))
+        (72, Some(1))
+    );
+    // Its two circles exact: two half arcs each (docs/adr/0328 §1).
+    let loops = h.boundary.as_ref().expect("an exact boundary");
+    assert_eq!(loops.len(), 2);
+    assert!(
+        loops
+            .iter()
+            .all(|l| l.bulges.as_deref() == Some(&[1.0, 1.0][..]))
     );
     assert!(
         (rel(h.ring[0])[0] - 0.5).abs() < 1e-12,

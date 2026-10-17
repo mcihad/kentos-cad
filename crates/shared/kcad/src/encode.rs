@@ -1403,6 +1403,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 69 (docs/adr/0328): a hatch's exact boundary or a tie to a face's line work.
+    let bounded = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Hatch(h)
+                if h.boundary.is_some() || h.assoc.as_ref().is_some_and(|a| !a.bounds.is_empty()))
+        })
+    };
+    if bounded(&doc.entities) || doc.blocks.iter().any(|b| bounded(&b.entities)) {
+        return crate::SCHEMA_WITH_HATCH_BOUNDARIES;
+    }
     // Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
     let tabled = |list: &[Entity]| {
         list.iter().any(|e| {

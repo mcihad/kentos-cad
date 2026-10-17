@@ -406,8 +406,8 @@ AutoCAD'de ilişkili ölçü, ölçtüğü geometri değiştiğinde konum/yön/d
 
 Mevcut desen/degrade ve ilişkili tarama kodu korunmalıdır. Hedef yeni bir tarama aracı açmak değil, kaynak sınır doğruluğunu ve profesyonel düzenleme/aktarımı tamamlamaktır. [E05, E11]
 
-- [ ] **CAD-HATCH-01:** Line/arc/ellipse/NURBS kaynak boundary edge'lerini kayıpsız temsil et; render ring ile kaynak boundary birbirine karışmasın.
-- [ ] **CAD-HATCH-02:** Associative hatch kaynaklarını kararlı alt geometri referanslarıyla bağla; boundary değişikliği ilgili taramayı aynı transaction'da güncellesin.
+- [x] **CAD-HATCH-01:** Line/arc/ellipse/NURBS kaynak boundary edge'lerini kayıpsız temsil et; render ring ile kaynak boundary birbirine karışmasın. — *17 Ekim; [ADR 0328](../docs/adr/0328-hatch-source-boundary-and-face-ties.md) §1, §3: taramanın `boundary`'si (halkalar: nokta, büküm, elips yayı ve NURBS kenarları), `ring`/`holes` ondan çizilir (belgenin kuralı), bölgeden kapalı eğriler geri bulunur, dönüşümler taşır, DXF HATCH kenarlarıyla iki yönde; `.kcad` şema 69.*
+- [x] **CAD-HATCH-02:** Associative hatch kaynaklarını kararlı alt geometri referanslarıyla bağla; boundary değişikliği ilgili taramayı aynı transaction'da güncellesin. — *17 Ekim; [ADR 0328](../docs/adr/0328-hatch-source-boundary-and-face-ties.md) §2: çizgilerle kapanan yüzün bağı (`bounds`: kenarları yüzün kenarında olan nesneler kalıcı kimlikleriyle), belge aynı adımda yeniden keser, bütünüyle taşınan yüz tohumunu götürür, açılan yüz bağı koparır.*
 - [ ] **CAD-HATCH-03:** Pick point / select boundaries / çoklu bölge / island detection yöntemlerinin sayısal ve UI kapsamını doğrula.
 - [ ] **CAD-HATCH-04:** Gap tolerance ve boundary repair; kapanan boşluk ve değişen alanı plan raporunda göstersin.
 - [ ] **CAD-HATCH-05:** Boundary oluşturma, boundary yeniden seçme, add/remove island ve ilişkiyi koparma işlemleri API'de olsun.

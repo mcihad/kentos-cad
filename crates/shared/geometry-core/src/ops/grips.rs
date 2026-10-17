@@ -108,6 +108,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
             out.extend(arms.iter().flatten().flat_map(|a| a.pts.iter().copied()));
             out
         }
+        // An exact boundary's outer corners, not its arcs' and curves' chords (docs/adr/0328 §1).
+        Shape::Hatch {
+            boundary: Some(b), ..
+        } if !b.is_empty() && b[0].pts.len() > 1 => b[0].pts.clone(),
         Shape::Hatch { ring, .. } => ring.clone(),
         Shape::Dimension { .. } => dimension_grips(e).into_iter().map(|(p, _)| p).collect(),
     }
@@ -602,12 +606,33 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             fit_tolerance: None,
             tangents: None,
         },
+        // A grip on an exact boundary moves its corner (docs/adr/0328 §1); the document draws the ring again.
+        Shape::Hatch {
+            pattern,
+            assoc,
+            boundary: Some(b),
+            ..
+        } if !b.is_empty() && b[0].pts.len() > 1 => {
+            let moved = crate::geom::hatch_boundary::moved_point(b, index, p)?;
+            // The ring drawn from it at once: the preview shows the edit.
+            let (ring, drawn_holes) = crate::geom::hatch_boundary::rings(&moved);
+            Shape::Hatch {
+                ring,
+                holes: (!drawn_holes.is_empty()).then_some(drawn_holes),
+                pattern: pattern.clone(),
+                assoc: assoc.clone(),
+                boundary: Some(moved),
+            }
+        }
+        // A grip moves a drawn ring's vertex: the exact boundary no longer holds.
         Shape::Hatch {
             ring,
             holes,
             pattern,
             assoc,
+            ..
         } => Shape::Hatch {
+            boundary: None,
             ring: replace_at(ring, index, p),
             holes: holes.clone(),
             pattern: pattern.clone(),

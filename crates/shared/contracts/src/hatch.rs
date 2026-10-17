@@ -120,15 +120,22 @@ pub struct HatchPattern {
     pub gradient: Option<HatchGradient>,
 }
 
-/// The objects a hatch made inside a closed object follows (docs/adr/0186
-/// §6): the closed object, its islands, the texts and inserts left open, and
-/// the point clicked inside, which picks the region's part.
+/// The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
+/// object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
+/// (`bounds`: the objects whose line work bounds it, its islands' too) follows that line work; the point clicked
+/// inside picks the region's part or face. Exactly one of `outer` and `bounds` is given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchAssoc {
-    pub outer: EntityId,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub outer: Option<EntityId>,
+    /// The objects whose line work closes its face (docs/adr/0328 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
+    pub bounds: Vec<EntityId>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub islands: Vec<EntityId>,
@@ -137,6 +144,221 @@ pub struct HatchAssoc {
     pub cutouts: Vec<EntityId>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Vec2,
+}
+
+/// The most loops a hatch's boundary has, edges a loop and control points a NURBS edge.
+pub const MAX_BOUNDARY_LOOPS: usize = 100_000;
+pub const MAX_LOOP_EDGES: usize = 1_000_000;
+pub const MAX_CURVE_POINTS: usize = 100_000;
+/// The highest degree a NURBS edge may have.
+pub const MAX_CURVE_DEGREE: u32 = 10;
+
+/// A boundary edge that is no line or circular arc (docs/adr/0328 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchCurve {
+    /// An ellipse's arc: centre `c`, major semi-axis `major` (from `c`), minor to major `ratio`, from parameter `t0`
+    /// to `t1` (radians): counter-clockwise when `t1` is past `t0`, clockwise when before it; a whole ellipse
+    /// `t1 = t0 ± 2π`.
+    Ellipse {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        c: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        major: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        ratio: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        t0: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        t1: f64,
+    },
+    /// A NURBS curve run whole, from its first knot to its last.
+    Nurbs {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        degree: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        ctrl: Vec<Vec2>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        knots: Vec<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        weights: Option<Vec<f64>>,
+    },
+}
+
+/// One closed loop of a hatch's boundary as its source holds it (docs/adr/0328 §1): edge `i` runs from `pts[i]` to
+/// the next point (the last to the first); it is straight, a circular arc of `bulges[i]` (tan(θ/4), counter-clockwise
+/// positive, as a polygon's), or the curve `curves[i]` (an ellipse's arc or a NURBS curve), whose ends are those
+/// points. A loop of one point is one closed curve.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HatchLoop {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curves: Option<Vec<Option<HatchCurve>>>,
+}
+
+impl HatchCurve {
+    /// What is wrong with its numbers: finite, a ratio within (0, 1], a sweep within one turn; a NURBS curve's
+    /// degree, knots and positive weights. Whether its ends meet its loop's points is the geometry core's.
+    pub fn problem(&self) -> Option<String> {
+        match self {
+            HatchCurve::Ellipse {
+                c,
+                major,
+                ratio,
+                t0,
+                t1,
+            } => {
+                if ![c.x, c.y, major.x, major.y, *ratio, *t0, *t1]
+                    .iter()
+                    .all(|x| x.is_finite())
+                {
+                    return Some("Elips kenarında sonlu olmayan bir sayı var.".into());
+                }
+                if !(*ratio > 0.0 && *ratio <= 1.0) || (major.x == 0.0 && major.y == 0.0) {
+                    return Some(
+                        "Elips kenarının büyük ekseni sıfır olamaz, oranı 0 ile 1 arasında olmalı."
+                            .into(),
+                    );
+                }
+                let sweep = (t1 - t0).abs();
+                if sweep == 0.0 || sweep > std::f64::consts::TAU * (1.0 + 1e-12) {
+                    return Some(
+                        "Elips kenarının açıklığı sıfır olamaz ve bir turu aşamaz.".into(),
+                    );
+                }
+                None
+            }
+            HatchCurve::Nurbs {
+                degree,
+                ctrl,
+                knots,
+                weights,
+            } => {
+                let n = ctrl.len();
+                if *degree < 1 || *degree > MAX_CURVE_DEGREE {
+                    return Some(format!(
+                        "NURBS kenarının derecesi {degree}; 1 ile {MAX_CURVE_DEGREE} arasında olmalı."
+                    ));
+                }
+                if n <= *degree as usize || n > MAX_CURVE_POINTS {
+                    return Some(format!(
+                        "NURBS kenarının {n} denetim noktası var; dereceden çok, en çok {MAX_CURVE_POINTS} olmalı."
+                    ));
+                }
+                if knots.len() != n + *degree as usize + 1 {
+                    return Some(format!(
+                        "NURBS kenarının {} düğümü var; denetim noktası + derece + 1 = {} olmalı.",
+                        knots.len(),
+                        n + *degree as usize + 1
+                    ));
+                }
+                if !ctrl.iter().all(|p| p.x.is_finite() && p.y.is_finite())
+                    || !knots.iter().all(|k| k.is_finite())
+                    || knots.windows(2).any(|w| w[1] < w[0])
+                    || knots[*degree as usize] >= knots[n]
+                {
+                    return Some("NURBS kenarının noktaları sonlu, düğümleri artan olmalı.".into());
+                }
+                if let Some(w) = weights
+                    && (w.len() != n || !w.iter().all(|x| x.is_finite() && *x > 0.0))
+                {
+                    return Some(
+                        "NURBS kenarının ağırlıkları denetim noktaları kadar ve sıfırdan büyük olmalı."
+                            .into(),
+                    );
+                }
+                None
+            }
+        }
+    }
+}
+
+impl HatchLoop {
+    /// A loop of lines and arcs (a polygon's ring).
+    pub fn of_ring(pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Self {
+        Self {
+            pts,
+            bulges,
+            curves: None,
+        }
+    }
+
+    /// Whether an edge of it is an ellipse's arc or a NURBS curve.
+    pub fn has_curves(&self) -> bool {
+        self.curves.iter().flatten().any(Option::is_some)
+    }
+
+    /// What is wrong with its form: points finite and as many bulges and curves as points, a loop of one point a
+    /// closed curve, of two at least one curved edge, each curve's numbers.
+    pub fn problem(&self) -> Option<String> {
+        let n = self.pts.len();
+        if n == 0 || n > MAX_LOOP_EDGES {
+            return Some(format!(
+                "Tarama sınırının bir halkasında {n} nokta var; en az 1, en çok {MAX_LOOP_EDGES} olmalı."
+            ));
+        }
+        if !self.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite()) {
+            return Some("Tarama sınırında sonlu olmayan bir nokta var.".into());
+        }
+        if let Some(b) = &self.bulges
+            && (b.len() != n || !b.iter().all(|x| x.is_finite()))
+        {
+            return Some("Tarama sınırının bükümleri noktaları kadar ve sonlu olmalı.".into());
+        }
+        if let Some(c) = &self.curves {
+            if c.len() != n {
+                return Some("Tarama sınırının eğrileri noktaları kadar olmalı.".into());
+            }
+            for (i, curve) in c.iter().enumerate() {
+                if let Some(curve) = curve {
+                    if let Some(words) = curve.problem() {
+                        return Some(words);
+                    }
+                    if self.bulges.as_ref().is_some_and(|b| b[i] != 0.0) {
+                        return Some("Tarama sınırının eğri kenarının bükümü 0 olmalı.".into());
+                    }
+                }
+            }
+        }
+        let curved = |i: usize| {
+            self.curves.as_ref().is_some_and(|c| c[i].is_some())
+                || self.bulges.as_ref().is_some_and(|b| b[i] != 0.0)
+        };
+        match n {
+            1 if self.curves.as_ref().is_none_or(|c| c[0].is_none()) => {
+                Some("Tek noktalı halka kapalı bir eğri olmalı.".into())
+            }
+            2 if !(curved(0) || curved(1)) => {
+                Some("İki noktalı halkanın en az bir kenarı eğri olmalı.".into())
+            }
+            _ => None,
+        }
+    }
+}
+
+/// What is wrong with a hatch's boundary: its loops within their bound, each loop's form.
+pub fn boundary_problem(loops: &[HatchLoop]) -> Option<String> {
+    if loops.is_empty() || loops.len() > MAX_BOUNDARY_LOOPS {
+        return Some(format!(
+            "Tarama sınırında {} halka var; en az 1, en çok {MAX_BOUNDARY_LOOPS} olmalı.",
+            loops.len()
+        ));
+    }
+    loops.iter().find_map(HatchLoop::problem)
 }
 
 fn finite_all(xs: &[f64]) -> bool {
@@ -291,6 +513,15 @@ impl HatchPattern {
 }
 
 impl HatchAssoc {
+    /// Every object it names: the closed object or the bounds, the islands, the cutouts.
+    pub fn objects(&self) -> impl Iterator<Item = &EntityId> + '_ {
+        self.outer
+            .iter()
+            .chain(&self.bounds)
+            .chain(&self.islands)
+            .chain(&self.cutouts)
+    }
+
     /// What is wrong with it: its seed finite, its lists within their bounds,
     /// no object named twice.
     pub fn problem(&self) -> Option<(&'static str, String)> {
@@ -300,7 +531,14 @@ impl HatchAssoc {
                 "Taramanın tohum noktası sonlu olmalı.".to_owned(),
             ));
         }
-        let n = self.islands.len() + self.cutouts.len();
+        if self.outer.is_some() != self.bounds.is_empty() {
+            return Some((
+                "assoc",
+                "Taramanın ilişkisi ya kapalı nesneyi (outer) ya da sınır nesnelerini (bounds) gösterir; ikisinden biri verilmeli."
+                    .to_owned(),
+            ));
+        }
+        let n = self.islands.len() + self.cutouts.len() + self.bounds.len();
         if n > MAX_ASSOC_OBJECTS {
             return Some((
                 "assoc",
@@ -310,8 +548,13 @@ impl HatchAssoc {
             ));
         }
         let mut seen = std::collections::HashSet::with_capacity(n + 1);
-        seen.insert(self.outer);
-        for id in self.islands.iter().chain(&self.cutouts) {
+        for id in self
+            .outer
+            .iter()
+            .chain(&self.bounds)
+            .chain(&self.islands)
+            .chain(&self.cutouts)
+        {
             if !seen.insert(*id) {
                 return Some((
                     "assoc",

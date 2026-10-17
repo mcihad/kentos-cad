@@ -23,11 +23,12 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::hatch::hatch_lines;
+use kentos_geometry_core::geom::hatch_boundary;
 use kentos_geometry_core::geom::hatch_pattern::too_dense;
 use kentos_geometry_core::geom::region::{FaceIndex, inside_area, net_area, orient_ring};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::areas::{areas_of_entity, line_source, polygon_of_area};
-use kentos_geometry_core::ops::hatch_region::{cut_base, cutout, pick, seed_of};
+use kentos_geometry_core::ops::hatch_region::{bounding, cut_base, cutout, pick, seed_of};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::hatch::{Options, choice_named, colour_of, pattern_of};
@@ -403,11 +404,13 @@ pub mod entities_boundary {
 
 // ── Tarama ─────────────────────────────────────────────────────────────
 
-/// The objects a region came from: the closed object, the islands and the
-/// cutouts that reached in, by their slots (kapalı nesne only).
+/// The objects a region came from, by their slots: the closed object (kapalı
+/// nesne) or the line work bounding its face (çizgiler, docs/adr/0328 §3),
+/// the islands and the cutouts that reached in.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tie {
-    pub outer: Slot,
+    pub outer: Option<Slot>,
+    pub bounds: Vec<Slot>,
     pub islands: Vec<Slot>,
     pub cutouts: Vec<Slot>,
 }
@@ -484,7 +487,8 @@ fn cut_whole(own: Slot, part: &Area, bounds: &Bounds, by: Cutting, store: &Store
     let cut = cut_base(part, &island_areas, &boxes);
     Some(Whole {
         tie: Some(Tie {
-            outer: own,
+            outer: Some(own),
+            bounds: Vec::new(),
             islands: cut
                 .islands
                 .iter()
@@ -747,11 +751,119 @@ pub(crate) fn regions(
     }
 }
 
+/// The shown line work near `bounds` that closes faces: of the boundary set and layer Tarama's lines way reads.
+fn line_work_near(
+    doc: &Document,
+    store: &Store,
+    set: Option<&TrimBoundaries>,
+    layer: Option<&str>,
+    bounds: &Bounds,
+) -> Vec<(Slot, Shape)> {
+    let listed: Option<std::collections::HashSet<Slot>> = match set {
+        Some(TrimBoundaries::Objects { uids }) => {
+            Some(uids.iter().filter_map(|u| find(doc, u)).collect())
+        }
+        _ => None,
+    };
+    let rect = match set {
+        Some(TrimBoundaries::Area { min, max }) => Some(rect(*min, *max)),
+        _ => None,
+    };
+    store
+        .overlapping(bounds, None)
+        .into_iter()
+        .filter(|it| bounds_faces(&it.shape))
+        .filter(|it| {
+            rect.as_ref().is_none_or(|r| {
+                it.bounds.max_x >= r.min_x
+                    && it.bounds.min_x <= r.max_x
+                    && it.bounds.max_y >= r.min_y
+                    && it.bounds.min_y <= r.max_y
+            })
+        })
+        .filter_map(|it| {
+            let s = slot(it.id)?;
+            let e = doc.get(s)?;
+            if layer.is_some_and(|l| e.base().layer_id != l)
+                || listed.as_ref().is_some_and(|l| !l.contains(&s))
+            {
+                return None;
+            }
+            Some((s, it.shape.clone()))
+        })
+        .collect()
+}
+
+/// A face's tie (docs/adr/0328 §3): the line work along its outer ring its bounds, along its holes its islands, the
+/// texts and inserts left open its cutouts; none when no object runs along its outer ring.
+fn face_tie(
+    doc: &Document,
+    store: &Store,
+    face: &Area,
+    near: &[(Slot, Shape)],
+    texts: bool,
+) -> Option<Tie> {
+    let shapes: Vec<Shape> = near.iter().map(|(_, s)| s.clone()).collect();
+    let outer = Area {
+        outer: face.outer.clone(),
+        holes: Vec::new(),
+    };
+    // In the drawing's order, as the slots go.
+    let bounds: Vec<Slot> = bounding(&outer, &shapes)
+        .into_iter()
+        .map(|i| near[i].0)
+        .collect::<std::collections::BTreeSet<Slot>>()
+        .into_iter()
+        .collect();
+    if bounds.is_empty() {
+        return None;
+    }
+    let islands: Vec<Slot> = face
+        .holes
+        .iter()
+        .flat_map(|h| {
+            bounding(
+                &Area {
+                    outer: h.clone(),
+                    holes: Vec::new(),
+                },
+                &shapes,
+            )
+        })
+        .map(|i| near[i].0)
+        .filter(|s| !bounds.contains(s))
+        .collect::<std::collections::BTreeSet<Slot>>()
+        .into_iter()
+        .collect();
+    let cutouts = if texts {
+        let font = drawing_font(doc.settings().drawing_font);
+        let (slots, boxes) = cutouts_in(&area_bounds(face), font, store);
+        let cut = cut_base(face, &[], &boxes);
+        cut.cutouts
+            .iter()
+            .filter_map(|&k| slots.get(k).copied())
+            .collect()
+    } else {
+        Vec::new()
+    };
+    Some(Tie {
+        outer: None,
+        bounds,
+        islands,
+        cutouts,
+    })
+}
+
 /// The tie in the contract's terms: the objects' persistent ids, the seed.
 fn assoc_of(doc: &Document, tie: &Tie, seed: Vec2) -> Option<HatchAssoc> {
     let id = |s: Slot| doc.uid(s).map(|u| EntityId(*u.as_bytes()));
+    let outer = match tie.outer {
+        Some(s) => Some(id(s)?),
+        None => None,
+    };
     Some(HatchAssoc {
-        outer: id(tie.outer)?,
+        outer,
+        bounds: tie.bounds.iter().filter_map(|s| id(*s)).collect(),
         islands: tie.islands.iter().filter_map(|s| id(*s)).collect(),
         cutouts: tie.cutouts.iter().filter_map(|s| id(*s)).collect(),
         seed: Point {
@@ -772,7 +884,7 @@ fn check_hatch(
     input: &EntitiesHatch,
 ) -> Result<(Vec<Planned>, EntitiesCreate, Vec<CommandWarning>), Stop> {
     let pattern = pattern_of_spec(&input.pattern, doc.settings().plot_scale)?;
-    let (associative, way) = match &input.region {
+    let (associative, _way) = match &input.region {
         HatchRegion::Point {
             at,
             way,
@@ -856,15 +968,53 @@ fn check_hatch(
                 "pattern",
             ));
         }
-        let assoc = match &p.tie {
-            Some(tie) if associative && way == HatchWay::Object => assoc_of(doc, tie, p.seed),
+        // The objects it came from: its tie's, or the line work around its face (docs/adr/0328 §3).
+        let (tie, sources) = match (&p.tie, &input.region) {
+            (Some(tie), _) => {
+                let shapes = std::iter::once(tie.outer)
+                    .flatten()
+                    .chain(tie.islands.iter().copied())
+                    .filter_map(|s| store.get(f64::from(s.0)).map(|it| it.shape.clone()))
+                    .collect();
+                (Some(tie.clone()), shapes)
+            }
+            (
+                None,
+                HatchRegion::Point {
+                    boundaries,
+                    boundary_layer,
+                    texts,
+                    ..
+                },
+            ) => {
+                let near = line_work_near(
+                    doc,
+                    store,
+                    boundaries.as_ref(),
+                    boundary_layer.as_deref(),
+                    &area_bounds(&p.area),
+                );
+                let tie = associative
+                    .then(|| face_tie(doc, store, &p.area, &near, texts.unwrap_or(false)));
+                (tie.flatten(), near.into_iter().map(|(_, s)| s).collect())
+            }
+            _ => (None, Vec::new()),
+        };
+        let assoc = match &tie {
+            Some(tie) if associative => assoc_of(doc, tie, p.seed),
             _ => None,
         };
+        // Its boundary exact: lines and arcs as found, the curves it was cut from taken back (docs/adr/0328 §1).
+        let loops = hatch_boundary::of_area(&p.area, &sources);
+        let boundary = hatch_boundary::curved(&loops)
+            .then(|| kentos_formats::blocks::contract_boundary(&loops))
+            .flatten();
         geometries.push(EntityGeometry::Hatch {
             ring: wire(&ring),
             holes: (!holes.is_empty()).then(|| holes.iter().map(|h| wire(h)).collect()),
             pattern: pattern.clone(),
             assoc,
+            boundary,
         });
     }
     let objects = creating::input(

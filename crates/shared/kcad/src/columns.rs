@@ -41,7 +41,7 @@
 //! | xline, ray | | p, dir | |
 //! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any, its overrides as a JSON list if any (option 14), its scales as JSON if any (option 15) |
 //! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule, 3 and 4 the pair rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1); its options, moved value, breaks, overrides and scales as one JSON text if more (bit 29) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
-//! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
+//! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer (empty for a face's tie), islands (i) and cutouts (k) ids (UUID text) if tied, then schema 69's boundary and the tie's bounds as one JSON object if any (docs/adr/0328) |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any, its scales as JSON if any (option 4) |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet, then schema 68's styles, formulas, fields, link and block schedule as one JSON object if any (docs/adr/0327) |
@@ -67,7 +67,7 @@
 //! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
 //! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
 //! type, 64 the value's colour), and bit 28 (`REFS`) for its references (docs/adr/0249 §4);
-//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3), moved attributes (a count, then each tag and point, docs/adr/0317 §1); leader: text, arrow, mask (no value;
+//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186), boundary or bounds (docs/adr/0328); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3), moved attributes (a count, then each tag and point, docs/adr/0317 §1); leader: text, arrow, mask (no value;
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
@@ -1161,6 +1161,7 @@ impl Packer {
                 holes,
                 pattern,
                 assoc,
+                boundary,
             }) => {
                 let HatchPattern {
                     kind,
@@ -1220,11 +1221,25 @@ impl Packer {
                     flags |= OPT[5];
                     self.int(count(a.islands.len()));
                     self.int(count(a.cutouts.len()));
-                    self.text(&a.outer.to_text());
+                    // A face's tie names no closed object (docs/adr/0328 §3): its id empty, its bounds below.
+                    self.text(&a.outer.map(|o| o.to_text()).unwrap_or_default());
                     for id in a.islands.iter().chain(&a.cutouts) {
                         self.text(&id.to_text());
                     }
                     self.out.floats.extend([a.seed.x, a.seed.y]);
+                }
+                // Schema 69's exact boundary and a face's bounds (docs/adr/0328): one JSON object.
+                let bounds = assoc.as_ref().map_or(&[][..], |a| &a.bounds[..]);
+                if boundary.is_some() || !bounds.is_empty() {
+                    flags |= OPT[6];
+                    let mut more = serde_json::Map::new();
+                    if let Some(b) = boundary {
+                        more.insert("boundary".into(), serde_json::to_value(b).unwrap_or_default());
+                    }
+                    if !bounds.is_empty() {
+                        more.insert("bounds".into(), serde_json::to_value(bounds).unwrap_or_default());
+                    }
+                    self.text(&serde_json::Value::Object(more).to_string());
                 }
             }
             Entity::Insert(InsertEntity {
@@ -2091,8 +2106,9 @@ fn allowed(kind: u8) -> u32 {
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
         11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS | MORE,
-        // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
-        12 => OPT[..6].iter().fold(0, |m, b| m | b),
+        // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186), schema 69's boundary
+        // and bounds (docs/adr/0328).
+        12 => OPT[..7].iter().fold(0, |m, b| m | b),
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
         // parameter values (docs/adr/0318 §3).
         13 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
@@ -2739,12 +2755,21 @@ fn geometry(
                 if i.saturating_add(k) > c.cols.text_lengths.len() {
                     return Err(broken("taramanın nesne sayısı metinlerden fazla"));
                 }
+                let outer = {
+                    let t = c.text(|| place("assoc/outer"))?;
+                    if t.is_empty() {
+                        None
+                    } else {
+                        Some(EntityId::parse(&t).ok_or_else(|| {
+                            broken(&format!("taramanın nesnesinin kimliği “{t}”"))
+                        })?)
+                    }
+                };
                 let mut id = |what: &str| -> Result<EntityId, KcadError> {
                     let t = c.text(|| place(what))?;
                     EntityId::parse(&t)
                         .ok_or_else(|| broken(&format!("taramanın nesnesinin kimliği “{t}”")))
                 };
-                let outer = id("assoc/outer")?;
                 let islands = (0..i)
                     .map(|_| id("assoc/islands"))
                     .collect::<Result<Vec<_>, _>>()?;
@@ -2753,10 +2778,33 @@ fn geometry(
                     .collect::<Result<Vec<_>, _>>()?;
                 Some(HatchAssoc {
                     outer,
+                    bounds: Vec::new(),
                     islands,
                     cutouts,
                     seed: c.point()?,
                 })
+            } else {
+                None
+            };
+            let mut assoc = assoc;
+            let boundary = if has(6) {
+                #[derive(serde::Deserialize)]
+                struct More {
+                    #[serde(default)]
+                    boundary: Option<Vec<kentos_contracts::HatchLoop>>,
+                    #[serde(default)]
+                    bounds: Vec<EntityId>,
+                }
+                let t = c.text(|| place("boundary"))?;
+                let more: More = serde_json::from_str(&t)
+                    .map_err(|e| broken(&format!("taramanın sınırı okunamadı: {e}")))?;
+                if !more.bounds.is_empty() {
+                    match &mut assoc {
+                        Some(a) => a.bounds = more.bounds,
+                        None => return Err(broken("ilişkisi olmayan taramanın sınır nesneleri")),
+                    }
+                }
+                more.boundary
             } else {
                 None
             };
@@ -2774,6 +2822,7 @@ fn geometry(
                     gradient,
                 },
                 assoc,
+                boundary,
             })
         }
         15 => {
@@ -3627,6 +3676,7 @@ mod tests {
                 zb: None,
             }),
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: Some(vec![vec![Vec2 { x: 1.0, y: 1.0 }; 3]]),
@@ -3635,6 +3685,7 @@ mod tests {
             }),
             // A pattern of families, tied to its objects (docs/adr/0186).
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: None,
@@ -3658,13 +3709,15 @@ mod tests {
                     ..HatchPattern::user(HatchPatternType::Pattern, 30.0, 1.0)
                 },
                 assoc: Some(HatchAssoc {
-                    outer: id(1),
+                    outer: Some(id(1)),
+                    bounds: Vec::new(),
                     islands: vec![id(2)],
                     cutouts: Vec::new(),
                     seed: Vec2 { x: 1.0, y: 0.5 },
                 }),
             }),
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: None,

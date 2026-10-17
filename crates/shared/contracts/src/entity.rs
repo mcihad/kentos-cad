@@ -1472,6 +1472,12 @@ pub struct HatchEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub assoc: Option<crate::HatchAssoc>,
+    /// Its boundary as its source holds it (docs/adr/0328 §1): the outer loop, then the holes', lines, arcs,
+    /// ellipses' arcs and NURBS curves exact; `ring` and `holes` are drawn from it (arcs and curves as chords). None:
+    /// the ring and holes are all it has.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary: Option<Vec<crate::HatchLoop>>,
 }
 
 /// A leader (docs/adr/0146): an arrowhead at its first vertex, a line

@@ -468,11 +468,15 @@ pub const SCHEMA_WITH_MULTILEADER: u32 = 67;
 /// Schema 68 (docs/adr/0327): a table's `styles`, `formulas`, `fields`, a linked file's `link` and a block
 /// schedule's `schedule`.
 pub const SCHEMA_WITH_TABLE_CELLS: u32 = 68;
+/// Schema 69 (docs/adr/0328): a hatch's exact `boundary` (loops of lines, arcs, ellipses' arcs and NURBS curves)
+/// and a tie's `bounds` (the line work a face follows, `outer` then absent), written only when a hatch has one;
+/// older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_HATCH_BOUNDARIES: u32 = 69;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 67] = [
+pub const SCHEMAS: [u32; 68] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -540,6 +544,7 @@ pub const SCHEMAS: [u32; 67] = [
     SCHEMA_WITH_TEXT_FIELDS,
     SCHEMA_WITH_MULTILEADER,
     SCHEMA_WITH_TABLE_CELLS,
+    SCHEMA_WITH_HATCH_BOUNDARIES,
 ];
 
 /// The file a drawing is saved as.

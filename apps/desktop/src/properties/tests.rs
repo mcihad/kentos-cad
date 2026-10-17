@@ -408,6 +408,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     let hatch = add(
         &mut app,
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("cizim"),
             ring: vec![
                 Wire { x: E, y: N },

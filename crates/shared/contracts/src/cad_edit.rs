@@ -534,6 +534,11 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         assoc: Option<crate::HatchAssoc>,
+        /// Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
+        /// drawn from it and may be left empty.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        boundary: Option<Vec<crate::HatchLoop>>,
     },
     /// A block placed (docs/adr/0144): the definition's base point goes to
     /// `p`, its objects are mirrored in the definition's x axis when

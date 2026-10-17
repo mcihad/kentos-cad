@@ -597,14 +597,17 @@ impl Reader<'_> {
                 };
                 let assoc = match self.string()? {
                     None => None,
+                    // The packed record keeps the closed object's id; a face's line work is not drawn.
                     Some(outer) => Some(HatchAssoc {
-                        outer,
+                        outer: (!outer.is_empty()).then_some(outer),
+                        bounds: None,
                         islands: self.strings()?,
                         cutouts: self.strings()?,
                         seed: self.pt()?,
                     }),
                 };
                 Shape::Hatch {
+                    boundary: None,
                     ring,
                     holes,
                     pattern: HatchPattern {
@@ -1181,6 +1184,7 @@ impl Packer {
                 holes,
                 pattern,
                 assoc,
+                ..
             } => {
                 self.put(&[12.0]);
                 self.points(ring);
@@ -1209,7 +1213,7 @@ impl Packer {
                 match assoc {
                     None => self.put(&[-1.0]),
                     Some(a) => {
-                        let outer = self.string(&a.outer);
+                        let outer = self.string(a.outer.as_deref().unwrap_or_default());
                         self.put(&[outer]);
                         self.strings(a.islands.as_deref());
                         self.strings(a.cutouts.as_deref());

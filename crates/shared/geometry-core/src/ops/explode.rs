@@ -195,6 +195,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                     holes: None,
                     pattern: HatchPattern::user("solid", 0.0, *height),
                     assoc: None,
+                    boundary: None,
                 }));
             }
             for c in &laid.cells {
@@ -351,6 +352,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                     holes: None,
                     pattern: HatchPattern::user("solid", 0.0, *height),
                     assoc: None,
+                    boundary: None,
                 }));
             }
             let text = match text {
@@ -466,6 +468,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
                     holes: None,
                     pattern: HatchPattern::user("solid", 0.0, *height),
                     assoc: None,
+                    boundary: None,
                 }));
             }
             if let (Some(text), Some(p)) = (text, l.note_point) {

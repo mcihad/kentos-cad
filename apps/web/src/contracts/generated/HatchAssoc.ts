@@ -3,8 +3,13 @@ import type { EntityId } from "./EntityId";
 import type { Vec2 } from "./Vec2";
 
 /**
- * The objects a hatch made inside a closed object follows (docs/adr/0186
- * §6): the closed object, its islands, the texts and inserts left open, and
- * the point clicked inside, which picks the region's part.
+ * The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
+ * object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
+ * (`bounds`: the objects whose line work bounds it, its islands' too) follows that line work; the point clicked
+ * inside picks the region's part or face. Exactly one of `outer` and `bounds` is given.
  */
-export type HatchAssoc = { outer: EntityId, islands?: Array<EntityId>, cutouts?: Array<EntityId>, seed: Vec2, };
+export type HatchAssoc = { outer?: EntityId, 
+/**
+ * The objects whose line work closes its face (docs/adr/0328 §3).
+ */
+bounds?: Array<EntityId>, islands?: Array<EntityId>, cutouts?: Array<EntityId>, seed: Vec2, };

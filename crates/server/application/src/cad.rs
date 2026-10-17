@@ -300,6 +300,14 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 check_len("Tarama adası", h.len(), 3)?;
             }
             positive("Tarama aralığı", x.pattern.spacing)?;
+            // Its exact boundary in the contract's form (docs/adr/0328 §1).
+            if let Some(words) = x
+                .boundary
+                .as_deref()
+                .and_then(kentos_contracts::boundary_problem)
+            {
+                return Err(words);
+            }
         }
         // Its block is the project's: the commit checks it is there (docs/adr/0144 §5).
         Insert(x) => {

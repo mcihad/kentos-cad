@@ -29,7 +29,8 @@ islands?: boolean,
  */
 texts?: boolean, 
 /**
- * İlişkili (`object` only): the hatch follows its objects; absent: true.
+ * İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
+ * docs/adr/0328 §3); absent: true.
  */
 associative?: boolean, } | { "kind": "objects", uids: Array<string>, 
 /**

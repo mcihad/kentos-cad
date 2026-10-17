@@ -1487,6 +1487,8 @@ KINDS = {
         "holes": (lambda h: array([points(r) for r in h]), False),
         "pattern": (lambda p: hatch_pattern(p), True),
         "assoc": (lambda a: hatch_assoc(a), False),
+        # Schema 69 (docs/adr/0328 §1): its exact boundary, as its JSON.
+        "boundary": (opaque, False),
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False),
@@ -1617,8 +1619,10 @@ def hatch_pattern(p):
 def hatch_assoc(a):
     """What a hatch's region follows (schema 23, docs/adr/0186 §6): objects by persistent id, empty lists not written; the seed."""
     ids = lambda us: array([blob(uid_bytes(u)) for u in us])
-    assert a.get("islands", [None]) and a.get("cutouts", [None]), "boş liste yazılmaz"
-    return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), True), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
+    assert a.get("islands", [None]) and a.get("cutouts", [None]) and a.get("bounds", [None]), "boş liste yazılmaz"
+    # Schema 69 (docs/adr/0328 §3): a face's tie names its line work (`bounds`) and no closed object; the reader holds
+    # it to one of the two (broken/hatch-assoc-outer-and-bounds.kcad).
+    return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), False), "bounds": (ids, False), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
 
 
 # A reference's places and the numbers each has (docs/adr/0249 §1); the codes of a broken one.
@@ -2012,6 +2016,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 69 (docs/adr/0328): a hatch's exact boundary or a face's tie.
+    def bounded(es):
+        return any(e["kind"] == "hatch" and ("boundary" in e or "bounds" in e.get("assoc", {})) for e in es)
+    if bounded(entities) or any(bounded(b["entities"]) for b in blocks or []):
+        return 69
     # Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
     def tabled(es):
         def linked(src):
@@ -2403,7 +2412,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-69.kcad"] = container(root(cmap(parts), version=uint(69)))
+    files["schema-version-70.kcad"] = container(root(cmap(parts), version=uint(70)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3774,6 +3783,28 @@ def build():
     out["broken/table-link-not-file.kcad"] = cells_broken(lambda d: d["entities"][2].update(link={"path": "alanlar.csv"}))
     out["broken/table-schedule-and-source.kcad"] = cells_broken(lambda d: d["entities"][2].update(schedule={"kind": "blocks"}))
     out["broken/table-schedule-name-empty.kcad"] = cells_broken(lambda d: d["entities"][4]["source"].update(names=[" "]))
+    # A hatch's exact boundary and a face's tie are schema 69's (docs/adr/0328): in schema 68 an unknown field; an
+    # empty boundary, a loop of one point without a curve, curves not as many as points, a NURBS curve's knots, a tie
+    # with both a closed object and bounds refused.
+    out["hatch-boundaries.kcad"] = container(document(load("hatch-boundaries.json")))
+    payload = document(load("hatch-boundaries.json"))
+    assert payload.count(b"\x67version\x18\x45") == 1
+    out["broken/hatch-boundary-in-schema-68.kcad"] = container(payload.replace(b"\x67version\x18\x45", b"\x67version\x18\x44"))
+
+    def boundary_broken(change):
+        d = load("hatch-boundaries.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-boundary-empty.kcad"] = boundary_broken(lambda d: d["entities"][2].update(boundary=[]))
+    out["broken/hatch-boundary-point.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0].update(pts=d["entities"][8]["boundary"][0]["pts"][:1], curves=[None]))
+    out["broken/hatch-boundary-curves.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0]["curves"].append(None))
+    out["broken/hatch-boundary-knots.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0]["curves"][1].update(knots=[0.0, 0.0, 1.0, 1.0, 1.0]))
+    out["broken/hatch-boundary-ratio.kcad"] = boundary_broken(lambda d: d["entities"][2]["boundary"][1]["curves"][0].update(ratio=1.5))
+
+    def tied_twice(d):
+        d["entities"][7]["assoc"]["outer"] = d["uids"][0]
+    out["broken/hatch-assoc-outer-and-bounds.kcad"] = boundary_broken(tied_twice)
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

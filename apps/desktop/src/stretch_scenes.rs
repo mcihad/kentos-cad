@@ -73,7 +73,8 @@ fn tie(app: &mut App) {
     };
     if let Some(Entity::Hatch(h)) = doc.get(Slot(2)).cloned() {
         let tied = HatchAssoc {
-            outer: room,
+            outer: Some(room),
+            bounds: Vec::new(),
             islands: Vec::new(),
             cutouts: Vec::new(),
             seed: Point {
@@ -84,6 +85,7 @@ fn tie(app: &mut App) {
         let _ = doc.update(
             Slot(2),
             Entity::Hatch(kentos_contracts::HatchEntity {
+                boundary: None,
                 assoc: Some(tied),
                 ..h
             }),

@@ -243,7 +243,13 @@ enum Ties {
 fn ties(doc: &Document, e: &Entity) -> Ties {
     let there = |id: &EntityId| doc.slot_of(Uuid::from_bytes(id.0)).is_some();
     match e {
-        Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| there(&a.outer)) => Ties::Whole,
+        Entity::Hatch(h)
+            if h.assoc
+                .as_ref()
+                .is_some_and(|a| a.outer.as_ref().map_or(a.bounds.iter().any(there), there)) =>
+        {
+            Ties::Whole
+        }
         Entity::Text(t) if t.label_of.as_ref().is_some_and(there) => Ties::Whole,
         Entity::Dimension(d) => match &d.refs {
             Some(r) => {

@@ -51,7 +51,7 @@ mod leader;
 mod paragraph;
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
-use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
+use crate::math::{PI, TAU, atan, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
 
@@ -2034,11 +2034,23 @@ impl Writer<'_> {
         self.out.str(2, name);
         self.out.int(70, i64::from(fill));
         self.out.int(71, 0);
-        self.out.int(91, 1 + holes.len() as i64);
-        // Outer boundary (external polyline), then the islands (polylines).
-        self.boundary(&h.ring, 3);
-        for hole in &holes {
-            self.boundary(hole, 2);
+        // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
+        // arcs and curves an edge path; else the drawn ring and holes.
+        match h.boundary.as_deref().filter(|b| !b.is_empty()) {
+            Some(loops) => {
+                self.out.int(91, loops.len() as i64);
+                for (k, l) in loops.iter().enumerate() {
+                    self.exact_boundary(l, k == 0);
+                }
+            }
+            None => {
+                self.out.int(91, 1 + holes.len() as i64);
+                // Outer boundary (external polyline), then the islands (polylines).
+                self.boundary(&h.ring, 3);
+                for hole in &holes {
+                    self.boundary(hole, 2);
+                }
+            }
         }
         self.out.int(75, 0);
         // A pattern of the library is AutoCAD's predefined one of that name; another is custom.
@@ -2173,6 +2185,108 @@ impl Writer<'_> {
             self.out.int(421, c.rgb.unwrap_or(own));
         }
         self.out.str(470, name);
+    }
+
+    /// One loop of a hatch's exact boundary: a polyline path (72 bulges) of lines and arcs, else an edge path whose
+    /// edges are lines (1), circular arcs (2: a clockwise one's angles negated, 73 = 0), ellipses' arcs (3: angles of
+    /// the parameters, negated when clockwise) and splines (4, AC1021: no fit data).
+    fn exact_boundary(&mut self, l: &kentos_contracts::HatchLoop, outer: bool) {
+        let n = l.pts.len();
+        let bulge = |i: usize| l.bulges.as_ref().map_or(0.0, |b| b[i]);
+        if !l.has_curves() {
+            self.out.int(92, if outer { 3 } else { 2 });
+            let arcs = (0..n).any(|i| bulge(i) != 0.0);
+            self.out.int(72, i64::from(arcs));
+            self.out.int(73, 1);
+            self.out.int(93, n as i64);
+            for (i, p) in l.pts.iter().enumerate() {
+                self.out.xy(10, *p);
+                if arcs {
+                    self.out.real(42, bulge(i));
+                }
+            }
+            self.out.int(97, 0);
+            return;
+        }
+        self.out.int(92, i64::from(outer));
+        self.out.int(93, n as i64);
+        let curve = |i: usize| l.curves.as_ref().and_then(|c| c[i].as_ref());
+        for i in 0..n {
+            let (a, b) = (l.pts[i], l.pts[(i + 1) % n]);
+            match curve(i) {
+                Some(kentos_contracts::HatchCurve::Ellipse {
+                    c,
+                    major,
+                    ratio,
+                    t0,
+                    t1,
+                }) => {
+                    let ccw = t1 > t0;
+                    let angle = |t: f64| {
+                        let d = deg(atan2(ratio * sin(t), cos(t)));
+                        if ccw { d } else { -d }
+                    };
+                    self.out.int(72, 3);
+                    self.out.xy(10, *c);
+                    self.out.xy(11, *major);
+                    self.out.real(40, *ratio);
+                    self.out.real(50, angle(*t0));
+                    self.out.real(51, angle(*t1));
+                    self.out.int(73, i64::from(ccw));
+                }
+                Some(kentos_contracts::HatchCurve::Nurbs {
+                    degree,
+                    ctrl,
+                    knots,
+                    weights,
+                }) => {
+                    self.out.int(72, 4);
+                    self.out.int(94, i64::from(*degree));
+                    self.out.int(73, i64::from(weights.is_some()));
+                    self.out.int(74, 0);
+                    self.out.int(95, knots.len() as i64);
+                    self.out.int(96, ctrl.len() as i64);
+                    for k in knots {
+                        self.out.real(40, *k);
+                    }
+                    for (j, p) in ctrl.iter().enumerate() {
+                        self.out.xy(10, *p);
+                        if let Some(w) = weights {
+                            self.out.real(42, w[j]);
+                        }
+                    }
+                }
+                None => {
+                    let bl = bulge(i);
+                    let (dx, dy) = (b.x - a.x, b.y - a.y);
+                    let chord = hypot(dx, dy);
+                    if bl == 0.0 || chord == 0.0 {
+                        self.out.int(72, 1);
+                        self.out.xy(10, a);
+                        self.out.xy(11, b);
+                        continue;
+                    }
+                    // The bulge's circle (geometry core's bulge_arc).
+                    let k = (1.0 - bl * bl) / (4.0 * bl);
+                    let c = Vec2 {
+                        x: (a.x + b.x) / 2.0 - dy * k,
+                        y: (a.y + b.y) / 2.0 + dx * k,
+                    };
+                    let r = chord * (1.0 + bl * bl) / (4.0 * bl.abs());
+                    let start = deg(atan2(a.y - c.y, a.x - c.x));
+                    let sweep = deg(4.0 * atan(bl));
+                    let ccw = sweep > 0.0;
+                    let sign = if ccw { 1.0 } else { -1.0 };
+                    self.out.int(72, 2);
+                    self.out.xy(10, c);
+                    self.out.real(40, r);
+                    self.out.real(50, sign * start);
+                    self.out.real(51, sign * (start + sweep));
+                    self.out.int(73, i64::from(ccw));
+                }
+            }
+        }
+        self.out.int(97, 0);
     }
 
     fn boundary(&mut self, ring: &[Vec2], flags: i64) {

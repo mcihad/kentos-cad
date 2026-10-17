@@ -197,11 +197,82 @@ pub fn region(
     cutouts: &[Vec<Vec2>],
     seed: Vec2,
 ) -> Option<Region> {
+    region_cut(outer, islands, cutouts, seed).map(|(a, cut)| region_of(&a, &cut))
+}
+
+/// `region`'s part as an area, arcs exact, and the cut that left it.
+pub fn region_cut(
+    outer: &Shape,
+    islands: &[Shape],
+    cutouts: &[Vec<Vec2>],
+    seed: Vec2,
+) -> Option<(Area, Cut)> {
     let parts = areas_of_entity(outer);
     let base = pick(&parts, seed)?;
     let islands: Vec<Vec<Area>> = islands.iter().map(areas_of_entity).collect();
     let cut = cut_base(base, &islands, cutouts);
-    pick(&cut.parts, seed).map(|a| region_of(a, &cut))
+    let k = pick_index(&cut.parts, seed)?;
+    Some((cut.parts[k].clone(), cut))
+}
+
+/// How near a face's edge must run along an object's for the object to bound it (m).
+const BOUND_TOL: f64 = 1e-6;
+
+/// The middles of an area's edges (an arc's on the arc).
+fn edge_middles(a: &Area) -> Vec<Vec2> {
+    std::iter::once(&a.outer)
+        .chain(&a.holes)
+        .flat_map(|r| {
+            let n = r.pts.len();
+            (0..n).map(move |i| {
+                let b = r.bulges.as_ref().map_or(0.0, |b| b[i]);
+                crate::geom::bulge::segment_mid(r.pts[i], r.pts[(i + 1) % n], b)
+            })
+        })
+        .collect()
+}
+
+/// Which of `shapes` bound `rings` (docs/adr/0328 §3): those along whose
+/// edges one of the rings' edges runs (its middle on one of theirs).
+pub fn bounding(rings: &Area, shapes: &[Shape]) -> Vec<usize> {
+    let middles = edge_middles(rings);
+    shapes
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| {
+            let edges = crate::ops::edges::entity_edges(s);
+            middles.iter().any(|m| {
+                edges
+                    .iter()
+                    .any(|e| crate::geom::intersect::closest_on_edge(e, *m).d <= BOUND_TOL)
+            })
+        })
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// A face's region (docs/adr/0328 §3): the face the line work of `bounds`
+/// and `islands` closes around `seed` (the islands' closed groups its
+/// holes), less the `cutouts`' boxes; the part that holds the seed. None
+/// when the line work closes nothing around it.
+pub fn face_region(
+    bounds: &[Shape],
+    islands: &[Shape],
+    cutouts: &[Vec<Vec2>],
+    seed: Vec2,
+) -> Option<Area> {
+    let lines: Vec<Entity> = bounds
+        .iter()
+        .chain(islands)
+        .map(|s| Entity::new(s.clone()))
+        .collect();
+    let index = crate::geom::region::FaceIndex::new(&[crate::ops::areas::line_source(&lines)]);
+    let face = index.at(seed, !islands.is_empty())?;
+    if cutouts.is_empty() {
+        return Some(face);
+    }
+    let cut = cut_base(&face, &[], cutouts);
+    pick(&cut.parts, seed).cloned()
 }
 
 /// `region` of objects as the documents hold them: the cutouts' boxes from

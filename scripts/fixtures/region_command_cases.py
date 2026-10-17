@@ -10,6 +10,9 @@ definitions (docs/adr/0062, 0065, 0186, 0254), without KentOS code, on a drawing
 - A region around a point: the smallest face the boundaries' line work closes around it (the shown objects, or
   those meeting the rectangle, or the listed ones; of the boundary layer alone when one is named); the closed
   groups inside it are its holes unless Adalar is off.
+- Çizgiler with İlişkili (docs/adr/0328 §3): the hatch names the shown objects of the boundary set and layer along
+  whose line work the middle of one of the face's outer edges lies (its bounds), those along its holes' edges (its
+  islands), each list in the drawing's order, and the point.
 - Kapalı nesne: the smallest closed object around the point; the smaller closed objects inside it are its
   islands, cut out (holes here, each wholly inside); with İlişkili the hatch names the object, the islands that
   reached in and the point.
@@ -323,6 +326,47 @@ def tie(outer_id, islands=(), seed=None):
     return t
 
 
+def on_segment(m, a, b):
+    """Whether the point `m` lies on the segment a–b (exactly: the work is axis-parallel)."""
+    (mx, my), (ax, ay), (bx, by) = [tuple(map(F, q)) for q in (m, a, b)]
+    if (bx - ax) * (my - ay) != (by - ay) * (mx - ax):
+        return False
+    return min(ax, bx) <= mx <= max(ax, bx) and min(ay, by) <= my <= max(ay, by)
+
+
+def segments_of(e):
+    if e["kind"] == "line":
+        return [((e["a"]["x"], e["a"]["y"]), (e["b"]["x"], e["b"]["y"]))]
+    pts = [(p["x"], p["y"]) for p in e["pts"]]
+    return list(zip(pts, pts[1:] + pts[:1]))
+
+
+def along(rect_, layer_id=None):
+    """The shown objects (of `layer_id` alone when given) along whose line work the middle of one of the rectangle's
+    edges lies, in the drawing's order."""
+    corners = rect(*rect_)
+    middles = [((F(a[0]) + F(b[0])) / 2, (F(a[1]) + F(b[1])) / 2) for a, b in zip(corners, corners[1:] + corners[:1])]
+    hidden = {"gizli"}
+    out = []
+    for e in ENTITIES:
+        if e["layerId"] in hidden or (layer_id is not None and e["layerId"] != layer_id):
+            continue
+        if any(on_segment(m, a, b) for m in middles for a, b in segments_of(e)):
+            out.append(e["id"])
+    return out
+
+
+def face_tie(face, holes, seed, layer_id=None):
+    """A face's tie (docs/adr/0328 §3): its bounds, its islands (not already bounds), the point."""
+    bounds = along(face, layer_id)
+    islands = [i for h in holes for i in along(h, layer_id) if i not in bounds]
+    t = {"bounds": [UID(i) for i in bounds]}
+    if islands:
+        t["islands"] = [UID(i) for i in islands]
+    t["seed"] = {"x": plain(seed[0]), "y": plain(seed[1])}
+    return t
+
+
 def hatch_case(name, region, pat_in, made, layer_id="tarama", look=None, warnings=(), plan=False, undo=False):
     """`made`: [(outer, holes, pattern, assoc)] the hatches written, in order."""
     inp = {"region": region, "pattern": pat_in, "layerId": layer_id, **(look or {})}
@@ -358,10 +402,12 @@ def hatch_cases():
         hatch_case("Adalar kapalı: bina taranır, ilişkide ada yok", at_point(*p_in, islands=False), DOLU, [(PARCEL, [], solid, tie(20, [], p_in))]),
         hatch_case("İlişkisiz: tarama nesnelerini izlemez", at_point(*p_in, associative=False), DOLU, [(PARCEL, [BUILDING], solid, None)]),
         hatch_case("Binanın içi: noktayı çevreleyen en küçük kapalı nesne", at_point(X + 46, Y + 6), DOLU, [(BUILDING, [], solid, tie(21, [], (X + 46, Y + 6)))]),
-        hatch_case("Çizgiler: odanın yüzü, içindeki kapalı nesne delik; bir şeye bağlanmaz", at_point(X + 2, Y + 2, way="lines"), DOLU,
+        hatch_case("Çizgiler: odanın yüzü, içindeki kapalı nesne delik; tarama yüzü kapatan çizgilere ve adaya bağlı", at_point(X + 2, Y + 2, way="lines"), DOLU,
+                   [(ROOM_A, [ISLAND], solid, face_tie(ROOM_A, [ISLAND], (X + 2, Y + 2)))]),
+        hatch_case("Çizgiler, ilişkisiz: bir şeye bağlanmaz", at_point(X + 2, Y + 2, way="lines", associative=False), DOLU,
                    [(ROOM_A, [ISLAND], solid, None)]),
-        hatch_case("Çizgiler ve sınır katmanı: ara çizgi sayılmaz", at_point(X + 22, Y + 4, way="lines", boundaryLayer="sinir"), DOLU,
-                   [(ROOM_B, [], solid, None)]),
+        hatch_case("Çizgiler ve sınır katmanı: ara çizgi sayılmaz, bağ da onun çizgileri", at_point(X + 22, Y + 4, way="lines", boundaryLayer="sinir"), DOLU,
+                   [(ROOM_B, [], solid, face_tie(ROOM_B, [], (X + 22, Y + 4), "sinir"))]),
         hatch_case("Çizgili: 45° + açı, kâğıtta 3 mm × ölçek × çizim ölçeği", at_point(*p_in, associative=False),
                    {"name": "Çizgili", "scale": 2, "angle": 15}, [(PARCEL, [BUILDING], pattern("Çizgili", 2.0, 15.0), None)]),
         hatch_case("Kitaplık deseni adıyla (büyük küçük harf fark etmez)", at_point(*p_in, associative=False), {"name": "ansi31"},

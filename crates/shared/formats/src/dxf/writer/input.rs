@@ -142,6 +142,8 @@ struct Fields {
     ring: Option<Vec<Vec2>>,
     pattern: Option<HatchPattern>,
     assoc: Option<HatchAssoc>,
+    /// A hatch's exact boundary (docs/adr/0328 §1).
+    boundary: Option<Vec<kentos_contracts::HatchLoop>>,
     block: Option<BlockId>,
     scale: Option<f64>,
     mirror: Option<bool>,
@@ -424,6 +426,7 @@ impl Fields {
                 pattern: need(self.pattern, "pattern")?,
                 // Written without it (docs/adr/0186 §6), and said.
                 assoc: self.assoc,
+                boundary: self.boundary,
             }),
             "insert" => Entity::Insert(InsertEntity {
                 parameters: Default::default(),
@@ -595,6 +598,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "ring" => f.ring = Some(map.next_value()?),
                         "pattern" => f.pattern = Some(map.next_value()?),
                         "assoc" => f.assoc = map.next_value()?,
+                        "boundary" => f.boundary = map.next_value()?,
                         "block" => f.block = Some(map.next_value()?),
                         "scale" => f.scale = Some(map.next_value()?),
                         "mirror" => f.mirror = map.next_value()?,

@@ -216,6 +216,7 @@ fn a_hatch_keeps_its_islands_when_it_changes() {
         Vec2 { x: 1.0, y: 2.0 },
     ];
     let hatch = Entity::Hatch(HatchEntity {
+        boundary: None,
         base: base("a"),
         ring,
         holes: Some(vec![island.clone()]),

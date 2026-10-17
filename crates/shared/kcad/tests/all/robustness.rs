@@ -459,6 +459,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 path: None,
             }),
             _ => Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: b,
                 ring: points(rng, 3),
                 holes: rng.chance(50).then(|| vec![points(rng, 3)]),

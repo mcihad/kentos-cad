@@ -493,7 +493,8 @@ pub fn core_assoc(a: &HatchAssoc) -> CoreAssoc {
         (!list.is_empty()).then(|| list.iter().map(EntityId::to_text).collect())
     };
     CoreAssoc {
-        outer: a.outer.to_text(),
+        outer: a.outer.map(|o| o.to_text()),
+        bounds: ids(&a.bounds),
         islands: ids(&a.islands),
         cutouts: ids(&a.cutouts),
         seed: v(&a.seed),
@@ -509,7 +510,11 @@ pub fn contract_assoc(a: CoreAssoc) -> Option<HatchAssoc> {
             .collect()
     };
     Some(HatchAssoc {
-        outer: EntityId::parse(&a.outer)?,
+        outer: match &a.outer {
+            Some(o) => Some(EntityId::parse(o)?),
+            None => None,
+        },
+        bounds: ids(a.bounds)?,
         islands: ids(a.islands)?,
         cutouts: ids(a.cutouts)?,
         seed: Point {
@@ -821,6 +826,10 @@ pub fn shape(entity: &Entity) -> Shape {
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
             pattern: core_pattern(&h.pattern),
             assoc: h.assoc.as_ref().map(core_assoc),
+            boundary: h
+                .boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::core_boundary),
         },
         // Its attributes too: what its block's attribute texts show (docs/adr/0144 §7).
         Entity::Insert(i) => Shape::Insert {
@@ -1193,6 +1202,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 holes,
                 pattern,
                 assoc,
+                boundary,
             },
         ) => {
             // The core carries the pattern's type through; it turns, scales and reflects
@@ -1203,6 +1213,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 e.pattern = p;
             }
             e.assoc = assoc.and_then(contract_assoc);
+            // The exact boundary the core carried (docs/adr/0328 §1); none when it dropped it.
+            e.boundary = boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::contract_boundary);
         }
         (
             Entity::Leader(e),
@@ -1514,13 +1528,22 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             holes,
             pattern,
             assoc,
-        } => Entity::Hatch(HatchEntity {
-            base,
-            ring,
-            holes,
-            pattern,
-            assoc,
-        }),
+            boundary,
+        } => {
+            // A boundary draws the ring (docs/adr/0328 §1).
+            let (ring, holes) = match boundary.as_deref().and_then(kentos_domain::hatch_boundaries::drawn) {
+                Some(drawn) => drawn,
+                None => (ring, holes),
+            };
+            Entity::Hatch(HatchEntity {
+                base,
+                ring,
+                holes,
+                pattern,
+                assoc,
+                boundary,
+            })
+        }
         EntityGeometry::Insert {
             block,
             p,
@@ -1802,7 +1825,11 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             holes,
             pattern,
             assoc,
+            boundary,
         } => EntityGeometry::Hatch {
+            boundary: boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::contract_boundary),
             ring: back(ring),
             holes: holes.map(|hs| hs.into_iter().map(back).collect()),
             pattern: contract_pattern(pattern)?,
@@ -1999,6 +2026,7 @@ mod tests {
             holes: None,
             pattern: HatchPattern::user("dots", 0.0, 1.0),
             assoc: None,
+            boundary: None,
         };
         assert_eq!(edit_geometry(odd), None);
     }

@@ -264,7 +264,7 @@ impl Tool for Hatch {
                         "kapalı nesne"
                     },
                 );
-        let prompt = options::with_region_options(prompt, &m, !m.hatch_by_lines);
+        let prompt = options::with_region_options(prompt, &m, true);
         if m.hatch_by_lines {
             let layer = self
                 .boundary_name
@@ -346,9 +346,7 @@ impl Tool for Hatch {
                 cx.selection.set_hover(None);
                 self.changed()
             }
-            k if options::option(k, !cx.memory.hatch_by_lines, &mut self.asking, cx) => {
-                self.changed()
-            }
+            k if options::option(k, true, &mut self.asking, cx) => self.changed(),
             _ if options::typed_choice(text, cx) => self.changed(),
             _ => false,
         };

@@ -12,6 +12,7 @@ pub mod delaunay;
 pub mod dimension;
 pub mod ellipse;
 pub mod hatch;
+pub mod hatch_boundary;
 pub mod hatch_pattern;
 pub mod image;
 pub mod intersect;

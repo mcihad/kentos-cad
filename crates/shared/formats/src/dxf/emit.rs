@@ -33,6 +33,9 @@ use crate::gis::CLOSING_Z;
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
+use kentos_geometry_core::Vec2 as CoreVec2;
+use kentos_geometry_core::entity::{HatchCurve as CoreCurve, HatchLoop as CoreLoop};
+use kentos_geometry_core::geom::hatch_boundary;
 
 mod notes;
 mod pattern;
@@ -2823,6 +2826,8 @@ impl<'l> Emitter<'l> {
             return self.skip("Tarama (HATCH)", "doğrultusu (210) geçersiz", e.line);
         };
         let mut rings: Vec<Vec<Vec2>> = Vec::new();
+        // Each ring's path exact (docs/adr/0328 §1), in drawing coordinates; none where it cannot be.
+        let mut loops: Vec<Option<CoreLoop>> = Vec::new();
         let mut curved = false;
         for path in &h.paths {
             let Boundary {
@@ -2841,12 +2846,25 @@ impl<'l> Emitter<'l> {
             }
             if ring.len() >= 3 && ring.iter().all(|p| finite(*p)) {
                 rings.push(ring);
+                let at = |p: CoreVec2| {
+                    let q = m.apply(Vec2 { x: p.x, y: p.y });
+                    finite(q).then(|| CoreVec2::new(q.x, q.y))
+                };
+                loops.push(path_loop(path).and_then(|l| {
+                    hatch_boundary::mapped(&[l], &at, [m.a, m.b, m.c, m.d])
+                        .and_then(|mut v| v.pop())
+                        .filter(|l| hatch_boundary::problem(std::slice::from_ref(l)).is_none())
+                }));
             }
         }
         if rings.is_empty() {
             return self.skip("Tarama (HATCH)", "sınırı okunamadı ya da alanı yok", e.line);
         }
-        if curved {
+        // Curves are kept exact where every path could be (docs/adr/0328 §1); else drawn in pieces. Straight paths
+        // are their rings: no boundary.
+        let exact = loops.iter().all(Option::is_some)
+            && hatch_boundary::curved(&loops.iter().flatten().cloned().collect::<Vec<_>>());
+        if curved && !exact {
             self.note("Tarama (HATCH)", "sınırdaki yaylar ve eğriler parçalı alındı (72 parça/tur, uygulamanın taramaları gibi)", e.line);
         }
         if h.assoc {
@@ -2911,12 +2929,24 @@ impl<'l> Emitter<'l> {
                 .filter(|&j| parent[j] == Some(i) && depth[j] <= max_depth)
                 .map(|j| rings[j].clone())
                 .collect();
+            let boundary = if exact {
+                let mine: Vec<CoreLoop> = std::iter::once(i)
+                    .chain(
+                        (0..rings.len()).filter(|&j| parent[j] == Some(i) && depth[j] <= max_depth),
+                    )
+                    .filter_map(|k| loops[k].clone())
+                    .collect();
+                crate::blocks::contract_boundary(&mine)
+            } else {
+                None
+            };
             self.push(Entity::Hatch(HatchEntity {
                 base: b.clone(),
                 ring: rings[i].clone(),
                 holes: (!holes.is_empty()).then_some(holes),
                 pattern: pattern.clone(),
                 assoc: None,
+                boundary,
             }));
         }
     }
@@ -2962,6 +2992,162 @@ fn arc_edge(c: Vec2, r: f64, a0: f64, a1: f64, ccw: bool, prev: Option<Vec2>, ou
     };
     out.push(at(start));
     arc_points(c, r, rad(start), rad(sweep), Some(at(end)), out);
+}
+
+/// A hatch boundary path as its exact loop, in object coordinates (docs/adr/0328 §1): a polyline path's vertices
+/// and bulges; an edge path's lines and arcs as vertices and bulges, its elliptic arcs and splines as curves. None
+/// when an edge does not start where the one before it ended (within a millionth of the path's size), or a spline's
+/// numbers make no curve: the path is then taken in pieces, as before.
+fn path_loop(path: &Path) -> Option<CoreLoop> {
+    let p2 = |p: &[f64; 2]| CoreVec2::new(p[0], p[1]);
+    match path {
+        Path::Poly { pts, bulges } => {
+            let mut pts: Vec<CoreVec2> = pts.iter().map(p2).collect();
+            let mut bulges: Vec<f64> = (0..pts.len()).map(|i| bulges.get(i).copied().unwrap_or(0.0)).collect();
+            if pts.len() > 1 && pts.first() == pts.last() {
+                pts.pop();
+                bulges.pop();
+            }
+            if pts.len() < 2 || !bulges.iter().all(|b| b.is_finite()) {
+                return None;
+            }
+            let any = bulges.iter().any(|b| *b != 0.0);
+            Some(CoreLoop {
+                pts,
+                bulges: any.then_some(bulges),
+                curves: None,
+            })
+        }
+        Path::Edges(edges) => {
+            // How near an edge must start to where the one before ended.
+            let size = edges
+                .iter()
+                .flat_map(|e| match e {
+                    Edge::Line { a, b } => vec![a[0].abs(), a[1].abs(), b[0].abs(), b[1].abs()],
+                    Edge::Arc { c, r, .. } => vec![c[0].abs() + r, c[1].abs() + r],
+                    Edge::Ellipse { c, major, .. } => vec![c[0].abs() + hypot(major[0], major[1]), c[1].abs()],
+                    Edge::Spline { ctrl, .. } => ctrl.iter().flat_map(|p| [p[0].abs(), p[1].abs()]).collect(),
+                })
+                .fold(1.0_f64, f64::max);
+            let tol = 1e-6 + 1e-9 * size;
+            let near = |a: CoreVec2, b: CoreVec2| hypot(a.x - b.x, a.y - b.y) <= tol;
+            let mut pts: Vec<CoreVec2> = Vec::new();
+            let mut bulges: Vec<f64> = Vec::new();
+            let mut curves: Vec<Option<CoreCurve>> = Vec::new();
+            let mut ends: Vec<CoreVec2> = Vec::new();
+            let mut prev: Option<CoreVec2> = None;
+            for edge in edges {
+                let (start, end, bulge, curve) = match edge {
+                    Edge::Line { a, b } => (p2(a), p2(b), 0.0, None),
+                    Edge::Arc { c, r, a0, a1, ccw } => {
+                        let at = |d: f64| {
+                            let (s, co) = sin_cos_deg(d);
+                            CoreVec2::new(c[0] + r * co, c[1] + r * s)
+                        };
+                        // As `arc_edge` reads it.
+                        let (s, e, sweep) = if *ccw {
+                            let span = (a1 - a0).rem_euclid(360.0);
+                            (*a0, *a1, if span == 0.0 { 360.0 } else { span })
+                        } else {
+                            let pv = prev.map(|p| Vec2 { x: p.x, y: p.y });
+                            let to = |x: CoreVec2| Vec2 { x: x.x, y: x.y };
+                            let (s, e) = match pv {
+                                Some(p) if dist(to(at(*a0)), p) < dist(to(at(-a0)), p) => (*a0, *a1),
+                                _ => (-a0, -a1),
+                            };
+                            let span = (s - e).rem_euclid(360.0);
+                            (s, e, -(if span == 0.0 { 360.0 } else { span }))
+                        };
+                        if sweep.abs() >= 360.0 {
+                            // A whole circle: two half arcs.
+                            let (p0, p1) = (at(s), at(s + sweep / 2.0));
+                            let b = if sweep > 0.0 { 1.0 } else { -1.0 };
+                            pts.extend([p0, p1]);
+                            bulges.extend([b, b]);
+                            curves.extend([None, None]);
+                            ends.extend([p1, p0]);
+                            prev = Some(p0);
+                            continue;
+                        }
+                        (at(s), at(e), crate::math::tan(rad(sweep) / 4.0), None)
+                    }
+                    Edge::Ellipse {
+                        c,
+                        major,
+                        ratio,
+                        a0,
+                        a1,
+                        ccw,
+                    } => {
+                        // As `path_points` reads it.
+                        let (a0, a1) = if *ccw { (*a0, *a1) } else { (-*a0, -*a1) };
+                        let param = |a: f64| atan2(sin(rad(a)) / ratio.max(1e-12), cos(rad(a)));
+                        let (t0, mut t1) = (param(a0), param(a1));
+                        if *ccw {
+                            if t1 <= t0 {
+                                t1 += TAU;
+                            }
+                        } else if t1 >= t0 {
+                            t1 -= TAU;
+                        }
+                        let curve = CoreCurve::Ellipse {
+                            c: p2(c),
+                            major: p2(major),
+                            ratio: *ratio,
+                            t0,
+                            t1,
+                        };
+                        let (s, e) = hatch_boundary::curve_ends(&curve)?;
+                        (s, e, 0.0, Some(curve))
+                    }
+                    Edge::Spline {
+                        degree,
+                        knots,
+                        ctrl,
+                        weights,
+                    } => {
+                        let curve = CoreCurve::Nurbs {
+                            degree: *degree,
+                            ctrl: ctrl.iter().map(p2).collect(),
+                            knots: knots.clone(),
+                            weights: (weights.len() == ctrl.len()).then(|| weights.clone()),
+                        };
+                        let (s, e) = hatch_boundary::curve_ends(&curve)?;
+                        (s, e, 0.0, Some(curve))
+                    }
+                };
+                if let Some(p) = prev
+                    && !near(p, start)
+                {
+                    return None;
+                }
+                pts.push(start);
+                bulges.push(if bulge.is_finite() { bulge } else { return None });
+                curves.push(curve);
+                ends.push(end);
+                prev = Some(end);
+            }
+            let (first, last) = (*pts.first()?, *ends.last()?);
+            if !near(last, first) {
+                return None;
+            }
+            // A curve's ends are its loop's points: snap a line's or an arc's start onto the curve's end before it.
+            let n = pts.len();
+            for i in 0..n {
+                let j = (i + 1) % n;
+                if curves[i].is_some() && curves[j].is_none() {
+                    pts[j] = ends[i];
+                }
+            }
+            let any_bulge = bulges.iter().any(|b| *b != 0.0);
+            let any_curve = curves.iter().any(Option::is_some);
+            Some(CoreLoop {
+                pts,
+                bulges: any_bulge.then_some(bulges),
+                curves: any_curve.then_some(curves),
+            })
+        }
+    }
 }
 
 /// A hatch boundary path as points (object coordinates).

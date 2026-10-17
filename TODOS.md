@@ -191,6 +191,12 @@ Liste:
   Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
   `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
   kullanıcının kendi TTF/OTF yazı tipleri.
+- [ ] `CAD-HATCH-01`, `02` taramanın kaynak sınırı ve yüzün bağı (ADR 0328, 17 Ekim): web'de gerekenler: `.kcad` şema 69'un
+  `boundary`'si ve ilişkinin `bounds`'u (web'in kopyası 53'te), belgenin sınır kuralı (sınır halkayı çizer, elle değişen halka
+  sınırı düşürür) ve `hatchTies.ts`'in yüz bağı (çizgi işinden yüz, tohumun kayması); Tarama'nın çizgi yolunda İlişkili (İ) ve
+  `cad.entities.hatch`'in yüz bağı (ortak durumlar `cad.entities.hatch.json`); dönüşümlerin, Esnet'in ve tutamaçların sınırı
+  taşıması çekirdekten (`geom::hatch_boundary`); DXF okuma ve yazma çekirdekte, web'in biçim işçisi yeni sürümü alınca gelir;
+  iz `hatches.json`'un İ seçeneği.
 - [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
   `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
   WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in

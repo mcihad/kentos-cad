@@ -681,6 +681,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             pattern: core_pattern(&h.pattern),
             // A block's hatch follows nothing (docs/adr/0186 §6).
             assoc: None,
+            boundary: h.boundary.as_deref().and_then(core_boundary),
         },
         Entity::Table(t) => core_table(t),
         // A picture is no block's piece (docs/adr/0192 §1); its frame for what it covers.
@@ -1018,6 +1019,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             ring,
             holes,
             pattern,
+            boundary,
             ..
         } => Entity::Hatch(HatchEntity {
             base,
@@ -1027,6 +1029,7 @@ fn entity(s: &Shape) -> Option<Entity> {
                 .map(|hs| hs.iter().map(|r| points_back(r)).collect()),
             pattern: contract_pattern(pattern),
             assoc: None,
+            boundary: boundary.as_deref().and_then(contract_boundary),
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
         Shape::Insert { .. }
@@ -1037,6 +1040,26 @@ fn entity(s: &Shape) -> Option<Entity> {
             return None;
         }
     })
+}
+
+/// A hatch's exact boundary as the core holds it (docs/adr/0328 §1), read from the contract's JSON (the same
+/// form); none when it cannot be read.
+pub fn core_boundary(
+    loops: &[kentos_contracts::HatchLoop],
+) -> Option<Vec<kentos_geometry_core::entity::HatchLoop>> {
+    let text = serde_json::to_string(loops).ok()?;
+    let json = Json::parse(&text).ok()?;
+    Vec::<kentos_geometry_core::entity::HatchLoop>::from_json(&json).ok()
+}
+
+/// The core's boundary in the contract's terms.
+pub fn contract_boundary(
+    loops: &[kentos_geometry_core::entity::HatchLoop],
+) -> Option<Vec<kentos_contracts::HatchLoop>> {
+    use kentos_geometry_core::api::json::ToJson;
+    let mut text = String::new();
+    loops.to_vec().write_json(&mut text);
+    serde_json::from_str(&text).ok()
 }
 
 /// A dynamic definition's part as the core varies it (docs/adr/0318 §2), read from the contract's JSON.

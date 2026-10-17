@@ -148,12 +148,14 @@ impl HatchPattern {
     }
 }
 
-/// The objects a hatch's region follows (docs/adr/0186 §6), by their
-/// persistent ids: the closed object, its islands, the texts and inserts
+/// The objects a hatch's region follows (docs/adr/0186 §6, 0328 §3), by
+/// their persistent ids: the closed object (`outer`) or the objects whose
+/// line work closes its face (`bounds`), its islands, the texts and inserts
 /// left open, and the point clicked inside.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HatchAssoc {
-    pub outer: String,
+    pub outer: Option<String>,
+    pub bounds: Option<Vec<String>>,
     pub islands: Option<Vec<String>>,
     pub cutouts: Option<Vec<String>>,
     pub seed: Vec2,
@@ -161,9 +163,50 @@ pub struct HatchAssoc {
 
 crate::json_struct!(HatchAssoc {
     outer,
+    bounds,
     islands,
     cutouts,
     seed
+});
+
+/// A boundary edge that is no line or circular arc (docs/adr/0328 §1): an
+/// ellipse's arc from `t0` to `t1` (counter-clockwise when `t1` is past
+/// `t0`), or a NURBS curve run whole.
+#[derive(Clone, Debug, PartialEq)]
+pub enum HatchCurve {
+    Ellipse {
+        c: Vec2,
+        major: Vec2,
+        ratio: f64,
+        t0: f64,
+        t1: f64,
+    },
+    Nurbs {
+        degree: usize,
+        ctrl: Vec<Vec2>,
+        knots: Vec<f64>,
+        weights: Option<Vec<f64>>,
+    },
+}
+
+crate::json_tagged!(HatchCurve, "kind",
+    Ellipse => "ellipse" { c, major, ratio, t0, t1 },
+    Nurbs => "nurbs" { degree, ctrl, knots, weights },
+);
+
+/// A closed loop of a hatch's boundary (docs/adr/0328 §1): edge `i` from
+/// `pts[i]` to the next, straight, an arc of `bulges[i]` or `curves[i]`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HatchLoop {
+    pub pts: Vec<Vec2>,
+    pub bulges: Option<Vec<f64>>,
+    pub curves: Option<Vec<Option<HatchCurve>>>,
+}
+
+crate::json_struct!(HatchLoop {
+    pts,
+    bulges,
+    curves
 });
 
 /// A part of a multi-part area past its first (docs/adr/0143): its ring in
@@ -387,6 +430,8 @@ pub enum Shape {
         pattern: HatchPattern,
         /// The objects its region follows (docs/adr/0186 §6).
         assoc: Option<HatchAssoc>,
+        /// Its boundary exact, the ring and holes drawn from it (docs/adr/0328 §1).
+        boundary: Option<Vec<HatchLoop>>,
     },
     /// A block placed in the drawing (docs/adr/0144): the definition `block`
     /// (its id) moved from its base point to `p`, mirrored in its x axis when
@@ -529,7 +574,7 @@ crate::json_tagged!(Shape, "kind",
     Nurbs => "nurbs" { degree, ctrl, knots, weights, closed, periodic, fit, fit_tolerance => "fitTolerance"; tangents },
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, flow => "layout", path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
-    Hatch => "hatch" { ring, holes, pattern, assoc },
+    Hatch => "hatch" { ring, holes, pattern, assoc, boundary },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles & face: crate::text::face::Face },

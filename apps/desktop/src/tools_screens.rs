@@ -448,6 +448,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::table_scenes::scenes());
     all.extend(crate::coordinate_scenes::scenes());
     all.extend(crate::hatch_scenes::scenes());
+    all.extend(crate::hatch_boundary_scenes::scenes());
     all.extend(crate::selection_scenes::scenes());
     all.extend(crate::point_calc_scenes::scenes());
     all.extend(crate::stationing_scenes::scenes());

@@ -792,6 +792,13 @@ impl<'d> Encoder<'d> {
                     return refuse(self, "pattern", &words);
                 }
                 f.push(("pattern", Val::Pattern(&e.pattern)));
+                // Its exact boundary (docs/adr/0328 §1), as its JSON, within the contract's form.
+                if let Some(b) = &e.boundary {
+                    if let Some(words) = kentos_contracts::boundary_problem(b) {
+                        return refuse(self, "boundary", &words);
+                    }
+                    f.push(("boundary", Val::Json(serde_json::to_value(b).unwrap_or_default())));
+                }
                 // What its region follows (§6): only the drawing's hatches (a block
                 // definition's objects have no persistent ids to name).
                 if let Some(a) = &e.assoc {
@@ -1873,14 +1880,20 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Assoc(a) => {
-                let n = 2 + usize::from(!a.cutouts.is_empty()) + usize::from(!a.islands.is_empty());
+                let n = 1
+                    + usize::from(a.outer.is_some())
+                    + usize::from(!a.bounds.is_empty())
+                    + usize::from(!a.cutouts.is_empty())
+                    + usize::from(!a.islands.is_empty());
                 self.open(n, true)?;
-                // seed (4), outer (5), cutouts (7), islands (7).
+                // seed (4), outer (5), bounds (6, docs/adr/0328 §3), cutouts (7), islands (7).
                 self.key("seed");
                 self.at(Seg::Name("seed"), |e| e.point(&a.seed))?;
-                self.key("outer");
-                self.at(Seg::Name("outer"), |e| e.id(&a.outer.0))?;
-                for (key, ids) in [("cutouts", &a.cutouts), ("islands", &a.islands)] {
+                if let Some(outer) = &a.outer {
+                    self.key("outer");
+                    self.at(Seg::Name("outer"), |e| e.id(&outer.0))?;
+                }
+                for (key, ids) in [("bounds", &a.bounds), ("cutouts", &a.cutouts), ("islands", &a.islands)] {
                     if ids.is_empty() {
                         continue;
                     }

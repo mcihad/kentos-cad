@@ -96,10 +96,7 @@ impl Document {
             }
             Entity::Hatch(h) => {
                 if let Some(assoc) = &h.assoc {
-                    let gone = std::iter::once(&assoc.outer)
-                        .chain(&assoc.islands)
-                        .chain(&assoc.cutouts)
-                        .any(|id| self.gone(id.0));
+                    let gone = assoc.objects().any(|id| self.gone(id.0));
                     if gone {
                         say(
                             AuditKind::BrokenHatch,

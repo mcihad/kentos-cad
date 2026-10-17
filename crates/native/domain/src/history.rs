@@ -607,6 +607,9 @@ impl Document {
     /// name (dimension_ties.rs, docs/adr/0249 §3) after `ops`, applied and
     /// joined to them.
     pub(crate) fn follow_into(&mut self, ops: &mut Vec<Op>) {
+        // First: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
+        let settled = self.settle_boundaries(ops);
+        ops.extend(settled);
         let follow = self.follow_links(ops);
         ops.extend(follow);
         // After the linked texts: a text a hatch leaves open may have moved with its object.

@@ -232,6 +232,8 @@ pub(super) struct Features {
     pub(super) multileader: bool,
     /// Schema 68: a table's `styles`, `formulas`, `fields`, `link` and `schedule` (docs/adr/0327).
     pub(super) table_cells: bool,
+    /// Schema 69: a hatch's `boundary` and its tie's `bounds` (docs/adr/0328).
+    pub(super) hatch_boundaries: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -315,6 +317,7 @@ impl Features {
             text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
             multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
             table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
+            hatch_boundaries: schema >= crate::SCHEMA_WITH_HATCH_BOUNDARIES,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -433,6 +436,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Hatch => {
                 matches!(key, "ring" | "holes" | "pattern")
                     || (has.hatches && has.uids && key == "assoc")
+                    || (has.hatch_boundaries && key == "boundary")
             }
             Kind::Insert => {
                 matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
@@ -600,6 +604,8 @@ struct Fields {
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
     assoc: Option<HatchAssoc>,
+    /// A hatch's exact boundary (schema 69, docs/adr/0328 §1).
+    hatch_boundary: Option<Vec<kentos_contracts::HatchLoop>>,
     /// A dimension's references (docs/adr/0249 §4).
     refs: Option<DimensionRefs>,
     /// A dimension's moved value and breaks (docs/adr/0321).
@@ -1144,7 +1150,14 @@ pub(super) fn object(
                 f.style = Some(named(r, known)?)
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
-            "assoc" => f.assoc = Some(hatch_assoc(r)?),
+            "assoc" => f.assoc = Some(hatch_assoc(r, has.hatch_boundaries)?),
+            "boundary" if kind == Kind::Hatch => {
+                let (b, at): (Vec<kentos_contracts::HatchLoop>, usize) = json_part(r, "taramanın sınırı")?;
+                if let Some(words) = kentos_contracts::boundary_problem(&b) {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.hatch_boundary = Some(b);
+            }
             "refs" => {
                 f.refs = Some(dimension_refs(
                     r,
@@ -1933,6 +1946,7 @@ fn build(
             holes: f.loops.take(),
             pattern: required(r, f.pattern.take(), "pattern")?,
             assoc: f.assoc.take(),
+            boundary: f.hatch_boundary.take(),
         }),
         Kind::Insert => {
             let scale = required(r, f.scale, "scale")?;
@@ -2782,14 +2796,16 @@ fn wipeout(r: &mut Reader<'_>) -> Result<kentos_contracts::Wipeout, KcadError> {
     })
 }
 
-fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
+fn hatch_assoc(r: &mut Reader<'_>, faces: bool) -> Result<HatchAssoc, KcadError> {
     let at = r.position();
     let (mut seed, mut outer, mut islands, mut cutouts) = (None, None, Vec::new(), Vec::new());
+    let mut bounds = Vec::new();
     map(r, |r, key| {
         match key {
             "seed" => seed = Some(point(r)?),
             "outer" => outer = Some(EntityId(id16(r)?)),
-            "cutouts" | "islands" => {
+            // A face's line work (schema 69, docs/adr/0328 §3).
+            "cutouts" | "islands" | "bounds" if key != "bounds" || faces => {
                 let at = r.position();
                 let ids = list(r, |r, _| Ok(EntityId(id16(r)?)))?;
                 // The writer leaves an empty list out: one spelling (§6.6).
@@ -2800,18 +2816,23 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
                         "nesne listesi boş; nesnesi olmayan listenin alanı yazılmaz",
                     ));
                 }
-                if key == "cutouts" {
-                    cutouts = ids;
-                } else {
-                    islands = ids;
+                match key {
+                    "cutouts" => cutouts = ids,
+                    "bounds" => bounds = ids,
+                    _ => islands = ids,
                 }
             }
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
+    // Before schema 69 a tie always names its closed object.
+    if !faces && outer.is_none() {
+        return Err(r.fail_at(Code::BadValue, at, "taramanın ilişkisinde outer eksik"));
+    }
     let a = HatchAssoc {
-        outer: required(r, outer, "outer")?,
+        outer,
+        bounds,
         islands,
         cutouts,
         seed: required(r, seed, "seed")?,

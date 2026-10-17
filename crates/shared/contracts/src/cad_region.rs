@@ -126,7 +126,8 @@ pub enum HatchWay {
     #[default]
     Object,
     /// Çizgiler (AutoCAD's): the face the boundaries' line work closes
-    /// around the point, closed groups inside it its islands; it follows nothing.
+    /// around the point, closed groups inside it its islands; with İlişkili it
+    /// follows that line work (docs/adr/0328 §3).
     Lines,
 }
 
@@ -166,7 +167,8 @@ pub enum HatchRegion {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         texts: Option<bool>,
-        /// İlişkili (`object` only): the hatch follows its objects; absent: true.
+        /// İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
+        /// docs/adr/0328 §3); absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,

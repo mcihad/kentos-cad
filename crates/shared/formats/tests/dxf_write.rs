@@ -358,6 +358,7 @@ fn objects() -> Vec<Entity> {
             path: None,
         }),
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("yapi"),
             ring: vec![tm(0.0, 0.0), tm(40.0, 0.0), tm(40.0, 30.0), tm(0.0, 30.0)],
             holes: Some(vec![
@@ -368,6 +369,7 @@ fn objects() -> Vec<Entity> {
             assoc: None,
         }),
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("yapi"),
             ring: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
             holes: None,
@@ -375,6 +377,7 @@ fn objects() -> Vec<Entity> {
             assoc: None,
         }),
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("yapi"),
             ring: vec![tm(70.0, 0.0), tm(80.0, 0.0), tm(75.0, 8.0)],
             holes: None,
@@ -382,6 +385,7 @@ fn objects() -> Vec<Entity> {
             assoc: None,
         }),
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("yapi"),
             ring: vec![tm(90.0, 0.0), tm(100.0, 0.0), tm(95.0, 8.0)],
             holes: None,
@@ -3338,4 +3342,104 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
         .sum();
     assert_eq!(kinds(&r, "dimension") + exploded as usize, n, "{:?}", r.report);
     assert!(kinds(&r, "dimension") >= 4);
+}
+
+/// A hatch's exact boundary (docs/adr/0328 §1): its arcs, an ellipse's hole and a spline edge go out as HATCH edges
+/// and come back as the same loops, within a nanometre and a billionth of a radian; nothing is taken in pieces.
+#[test]
+fn a_hatch_boundary_goes_out_and_comes_back_exact() {
+    use kentos_contracts::{HatchCurve, HatchLoop};
+    use std::f64::consts::TAU;
+    let o = tm(0.0, 0.0);
+    let p = |x: f64, y: f64| v(o.x + x, o.y + y);
+    let boundary = vec![
+        HatchLoop {
+            pts: vec![p(0.0, 0.0), p(12.0, 0.0), p(12.0, 8.0), p(0.0, 8.0)],
+            bulges: Some(vec![0.0, -0.25, 0.0, 0.4]),
+            curves: None,
+        },
+        HatchLoop {
+            pts: vec![p(8.0, 4.0)],
+            bulges: None,
+            curves: Some(vec![Some(HatchCurve::Ellipse {
+                c: p(6.0, 4.0),
+                major: v(2.0, 0.0),
+                ratio: 0.5,
+                t0: 0.0,
+                t1: -TAU,
+            })]),
+        },
+        HatchLoop {
+            pts: vec![p(2.0, 1.0), p(4.0, 1.0)],
+            bulges: None,
+            curves: Some(vec![
+                None,
+                Some(HatchCurve::Nurbs {
+                    degree: 2,
+                    ctrl: vec![p(4.0, 1.0), p(3.0, 3.0), p(2.0, 1.0)],
+                    knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+                    weights: Some(vec![1.0, 0.5, 1.0]),
+                }),
+            ]),
+        },
+    ];
+    let hatch = Entity::Hatch(HatchEntity {
+        base: base("yapi"),
+        ring: vec![p(0.0, 0.0), p(12.0, 0.0), p(12.0, 8.0), p(0.0, 8.0)],
+        holes: None,
+        pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
+        assoc: None,
+        boundary: Some(boundary.clone()),
+    });
+    let (text, _) = write(&input(vec![hatch]));
+    let r = read(&text);
+    assert!(
+        r.report.notes.iter().all(|n| !n.reason.contains("parçalı")),
+        "{:?}",
+        r.report.notes
+    );
+    // The outer loop with its islands: the reader makes one hatch of the outer ring and its holes.
+    let got: Vec<HatchLoop> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Hatch(h) => h.boundary.clone(),
+            _ => None,
+        })
+        .flatten()
+        .collect();
+    assert_eq!(got.len(), 3, "{got:#?}");
+    let near = |a: Vec2, b: Vec2| kentos_formats::math::hypot(a.x - b.x, a.y - b.y) < 1e-9;
+    for (g, w) in got.iter().zip(&boundary) {
+        assert_eq!(g.pts.len(), w.pts.len(), "{g:?}");
+        assert!(g.pts.iter().zip(&w.pts).all(|(a, b)| near(*a, *b)), "{g:?}");
+        for (i, (a, b)) in g
+            .bulges
+            .clone()
+            .unwrap_or(vec![0.0; g.pts.len()])
+            .iter()
+            .zip(w.bulges.clone().unwrap_or(vec![0.0; w.pts.len()]))
+            .enumerate()
+        {
+            assert!((a - b).abs() < 1e-9, "{i}: {a} {b}");
+        }
+        let curves = |l: &HatchLoop| l.curves.clone().unwrap_or(vec![None; l.pts.len()]);
+        for (a, b) in curves(g).iter().zip(curves(w)) {
+            match (a, b) {
+                (None, None) => {}
+                (
+                    Some(HatchCurve::Ellipse { c, major, ratio, t0, t1 }),
+                    Some(HatchCurve::Ellipse { c: c2, major: m2, ratio: r2, t0: s0, t1: s1 }),
+                ) => {
+                    assert!(near(*c, c2) && near(*major, m2) && (ratio - r2).abs() < 1e-12);
+                    assert!(((t1 - t0) - (s1 - s0)).abs() < 1e-9, "{t0} {t1}");
+                }
+                (Some(HatchCurve::Nurbs { ctrl, weights, .. }), Some(HatchCurve::Nurbs { ctrl: c2, weights: w2, .. })) => {
+                    assert!(ctrl.iter().zip(&c2).all(|(a, b)| near(*a, *b)));
+                    assert_eq!(weights.as_deref(), w2.as_deref());
+                }
+                (a, b) => panic!("{a:?} {b:?}"),
+            }
+        }
+    }
 }

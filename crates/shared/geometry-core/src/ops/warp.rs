@@ -158,6 +158,8 @@ impl Warp {
 trait Map {
     fn at(&self, p: Vec2) -> Result<Vec2, Beyond>;
     fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond>;
+    /// The linear part when the map is affine everywhere.
+    fn linear_part(&self) -> Option<Jacobian>;
 }
 
 impl Map for Warp {
@@ -167,6 +169,9 @@ impl Map for Warp {
     fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond> {
         self.jacobian(p)
     }
+    fn linear_part(&self) -> Option<Jacobian> {
+        self.linear()
+    }
 }
 
 impl Map for Sheet {
@@ -175,6 +180,9 @@ impl Map for Sheet {
     }
     fn jac(&self, p: Vec2) -> Result<Jacobian, Beyond> {
         Ok(self.jacobian(p))
+    }
+    fn linear_part(&self) -> Option<Jacobian> {
+        None
     }
 }
 
@@ -791,6 +799,7 @@ fn common<M: Map + ?Sized>(
             holes,
             pattern,
             assoc,
+            boundary,
         } => {
             let n = ring.len().max(1) as f64;
             let mean = Vec2::new(
@@ -816,7 +825,14 @@ fn common<M: Map + ?Sized>(
                 }
             };
             let map = |ps: &Vec<Vec2>| ps.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>();
+            // The exact boundary under a linear warp (docs/adr/0328 §1); a projective one or a sheet bends it: the
+            // drawn ring alone goes on.
+            let linear = m.linear_part();
             kept(Shape::Hatch {
+                boundary: match (boundary, linear) {
+                    (Some(b), Some(j)) => crate::geom::hatch_boundary::mapped(b, &|p| m.at(p).ok(), j),
+                    _ => None,
+                },
                 ring: map(ring)?,
                 holes: match holes {
                     Some(hs) => Some(hs.iter().map(map).collect::<Result<Vec<_>, _>>()?),

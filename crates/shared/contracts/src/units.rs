@@ -333,6 +333,20 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             if let Some(a) = &mut h.assoc {
                 s.point(&mut a.seed);
             }
+            // The exact boundary (docs/adr/0328 §1): its points, an ellipse's centre and axis, a curve's control
+            // points; bulges, ratios, parameters, knots and weights have no length.
+            for l in h.boundary.iter_mut().flatten() {
+                s.points(&mut l.pts);
+                for c in l.curves.iter_mut().flatten().flatten() {
+                    match c {
+                        crate::HatchCurve::Ellipse { c, major, .. } => {
+                            s.point(c);
+                            s.point(major);
+                        }
+                        crate::HatchCurve::Nurbs { ctrl, .. } => s.points(ctrl),
+                    }
+                }
+            }
         }
         // Its definition is scaled with the drawing: its own scale stays.
         Entity::Insert(i) => s.point(&mut i.p),

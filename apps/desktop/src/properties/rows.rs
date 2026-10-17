@@ -2325,7 +2325,7 @@ fn hatch_rows(
         ]);
     }
     let tie = match &h.assoc {
-        Some(a) => format!("Evet ({} nesne)", 1 + a.islands.len() + a.cutouts.len()),
+        Some(a) => format!("Evet ({} nesne)", a.objects().count()),
         None => "Hayır".to_owned(),
     };
     let untie = (h.assoc.is_some() && !locked).then(|| Editor::Select {

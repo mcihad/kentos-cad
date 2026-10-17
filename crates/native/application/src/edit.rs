@@ -803,6 +803,7 @@ pub(crate) fn check_geometry(
             holes,
             pattern,
             assoc,
+            boundary,
         } => {
             // Its pattern's own fields within their bounds, its tie's too (docs/adr/0186 §1, §6); a
             // number that is not finite is said as such below (`not_finite`).
@@ -817,7 +818,23 @@ pub(crate) fn check_geometry(
                     at(&format!(".{field}")),
                 )));
             }
-            if ring.len() < 3 {
+            // Its exact boundary in the contract's form, its curves ending at its points (docs/adr/0328 §1); the
+            // ring is then drawn from it.
+            if let Some(b) = boundary {
+                let words = kentos_contracts::boundary_problem(b).or_else(|| {
+                    kentos_domain::hatch_boundaries::drawn(b)
+                        .is_none()
+                        .then(|| "Tarama sınırının eğrileri kenarlarının uçlarında başlayıp bitmiyor ya da sınır bir alan kapatmıyor.".to_owned())
+                });
+                if let Some(words) = words {
+                    return Err(Stop::failed(error(
+                        codes::INVALID_HATCH,
+                        words,
+                        at(".boundary"),
+                    )));
+                }
+            }
+            if boundary.is_none() && ring.len() < 3 {
                 return Err(Stop::failed(error(
                     codes::TOO_FEW_CORNERS,
                     format!(
@@ -1637,6 +1654,7 @@ fn finite(g: &EntityGeometry) -> bool {
             holes,
             pattern,
             assoc,
+            ..
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))

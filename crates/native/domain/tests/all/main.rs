@@ -7,6 +7,7 @@ mod dimension_ties;
 mod exchange;
 mod external;
 mod fixtures;
+mod hatch_boundaries;
 mod identity;
 mod layer_fields;
 mod layer_rules;

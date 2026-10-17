@@ -1510,6 +1510,8 @@ fn shape(entity: &Entity) -> Shape {
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
             pattern: core_pattern(&h.pattern),
             assoc: None,
+            // The scene draws the ring the boundary drew (docs/adr/0328 §1).
+            boundary: None,
         },
         // The scene draws no text: an attribute's value does not matter here.
         Entity::Insert(i) => Shape::Insert {

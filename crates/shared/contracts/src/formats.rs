@@ -181,7 +181,12 @@ use crate::layer::LineType;
 /// 74 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script:
 ///    `.kcad` document schema 65; in the typed columns the text's option 16 (its JSON text) and a run's flags 8 and 16
 ///    together. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 77;
+/// 75–77 (docs/adr/0325–0327): a text's `fields`, a leader's arms and blocks, a table's cells: `.kcad` document
+///    schemas 66–68, each its JSON text in the typed columns. The web's copy stays 53.
+/// 78 (docs/adr/0328): a hatch's exact `boundary` and a face's tie (`bounds`, no `outer`): `.kcad` document schema
+///    69; in the typed columns the hatch's option bit 6 and one JSON text, a face's tie with an empty outer id. The
+///    web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 78;
 
 // ── Every import ────────────────────────────────────────────────────────
 

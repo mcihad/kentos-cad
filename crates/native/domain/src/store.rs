@@ -102,17 +102,13 @@ fn fields_of(stored: &Stored) -> Option<(Vec<Uuid>, bool)> {
     Some((of, always))
 }
 
-/// The objects a hatch's region follows: its closed object, islands and
-/// cutouts (docs/adr/0186 §6); the objects an associative dimension's points
+/// The objects a hatch's region follows: its closed object or its face's
+/// line work, islands and cutouts (docs/adr/0186 §6, 0328 §3); the objects an associative dimension's points
 /// follow while their references hold (docs/adr/0249 §3).
 fn ties_of(stored: &Stored) -> Vec<Uuid> {
     match &*stored.entity {
         Entity::Hatch(h) => h.assoc.as_ref().map_or_else(Vec::new, |a| {
-            std::iter::once(&a.outer)
-                .chain(&a.islands)
-                .chain(&a.cutouts)
-                .map(|id| Uuid::from_bytes(id.0))
-                .collect()
+            a.objects().map(|id| Uuid::from_bytes(id.0)).collect()
         }),
         Entity::Dimension(d) => d.refs.as_ref().map_or_else(Vec::new, |r| {
             let mut of: Vec<Uuid> = r

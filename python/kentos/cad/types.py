@@ -3131,6 +3131,27 @@ class FieldSource(_Union):
         return _variant(_FIELD_SOURCE, "FieldSource", "kind", data).from_json(data)
 
 
+class HatchCurve(_Union):
+    """A boundary edge that is no line or circular arc (docs/adr/0328 §1).
+
+    One of:
+
+    - :class:`EllipseHatchCurve` (``kind: ellipse``)
+    - :class:`NurbsHatchCurve` (``kind: nurbs``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchCurve:
+        return _variant(_HATCH_CURVE, "HatchCurve", "kind", data).from_json(data)
+
+
 class HatchRegion(_Union):
     """Where Tarama hatches.
 
@@ -11945,34 +11966,41 @@ class GridChoice(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class HatchAssoc(_Model):
-    """The objects a hatch made inside a closed object follows (docs/adr/0186
-    §6): the closed object, its islands, the texts and inserts left open, and
-    the point clicked inside, which picks the region's part.
+    """The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
+    object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
+    (`bounds`: the objects whose line work bounds it, its islands' too) follows that line work; the point clicked
+    inside picks the region's part or face. Exactly one of `outer` and `bounds` is given.
     Attributes:
         seed: Unit: length.
+        bounds: The objects whose line work closes its face (docs/adr/0328 §3).
     """
-    outer: str
     seed: Vec2
+    bounds: list[str] | Unset = UNSET
     cutouts: list[str] | Unset = UNSET
     islands: list[str] | Unset = UNSET
+    outer: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
-        out["outer"] = self.outer
         out["seed"] = _vec2_out(self.seed)
+        if self.bounds is not UNSET:
+            out["bounds"] = list(self.bounds)
         if self.cutouts is not UNSET:
             out["cutouts"] = list(self.cutouts)
         if self.islands is not UNSET:
             out["islands"] = list(self.islands)
+        if self.outer is not UNSET:
+            out["outer"] = self.outer
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchAssoc:
         return cls(
-            outer=data["outer"],
             seed=Vec2.from_json(data["seed"]),
+            bounds=list(data["bounds"]) if "bounds" in data else UNSET,
             cutouts=list(data["cutouts"]) if "cutouts" in data else UNSET,
             islands=list(data["islands"]) if "islands" in data else UNSET,
+            outer=data.get("outer", UNSET),
         )
 
 
@@ -11989,6 +12017,9 @@ class HatchEntity(Entity):
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
+        boundary: Its boundary as its source holds it (docs/adr/0328 §1): the outer loop, then the holes', lines, arcs,
+            ellipses' arcs and NURBS curves exact; `ring` and `holes` are drawn from it (arcs and curves as chords). None:
+            the ring and holes are all it has.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -12019,6 +12050,7 @@ class HatchEntity(Entity):
     pattern: HatchPattern
     assoc: HatchAssoc | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
+    boundary: list[HatchLoop] | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
@@ -12044,6 +12076,8 @@ class HatchEntity(Entity):
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.attachments is not UNSET:
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.boundary is not UNSET:
+            out["boundary"] = None if self.boundary is None else [e0.to_json() for e0 in self.boundary]
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -12082,6 +12116,7 @@ class HatchEntity(Entity):
             pattern=HatchPattern.from_json(data["pattern"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else [HatchLoop.from_json(e0) for e0 in data["boundary"]],
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
@@ -12122,6 +12157,38 @@ class HatchGradient(_Model):
             shape=_enum_in(GradientShape, data["shape"]),
             color2=data["color2"],
             inverted=data.get("inverted", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchLoop(_Model):
+    """One closed loop of a hatch's boundary as its source holds it (docs/adr/0328 §1): edge `i` runs from `pts[i]` to
+    the next point (the last to the first); it is straight, a circular arc of `bulges[i]` (tan(θ/4), counter-clockwise
+    positive, as a polygon's), or the curve `curves[i]` (an ellipse's arc or a NURBS curve), whose ends are those
+    points. A loop of one point is one closed curve.
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+    curves: list[HatchCurve | None] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.curves is not UNSET:
+            out["curves"] = None if self.curves is None else [None if e0 is None else e0.to_json() for e0 in self.curves]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchLoop:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            curves=UNSET if "curves" not in data else None if data["curves"] is None else [None if e0 is None else HatchCurve.from_json(e0) for e0 in data["curves"]],
         )
 
 
@@ -26923,12 +26990,15 @@ class HatchEntityGeometry(EntityGeometry):
     Attributes:
         ring: Unit: length.
         assoc: The objects its region follows (docs/adr/0186 §6).
+        boundary: Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
+            drawn from it and may be left empty.
         holes: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "hatch"
     ring: list[Vec2]
     pattern: HatchPattern
     assoc: HatchAssoc | None | Unset = UNSET
+    boundary: list[HatchLoop] | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -26937,6 +27007,8 @@ class HatchEntityGeometry(EntityGeometry):
         out["pattern"] = self.pattern.to_json()
         if self.assoc is not UNSET:
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
+        if self.boundary is not UNSET:
+            out["boundary"] = None if self.boundary is None else [e0.to_json() for e0 in self.boundary]
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [[_vec2_out(e1) for e1 in e0] for e0 in self.holes]
         return out
@@ -26947,6 +27019,7 @@ class HatchEntityGeometry(EntityGeometry):
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
+            boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else [HatchLoop.from_json(e0) for e0 in data["boundary"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
         )
 
@@ -27500,11 +27573,85 @@ class ProjectFieldSource(FieldSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class EllipseHatchCurve(HatchCurve):
+    """An ellipse's arc: centre `c`, major semi-axis `major` (from `c`), minor to major `ratio`, from parameter `t0`
+    to `t1` (radians): counter-clockwise when `t1` is past `t0`, clockwise when before it; a whole ellipse
+    `t1 = t0 ± 2π`.
+    Attributes:
+        c: Unit: length.
+        major: Unit: length.
+        ratio: Unit: 1.
+        t0: Unit: rad.
+        t1: Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "ellipse"
+    c: Vec2
+    major: Vec2
+    ratio: float
+    t0: float
+    t1: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ellipse"}
+        out["c"] = _vec2_out(self.c)
+        out["major"] = _vec2_out(self.major)
+        out["ratio"] = float(self.ratio)
+        out["t0"] = float(self.t0)
+        out["t1"] = float(self.t1)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EllipseHatchCurve:
+        return cls(
+            c=Vec2.from_json(data["c"]),
+            major=Vec2.from_json(data["major"]),
+            ratio=float(data["ratio"]),
+            t0=float(data["t0"]),
+            t1=float(data["t1"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NurbsHatchCurve(HatchCurve):
+    """A NURBS curve run whole, from its first knot to its last.
+    Attributes:
+        degree: Unit: count.
+        ctrl: Unit: length.
+        knots: Unit: 1.
+        weights: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "nurbs"
+    degree: int
+    ctrl: list[Vec2]
+    knots: list[float]
+    weights: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "nurbs"}
+        out["degree"] = self.degree
+        out["ctrl"] = [_vec2_out(e0) for e0 in self.ctrl]
+        out["knots"] = [float(e0) for e0 in self.knots]
+        if self.weights is not UNSET:
+            out["weights"] = None if self.weights is None else [float(e0) for e0 in self.weights]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NurbsHatchCurve:
+        return cls(
+            degree=data["degree"],
+            ctrl=[Vec2.from_json(e0) for e0 in data["ctrl"]],
+            knots=[float(e0) for e0 in data["knots"]],
+            weights=UNSET if "weights" not in data else None if data["weights"] is None else [float(e0) for e0 in data["weights"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointHatchRegion(HatchRegion):
     """The region around `at`.
     Attributes:
         at: Unit: length.
-        associative: İlişkili (`object` only): the hatch follows its objects; absent: true.
+        associative: İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
+            docs/adr/0328 §3); absent: true.
         boundaries: `lines`: whose line work closes the region; absent: every shown object.
         boundary_layer: `lines`: only this layer's line work counts (Sınır katmanı).
         islands: Adalar: the islands are left unhatched; absent: true.
@@ -30526,6 +30673,9 @@ _FIELD_EDIT: dict[str, type[FieldEdit]] = {"insert": InsertFieldEdit, "remove": 
 _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "project": ProjectFieldSource}
 
 
+_HATCH_CURVE: dict[str, type[HatchCurve]] = {"ellipse": EllipseHatchCurve, "nurbs": NurbsHatchCurve}
+
+
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
@@ -30884,6 +31034,7 @@ __all__ = [
     "EllipseConstructedCurve",
     "EllipseEntity",
     "EllipseEntityGeometry",
+    "EllipseHatchCurve",
     "Ellipsoid",
     "EmptyInput",
     "EndSubPlace",
@@ -30999,9 +31150,11 @@ __all__ = [
     "GridChoice",
     "GridTableEdit",
     "HatchAssoc",
+    "HatchCurve",
     "HatchEntity",
     "HatchEntityGeometry",
     "HatchGradient",
+    "HatchLoop",
     "HatchPattern",
     "HatchPatternSpec",
     "HatchPatternType",
@@ -31218,6 +31371,7 @@ __all__ = [
     "NurbsCreated",
     "NurbsEntity",
     "NurbsEntityGeometry",
+    "NurbsHatchCurve",
     "NurbsPlan",
     "ObjectEnd",
     "ObjectFieldSource",

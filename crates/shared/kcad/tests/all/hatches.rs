@@ -40,6 +40,7 @@ fn v(x: f64, y: f64) -> Vec2 {
 
 fn hatch(pattern: HatchPattern, assoc: Option<HatchAssoc>) -> Entity {
     Entity::Hatch(HatchEntity {
+        boundary: None,
         base: EntityBase {
             look: Default::default(),
             id: 0,
@@ -112,7 +113,8 @@ fn only_a_drawing_with_a_pattern_a_gradient_or_a_tie_is_schema_23() {
     // Lines that follow their objects: the tie is schema 23's.
     let mut doc = drawing(vec![hatch(lines, None)]);
     let tie = HatchAssoc {
-        outer: doc.uids[0],
+        outer: Some(doc.uids[0]),
+        bounds: Vec::new(),
         islands: Vec::new(),
         cutouts: Vec::new(),
         seed: v(1.0, 1.0),
@@ -144,7 +146,7 @@ fn patterns_and_ties_come_back_bit_for_bit() {
     let a = tied.assoc.as_ref().expect("its tie");
     assert_eq!(
         (a.outer, a.islands.as_slice(), a.cutouts.as_slice()),
-        (doc.uids[0], &doc.uids[1..2], &doc.uids[2..3])
+        (Some(doc.uids[0]), &doc.uids[1..2], &doc.uids[2..3])
     );
 }
 
@@ -167,7 +169,8 @@ fn the_writer_refuses_what_the_reader_would() {
     // A tie names each object once.
     let id = EntityId([0x55; 16]);
     let twice = HatchAssoc {
-        outer: id,
+        outer: Some(id),
+        bounds: Vec::new(),
         islands: vec![id],
         cutouts: Vec::new(),
         seed: v(1.0, 1.0),
@@ -178,7 +181,8 @@ fn the_writer_refuses_what_the_reader_would() {
     // A block definition's objects have no persistent ids for a tie to name.
     let mut doc = content("blocks.json");
     let tie = HatchAssoc {
-        outer: id,
+        outer: Some(id),
+        bounds: Vec::new(),
         islands: Vec::new(),
         cutouts: Vec::new(),
         seed: v(1.0, 1.0),

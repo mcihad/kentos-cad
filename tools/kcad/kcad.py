@@ -224,6 +224,13 @@ MAX_LEADER_ARMS = 64
 # Schema 68: schema 67, a table's `styles`, `formulas`, `fields`, its linked file's `link` and a block schedule's
 # `schedule` (docs/adr/0327).
 SCHEMA_WITH_TABLE_CELLS = 68
+# Schema 69: schema 68, a hatch's exact `boundary` (loops of lines, arcs, ellipses' arcs and NURBS curves) and a tie's
+# `bounds` (the line work a face follows; `outer` then absent) (docs/adr/0328).
+SCHEMA_WITH_HATCH_BOUNDARIES = 69
+MAX_BOUNDARY_LOOPS = 100_000
+MAX_LOOP_EDGES = 1_000_000
+MAX_CURVE_POINTS = 100_000
+MAX_CURVE_DEGREE = 10
 MAX_CELL_STYLES = 1000
 MAX_FORMULAS = 10_000
 MAX_CELL_FIELDS = 1000
@@ -423,7 +430,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1937,6 +1944,7 @@ class _Schema:
         self.text_fields = version >= SCHEMA_WITH_TEXT_FIELDS
         self.multileader = version >= SCHEMA_WITH_MULTILEADER
         self.table_cells = version >= SCHEMA_WITH_TABLE_CELLS
+        self.hatch_boundaries = version >= SCHEMA_WITH_HATCH_BOUNDARIES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4593,13 +4601,91 @@ class _Schema:
         return self.array(self.id16)(v)
 
     def hatch_assoc(self, v):
-        a = self.fields({"outer": (self.id16, True), "islands": (self.assoc_ids, False), "cutouts": (self.assoc_ids, False), "seed": (self.point, True)})(v)
-        named = [a["outer"], *a.get("islands", []), *a.get("cutouts", [])]
-        if len(named) - 1 > MAX_ASSOC_OBJECTS:
-            self.fail("bad_value", f"taramanın ilişkisi {len(named) - 1} nesne gösteriyor; en çok {MAX_ASSOC_OBJECTS} olmalı")
+        # Schema 69 (docs/adr/0328 §3): a face's tie names its line work (`bounds`) and no closed object.
+        table = {"outer": (self.id16, not self.hatch_boundaries), "islands": (self.assoc_ids, False), "cutouts": (self.assoc_ids, False), "seed": (self.point, True)}
+        if self.hatch_boundaries:
+            table["bounds"] = (self.assoc_ids, False)
+        a = self.fields(table)(v)
+        if ("outer" in a) == ("bounds" in a):
+            self.fail("bad_value", "taramanın ilişkisi ya kapalı nesneyi (outer) ya da sınır nesnelerini (bounds) gösterir")
+        named = [*([a["outer"]] if "outer" in a else []), *a.get("bounds", []), *a.get("islands", []), *a.get("cutouts", [])]
+        if len(named) - ("outer" in a) > MAX_ASSOC_OBJECTS:
+            self.fail("bad_value", f"taramanın ilişkisi {len(named)} nesne gösteriyor; en çok {MAX_ASSOC_OBJECTS} olmalı")
         if len(set(named)) != len(named):
             self.fail("bad_value", "taramanın ilişkisi bir nesneyi iki kez gösteriyor")
         return a
+
+    # A hatch's exact boundary (schema 69, docs/adr/0328 §1): the contract's form (kentos_contracts::boundary_problem),
+    # in its order; whether a curve ends at its loop's points is the geometry's, not the file's.
+
+    def xy(self, v):
+        return self.fields({"x": (self.float, True), "y": (self.float, True)})(v)
+
+    def hatch_curve(self, v):
+        if type(v) is not dict:
+            self.fail("wrong_type", "harita olmalı")
+        if v.get("kind") == "ellipse":
+            c = self.fields({"kind": (self.text, True), "c": (self.xy, True), "major": (self.xy, True), "ratio": (self.float, True), "t0": (self.float, True), "t1": (self.float, True)})(v)
+            nums = [c["c"]["x"], c["c"]["y"], c["major"]["x"], c["major"]["y"], c["ratio"], c["t0"], c["t1"]]
+            if not all(math.isfinite(x) for x in nums):
+                self.fail("bad_value", "elips kenarında sonlu olmayan bir sayı var")
+            if not 0.0 < c["ratio"] <= 1.0 or (c["major"]["x"] == 0.0 and c["major"]["y"] == 0.0):
+                self.fail("bad_value", "elips kenarının büyük ekseni sıfır olamaz, oranı 0 ile 1 arasında olmalı")
+            sweep = abs(c["t1"] - c["t0"])
+            if sweep == 0.0 or sweep > 2 * math.pi * (1 + 1e-12):
+                self.fail("bad_value", "elips kenarının açıklığı sıfır olamaz ve bir turu aşamaz")
+            return c
+        if v.get("kind") == "nurbs":
+            c = self.fields({"kind": (self.text, True), "degree": (self.uint(32), True), "ctrl": (self.array(self.xy), True), "knots": (self.array(self.float), True), "weights": (self.array(self.float), False)})(v)
+            p, ctrl, knots = c["degree"], c["ctrl"], c["knots"]
+            n = len(ctrl)
+            if not 1 <= p <= MAX_CURVE_DEGREE:
+                self.fail("bad_value", f"NURBS kenarının derecesi {p}; 1 ile {MAX_CURVE_DEGREE} arasında olmalı")
+            if n <= p or n > MAX_CURVE_POINTS:
+                self.fail("bad_value", f"NURBS kenarının {n} denetim noktası var")
+            if len(knots) != n + p + 1:
+                self.fail("bad_value", f"NURBS kenarının {len(knots)} düğümü var; {n + p + 1} olmalı")
+            if (not all(math.isfinite(q["x"]) and math.isfinite(q["y"]) for q in ctrl) or not all(math.isfinite(k) for k in knots)
+                    or any(b < a for a, b in zip(knots, knots[1:])) or knots[p] >= knots[n]):
+                self.fail("bad_value", "NURBS kenarının noktaları sonlu, düğümleri artan olmalı")
+            if "weights" in c and (len(c["weights"]) != n or not all(math.isfinite(w) and w > 0 for w in c["weights"])):
+                self.fail("bad_value", "NURBS kenarının ağırlıkları denetim noktaları kadar ve sıfırdan büyük olmalı")
+            return c
+        self.fail("bad_value", f"eğri kenarı “{v.get('kind')}” bilinmiyor (ellipse, nurbs)")
+
+    def hatch_loop(self, v):
+        def curve_or_null(c):
+            return None if c is None else self.hatch_curve(c)
+        lp = self.fields({"pts": (self.array(self.xy), True), "bulges": (self.array(self.float), False), "curves": (self.array(curve_or_null), False)})(v)
+        pts, n = lp["pts"], len(lp["pts"])
+        if n == 0 or n > MAX_LOOP_EDGES:
+            self.fail("bad_value", f"tarama sınırının bir halkasında {n} nokta var")
+        if not all(math.isfinite(q["x"]) and math.isfinite(q["y"]) for q in pts):
+            self.fail("bad_value", "tarama sınırında sonlu olmayan bir nokta var")
+        bulges = lp.get("bulges")
+        if bulges is not None and (len(bulges) != n or not all(math.isfinite(b) for b in bulges)):
+            self.fail("bad_value", "tarama sınırının bükümleri noktaları kadar ve sonlu olmalı")
+        curves = lp.get("curves")
+        if curves is not None:
+            if len(curves) != n:
+                self.fail("bad_value", "tarama sınırının eğrileri noktaları kadar olmalı")
+            for i, c in enumerate(curves):
+                if c is not None and bulges is not None and bulges[i] != 0.0:
+                    self.fail("bad_value", "tarama sınırının eğri kenarının bükümü 0 olmalı")
+
+        def curved(i):
+            return (curves is not None and curves[i] is not None) or (bulges is not None and bulges[i] != 0.0)
+        if n == 1 and not (curves is not None and curves[0] is not None):
+            self.fail("bad_value", "tek noktalı halka kapalı bir eğri olmalı")
+        if n == 2 and not (curved(0) or curved(1)):
+            self.fail("bad_value", "iki noktalı halkanın en az bir kenarı eğri olmalı")
+        return lp
+
+    def hatch_boundary(self, v):
+        loops = self.array(self.hatch_loop)(v)
+        if not loops or len(loops) > MAX_BOUNDARY_LOOPS:
+            self.fail("bad_value", f"tarama sınırında {len(loops)} halka var; en az 1 olmalı")
+        return loops
 
     def sub_place(self, v):
         """A place on an object (docs/adr/0249 §1): its `kind`, then the numbers that kind has, each at most
@@ -5228,6 +5314,8 @@ ENTITY_KINDS = {
         "holes": (s.array(s.array(s.point)), False),
         "pattern": (s.hatch_pattern, True),
         **({"assoc": (s.hatch_assoc, False)} if s.hatches and s.inside is None else {}),
+        # Schema 69 (docs/adr/0328 §1): its exact boundary.
+        **({"boundary": (s.hatch_boundary, False)} if s.hatch_boundaries else {}),
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),

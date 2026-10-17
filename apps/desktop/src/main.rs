@@ -118,6 +118,8 @@ mod find_replace;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
+#[cfg(test)]
+mod hatch_boundary_scenes;
 mod history;
 #[cfg(test)]
 mod history_scenes;
