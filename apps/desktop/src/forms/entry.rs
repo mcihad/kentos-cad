@@ -92,7 +92,7 @@ pub struct Memory {
 /// The window.
 pub struct Entry {
     form: String,
-    name: String,
+    pub(crate) name: String,
     draft: bool,
     uid: String,
     screen: RecordScreen,
@@ -143,6 +143,14 @@ pub struct Entry {
     turn: u64,
     /// How many pages of suggestions a searched list shows (Daha fazla).
     pages: BTreeMap<String, usize>,
+    /// The children linked or unlinked in this window, by the related item (docs/adr/0440 §2): written
+    /// with the record by Kaydet, dropped by Vazgeç.
+    links: Vec<(String, kentos_contracts::FormChild)>,
+    /// A related table's or cards' page shown, by the item (docs/adr/0440 §6).
+    related_pages: BTreeMap<String, usize>,
+    /// The record's snapshot as it stands in this window and the one its log's last step was taken on
+    /// (docs/adr/0440 §4): what a reviewer compares.
+    snapshot: Option<String>,
     /// A paged list's whole list for the record, by its item (docs/adr/0439 §1): what its search searches.
     whole: BTreeMap<String, Vec<kentos_contracts::FieldChoice>>,
     /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
@@ -206,6 +214,8 @@ pub enum Event {
     Value(String, String),
     /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
     Query(String, String),
+    /// A related item's page (docs/adr/0440 §6): its id and the page, from 0.
+    RelatedPage(String, usize),
     /// A searched list's turn came (docs/adr/0439 §6): the field's key and the search's number.
     Search(String, u64),
     /// A searched list shows a page more.
@@ -243,6 +253,10 @@ pub enum Event {
 
 /// How long typing pauses before a searched list is searched (docs/adr/0439 §6).
 const SEARCH_PAUSE: std::time::Duration = std::time::Duration::from_millis(150);
+/// A related table's or cards' page (docs/adr/0440 §6).
+const RELATED_PAGE: usize = 50;
+/// The most forms open one over another (docs/adr/0440 §7).
+pub(crate) const MOST_NESTED: usize = 4;
 /// The suggestions of a searched list's page.
 const SEARCH_PAGE: usize = 12;
 /// A list longer than this is searched rather than laid out.
@@ -345,6 +359,7 @@ impl Entry {
             moment,
         );
         self.items = prepared.described(&after, &self.screen.object);
+        self.snapshot = kentos_native_application::forms::record_snapshot(doc, &self.form, &self.uid, &after);
         // A paged list's search reaches every value (docs/adr/0439 §1).
         self.whole = self
             .items
@@ -462,9 +477,33 @@ impl Entry {
     /// A related item's objects now.
     #[cfg(test)]
     pub(crate) fn related_of(&self, item: &str) -> Vec<String> {
-        self.state(item)
+        self.related_now(item)
+    }
+
+    /// A related item's objects as this window has them (docs/adr/0440 §2): the drawing's, the ones
+    /// linked here after them, the ones unlinked here left out.
+    pub(crate) fn related_now(&self, item: &str) -> Vec<String> {
+        let mut out = self
+            .state(item)
             .and_then(|s| s.related.clone())
-            .unwrap_or_default()
+            .unwrap_or_default();
+        for (i, c) in &self.links {
+            if i != item {
+                continue;
+            }
+            if c.unlink {
+                out.retain(|u| *u != c.uid);
+            } else if !out.contains(&c.uid) {
+                out.push(c.uid.clone());
+            }
+        }
+        out
+    }
+
+    /// Whether the window holds links not written yet.
+    #[cfg(test)]
+    pub(crate) fn pending_for_tests(&self) -> usize {
+        self.links.len()
     }
 
     /// Whether a group is closed now.
@@ -499,7 +538,7 @@ impl Entry {
         if !self.members.is_empty() {
             return !self.values.is_empty();
         }
-        self.after != self.before
+        self.after != self.before || !self.links.is_empty()
     }
 
     /// The issue shown under a field: once touched, or after Kaydet; an error before a warning.
@@ -804,6 +843,9 @@ impl App {
             turn: 0,
             pages: BTreeMap::new(),
             whole: BTreeMap::new(),
+            links: Vec::new(),
+            related_pages: BTreeMap::new(),
+            snapshot: None,
             place: None,
             follows: BTreeSet::new(),
         };
@@ -979,6 +1021,54 @@ impl App {
             return Task::none();
         };
         let record = e.uid.clone();
+        // Through a project relation, the link waits for Kaydet with the record (docs/adr/0440 §2).
+        let relation = self.document.as_ref().and_then(|d| {
+            let form_layer = d
+                .model
+                .settings()
+                .forms
+                .iter()
+                .find(|f| f.id == e.form)
+                .map(|f| f.layer.clone())?;
+            d.model
+                .settings()
+                .relations
+                .iter()
+                .find(|r| r.parent == form_layer && r.child == layer && r.field == field)
+                .map(|r| r.id.clone())
+        });
+        if let Some(relation) = relation {
+            if let Some(e) = self.form_entry.as_mut() {
+                let undone = e
+                    .links
+                    .iter()
+                    .position(|(i, c)| *i == item && c.uid == uid && c.unlink == link);
+                match undone {
+                    // Linking what was unlinked here (or the other way) takes the pending one back.
+                    Some(at) => {
+                        e.links.remove(at);
+                    }
+                    None => e.links.push((
+                        item.to_owned(),
+                        kentos_contracts::FormChild {
+                            relation,
+                            uid: uid.to_owned(),
+                            values: BTreeMap::new(),
+                            unlink: !link,
+                        },
+                    )),
+                }
+            }
+            self.say(
+                Level::Info,
+                if link {
+                    "Nesne bağlanacak; Kaydet ile kayıtla birlikte yazılır."
+                } else {
+                    "Nesnenin bağı koparılacak; Kaydet ile kayıtla birlikte yazılır."
+                },
+            );
+            return Task::none();
+        }
         let Some((name, many)) = self
             .layer_fields_of(&layer)
             .iter()
@@ -1161,12 +1251,28 @@ impl App {
         Task::none()
     }
 
-    /// A related object's form, when the record shown has nothing unsaved.
+    /// The form closed: the record's form under it, if one waits, comes back with its draft and its
+    /// related objects read anew (docs/adr/0440 §7); else the window closes.
+    pub(crate) fn entry_closed(&mut self) -> Task<Message> {
+        self.form_entry = self.form_stack.pop();
+        if self.form_entry.is_none() {
+            self.dialog = None;
+            return Task::none();
+        }
+        let task = self.refresh_entry();
+        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+            e.recompute(&doc.model);
+        }
+        task
+    }
+
+    /// A related object's form over the record's (docs/adr/0440 §7): the record's form waits with its
+    /// draft and comes back when the child's closes; at most [`MOST_NESTED`] forms deep.
     fn open_related(&mut self, uid: &str) -> Task<Message> {
-        if self.form_entry.as_ref().is_some_and(Entry::dirty) {
+        if self.form_stack.len() + 1 >= MOST_NESTED {
             self.say(
                 Level::Warn,
-                "Kayıtta kaydedilmemiş değişiklik var: önce Kaydet’e ya da Vazgeç’e basın.",
+                format!("En çok {MOST_NESTED} form iç içe açılır; önce açık formlardan birini kapatın."),
             );
             return Task::none();
         }
@@ -1184,7 +1290,9 @@ impl App {
         };
         match self.form_of_layer(&layer) {
             Some(form) => {
-                self.form_entry = None;
+                if let Some(parent) = self.form_entry.take() {
+                    self.form_stack.push(parent);
+                }
                 self.selection.set([slot]);
                 self.open_entry(slot, &form)
             }
@@ -1228,6 +1336,10 @@ impl App {
             }
             Event::More(key) => {
                 *e.pages.entry(key).or_insert(1) += 1;
+                return Task::none();
+            }
+            Event::RelatedPage(item, page) => {
+                e.related_pages.insert(item, page);
                 return Task::none();
             }
             Event::Value(key, text) => {
@@ -1375,8 +1487,7 @@ impl App {
                     let (uid, form) = (e.uid.clone(), e.form.clone());
                     return self.redock(&uid, &form);
                 }
-                self.form_entry = None;
-                self.dialog = None;
+                return self.entry_closed();
             }
             Event::Save => return self.save_entry(),
             Event::Reload => {
@@ -1558,6 +1669,7 @@ impl App {
             // to this record, or a new release, is said instead of written over; Üzerine yaz drops them.
             expected_revision: None,
             opened: (!e.overwrite).then(|| e.before.clone()),
+            children: e.links.iter().map(|(_, c)| c.clone()).collect(),
             release: if e.draft || e.overwrite {
                 None
             } else {
@@ -1603,8 +1715,7 @@ impl App {
         }
         match self.answered(result) {
             Some(done) => {
-                self.form_entry = None;
-                self.dialog = None;
+                let back = self.entry_closed();
                 if let Some(uid) = &docked {
                     let _ = self.redock(uid, &form);
                 }
@@ -1615,13 +1726,13 @@ impl App {
                         .or_default()
                         .extend(reused);
                 }
-                let said = if done.changed {
-                    format!("Kayıt “{name}” formuyla yazıldı.")
-                } else {
-                    "Kayıtta değişiklik yok.".to_owned()
+                let said = match (done.changes.len(), done.children.len()) {
+                    (0, _) => "Kayıtta değişiklik yok.".to_owned(),
+                    (_, 0) => format!("Kayıt “{name}” formuyla yazıldı."),
+                    (_, n) => format!("Kayıt “{name}” formuyla, {n} alt kaydıyla birlikte yazıldı."),
                 };
                 self.say(Level::Success, said);
-                Task::none()
+                back
             }
             None => self.go_to_first_issue(),
         }
@@ -1737,6 +1848,17 @@ impl App {
         if e.draft {
             head.push_str(" · form yayınlanmadı, taslağıyla");
         }
+        // The forms waiting under this one (docs/adr/0440 §7), the nearest last.
+        if let Some(under) = self.form_stack.last() {
+            head.push_str(&format!(
+                " · altta “{}” formu bekliyor{}",
+                under.name,
+                match self.form_stack.len() {
+                    1 => String::new(),
+                    n => format!(" ({n} form)"),
+                }
+            ));
+        }
         // ◀ 3 / 12 ▶: the layer's records one after another (docs/adr/0408 §3).
         let step = |glyph: Icon, to: i32, can: bool| {
             iced::widget::button(icon(glyph).size(12.0))
@@ -1778,6 +1900,30 @@ impl App {
                     "Kayıt “{words_of}” durumunda; değiştirilemez. İş akışının bir adımı onu düzenlemeye açar."
                 ),
             )]));
+        }
+        // The snapshot the last step was taken on, against the record now (docs/adr/0440 §4).
+        let logged = e
+            .screen
+            .prepared
+            .workflow()
+            .and_then(|w| w.log.as_ref())
+            .and_then(|k| e.fields.iter().find(|f| f.key() == k))
+            .and_then(|f| e.before.get(&f.name))
+            .and_then(|log| kentos_native_application::forms::logged_snapshot(log).map(str::to_owned));
+        if let (Some(then), Some(now)) = (logged, e.snapshot.as_ref()) {
+            body = body.push(words::summary(vec![if then == *now {
+                words::text_line(
+                    Kind::Ok,
+                    format!("Son adım bu kayıt üzerinde atıldı (anlık görüntü #{then})."),
+                )
+            } else {
+                words::text_line(
+                    Kind::Warn,
+                    format!(
+                        "Kayıt, alt kayıtları ya da ekleri son adımdan sonra değişti: adım #{then} üzerinde atıldı, şimdi #{now}."
+                    ),
+                )
+            }]));
         }
         // A draft (docs/adr/0432): kept incomplete; the form's requirements warn until a step that
         // asks for a valid record.
@@ -2417,10 +2563,7 @@ impl App {
         id: &str,
         title: Option<&str>,
     ) -> Element<'a, Message> {
-        let uids = e
-            .state(id)
-            .and_then(|s| s.related.clone())
-            .unwrap_or_default();
+        let uids = e.related_now(id);
         let mut col = Column::new().spacing(6).push(
             row![
                 icon(Icon::Link).size(13.0),
@@ -2469,16 +2612,55 @@ impl App {
                 }
                 _ => Vec::new(),
             };
-        // A table of the other layer's fields, its numbers totalled (docs/adr/0425).
+        // A table of the other layer's fields, its numbers totalled (docs/adr/0425), or a card for each
+        // (docs/adr/0440 §6), a page at a time.
         if let (Some(d), Some(FormItem::Related {
             layer,
             field,
-            view: kentos_contracts::RelatedView::Table,
+            view: view @ (kentos_contracts::RelatedView::Table | kentos_contracts::RelatedView::Cards),
             columns,
             ..
         })) = (doc, crate::forms::designer::find(&e.body.items, id))
         {
-            col = col.push(related_table(d, layer, field, columns, &uids, e, id, live));
+            let page = e
+                .related_pages
+                .get(id)
+                .copied()
+                .unwrap_or(0)
+                .min(uids.len().saturating_sub(1) / RELATED_PAGE);
+            let shown_uids: Vec<String> = uids
+                .iter()
+                .skip(page * RELATED_PAGE)
+                .take(RELATED_PAGE)
+                .cloned()
+                .collect();
+            col = col.push(if *view == kentos_contracts::RelatedView::Cards {
+                related_cards(d, layer, field, columns, &shown_uids, e, id, live)
+            } else {
+                related_table(d, layer, field, columns, &uids, &shown_uids, e, id, live)
+            });
+            if uids.len() > RELATED_PAGE {
+                let pages = uids.len().div_ceil(RELATED_PAGE);
+                let first = page * RELATED_PAGE + 1;
+                let last = (first + RELATED_PAGE - 1).min(uids.len());
+                let go = |to: usize, glyph: Icon| {
+                    iced::widget::button(icon(glyph).size(12.0))
+                        .padding([3, 6])
+                        .style(style::button::tool(false))
+                        .on_press_maybe((to != page && to < pages).then(|| {
+                            e.msg(Event::RelatedPage(id.to_owned(), to))
+                        }))
+                };
+                col = col.push(
+                    row![
+                        go(page.saturating_sub(1), Icon::ChevronLeft),
+                        label::caption(format!("{first}–{last} / {}", uids.len())).style(muted),
+                        go(page + 1, Icon::ChevronRight),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                );
+            }
             return self.related_footer(e, id, col, live, candidates);
         }
         for uid in uids.iter().take(50) {
@@ -3276,6 +3458,7 @@ fn related_table<'a>(
     layer: &str,
     link: &str,
     columns: &[String],
+    all: &[String],
     uids: &[String],
     e: &'a Entry,
     id: &str,
@@ -3322,7 +3505,23 @@ fn related_table<'a>(
         .iter()
         .map(|f| (f.kind == LayerFieldKind::Decimal).then_some(0.0))
         .collect();
-    for uid in uids.iter().take(200) {
+    // The totals are of every related object, not only the page's.
+    for uid in all {
+        let Some(x) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| d.model.slot_of(u))
+            .and_then(|s| d.model.get(s))
+        else {
+            continue;
+        };
+        for (i, f) in shown.iter().enumerate() {
+            let raw = x.base().attrs.get(&f.name).map_or("", String::as_str);
+            if let (Some(t), Ok(v)) = (totals[i].as_mut(), raw.trim().parse::<f64>()) {
+                *t += v;
+            }
+        }
+    }
+    for uid in uids {
         let Some(x) = kentos_domain::Uuid::parse_str(uid)
             .ok()
             .and_then(|u| d.model.slot_of(u))
@@ -3331,11 +3530,8 @@ fn related_table<'a>(
             continue;
         };
         let mut line = Row::new().spacing(8).align_y(Center);
-        for (i, f) in shown.iter().enumerate() {
+        for f in &shown {
             let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
-            if let (Some(t), Ok(v)) = (totals[i].as_mut(), raw.trim().parse::<f64>()) {
-                *t += v;
-            }
             line = line.push(cell(kentos_contracts::display_value(f, &raw), Some(f)));
         }
         let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
@@ -3379,10 +3575,87 @@ fn related_table<'a>(
         foot = foot.push(space::horizontal().width(84));
         rows = rows.push(container(foot).padding(iced::Padding { top: 4.0, ..iced::Padding::ZERO }));
     }
-    if uids.len() > 200 {
-        rows = rows.push(label::caption(format!("{} nesne daha.", uids.len() - 200)).style(muted));
-    }
     rows.into()
+}
+
+/// The related objects as cards (docs/adr/0440 §6): each its columns' labels and values, as people
+/// read them, with Aç, Çizimde göster and Bağı kopar.
+#[allow(clippy::too_many_arguments)]
+fn related_cards<'a>(
+    d: &crate::document::Document,
+    layer: &str,
+    link: &str,
+    columns: &[String],
+    uids: &[String],
+    e: &'a Entry,
+    id: &str,
+    live: bool,
+) -> Element<'a, Message> {
+    let fields: Vec<kentos_contracts::LayerField> = d
+        .model
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    let shown: Vec<kentos_contracts::LayerField> = if columns.is_empty() {
+        fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
+    } else {
+        columns
+            .iter()
+            .filter_map(|c| fields.iter().find(|f| f.key() == c).cloned())
+            .collect()
+    };
+    let mut cards = Column::new().spacing(6);
+    for uid in uids {
+        let Some(x) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| d.model.slot_of(u))
+            .and_then(|s| d.model.get(s))
+        else {
+            continue;
+        };
+        let mut body = Column::new().spacing(2);
+        for f in &shown {
+            let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
+            body = body.push(
+                row![
+                    container(label::caption(f.label().to_owned()).style(muted)).width(120),
+                    label::body(kentos_contracts::display_value(f, &raw)),
+                ]
+                .spacing(8),
+            );
+        }
+        let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
+            kentos_ui::widget::tip(
+                iced::widget::button(icon(glyph).size(13.0))
+                    .padding([3, 5])
+                    .style(style::button::tool(false))
+                    .on_press_maybe(on),
+                kentos_ui::widget::Tip::new(tip),
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        let tools = Row::new()
+            .spacing(2)
+            .push(tool(Icon::Open, "Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))))
+            .push(tool(
+                Icon::Target,
+                "Çizimde göster",
+                live.then(|| e.msg(Event::ShowObject(uid.clone()))),
+            ))
+            .push(tool(
+                Icon::Close,
+                "Bağı kopar",
+                live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone()))),
+            ));
+        cards = cards.push(
+            container(row![container(body).width(Fill), tools].spacing(8).align_y(iced::alignment::Vertical::Top))
+                .padding(8)
+                .width(Fill)
+                .style(style::container::field_box),
+        );
+    }
+    cards.into()
 }
 
 /// `codes` in the list's order (`list`), a held code the list no longer offers after them.

@@ -10462,6 +10462,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -18430,6 +18435,11 @@
               {
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
                 "type": "string"
               }
             ]
@@ -30140,6 +30150,11 @@
               {
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
                 "type": "string"
               }
             ]
@@ -56337,9 +56352,54 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "RelationFollowed": {
+            "description": "What a relation did to a deleted parent's children (docs/adr/0440 §1).",
+            "properties": {
+              "deleted": {
+                "description": "Children deleted with it (a composition).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "relation": {
+                "description": "The relation's id.",
+                "type": "string"
+              },
+              "unlinked": {
+                "description": "Children whose link was emptied or lost the parent's id from its list.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "relation",
+              "unlinked",
+              "deleted"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.entities.delete` v1: what was deleted and what stayed.",
         "properties": {
+          "attachments": {
+            "description": "The attachments the deleted objects (their followed children too) held (docs/adr/0440 §1).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "followed": {
+            "description": "What the project's relations did to the deleted objects' children (docs/adr/0440 §1), in the\nrelations' order.",
+            "items": {
+              "$ref": "#/$defs/RelationFollowed"
+            },
+            "type": "array"
+          },
           "locked": {
             "description": "The ids left in place because their layer is locked, in the input's order.",
             "items": {
@@ -56369,9 +56429,54 @@
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "RelationFollowed": {
+            "description": "What a relation did to a deleted parent's children (docs/adr/0440 §1).",
+            "properties": {
+              "deleted": {
+                "description": "Children deleted with it (a composition).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "relation": {
+                "description": "The relation's id.",
+                "type": "string"
+              },
+              "unlinked": {
+                "description": "Children whose link was emptied or lost the parent's id from its list.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "relation",
+              "unlinked",
+              "deleted"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.entities.delete` would delete (plan mode); nothing is deleted.",
         "properties": {
+          "attachments": {
+            "description": "The attachments that would go with the objects (docs/adr/0440 §1).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "followed": {
+            "description": "What the project's relations would do to the children (docs/adr/0440 §1).",
+            "items": {
+              "$ref": "#/$defs/RelationFollowed"
+            },
+            "type": "array"
+          },
           "locked": {
             "description": "The ids it would leave in place because their layer is locked.",
             "items": {
@@ -56415,7 +56520,9 @@
           "layer_locked",
           "invalid_revision",
           "revision_conflict",
-          "relation_restricted"
+          "relation_restricted",
+          "relation_locked",
+          "relation_too_large"
         ],
         "warnings": [
           "layer_locked"
@@ -349349,6 +349456,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -350534,6 +350646,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -351744,6 +351861,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -352521,10 +352643,50 @@
       "undo": "step",
       "cost": "instant",
       "input": {
+        "$defs": {
+          "FormChild": {
+            "additionalProperties": false,
+            "description": "A child written with its parent's record (docs/adr/0440 §2).",
+            "properties": {
+              "relation": {
+                "description": "The project relation whose parent is the form's layer.",
+                "type": "string"
+              },
+              "uid": {
+                "description": "The child (lowercase UUID text with hyphens): an object of the relation's child layer, or a new\nrecord's id the caller made (the same id given again writes the same record, not another).",
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "unlink": {
+                "description": "The link to the record taken off (Bağı kopar) instead of made; written only as `true`.",
+                "type": "boolean"
+              },
+              "values": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Values by the child layer's fields' keys, through the child layer's form when it has one.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "relation",
+              "uid"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "description": "Input of `cad.forms.submit` v1.\n\nRefusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`\n(status `conflict`);\n`unknown_form`, `form_unpublished`, `form_preflight`, `form_release_changed` (status `conflict`),\n`entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),\n`form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse\nas every write's (`rule_broken`, `not_unique`).",
         "properties": {
+          "children": {
+            "description": "The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or\nmade, each through its relation; the record and its children go in together or not at all.",
+            "items": {
+              "$ref": "#/$defs/FormChild"
+            },
+            "type": "array"
+          },
           "defaults": {
             "description": "The form's defaults in the record's empty fields first (a new record).",
             "type": "boolean"
@@ -352600,6 +352762,65 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "ChildSubmitted": {
+            "description": "A child as the submission wrote it.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "created": {
+                "description": "A new record, made by the submission; written only as `true`.",
+                "type": "boolean"
+              },
+              "relation": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "relation",
+              "attrs",
+              "changed"
+            ],
+            "type": "object"
+          },
+          "RecordChange": {
+            "description": "A record a command wrote (docs/adr/0440 §5): its id, layer, whether it was made, the fields that\nchanged by their names, in order.",
+            "properties": {
+              "created": {
+                "type": "boolean"
+              },
+              "fields": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "fields"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.forms.submit` v1, and what plan says it would do.",
         "properties": {
@@ -352614,13 +352835,38 @@
             "description": "Whether the object changed.",
             "type": "boolean"
           },
+          "changes": {
+            "description": "The records written (docs/adr/0440 §5): the record, then its children, in order; none\nunchanged.",
+            "items": {
+              "$ref": "#/$defs/RecordChange"
+            },
+            "type": "array"
+          },
+          "children": {
+            "description": "The children as written (docs/adr/0440 §2), in the input's order.",
+            "items": {
+              "$ref": "#/$defs/ChildSubmitted"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made against).",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "snapshot": {
+            "description": "The record's snapshot afterwards (docs/adr/0440 §4): its fingerprint with its children and\nattachments, what a reviewer approves.",
+            "type": "string"
+          },
           "uid": {
             "type": "string"
+          },
+          "undo": {
+            "description": "The undo step the write is (plan and an unchanged record: none).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "version": {
             "description": "The release written through; none: the draft.",
@@ -352637,12 +352883,72 @@
           "uid",
           "attrs",
           "changed",
+          "snapshot",
           "revision"
         ],
         "title": "FormsSubmitted",
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "ChildSubmitted": {
+            "description": "A child as the submission wrote it.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "created": {
+                "description": "A new record, made by the submission; written only as `true`.",
+                "type": "boolean"
+              },
+              "relation": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "relation",
+              "attrs",
+              "changed"
+            ],
+            "type": "object"
+          },
+          "RecordChange": {
+            "description": "A record a command wrote (docs/adr/0440 §5): its id, layer, whether it was made, the fields that\nchanged by their names, in order.",
+            "properties": {
+              "created": {
+                "type": "boolean"
+              },
+              "fields": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "fields"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.forms.submit` v1, and what plan says it would do.",
         "properties": {
@@ -352657,13 +352963,38 @@
             "description": "Whether the object changed.",
             "type": "boolean"
           },
+          "changes": {
+            "description": "The records written (docs/adr/0440 §5): the record, then its children, in order; none\nunchanged.",
+            "items": {
+              "$ref": "#/$defs/RecordChange"
+            },
+            "type": "array"
+          },
+          "children": {
+            "description": "The children as written (docs/adr/0440 §2), in the input's order.",
+            "items": {
+              "$ref": "#/$defs/ChildSubmitted"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision afterwards (plan: the one it was made against).",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "snapshot": {
+            "description": "The record's snapshot afterwards (docs/adr/0440 §4): its fingerprint with its children and\nattachments, what a reviewer approves.",
+            "type": "string"
+          },
           "uid": {
             "type": "string"
+          },
+          "undo": {
+            "description": "The undo step the write is (plan and an unchanged record: none).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "version": {
             "description": "The release written through; none: the draft.",
@@ -352680,6 +353011,7 @@
           "uid",
           "attrs",
           "changed",
+          "snapshot",
           "revision"
         ],
         "title": "FormsSubmitted",
@@ -352700,7 +353032,10 @@
           "layer_locked",
           "form_invalid",
           "form_release_changed",
-          "record_changed"
+          "record_changed",
+          "unknown_relation",
+          "relation_mismatch",
+          "relation_field_unknown"
         ],
         "warnings": [
           "form_check_warning",
@@ -355821,6 +356156,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -357190,6 +357530,11 @@
               {
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
+                "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
                 "type": "string"
               }
             ]
@@ -358638,6 +358983,11 @@
                 "const": "table",
                 "description": "A table of the item's columns, the numbers totalled under them.",
                 "type": "string"
+              },
+              {
+                "const": "cards",
+                "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+                "type": "string"
               }
             ]
           },
@@ -359020,6 +359370,10 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "snapshot": {
+            "description": "The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.",
+            "type": "string"
+          },
           "to": {
             "type": "string"
           },
@@ -359043,6 +359397,7 @@
           "from",
           "to",
           "attrs",
+          "snapshot",
           "revision"
         ],
         "title": "FormsTransitioned",
@@ -359067,6 +359422,10 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "snapshot": {
+            "description": "The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.",
+            "type": "string"
+          },
           "to": {
             "type": "string"
           },
@@ -359090,6 +359449,7 @@
           "from",
           "to",
           "attrs",
+          "snapshot",
           "revision"
         ],
         "title": "FormsTransitioned",
@@ -365836,6 +366196,13 @@
             "description": "Whether the settings changed.",
             "type": "boolean"
           },
+          "links": {
+            "description": "The children whose field holds a link of the relation (the edited one's, before the edit;\ndocs/adr/0440 §3).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "relations": {
             "description": "The project's relations afterwards, in order.",
             "items": {
@@ -365929,6 +366296,13 @@
             "description": "Whether the settings changed.",
             "type": "boolean"
           },
+          "links": {
+            "description": "The children whose field holds a link of the relation (the edited one's, before the edit;\ndocs/adr/0440 §3).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "relations": {
             "description": "The project's relations afterwards, in order.",
             "items": {
@@ -365960,7 +366334,9 @@
           "too_many_relations",
           "layer_not_found",
           "not_a_layer",
-          "relation_field_unknown"
+          "relation_field_unknown",
+          "relation_in_use",
+          "relation_cycle"
         ]
       },
       "examples": [
@@ -391132,6 +391508,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesnenin ilişkili alt kayıtları var; ilişki silinmesine izin vermiyor."
+    },
+    {
+      "code": "relation_locked",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İlişkinin değiştireceği alt kayıtlar kilitli katmanda."
+    },
+    {
+      "code": "relation_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İlişkilerin izleyeceği alt kayıtlar tek adım için çok fazla."
+    },
+    {
+      "code": "relation_cycle",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bileşik ilişkiler döngü kuruyor ya da zincir çok derin."
+    },
+    {
+      "code": "relation_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alt kayıtlar ilişkinin bağlarını tutuyor."
+    },
+    {
+      "code": "relation_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İlişkinin üst katmanı formun katmanı değil."
     },
     {
       "code": "form_release_dropped",

@@ -851,7 +851,18 @@
         "Alan": "900.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "8041debbd912dc61"
       },
       "warnings": []
      },
@@ -1883,7 +1894,18 @@
         "Alan": "900.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "8041debbd912dc61"
       },
       "warnings": []
      },
@@ -2403,7 +2425,18 @@
         "Alan": "900.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "8041debbd912dc61"
       },
       "warnings": []
      },
@@ -4236,7 +4269,18 @@
         "Alan": "900.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Durum"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "6a69d2e55f4b5059"
       },
       "warnings": [
        {
@@ -6061,7 +6105,8 @@
         "Alan": "900.00"
        },
        "changed": false,
-       "revision": "$current"
+       "revision": "$current",
+       "snapshot": "51d7ca29fddd7162"
       },
       "warnings": []
      },
@@ -6518,7 +6563,18 @@
         "Kat": "2"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "4970f2e4630009a4"
       },
       "warnings": []
      },
@@ -7425,7 +7481,19 @@
         "Alan": "900.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Başlangıç",
+          "Bitiş"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "76ec60d931f60ee4"
       },
       "warnings": []
      },
@@ -8335,7 +8403,18 @@
         "Alan": "700.00"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:4",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "ead3cf23849a03e7"
       },
       "warnings": []
      },
@@ -9247,7 +9326,19 @@
         "Açıklama": "Kolonlar."
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Açıklama",
+          "Durum"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "d96c320357f1d1b6"
       },
       "warnings": []
      },
@@ -9705,7 +9796,18 @@
         "Ada/Parsel": "300/4"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "bina",
+         "fields": [
+          "Ada/Parsel"
+         ]
+        }
+       ],
+       "undo": "Form: Ruhsat",
+       "snapshot": "baa8f2baffd20ca2"
       },
       "warnings": []
      },

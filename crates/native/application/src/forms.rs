@@ -496,3 +496,112 @@ pub(crate) fn enforced(
     }
     Ok(())
 }
+
+/// A child as a write would leave it: its id, layer and attributes (docs/adr/0440 §4).
+pub(crate) type Pending<'a> = (&'a str, &'a str, &'a Attrs);
+
+/// A record's snapshot (docs/adr/0440 §4): the first 16 hexadecimal digits of the SHA-256 of the
+/// canonical JSON of its attributes (but `skip`'s: a workflow's state and log), its attachments and its
+/// children (each relation whose parent is `layer`, in the project's order, its children holding `uid`
+/// sorted by their ids, with their attributes), `pending` standing for the document where a write would
+/// change it. What a reviewer approves: the same record with the same children reads the same.
+pub(crate) fn snapshot(
+    doc: &Document,
+    layer: &str,
+    uid: &str,
+    attrs: &Attrs,
+    attachments: &[kentos_contracts::Attachment],
+    skip: &[&str],
+    pending: &[Pending<'_>],
+) -> String {
+    let own: serde_json::Map<String, serde_json::Value> = attrs
+        .iter()
+        .filter(|(k, _)| !skip.contains(&k.as_str()))
+        .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+        .collect();
+    let mut children = Vec::new();
+    for r in doc
+        .settings()
+        .relations
+        .iter()
+        .filter(|r| r.parent == layer)
+    {
+        let Some(name) = doc
+            .layers()
+            .get(&r.child)
+            .and_then(|n| n.fields.iter().find(|f| f.key() == r.field))
+            .map(|f| f.name.clone())
+        else {
+            continue;
+        };
+        let mut rows: Vec<(String, Attrs)> = doc
+            .by_layer_with_uids(&r.child)
+            .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
+            .filter(|(u, _)| !pending.iter().any(|(p, ..)| p == u))
+            .collect();
+        rows.extend(
+            pending
+                .iter()
+                .filter(|(_, l, _)| *l == r.child)
+                .map(|(u, _, a)| ((*u).to_owned(), (*a).clone())),
+        );
+        rows.retain(|(_, a)| {
+            a.get(&name)
+                .is_some_and(|v| v.split(';').any(|h| h.trim() == uid))
+        });
+        rows.sort_by(|a, b| a.0.cmp(&b.0));
+        for (u, a) in rows {
+            children.push(serde_json::json!({ "relation": r.id, "uid": u, "attrs": a }));
+        }
+    }
+    let value = serde_json::json!({
+        "attrs": own,
+        "attachments": serde_json::to_value(attachments).unwrap_or_default(),
+        "children": children,
+    });
+    kentos_contracts::canonical::digest_of(&value, 16)
+}
+
+/// The fields a form's workflow keeps out of the snapshot: its state's and its log's names.
+pub(crate) fn snapshot_skip<'a>(doc: &'a Document, layer: &str, body: &FormBody) -> Vec<&'a str> {
+    let Some(w) = &body.workflow else {
+        return Vec::new();
+    };
+    let fields = fields(doc, layer);
+    [Some(w.field.as_str()), w.log.as_deref()]
+        .into_iter()
+        .flatten()
+        .filter_map(|k| {
+            fields
+                .iter()
+                .find(|f| f.key() == k)
+                .map(|f| f.name.as_str())
+        })
+        .collect()
+}
+
+/// The snapshot of the record `uid` holding `attrs` as `form` sees it (docs/adr/0440 §4): what a workflow
+/// step would write at the end of its log line; none for a form or a record the drawing has not.
+pub fn record_snapshot(doc: &Document, form: &str, uid: &str, attrs: &Attrs) -> Option<String> {
+    let f = doc.settings().forms.iter().find(|f| f.id == form)?;
+    let body = f.release().map_or(&f.draft, |r| &r.body);
+    let slot = doc.slot_of(Uuid::parse_str(uid).ok()?)?;
+    let e = doc.get(slot)?;
+    let skip = snapshot_skip(doc, &f.layer, body);
+    Some(snapshot(
+        doc,
+        &f.layer,
+        uid,
+        attrs,
+        &e.base().attachments,
+        &skip,
+        &[],
+    ))
+}
+
+/// The snapshot a record's log names last (docs/adr/0440 §4): the `#…` that ends its last line.
+pub fn logged_snapshot(log: &str) -> Option<&str> {
+    let line = log.lines().rev().find(|l| !l.trim().is_empty())?;
+    let (_, tail) = line.rsplit_once(" · #")?;
+    (tail.len() == 16 && tail.chars().all(|c| c.is_ascii_hexdigit())).then_some(tail)
+}

@@ -908,6 +908,9 @@ pub struct App {
     )>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
+    /// The records whose forms wait under a child's (docs/adr/0440 §7): their drafts kept, the
+    /// nearest last.
+    pub(crate) form_stack: Vec<crate::forms::entry::Entry>,
     /// İlişkiler (forms/relations.rs, docs/adr/0405).
     pub(crate) relations_window: Option<crate::forms::relations::Window>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
@@ -1219,6 +1222,7 @@ impl App {
             forms_window: None,
             form_clipboard: None,
             form_entry: None,
+            form_stack: Vec::new(),
             relations_window: None,
             table_styles: None,
             subtypes: None,

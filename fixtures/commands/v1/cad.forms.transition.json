@@ -1187,6 +1187,7 @@
         "Yükseklik": "9"
        },
        "version": 1,
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -1286,6 +1287,7 @@
         "Yükseklik": "15"
        },
        "version": 1,
+       "snapshot": "47c3f7c01d983d55",
        "revision": "$current"
       },
       "warnings": []
@@ -1383,6 +1385,7 @@
         "Yükseklik": "6"
        },
        "version": 1,
+       "snapshot": "98d9aa4cc3b9e6e0",
        "revision": "$current"
       },
       "warnings": []
@@ -1485,6 +1488,7 @@
         "Gerekçe": "Kat sayısı yanlış."
        },
        "version": 1,
+       "snapshot": "363308794ef35e66",
        "revision": "$current"
       },
       "warnings": []
@@ -1543,6 +1547,7 @@
         "Gerekçe": "Kat yeniden ölçülecek."
        },
        "version": 1,
+       "snapshot": "e105eb22c7628b66",
        "revision": "$current"
       },
       "warnings": []
@@ -1646,6 +1651,7 @@
         "Yükseklik": "12"
        },
        "version": 1,
+       "snapshot": "812ae27f7178d8a0",
        "revision": "$current"
       },
       "warnings": []
@@ -1702,6 +1708,7 @@
         "Durum": "gonderildi"
        },
        "version": 1,
+       "snapshot": "8479f73d437ddf05",
        "revision": "$current"
       },
       "warnings": []
@@ -1891,6 +1898,7 @@
         "Durum": "taslak"
        },
        "version": 1,
+       "snapshot": "a269c6fe190753c6",
        "revision": "$current"
       },
       "warnings": []
@@ -1945,6 +1953,7 @@
         "Yükseklik": "9"
        },
        "version": 1,
+       "snapshot": "b6ba61fba70f52c4",
        "revision": "$current"
       },
       "warnings": []
@@ -1999,6 +2008,7 @@
         "Yükseklik": "9"
        },
        "version": 1,
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -2053,6 +2063,7 @@
         "Gerekçe": "Eksik ölçü."
        },
        "version": 1,
+       "snapshot": "36e22a898869b1ed",
        "revision": "$current"
       },
       "warnings": []
@@ -2103,6 +2114,7 @@
         "Gerekçe": "Eksik ölçü."
        },
        "version": 1,
+       "snapshot": "36e22a898869b1ed",
        "revision": "$current"
       },
       "warnings": []
@@ -2157,6 +2169,7 @@
         "Yükseklik": "9"
        },
        "version": 1,
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -2234,6 +2247,7 @@
         "Kat": "3",
         "Yükseklik": "9"
        },
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -2287,9 +2301,10 @@
         "Durum": "gonderildi",
         "Kat": "3",
         "Yükseklik": "9",
-        "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi)"
+        "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi) · #ddf3a9f537c851cd"
        },
        "version": 1,
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -2310,7 +2325,7 @@
          "Durum": "gonderildi",
          "Kat": "3",
          "Yükseklik": "9",
-         "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi)"
+         "Geçmiş": "2026-10-17T14:30:00 · Ayşe Yılmaz · Gönder (Taslak → Gönderildi) · #ddf3a9f537c851cd"
         }
        }
       },
@@ -2342,9 +2357,10 @@
         "Durum": "gonderildi",
         "Kat": "3",
         "Yükseklik": "9",
-        "Geçmiş": "Gönder (Taslak → Gönderildi)"
+        "Geçmiş": "Gönder (Taslak → Gönderildi) · #ddf3a9f537c851cd"
        },
        "version": 1,
+       "snapshot": "ddf3a9f537c851cd",
        "revision": "$current"
       },
       "warnings": []
@@ -2365,7 +2381,7 @@
          "Durum": "gonderildi",
          "Kat": "3",
          "Yükseklik": "9",
-         "Geçmiş": "Gönder (Taslak → Gönderildi)"
+         "Geçmiş": "Gönder (Taslak → Gönderildi) · #ddf3a9f537c851cd"
         }
        }
       },
@@ -2402,9 +2418,10 @@
         "Kat": "2",
         "Yükseklik": "6",
         "Gerekçe": "Kat eksik.",
-        "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik."
+        "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik. · #c338d85a6e170fd1"
        },
        "version": 1,
+       "snapshot": "c338d85a6e170fd1",
        "revision": "$current"
       },
       "warnings": []
@@ -2426,7 +2443,7 @@
          "Kat": "2",
          "Yükseklik": "6",
          "Gerekçe": "Kat eksik.",
-         "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik."
+         "Geçmiş": "Mehmet Kaya · Geri gönder (Gönderildi → İade edildi): Kat eksik. · #c338d85a6e170fd1"
         }
        }
       },
@@ -2511,9 +2528,10 @@
         "Kat": "2",
         "Yükseklik": "6",
         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-        "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli."
+        "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli. · #0f75"
        },
        "version": 1,
+       "snapshot": "0f756decbd4d4aca",
        "revision": "$current"
       },
       "warnings": []
@@ -2535,7 +2553,7 @@
          "Kat": "2",
          "Yükseklik": "6",
          "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-         "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli."
+         "Geçmiş": "2026-10-17T09:00:00 · Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): İlk ölçüm yanlış, yeniden ölçülmeli. · #0f75"
         }
        }
       },
@@ -2565,9 +2583,10 @@
         "Kat": "2",
         "Yükseklik": "6",
         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-        "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi)"
+        "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi) · #0f756decbd4d4aca"
        },
        "version": 1,
+       "snapshot": "0f756decbd4d4aca",
        "revision": "$current"
       },
       "warnings": []
@@ -2589,7 +2608,7 @@
          "Kat": "2",
          "Yükseklik": "6",
          "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-         "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi)"
+         "Geçmiş": "2026-10-17T11:00:00 · Mehmet Kaya · Gönder (İade edildi → Gönderildi) · #0f756decbd4d4aca"
         }
        }
       },
@@ -2619,9 +2638,10 @@
         "Kat": "2",
         "Yükseklik": "6",
         "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-        "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı)"
+        "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı) · #0f756decbd4d4aca"
        },
        "version": 1,
+       "snapshot": "0f756decbd4d4aca",
        "revision": "$current"
       },
       "warnings": []
@@ -2643,7 +2663,7 @@
          "Kat": "2",
          "Yükseklik": "6",
          "Gerekçe": "İlk ölçüm yanlış, yeniden ölçülmeli.",
-         "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı)"
+         "Geçmiş": "2026-10-18T08:15:00 · Zeynep Arslan · Onayla (Gönderildi → Onaylandı) · #0f756decbd4d4aca"
         }
        }
       },

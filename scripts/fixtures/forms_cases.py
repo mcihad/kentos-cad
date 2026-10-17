@@ -989,7 +989,8 @@ class Form:
                 n = counted(obj, x.get("accept", "any"))
                 if n is not None:
                     state["attachments"] = n
-            elif x["type"] == "related":
+            elif x["type"] == "related" and state["shown"]:
+                # docs/adr/0440 §6: a hidden item's related objects are not looked for.
                 uid = (obj or {}).get("uid")
                 state["related"] = [own for own, held in self.related[x["id"]]
                                     if uid is not None and uid in [h.strip(JS_SPACE) for h in held.split(";")]]
@@ -1316,6 +1317,38 @@ def canonical_json(v):
 
 def digest(body):
     return hashlib.sha256(canonical_json(body).encode("utf-8")).hexdigest()[:32]
+
+
+def snapshot(attrs, skip=(), attachments=(), children=()):
+    """A record's snapshot (docs/adr/0440 §4): 16 hex digits of the SHA-256 of the canonical JSON of its attributes
+    (`skip`'s left out: a workflow's state and log), its attachments and its children ([relation, uid, attrs] in the
+    relations' order, each relation's sorted by uid)."""
+    value = {"attrs": {k: v for k, v in attrs.items() if k not in skip}, "attachments": list(attachments),
+             "children": [{"relation": r, "uid": u, "attrs": a} for r, u, a in children]}
+    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()[:16]
+
+
+def snapshot_skip(body, fields):
+    """The names a form's workflow keeps out of the snapshot: its state's and its log's."""
+    w = body.get("workflow")
+    if not w:
+        return ()
+    keys = [w["field"]] + ([w["log"]] if "log" in w else [])
+    return tuple(f["name"] for f in fields if key_of(f) in keys)
+
+
+def changed_names(a, b):
+    return sorted({k for k in list(a) + list(b) if a.get(k) != b.get(k)}, key=lambda s: s.encode("utf-8"))
+
+
+def submitted(out, slot_uid, before, after, layer, label, snap):
+    """The submission's answer's new parts (docs/adr/0440 §4, §5): the records written, the snapshot, the undo step."""
+    names = changed_names(before, after)
+    if names:
+        out["changes"] = [{"uid": slot_uid, "layer": layer, "fields": names}]
+        out["undo"] = label
+    out["snapshot"] = snap
+    return out
 
 
 # ── The shared layer and form ────────────────────────────────────────────
@@ -2531,6 +2564,8 @@ def submit_cases():
         out = {"uid": f"$uidOf:{slot}", "attrs": after, "changed": changed, "revision": "$current"}
         if version is not None:
             out["version"] = version
+        submitted(out, f"$uidOf:{slot}", before, after, form["layer"], f"Form: {form['name']}",
+                  snapshot(after, snapshot_skip(body, fields)))
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": after}}, "canUndo": undo + changed > 0, "canRedo": False}
         expect.update({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})
         return {"op": "execute", "input": inp, "result": {"status": "completed", "output": out, "warnings": warnings},
@@ -3093,8 +3128,9 @@ def look_command_cases():
         else:
             changed = after != attrs
             step = {"op": "execute", "input": inp,
-                    "result": {"status": "completed", "output": {"uid": "$uidOf:1", "attrs": after, "changed": changed,
-                                                                  "revision": "$current", "version": 1}, "warnings": []},
+                    "result": {"status": "completed", "output": submitted(
+                        {"uid": "$uidOf:1", "attrs": after, "changed": changed, "revision": "$current", "version": 1},
+                        "$uidOf:1", attrs, after, "bina", "Form: Bina adresi", ANY), "warnings": []},
                     "expect": {"ids": LOOK_IDS, "fields": {"1": {"attrs": after}}, "canUndo": changed, "canRedo": False,
                                **({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})}}
         submit.append({"name": f"başka katmandan liste: {name}", "setup": look_setup(first=attrs), "steps": [step]})
@@ -3554,11 +3590,23 @@ def relations_edit_cases():
     cases = []
     base = [relation("bina-sayac", "bina", "sayac", "bina", name="Binanın sayaçları")]
 
+    def links_of(r):
+        """docs/adr/0440 §3: the children whose field holds a value of the relation's."""
+        found = [f for f in REL_FIELDS.get(r["child"], []) if key_of(f) == r["field"]]
+        if not found:
+            return 0
+        return sum(1 for _, lay, a in REL_OBJECTS if lay == r["child"] and a.get(found[0]["name"], "").strip())
+
     def edited(name, edit, before=(), after=None, changed=True, op="execute", **more):
         after = list(before) if after is None else after
         inp = {"edit": edit, **more}
-        result = {"status": "completed", "output": {"relations": after, "changed": changed, "revision": "$current"},
-                  "warnings": []}
+        rel = edit.get("relation") if edit["kind"] == "create" else next(
+            (r for r in before if r["id"] == edit.get("id", edit.get("relation", {}).get("id"))), None)
+        output = {"relations": after, "changed": changed, "revision": "$current"}
+        n = links_of(rel) if rel else 0
+        if n:
+            output["links"] = n
+        result = {"status": "completed", "output": output, "warnings": []}
         expect = {"ids": REL_IDS, "canUndo": False, "canRedo": False, "revision": "changed" if changed and op == "execute" else "same"}
         if changed and op == "execute":
             expect["dirty"] = True
@@ -3605,6 +3653,36 @@ def relations_edit_cases():
     refused("alan alt katmanda yok", {"kind": "create", "relation": {**rc, "field": "bina"}},
             failed("relation_field_unknown", "“Vana” katmanında “bina” alanı yok. Alt katmanın, üst nesnenin kimliğini tutacak alanını seçin.",
                    "edit.relation.field"))
+    # docs/adr/0440 §3: compositions in a circle; a key changed under links; the links counted.
+    rb = relation("sayac-bina", "sayac", "bina", "Ad", "cascade", "Sayacın binası")
+    rcasc = {**base[0], "onDelete": "cascade"}
+    refused("bileşik ilişkiler döngü kuramaz", {"kind": "create", "relation": rb}, failed("relation_cycle", ANY, "edit"), [rcasc])
+    edited("biri bileşik değilse döngü yoktur", {"kind": "create", "relation": rb}, base, base + [rb])
+    ws = {**relation("sayac-ust", "sayac", "sayac", "no", "cascade", "Ana sayaç")}
+    edited("katmanın kendisiyle bileşik ilişkisi döngü sayılmaz", {"kind": "create", "relation": ws}, [rcasc], [rcasc, ws])
+    link_step = {"op": "execute", "command": "cad.entities.set",
+                 "input": {"uids": ["$uidOf:3", "$uidOf:4"], "attrs": {"bina": "$uidOf:1"}, "operation": "attributes"},
+                 "result": {"status": "completed", "output": {"changed": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4],
+                                                               "revision": "$current"}, "warnings": []},
+                 "expect": {"ids": REL_IDS, "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}}
+    moved = {**base[0], "field": "no"}
+    cases.append({"name": "bağları olan ilişkinin alanı değişemez", "setup": rel_setup(base), "steps": [
+        link_step,
+        {"op": "execute", "input": {"edit": {"kind": "update", "relation": moved}},
+         "result": failed("relation_in_use", ANY, "edit.relation.field"),
+         "expect": {"ids": REL_IDS, "revision": "same"}}]})
+    cases.append({"name": "bağları olan ilişkinin silme kuralı değişir; bağlar sayılır", "setup": rel_setup(base), "steps": [
+        link_step,
+        {"op": "execute", "input": {"edit": {"kind": "update", "relation": rcasc}},
+         "result": {"status": "completed", "output": {"relations": [rcasc], "changed": True, "links": 2,
+                                                      "revision": "$current"}, "warnings": []},
+         "expect": {"ids": REL_IDS, "revision": "changed"}}]})
+    cases.append({"name": "silinen ilişkinin bağları kayıtlarda kalır ve sayılır", "setup": rel_setup(base), "steps": [
+        link_step,
+        {"op": "plan", "input": {"edit": {"kind": "remove", "id": "bina-sayac"}},
+         "result": {"status": "completed", "output": {"relations": [], "changed": True, "links": 2, "revision": "$current"},
+                    "warnings": []},
+         "expect": {"ids": REL_IDS, "revision": "same"}}]})
     refused("beklenen sürüm: geçersiz", {"kind": "create", "relation": rc}, failed("invalid_revision", REVISION, "expectedRevision"),
             expectedRevision="07")
     refused("beklenen sürüm: çakışan", {"kind": "create", "relation": rc},
@@ -3631,15 +3709,24 @@ def delete_relation_cases():
 
     layer_of = {i: l for i, l, _ in REL_OBJECTS}
 
-    def follow(state, ids, relations, locked):
-        """The objects left and their attributes after deleting `ids` (each relation's policy)."""
+    def follow(state, ids, relations, locked, counts=None):
+        """The objects left and their attributes after deleting `ids` (each relation's policy); `counts` takes each
+        relation's unlinked and deleted children (docs/adr/0440 §1). A relation that would change a locked layer's
+        child raises."""
         gone, out = list(ids), {i: dict(a) for i, a in state.items() if i not in ids}
         queue = list(ids)
+        counts = {} if counts is None else counts
         while queue:
             parent = queue.pop()
             for r in relations:
                 pol = r.get("onDelete", "unlink")
-                if r["parent"] != layer_of[parent] or pol in ("keep", "restrict") or r["child"] in locked:
+                if r["parent"] != layer_of[parent] or pol in ("keep", "restrict"):
+                    continue
+                if r["child"] in locked:
+                    if [f for f in REL_FIELDS[r["child"]] if f["name"] == r["field"]] and any(
+                            layer_of[c] == r["child"] and f"$uid:o{parent}" in parts(out[c].get(r["field"], ""))
+                            for c in out):
+                        raise LookupError(r["name"])
                     continue
                 found = [f for f in REL_FIELDS[r["child"]] if f["name"] == r["field"]]
                 if not found:
@@ -3649,14 +3736,18 @@ def delete_relation_cases():
                 for c in [c for c in out if layer_of[c] == r["child"] and me in parts(out[c].get(names[0], ""))]:
                     # docs/adr/0409 §2: a many-to-many child keeps its other parents; cascaded only when none is left.
                     rest = [h for h in parts(out[c][names[0]]) if h != me] if found[0].get("multiple") else []
+                    n = counts.setdefault(r["id"], [0, 0])
                     if rest:
                         out[c][names[0]] = "; ".join(rest)
+                        n[0] += 1
                     elif pol == "cascade":
                         out.pop(c)
                         gone.append(c)
                         queue.append(c)
+                        n[1] += 1
                     else:
                         out[c].pop(names[0])
+                        n[0] += 1
         return out
 
     def restricted(state, ids, relations):
@@ -3669,7 +3760,7 @@ def delete_relation_cases():
                     return k, r["name"]
         return None
 
-    def case(name, relations, ids, locked=(), undo=False, given=None):
+    def case(name, relations, ids, locked=(), undo=False, given=None, plan=False):
         steps, state = links(relations)
         # A locked layer is locked after its links are written.
         for lid in locked:
@@ -3688,10 +3779,26 @@ def delete_relation_cases():
                                                                     "Önce alt kayıtları silin ya da bağlarını koparın.", f"uids[{k}]"),
                           "expect": {"ids": REL_IDS, "revision": "same"}})
         else:
-            after = follow(state, ids, relations, locked)
+            counts = {}
+            try:
+                after = follow(state, ids, relations, locked, counts)
+            except LookupError:
+                # docs/adr/0440 §1: a locked layer's child is not changed behind the user's back.
+                steps.append({"op": "execute", "input": inp, "result": failed("relation_locked", ANY, "uids"),
+                              "expect": {"ids": REL_IDS, "revision": "same"}})
+                cases.append({"name": name, "setup": rel_setup(relations), "steps": capture + steps})
+                return
+            output = {"removed": [f"$uid:o{i}" for i in ids], "locked": [], "revision": "$current"}
+            followed = [{"relation": r["id"], "unlinked": counts[r["id"]][0], "deleted": counts[r["id"]][1]}
+                        for r in relations if r["id"] in counts]
+            if followed:
+                output["followed"] = followed
+            if plan:
+                steps.append({"op": "plan", "input": inp, "result": {"status": "completed", "output": output,
+                                                                     "warnings": []},
+                              "expect": {"ids": REL_IDS, "revision": "same"}})
             steps.append({"op": "execute", "input": inp,
-                          "result": {"status": "completed", "output": {"removed": [f"$uid:o{i}" for i in ids], "locked": [],
-                                                                        "revision": "$current"}, "warnings": []},
+                          "result": {"status": "completed", "output": output, "warnings": []},
                           "expect": {"ids": sorted(after), "fields": {str(i): {"attrs": a} for i, a in after.items()},
                                      "canUndo": True, "dirty": True, "revision": "changed"}})
             if undo:
@@ -3716,7 +3823,9 @@ def delete_relation_cases():
     case("alt nesneyi silmek üst nesneyi değiştirmez", [R("cascade")], [3])
     case("iki bina birden: bütün sayaçlar bağsız kalır", [R("unlink")], [1, 2])
     case("bir binadan iki ilişki: sayaçlar bağsız, aboneler silinir", [R("unlink"), A("cascade")], [1])
-    case("kilitli alt katmandaki kayıtlar değişmez", [R("cascade")], [1], locked=("sayac",))
+    case("kilitli alt katmandaki kayıtları değiştirecek silme reddedilir", [R("cascade")], [1], locked=("sayac",))
+    case("kilitli katmandaki alt kayıtlara dokunmayan ilişki silmeyi durdurmaz", [V("cascade")], [1], locked=("vana",))
+    case("plan her ilişkinin bağını koparacağı ve sileceği alt kayıtları sayar", [R("cascade"), V("unlink")], [1], plan=True)
     case("alanı alt katmanda olmayan ilişki bir şey yapmaz", [relation("bina-vana", "bina", "vana", "bina", "cascade")], [1])
     case("restrict başka katmanın silinmesini durdurmaz", [A("restrict")], [3])
     case("sayaç silinince vanası silinir, bina değişmez", [V("cascade")], [3])
@@ -3730,6 +3839,251 @@ def delete_relation_cases():
     case("çoktan çoğa cascade: iki binası da gidince malik silinir", [M("cascade")], [1, 2], undo=True)
     case("çoktan çoğa unlink: iki bina gidince alan boşalır", [M("unlink")], [2, 1])
     case("çoktan çoğa restrict: maliki olan bina silinmez", [M("restrict")], [2])
+    return cases
+
+
+CHILD_NEW = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001"
+CHILD_NEW2 = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1002"
+SAYAC_BODY = {"revision": 1, "items": [{"type": "field", "id": "no", "field": "no", "required": True,
+                                        "checks": [{"rule": "uzunluk(no) >= 3", "message": "Numara en az 3 karakter."}]},
+                                       {"type": "field", "id": "bina", "field": "bina"}]}
+BINA_BODY = {"revision": 1, "items": [{"type": "field", "id": "ad", "field": "Ad"}]}
+
+
+def submit_children_cases():
+    """cad.forms.submit with the record's children (docs/adr/0440 §2), the reference's own rule."""
+    cases = []
+    bina_form = {"id": "bina", "name": "Bina", "layer": "bina", "draft": copy.deepcopy(BINA_BODY),
+                 "releases": [{"version": 1, "digest": digest(BINA_BODY), "body": copy.deepcopy(BINA_BODY)}]}
+    sayac_form = {"id": "sayac", "name": "Sayaç", "layer": "sayac", "draft": copy.deepcopy(SAYAC_BODY),
+                  "releases": [{"version": 1, "digest": digest(SAYAC_BODY), "body": copy.deepcopy(SAYAC_BODY)}]}
+    R = relation("bina-sayac", "bina", "sayac", "bina", name="Binanın sayaçları")
+    A = relation("bina-abone", "bina", "abone", "bina", name="Binanın aboneleri")
+    M = relation("bina-malik", "bina", "malik", "binalar", name="Binanın malikleri")
+    V = relation("sayac-vana", "sayac", "vana", "sayac", name="Sayacın vanaları")
+    BAD = relation("bina-vana", "bina", "vana", "bina", name="Binanın vanaları")
+    rels = [R, A, M, V, BAD]
+    layer_of = {i: l for i, l, _ in REL_OBJECTS}
+
+    def setup_(locked=(), forms=(bina_form, sayac_form)):
+        s = copy.deepcopy(rel_setup(rels, locked))
+        s["settings"]["forms"] = [copy.deepcopy(f) for f in forms]
+        return s
+
+    capture = [{"op": "captureUid", "id": i, "as": f"o{i}"} for i in REL_IDS]
+
+    def link_steps(links):
+        """The links written before the submission: a child's field holding its parents' ids."""
+        out = []
+        for child, field, value in links:
+            out.append({"op": "execute", "command": "cad.entities.set",
+                        "input": {"uids": [f"$uid:o{child}"], "attrs": {field: value}, "operation": "attributes"},
+                        "result": {"status": "completed", "output": {"changed": [f"$uid:o{child}"], "ids": [child],
+                                                                      "revision": "$current"}, "warnings": []},
+                        "expect": {"ids": REL_IDS, "revision": "changed"}})
+        return out
+
+    def children_of(state, parent, new_attrs):
+        """The record's children after the submission: (relation, uid, attrs), each relation's sorted by uid."""
+        out = []
+        for r in rels:
+            if r["parent"] != layer_of[parent]:
+                continue
+            found = [f for f in REL_FIELDS[r["child"]] if key_of(f) == r["field"]]
+            if not found:
+                continue
+            rows = [(f"$uidOf:{i}", a) for i, a in state.items() if i in layer_of and layer_of[i] == r["child"]]
+            rows += [(u, a) for u, (lay, a) in new_attrs.items() if lay == r["child"]]
+            for u, a in sorted(rows):
+                if f"$uid:o{parent}" in parts(a.get(found[0]["name"], "")):
+                    out.append((r["id"], u, a))
+        return out
+
+    def submit(name, children, values=None, parent=1, op="execute", locked=(), forms=(bina_form, sayac_form), links=(),
+               then=None):
+        state = {i: dict(a) for i, _, a in REL_OBJECTS}
+        for child, field, value in links:
+            state[child][field] = value
+        inp = {"form": "bina", "uid": f"$uidOf:{parent}"}
+        if values:
+            inp["values"] = values
+        inp["children"] = children
+        result, written = answer(inp, state, parent, locked, forms)
+        if op == "plan" and result["status"] == "completed":
+            result["output"].pop("undo", None)
+        pre = link_steps(links)
+        expect = {"ids": REL_IDS + [10] if written and any(c.get("created") for c in result["output"]["children"]) else REL_IDS}
+        if result["status"] != "completed" or op == "plan" or not written:
+            expect.update({"revision": "same"})
+        else:
+            expect.update({"revision": "changed", "dirty": True, "canUndo": True})
+            expect["fields"] = {str(i): {"attrs": a} for i, a in written.items()}
+        if pre and "canUndo" in expect:
+            expect.pop("canUndo")
+        steps = capture + pre + [{"op": op, "input": inp, "result": result, "expect": expect}]
+        if then:
+            steps += then(inp, written)
+        cases.append({"name": name, "setup": setup_(locked, forms), "steps": steps})
+
+    def answer(inp, state, parent, locked, forms):
+        """The result and the slots written with their attributes (a new record as slot 10); or a refusal."""
+        def stop(code, path, status="failed"):
+            return failed(code, ANY, path, status), None
+        bina = Form(BINA_BODY, REL_FIELDS["bina"])
+        before = state[parent]
+        after, issues = bina.assess(dict(before), utf8_sorted(dict(inp.get("values", {}))), {}, False)
+        if errors(issues):
+            first = errors(issues)[0]
+            return stop("form_invalid", f"values.{first['field']}" if first.get("field") in inp.get("values", {}) else "values")
+        out_children, written, new_attrs, seen = [], {}, {}, []
+        for i, c in enumerate(inp["children"]):
+            at = f"children[{i}]"
+            uid = c["uid"]
+            if not uid.startswith("$uidOf:") and not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", uid):
+                return stop("invalid_uid", f"{at}.uid")
+            if uid in seen or uid == inp["uid"]:
+                return stop("invalid_uid", f"{at}.uid")
+            seen.append(uid)
+            r = next((r for r in rels if r["id"] == c["relation"]), None)
+            if r is None:
+                return stop("unknown_relation", f"{at}.relation")
+            if r["parent"] != "bina":
+                return stop("relation_mismatch", f"{at}.relation")
+            link = next((f for f in REL_FIELDS[r["child"]] if key_of(f) == r["field"]), None)
+            if link is None:
+                return stop("relation_field_unknown", f"{at}.relation")
+            slot = int(uid.split(":")[1]) if uid.startswith("$uidOf:") else None
+            if slot is not None and layer_of[slot] != r["child"]:
+                return stop("form_layer_mismatch", f"{at}.uid")
+            if slot is None and c.get("unlink"):
+                return stop("entity_not_found", f"{at}.uid")
+            if r["child"] in locked:
+                return stop("layer_locked", f"{at}.uid")
+            base = dict(state[slot]) if slot is not None else {}
+            held = parts(base.get(link["name"], ""))
+            me = f"$uid:o{parent}"
+            if c.get("unlink"):
+                nxt = [h for h in held if h != me]
+            elif link.get("multiple"):
+                nxt = held + ([me] if me not in held else [])
+            else:
+                nxt = [me]
+            attrs = dict(base)
+            if nxt:
+                attrs[link["name"]] = "; ".join(nxt)
+            else:
+                attrs.pop(link["name"], None)
+            form = next((f for f in forms if f["layer"] == r["child"]), None)
+            vals = c.get("values", {})
+            if form is not None:
+                f = Form(form["releases"][-1]["body"], REL_FIELDS[r["child"]])
+                a2, iss = f.assess(attrs, utf8_sorted(dict(vals)), {}, slot is None)
+                if errors(iss):
+                    first = errors(iss)[0]
+                    return stop("form_invalid", f"{at}.values.{first['field']}" if first.get("field") in vals else f"{at}.values")
+                attrs = a2
+            else:
+                for k, v in vals.items():
+                    fld = next((f for f in REL_FIELDS[r["child"]] if key_of(f) == k), None)
+                    if fld is None:
+                        return stop("form_invalid", f"{at}.values.{k}")
+                    cv, why = check_value(fld, v)
+                    if why:
+                        return stop("form_invalid", f"{at}.values.{k}")
+                    if cv:
+                        attrs[fld["name"]] = cv
+                    else:
+                        attrs.pop(fld["name"], None)
+            moved = slot is None or attrs != base
+            out_children.append({"uid": uid, "relation": r["id"], **({"created": True} if slot is None else {}),
+                                 "attrs": attrs, "changed": moved, "_before": base, "_slot": slot})
+            if slot is None:
+                new_attrs[uid] = (r["child"], attrs)
+            elif moved:
+                written[slot] = attrs
+        if after != before:
+            written[parent] = after
+        for c in out_children:
+            if c["_slot"] is None:
+                written[10] = c["attrs"]
+        changes = []
+        names = changed_names(before, after)
+        if names:
+            changes.append({"uid": inp["uid"], "layer": "bina", "fields": names})
+        for c in out_children:
+            if c["changed"]:
+                changes.append({"uid": c["uid"], "layer": layer_of.get(c["_slot"], next(
+                    r["child"] for r in rels if r["id"] == c["relation"])),
+                    **({"created": True} if c["_slot"] is None else {}), "fields": changed_names(c["_before"], c["attrs"])})
+        # The snapshot: computed where every child's id is known (new records' given ids), else any.
+        later = dict(state)
+        for c in out_children:
+            if c["_slot"] is not None:
+                later[c["_slot"]] = c["attrs"]
+        kids = children_of(later, parent, new_attrs)
+        # A child's attributes hold the record's id, known only when the case runs: then any.
+        snap = ANY if kids else snapshot(after)
+        output = {"uid": inp["uid"], "version": 1, "attrs": after, "changed": bool(names),
+                  "children": [{k: v for k, v in c.items() if not k.startswith("_")} for c in out_children],
+                  "snapshot": snap, "revision": "$current"}
+        if changes:
+            output["changes"] = changes
+            output["undo"] = "Form: Bina"
+        if not output["children"]:
+            del output["children"]
+        return {"status": "completed", "output": output, "warnings": []}, written
+
+    submit("bağla: var olan sayaç binaya bağlanır, değeri sayacın formuyla yazılır",
+           [{"relation": "bina-sayac", "uid": "$uidOf:3", "values": {"no": "S-10"}}])
+    submit("bağı kopar: sayacın alanı boşalır", [{"relation": "bina-sayac", "uid": "$uidOf:3", "unlink": True}],
+           links=[(3, "bina", "$uid:o1")])
+    submit("yeni kayıt: çağıranın kimliğiyle, sayacın formuyla", [{"relation": "bina-sayac", "uid": CHILD_NEW,
+                                                                   "values": {"no": "S-99"}}], parent=2)
+
+    def again(inp, written):
+        child = {k: v for k, v in written.items() if k == 10}
+        step = {"op": "execute", "input": inp, "result": {"status": "completed", "output": {
+            "uid": inp["uid"], "version": 1, "attrs": dict(REL_OBJECTS[1][2]), "changed": False,
+            "children": [{"uid": CHILD_NEW, "relation": "bina-sayac", "attrs": child[10], "changed": False}],
+            "snapshot": ANY,
+            "revision": "$current"}, "warnings": []},
+            "expect": {"ids": REL_IDS + [10], "fields": {"10": {"attrs": child[10]}}, "revision": "same"}}
+        return [step]
+    submit("aynı kimlikle yeniden gönderilen yeni kayıt ikinci kez oluşmaz", [{"relation": "bina-sayac", "uid": CHILD_NEW,
+                                                                              "values": {"no": "S-99"}}], parent=2,
+           then=again)
+    submit("çoktan çoğa: malikin binaları listesine bina eklenir", [{"relation": "bina-malik", "uid": "$uidOf:9"}],
+           links=[(9, "binalar", "$uid:o2")])
+    submit("çoktan çoğa: bağı kopar yalnız bu binayı çıkarır", [{"relation": "bina-malik", "uid": "$uidOf:9", "unlink": True}],
+           links=[(9, "binalar", "$uid:o1; $uid:o2")])
+    submit("formu olmayan alt katman: değerler alanların kuralıyla", [{"relation": "bina-abone", "uid": "$uidOf:8",
+                                                                       "values": {"ad": "Ayşe Kaya"}}])
+    submit("kayıt ve alt kayıtları birlikte: değer, bağ, kopma ve yeni kayıt",
+           [{"relation": "bina-sayac", "uid": "$uidOf:3", "unlink": True},
+            {"relation": "bina-sayac", "uid": "$uidOf:4", "values": {"no": "S-20"}},
+            {"relation": "bina-abone", "uid": CHILD_NEW2, "values": {"ad": "Yeni abone"}}],
+           values={"Ad": "A blok"}, links=[(3, "bina", "$uid:o1")])
+    submit("plan yazmaz, ne yazılacağını söyler", [{"relation": "bina-sayac", "uid": "$uidOf:3", "values": {"no": "S-10"}}],
+           values={"Ad": "A2"}, op="plan")
+
+    def undone(inp, written):
+        return [{"op": "undo", "expect": {"ids": REL_IDS, "fields": {"1": {"attrs": dict(REL_OBJECTS[0][2])},
+                                                                      "3": {"attrs": dict(REL_OBJECTS[2][2])}},
+                                          "canRedo": True}}]
+    submit("geri alma kaydı ve alt kayıtlarını birlikte geri alır",
+           [{"relation": "bina-sayac", "uid": "$uidOf:3", "values": {"no": "S-10"}}], values={"Ad": "A3"}, then=undone)
+    submit("olmayan ilişki", [{"relation": "yok", "uid": "$uidOf:3"}])
+    submit("üst katmanı formun katmanı olmayan ilişki", [{"relation": "sayac-vana", "uid": "$uidOf:6"}])
+    submit("alanı alt katmanda olmayan ilişki", [{"relation": "bina-vana", "uid": "$uidOf:6"}])
+    submit("ilişkinin alt katmanında olmayan nesne", [{"relation": "bina-sayac", "uid": "$uidOf:6"}])
+    submit("geçersiz kimlik", [{"relation": "bina-sayac", "uid": "S-1"}])
+    submit("aynı alt kayıt iki kez", [{"relation": "bina-sayac", "uid": "$uidOf:3"}, {"relation": "bina-sayac", "uid": "$uidOf:3"}])
+    submit("olmayan nesnenin bağı koparılmaz", [{"relation": "bina-sayac", "uid": CHILD_NEW, "unlink": True}])
+    submit("alt kaydın formu reddedince hiçbiri yazılmaz", [{"relation": "bina-sayac", "uid": "$uidOf:3", "values": {"no": "S"}}],
+           values={"Ad": "A4"})
+    submit("yeni alt kaydın zorunlu alanı boşsa reddedilir", [{"relation": "bina-sayac", "uid": CHILD_NEW}])
+    submit("formu olmayan alt katmanın olmayan alanı", [{"relation": "bina-abone", "uid": "$uidOf:8", "values": {"yas": "3"}}])
+    submit("kilitli alt katman", [{"relation": "bina-sayac", "uid": "$uidOf:3"}], locked=("sayac",))
     return cases
 
 
@@ -3769,7 +4123,13 @@ def commands():
         d / "cad.entities.delete.relations.json": command_file(
             "cad.entities.delete", "Silme ve ilişkiler",
             "ADR 0405 §2: üst nesne silinince alt kayıtlar ilişkinin politikasıyla aynı adımda izler (unlink, cascade, keep); "
-            "restrict alt kaydı olan üst nesneyi silmez; kilitli katmandaki alt kayıt değişmez.", delete_relation_cases()),
+            "restrict alt kaydı olan üst nesneyi silmez; kilitli katmandaki alt kaydı değiştirecek silme reddedilir (ADR 0440 §1); "
+            "plan ve cevap her ilişkinin izlediği alt kayıtları sayar.", delete_relation_cases()),
+        d / "cad.forms.submit.children.json": command_file(
+            "cad.forms.submit", "Formla kaydet ve alt kayıtlar",
+            "ADR 0440 §2: kayıt alt kayıtlarıyla tek adımda yazılır: ilişkisiyle bağlanan, bağı koparılan, değişen ya da "
+            "çağıranın verdiği kimlikle oluşan; alt katmanın formu varsa onunla; biri reddedilirse hiçbiri yazılmaz. Cevap "
+            "yazılan kayıtları, anlık görüntüyü ve geri alma adımını söyler.", submit_children_cases()),
         d / "cad.polygon.create.forms.json": {**command_file(
             "cad.polygon.create", "Alan çiz ve formun kuralları",
             "ADR 0402 §4: kurallarını uygulayan formun katmanına çizilen alan, aynı adımda formun varsayılanlarını ve "

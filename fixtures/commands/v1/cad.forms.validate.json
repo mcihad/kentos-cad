@@ -14661,8 +14661,7 @@
         },
         {
          "id": "sayaclar",
-         "shown": false,
-         "related": []
+         "shown": false
         }
        ],
        "version": 1,
@@ -16445,8 +16444,7 @@
         },
         {
          "id": "sayaclar",
-         "shown": false,
-         "related": []
+         "shown": false
         }
        ],
        "version": 1,

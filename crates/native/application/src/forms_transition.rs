@@ -16,6 +16,7 @@ use crate::codes;
 use crate::forms::{self, fail};
 
 struct Checked {
+    snapshot: String,
     slot: Slot,
     entity: Entity,
     from: String,
@@ -234,6 +235,18 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             &format!("values.{}", r.key()),
         ));
     }
+    // The snapshot the step was taken on (docs/adr/0440 §4): the record with its children and
+    // attachments, its state and log aside; what a reviewer approves.
+    let skip = forms::snapshot_skip(doc, &form.layer, body);
+    let snapshot = forms::snapshot(
+        doc,
+        &form.layer,
+        &input.uid,
+        &after,
+        &e.base().attachments,
+        &skip,
+        &[],
+    );
     // The step's line in the log (docs/adr/0429): the oldest lines go when the field's length is full.
     let mut after = after;
     if let Some(l) = log {
@@ -253,6 +266,7 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
         {
             line.push_str(&format!(": {}", text.trim()));
         }
+        line.push_str(&format!(" · #{snapshot}"));
         let mut lines: Vec<String> = after
             .get(&l.name)
             .map(|t| t.lines().map(str::to_owned).collect())
@@ -279,6 +293,7 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
         to: step.to.clone(),
         version,
         label: format!("Form: {}", step.label),
+        snapshot,
     })
 }
 
@@ -289,6 +304,7 @@ fn answer(doc: &Document, c: &Checked, uid: &str) -> FormsTransitioned {
         to: c.to.clone(),
         attrs: c.entity.base().attrs.clone(),
         version: c.version,
+        snapshot: c.snapshot.clone(),
         revision: doc.revision().to_string(),
     }
 }

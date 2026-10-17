@@ -15,7 +15,10 @@
 //! 3. every id names an object of the document (in order);
 //! 4. not every object on a locked layer;
 //! 5. no object a `restrict` relation keeps while it has children (`relation_restricted` at its
-//!    place in `uids`, docs/adr/0405 §2). The others' children follow in the document's step.
+//!    place in `uids`, docs/adr/0405 §2). The others' children follow in the document's step;
+//! 6. no relation that would change a locked layer's child (`relation_locked`), nor more children
+//!    than one step takes (`relation_too_large`, docs/adr/0440 §1). The plan and the answer count what
+//!    each relation did and the attachments that went.
 //!
 //! Ids are checked before the document is read, and the revision before the
 //! objects: an input that is wrong by itself is refused whatever the drawing
@@ -24,6 +27,7 @@
 
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesDelete, EntitiesDeletePlan, EntitiesDeleted,
+    RelationFollowed,
 };
 use kentos_domain::{Document, Slot};
 
@@ -54,6 +58,8 @@ pub fn plan(
             output: EntitiesDeletePlan {
                 removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
                 locked: checked.locked,
+                followed: checked.followed,
+                attachments: checked.attachments,
                 revision: cx.doc.revision().to_string(),
             },
             warnings: checked.warnings,
@@ -93,6 +99,8 @@ fn write_execute(
         output: EntitiesDeleted {
             removed: checked.removed.into_iter().map(|(_, uid)| uid).collect(),
             locked: checked.locked,
+            followed: checked.followed,
+            attachments: checked.attachments,
             revision: cx.doc.revision().to_string(),
         },
         warnings: checked.warnings,
@@ -105,6 +113,8 @@ struct Checked {
     removed: Vec<(Slot, String)>,
     locked: Vec<String>,
     warnings: Vec<CommandWarning>,
+    followed: Vec<RelationFollowed>,
+    attachments: u32,
 }
 
 /// The checks in the contract's order.
@@ -149,6 +159,31 @@ fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
             Some(format!("uids[{at}]")),
         )));
     }
+    // What the relations would do (docs/adr/0440 §1): a locked child is not changed behind the user's
+    // back, nor is a step made too large to undo.
+    let effects = doc.relation_effects(&going);
+    if let Some((relation, layer)) = &effects.locked {
+        return Err(Stop::failed(checks::error(
+            codes::RELATION_LOCKED,
+            format!(
+                "“{relation}” ilişkisi “{}” katmanındaki alt kayıtları değiştirir ama katman kilitli. Kilidi Katmanlar panelinden açın ya da önce bağları koparın.",
+                doc.layers()
+                    .get(layer)
+                    .map_or(layer.as_str(), |n| n.name.as_str())
+            ),
+            Some("uids".into()),
+        )));
+    }
+    if effects.children > MOST_FOLLOWED {
+        return Err(Stop::failed(checks::error(
+            codes::RELATION_TOO_LARGE,
+            format!(
+                "İlişkiler {} alt kaydı değiştirirdi; tek adımda en çok {MOST_FOLLOWED}. Daha az nesne seçin.",
+                effects.children
+            ),
+            Some("uids".into()),
+        )));
+    }
     let mut warnings = Vec::new();
     if !locked.is_empty() {
         warnings.push(CommandWarning {
@@ -161,8 +196,21 @@ fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
         removed,
         locked,
         warnings,
+        followed: effects
+            .followed
+            .into_iter()
+            .map(|(relation, unlinked, deleted)| RelationFollowed {
+                relation,
+                unlinked,
+                deleted,
+            })
+            .collect(),
+        attachments: effects.attachments,
     })
 }
+
+/// The most children a delete's relations may change in one step (docs/adr/0440 §1).
+pub const MOST_FOLLOWED: usize = 10_000;
 
 #[cfg(test)]
 mod tests {

@@ -39,6 +39,7 @@ mod external;
 mod followers;
 mod form_follow;
 mod relation_follow;
+pub use relation_follow::RelationEffects;
 pub mod fields;
 mod hash;
 mod hatch_ties;

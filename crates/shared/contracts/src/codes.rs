@@ -284,6 +284,16 @@ codes! {
     RELATION_FIELD_UNKNOWN = "relation_field_unknown", Failed, false, "İlişkinin alanı alt katmanda yok.";
     /// A parent a `restrict` relation keeps from being deleted while it has children.
     RELATION_RESTRICTED = "relation_restricted", Failed, false, "Nesnenin ilişkili alt kayıtları var; ilişki silinmesine izin vermiyor.";
+    /// A relation would change or delete children on a locked layer (docs/adr/0440 §1).
+    RELATION_LOCKED = "relation_locked", Failed, false, "İlişkinin değiştireceği alt kayıtlar kilitli katmanda.";
+    /// A delete whose relations would reach too many children for one step (docs/adr/0440 §1).
+    RELATION_TOO_LARGE = "relation_too_large", Failed, false, "İlişkilerin izleyeceği alt kayıtlar tek adım için çok fazla.";
+    /// Compositions that delete each other in a circle, or a chain deeper than allowed (docs/adr/0440 §3).
+    RELATION_CYCLE = "relation_cycle", Failed, false, "Bileşik ilişkiler döngü kuruyor ya da zincir çok derin.";
+    /// A relation's child layer or field changed while children hold its links (docs/adr/0440 §3).
+    RELATION_IN_USE = "relation_in_use", Failed, false, "Alt kayıtlar ilişkinin bağlarını tutuyor.";
+    /// A submission's child through a relation whose parent is not the form's layer (docs/adr/0440 §2).
+    RELATION_MISMATCH = "relation_mismatch", Failed, false, "İlişkinin üst katmanı formun katmanı değil.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
     /// A moment that is not a date or a date and a local time (`cad.forms.validate`, `.submit`).

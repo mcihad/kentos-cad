@@ -366,6 +366,8 @@ pub enum RelatedView {
     List,
     /// A table of the item's columns, the numbers totalled under them.
     Table,
+    /// A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).
+    Cards,
 }
 
 impl RelatedView {

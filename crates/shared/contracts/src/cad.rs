@@ -428,6 +428,16 @@ pub struct EntitiesDeleted {
     pub removed: Vec<String>,
     /// The ids left in place because their layer is locked, in the input's order.
     pub locked: Vec<String>,
+    /// What the project's relations did to the deleted objects' children (docs/adr/0440 §1), in the
+    /// relations' order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RelationFollowed>>", optional))]
+    pub followed: Vec<RelationFollowed>,
+    /// The attachments the deleted objects (their followed children too) held (docs/adr/0440 §1).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub attachments: u32,
     /// The document's revision after the delete, as decimal text. Inside an
     /// open transaction or group the delete joins it, and the revision
     /// changes when that ends.
@@ -446,8 +456,38 @@ pub struct EntitiesDeletePlan {
     pub removed: Vec<String>,
     /// The ids it would leave in place because their layer is locked.
     pub locked: Vec<String>,
+    /// What the project's relations would do to the children (docs/adr/0440 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RelationFollowed>>", optional))]
+    pub followed: Vec<RelationFollowed>,
+    /// The attachments that would go with the objects (docs/adr/0440 §1).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub attachments: u32,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to delete exactly these, or nothing.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// What a relation did to a deleted parent's children (docs/adr/0440 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RelationFollowed {
+    /// The relation's id.
+    pub relation: String,
+    /// Children whose link was emptied or lost the parent's id from its list.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub unlinked: u32,
+    /// Children deleted with it (a composition).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub deleted: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }

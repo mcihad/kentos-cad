@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    FormChild,
     FormPackage,
     FormsAudit,
     FormsAudited,
@@ -1048,6 +1049,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         *,
         form: str,
         uid: str,
+        children: Sequence[FormChild] | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1078,6 +1080,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             doc: The drawing it works on.
             form: The form's id.
             uid: The object (lowercase UUID text with hyphens).
+            children: The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
+                made, each through its relation; the record and its children go in together or not at all.
             defaults: The form's defaults in the record's empty fields first (a new record).
             draft: Through its draft instead of its latest release (a form not yet published).
             expected_revision: The document revision the input was prepared against, as decimal text.
@@ -1107,6 +1111,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         return self.execute_input(doc, FormsSubmit(
             form=form,
             uid=uid,
+            children=_opt(children, lambda x: list(x)),
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1124,6 +1129,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         *,
         form: str,
         uid: str,
+        children: Sequence[FormChild] | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1139,6 +1145,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         return self.plan_input(doc, FormsSubmit(
             form=form,
             uid=uid,
+            children=_opt(children, lambda x: list(x)),
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1156,6 +1163,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         *,
         form: str,
         uid: str,
+        children: Sequence[FormChild] | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1171,6 +1179,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         return self.validate_input(doc, FormsSubmit(
             form=form,
             uid=uid,
+            children=_opt(children, lambda x: list(x)),
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1188,6 +1197,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         *,
         form: str,
         uid: str,
+        children: Sequence[FormChild] | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1208,6 +1218,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         return self.answer_input(doc, FormsSubmit(
             form=form,
             uid=uid,
+            children=_opt(children, lambda x: list(x)),
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,

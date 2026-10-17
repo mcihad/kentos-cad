@@ -278,11 +278,72 @@ pub struct FormsSubmit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub opened: Option<BTreeMap<String, String>>,
+    /// The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
+    /// made, each through its relation; the record and its children go in together or not at all.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormChild>>", optional))]
+    pub children: Vec<FormChild>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// A child written with its parent's record (docs/adr/0440 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormChild {
+    /// The project relation whose parent is the form's layer.
+    pub relation: String,
+    /// The child (lowercase UUID text with hyphens): an object of the relation's child layer, or a new
+    /// record's id the caller made (the same id given again writes the same record, not another).
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+    /// Values by the child layer's fields' keys, through the child layer's form when it has one.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub values: BTreeMap<String, String>,
+    /// The link to the record taken off (Bağı kopar) instead of made; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unlink: bool,
+}
+
+/// A child as the submission wrote it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ChildSubmitted {
+    pub uid: String,
+    pub relation: String,
+    /// A new record, made by the submission; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub created: bool,
+    pub attrs: BTreeMap<String, String>,
+    pub changed: bool,
+}
+
+/// A record a command wrote (docs/adr/0440 §5): its id, layer, whether it was made, the fields that
+/// changed by their names, in order.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordChange {
+    pub uid: String,
+    pub layer: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub created: bool,
+    pub fields: Vec<String>,
 }
 
 /// Output of `cad.forms.submit` v1, and what plan says it would do.
@@ -302,6 +363,22 @@ pub struct FormsSubmitted {
     pub attrs: BTreeMap<String, String>,
     /// Whether the object changed.
     pub changed: bool,
+    /// The children as written (docs/adr/0440 §2), in the input's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ChildSubmitted>>", optional))]
+    pub children: Vec<ChildSubmitted>,
+    /// The records written (docs/adr/0440 §5): the record, then its children, in order; none
+    /// unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordChange>>", optional))]
+    pub changes: Vec<RecordChange>,
+    /// The record's snapshot afterwards (docs/adr/0440 §4): its fingerprint with its children and
+    /// attachments, what a reviewer approves.
+    pub snapshot: String,
+    /// The undo step the write is (plan and an unchanged record: none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub undo: Option<String>,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
@@ -415,9 +492,19 @@ pub struct RelationsEdited {
     pub relations: Vec<ProjectRelation>,
     /// Whether the settings changed.
     pub changed: bool,
+    /// The children whose field holds a link of the relation (the edited one's, before the edit;
+    /// docs/adr/0440 §3).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub links: u32,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// Input of `cad.forms.audit` v1 (docs/adr/0406 §1).
@@ -748,6 +835,8 @@ pub struct FormsTransitioned {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: Option<u32>,
+    /// The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.
+    pub snapshot: String,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

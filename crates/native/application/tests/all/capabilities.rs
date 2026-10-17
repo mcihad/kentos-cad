@@ -64,6 +64,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.entities.delete",
+        "relation_too_large",
+        "on bin alt kayıt gerektirir; ortak durum dosyası için çok büyük, sınır delete.rs'in MOST_FOLLOWED'ıdır ve relation_effects onu sayar (ADR 0440 §1)",
+    ),
+    (
         "cad.entities.offset",
         "approximate_offset",
         "eğrinin kopyası yaklaşıktır, kesin bir beklentiyle yazılamaz; geometri-core'un offset_notes testinde eğriye uzaklığıyla denetlenir (ADR 0293)",

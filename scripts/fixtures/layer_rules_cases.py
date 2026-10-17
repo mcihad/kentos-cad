@@ -536,8 +536,10 @@ def submit_file():
         expect = {"ids": list(RECORDS), "fields": {str(slot): {"attrs": after}}, "canUndo": changed, "canRedo": False}
         expect.update({"dirty": True, "revision": "changed"} if changed else {"revision": "same"})
         cases.append({"name": name, "setup": setup_, "steps": [{"op": "execute", "input": inp, "result": {
-            "status": "completed", "output": {"uid": f"$uidOf:{slot}", "version": version, "attrs": after, "changed": changed,
-                                              "revision": "$current"}, "warnings": warnings}, "expect": expect}]})
+            "status": "completed", "output": fc.submitted(
+                {"uid": f"$uidOf:{slot}", "version": version, "attrs": after, "changed": changed, "revision": "$current"},
+                f"$uidOf:{slot}", before, after, FORM["layer"], f"Form: {FORM['name']}", fc.snapshot(after)), "warnings": warnings},
+            "expect": expect}]})
 
     def conflict(name, inp, slot, c, message, path, setup_=S):
         cases.append({"name": name, "setup": setup_, "steps": [{"op": "execute", "input": inp, "result": {

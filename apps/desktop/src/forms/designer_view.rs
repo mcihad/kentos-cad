@@ -15,10 +15,10 @@ use kentos_ui::{label, style};
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
-    ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL,
-    CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME,
-    NEW_FORM, PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM,
-    Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT,
+    CANCEL, CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit,
+    NAME, NEW_FORM, PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM,
+    REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
@@ -362,6 +362,7 @@ impl App {
             tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
             tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
             tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
+            tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
             tool(
                 ADD_ATTACHMENTS,
                 crate::icons::from_web(Some("photo")),
@@ -641,6 +642,7 @@ impl App {
                         input("İlişkili kayıtlar", text.as_deref().unwrap_or(""), Text::Label),
                         None,
                     ))
+                    .push(self.relation_pick(layer, field))
                     .push(words::field("Katman", pick_layer, error_of("related")))
                     .push(words::field("Alan", pick_field, None))
                     .push(
@@ -651,17 +653,17 @@ impl App {
                     );
                 // Liste | Tablo, and the table's columns (docs/adr/0425).
                 use kentos_contracts::RelatedView as RV;
-                let views = [RV::List, RV::Table];
+                let views = [RV::List, RV::Table, RV::Cards];
                 col = col.push(words::field(
                     "Görünüm",
                     Select::new(
-                        ["Liste", "Tablo"].map(Choice::new),
+                        ["Liste", "Tablo", "Kartlar"].map(Choice::new),
                         views.iter().position(|v| v == view),
                         move |i| msg(Event::RelatedView(views[i])),
                     ),
                     None,
                 ));
-                if *view == RV::Table {
+                if *view != RV::List {
                     let mut chips = Row::new().spacing(4);
                     for f in their.iter().filter(|f| f.key() != field) {
                         let on = columns.iter().any(|c| c == f.key());
@@ -1257,6 +1259,39 @@ impl App {
 }
 
 impl App {
+    /// İlişki (docs/adr/0440 §6): the project relations whose parent is the form's layer; one picked fills
+    /// the related item's layer and field.
+    fn relation_pick<'a>(&'a self, layer: &str, field: &str) -> Element<'a, Message> {
+        let form_layer = self.chosen_form().map(|f| f.layer.clone());
+        let relations: Vec<kentos_contracts::ProjectRelation> = self
+            .document
+            .as_ref()
+            .map(|d| {
+                d.model
+                    .settings()
+                    .relations
+                    .iter()
+                    .filter(|r| Some(&r.parent) == form_layer.as_ref())
+                    .cloned()
+                    .collect()
+            })
+            .unwrap_or_default();
+        let at = relations
+            .iter()
+            .position(|r| r.child == layer && r.field == field);
+        let ids: Vec<String> = relations.iter().map(|r| r.id.clone()).collect();
+        words::field(
+            "İlişki",
+            Select::new(
+                relations.iter().map(|r| Choice::new(r.name.clone())),
+                at,
+                move |i| msg(Event::RelatedFrom(ids[i].clone())),
+            )
+            .placeholder("Projenin ilişkilerinden"),
+            None,
+        )
+    }
+
     /// A field's list from another layer (docs/adr/0404 §1): Kendi değerleri or a layer, its key
     /// (Kimlik: the object's persistent id), its label, the chain's matches and the filter.
     fn lookup_rows<'a>(

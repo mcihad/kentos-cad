@@ -739,7 +739,19 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Durum",
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "f0a50a14b30b446b"
       },
       "warnings": []
      },
@@ -788,7 +800,8 @@
        },
        "changed": false,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "snapshot": "f0a50a14b30b446b"
       },
       "warnings": []
      },
@@ -1277,7 +1290,21 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "bina",
+         "fields": [
+          "Açıklama",
+          "Durum",
+          "Kat",
+          "Onaylı"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "294ad585b6b14adc"
       },
       "warnings": []
      },
@@ -1765,7 +1792,20 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "bina",
+         "fields": [
+          "Durum",
+          "Kat",
+          "Tarih"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "7580b1ec04b24cda"
       },
       "warnings": []
      },
@@ -2284,7 +2324,20 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "bina",
+         "fields": [
+          "Durum",
+          "Kat",
+          "Tarih"
+         ]
+        }
+       ],
+       "undo": "Form: Taslaklı denetim",
+       "snapshot": "b2018088a3e5d9e3"
       },
       "warnings": [
        {
@@ -6087,7 +6140,18 @@
         "Kod": "B-12"
        },
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Durum"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "5b96b55e8d8d4d23"
       },
       "warnings": []
      },
@@ -8120,7 +8184,18 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Kat"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "535a5b98c14f279b"
       },
       "warnings": []
      },
@@ -8605,7 +8680,8 @@
        },
        "changed": false,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "snapshot": "cdfdb51a522c2012"
       },
       "warnings": []
      },
@@ -9093,7 +9169,19 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Açıklama",
+          "Tarih"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "ffddd54e22d9b816"
       },
       "warnings": []
      },
@@ -9142,7 +9230,18 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Tarih"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "9c6b02aab9e2c2a2"
       },
       "warnings": []
      },
@@ -9630,7 +9729,18 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Açıklama"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "c4cb8801e21c1702"
       },
       "warnings": []
      },
@@ -10119,7 +10229,19 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Kat",
+          "Onaylı"
+         ]
+        }
+       ],
+       "undo": "Form: Bina denetimi",
+       "snapshot": "dea2b5ea6c7f8af4"
       },
       "warnings": []
      },
@@ -11228,7 +11350,27 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "bina",
+         "fields": [
+          "Açıklama",
+          "Durum",
+          "Kat",
+          "Kayıt",
+          "Kod",
+          "Puan",
+          "Riskli",
+          "Taban",
+          "Tarih",
+          "Yükseklik"
+         ]
+        }
+       ],
+       "undo": "Form: Bina hesabı",
+       "snapshot": "37773ba5ddad9dc7"
       },
       "warnings": [
        {
@@ -13953,7 +14095,20 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Mahalle",
+          "İl",
+          "İlçe"
+         ]
+        }
+       ],
+       "undo": "Form: Bina adresi",
+       "snapshot": "$any"
       },
       "warnings": []
      },
@@ -14795,7 +14950,18 @@
        },
        "changed": true,
        "revision": "$current",
-       "version": 1
+       "version": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bina",
+         "fields": [
+          "Parsel"
+         ]
+        }
+       ],
+       "undo": "Form: Bina adresi",
+       "snapshot": "$any"
       },
       "warnings": []
      },

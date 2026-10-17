@@ -15,4 +15,8 @@ attrs: { [key in string]: string },
 /**
  * The release used; none: the draft.
  */
-version?: number, revision: string, };
+version?: number, 
+/**
+ * The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.
+ */
+snapshot: string, revision: string, };

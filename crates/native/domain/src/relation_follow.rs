@@ -122,6 +122,100 @@ impl Document {
         out
     }
 
+    /// What deleting the objects `uids` would do through the project's relations (docs/adr/0440 §1),
+    /// as [`Document::follow_relations`] does it, writing nothing: each relation's unlinked and deleted
+    /// children, the attachments that would go, the first relation that would touch a locked layer's
+    /// child and how many children would follow.
+    pub fn relation_effects(&self, uids: &[Uuid]) -> RelationEffects {
+        let mut out = RelationEffects::default();
+        let mut gone: Vec<(String, Uuid)> = Vec::new();
+        let mut seen: HashSet<Uuid> = HashSet::new();
+        for uid in uids {
+            if let Some(s) = self
+                .store
+                .slot_of(*uid)
+                .and_then(|slot| self.store.get(slot))
+                && seen.insert(*uid)
+            {
+                out.attachments += s.entity.base().attachments.len() as u32;
+                gone.push((s.entity.base().layer_id.clone(), *uid));
+            }
+        }
+        // The children's link values as the walk has left them.
+        let mut left: std::collections::HashMap<Uuid, String> = std::collections::HashMap::new();
+        let mut counts: Vec<(String, u32, u32)> = Vec::new();
+        while let Some((layer, parent)) = gone.pop() {
+            let id = parent.to_string();
+            for r in &self.settings.relations {
+                if r.parent != layer
+                    || matches!(r.on_delete, RelationDelete::Keep | RelationDelete::Restrict)
+                {
+                    continue;
+                }
+                let Some((name, many)) = self
+                    .layers
+                    .get(&r.child)
+                    .and_then(|n| n.fields.iter().find(|f| f.key() == r.field))
+                    .map(|f| (f.name.clone(), f.multiple))
+                else {
+                    continue;
+                };
+                for child in self.store.on_layer(&r.child) {
+                    if seen.contains(&child.uid) {
+                        continue;
+                    }
+                    let value = left
+                        .get(&child.uid)
+                        .cloned()
+                        .or_else(|| child.entity.base().attrs.get(&name).cloned());
+                    let Some(value) = value.filter(|v| holds_id(v, &id)) else {
+                        continue;
+                    };
+                    if self.layers.is_locked(&r.child) {
+                        out.locked
+                            .get_or_insert_with(|| (r.name.clone(), r.child.clone()));
+                        continue;
+                    }
+                    let rest = if many {
+                        value
+                            .split(';')
+                            .map(str::trim)
+                            .filter(|h| !h.is_empty() && *h != id)
+                            .collect::<Vec<_>>()
+                            .join(kentos_contracts::MULTIPLE_JOIN)
+                    } else {
+                        String::new()
+                    };
+                    let at = match counts.iter().position(|(rid, ..)| *rid == r.id) {
+                        Some(i) => i,
+                        None => {
+                            counts.push((r.id.clone(), 0, 0));
+                            counts.len() - 1
+                        }
+                    };
+                    if !rest.is_empty() || r.on_delete != RelationDelete::Cascade {
+                        counts[at].1 += 1;
+                        left.insert(child.uid, rest);
+                    } else {
+                        counts[at].2 += 1;
+                        seen.insert(child.uid);
+                        out.attachments += child.entity.base().attachments.len() as u32;
+                        gone.push((r.child.clone(), child.uid));
+                    }
+                    out.children += 1;
+                }
+            }
+        }
+        // The relations' order.
+        out.followed = self
+            .settings
+            .relations
+            .iter()
+            .filter_map(|r| counts.iter().find(|(id, ..)| *id == r.id).cloned())
+            .collect();
+        out
+    }
+
     /// The children a `restrict` relation keeps the objects `uids` from being deleted for: each parent
     /// that has one, with the relation's name (docs/adr/0405 §2).
     pub fn restricted_by(&self, uids: &[Uuid]) -> Vec<(Uuid, String)> {
@@ -166,6 +260,18 @@ impl Document {
         }
         out
     }
+}
+
+/// What a delete would do through the project's relations (docs/adr/0440 §1).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct RelationEffects {
+    /// Each relation's id, its unlinked and its deleted children, in the relations' order.
+    pub followed: Vec<(String, u32, u32)>,
+    pub attachments: u32,
+    /// The first relation (its name and child layer) that would change a locked layer's child.
+    pub locked: Option<(String, String)>,
+    /// The children that would change or go.
+    pub children: usize,
 }
 
 /// Whether a reference field's value holds `id`: the id itself or one of a many-to-many field's ids

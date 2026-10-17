@@ -2021,12 +2021,14 @@ class RelatedView(_StrEnum):
 
     - ``list``: Their names, one a line.
     - ``table``: A table of the item's columns, the numbers totalled under them.
+    - ``cards``: A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).
     """
     LIST = "list"
     TABLE = "table"
+    CARDS = "cards"
 
 
-RelatedViewName = Literal["list", "table"]
+RelatedViewName = Literal["list", "table", "cards"]
 """The names of :class:`RelatedView`, for a plain string."""
 
 
@@ -5869,6 +5871,39 @@ class CheckpointRestore(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ChildSubmitted(_Model):
+    """A child as the submission wrote it.
+    Attributes:
+        created: A new record, made by the submission; written only as `true`.
+    """
+    uid: str
+    relation: str
+    attrs: dict[str, str]
+    changed: bool
+    created: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["relation"] = self.relation
+        out["attrs"] = dict(self.attrs)
+        out["changed"] = self.changed
+        if self.created is not UNSET:
+            out["created"] = self.created
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChildSubmitted:
+        return cls(
+            uid=data["uid"],
+            relation=data["relation"],
+            attrs=dict(data["attrs"]),
+            changed=data["changed"],
+            created=data.get("created", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CircleCreate(_Model):
     """Input of `cad.circle.create` v1: one circle by its centre and radius on a
     named layer, written as one undo step. The circle tool computes the circle
@@ -8721,16 +8756,24 @@ class EntitiesDeletePlan(_Model):
         locked: The ids it would leave in place because their layer is locked.
         revision: The document revision the plan was made against. Give it as
             `expectedRevision` to delete exactly these, or nothing.
+        attachments: The attachments that would go with the objects (docs/adr/0440 §1). Unit: count.
+        followed: What the project's relations would do to the children (docs/adr/0440 §1).
     """
     removed: list[str]
     locked: list[str]
     revision: str
+    attachments: int | Unset = UNSET
+    followed: list[RelationFollowed] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["removed"] = list(self.removed)
         out["locked"] = list(self.locked)
         out["revision"] = self.revision
+        if self.attachments is not UNSET:
+            out["attachments"] = self.attachments
+        if self.followed is not UNSET:
+            out["followed"] = [e0.to_json() for e0 in self.followed]
         return out
 
     @classmethod
@@ -8739,6 +8782,8 @@ class EntitiesDeletePlan(_Model):
             removed=list(data["removed"]),
             locked=list(data["locked"]),
             revision=data["revision"],
+            attachments=data.get("attachments", UNSET),
+            followed=[RelationFollowed.from_json(e0) for e0 in data["followed"]] if "followed" in data else UNSET,
         )
 
 
@@ -8752,16 +8797,25 @@ class EntitiesDeleted(_Model):
         revision: The document's revision after the delete, as decimal text. Inside an
             open transaction or group the delete joins it, and the revision
             changes when that ends.
+        attachments: The attachments the deleted objects (their followed children too) held (docs/adr/0440 §1). Unit: count.
+        followed: What the project's relations did to the deleted objects' children (docs/adr/0440 §1), in the
+            relations' order.
     """
     removed: list[str]
     locked: list[str]
     revision: str
+    attachments: int | Unset = UNSET
+    followed: list[RelationFollowed] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["removed"] = list(self.removed)
         out["locked"] = list(self.locked)
         out["revision"] = self.revision
+        if self.attachments is not UNSET:
+            out["attachments"] = self.attachments
+        if self.followed is not UNSET:
+            out["followed"] = [e0.to_json() for e0 in self.followed]
         return out
 
     @classmethod
@@ -8770,6 +8824,8 @@ class EntitiesDeleted(_Model):
             removed=list(data["removed"]),
             locked=list(data["locked"]),
             revision=data["revision"],
+            attachments=data.get("attachments", UNSET),
+            followed=[RelationFollowed.from_json(e0) for e0 in data["followed"]] if "followed" in data else UNSET,
         )
 
 
@@ -11394,6 +11450,41 @@ class FormCheck(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormChild(_Model):
+    """A child written with its parent's record (docs/adr/0440 §2).
+    Attributes:
+        relation: The project relation whose parent is the form's layer.
+        uid: The child (lowercase UUID text with hyphens): an object of the relation's child layer, or a new
+            record's id the caller made (the same id given again writes the same record, not another).
+        unlink: The link to the record taken off (Bağı kopar) instead of made; written only as `true`.
+        values: Values by the child layer's fields' keys, through the child layer's form when it has one.
+    """
+    relation: str
+    uid: str
+    unlink: bool | Unset = UNSET
+    values: dict[str, str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = self.relation
+        out["uid"] = self.uid
+        if self.unlink is not UNSET:
+            out["unlink"] = self.unlink
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormChild:
+        return cls(
+            relation=data["relation"],
+            uid=data["uid"],
+            unlink=data.get("unlink", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormIssue(_Model):
     """What a form's preflight or a record's validation found (docs/adr/0401 §4, §6): a stable code,
     where (the item, the field's key, the rule) and the sentence that says it.
@@ -12378,6 +12469,8 @@ class FormsSubmit(_Model):
     Attributes:
         form: The form's id.
         uid: The object (lowercase UUID text with hyphens).
+        children: The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
+            made, each through its relation; the record and its children go in together or not at all.
         defaults: The form's defaults in the record's empty fields first (a new record).
         draft: Through its draft instead of its latest release (a form not yet published).
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -12395,6 +12488,7 @@ class FormsSubmit(_Model):
     """
     form: str
     uid: str
+    children: list[FormChild] | Unset = UNSET
     defaults: bool | Unset = UNSET
     draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -12408,6 +12502,8 @@ class FormsSubmit(_Model):
         out: dict[str, Any] = {}
         out["form"] = self.form
         out["uid"] = self.uid
+        if self.children is not UNSET:
+            out["children"] = [e0.to_json() for e0 in self.children]
         if self.defaults is not UNSET:
             out["defaults"] = self.defaults
         if self.draft is not UNSET:
@@ -12431,6 +12527,7 @@ class FormsSubmit(_Model):
         return cls(
             form=data["form"],
             uid=data["uid"],
+            children=[FormChild.from_json(e0) for e0 in data["children"]] if "children" in data else UNSET,
             defaults=data.get("defaults", UNSET),
             draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
@@ -12448,13 +12545,23 @@ class FormsSubmitted(_Model):
     Attributes:
         attrs: The record's attributes afterwards.
         changed: Whether the object changed.
+        snapshot: The record's snapshot afterwards (docs/adr/0440 §4): its fingerprint with its children and
+            attachments, what a reviewer approves.
         revision: The document's revision afterwards (plan: the one it was made against).
+        changes: The records written (docs/adr/0440 §5): the record, then its children, in order; none
+            unchanged.
+        children: The children as written (docs/adr/0440 §2), in the input's order.
+        undo: The undo step the write is (plan and an unchanged record: none).
         version: The release written through; none: the draft. Unit: version.
     """
     uid: str
     attrs: dict[str, str]
     changed: bool
+    snapshot: str
     revision: str
+    changes: list[RecordChange] | Unset = UNSET
+    children: list[ChildSubmitted] | Unset = UNSET
+    undo: str | None | Unset = UNSET
     version: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12462,7 +12569,14 @@ class FormsSubmitted(_Model):
         out["uid"] = self.uid
         out["attrs"] = dict(self.attrs)
         out["changed"] = self.changed
+        out["snapshot"] = self.snapshot
         out["revision"] = self.revision
+        if self.changes is not UNSET:
+            out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.children is not UNSET:
+            out["children"] = [e0.to_json() for e0 in self.children]
+        if self.undo is not UNSET:
+            out["undo"] = self.undo
         if self.version is not UNSET:
             out["version"] = self.version
         return out
@@ -12473,7 +12587,11 @@ class FormsSubmitted(_Model):
             uid=data["uid"],
             attrs=dict(data["attrs"]),
             changed=data["changed"],
+            snapshot=data["snapshot"],
             revision=data["revision"],
+            changes=[RecordChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
+            children=[ChildSubmitted.from_json(e0) for e0 in data["children"]] if "children" in data else UNSET,
+            undo=data.get("undo", UNSET),
             version=data.get("version", UNSET),
         )
 
@@ -12605,12 +12723,14 @@ class FormsTransitioned(_Model):
     Attributes:
         from_: The state it was in and the state it is in.
         attrs: The record's attributes afterwards.
+        snapshot: The record's snapshot the step was taken on (docs/adr/0440 §4), also at the end of its log line.
         version: The release used; none: the draft. Unit: version.
     """
     uid: str
     from_: str
     to: str
     attrs: dict[str, str]
+    snapshot: str
     revision: str
     version: int | None | Unset = UNSET
 
@@ -12620,6 +12740,7 @@ class FormsTransitioned(_Model):
         out["from"] = self.from_
         out["to"] = self.to
         out["attrs"] = dict(self.attrs)
+        out["snapshot"] = self.snapshot
         out["revision"] = self.revision
         if self.version is not UNSET:
             out["version"] = self.version
@@ -12632,6 +12753,7 @@ class FormsTransitioned(_Model):
             from_=data["from"],
             to=data["to"],
             attrs=dict(data["attrs"]),
+            snapshot=data["snapshot"],
             revision=data["revision"],
             version=data.get("version", UNSET),
         )
@@ -21226,6 +21348,35 @@ class RasterStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecordChange(_Model):
+    """A record a command wrote (docs/adr/0440 §5): its id, layer, whether it was made, the fields that
+    changed by their names, in order.
+    """
+    uid: str
+    layer: str
+    fields: list[str]
+    created: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["fields"] = list(self.fields)
+        if self.created is not UNSET:
+            out["created"] = self.created
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordChange:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            fields=list(data["fields"]),
+            created=data.get("created", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecordCopy(_Model):
     """One copy: the object it was made from, its persistent id and its slot.
     Attributes:
@@ -21683,6 +21834,34 @@ class RegularPolygonCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RelationFollowed(_Model):
+    """What a relation did to a deleted parent's children (docs/adr/0440 §1).
+    Attributes:
+        relation: The relation's id.
+        unlinked: Children whose link was emptied or lost the parent's id from its list. Unit: count.
+        deleted: Children deleted with it (a composition). Unit: count.
+    """
+    relation: str
+    unlinked: int
+    deleted: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = self.relation
+        out["unlinked"] = self.unlinked
+        out["deleted"] = self.deleted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelationFollowed:
+        return cls(
+            relation=data["relation"],
+            unlinked=data["unlinked"],
+            deleted=data["deleted"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RelationsEdit(_Model):
     """Input of `cad.relations.edit` v1.
 
@@ -21717,16 +21896,21 @@ class RelationsEdited(_Model):
         relations: The project's relations afterwards, in order.
         changed: Whether the settings changed.
         revision: The document's revision afterwards (plan: the one it was made against).
+        links: The children whose field holds a link of the relation (the edited one's, before the edit;
+            docs/adr/0440 §3). Unit: count.
     """
     relations: list[ProjectRelation]
     changed: bool
     revision: str
+    links: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["relations"] = [e0.to_json() for e0 in self.relations]
         out["changed"] = self.changed
         out["revision"] = self.revision
+        if self.links is not UNSET:
+            out["links"] = self.links
         return out
 
     @classmethod
@@ -21735,6 +21919,7 @@ class RelationsEdited(_Model):
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]],
             changed=data["changed"],
             revision=data["revision"],
+            links=data.get("links", UNSET),
         )
 
 
@@ -31118,6 +31303,7 @@ __all__ = [
     "CheckpointKind",
     "CheckpointKindName",
     "CheckpointRestore",
+    "ChildSubmitted",
     "CircleConstructedCurve",
     "CircleCreate",
     "CircleCreated",
@@ -31338,6 +31524,7 @@ __all__ = [
     "FormChangeKind",
     "FormChangeKindName",
     "FormCheck",
+    "FormChild",
     "FormIssue",
     "FormItem",
     "FormItemState",
@@ -31746,6 +31933,7 @@ __all__ = [
     "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
+    "RecordChange",
     "RecordCopy",
     "RecordEntity",
     "RecordRow",
@@ -31767,6 +31955,7 @@ __all__ = [
     "RelatedViewName",
     "RelationDelete",
     "RelationDeleteName",
+    "RelationFollowed",
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",

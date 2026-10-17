@@ -54,6 +54,8 @@ pub(super) const UP: &str = "Yukarı";
 pub(super) const DOWN: &str = "Aşağı";
 pub(super) const REMOVE_ITEM: &str = "Öğeyi sil";
 pub(super) const ADD_RELATED: &str = "İlişkili";
+/// A field referring to the record's parent through a project relation (docs/adr/0440 §6).
+pub(super) const ADD_REFERENCE: &str = "Başvuru";
 pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
@@ -188,6 +190,11 @@ pub enum Event {
     AddField(String),
     /// A related item (docs/adr/0404 §4) where the chosen item is.
     AddRelated,
+    /// A reference to the parent through a project relation whose child is the form's layer
+    /// (docs/adr/0440 §6).
+    AddReference,
+    /// A related item made of a project relation: its layer and field.
+    RelatedFrom(String),
     /// An attachments item (docs/adr/0407 §1) where the chosen item is.
     AddAttachments,
     /// Konum (docs/adr/0433): the record's place.
@@ -1094,6 +1101,85 @@ impl App {
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
                 w.item = Some(id);
             }
+            Event::AddReference => {
+                let form_layer = self.chosen_form().map(|f| f.layer.clone());
+                let relations = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.settings().relations.clone())
+                    .unwrap_or_default();
+                let held: Vec<String> = w
+                    .body
+                    .as_ref()
+                    .map(|b| {
+                        b.walk()
+                            .into_iter()
+                            .filter_map(|(_, i)| match i {
+                                FormItem::Field(f) => Some(f.field.clone()),
+                                _ => None,
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let Some(r) = relations
+                    .iter()
+                    .find(|r| Some(&r.child) == form_layer.as_ref() && !held.contains(&r.field))
+                    .or_else(|| {
+                        relations
+                            .iter()
+                            .find(|r| Some(&r.child) == form_layer.as_ref())
+                    })
+                    .cloned()
+                else {
+                    self.warn("Bu formun katmanını alt katman sayan bir ilişki yok; önce İlişkiler penceresinden bir ilişki kurun.");
+                    return Task::none();
+                };
+                let label = self
+                    .layer_fields_of(&r.parent)
+                    .iter()
+                    .find(|f| f.kind == kentos_contracts::LayerFieldKind::Text)
+                    .map(|f| f.key().to_owned());
+                let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                let id = kentos_forms::item_id_of(&r.field, &taken);
+                let mut field = FormField::new(id.clone(), r.field.clone());
+                field.label = Some(r.name.clone());
+                field.lookup = Some(kentos_contracts::FormLookup {
+                    layer: r.parent.clone(),
+                    key: kentos_contracts::LOOKUP_UID.into(),
+                    label,
+                    ..kentos_contracts::FormLookup::default()
+                });
+                let item = FormItem::Field(field);
+                edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
+                w.item = Some(id);
+            }
+            Event::RelatedFrom(relation) => {
+                let r = self.document.as_ref().and_then(|d| {
+                    d.model
+                        .settings()
+                        .relations
+                        .iter()
+                        .find(|r| r.id == relation)
+                        .cloned()
+                });
+                if let (Some(id), Some(r)) = (chosen_item.clone(), r) {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related {
+                            layer,
+                            field,
+                            label,
+                            ..
+                        }) = find_mut(&mut b.items, &id)
+                        {
+                            *layer = r.child.clone();
+                            *field = r.field.clone();
+                            if label.as_deref().is_none_or(|l| l == "İlişkili kayıtlar") {
+                                *label = Some(r.name.clone());
+                            }
+                        }
+                    });
+                }
+            }
             Event::AddAttachments => {
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
                 let id = kentos_forms::item_id_of("ekler", &taken);
@@ -1847,6 +1933,7 @@ impl App {
             Control::Press(ADD_GROUP) => Some(msg(Event::AddGroup)),
             Control::Press(ADD_NOTE) => Some(msg(Event::AddNote)),
             Control::Press(ADD_RELATED) => Some(msg(Event::AddRelated)),
+            Control::Press(ADD_REFERENCE) => Some(msg(Event::AddReference)),
             Control::Press(ADD_ATTACHMENTS) => Some(msg(Event::AddAttachments)),
             Control::Press(AUDIT) => Some(msg(Event::Audit)),
             Control::Press(ENFORCE) => self.chosen_form().map(|f| msg(Event::Enforce(!f.enforce))),

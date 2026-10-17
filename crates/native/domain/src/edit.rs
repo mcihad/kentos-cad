@@ -106,6 +106,44 @@ impl Document {
         Ok(slots)
     }
 
+    /// Adds objects with the persistent ids given (a caller's new records, docs/adr/0440 §2) as one change;
+    /// inside a transaction they join it. Nothing is added when an id is taken or slots run out.
+    pub fn add_many_with_uids(
+        &mut self,
+        entities: Vec<(uuid::Uuid, Entity)>,
+        label: &str,
+    ) -> Result<Vec<Slot>, Refusal> {
+        if let Some((uid, _)) = entities
+            .iter()
+            .find(|(uid, _)| self.store.slot_of(*uid).is_some())
+        {
+            return Err(Refusal(format!(
+                "“{uid}” kimlikli bir nesne çizimde zaten var."
+            )));
+        }
+        let last = self.next_slot + entities.len() as u64;
+        if last > u64::from(u32::MAX) + 1 {
+            return Err(Refusal(SlotsExhausted.to_string()));
+        }
+        let mut slots = Vec::with_capacity(entities.len());
+        let mut ops = Vec::with_capacity(entities.len());
+        for (uid, mut entity) in entities {
+            let slot = Slot(
+                u32::try_from(self.next_slot).map_err(|_| Refusal(SlotsExhausted.to_string()))?,
+            );
+            self.next_slot += 1;
+            base_mut(&mut entity).id = slot.0;
+            slots.push(slot);
+            ops.push(Op::Add(Stored {
+                uid,
+                entity: Arc::new(entity),
+            }));
+        }
+        self.store.reserve(ops.len());
+        self.record(ops, label);
+        Ok(slots)
+    }
+
     /// Replaces an object, keeping its slot and persistent id, as one undo
     /// step. Returns false for an unknown slot, or when nothing would change,
     /// which is not an edit (docs/adr/0020); nothing happens then.

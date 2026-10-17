@@ -14,6 +14,11 @@ relations: Array<ProjectRelation>,
  */
 changed: boolean, 
 /**
+ * The children whose field holds a link of the relation (the edited one's, before the edit;
+ * docs/adr/0440 §3).
+ */
+links?: number, 
+/**
  * The document's revision afterwards (plan: the one it was made against).
  */
 revision: string, };

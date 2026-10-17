@@ -443,7 +443,8 @@ impl Prepared {
                     .filter(|v| !v.is_empty())
                     .and_then(|v| list.preview(v));
             }
-            if let Some(related) = &node.related {
+            // A hidden item's related objects are not looked for (docs/adr/0440 §6).
+            if let Some(related) = node.related.as_ref().filter(|_| state.shown) {
                 state.related = Some(related.of(object));
             }
             if let (Some(b), Some(held)) = (&node.attachments, &object.attachments) {

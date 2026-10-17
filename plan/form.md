@@ -352,12 +352,12 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-REL-01:** 1:1, 1:N ve N:M relation; dataset IDs, PK/FK, type, optionality/min/max ve stable relation ID taşısın.
 - [ ] **FORM-REL-02:** N:M için gerçek link table; ilişki satırı kendi UUID/attributes/revision'ını taşıyabilsin.
 - [x] **FORM-REL-03:** Association ile composition sahipliği ayrı olsun; restrict/cascade/unlink/set-null açık delete policy olarak tanımlansın. — *Yapıldı (16 Ekim; ADR 0405 §1–§2: unlink, cascade (bileşik), restrict, keep; bütün silme yollarında).*
-- [ ] **FORM-REL-04:** Delete planı etkilenen children/link rows/attachments'ı saysın; cascade bütün source izinlerini ve transaction limitini doğrulasın.
+- [x] **FORM-REL-04:** Delete planı etkilenen children/link rows/attachments'ı saysın; cascade bütün source izinlerini ve transaction limitini doğrulasın. — *17 Ekim: silmenin planı ve cevabı ilişki başına bağı koparılan ve silinen alt kayıtları ve giden ekleri sayar; kilitli katmandaki alt kaydı değiştirecek silme `relation_locked`, bir adımda en çok 10 000 alt kayıt (`relation_too_large`) (ADR 0440 §1).*
 - [ ] **FORM-REL-05:** FK type/unique/orphan/cardinality kuralları server transaction ve uygun DB constraints ile uygulanmalı.
-- [ ] **FORM-REL-06:** Parent UUID unsaved create sırasında üretilebilir olsun; aynı submission'da child FK eşlemesi deterministik ve idempotent olsun.
+- [x] **FORM-REL-06:** Parent UUID unsaved create sırasında üretilebilir olsun; aynı submission'da child FK eşlemesi deterministik ve idempotent olsun. — *17 Ekim: gönderimin yeni alt kaydı çağıranın ürettiği kimlikle oluşur; aynı kimlikle yeniden gönderim aynı kaydı yazar, ikinci kayıt yapmaz; bağ alanı kaydın kimliğiyle aynı adımda yazılır (ADR 0440 §2).*
 - [ ] **FORM-REL-07:** Local/offline UUID eşlemesi sync sırasında korunmalı; slot/FID veya label anahtar olmamalı.
 - [x] **FORM-REL-08:** Geometrili parent/child ve geometri olmayan table record ilişkileri aynı record API'sinden erişilsin. — *Yapıldı (16 Ekim; ADR 0410: geometrisiz kayıt `record`, `cad.records.create`; düzenleme, silme, form ve ilişkiler geometrili nesnelerle aynı komutlardan).*
-- [ ] **FORM-REL-09:** Relation rename/type/cardinality/key change için kullanım grafı ve veri migration kontrolü olsun.
+- [x] **FORM-REL-09:** Relation rename/type/cardinality/key change için kullanım grafı ve veri migration kontrolü olsun. — *17 Ekim: `cad.relations.edit` ilişkinin bağlarını sayar (`links`), bağları tutan kayıtlar varken alt katmanı ya da alanı değiştirmez (`relation_in_use`), bileşik döngü ve derinlik `relation_cycle`; alanın kullanıldığı yerler ilişkileri de sayar (ADR 0414, 0440 §3).*
 
 ### 6.2 Master–detail runtime
 
@@ -365,10 +365,10 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 - [ ] **FORM-REL-11:** Child create/update/delete/link/unlink/view/select-on-map action'ları ayrı yetki ve capability ile gösterilsin.
 - [x] **FORM-REL-12:** İlişkili lookup/relation reference; yetkili parent search, display fields, filter ve nested parent preview sunsun. — *17 Ekim: ilişki başvurusu `$uid` ile; liste aranır (en az harf, sayfa), sütunlarla gösterilir, süzgeç ve mekânsal ilişkiyle daralır, seçilen kaydın sütunları canlı önizlemede (ADR 0404, 0439 §2, §5, §6).*
 - [ ] **FORM-REL-13:** Parent data edit izni child edit izni vermesin; ilgili dataset/row/field/action yetkileri ayrıca denetlensin.
-- [ ] **FORM-REL-14:** Parent/child patch'leri tek logical submission ve atomik transaction içinde uygulanabilsin; ayrı commit gerekiyorsa durum/kayıp sınırı açık olsun.
-- [ ] **FORM-REL-15:** Detail row pagination/virtualization, lazy tab loading ve aggregate count filtrelenmiş izinli veri üzerinden çalışsın.
-- [ ] **FORM-REL-16:** Child editing ve parent tab değişimi draft kaybettirmesin; kaydet/vazgeç ve validation summary bütün graph'ı kapsasın.
-- [ ] **FORM-REL-17:** Relation graph döngüsü/derinlik ve recursive form opening bütçesi tanımlansın.
+- [x] **FORM-REL-14:** Parent/child patch'leri tek logical submission ve atomik transaction içinde uygulanabilsin; ayrı commit gerekiyorsa durum/kayıp sınırı açık olsun. — *17 Ekim: `cad.forms.submit`'in `children`'ı kayıt ve alt kayıtlarını tek geri alma adımında, hep ya da hiç yazar; alt kaydın formu da sorulur (ADR 0440 §2).*
+- [ ] **FORM-REL-15:** Detail row pagination/virtualization, lazy tab loading ve aggregate count filtrelenmiş izinli veri üzerinden çalışsın. — *17 Ekim, kısmen: ilişkili tablo ve kartlar 50'şer sayfalanır, toplamlar bütün alt kayıtların; gizli öğenin alt kayıtları aranmaz (ADR 0440 §6); izinlere göre süzülen sayılar bulutta açık.*
+- [x] **FORM-REL-16:** Child editing ve parent tab değişimi draft kaybettirmesin; kaydet/vazgeç ve validation summary bütün graph'ı kapsasın. — *17 Ekim: bekleyen bağlar kaydın taslağında, Kaydet ile birlikte yazılır, Vazgeç bırakır; alt kaydın formu üst kaydın taslağını bekletir ve geri getirir; gönderimin reddi bütün grafın ilk sorununu yoluyla söyler (ADR 0440 §2, §7).*
+- [x] **FORM-REL-17:** Relation graph döngüsü/derinlik ve recursive form opening bütçesi tanımlansın. — *17 Ekim: bileşik ilişkilerin döngüsü ve en çok 8 katmanlık zinciri (`relation_cycle`), en çok 4 iç içe form, belgenin izlemesinde her kayıt bir kez (ADR 0440 §3, §7).*
 - [x] **FORM-REL-18:** Duplicate/clone/split/merge işlemlerinde child ownership ve copying policy açık olsun; unwanted cascade copy yapma. — *Yapıldı (16 Ekim; ADR 0415: bileşik ilişkinin alt kayıtları kopyalanır, öbürleri kopyalanmaz; tekil alan boş kalır).*
 
 ### 6.3 Join türleri ve yazma yönlendirmesi
@@ -436,7 +436,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-02:** Drag/drop ve keyboard reorder; tabs, groups, accordion, grid/columns, splitter, stepper ve reusable section desteklesin. — *17 Ekim, kısmen: ağaçta sürükleme ve Alt+↑/↓, sekme, grup, kapalı grup (akordeon), sütunlar, adım adım ve öğeyi kopyala ve yapıştır (ADR 0403, 0437); bölücü açık.*
 - [x] **FORM-DESIGN-03:** Field ID üzerinden binding; alias/help/placeholder/widget/format/domain seçimiyle type-safe yapılsın. — *17 Ekim: alan kararlı anahtarla bağlanır, giriş biçimi alanın türüne göre süzülür, değer listesi bağı türüyle denetlenir (ADR 0401, 0430, 0437).*
 - [x] **FORM-DESIGN-04:** Aynı field birden çok yerde gösterilebilir; tek draft value owner'ı olsun, mirror display ile bağımsız edit kutuları birbirini ezmesin. — *17 Ekim: yansıma alanı salt okunur gösterir, değeri tek öğe yazar (ADR 0437).*
-- [ ] **FORM-DESIGN-05:** Master–detail, relation reference, embedded child form, lookup panel ve record grid eklenebilsin.
+- [x] **FORM-DESIGN-05:** Master–detail, relation reference, embedded child form, lookup panel ve record grid eklenebilsin. — *17 Ekim: tasarımcıda ilişkili kayıtlar (Liste, Tablo, Kartlar; İlişki seçimiyle), ilişki başvurusu (Başvuru), başka katmandan liste sütunları ve önizlemesiyle; gömülü alt form Kartlar ve iç içe formla (ADR 0404, 0425, 0439, 0440 §6).*
 - [ ] **FORM-DESIGN-06:** Hesaplı summary, related aggregate, chart, image/attachment, map location ve inline validation bileşenleri olsun. — *17 Ekim, kısmen: hesaplı not, ilişkili kayıtların tablosu ve toplamları, ekler, harita konumu ve satır içi doğrulama (ADR 0402, 0407, 0425, 0433); grafik açık.*
 - [x] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin. — *17 Ekim: açılır liste, seçenek düğmeleri, parçalı seçim, çoklu seçim, aranır liste, etiketler ve ağaç; kodlar listenin (ADR 0401, 0408, 0431, 0437).*
 - [x] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin. — *Yapıldı (16 Ekim; ADR 0401 §10: İfade oluşturucunun Metin ve Akış'ı).*
@@ -591,7 +591,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 - [ ] **FORM-WORK-03:** Saha personeli submitted kaydı kendisi approved yapamasın; reviewer kararı audit/history ve beklenen record revision taşısın. — *17 Ekim, kısmen: adımlar kaydın geçmiş alanına an, kişi, adım ve gerekçeyle yazılır (ADR 0429); kendi kaydını onaylamanın yasağı rollerle bulutta açık.*
 - [x] **FORM-WORK-04:** Onaylanan kayıt read-only veya correction workflow'da düzenlenebilir olsun; user seçimi sunucu politikasını değiştiremesin. — *17 Ekim: onaylı kayıt kilitli durumda salt okunur, düzeltme adımıyla açılır (ADR 0428).*
 - [ ] **FORM-WORK-05:** Return/reject; field/path bazlı geri bildirim ve düzeltilebilir taslak üretsin; eski submission snapshot'ı kaybolmasın. — *17 Ekim, kısmen: geri gönderme gerekçe alanıyla (ADR 0428); alan bazlı geri bildirim ve eski anlık görüntü açık.*
-- [ ] **FORM-WORK-06:** Parent/child/attachment ve calculated fields aynı submission revision'a bağlansın; reviewer hangi snapshot'ı onayladığını bilsin.
+- [x] **FORM-WORK-06:** Parent/child/attachment ve calculated fields aynı submission revision'a bağlansın; reviewer hangi snapshot'ı onayladığını bilsin. — *17 Ekim: kaydın anlık görüntüsü (öznitelikler, ekler ve alt kayıtlar) adımın geçmiş satırında ve cevabında; Formla düzenle onaylanan hâlin değişip değişmediğini söyler; gönderim yazdığı anlık görüntüyü verir (ADR 0440 §4).*
 - [ ] **FORM-WORK-07:** Fotoğraf/dosya/audio gibi ekler MIME/size/hash, owner, record relation, capture timestamp ve erişim policy taşısın.
 - [ ] **FORM-WORK-08:** Attachment upload staging/resumable/check/finalize ve orphan cleanup akışı olsun; kayıt commit edilmeden uzun upload DB transaction tutmasın.
 - [ ] **FORM-WORK-09:** Unsaved parent ve offline child ekleri local UUID/job IDs ile bağlansın; retry duplicate attachment veya child oluşturmasın.
@@ -624,7 +624,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 - [x] **FORM-API-03:** UI, CLI/headless, Python ve MCP aynı handler/state machine/validator/access resolver'ı kullansın; alternate business rule oluşturma. — *Yapıldı (16 Ekim; ADR 0401 §9).*
 - [x] **FORM-API-04:** `describe/compile/preview/validate/plan` production no-write olsun; mock preview, production save ve publication ayrı komut olsun. — *Yapıldı (16 Ekim; ADR 0401 §9 (`cad.forms.validate`)).*
 - [ ] **FORM-API-05:** Mutation; actor context, immutable form/source revisions, expected record revision, idempotency ve typed patch taşısın.
-- [ ] **FORM-API-06:** Sonuç; session/submission/job/resource IDs, validation paths, warnings, conflict, actual changeset/artifacts ve audit/undo sınırını bildirsin.
+- [x] **FORM-API-06:** Sonuç; session/submission/job/resource IDs, validation paths, warnings, conflict, actual changeset/artifacts ve audit/undo sınırını bildirsin. — *17 Ekim: gönderimin cevabı yazılan kayıtları (`changes`), alt kayıtları, anlık görüntüyü ve geri alma adımını verir; hata yolları alanın ve alt kaydın yolu, uyarılar ve çakışma protokolün zarfında (ADR 0253, 0440 §5).*
 - [x] **FORM-API-07:** Python wrapper/stub/help/examples ve CLI/MCP schema drift CI'da hata olsun; üretilen dosyaları elle düzeltme. — *Yapıldı (16 Ekim; `scripts/python/sdk.py --check`, katalog testleri).*
 - [ ] **FORM-API-08:** Form/schema/domain/relation keşfi pagination/projection/permission filtreli olsun; tüm özel şema ve veriyi her AI context'ine doldurma.
 - [ ] **FORM-API-09:** AI form tasarımı draft/diff ve preview üretir; tasarım/yayın/data review/ACL değişimini doğru actor/grant ile ayrı çağırır.

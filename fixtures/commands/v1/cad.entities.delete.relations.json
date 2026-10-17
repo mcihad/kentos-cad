@@ -4,7 +4,7 @@
  "command": "cad.entities.delete",
  "commandVersion": 1,
  "title": "Silme ve ilişkiler",
- "note": "ADR 0405 §2: üst nesne silinince alt kayıtlar ilişkinin politikasıyla aynı adımda izler (unlink, cascade, keep); restrict alt kaydı olan üst nesneyi silmez; kilitli katmandaki alt kayıt değişmez. Kural ve beklenenler scripts/fixtures/forms_cases.py'de KentOS kodu olmadan yazılmıştır; sorunların ve formdan gelen retlerin cümleleri çekirdeğindir ($any).",
+ "note": "ADR 0405 §2: üst nesne silinince alt kayıtlar ilişkinin politikasıyla aynı adımda izler (unlink, cascade, keep); restrict alt kaydı olan üst nesneyi silmez; kilitli katmandaki alt kaydı değiştirecek silme reddedilir (ADR 0440 §1); plan ve cevap her ilişkinin izlediği alt kayıtları sayar. Kural ve beklenenler scripts/fixtures/forms_cases.py'de KentOS kodu olmadan yazılmıştır; sorunların ve formdan gelen retlerin cümleleri çekirdeğindir ($any).",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -1902,7 +1902,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 2,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -2751,7 +2758,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 2,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -3679,7 +3693,19 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -4524,7 +4550,19 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 0,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -5363,7 +5401,19 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 0,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -7075,7 +7125,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "sayac-vana",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -10416,7 +10473,14 @@
         "$uid:o2"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 3,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -11266,7 +11330,19 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 2,
+         "deleted": 0
+        },
+        {
+         "relation": "bina-abone",
+         "unlinked": 0,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -11329,7 +11405,7 @@
    ]
   },
   {
-   "name": "kilitli alt katmandaki kayıtlar değişmez",
+   "name": "kilitli alt katmandaki kayıtları değiştirecek silme reddedilir",
    "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -12134,6 +12210,836 @@
       ]
      },
      "result": {
+      "status": "failed",
+      "error": {
+       "code": "relation_locked",
+       "message": "$any",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmandaki alt kayıtlara dokunmayan ilişki silmeyi durdurmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "sayac-vana",
+       "name": "Sayacın vanaları",
+       "parent": "sayac",
+       "child": "vana",
+       "field": "sayac",
+       "onDelete": "cascade"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.set",
+     "input": {
+      "operation": "locked",
+      "layer": "vana",
+      "value": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "active": "bina",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o1"
+      ]
+     },
+     "result": {
       "status": "completed",
       "output": {
        "removed": [
@@ -12183,6 +13089,907 @@
         "attrs": {
          "no": "V-1",
          "sayac": "$uid:o3"
+        }
+       },
+       "7": {
+        "attrs": {
+         "no": "V-2",
+         "sayac": "$uid:o5"
+        }
+       },
+       "8": {
+        "attrs": {
+         "ad": "Ayşe",
+         "bina": "$uid:o1"
+        }
+       },
+       "9": {
+        "attrs": {
+         "ad": "Mehmet",
+         "binalar": "$uid:o1; $uid:o2"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan her ilişkinin bağını koparacağı ve sileceği alt kayıtları sayar",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina",
+       "onDelete": "cascade"
+      },
+      {
+       "id": "sayac-vana",
+       "name": "Sayacın vanaları",
+       "parent": "sayac",
+       "child": "vana",
+       "field": "sayac"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "o1"
+    },
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "o2"
+    },
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "o3"
+    },
+    {
+     "op": "captureUid",
+     "id": 4,
+     "as": "o4"
+    },
+    {
+     "op": "captureUid",
+     "id": 5,
+     "as": "o5"
+    },
+    {
+     "op": "captureUid",
+     "id": 6,
+     "as": "o6"
+    },
+    {
+     "op": "captureUid",
+     "id": 7,
+     "as": "o7"
+    },
+    {
+     "op": "captureUid",
+     "id": 8,
+     "as": "o8"
+    },
+    {
+     "op": "captureUid",
+     "id": 9,
+     "as": "o9"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o3"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o4"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o5"
+      ],
+      "attrs": {
+       "bina": "$uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o5"
+       ],
+       "ids": [
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o6"
+      ],
+      "attrs": {
+       "sayac": "$uid:o3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o7"
+      ],
+      "attrs": {
+       "sayac": "$uid:o5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o7"
+       ],
+       "ids": [
+        7
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o8"
+      ],
+      "attrs": {
+       "bina": "$uid:o1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o8"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uid:o9"
+      ],
+      "attrs": {
+       "binalar": "$uid:o1; $uid:o2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uid:o9"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uid:o1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o1"
+       ],
+       "locked": [],
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uid:o1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "removed": [
+        "$uid:o1"
+       ],
+       "locked": [],
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       2,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ad": "B"
+        }
+       },
+       "5": {
+        "attrs": {
+         "no": "S-3",
+         "bina": "$uid:o2"
+        }
+       },
+       "6": {
+        "attrs": {
+         "no": "V-1"
         }
        },
        "7": {
@@ -14695,7 +16502,14 @@
         "$uid:o3"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "sayac-vana",
+         "unlinked": 0,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -15546,7 +17360,19 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-sayac",
+         "unlinked": 0,
+         "deleted": 2
+        },
+        {
+         "relation": "sayac-vana",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -18060,7 +19886,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-abone",
+         "unlinked": 0,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -18975,7 +20808,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-malik",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -19827,7 +21667,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-malik",
+         "unlinked": 1,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },
@@ -20681,7 +22528,14 @@
         "$uid:o2"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-malik",
+         "unlinked": 1,
+         "deleted": 1
+        }
+       ]
       },
       "warnings": []
      },
@@ -21592,7 +23446,14 @@
         "$uid:o1"
        ],
        "locked": [],
-       "revision": "$current"
+       "revision": "$current",
+       "followed": [
+        {
+         "relation": "bina-malik",
+         "unlinked": 2,
+         "deleted": 0
+        }
+       ]
       },
       "warnings": []
      },

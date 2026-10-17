@@ -3747,7 +3747,7 @@ class _Schema:
                     "field": (self.text, True),
                     "visibleWhen": (self.text, False),
                     # docs/adr/0425: a table of the other layer's fields; a list is not written.
-                    "view": (self.enum(("table",)), False),
+                    "view": (self.enum(("table", "cards")), False),
                     "columns": (self.array(self.text), False),
                 },
                 # docs/adr/0407 §1: the record's photos and documents.

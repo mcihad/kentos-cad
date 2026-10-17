@@ -1238,6 +1238,172 @@ fn sources_migrated(app: &mut App) {
     let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Migrate));
 }
 
+/// Buildings and their meters (docs/adr/0440): a project relation, sixty meters of the first building
+/// shown as cards a page at a time, the meters' own form, the building's workflow logging its snapshot.
+fn meters(app: &mut App) {
+    let mut o = Objects::new();
+    let a = o.path(
+        "bina",
+        &[[0.0, 0.0], [20.0, 0.0], [20.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.data(a, &[("Ad", "A blok"), ("Durum", "taslak")], Some("A blok"));
+    let b = o.path(
+        "bina",
+        &[[30.0, 0.0], [44.0, 0.0], [44.0, 12.0], [30.0, 12.0]],
+        true,
+    );
+    o.data(b, &[("Ad", "B blok"), ("Durum", "taslak")], Some("B blok"));
+    for i in 1..=62 {
+        let id = o.record("sayac");
+        let no = format!("S-{i:03}");
+        let kind = if i % 3 == 0 { "elektrik" } else { "su" };
+        o.data(id, &[("no", no.as_str()), ("tur", kind)], None);
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#0E7490", 0.35);
+        bina["fields"] = json!([
+            { "name": "Ad", "kind": "text" },
+            { "name": "Durum", "kind": "text", "values": [
+                { "code": "taslak", "label": "Taslak" }, { "code": "onay", "label": "Onaylandı" }] },
+            { "name": "Geçmiş", "kind": "text", "length": 2000 }]);
+        let mut sayac = crate::tools_scenes::layer("sayac", "Sayaç", "#B45309", 0.25);
+        sayac["fields"] = json!([
+            { "name": "no", "alias": "Numara", "kind": "text" },
+            { "name": "tur", "alias": "Tür", "kind": "text" },
+            { "name": "bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(sayac);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+    });
+    let bina = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "ad", "field": "Ad" },
+        { "type": "related", "id": "sayaclar", "label": "Sayaçlar", "layer": "sayac", "field": "bina",
+          "view": "cards", "columns": ["no", "tur"] }
+    ], "workflow": { "field": "Durum", "initial": "taslak", "log": "Geçmiş",
+        "steps": [{ "label": "Onayla", "from": ["taslak"], "to": "onay" },
+                  { "label": "Geri al", "from": ["onay"], "to": "taslak" }] } });
+    let sayac = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "no", "field": "no", "required": true },
+        { "type": "field", "id": "tur", "field": "tur" } ] });
+    let form = |id: &str, name: &str, layer: &str, body: &Value| {
+        let typed: kentos_contracts::FormBody =
+            serde_json::from_value(body.clone()).expect("a body");
+        json!({ "id": id, "name": name, "layer": layer, "draft": body.clone(),
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body.clone() }] })
+    };
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![
+        serde_json::from_value(form("bina", "Bina", "bina", &bina)).expect("a form"),
+        serde_json::from_value(form("sayac", "Sayaç", "sayac", &sayac)).expect("a form"),
+    ];
+    settings.relations = vec![serde_json::from_value(json!({
+        "id": "bina-sayac", "name": "Binanın sayaçları", "parent": "bina", "child": "sayac", "field": "bina",
+        "onDelete": "cascade" })).expect("a relation")];
+    doc.model.set_settings(settings);
+    // The first sixty meters are the first building's.
+    let uid = doc
+        .model
+        .uid(Slot(1))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    let uids: Vec<String> = (3..=62)
+        .filter_map(|s| doc.model.uid(Slot(s)).map(|u| u.to_string()))
+        .collect();
+    let _ = kentos_native_application::set::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        serde_json::from_value(
+            json!({ "uids": uids, "attrs": { "bina": uid }, "operation": "attributes" }),
+        )
+        .expect("an input"),
+    );
+    app.features.layer = Some("bina".into());
+}
+
+/// Formla düzenle on the first building: its meters as cards, 1–50 of 60.
+fn meters_cards(app: &mut App) {
+    meters(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The second building: a free meter linked and the name typed, both waiting for Kaydet.
+fn meters_pending(app: &mut App) {
+    meters(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+    let free = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(Slot(63)))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    entry(
+        app,
+        entry::Event::Value("Ad".into(), "B blok (yeni)".into()),
+    );
+    entry(app, entry::Event::Link("sayaclar".into(), free));
+}
+
+/// A meter's form opened over its building's, the building's typed name waiting under it.
+fn meters_nested(app: &mut App) {
+    meters(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(
+        app,
+        entry::Event::Value("Ad".into(), "A blok (yeni)".into()),
+    );
+    let child = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(Slot(3)))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    entry(app, entry::Event::OpenRelated(child));
+}
+
+/// Formlar on the building form, its meters item chosen: İlişki, Görünüm Kartlar, the columns; Başvuru.
+fn meters_designer(app: &mut App) {
+    meters(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("sayaclar".into()));
+}
+
+/// The first building approved, then one of its meters changed: the step's snapshot is not the record's.
+fn meters_snapshot(app: &mut App) {
+    meters(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let uid = doc
+        .model
+        .uid(Slot(1))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    let meter = doc
+        .model
+        .uid(Slot(3))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    let _ = kentos_native_application::forms_transition::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        serde_json::from_value(json!({ "form": "bina", "uid": uid, "step": "Onayla",
+            "moment": "2026-10-17T10:00:00", "user": "Ayşe Yılmaz" }))
+        .expect("an input"),
+    );
+    let _ = kentos_native_application::set::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        serde_json::from_value(
+            json!({ "uids": [meter], "attrs": { "tur": "gaz" }, "operation": "attributes" }),
+        )
+        .expect("an input"),
+    );
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
 /// The province being searched: “an” typed, typing paused.
 fn searched_list(app: &mut App) {
     chosen_facilities(app);
@@ -2425,6 +2591,11 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-deger-gunleri", permit_values),
         ("form-kural-baglari", permit_designer),
         ("form-kaynak-giris", sources_entry),
+        ("form-iliski-kartlar", meters_cards),
+        ("form-iliski-bekleyen", meters_pending),
+        ("form-iliski-yigini", meters_nested),
+        ("form-iliski-tasarim", meters_designer),
+        ("form-onay-goruntusu", meters_snapshot),
         ("form-deger-paketi", sources_domains),
         ("form-degerleri-bicime", sources_migrated),
         ("deger-listeleri", domains_window),
@@ -2683,7 +2854,7 @@ mod tests {
         // The step wrote its line to the log (docs/adr/0429).
         let log = attrs.get("Geçmiş").cloned().unwrap_or_default();
         assert!(
-            log.ends_with("Düzelt (Onaylandı → İade edildi): Kat yeniden ölçülecek."),
+            log.contains("Düzelt (Onaylandı → İade edildi): Kat yeniden ölçülecek. · #"),
             "{log}"
         );
     }
@@ -2840,6 +3011,123 @@ mod tests {
         );
         entry(&mut app, entry::Event::Save);
         assert!(app.form_entry.is_none(), "written and closed");
+    }
+
+    /// docs/adr/0440 §2: a link made in the window waits for Kaydet and goes in with the record, one
+    /// step; Vazgeç drops it.
+    #[test]
+    fn a_link_waits_for_kaydet_and_goes_in_with_the_record() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_pending(&mut app);
+        let e = app.form_entry.as_ref().expect("open");
+        assert_eq!(e.pending_for_tests(), 1);
+        assert_eq!(
+            e.related_of("sayaclar").len(),
+            1,
+            "the linked meter is listed"
+        );
+        let free = Slot(63);
+        let link = |app: &App| {
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .get(free)
+                .unwrap()
+                .base()
+                .attrs
+                .get("bina")
+                .cloned()
+        };
+        assert_eq!(link(&app), None, "not written yet");
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none());
+        let parent = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .uid(Slot(2))
+            .unwrap()
+            .to_string();
+        assert_eq!(link(&app).as_deref(), Some(parent.as_str()));
+        let doc = &mut app.document.as_mut().unwrap().model;
+        doc.undo();
+        assert_eq!(
+            link(&app),
+            None,
+            "one step: the link goes back with the name"
+        );
+        assert_eq!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .get(Slot(2))
+                .unwrap()
+                .base()
+                .attrs
+                .get("Ad")
+                .map(String::as_str),
+            Some("B blok")
+        );
+        // Vazgeç drops a waiting link.
+        meters_pending(&mut app);
+        entry(&mut app, entry::Event::Cancel);
+        assert_eq!(link(&app), None);
+    }
+
+    /// docs/adr/0440 §7: a child's form opens over its parent's; the parent's draft waits and comes back;
+    /// at most four forms deep.
+    #[test]
+    fn a_child_form_opens_over_its_parent_and_the_parent_comes_back_with_its_draft() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_nested(&mut app);
+        assert_eq!(app.form_stack.len(), 1, "the building waits");
+        assert_eq!(
+            app.form_entry.as_ref().map(|e| e.name.clone()).as_deref(),
+            Some("Sayaç")
+        );
+        entry(&mut app, entry::Event::Value("no".into(), "S-900".into()));
+        entry(&mut app, entry::Event::Save);
+        let e = app.form_entry.as_ref().expect("the building back");
+        assert_eq!(e.name, "Bina");
+        assert!(e.dirty_now(), "its typed name kept");
+        assert!(app.form_stack.is_empty());
+        let meter = &app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(Slot(3))
+            .unwrap()
+            .base()
+            .attrs;
+        assert_eq!(meter.get("no").map(String::as_str), Some("S-900"));
+    }
+
+    /// docs/adr/0440 §4: the step's snapshot ends its log line; a meter changed after it is said.
+    #[test]
+    fn a_step_s_snapshot_is_logged_and_a_later_change_is_said() {
+        let mut app = crate::files_testing::app_with_drawing();
+        meters_snapshot(&mut app);
+        let doc = &app.document.as_ref().unwrap().model;
+        let log = doc
+            .get(Slot(1))
+            .unwrap()
+            .base()
+            .attrs
+            .get("Geçmiş")
+            .cloned()
+            .unwrap_or_default();
+        let then = kentos_native_application::forms::logged_snapshot(&log)
+            .expect("a snapshot")
+            .to_owned();
+        let attrs = doc.get(Slot(1)).unwrap().base().attrs.clone();
+        let uid = doc.uid(Slot(1)).unwrap().to_string();
+        let now =
+            kentos_native_application::forms::record_snapshot(doc, "bina", &uid, &attrs).unwrap();
+        assert_ne!(then, now, "the meter changed after the step");
     }
 
     /// docs/adr/0439 §1–§5: only the parcels holding the building are offered, with their columns; the
@@ -4017,12 +4305,16 @@ mod tests {
         // Building 3 takes the second owner; its other building stays.
         app.selection.set([Slot(3)]);
         run(&mut app, "data.formEdit");
+        // Through the project relation a link waits for Kaydet (docs/adr/0440 §2).
         entry(&mut app, entry::Event::Link("malikler".into(), o2.clone()));
+        entry(&mut app, entry::Event::Save);
         assert_eq!(attrs(&app, 5).get("Binalar"), Some(&format!("{b2}; {b3}")));
+        run(&mut app, "data.formEdit");
         entry(
             &mut app,
             entry::Event::Unlink("malikler".into(), o2.clone()),
         );
+        entry(&mut app, entry::Event::Save);
         assert_eq!(attrs(&app, 5).get("Binalar"), Some(&b2));
         // Building 1's first owner is unlinked from it alone.
         app.selection.set([Slot(1)]);
@@ -4031,7 +4323,9 @@ mod tests {
             &mut app,
             entry::Event::Unlink("malikler".into(), o1.clone()),
         );
+        entry(&mut app, entry::Event::Save);
         assert_eq!(attrs(&app, 4).get("Binalar"), Some(&b2));
+        run(&mut app, "data.formEdit");
         // Yeni: an owner linked to the building, a record as the owners are (docs/adr/0410 §4),
         // opened by the owner's form.
         entry(&mut app, entry::Event::NewRelated("malikler".into()));

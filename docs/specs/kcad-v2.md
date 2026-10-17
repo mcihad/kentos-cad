@@ -633,7 +633,7 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
   yalnız `true` olarak `descending`), en çok 4 `columns`, `limit` (1–1000), en çok 20 `copy` (`from`, `to`), `stamp`,
   `duplicates` (`first` ya da `refuse`; `warn` varsayılandır, yazılmaz) ve `spatial` (`relation`: `contains`, `within`,
   `intersects`, `nearest`; `tolerance` sıfır ya da artı sayı); alanın `minSearch`'ü 1–10; `checks`: `rule`, `message` ve yalnız `true` olarak
-  `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle şablon), `related` (`label`, `layer`, `field`, `visibleWhen`:
+  `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle şablon), `related` (`label`, `layer`, `field`, `visibleWhen`, `view`: `table` ya da `cards`, `list` varsayılandır ve yazılmaz, ADR 0425 ve 0440, en çok 8 `columns`:
   başka katmanın bu kayda başvuran nesneleri, ADR 0404 §4), `attachments` (`label`, `accept`: `photo` ya da `document`, `any`
   varsayılandır, yazılmaz; `min`, `max` 0–100, en az en çoktan büyük olamaz; `visibleWhen`: kaydın ekleri, ADR 0407 §1). Her öğenin `id`'si form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000
   karakter.

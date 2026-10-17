@@ -152,12 +152,15 @@ def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=N
             raise Refused("form_invalid", ANY, f"values.{first['field']}" if first.get("field") in values else "step")
     if reason and not (after.get(reason) or "").strip():
         raise Refused("reason_required", f"“{step_label}” adımının gerekçesi (“{reason}”) yazılmalı.", f"values.{reason}")
+    # docs/adr/0440 §4: the snapshot the step was taken on: the record, its state and log aside.
+    snap = fc.snapshot(after, ("Durum", "Geçmiş") if logged else ("Durum",))
     if logged:
         # docs/adr/0429: the moment, the person, the step and its states, the reason; the oldest lines go.
         line = " · ".join([*([moment] if moment else []), *([user] if user else []),
                            f"{step_label} ({words(state)} → {words(step['to'])})"])
         if reason and (after.get(reason) or "").strip():
             line += f": {after[reason].strip()}"
+        line += f" · #{snap}"
         lines = (after.get("Geçmiş") or "").splitlines() if after.get("Geçmiş") else []
         lines.append(line)
         while len(lines) > 1 and len("\n".join(lines)) > 120:
@@ -165,7 +168,7 @@ def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=N
         if len(lines[-1]) > 120:
             lines[-1] = lines[-1][:120]
         after["Geçmiş"] = "\n".join(lines)
-    return state, step["to"], after
+    return state, step["to"], after, snap
 
 
 def step(slot, label, values=None, now=None, op="execute", undo=False, form="denetim", draft=False, moment=None,
@@ -182,7 +185,7 @@ def step(slot, label, values=None, now=None, op="execute", undo=False, form="den
     if user:
         inp["user"] = user
     try:
-        frm, to, after = take(slot, label, values, now[slot], logged=form == "kayitli", moment=moment, user=user)
+        frm, to, after, snap = take(slot, label, values, now[slot], logged=form == "kayitli", moment=moment, user=user)
     except Refused as r:
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": now[slot]}}, "canUndo": undo, "canRedo": False,
                   "revision": "same"}
@@ -192,6 +195,7 @@ def step(slot, label, values=None, now=None, op="execute", undo=False, form="den
     out = {"uid": f"$uidOf:{slot}", "from": frm, "to": to, "attrs": after}
     if not draft:
         out["version"] = 1
+    out["snapshot"] = snap
     out["revision"] = "$current"
     changed = after != now[slot]
     result = {"status": "completed", "output": out, "warnings": []}

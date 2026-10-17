@@ -2636,7 +2636,8 @@
         }
        ],
        "changed": true,
-       "revision": "$current"
+       "revision": "$current",
+       "links": 3
       },
       "warnings": []
      },
@@ -10243,6 +10244,2957 @@
       "canRedo": false,
       "revision": "same",
       "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bileşik ilişkiler döngü kuramaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina",
+       "onDelete": "cascade"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "sayac-bina",
+        "name": "Sayacın binası",
+        "parent": "sayac",
+        "child": "bina",
+        "field": "Ad",
+        "onDelete": "cascade"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "relation_cycle",
+       "message": "$any",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "biri bileşik değilse döngü yoktur",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "sayac-bina",
+        "name": "Sayacın binası",
+        "parent": "sayac",
+        "child": "bina",
+        "field": "Ad",
+        "onDelete": "cascade"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "relations": [
+        {
+         "id": "bina-sayac",
+         "name": "Binanın sayaçları",
+         "parent": "bina",
+         "child": "sayac",
+         "field": "bina"
+        },
+        {
+         "id": "sayac-bina",
+         "name": "Sayacın binası",
+         "parent": "sayac",
+         "child": "bina",
+         "field": "Ad",
+         "onDelete": "cascade"
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "links": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanın kendisiyle bileşik ilişkisi döngü sayılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina",
+       "onDelete": "cascade"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "sayac-ust",
+        "name": "Ana sayaç",
+        "parent": "sayac",
+        "child": "sayac",
+        "field": "no",
+        "onDelete": "cascade"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "relations": [
+        {
+         "id": "bina-sayac",
+         "name": "Binanın sayaçları",
+         "parent": "bina",
+         "child": "sayac",
+         "field": "bina",
+         "onDelete": "cascade"
+        },
+        {
+         "id": "sayac-ust",
+         "name": "Ana sayaç",
+         "parent": "sayac",
+         "child": "sayac",
+         "field": "no",
+         "onDelete": "cascade"
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "links": 3
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağları olan ilişkinin alanı değişemez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "bina": "$uidOf:1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "ids": [
+        3,
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "update",
+       "relation": {
+        "id": "bina-sayac",
+        "name": "Binanın sayaçları",
+        "parent": "bina",
+        "child": "sayac",
+        "field": "no"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "relation_in_use",
+       "message": "$any",
+       "path": "edit.relation.field"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağları olan ilişkinin silme kuralı değişir; bağlar sayılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "bina": "$uidOf:1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "ids": [
+        3,
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "update",
+       "relation": {
+        "id": "bina-sayac",
+        "name": "Binanın sayaçları",
+        "parent": "bina",
+        "child": "sayac",
+        "field": "bina",
+        "onDelete": "cascade"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "relations": [
+        {
+         "id": "bina-sayac",
+         "name": "Binanın sayaçları",
+         "parent": "bina",
+         "child": "sayac",
+         "field": "bina",
+         "onDelete": "cascade"
+        }
+       ],
+       "changed": true,
+       "links": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "silinen ilişkinin bağları kayıtlarda kalır ve sayılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkiler",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "relations": [
+      {
+       "id": "bina-sayac",
+       "name": "Binanın sayaçları",
+       "parent": "bina",
+       "child": "sayac",
+       "field": "bina"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "sayac",
+      "name": "Sayac",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "vana",
+      "name": "Vana",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       },
+       {
+        "name": "sayac",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "abone",
+      "name": "Abone",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "bina",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       },
+       {
+        "name": "binalar",
+        "kind": "text",
+        "multiple": true
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "A"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Ad": "B"
+      },
+      "pts": [
+       {
+        "x": 487012,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420000
+       },
+       {
+        "x": 487022,
+        "y": 4420010
+       },
+       {
+        "x": 487012,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-1"
+      },
+      "pts": [
+       {
+        "x": 487024,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420000
+       },
+       {
+        "x": 487034,
+        "y": 4420010
+       },
+       {
+        "x": 487024,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-2"
+      },
+      "pts": [
+       {
+        "x": 487036,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420000
+       },
+       {
+        "x": 487046,
+        "y": 4420010
+       },
+       {
+        "x": 487036,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "sayac",
+      "attrs": {
+       "no": "S-3"
+      },
+      "pts": [
+       {
+        "x": 487048,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420000
+       },
+       {
+        "x": 487058,
+        "y": 4420010
+       },
+       {
+        "x": 487048,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-1"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "vana",
+      "attrs": {
+       "no": "V-2"
+      },
+      "pts": [
+       {
+        "x": 487072,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420000
+       },
+       {
+        "x": 487082,
+        "y": 4420010
+       },
+       {
+        "x": 487072,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "abone",
+      "attrs": {
+       "ad": "Ayşe"
+      },
+      "pts": [
+       {
+        "x": 487084,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420000
+       },
+       {
+        "x": 487094,
+        "y": 4420010
+       },
+       {
+        "x": 487084,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "malik",
+      "attrs": {
+       "ad": "Mehmet"
+      },
+      "pts": [
+       {
+        "x": 487096,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420000
+       },
+       {
+        "x": 487106,
+        "y": 4420010
+       },
+       {
+        "x": 487096,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "bina": "$uidOf:1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "ids": [
+        3,
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "id": "bina-sayac"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "relations": [],
+       "changed": true,
+       "links": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
      }
     }
    ]

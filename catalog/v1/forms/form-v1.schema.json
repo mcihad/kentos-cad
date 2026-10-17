@@ -988,6 +988,11 @@
           "const": "table",
           "description": "A table of the item's columns, the numbers totalled under them.",
           "type": "string"
+        },
+        {
+          "const": "cards",
+          "description": "A card for each child: its columns' labels and values, as its form names them (docs/adr/0440 §6).",
+          "type": "string"
         }
       ]
     },

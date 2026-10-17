@@ -17850,12 +17850,7 @@
     },
     {
      "id": "sayaclar",
-     "shown": false,
-     "related": [
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002c"
-     ]
+     "shown": false
     }
    ],
    "issues": []
@@ -18703,12 +18698,7 @@
     },
     {
      "id": "sayaclar",
-     "shown": false,
-     "related": [
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0029",
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002a",
-      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d002c"
-     ]
+     "shown": false
     }
    ],
    "issues": [

@@ -81,6 +81,77 @@ fn check_layers(doc: &Document, r: &ProjectRelation) -> Result<(), Stop> {
     Ok(())
 }
 
+/// The children of the child layer `r` names whose field holds a link (docs/adr/0440 §3).
+pub(crate) fn links_of(doc: &Document, r: &ProjectRelation) -> u32 {
+    let Some(name) = doc
+        .layers()
+        .get(&r.child)
+        .and_then(|n| n.fields.iter().find(|f| f.key() == r.field))
+        .map(|f| f.name.clone())
+    else {
+        return 0;
+    };
+    doc.by_layer(&r.child)
+        .filter(|e| {
+            e.base()
+                .attrs
+                .get(&name)
+                .is_some_and(|v| !v.trim().is_empty())
+        })
+        .count() as u32
+}
+
+/// The most layers a chain of compositions crosses (docs/adr/0440 §3).
+pub const MOST_CASCADE_DEPTH: usize = 8;
+
+/// Compositions that delete each other in a circle through other layers, or a chain of them deeper
+/// than [`MOST_CASCADE_DEPTH`] (a layer's own composition, a tree of its records, is neither): the
+/// first such relation's name and why.
+fn cascade_problem(relations: &[ProjectRelation]) -> Option<String> {
+    use kentos_contracts::RelationDelete;
+    let edges: Vec<(&str, &str, &str)> = relations
+        .iter()
+        .filter(|r| r.on_delete == RelationDelete::Cascade && r.parent != r.child)
+        .map(|r| (r.parent.as_str(), r.child.as_str(), r.name.as_str()))
+        .collect();
+    // The longest path from each layer, a circle found on the way.
+    fn walk<'a>(
+        at: &'a str,
+        edges: &[(&'a str, &'a str, &'a str)],
+        path: &mut Vec<&'a str>,
+    ) -> Result<usize, &'a str> {
+        let mut deepest = 0;
+        for (from, to, name) in edges.iter().filter(|(f, ..)| *f == at) {
+            let _ = from;
+            if path.contains(to) {
+                return Err(name);
+            }
+            path.push(to);
+            let d = walk(to, edges, path)?;
+            path.pop();
+            deepest = deepest.max(d + 1);
+        }
+        Ok(deepest)
+    }
+    for (from, ..) in &edges {
+        let mut path = vec![*from];
+        match walk(from, &edges, &mut path) {
+            Err(name) => {
+                return Some(format!(
+                    "“{name}” bileşik ilişkisi döngü kuruyor: üst kayıt silinince alt kayıtları onu yeniden silerdi. Döngüdeki bir ilişkinin silme kuralını değiştirin."
+                ));
+            }
+            Ok(d) if d > MOST_CASCADE_DEPTH => {
+                return Some(format!(
+                    "Bileşik ilişkilerin zinciri {d} katman derinliğinde; en çok {MOST_CASCADE_DEPTH}. Zincirdeki bir ilişkinin silme kuralını değiştirin."
+                ));
+            }
+            Ok(_) => {}
+        }
+    }
+    None
+}
+
 fn check(doc: &Document, input: &RelationsEdit) -> Result<ProjectSettings, Stop> {
     check_input(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -120,6 +191,21 @@ fn check(doc: &Document, input: &RelationsEdit) -> Result<ProjectSettings, Stop>
                 return Err(unknown(&relation.id, "edit.relation.id"));
             };
             check_layers(doc, relation)?;
+            // A relation's key changed while children hold its links (docs/adr/0440 §3): the links would
+            // be lost or misread.
+            let old = &s.relations[i];
+            if (old.child != relation.child || old.field != relation.field)
+                && let n @ 1.. = links_of(doc, old)
+            {
+                return Err(fail(
+                    codes::RELATION_IN_USE,
+                    format!(
+                        "{n} alt kayıt “{}” ilişkisinin bağını eski alanında tutuyor; alt katmanı ya da alanı değişince bağlar kaybolur. Önce değerleri yeni alana taşıyın (Veri aktar, Öznitelik hesapla) ya da bağları koparın.",
+                        old.name
+                    ),
+                    "edit.relation.field",
+                ));
+            }
             s.relations[i] = relation.clone();
         }
         RelationsOp::Remove { id } => {
@@ -129,13 +215,36 @@ fn check(doc: &Document, input: &RelationsEdit) -> Result<ProjectSettings, Stop>
             s.relations.remove(i);
         }
     }
+    if let Some(problem) = cascade_problem(&s.relations) {
+        return Err(fail(codes::RELATION_CYCLE, problem, "edit"));
+    }
     Ok(s)
 }
 
-fn answer(s: &ProjectSettings, changed: bool, revision: String) -> RelationsEdited {
+/// The links the edit's relation holds: the edited or removed one's as it is, a new one's as given.
+fn links_for(doc: &Document, input: &RelationsEdit) -> u32 {
+    match &input.edit {
+        RelationsOp::Create { relation } => links_of(doc, relation),
+        RelationsOp::Update { relation } => doc
+            .settings()
+            .relations
+            .iter()
+            .find(|r| r.id == relation.id)
+            .map_or(0, |r| links_of(doc, r)),
+        RelationsOp::Remove { id } => doc
+            .settings()
+            .relations
+            .iter()
+            .find(|r| r.id == *id)
+            .map_or(0, |r| links_of(doc, r)),
+    }
+}
+
+fn answer(s: &ProjectSettings, changed: bool, links: u32, revision: String) -> RelationsEdited {
     RelationsEdited {
         relations: s.relations.clone(),
         changed,
+        links,
         revision,
     }
 }
@@ -157,7 +266,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RelationsEdit) -> CommandResult<R
         Ok(next) => {
             let changed = next != *cx.doc.settings();
             CommandResult::Completed {
-                output: answer(&next, changed, cx.doc.revision().to_string()),
+                output: answer(
+                    &next,
+                    changed,
+                    links_for(cx.doc, input),
+                    cx.doc.revision().to_string(),
+                ),
                 warnings: Vec::new(),
             }
         }
@@ -188,12 +302,13 @@ fn write_execute(
         Err(stop) => return stop.into(),
     };
     let changed = next != *cx.doc.settings();
+    let links = links_for(cx.doc, &input);
     if changed {
         cx.doc.set_settings(next);
     }
     let settings = cx.doc.settings().clone();
     CommandResult::Completed {
-        output: answer(&settings, changed, cx.doc.revision().to_string()),
+        output: answer(&settings, changed, links, cx.doc.revision().to_string()),
         warnings: Vec::new(),
     }
 }

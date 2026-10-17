@@ -194,6 +194,10 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AW` ilişkilerin grafı ve gönderim (ADR 0440, 17 Ekim): web'de gerekenler: `FormsSubmit.children`, `FormsSubmitted`'ın
+  `children`, `changes`, `snapshot`, `undo`'su, `FormsTransitioned.snapshot`, `cad.entities.delete`'in `followed` ve `attachments`'ı,
+  `RelationsEdited.links`, `RelatedView.cards` (TS türleri üretildi); web'in silme işleyicisinde `relation_locked` ve sayılar,
+  Formla düzenle'de bekleyen bağlar, iç içe form, kartlar, sayfa ve anlık görüntü satırı, tasarımcıda İlişki ve Başvuru.
 - [ ] `FORM-AV` kaynaklar, başvurular ve göç (ADR 0439, 17 Ekim): web'de gerekenler: `FormLookup`'un `sort`, `columns`,
   `limit`, `copy`, `stamp`, `duplicates`, `spatial`'ı, `LookupMatch.fold`, `FormField.minSearch`, durumun `more` ve `preview`'u,
   `cad.domains.export`, `cad.domains.edit`'in `import`'u, `cad.fields.migrate` (TS türleri üretildi); form çekirdeğinin web
@@ -1537,6 +1541,10 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AW` İlişkilerin grafı ve gönderim: silmenin ilişki etkisi ve kilitli alt kaydın reddi, kayıt alt kayıtlarıyla tek
+  gönderimde (istemcinin kimliğiyle yeni kayıt), ilişkinin kullanımı ve bileşik döngü, anlık görüntü ve gözden geçirenin satırı,
+  gönderimin ayrıntılı cevabı, Kartlar ve sayfa, iç içe form, tasarımcıda İlişki ve Başvuru. — **17 Ekim,
+  [ADR 0440](docs/adr/0440-relation-graph-and-submission.md).**
 - [x] `FORM-AV` Kaynaklar, başvurular ve göç: başka katmandan listenin sırası, sütunları, sayfası, kopyası ve kaynak damgası,
   türüyle ve katlanarak karşılaştırma, yinelenen anahtar kuralı (işlem araçlarında da), mekânsal liste, sayfalı ve gecikmeli arama,
   değer listelerinin paketi, Değerleri biçime çevir. — **17 Ekim, [ADR 0439](docs/adr/0439-sources-references-and-migration.md).**

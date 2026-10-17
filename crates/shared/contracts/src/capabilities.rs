@@ -265,7 +265,11 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.delete",
-        refusals: &[OBJECTS, REVISION, &["relation_restricted"]],
+        refusals: &[
+            OBJECTS,
+            REVISION,
+            &["relation_restricted", "relation_locked", "relation_too_large"],
+        ],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
@@ -1706,6 +1710,10 @@ const ENTRIES: &[Entry] = &[
                 // docs/adr/0438 §6, §7: the screen's release and record.
                 "form_release_changed",
                 "record_changed",
+                // docs/adr/0440 §2: the children.
+                "unknown_relation",
+                "relation_mismatch",
+                "relation_field_unknown",
             ],
         ],
         warnings: &["form_check_warning", "form_required", "form_layer_rule"],
@@ -1853,6 +1861,9 @@ const ENTRIES: &[Entry] = &[
                 "layer_not_found",
                 "not_a_layer",
                 "relation_field_unknown",
+                // docs/adr/0440 §3: a key changed under links; compositions in a circle.
+                "relation_in_use",
+                "relation_cycle",
             ],
         ],
         warnings: &[],
