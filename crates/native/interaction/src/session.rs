@@ -255,6 +255,8 @@ pub const TOOLS: &[&str] = &[
     crate::edge_shift::ID,
     // docs/adr/0249 §3: Yeniden bağla.
     crate::dimension_reassociate::ID,
+    // docs/adr/0335: Kısıt.
+    crate::constraint_tool::ID,
     // docs/adr/0301: Diziyi düzenle.
     crate::array_edit::ID,
     // docs/adr/0303: Eğriyi düzenle.
@@ -577,6 +579,7 @@ impl Session {
             crate::station_labels::ID => Box::new(crate::station_labels::StationLabels::new()),
             crate::centerline::ID => Box::new(crate::centerline::Centerline::new()),
             crate::edge_shift::ID => Box::new(crate::edge_shift::EdgeShift::new()),
+            crate::constraint_tool::ID => Box::new(crate::constraint_tool::ConstraintTool::new()),
             crate::dimension_reassociate::ID => {
                 Box::new(crate::dimension_reassociate::DimensionReassociate::new())
             }

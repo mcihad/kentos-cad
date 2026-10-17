@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 36] = [
+const SCENES: [Scene; 37] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -69,6 +69,8 @@ const SCENES: [Scene; 36] = [
     scene("parcala", Some("Değiştir"), "Parçala", Open::Arrow),
     scene("kot", Some("Değiştir"), "Kot ver", Open::Caption),
     scene("dizi", Some("Değiştir"), "Dizi", Open::Caption),
+    // Kısıt's seventeen kinds (docs/adr/0335).
+    scene("kisit", Some("Değiştir"), "Kısıt", Open::Caption),
     // Hizala ve dağıt's eight methods under Dönüştür's ▾ (docs/adr/0194).
     scene("hizala-dagit", Some("Değiştir"), "Dönüştür", Open::Caption),
     scene("ara-nokta", Some("Çizim"), "Ara nokta", Open::Arrow),

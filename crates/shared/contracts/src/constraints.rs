@@ -170,11 +170,21 @@ pub enum ConstraintRule {
     Angle {
         a: ElementRef,
         b: ElementRef,
-        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        // A struct variant's fields keep their Rust names under the enum's `rename_all`: named here.
+        #[serde(
+            default,
+            skip_serializing_if = "std::ops::Not::not",
+            rename = "reverseA"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional, rename = "reverseA"))]
         reverse_a: bool,
-        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        // A struct variant's fields keep their Rust names under the enum's `rename_all`: named here.
+        #[serde(
+            default,
+            skip_serializing_if = "std::ops::Not::not",
+            rename = "reverseB"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional, rename = "reverseB"))]
         reverse_b: bool,
         parameter: String,
     },
@@ -629,6 +639,25 @@ pub fn constraints_problem(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_angle_s_flags_are_written_in_camel_case() {
+        let rule: ConstraintRule = serde_json::from_value(serde_json::json!({
+            "kind": "angle",
+            "a": { "uid": "0192f5a6-1000-7000-8000-000000000101", "element": { "kind": "segment", "part": 0, "ring": 0, "index": 0 } },
+            "b": { "uid": "0192f5a6-1000-7000-8000-000000000102", "element": { "kind": "segment", "part": 0, "ring": 0, "index": 0 } },
+            "reverseB": true,
+            "parameter": "a1"
+        }))
+        .expect("reads");
+        let ConstraintRule::Angle { reverse_b, .. } = &rule else {
+            panic!("an angle")
+        };
+        assert!(*reverse_b);
+        let back = serde_json::to_value(&rule).expect("writes");
+        assert_eq!(back["reverseB"], true);
+        assert!(back.get("reverse_b").is_none());
+    }
 
     fn uid(n: u8) -> EntityId {
         EntityId([n; 16])

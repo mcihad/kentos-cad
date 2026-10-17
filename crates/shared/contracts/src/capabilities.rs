@@ -621,6 +621,42 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.constraints.edit",
+        refusals: &[
+            &[
+                "no_constraints",
+                "invalid_uid",
+                "invalid_constraint",
+                "invalid_parameter",
+                "parameter_expression",
+                "entity_not_found",
+                "element_not_found",
+                "constraint_not_found",
+                "parameter_in_use",
+                "parameter_kind",
+                "parameter_missing",
+                "parameter_cycle",
+                "parameter_range",
+                "layer_locked",
+                "constraint_conflict",
+                "constraint_singular",
+                "not_converged",
+                "constraint_redundant",
+                "shape_flipped",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        // A circle's part: a circle and an arc have one, another kind is refused for the part (docs/adr/0335 §1).
+        targets: || vec![target(Some("circle"), &["circle", "arc"], &[], Some("element_not_found"), None)],
+    },
+    Entry {
+        id: "cad.constraints.query",
+        refusals: &[&["invalid_uid"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.arrays.edit",
         refusals: &[
             &[

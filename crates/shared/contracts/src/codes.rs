@@ -1062,6 +1062,40 @@ codes! {
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 
+    // ── Constraints (docs/adr/0334, 0335) ────────────────────────────────
+    /// An edit with nothing in it: no constraint to add, no id to take away.
+    NO_CONSTRAINTS = "no_constraints", Failed, false, "Eklenecek ya da kaldırılacak kısıt verilmedi.";
+    /// A constraint whose parts do not fit its rule, or a reference rule that is not a dimension.
+    INVALID_CONSTRAINT = "invalid_constraint", Failed, false, "Kısıtın parçaları kuralına uymuyor (paralelin iki parçası kenar, yarıçapınki daire …).";
+    /// A part the object does not have: a vertex past its last, a bulged edge, a circle on a line.
+    ELEMENT_NOT_FOUND = "element_not_found", Failed, false, "Nesnede kısıtın andığı parça yok (köşe, düz kenar ya da daire).";
+    /// A constraint id the drawing does not hold.
+    CONSTRAINT_NOT_FOUND = "constraint_not_found", Failed, false, "Bu kimlikte kısıt çizimde yok.";
+    /// A parameter name that is not one: a letter first, then letters, digits and _; not a function's.
+    INVALID_PARAMETER = "invalid_parameter", Failed, false, "Parametre adı geçerli değil (harfle başlar; harf, rakam ve _; işlev adı olmaz).";
+    /// A parameter's expression that does not read or cannot be worked out.
+    PARAMETER_EXPRESSION = "parameter_expression", Failed, false, "Parametrenin ifadesi okunamıyor ya da hesaplanamıyor.";
+    /// A name an expression reads that is no parameter.
+    PARAMETER_MISSING = "parameter_missing", Failed, false, "İfadenin okuduğu adda parametre yok.";
+    /// Parameters that read each other round.
+    PARAMETER_CYCLE = "parameter_cycle", Failed, false, "Parametreler birbirini döngüyle okuyor.";
+    /// A dimension named a parameter of another kind (an angle's a length …).
+    PARAMETER_KIND = "parameter_kind", Failed, false, "Parametrenin türü ölçü kısıtına uymuyor (açıya açı, öbürlerine uzunluk).";
+    /// A parameter another dimension already has.
+    PARAMETER_IN_USE = "parameter_in_use", Failed, false, "Bu parametre başka bir ölçü kısıtının.";
+    /// A value outside its parameter's range, or a radius or diameter not above nought.
+    PARAMETER_RANGE = "parameter_range", Failed, false, "Değer parametrenin aralığının dışında ya da yarıçap sıfırdan büyük değil.";
+    /// A constraint added that repeats what the others already say.
+    CONSTRAINT_REDUNDANT = "constraint_redundant", Failed, false, "Eklenen kısıt ötekilerin zaten söylediğini tekrarlıyor; ölçü kısıtı başvuru olarak eklenebilir.";
+    /// Constraints that cannot hold together: nothing is written.
+    CONSTRAINT_CONFLICT = "constraint_conflict", Failed, false, "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı (çelişenler uids'te).";
+    /// A constraint that lost its meaning (a segment of no length …).
+    CONSTRAINT_SINGULAR = "constraint_singular", Failed, false, "Bir kısıt anlamını yitirdi (boysuz kenar, yarıçapsız daire …); hiçbir şey yazılmadı.";
+    /// The solver did not reach a solution.
+    NOT_CONVERGED = "not_converged", Failed, false, "Çözücü adımları içinde bir çözüme ulaşamadı; hiçbir şey yazılmadı.";
+    /// The solution turns a shape inside out; allowFlip writes it all the same.
+    SHAPE_FLIPPED = "shape_flipped", Failed, false, "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

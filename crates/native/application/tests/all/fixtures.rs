@@ -46,7 +46,7 @@ use kentos_native_application::{
     views_edit,
 };
 use kentos_native_application::{
-    arrays_edit, changeset, create, curves_edit, dimensions_create, divide, drawing_audit,
+    arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
     entities_reverse, file_import, stretch,
@@ -184,6 +184,18 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
                 .uid(Slot(slot))
                 .ok_or_else(|| format!("{at}: {slot} yuvasında nesne yok"))?;
             Value::String(uid.to_string())
+        }
+        // The drawing's constraint at this place now (docs/adr/0335).
+        Value::String(text) if text.starts_with("$constraint:") => {
+            let k = text["$constraint:".len()..]
+                .parse::<usize>()
+                .map_err(|_| format!("{at}: {text}: sıra bir sayı olmalı"))?;
+            let c = doc
+                .constraints()
+                .constraints
+                .get(k)
+                .ok_or_else(|| format!("{at}: {text}: çizimde {k}. kısıt yok"))?;
+            Value::String(c.id.to_string())
         }
         // The drawing's associative array at this place now (docs/adr/0301).
         Value::String(text) if text.starts_with("$array:") => {
@@ -341,6 +353,19 @@ fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a 
 trait Input {
     /// The number at an error path; `None` when the input has no such place.
     fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+
+// The constraint commands' numbers are in expressions, not the input's numbers (docs/adr/0335).
+impl Input for kentos_domain::contracts::ConstraintsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::ConstraintsQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
 }
 
 // The forms' inputs have no number a case makes NaN (docs/adr/0401 §9).
@@ -2294,6 +2319,12 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
         kentos_domain::contracts::CAD_ARRAYS_EDIT => {
             run!(arrays_edit, kentos_domain::contracts::ArraysEdit)
+        }
+        kentos_domain::contracts::CAD_CONSTRAINTS_EDIT => {
+            run!(constraints_edit, kentos_domain::contracts::ConstraintsEdit)
+        }
+        kentos_domain::contracts::CAD_CONSTRAINTS_QUERY => {
+            run!(constraints_query, kentos_domain::contracts::ConstraintsQuery)
         }
         kentos_domain::contracts::CAD_ENTITIES_EXPLODE => {
             run!(entities_explode, kentos_domain::contracts::EntitiesExplode)

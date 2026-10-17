@@ -41,6 +41,14 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("measure", "Rotanın ölçüsü (M), rotanın kendi biriminde."),
     (
+        "constraint",
+        "Ölçü kısıtının değeri: uzunlukta metre, açıda radyan.",
+    ),
+    (
+        "parameter",
+        "Kısıt parametresinin kendi biriminde: uzunluk çizim biriminde, açı projenin açı biriminde, sayı birimsiz.",
+    ),
+    (
         "paper-mm",
         "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
     ),

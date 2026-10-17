@@ -28,6 +28,8 @@ mod appearance_tokens_tests;
 #[cfg(test)]
 mod assoc_array_scenes;
 #[cfg(test)]
+mod constraint_scenes;
+#[cfg(test)]
 mod attachment_scenes;
 mod attachments;
 #[cfg(test)]

@@ -157,6 +157,13 @@ def rows_of(rule, parts, value, fixed):
         if kind == "parallel":
             return [(u[0] * w[1] - u[1] * w[0]) / lens]
         return [(u[0] * w[0] + u[1] * w[1]) / lens]
+    if kind == "tangent" and len(parts) == 3:
+        # At an end: the radius to the arc's end tied to the segment's end, square to the segment.
+        (_, s0, s1), (_, c, _), (_, e) = parts
+        u = (s1[0] - s0[0], s1[1] - s0[1])
+        w = (e[0] - c[0], e[1] - c[1])
+        lens = sp.sqrt(u[0] ** 2 + u[1] ** 2) * sp.sqrt(w[0] ** 2 + w[1] ** 2)
+        return [(u[0] * w[0] + u[1] * w[1]) / lens]
     if kind == "tangent":
         a, b = parts
         if a[0] == "segment":
@@ -248,7 +255,39 @@ def refs_of(rule):
 
 # ---- the solve ---------------------------------------------------------------------------------------------------
 
-def reference(case):
+def ends_of(shape, el):
+    """The points of a segment's object that are its ends."""
+    kind = next(iter(shape))
+    if kind == "line" and el == {"segment": [0, 0, 0]}:
+        return [{"point": "start"}, {"point": "end"}]
+    if kind in ("polygon", "polyline") and isinstance(el, dict) and "segment" in el:
+        part, ring, i = el["segment"]
+        return [{"vertex": [part, ring, i]}, {"vertex": [part, ring, i + 1]}, {"vertex": [part, ring, 0]}]
+    return []
+
+
+def tangent_end(rule, rules, shapes):
+    """A segment–arc tangent whose arc's end a coincident ties to the segment's end: that end (docs/adr/0335 §2)."""
+    if rule["rule"] != "tangent" or not isinstance(rule["a"][1], dict) or "segment" not in rule["a"][1]:
+        return None
+    arc = rule["b"][0]
+    if arc >= len(shapes) or next(iter(shapes[arc])) != "arc":
+        return None
+    ends = ends_of(shapes[rule["a"][0]], rule["a"][1])
+    on_segment = lambda r: r[0] == rule["a"][0] and r[1] in ends
+    arc_end = lambda r: r[0] == arc and r[1] in ({"point": "start"}, {"point": "end"})
+    for other in rules:
+        if other["rule"] != "coincident" or other.get("reference"):
+            continue
+        p, q = other["a"], other["b"]
+        if arc_end(p) and on_segment(q):
+            return p
+        if arc_end(q) and on_segment(p):
+            return q
+    return None
+
+
+def reference(case, all_shapes=False):
     shapes = case["shapes"]
     held = case.get("held", [])
     fix_from = case.get("fixFrom") or shapes
@@ -281,6 +320,9 @@ def reference(case):
         fixed = None
         if rule["rule"] == "fix":
             fixed = [subs_part(p, fixed_values) for p in parts]
+        end = tangent_end(rule, rules, shapes)
+        if end is not None:
+            parts = parts + [element(shapes, symbols, end)]
         value = sp.Float(repr(float(rule.get("value", 0.0))), 50)
         for expr in rows_of(rule, parts, value, fixed):
             rows.append((k, sp.sympify(expr)))
@@ -338,10 +380,17 @@ def reference(case):
         res, jj = evaluate(at)
         if all(abs(res[i]) < mp.mpf("1e-40") for i in kept):
             break
+        # A part that lost its meaning on the way (a segment shrunk to nothing): no step can be taken from here.
+        if not all(mp.isfinite(res[i]) for i in kept) or not all(
+                mp.isfinite(jj[i, j]) for i in kept for j in range(len(free))):
+            break
         # The least-norm step of the kept rows: dx = Jᵀ (J Jᵀ)⁻¹ (−r).
         jk = mp.matrix([[jj[i, j] for j in range(len(free))] for i in kept])
         rk = mp.matrix([-res[i] for i in kept])
-        y = mp.lu_solve(jk * jk.T, rk)
+        try:
+            y = mp.lu_solve(jk * jk.T, rk)
+        except ZeroDivisionError:
+            break
         dx = jk.T * y
         for j, s in enumerate(free):
             at[s] += dx[j]
@@ -400,6 +449,9 @@ def reference(case):
     }
     if status == "fully" or not holds:
         expect["shapes"] = [write_shape(s, [final[x] for x in symbols[i]]) for i, s in enumerate(shapes)]
+    if all_shapes:
+        # Every shape as solved, for a caller that knows the solution is unique enough (constraint_command_cases.py).
+        expect["solved"] = [write_shape(s, [final[x] for x in symbols[i]]) for i, s in enumerate(shapes)]
     return expect
 
 
@@ -522,6 +574,13 @@ def cases():
         {"rule": "radius", "a": [1, "circle"], "value": 3.0},
         {"rule": "fix", "a": [1, END]},
     ], fixFrom=[ln(0, 0, 4, 0), {"arc": [[4, 3], 3, -math.pi / 2, 0.4]}])
+    add("Yayın başı doğrunun ucunda ve teğet: uçta teğet", [ln(0, 0, 4, 0), {"arc": [[4.3, 2.4], 2.2, -1.4, 0.6]}], [
+        {"rule": "fix", "a": [0, SEG]},
+        {"rule": "coincident", "a": [1, START], "b": [0, END]},
+        {"rule": "tangent", "a": [0, SEG], "b": [1, "circle"], "left": True},
+        {"rule": "radius", "a": [1, "circle"], "value": 2.5},
+        {"rule": "fix", "a": [1, END]},
+    ], fixFrom=[ln(0, 0, 4, 0), {"arc": [[4, 2.5], 2.5, -math.pi / 2, 0.3]}])
     add("Eş merkezli iki daire, çap ve eşit", [cc(0, 0, 2), cc(0.3, -0.2, 1.1), cc(5, 5, 1)], [
         {"rule": "fix", "a": [0, CENTER]},
         {"rule": "concentric", "a": [0, "circle"], "b": [1, "circle"]},

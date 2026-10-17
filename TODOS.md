@@ -350,6 +350,10 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-PARAM-02`, `03`, `07` kısıt komutları ve aracı (ADR 0335, 17 Ekim): web'de gerekenler: `cad.constraints.edit` ve
+  `.query`'nin işleyicileri (`product/`, masaüstünün `constraints_edit.rs` ve `constraint_solve.rs`'inin ikizi; çözücü WASM'la),
+  Kısıt aracı (`tools/`; parça seçimi, planla önizleme), şeridin Kısıtlar paneli ve ikonları (`catalog/v1/additions.json`), ortak iz
+  `constraint-tool.json`.
 - [ ] `CAD-PARAM-01`, `05`, `06` kısıt modeli ve çözücü (ADR 0334, 17 Ekim): web'de gerekenler: `.kcad` şema 73'ün
   `constraints`'i (`io/kcad.ts` opak değer olarak okur ve yazar, kuralları `constraints_problem`'in WASM'ı), belgenin kısıt
   adımı (`Op::Constraints`'in karşılığı) ve çözücünün WASM bağlayıcısı (`ops::constraints::solve`); TS türleri üretildi

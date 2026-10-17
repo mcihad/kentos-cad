@@ -173,6 +173,8 @@ fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, Head
         "blocks" => to_value(&doc.blocks().iter().map(|b| &**b).collect::<Vec<_>>()),
         // The associative arrays in the order they were made (docs/adr/0300).
         "arrays" => to_value(&doc.arrays().iter().map(|a| &**a).collect::<Vec<_>>()),
+        // The constraints and the parameter table (docs/adr/0334).
+        "constraints" => to_value(doc.constraints()),
         "entities" => {
             let filter = Filter {
                 layer: optional_text(params, "layer")?,

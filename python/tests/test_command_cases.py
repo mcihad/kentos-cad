@@ -83,6 +83,12 @@ class Case:
                 record = self.slots().get(slot)
                 assert record is not None, f"{at}: no object in slot {slot}"
                 return record.uid
+            if value.startswith("$constraint:"):
+                # The drawing's constraint at this place now (docs/adr/0335).
+                k = int(value[len("$constraint:"):])
+                constraints = self.doc.constraints().get("constraints", [])
+                assert k < len(constraints), f"{at}: {value}: no constraint {k}"
+                return constraints[k]["id"]
             if value.startswith("$array:"):
                 # The drawing's associative array at this place now (docs/adr/0301).
                 k = int(value[len("$array:"):])

@@ -240,6 +240,11 @@ impl PySession {
         text(&self.inner.arrays())
     }
 
+    /// The constraints and the parameter table (docs/adr/0334).
+    fn constraints(&self) -> PyResult<String> {
+        text(self.inner.constraints())
+    }
+
     /// A page of objects: `bbox` is `(min_x, min_y, max_x, max_y)`, `after`
     /// the cursor a page gave.
     #[pyo3(signature = (layer = None, kinds = None, bbox = None, after = None, limit = None))]

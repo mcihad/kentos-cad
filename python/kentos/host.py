@@ -154,6 +154,9 @@ class DesktopSession(_document.SessionBase):
     def arrays(self) -> str:
         return self._ask("arrays")
 
+    def constraints(self) -> str:
+        return self._ask("constraints")
+
     def entities(
         self,
         layer: str | None = None,

@@ -1,0 +1,177 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "constraint-tool",
+ "title": "Kısıt: Yatay ile eğik çizgi en az değişiklikle yatay olur, geri alınır; Uzaklık iki ucuna tıklanır, değeri 10 yazılınca çizgi doğrultusunu koruyarak kısalır; her yazma cad.constraints.edit ile",
+ "source": "docs/adr/0335 §5 (Kısıt aracı, komutla yazma)",
+ "covers": [
+  "CAD-PARAM-02",
+  "CAD-PARAM-03"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.05
+ },
+ "draft": {
+  "snap": true,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.05,
+ "steps": [
+  {
+   "run": "tool.line",
+   "expect": {
+    "tool": "line"
+   }
+  },
+  {
+   "click": [
+    0,
+    0
+   ]
+  },
+  {
+   "click": [
+    12,
+    1
+   ],
+   "expect": {
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       12,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "run": "tool.constraint",
+   "expect": {
+    "tool": "constraint"
+   }
+  },
+  {
+   "key": "Y",
+   "note": "Yatay seçilir.",
+   "expect": {
+    "tool": "constraint",
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    6,
+    0.5
+   ],
+   "note": "Çizginin kenarı: yatay olur, iki ucu eşit kımıldar.",
+   "expect": {
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       0,
+       0.5
+      ],
+      [
+       12,
+       0.5
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Tek geri alma kısıtı ve çizgiyi birlikte geri alır.",
+   "expect": {
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       12,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "key": "U",
+   "note": "Uzaklık seçilir.",
+   "expect": {
+    "tool": "constraint",
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    0,
+    0
+   ],
+   "note": "Başlangıç noktası."
+  },
+  {
+   "click": [
+    12,
+    1
+   ],
+   "note": "Bitiş noktası: değer sorulur."
+  },
+  {
+   "text": "10"
+  },
+  {
+   "key": "Enter",
+   "note": "Çizgi 10 m olur; orta noktası ve doğrultusu kalır.",
+   "expect": {
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       1.0172712087756022,
+       0.08477260073130016
+      ],
+      [
+       10.982728791224398,
+       0.9152273992686999
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "shot": "kisit-uzaklik-yazildi",
+   "note": "Uzaklık 10"
+  }
+ ]
+}

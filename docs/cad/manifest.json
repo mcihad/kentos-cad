@@ -8056,6 +8056,22 @@
    "tests": 2
   },
   {
+   "id": "tool.constraint",
+   "kind": "command",
+   "title": "Kısıt",
+   "level": "semantic",
+   "via": [
+    "cad.constraints.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.constraints.edit",
+   "mcp": "cad.constraints.edit",
+   "note": "Kısıtın kuralı ve parçaları (nesnenin kimliği ve noktası, kenarı ya da dairesi) komuta verilir; yön çizimden, çözüm çözücüden (ADR 0335).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.continue",
    "kind": "tool",
    "title": "Sürdür",

@@ -72,6 +72,14 @@ pub(super) fn rows(rule: &Rule, parts: &[Built], value: f64, at: &[Built], s: f6
             };
             vec![r / norm * s]
         }
+        // At an end (the arc's end tied to the segment's by a coincident, its third part): the radius to that end
+        // square to the segment.
+        Rule::Tangent { .. } if parts.len() == 3 => {
+            let (s0, s1) = segment(0);
+            let (c, _) = circle(1);
+            let (d, r) = (s1 - s0, point(2) - c);
+            vec![d.dot(r) / (d.len() * r.len()) * s]
+        }
         Rule::Tangent {
             inside, left, a, ..
         } => match a.element {

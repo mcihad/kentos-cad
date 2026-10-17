@@ -271,6 +271,11 @@ impl Session {
         self.doc.arrays().iter().map(|a| &**a).collect()
     }
 
+    /// The constraints and the parameter table (docs/adr/0334).
+    pub fn constraints(&self) -> &kentos_contracts::ConstraintSet {
+        self.doc.constraints()
+    }
+
     /// A page of objects.
     pub fn entities(
         &self,

@@ -1,0 +1,5287 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.constraints.edit",
+ "commandVersion": 1,
+ "title": "Kısıtlar",
+ "note": "ADR 0335: kısıtlar parçalarına tıklanarak eklenir, kaldırılır, sürücü ya da başvuru yapılır, öbür çözümüne çevrilir; çizim çözücüyle (ADR 0334) çözülür ve kısıtlarla birlikte tek adımda yazılır. Yön çizimden okunur; şekli ters çeviren çözüm reddedilir. Durumlar KentOS kodu olmadan scripts/fixtures/constraint_command_cases.py ile yazılır.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kısıtlar",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 6,
+     "y": 0.3
+    }
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 6,
+     "y": 0.3
+    },
+    "b": {
+     "x": 6.2,
+     "y": 4
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 6.2,
+     "y": 4
+    },
+    "b": {
+     "x": 0,
+     "y": 4.1
+    }
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 4.1
+    },
+    "b": {
+     "x": 0,
+     "y": 0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 10,
+     "y": 3
+    },
+    "r": 1.5
+   },
+   {
+    "kind": "line",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 8,
+     "y": 0
+    },
+    "b": {
+     "x": 14,
+     "y": 0
+    }
+   },
+   {
+    "kind": "arc",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "c": {
+     "x": 3,
+     "y": 9
+    },
+    "r": 2,
+    "a0": 0,
+    "a1": 1.5
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": -5
+    },
+    "b": {
+     "x": 6,
+     "y": -4.5
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 24,
+      "y": 0
+     },
+     {
+      "x": 24,
+      "y": 3
+     },
+     {
+      "x": 20,
+      "y": 3
+     }
+    ],
+    "bulges": [
+     0,
+     0.3,
+     0,
+     0
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 2,
+     "y": 6
+    }
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 5,
+     "y": 6.5
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Dikdörtgen: köşeler, yatay, paralel kenarlar, dik köşe, sabit köşe, genişlik 8 ve yükseklik 4; tam kısıtlı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kısıtlar",
+     "expect": {
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzaklık değersiz: çizimin ölçtüğü parametre olur, hiçbir şey kımıldamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:1"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci ölçünün değeri birincinin parametresini okur (d2 = d1 / 2)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "d1 / 2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başvuru ölçüsü: ifadesi boş, yalnız ölçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": "yukseklik"
+         },
+         "reference": true
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 4,
+        "free": [
+         "$uidOf:2"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başvuru ölçüsüne değer verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "reference": true,
+         "value": "3"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_expression",
+       "message": "$any",
+       "path": "edit.constraints[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki noktayı yatay yap: ikisi de en az kımıldar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:10",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "node",
+             "part": 0
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:11",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "node",
+             "part": 0
+            }
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:10",
+         "$uidOf:11"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 2.0,
+         "y": 6.25
+        }
+       },
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 5.0,
+         "y": 6.25
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğruya teğet daire: merkezi doğrunun solunda kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:6",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "tangent",
+          "a": {
+           "uid": "$uidOf:6",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:5"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 2,
+        "free": [
+         "$uidOf:5"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "5": {
+        "kind": "circle",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 10.0,
+         "y": 2.25
+        },
+        "r": 2.25
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Teğet: ilk seçilen doğru tutulur, daire ona uyar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "tangent",
+          "a": {
+           "uid": "$uidOf:6",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          }
+         }
+        }
+       ]
+      },
+      "hold": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:5"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 2,
+        "free": [
+         "$uidOf:5"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "5": {
+        "kind": "circle",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 10.0,
+         "y": 2.25
+        },
+        "r": 2.25
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paralel: ilk seçilen üst kenar tutulur, alt kenar döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      },
+      "hold": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:1"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": -0.009927360774818402,
+         "y": 0.19854721549636803
+        },
+        "b": {
+         "x": 6.009927360774818,
+         "y": 0.10145278450363196
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tutulacak nesne yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      },
+      "hold": [
+       "0192f5a6-9999-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "$any",
+       "path": "hold[0]",
+       "uids": [
+        "0192f5a6-9999-7000-8000-000000000003"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Teğeti çevirmek daireyi sıfır yarıçapa indirir: ters dönme reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:6",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "tangent",
+          "a": {
+           "uid": "$uidOf:6",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:5"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 2,
+        "free": [
+         "$uidOf:5"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "5": {
+        "kind": "circle",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+         "x": 10.0,
+         "y": 2.25
+        },
+        "r": 2.25
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "flip",
+       "id": "$constraint:1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "shape_flipped",
+       "message": "$any",
+       "path": "edit",
+       "uids": [
+        "$uidOf:5"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yatay uzaklık çevrilince noktalar yer değiştirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:11",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "node",
+             "part": 0
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:10",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "node",
+             "part": 0
+            }
+           }
+          },
+          "axis": "horizontal",
+          "parameter": ""
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:10",
+         "$uidOf:11"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "flip",
+       "id": "$constraint:0"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [],
+       "changed": [
+        "$uidOf:11",
+        "$uidOf:10"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:11",
+         "$uidOf:10"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "11": {
+        "kind": "point",
+        "id": 11,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 2.0,
+         "y": 6.5
+        }
+       },
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 5.0,
+         "y": 6.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta sabit dairenin üstüne iner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:10",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "node",
+             "part": 0
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:10"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 1,
+        "free": [
+         "$uidOf:10"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "10": {
+        "kind": "point",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 8.595506233646434,
+         "y": 3.5266851623825874
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Açı derecede, 180°'den küçük olanı: sol kenar alt kenarla 60°",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        },
+        {
+         "rule": {
+          "kind": "angle",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "parameter": ""
+         },
+         "value": "60"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 1.8245156982442223,
+         "y": 3.559654824117136
+        },
+        "b": {
+         "x": -2.907160910476854e-78,
+         "y": 1.3135502992002281e-77
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çelişkili genişlik: hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "7"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_conflict",
+       "message": "$any",
+       "path": "edit",
+       "uids": [
+        "$any"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı genişliği yeniden vermek fazladır, eklenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_redundant",
+       "message": "$any",
+       "path": "edit.constraints",
+       "uids": [
+        "$any"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kaldır: ölçü kısıtının parametresi de gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "$constraint:9"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [
+        "$any"
+       ],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 1,
+        "free": [
+         "$uidOf:1",
+         "$uidOf:2",
+         "$uidOf:3"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kaldır: başka parametrenin okuduğu parametre kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "d1 / 2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "$constraint:9"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [
+        "$any"
+       ],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 1,
+        "free": [
+         "$uidOf:1",
+         "$uidOf:2",
+         "$uidOf:3"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başvuru yap ve yeniden sürücü yap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "mode",
+       "ids": [
+        "$constraint:10"
+       ],
+       "reference": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 1,
+        "free": [
+         "$uidOf:2",
+         "$uidOf:3",
+         "$uidOf:4"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "mode",
+       "ids": [
+        "$constraint:10"
+       ],
+       "reference": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometrik kısıt başvuru olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 3,
+        "free": [
+         "$uidOf:1"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.15
+        },
+        "b": {
+         "x": 6.0,
+         "y": 0.15
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "mode",
+       "ids": [
+        "$constraint:0"
+       ],
+       "reference": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_constraint",
+       "message": "$any",
+       "path": "edit.ids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paralelin tek çözümü var: çevrilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:3"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 7,
+        "free": [
+         "$uidOf:1",
+         "$uidOf:3"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": -0.005119063657497719,
+         "y": 0.10230484203123502
+        },
+        "b": {
+         "x": 6.005119063657498,
+         "y": 0.19769515796876497
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.201603899155255,
+         "y": 4.099226498116418
+        },
+        "b": {
+         "x": -0.0016038991552544382,
+         "y": 4.000773501883582
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "flip",
+       "id": "$constraint:0"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_constraint",
+       "message": "$any",
+       "path": "edit.id"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki çizgi kımıldamaz; ona bağlanan çizgi gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:8",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "under",
+        "dof": 2,
+        "free": [
+         "$uidOf:4"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 4.1
+        },
+        "b": {
+         "x": 0.0,
+         "y": -5.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli çizgiyi yatay yapmak çelişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:8",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "$any",
+       "path": "edit",
+       "uids": [
+        "$any"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı kenar kısıt almaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:9",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "element_not_found",
+       "message": "$any",
+       "path": "edit.constraints[0].rule",
+       "uids": [
+        "$uidOf:9"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "0192f5a6-9999-7000-8000-000000000001",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "$any",
+       "path": "edit.constraints[0].rule",
+       "uids": [
+        "0192f5a6-9999-7000-8000-000000000001"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parçalar kurala uymuyor: noktaya paralel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_constraint",
+       "message": "$any",
+       "path": "edit.constraints[0].rule"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş ekleme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_constraints",
+       "message": "$any",
+       "path": "edit.constraints"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan kısıt kaldırılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "0192f5a6-9999-7000-8000-000000000002"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_not_found",
+       "message": "$any",
+       "path": "edit.ids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parametre adı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": "2r"
+         },
+         "value": "2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameter",
+       "message": "$any",
+       "path": "edit.constraints[0].rule.parameter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parametre başka bir ölçünün",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": "r"
+         },
+         "value": "2"
+        },
+        {
+         "rule": {
+          "kind": "diameter",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": "r"
+         },
+         "value": "4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_in_use",
+       "message": "$any",
+       "path": "edit.constraints[1].rule.parameter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değer okunamıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": ""
+         },
+         "value": "2 +"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_expression",
+       "message": "$any",
+       "path": "edit.constraints[0].value"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değer olmayan bir adı okuyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": ""
+         },
+         "value": "genislik"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_missing",
+       "message": "$any",
+       "path": "parameters[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parametreler birbirini okuyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": "a"
+         },
+         "value": "b"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": "b"
+         },
+         "value": "a"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_cycle",
+       "message": "$any",
+       "path": "parameters[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız çöz: kısıtsız çizim tam, değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "solve"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [],
+       "changed": [],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçersiz kısıt kimliği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "kisit-1"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "$any",
+       "path": "edit.ids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanıcı parametresi kalan uzunluğa açı bağlanamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:4",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "perpendicular",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "8"
+        },
+        {
+         "rule": {
+          "kind": "distance",
+          "a": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          },
+          "parameter": ""
+         },
+         "value": "d1 / 2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "removed": [],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "diagnosis": {
+        "status": "fully",
+        "dof": 0,
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 6.673604638669885e-84,
+         "y": -1.243380114444475e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": -3.600040550869024e-84
+        }
+       },
+       "2": {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 1.1172907800462436e-84
+        },
+        "b": {
+         "x": 8.0,
+         "y": 4.0
+        }
+       },
+       "3": {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.0,
+         "y": 4.0
+        },
+        "b": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        }
+       },
+       "4": {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+         "x": 8.957375834903967e-61,
+         "y": 4.0
+        },
+        "b": {
+         "x": 2.451121330029324e-84,
+         "y": 2.189978471092469e-84
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "$constraint:9"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": [],
+       "removed": [
+        "$any"
+       ],
+       "changed": [],
+       "diagnosis": {
+        "status": "under",
+        "dof": 1,
+        "free": [
+         "$uidOf:1",
+         "$uidOf:2",
+         "$uidOf:3"
+        ],
+        "iterations": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "angle",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:2",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "parameter": "d1"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_kind",
+       "message": "$any",
+       "path": "edit.constraints[0].rule.parameter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      },
+      "expectedRevision": "07"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "$any",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm geçmişte kaldı: conflict, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "horizontal",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      },
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "$any",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yarıçap sıfır olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "radius",
+          "a": {
+           "uid": "$uidOf:5",
+           "element": {
+            "kind": "circle"
+           }
+          },
+          "parameter": ""
+         },
+         "value": "0"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "parameter_range",
+       "message": "$any",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizginin iki ucu çakışık ve paralel: tekil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "coincident",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          },
+          "b": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "end"
+            }
+           }
+          }
+         }
+        },
+        {
+         "rule": {
+          "kind": "parallel",
+          "a": {
+           "uid": "$uidOf:1",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          "b": {
+           "uid": "$uidOf:3",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_singular",
+       "message": "$any",
+       "path": "edit",
+       "uids": [
+        "$any"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

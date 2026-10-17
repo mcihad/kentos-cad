@@ -167,6 +167,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "ortak durumu yok; masaüstünün Harita servisi penceresi nesneli katmanı önermez",
     ),
     (
+        "cad.constraints.edit",
+        "not_converged",
+        "beklenmez: en az değişikliğin Gauss–Newton'u kısıtların tuttuğu bir çözüme ya ulaşır ya çelişki ya da tekillik bulur; 64 adımı aşan bir durum kararlı yazılamaz (ADR 0334 §4)",
+    ),
+    (
         "cad.entities.stretch",
         "neighbour_invalid",
         "beklenmez: Esnet köşeleri yalnız taşır, komşunun köşe sayısı değişmez; uyarı çekirdeğin kuralı değişirse diye yazılır (ADR 0254 §2)",
@@ -308,6 +313,11 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             None,
             |u| json!({ "uids": [u], "by": { "kind": "distance", "distance": 0.5, "side": { "x": 1.0e9, "y": 1.0e9 } } }),
         ),
+        // Sabit on a circle: a circle and an arc have the part, another kind is refused for it (docs/adr/0335).
+        ("cad.constraints.edit", Some("circle"), |u| {
+            json!({ "edit": { "kind": "add", "constraints": [{ "rule": { "kind": "fix",
+                    "a": { "uid": u, "element": { "kind": "circle" } } } }] } })
+        }),
         (
             "cad.dimensions.reassociate",
             None,

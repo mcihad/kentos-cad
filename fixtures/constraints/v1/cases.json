@@ -1922,6 +1922,136 @@
    }
   },
   {
+   "name": "Yayın başı doğrunun ucunda ve teğet: uçta teğet",
+   "shapes": [
+    {
+     "line": [
+      [
+       0,
+       0
+      ],
+      [
+       4,
+       0
+      ]
+     ]
+    },
+    {
+     "arc": [
+      [
+       4.3,
+       2.4
+      ],
+      2.2,
+      -1.4,
+      0.6
+     ]
+    }
+   ],
+   "constraints": [
+    {
+     "rule": "fix",
+     "a": [
+      0,
+      {
+       "segment": [
+        0,
+        0,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "rule": "coincident",
+     "a": [
+      1,
+      {
+       "point": "start"
+      }
+     ],
+     "b": [
+      0,
+      {
+       "point": "end"
+      }
+     ]
+    },
+    {
+     "rule": "tangent",
+     "a": [
+      0,
+      {
+       "segment": [
+        0,
+        0,
+        0
+       ]
+      }
+     ],
+     "b": [
+      1,
+      "circle"
+     ],
+     "left": true
+    },
+    {
+     "rule": "radius",
+     "a": [
+      1,
+      "circle"
+     ],
+     "value": 2.5
+    },
+    {
+     "rule": "fix",
+     "a": [
+      1,
+      {
+       "point": "end"
+      }
+     ]
+    }
+   ],
+   "fixFrom": [
+    {
+     "line": [
+      [
+       0,
+       0
+      ],
+      [
+       4,
+       0
+      ]
+     ]
+    },
+    {
+     "arc": [
+      [
+       4,
+       2.5
+      ],
+      2.5,
+      -1.5707963267948966,
+      0.3
+     ]
+    }
+   ],
+   "expect": {
+    "status": "over",
+    "dof": 0,
+    "redundant": [
+     4
+    ],
+    "conflicting": [],
+    "singular": [],
+    "broken": [],
+    "free": [],
+    "measured": []
+   }
+  },
+  {
    "name": "Eş merkezli iki daire, çap ve eşit",
    "shapes": [
     {

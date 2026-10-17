@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -32,7 +32,7 @@ use serde_json::Value;
 use crate::blocks_insert;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, blocks_define,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
     dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
@@ -154,6 +154,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_ENTITIES_REVERSE => $then!(entities_reverse, EntitiesReverse),
             kentos_contracts::CAD_ENTITIES_LENGTHEN => $then!(entities_lengthen, EntitiesLengthen),
             kentos_contracts::CAD_ARRAYS_EDIT => $then!(arrays_edit, ArraysEdit),
+            kentos_contracts::CAD_CONSTRAINTS_EDIT => $then!(constraints_edit, ConstraintsEdit),
+            kentos_contracts::CAD_CONSTRAINTS_QUERY => $then!(constraints_query, ConstraintsQuery),
             kentos_contracts::CAD_ENTITIES_EXPLODE => $then!(entities_explode, EntitiesExplode),
             kentos_contracts::CAD_CURVES_EDIT => $then!(curves_edit, CurvesEdit),
             kentos_contracts::CAD_ENTITIES_MATCH => $then!(entities_match, EntitiesMatch),

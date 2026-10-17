@@ -15,7 +15,7 @@ use super::dual::D;
 use super::model::{Built, Model, VarKind, build, write_back};
 use super::rules::{measured, rows};
 use super::sparse::{Factor, Row};
-use super::{Element, Outcome, Problem, Ref, Rule, Status};
+use super::{Element, Outcome, PointAt, Problem, Ref, Rule, Status};
 
 /// The most steps one group takes.
 const STEPS: u32 = 64;
@@ -34,6 +34,9 @@ struct Eq {
     parts: Vec<Vec<usize>>,
     /// A fix: its parts' place to hold, as built from the fix shapes.
     at: Vec<Built>,
+    /// A tangent at an end (docs/adr/0335 §2): the arc's end that a coincident ties to the segment's end, built
+    /// after the rule's own parts.
+    end: Option<Ref>,
 }
 
 fn element_of(r: &Ref) -> &Element {
@@ -54,7 +57,7 @@ fn eval(eq: &Eq, shapes: &[Shape], x: &[f64], free: &[bool], s: f64) -> Vec<D> {
             }
         })
         .collect();
-    let refs = eq.rule.refs();
+    let refs: Vec<Ref> = eq.rule.refs().into_iter().chain(eq.end).collect();
     let parts: Vec<Built> = refs
         .iter()
         .zip(&eq.parts)
@@ -86,6 +89,60 @@ pub(super) fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {
     let model = Model::new(shapes, &used);
     let parts = built_parts(&model, shapes, &model.x, rule)?;
     measured(rule, &parts)
+}
+
+/// The ends of a segment as points of its object: a line's start and end, a path edge's two vertices.
+fn segment_ends(shape: &Shape, element: &Element) -> Vec<PointAt> {
+    match (shape, element) {
+        (Shape::Line { .. }, Element::Segment { .. }) => vec![PointAt::Start, PointAt::End],
+        (
+            Shape::Polygon { .. } | Shape::Polyline { .. },
+            Element::Segment { part, ring, index },
+        ) => vec![
+            PointAt::Vertex {
+                part: *part,
+                ring: *ring,
+                index: *index,
+            },
+            PointAt::Vertex {
+                part: *part,
+                ring: *ring,
+                index: index + 1,
+            },
+            PointAt::Vertex {
+                part: *part,
+                ring: *ring,
+                index: 0,
+            },
+        ],
+        _ => Vec::new(),
+    }
+}
+
+/// A segment–arc tangent whose arc's end a coincident ties to an end of the segment (docs/adr/0335 §2): that end of
+/// the arc, so the tangent is written at it (its single root) rather than as the centre's distance (a double root
+/// with the coincident).
+fn tangent_end(rule: &Rule, all: &[super::Constraint], shapes: &[Shape]) -> Option<Ref> {
+    let Rule::Tangent { a, b, .. } = rule else {
+        return None;
+    };
+    if !matches!(a.element, Element::Segment { .. })
+        || !matches!(shapes.get(b.object)?, Shape::Arc { .. })
+    {
+        return None;
+    }
+    let ends = segment_ends(shapes.get(a.object)?, &a.element);
+    let on_segment = |r: &Ref| {
+        r.object == a.object && matches!(r.element, Element::Point(p) if ends.contains(&p))
+    };
+    let arc_end = |r: &Ref| {
+        r.object == b.object && matches!(r.element, Element::Point(PointAt::Start | PointAt::End))
+    };
+    all.iter().find_map(|c| match c.rule {
+        Rule::Coincident { a: p, b: q } if !c.reference && arc_end(&p) && on_segment(&q) => Some(p),
+        Rule::Coincident { a: p, b: q } if !c.reference && arc_end(&q) && on_segment(&p) => Some(q),
+        _ => None,
+    })
 }
 
 /// Union–find over the unknowns.
@@ -222,7 +279,8 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
         }
         let mut parts_vars = Vec::new();
         let mut ok = true;
-        for r in c.rule.refs() {
+        let end = tangent_end(&c.rule, p.constraints, shapes);
+        for r in c.rule.refs().into_iter().chain(end) {
             match model.element_vars(shapes, r.object, &r.element) {
                 Some(v) => parts_vars.push(v),
                 None => {
@@ -274,6 +332,7 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
             vars,
             parts,
             at,
+            end,
         });
     }
 
@@ -338,6 +397,9 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     let mut determined = vec![false; n];
     let mut iterations = 0u32;
     let mut cancelled = false;
+    // Constraints whose rows lost their meaning on a full step (a segment pulled to nothing): the solve can only
+    // creep towards that, so it says them singular rather than the conflict it would stop short at.
+    let mut blew: BTreeSet<usize> = BTreeSet::new();
 
     for g in &groups {
         let col_of: HashMap<usize, usize> =
@@ -405,6 +467,13 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
                     x[j] = s0 + alpha * d;
                 }
                 let trial = build_rows(&x);
+                if alpha == 1.0 {
+                    for (i, r) in trial.res.iter().enumerate() {
+                        if !r.is_finite() {
+                            blew.insert(eqs[g.eqs[trial.of[i]]].constraint);
+                        }
+                    }
+                }
                 if merit(&trial.res) < before {
                     taken = Some(trial);
                     break;
@@ -515,6 +584,9 @@ pub(super) fn run(p: &Problem<'_>, stop: &dyn Fn() -> bool) -> Outcome {
     // Conflicts found as unmet dependent rows count only when the solve could not meet them.
     let all_hold = all_hold && !lone_unmet;
     if all_hold {
+        conflicting.clear();
+    } else if !blew.is_empty() && !lone_unmet {
+        singular.extend(blew);
         conflicting.clear();
     }
     let status = if cancelled {

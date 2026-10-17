@@ -154,9 +154,10 @@ pub fn in_parameter_unit(units: ParamUnits, kind: ParameterKind, v: f64) -> f64 
     }
 }
 
-/// A value written as a parameter's expression: ten decimals at most, no trailing zeros.
+/// A value written as a parameter's expression: twelve decimals at most (below the solver's tolerance, so a
+/// dimension added at the value the drawing measures moves nothing), no trailing zeros.
 pub fn value_text(v: f64) -> String {
-    let t = format!("{v:.10}");
+    let t = format!("{v:.12}");
     let t = t.trim_end_matches('0').trim_end_matches('.');
     if t == "-0" { "0".into() } else { t.into() }
 }

@@ -45,6 +45,8 @@ UNITS: dict[str, str] = {
     "elevation": "Düşey metre: kot, z, yükseklik.",
     "m": "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
     "measure": "Rotanın ölçüsü (M), rotanın kendi biriminde.",
+    "constraint": "Ölçü kısıtının değeri: uzunlukta metre, açıda radyan.",
+    "parameter": "Kısıt parametresinin kendi biriminde: uzunluk çizim biriminde, açı projenin açı biriminde, sayı birimsiz.",
     "paper-mm": "Kâğıtta milimetre: kalınlık, kâğıttaki yazı yüksekliği, pafta boyları.",
     "px": "Ekranda mantıksal piksel.",
     "deg": "Derece; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
@@ -621,6 +623,20 @@ CloudRenderName = Literal["rgb", "classification", "elevation", "intensity", "re
 """The names of :class:`CloudRender`, for a plain string."""
 
 
+class ConstraintSense(_StrEnum):
+    """Where a new constraint's sense comes from.
+
+    - ``drawing``: From the drawing as it is: a tangent's side, a distance's side of its segment, the angle's quadrant under
+    - ``given``: As the rule gives it.
+    """
+    DRAWING = "drawing"
+    GIVEN = "given"
+
+
+ConstraintSenseName = Literal["drawing", "given"]
+"""The names of :class:`ConstraintSense`, for a plain string."""
+
+
 class Convention(_StrEnum):
     """Which way a Helmert transformation's rotations turn: EPSG's position
     vector convention (9606) or its coordinate frame convention (9607).
@@ -855,6 +871,22 @@ class DimensionZeros(_StrEnum):
 
 DimensionZerosName = Literal["both", "leading", "trailing"]
 """The names of :class:`DimensionZeros`, for a plain string."""
+
+
+class DistanceAxis(_StrEnum):
+    """Which way a distance is measured: along the line between its points, or across or along the drawing's axes.
+
+    - ``aligned``
+    - ``horizontal``: Along east: `b`'s east minus `a`'s.
+    - ``vertical``: Along north: `b`'s north minus `a`'s.
+    """
+    ALIGNED = "aligned"
+    HORIZONTAL = "horizontal"
+    VERTICAL = "vertical"
+
+
+DistanceAxisName = Literal["aligned", "horizontal", "vertical"]
+"""The names of :class:`DistanceAxis`, for a plain string."""
 
 
 class DivideEnds(_StrEnum):
@@ -2069,6 +2101,17 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class ParameterKind(_StrEnum):
+    """What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number."""
+    LENGTH = "length"
+    ANGLE = "angle"
+    NUMBER = "number"
+
+
+ParameterKindName = Literal["length", "angle", "number"]
+"""The names of :class:`ParameterKind`, for a plain string."""
+
+
 class ParametersOperation(_StrEnum):
     """What `cad.blocks.parameters` does (docs/adr/0318 §3).
 
@@ -2571,6 +2614,28 @@ class SnapKindName(_StrEnum):
 
 SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant", "intersection", "perpendicular", "tangent", "nearest", "centroid", "insertion"]
 """The names of :class:`SnapKindName`, for a plain string."""
+
+
+class SolveStatus(_StrEnum):
+    """How a solve ended (docs/adr/0334 §4).
+
+    - ``fully``: Every constraint holds and nothing can move without breaking one.
+    - ``under``: Every constraint holds; `dof` freedoms are left.
+    - ``over``: Every constraint holds, but some repeat what others already say (`redundant`).
+    - ``inconsistent``: The constraints ask for what cannot be (`conflicting`): nothing is written.
+    - ``singular``: A constraint lost its meaning on the way (a segment of no length, a circle of no radius: `singular`).
+    - ``nonConvergent``: The solver did not reach a solution in its steps.
+    """
+    FULLY = "fully"
+    UNDER = "under"
+    OVER = "over"
+    INCONSISTENT = "inconsistent"
+    SINGULAR = "singular"
+    NON_CONVERGENT = "nonConvergent"
+
+
+SolveStatusName = Literal["fully", "under", "over", "inconsistent", "singular", "nonConvergent"]
+"""The names of :class:`SolveStatus`, for a plain string."""
 
 
 class SourceOverrides(_StrEnum):
@@ -3099,6 +3164,28 @@ class BlockParameter(_Union):
         return _variant(_BLOCK_PARAMETER, "BlockParameter", "kind", data).from_json(data)
 
 
+class CadElement(_Union):
+    """A part of an object a constraint names.
+
+    One of:
+
+    - :class:`PointCadElement` (``kind: point``)
+    - :class:`SegmentCadElement` (``kind: segment``)
+    - :class:`CircleCadElement` (``kind: circle``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CadElement:
+        return _variant(_CAD_ELEMENT, "CadElement", "kind", data).from_json(data)
+
+
 class Cell(_Union):
     """A cell of a combination: a code of its field's list, any value (empty too), or empty.
 
@@ -3119,6 +3206,69 @@ class Cell(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> Cell:
         return _variant(_CELL, "Cell", "kind", data).from_json(data)
+
+
+class ConstraintEdit(_Union):
+    """What changes.
+
+    One of:
+
+    - :class:`AddConstraintEdit` (``kind: add``)
+    - :class:`RemoveConstraintEdit` (``kind: remove``)
+    - :class:`ModeConstraintEdit` (``kind: mode``)
+    - :class:`FlipConstraintEdit` (``kind: flip``)
+    - :class:`SolveConstraintEdit` (``kind: solve``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintEdit:
+        return _variant(_CONSTRAINT_EDIT, "ConstraintEdit", "kind", data).from_json(data)
+
+
+class ConstraintRule(_Union):
+    """What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the
+    dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
+
+    One of:
+
+    - :class:`CoincidentConstraintRule` (``kind: coincident``)
+    - :class:`HorizontalConstraintRule` (``kind: horizontal``)
+    - :class:`VerticalConstraintRule` (``kind: vertical``)
+    - :class:`ParallelConstraintRule` (``kind: parallel``)
+    - :class:`PerpendicularConstraintRule` (``kind: perpendicular``)
+    - :class:`TangentConstraintRule` (``kind: tangent``)
+    - :class:`ConcentricConstraintRule` (``kind: concentric``)
+    - :class:`CollinearConstraintRule` (``kind: collinear``)
+    - :class:`EqualConstraintRule` (``kind: equal``)
+    - :class:`SymmetricConstraintRule` (``kind: symmetric``)
+    - :class:`FixConstraintRule` (``kind: fix``)
+    - :class:`DistanceConstraintRule` (``kind: distance``)
+    - :class:`AngleConstraintRule` (``kind: angle``)
+    - :class:`RadiusConstraintRule` (``kind: radius``)
+    - :class:`DiameterConstraintRule` (``kind: diameter``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        a: ElementRef
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintRule:
+        return _variant(_CONSTRAINT_RULE, "ConstraintRule", "kind", data).from_json(data)
 
 
 class ConstructedCurve(_Union):
@@ -6718,6 +6868,48 @@ class Bounds(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CadParameter(_Model):
+    """A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
+    Attributes:
+        expression: Its value as written ([`crate::constraint_expr`]); empty for a reference constraint's parameter, whose value
+            is measured.
+        max: Unit: parameter.
+        min: The least and the most its value may be, in its own unit. Unit: parameter.
+    """
+    name: str
+    kind: ParameterKind | ParameterKindName
+    description: str | Unset = UNSET
+    expression: str | Unset = UNSET
+    max: float | None | Unset = UNSET
+    min: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.max is not UNSET:
+            out["max"] = None if self.max is None else float(self.max)
+        if self.min is not UNSET:
+            out["min"] = None if self.min is None else float(self.min)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CadParameter:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(ParameterKind, data["kind"]),
+            description=data.get("description", UNSET),
+            expression=data.get("expression", UNSET),
+            max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
+            min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CellField(_Model):
     """A cell bound to a source (docs/adr/0327 §3): its words are the value last written, `####` when broken.
     Attributes:
@@ -7664,6 +7856,257 @@ class CommitResult(_Model):
             deleted=list(data["deleted"]),
             event_seq=data["eventSeq"],
             replayed=data["replayed"] if "replayed" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Constraint(_Model):
+    """One constraint.
+    Attributes:
+        reference: A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its
+            parameter, read-only, takes the measured value.
+    """
+    id: str
+    rule: ConstraintRule
+    reference: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["rule"] = self.rule.to_json()
+        if self.reference is not UNSET:
+            out["reference"] = self.reference
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Constraint:
+        return cls(
+            id=data["id"],
+            rule=ConstraintRule.from_json(data["rule"]),
+            reference=data.get("reference", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintDiagnosis(_Model):
+    """What a solve found, by the constraints' and the objects' ids.
+    Attributes:
+        dof: The freedoms left: unknowns less the independent equations. Unit: count.
+        iterations: Unit: count.
+        broken: Constraints whose objects or parts are gone, or are not what the rule takes.
+        conflicting: Constraints that cannot hold together with the ones before them.
+        free: Objects that can still move.
+        redundant: Constraints that repeat what the ones before them already say.
+        singular: Constraints that lost their meaning (a segment of no length …).
+    """
+    status: SolveStatus | SolveStatusName
+    dof: int
+    iterations: int
+    broken: list[str] | Unset = UNSET
+    conflicting: list[str] | Unset = UNSET
+    free: list[str] | Unset = UNSET
+    redundant: list[str] | Unset = UNSET
+    singular: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["status"] = _enum_out(self.status)
+        out["dof"] = self.dof
+        out["iterations"] = self.iterations
+        if self.broken is not UNSET:
+            out["broken"] = list(self.broken)
+        if self.conflicting is not UNSET:
+            out["conflicting"] = list(self.conflicting)
+        if self.free is not UNSET:
+            out["free"] = list(self.free)
+        if self.redundant is not UNSET:
+            out["redundant"] = list(self.redundant)
+        if self.singular is not UNSET:
+            out["singular"] = list(self.singular)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintDiagnosis:
+        return cls(
+            status=_enum_in(SolveStatus, data["status"]),
+            dof=data["dof"],
+            iterations=data["iterations"],
+            broken=list(data["broken"]) if "broken" in data else UNSET,
+            conflicting=list(data["conflicting"]) if "conflicting" in data else UNSET,
+            free=list(data["free"]) if "free" in data else UNSET,
+            redundant=list(data["redundant"]) if "redundant" in data else UNSET,
+            singular=list(data["singular"]) if "singular" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintsEdit(_Model):
+    """Input of `cad.constraints.edit` v1: one undo step “Kısıtlar”: the constraints and every object the solve moves.
+    Objects on locked layers do not move. The edit is all or nothing: refused, nothing is written.
+
+    Refusals (`CommandError.code`), checked in this order: `no_constraints` (an empty list), `invalid_uid`,
+    `invalid_constraint` (parts that do not fit the rule, a reference rule not a dimension), `invalid_parameter`
+    (a name not valid), `parameter_expression` (a value that does not read, or given to a reference),
+    `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`, `element_not_found` (a part the
+    object does not have), `constraint_not_found`, `parameter_in_use` (a parameter another dimension has),
+    `parameter_kind` (a parameter of another kind), the parameters' values (`parameter_expression`,
+    `parameter_missing`: a name no parameter has, `parameter_cycle`, `parameter_range`: out of its range, or a radius
+    or diameter not above nought), `invalid_constraint` (the set's rules), `layer_locked` (a constraint whose objects
+    are all locked does not hold), `constraint_conflict` (`uids`: the constraints that cannot hold with the others),
+    `constraint_singular`, `not_converged`, `constraint_redundant` (`uids`: the constraints added that repeat),
+    `shape_flipped` (`uids`: the objects that would turn inside out).
+    Attributes:
+        edit: What changes.
+        allow_flip: Writes even when a shape would turn inside out (the user chose that solution).
+        expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
+            longer at it, nothing is written and the answer is `conflict`.
+        hold: Objects (persistent ids) this solve does not move, as AutoCAD keeps the object picked first and moves the
+            second; they are not held afterwards.
+    """
+    edit: ConstraintEdit
+    allow_flip: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    hold: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.allow_flip is not UNSET:
+            out["allowFlip"] = self.allow_flip
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.hold is not UNSET:
+            out["hold"] = list(self.hold)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintsEdit:
+        return cls(
+            edit=ConstraintEdit.from_json(data["edit"]),
+            allow_flip=data.get("allowFlip", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            hold=list(data["hold"]) if "hold" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintsEditPlan(_Model):
+    """What `cad.constraints.edit` would write (plan mode); nothing is written.
+    Attributes:
+        constraints: The constraints as they would be, the new ones last with their ids.
+        parameters: The parameters as they would be.
+        changed: The objects the solve would move, as they would be written, with their slots.
+        diagnosis: The solver's diagnosis of the result.
+    """
+    constraints: list[Constraint]
+    parameters: list[CadParameter]
+    changed: list[Entity]
+    diagnosis: ConstraintDiagnosis
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["constraints"] = [e0.to_json() for e0 in self.constraints]
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["diagnosis"] = self.diagnosis.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintsEditPlan:
+        return cls(
+            constraints=[Constraint.from_json(e0) for e0 in data["constraints"]],
+            parameters=[CadParameter.from_json(e0) for e0 in data["parameters"]],
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            diagnosis=ConstraintDiagnosis.from_json(data["diagnosis"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintsEdited(_Model):
+    """The answer of `cad.constraints.edit`.
+    Attributes:
+        added: The constraints added, their new ids in the input's order.
+        removed: The constraints taken away.
+        changed: The objects the solve moved.
+        diagnosis: The drawing's constraints after the write, as the solver finds them.
+        revision: The document's revision after the write, as decimal text.
+    """
+    added: list[str]
+    removed: list[str]
+    changed: list[str]
+    diagnosis: ConstraintDiagnosis
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = list(self.added)
+        out["removed"] = list(self.removed)
+        out["changed"] = list(self.changed)
+        out["diagnosis"] = self.diagnosis.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintsEdited:
+        return cls(
+            added=list(data["added"]),
+            removed=list(data["removed"]),
+            changed=list(data["changed"]),
+            diagnosis=ConstraintDiagnosis.from_json(data["diagnosis"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintsListed(_Model):
+    """The answer of `cad.constraints.query`.
+    Attributes:
+        diagnosis: The solver's diagnosis of the drawing as it is (the constraints asked for and those they are solved with).
+    """
+    constraints: list[ListedConstraint]
+    parameters: list[CadParameter]
+    diagnosis: ConstraintDiagnosis
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["constraints"] = [e0.to_json() for e0 in self.constraints]
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        out["diagnosis"] = self.diagnosis.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintsListed:
+        return cls(
+            constraints=[ListedConstraint.from_json(e0) for e0 in data["constraints"]],
+            parameters=[CadParameter.from_json(e0) for e0 in data["parameters"]],
+            diagnosis=ConstraintDiagnosis.from_json(data["diagnosis"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintsQuery(_Model):
+    """Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects.
+    Attributes:
+        uids: Only the constraints naming one of these objects (persistent ids); none: all of them.
+    """
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintsQuery:
+        return cls(
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -9493,6 +9936,26 @@ class EdgeNear(_Model):
         return cls(
             uid=data["uid"],
             near=Vec2.from_json(data["near"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementRef(_Model):
+    """A part of an object by the object's persistent id."""
+    uid: str
+    element: CadElement
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["element"] = self.element.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementRef:
+        return cls(
+            uid=data["uid"],
+            element=CadElement.from_json(data["element"]),
         )
 
 
@@ -20155,6 +20618,38 @@ class LineTypesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ListedConstraint(_Model):
+    """A constraint as the query lists it.
+    Attributes:
+        label: Its Turkish name (`Paralel`).
+        holds: Whether it holds now.
+        measured: A dimension's value now: metres or radians, as the drawing measures it. Unit: constraint.
+    """
+    constraint: Constraint
+    label: str
+    holds: bool
+    measured: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["constraint"] = self.constraint.to_json()
+        out["label"] = self.label
+        out["holds"] = self.holds
+        if self.measured is not UNSET:
+            out["measured"] = None if self.measured is None else float(self.measured)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ListedConstraint:
+        return cls(
+            constraint=Constraint.from_json(data["constraint"]),
+            label=data["label"],
+            holds=data["holds"],
+            measured=UNSET if "measured" not in data else None if data["measured"] is None else float(data["measured"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LocalDefinition(_Model):
     """A local system: its base and the plane transform from it to the base."""
     base: CrsBase
@@ -20571,6 +21066,43 @@ class NetworkLayer(_Model):
         return cls(
             layer=data["layer"],
             filter=data.get("filter", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewConstraint(_Model):
+    """A constraint to add.
+    Attributes:
+        rule: The rule and its parts. A dimension's `parameter` names its parameter: empty for the next free name
+            (`d1`, `ang1`, `rad1`, `dia1`); a name not in use makes a new parameter.
+        reference: A dimension that only measures (AutoCAD's reference parameter): it drives nothing.
+        sense: Where its sense comes from.
+        value: A dimension's value: an expression in the drawing's unit and the project's angle unit (`3.5`, `120cm`,
+            `genislik / 2`); none keeps the value the drawing measures now. Not for a reference dimension.
+    """
+    rule: ConstraintRule
+    reference: bool | Unset = UNSET
+    sense: ConstraintSense | ConstraintSenseName | Unset = UNSET
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule.to_json()
+        if self.reference is not UNSET:
+            out["reference"] = self.reference
+        if self.sense is not UNSET:
+            out["sense"] = _enum_out(self.sense)
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewConstraint:
+        return cls(
+            rule=ConstraintRule.from_json(data["rule"]),
+            reference=data.get("reference", UNSET),
+            sense=_enum_in(ConstraintSense, data["sense"]) if "sense" in data else UNSET,
+            value=data.get("value", UNSET),
         )
 
 
@@ -29095,6 +29627,70 @@ class LookupBlockParameter(BlockParameter):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointCadElement(CadElement):
+    """A point: a line's or an arc's start or end, a circle's or an arc's centre, a point object's node, a path's
+    vertex. Not a place along a curve nor an edge's middle.
+    """
+    TAG_VALUE: ClassVar[str] = "point"
+    place: SubPlace
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "point"}
+        out["place"] = self.place.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCadElement:
+        return cls(
+            place=SubPlace.from_json(data["place"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SegmentCadElement(CadElement):
+    """A straight segment: a line (all zero) or a path's straight edge from vertex `index` to the next (part 0 the
+    object's own path, ring 0 its outer ring).
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "segment"
+    part: int
+    ring: int
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "segment"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SegmentCadElement:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CircleCadElement(CadElement):
+    """A circle, or an arc's circle."""
+    TAG_VALUE: ClassVar[str] = "circle"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "circle"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CircleCadElement:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class AnyCell(Cell):
     TAG_VALUE: ClassVar[str] = "any"
 
@@ -29134,6 +29730,453 @@ class CodeCell(Cell):
     def from_json(cls, data: Mapping[str, Any]) -> CodeCell:
         return cls(
             code=data["code"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddConstraintEdit(ConstraintEdit):
+    """These constraints are added, in order, and the drawing solved with them. One that repeats the ones before
+    (redundant) is refused: a dimension can be added as a reference instead.
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    constraints: list[NewConstraint]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        out["constraints"] = [e0.to_json() for e0 in self.constraints]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddConstraintEdit:
+        return cls(
+            constraints=[NewConstraint.from_json(e0) for e0 in data["constraints"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveConstraintEdit(ConstraintEdit):
+    """These constraints (by id) are taken away; a dimension's parameter goes with it unless another parameter
+    reads it, when it stays as a user parameter with its value. Nothing moves.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    ids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveConstraintEdit:
+        return cls(
+            ids=list(data["ids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ModeConstraintEdit(ConstraintEdit):
+    """These dimensions drive (`reference` false: their parameter takes the value they measure now) or only
+    measure (`reference` true: their parameter's expression is cleared).
+    """
+    TAG_VALUE: ClassVar[str] = "mode"
+    ids: list[str]
+    reference: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "mode"}
+        out["ids"] = list(self.ids)
+        out["reference"] = self.reference
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModeConstraintEdit:
+        return cls(
+            ids=list(data["ids"]),
+            reference=data["reference"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FlipConstraintEdit(ConstraintEdit):
+    """The constraint's other solution (AutoCAD's flip): a tangent on the other side, a distance on the other side
+    of its segment, the angle's other quadrant; the drawing solved again.
+    """
+    TAG_VALUE: ClassVar[str] = "flip"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "flip"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FlipConstraintEdit:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SolveConstraintEdit(ConstraintEdit):
+    """Solves the drawing with its constraints as they are (after an edit made without them)."""
+    TAG_VALUE: ClassVar[str] = "solve"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "solve"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SolveConstraintEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class CoincidentConstraintRule(ConstraintRule):
+    """A point on a point, or on a segment's line or a circle."""
+    TAG_VALUE: ClassVar[str] = "coincident"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "coincident"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CoincidentConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HorizontalConstraintRule(ConstraintRule):
+    """A segment level, or two points level."""
+    TAG_VALUE: ClassVar[str] = "horizontal"
+    a: ElementRef
+    b: ElementRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "horizontal"}
+        out["a"] = self.a.to_json()
+        if self.b is not UNSET:
+            out["b"] = None if self.b is None else self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HorizontalConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=UNSET if "b" not in data else None if data["b"] is None else ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VerticalConstraintRule(ConstraintRule):
+    """A segment upright, or two points one above the other."""
+    TAG_VALUE: ClassVar[str] = "vertical"
+    a: ElementRef
+    b: ElementRef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "vertical"}
+        out["a"] = self.a.to_json()
+        if self.b is not UNSET:
+            out["b"] = None if self.b is None else self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VerticalConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=UNSET if "b" not in data else None if data["b"] is None else ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParallelConstraintRule(ConstraintRule):
+    TAG_VALUE: ClassVar[str] = "parallel"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "parallel"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParallelConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PerpendicularConstraintRule(ConstraintRule):
+    TAG_VALUE: ClassVar[str] = "perpendicular"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "perpendicular"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerpendicularConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TangentConstraintRule(ConstraintRule):
+    """A segment's line or a circle touching a circle. With a segment, `left`: the circle's centre is on the left of
+    the segment's direction; with two circles, `inside`: one inside the other. Set when the constraint is made,
+    from the drawing: the solution keeps that side.
+    """
+    TAG_VALUE: ClassVar[str] = "tangent"
+    a: ElementRef
+    b: ElementRef
+    inside: bool | Unset = UNSET
+    left: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "tangent"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        if self.inside is not UNSET:
+            out["inside"] = self.inside
+        if self.left is not UNSET:
+            out["left"] = self.left
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TangentConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+            inside=data.get("inside", UNSET),
+            left=data.get("left", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConcentricConstraintRule(ConstraintRule):
+    TAG_VALUE: ClassVar[str] = "concentric"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "concentric"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConcentricConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CollinearConstraintRule(ConstraintRule):
+    """Two segments on one line."""
+    TAG_VALUE: ClassVar[str] = "collinear"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "collinear"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CollinearConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EqualConstraintRule(ConstraintRule):
+    """Two segments of one length, or two circles of one radius."""
+    TAG_VALUE: ClassVar[str] = "equal"
+    a: ElementRef
+    b: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "equal"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EqualConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SymmetricConstraintRule(ConstraintRule):
+    """Two points mirror each other over a segment's line."""
+    TAG_VALUE: ClassVar[str] = "symmetric"
+    a: ElementRef
+    b: ElementRef
+    axis: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "symmetric"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["axis"] = self.axis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SymmetricConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+            axis=ElementRef.from_json(data["axis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FixConstraintRule(ConstraintRule):
+    """A point, a segment's ends or a circle's centre and radius stay where they are."""
+    TAG_VALUE: ClassVar[str] = "fix"
+    a: ElementRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fix"}
+        out["a"] = self.a.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FixConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DistanceConstraintRule(ConstraintRule):
+    """The distance from a point to a point, or (aligned only) to a segment's line; with a segment, `left`: the
+    point is on the left of the segment's direction (set when made). Horizontal and vertical distances are
+    signed: `b` minus `a`.
+    """
+    TAG_VALUE: ClassVar[str] = "distance"
+    a: ElementRef
+    b: ElementRef
+    parameter: str
+    axis: DistanceAxis | DistanceAxisName | Unset = UNSET
+    left: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "distance"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["parameter"] = self.parameter
+        if self.axis is not UNSET:
+            out["axis"] = _enum_out(self.axis)
+        if self.left is not UNSET:
+            out["left"] = self.left
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DistanceConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+            parameter=data["parameter"],
+            axis=_enum_in(DistanceAxis, data["axis"]) if "axis" in data else UNSET,
+            left=data.get("left", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AngleConstraintRule(ConstraintRule):
+    """The angle from segment `a`'s direction to `b`'s, counter-clockwise; `reverseA`, `reverseB`: a segment taken
+    from its end to its start (chosen when made, so the angle measured is the one the user picked).
+    """
+    TAG_VALUE: ClassVar[str] = "angle"
+    a: ElementRef
+    b: ElementRef
+    parameter: str
+    reverse_a: bool | Unset = UNSET
+    reverse_b: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "angle"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["parameter"] = self.parameter
+        if self.reverse_a is not UNSET:
+            out["reverseA"] = self.reverse_a
+        if self.reverse_b is not UNSET:
+            out["reverseB"] = self.reverse_b
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AngleConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            b=ElementRef.from_json(data["b"]),
+            parameter=data["parameter"],
+            reverse_a=data.get("reverseA", UNSET),
+            reverse_b=data.get("reverseB", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RadiusConstraintRule(ConstraintRule):
+    TAG_VALUE: ClassVar[str] = "radius"
+    a: ElementRef
+    parameter: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "radius"}
+        out["a"] = self.a.to_json()
+        out["parameter"] = self.parameter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RadiusConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            parameter=data["parameter"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DiameterConstraintRule(ConstraintRule):
+    TAG_VALUE: ClassVar[str] = "diameter"
+    a: ElementRef
+    parameter: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "diameter"}
+        out["a"] = self.a.to_json()
+        out["parameter"] = self.parameter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DiameterConstraintRule:
+        return cls(
+            a=ElementRef.from_json(data["a"]),
+            parameter=data["parameter"],
         )
 
 
@@ -36440,7 +37483,16 @@ _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "upd
 _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParameter, "polar": PolarBlockParameter, "angle": AngleBlockParameter, "point": PointBlockParameter, "flip": FlipBlockParameter, "visibility": VisibilityBlockParameter, "lookup": LookupBlockParameter}
 
 
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement}
+
+
 _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": CodeCell}
+
+
+_CONSTRAINT_EDIT: dict[str, type[ConstraintEdit]] = {"add": AddConstraintEdit, "remove": RemoveConstraintEdit, "mode": ModeConstraintEdit, "flip": FlipConstraintEdit, "solve": SolveConstraintEdit}
+
+
+_CONSTRAINT_RULE: dict[str, type[ConstraintRule]] = {"coincident": CoincidentConstraintRule, "horizontal": HorizontalConstraintRule, "vertical": VerticalConstraintRule, "parallel": ParallelConstraintRule, "perpendicular": PerpendicularConstraintRule, "tangent": TangentConstraintRule, "concentric": ConcentricConstraintRule, "collinear": CollinearConstraintRule, "equal": EqualConstraintRule, "symmetric": SymmetricConstraintRule, "fix": FixConstraintRule, "distance": DistanceConstraintRule, "angle": AngleConstraintRule, "radius": RadiusConstraintRule, "diameter": DiameterConstraintRule}
 
 
 _CONSTRUCTED_CURVE: dict[str, type[ConstructedCurve]] = {"circle": CircleConstructedCurve, "arc": ArcConstructedCurve, "ellipse": EllipseConstructedCurve}
@@ -36584,6 +37636,7 @@ __all__ = [
     "ActionRuns",
     "ActionRunsName",
     "AddArmLeaderEdit",
+    "AddConstraintEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddIslandsHatchEdit",
@@ -36606,6 +37659,7 @@ __all__ = [
     "AltUnits",
     "AngleArcDimensionMeasure",
     "AngleBlockParameter",
+    "AngleConstraintRule",
     "AngleDimensionMeasure",
     "AngleUnit",
     "AngleUnitName",
@@ -36733,6 +37787,8 @@ __all__ = [
     "BreakDimensionEdit",
     "BreakLine",
     "BreakLineName",
+    "CadElement",
+    "CadParameter",
     "CalloutKind",
     "CalloutKindName",
     "Cell",
@@ -36758,6 +37814,7 @@ __all__ = [
     "CheckpointKindName",
     "CheckpointRestore",
     "ChildSubmitted",
+    "CircleCadElement",
     "CircleConstructedCurve",
     "CircleCreate",
     "CircleCreated",
@@ -36784,13 +37841,27 @@ __all__ = [
     "CloudRenderName",
     "CloudSource",
     "CodeCell",
+    "CoincidentConstraintRule",
     "CollectLeaderEdit",
+    "CollinearConstraintRule",
     "ColumnAlignTableEdit",
     "ColumnWidthTableEdit",
     "Combination",
     "CombineTextEdit",
     "CommentFormsOp",
     "CommitResult",
+    "ConcentricConstraintRule",
+    "Constraint",
+    "ConstraintDiagnosis",
+    "ConstraintEdit",
+    "ConstraintRule",
+    "ConstraintSense",
+    "ConstraintSenseName",
+    "ConstraintsEdit",
+    "ConstraintsEditPlan",
+    "ConstraintsEdited",
+    "ConstraintsListed",
+    "ConstraintsQuery",
     "ConstructedCurve",
     "ConstructionEntity",
     "ContainingSelectRegion",
@@ -36833,6 +37904,7 @@ __all__ = [
     "DeleteViewsOp",
     "DeltaLengthenChange",
     "DeviationExplodeDensity",
+    "DiameterConstraintRule",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
     "DimensionArrow",
@@ -36870,6 +37942,9 @@ __all__ = [
     "DimensionsReassociate",
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
+    "DistanceAxis",
+    "DistanceAxisName",
+    "DistanceConstraintRule",
     "DistanceOffsetBy",
     "DivideBlock",
     "DivideEnds",
@@ -36903,6 +37978,7 @@ __all__ = [
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",
+    "ElementRef",
     "ElevationDimensionMeasure",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
@@ -36975,6 +38051,7 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "EqualConstraintRule",
     "ExplodeDensity",
     "ExportBlock",
     "ExportDxf",
@@ -37019,8 +38096,10 @@ __all__ = [
     "FilletRectangleCorners",
     "FitNurbsBy",
     "FitTableEdit",
+    "FixConstraintRule",
     "FlipBlockAction",
     "FlipBlockParameter",
+    "FlipConstraintEdit",
     "FontMatch",
     "FontMatchName",
     "FontsReport",
@@ -37117,6 +38196,7 @@ __all__ = [
     "HatchesPlan",
     "HeaderTableEdit",
     "Helmert",
+    "HorizontalConstraintRule",
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
@@ -37286,6 +38366,7 @@ __all__ = [
     "LinesCornerPick",
     "LinkDomainsOp",
     "LinkTablesOperation",
+    "ListedConstraint",
     "LocalCrsSystem",
     "LocalDefinition",
     "LocationFormItem",
@@ -37313,6 +38394,7 @@ __all__ = [
     "MirrorText",
     "MirrorTextName",
     "MirrorTransform",
+    "ModeConstraintEdit",
     "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
@@ -37336,6 +38418,7 @@ __all__ = [
     "NetworkKind",
     "NetworkKindName",
     "NetworkLayer",
+    "NewConstraint",
     "NewObject",
     "NodeSubPlace",
     "NoteFormItem",
@@ -37368,8 +38451,11 @@ __all__ = [
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
     "ParagraphLayout",
+    "ParallelConstraintRule",
     "ParallelPointConstruction",
     "ParamValue",
+    "ParameterKind",
+    "ParameterKindName",
     "ParametersOperation",
     "ParametersOperationName",
     "PartsDivision",
@@ -37386,6 +38472,7 @@ __all__ = [
     "PatternUnitName",
     "PdfExported",
     "PercentLengthenChange",
+    "PerpendicularConstraintRule",
     "PickedEntity",
     "PinnedObject",
     "PlaceMeasuredPoint",
@@ -37393,6 +38480,7 @@ __all__ = [
     "PlacementArrayEdit",
     "PointBinding",
     "PointBlockParameter",
+    "PointCadElement",
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
@@ -37481,6 +38569,7 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PublishFormsOp",
+    "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "RasterDataset",
     "RasterEntity",
@@ -37527,6 +38616,7 @@ __all__ = [
     "RelationsOp",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
+    "RemoveConstraintEdit",
     "RemoveControlCurveEdit",
     "RemoveDomainsOp",
     "RemoveEntityEdit",
@@ -37572,6 +38662,7 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "SegmentCadElement",
     "SelectKind",
     "SelectKindName",
     "SelectLeftOut",
@@ -37600,6 +38691,9 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SolveConstraintEdit",
+    "SolveStatus",
+    "SolveStatusName",
     "SourceOverrides",
     "SourceOverridesName",
     "SpaceDimensionEdit",
@@ -37642,6 +38736,7 @@ __all__ = [
     "Subtype",
     "SubtypeField",
     "SurveySettings",
+    "SymmetricConstraintRule",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
@@ -37659,6 +38754,7 @@ __all__ = [
     "TablesEdited",
     "TablesOperation",
     "TablesPlan",
+    "TangentConstraintRule",
     "TangentsCurveEdit",
     "TenantKind",
     "TenantKindName",
@@ -37743,6 +38839,7 @@ __all__ = [
     "VertexActionName",
     "VertexCornerPick",
     "VertexSubPlace",
+    "VerticalConstraintRule",
     "ViewsEdit",
     "ViewsEdited",
     "ViewsOp",

@@ -863,6 +863,13 @@
     "address.providers": {
       "level": "host"
     },
+    "tool.constraint": {
+      "level": "semantic",
+      "via": [
+        "cad.constraints.edit"
+      ],
+      "note": "Kısıtın kuralı ve parçaları (nesnenin kimliği ve noktası, kenarı ya da dairesi) komuta verilir; yön çizimden, çözüm çözücüden (ADR 0335)."
+    },
     "tool.dimensionReassociate": {
       "level": "semantic",
       "via": [

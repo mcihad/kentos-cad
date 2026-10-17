@@ -80,6 +80,9 @@ class SessionBase:
     def arrays(self) -> str:
         raise NotImplementedError
 
+    def constraints(self) -> str:
+        raise NotImplementedError
+
     def entities(
         self,
         layer: str | None = None,
@@ -737,6 +740,13 @@ class Document:
         insert there (`uid`; none when removed by hand) and `kept` when it was changed by hand. Made by
         `cad.entities.array` with `associative=True`."""
         return list(json.loads(self._session.arrays()))
+
+    def constraints(self) -> dict[str, Any]:
+        """The drawing's geometric and dimensional constraints and its parameter table (docs/adr/0334): `constraints`,
+        each its id, rule (`kind` and the parts it names: an object's uid and its point, segment or circle) and
+        `reference` when it only measures, and `parameters`, each its name, kind, expression and range. Both are
+        absent when empty. Changed by `cad.constraints.edit`, read with the diagnosis by `cad.constraints.query`."""
+        return dict(json.loads(self._session.constraints()))
 
     def all_layers(self) -> Iterator[LayerNode]:
         """Every layer of the tree (not the groups), depth first."""

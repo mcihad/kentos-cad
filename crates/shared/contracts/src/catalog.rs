@@ -1464,6 +1464,73 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Kısıtlar (docs/adr/0335), held together by fixtures/commands/v1/cad.constraints.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_CONSTRAINTS_EDIT.into(),
+            version: crate::CAD_CONSTRAINTS_EDIT_VERSION,
+            title: "Kısıtlar".into(),
+            summary: "Çizimin geometrik ve ölçü kısıtlarını (AutoCAD'in GEOMCONSTRAINT ve DIMCONSTRAINT'i) ekler, kaldırır, sürücü ya da başvuru yapar, öbür çözümüne çevirir ya da çizimi yeniden çözer; kısıtlar ve çözümün oynattığı nesneler tek geri alma adımı “Kısıtlar”. \
+                      edit add: kısıtlar sırasıyla eklenir; kural ve parçaları (nesnenin kalıcı kimliği ve parçası: nokta yeri, düz kenar ya da daire). Yön (teğetin yanı, kenara uzaklığın yanı, açının 180°'den küçük olanı, yatay ve düşey uzaklığın küçükten büyüğe) sense: given demedikçe çizimden okunur. Ölçü kısıtının parameter'ı boşsa bir sonraki boş ad (d1, ang1, rad1, dia1); value bir ifadedir (çizim biriminde, açı projenin açı biriminde; 3.5, 120cm, d1 / 2), yoksa çizimin ölçtüğü; reference yalnız ölçer. Ötekileri tekrarlayan kısıt eklenmez (constraint_redundant). \
+                      edit remove: kimlikleriyle kısıtlar kalkar, ölçünün parametresi başka parametre okumuyorsa onunla. edit mode: ölçüler sürücü ya da başvuru olur. edit flip: kısıtın öbür çözümü. edit solve: çizim kısıtlarıyla yeniden çözülür. \
+                      Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ConstraintsEdit>(),
+            output: schema::<crate::ConstraintsEdited>(),
+            plan: Some(schema::<crate::ConstraintsEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Alt kenarı yatay yap".into(),
+                    input: json!({ "edit": { "kind": "add", "constraints": [{ "rule": { "kind": "horizontal",
+                        "a": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "element": { "kind": "segment", "part": 0, "ring": 0, "index": 0 } } } }] } }),
+                    output: Some(json!({ "added": ["0192f5a6-2000-7000-8000-000000000301"], "removed": [],
+                        "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"],
+                        "diagnosis": { "status": "under", "dof": 3, "free": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "iterations": 1 },
+                        "revision": "13" })),
+                },
+                CommandExample {
+                    title: "Genişliği 8 m olan ölçü kısıtı".into(),
+                    input: json!({ "edit": { "kind": "add", "constraints": [{ "rule": { "kind": "distance",
+                        "a": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "element": { "kind": "point", "place": { "kind": "start" } } },
+                        "b": { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "element": { "kind": "point", "place": { "kind": "end" } } },
+                        "parameter": "genislik" }, "value": "8" }] } }),
+                    output: None,
+                },
+            ],
+        },
+        // Kısıtları oku (docs/adr/0335 §1), held together by fixtures/commands/v1/cad.constraints.query.json.
+        CommandDescriptor {
+            id: crate::CAD_CONSTRAINTS_QUERY.into(),
+            version: crate::CAD_CONSTRAINTS_QUERY_VERSION,
+            title: "Kısıtları oku".into(),
+            summary: "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ConstraintsQuery>(),
+            output: schema::<crate::ConstraintsListed>(),
+            plan: Some(schema::<crate::ConstraintsListed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin bütün kısıtları".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         // Patlat by its meaning (docs/adr/0302), held together by fixtures/commands/v1/cad.entities.explode.json.
         CommandDescriptor {
             id: crate::CAD_ENTITIES_EXPLODE.into(),
@@ -6034,6 +6101,12 @@ mod tests {
                     crate::CAD_ARRAYS_EDIT => {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_CONSTRAINTS_EDIT => {
+                        serde_json::from_value::<crate::ConstraintsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_CONSTRAINTS_QUERY => {
+                        serde_json::from_value::<crate::ConstraintsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_EXPLODE => {
                         serde_json::from_value::<crate::EntitiesExplode>(e.input.clone())
                             .map(|_| ())
@@ -6468,6 +6541,14 @@ mod tests {
                         }
                         crate::CAD_DIMENSIONS_QUERY => {
                             serde_json::from_value::<crate::DimensionsRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_CONSTRAINTS_EDIT => {
+                            serde_json::from_value::<crate::ConstraintsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_CONSTRAINTS_QUERY => {
+                            serde_json::from_value::<crate::ConstraintsListed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {

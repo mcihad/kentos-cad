@@ -598,6 +598,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `ops::constraints`'i (kendi çözücümüz: ikili sayılarla kesin Jakobiyen, gruplar, kısıtların sırasıyla seyrek LDLᵀ, en az
   değişikliğin Gauss–Newton'u; `fully`, `under`, `over`, `inconsistent`, `singular`, `nonConvergent`; fazla, çelişen, tekil, kopuk
   kısıtlar, serbestlik ve serbest nesneler; çelişkide hiçbir şey yazılmaz), bağlı 50 × 50 dikdörtgen 75 ms (ADR 0334);
+  kısıt komutları ve aracı: `cad.constraints.edit` (add, remove, mode, flip, solve; yön çizimden, parametre adı d1/ang1/rad1/dia1,
+  değer ifadeyle ya da ölçülen, başvuru ölçü; `hold`; çelişki, tekillik, fazlalık ve ters dönme `shape_flipped` retleri) ve salt
+  okunur `cad.constraints.query`; uçta teğet; Kısıt aracı (`tool.constraint`, on yedi yöntem, önizleme komutun planı) CAD › Değiştir ve
+  CBS › Düzenle'nin Kısıtlar panelinde; Python `kentos.cad.constraints`, `Document.constraints()`, MCP (ADR 0335);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1179,6 +1183,8 @@ python3 scripts/fixtures/hatch_pattern_file_cases.py --check; KENTOS_SHOTS_ONLY=
 cargo test -p kentos-domain --test all hatch_texts; cargo test -p kentos-native-application --lib budget_tests; KENTOS_SHOTS_ONLY=tarama-saydam,tarama-yazi-tasindi,tarama-sira cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # boş bırakılan yazıların izlenmesi ve döngüsü, bütçe ve iptal; yarı saydam dolu tarama sınırının arkasında, maskenin örttüğü desen, taşınan yazının boşluğu ve Sıra menüsü, .run/shots/arac-tarama-* (ADR 0332)
 python3 scripts/fixtures/constraint_cases.py --check; KENTOS_CONSTRAINTS_OUT=$PWD/.run/kisit.json cargo test -p kentos-geometry-core --test all constraints; python3 scripts/fixtures/constraint_cases.py --outputs .run/kisit.json   # kısıt çözücüsünün 33 durumu bağımsız başvurudan (sympy ve 50 basamaklı mpmath: rank kısıtların sırasıyla, çözümler, fazla, çelişen, tekil, kopuk, serbestlik), serbestliği kalan çözümler başvurunun denklemleriyle (ADR 0334)
 cargo test --release -p kentos-geometry-core --lib constraints::tests::timing -- --ignored --nocapture   # 1000 ayrı ve 10 × 10 … 50 × 50 bağlı dikdörtgenin çözüm süreleri (ADR 0334 §6)
+python3 scripts/fixtures/constraint_command_cases.py --check   # cad.constraints.edit ve .query durumlarını (yön, parametreler, tutma, retler; çözümler kısıt başvurusundan) KentOS kodu olmadan denetle (ADR 0335)
+KENTOS_SHOTS_ONLY=kisit-paralel,kisit-deger,kisit-genislik,kisit-celiski,kisit-teget cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; KENTOS_TRACES_ONLY=constraint-tool cargo test -p kentos-desktop every_trace_passes   # Kısıt aracının resimleri (.run/shots/arac-kisit-*) ve ortak izi (ADR 0335)
 python3 scripts/fixtures/dxf_hatch_cases.py --check; cargo test -p kentos-headless --test headless dxf_hatches_go_round   # DXF HATCH'in bağımsız dosyalarla gidiş-dönüşü: yollar, ilişkili taramanın kaynakları, reaktörleri ve tohumu, desen aileleri, degradeler (KENTOS_WRITE_DXF=1 çıktıları fixtures/formats/v1/dxf-hatch/out'a yazar; ADR 0333)
 KENTOS_PLOT_OUT=$PWD/.run/shots cargo test -p kentos-plot --test all a_gradient_and_a_dense_hatch; pdftoppm -r 150 -png .run/shots/tarama-pdf.pdf .run/shots/tarama-pdf   # degradenin ve sık desenin PDF'te vektörleri (ADR 0333)
 KENTOS_SHOTS_ONLY=olcu-bag,olcu-yakin,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # bağ vurgusu (yakında kâğıt zeminde de), izleyen ölçüler ve zincir, .run/shots/arac-olcu-bag-*, -yakin-*, -izleme-*, -zincir-* (ADR 0320)
