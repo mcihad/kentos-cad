@@ -46,10 +46,11 @@ const ADD_CODE: &str = "Kod ekle";
 const CODED: &str = "Kod listesi";
 const RANGED: &str = "Aralık";
 /// The kinds a list fits, in the order the window offers them.
-const KINDS: [LayerFieldKind; 3] = [
+const KINDS: [LayerFieldKind; 4] = [
     LayerFieldKind::Text,
     LayerFieldKind::Integer,
     LayerFieldKind::Decimal,
+    LayerFieldKind::Date,
 ];
 
 /// A list the window made of a field's own (Alandan): the field it links on Kaydet.
@@ -172,7 +173,10 @@ impl App {
             Event::Kind(k) => {
                 if let Some(d) = chosen {
                     d.kind = k;
-                    if !k.is_number() {
+                    if k.is_temporal() {
+                        // A date takes a range only (docs/adr/0436).
+                        d.values = None;
+                    } else if !k.is_number() {
                         d.min = None;
                         d.max = None;
                         d.values.get_or_insert_with(Vec::new);
@@ -229,12 +233,12 @@ impl App {
             }
             Event::Min(t) => {
                 if let Some(d) = chosen {
-                    d.min = (!t.trim().is_empty()).then_some(t);
+                    d.min = (!t.trim().is_empty()).then(|| canonical_end(d.kind, t));
                 }
             }
             Event::Max(t) => {
                 if let Some(d) = chosen {
-                    d.max = (!t.trim().is_empty()).then_some(t);
+                    d.max = (!t.trim().is_empty()).then(|| canonical_end(d.kind, t));
                 }
             }
             Event::Recode(from, to) => {
@@ -558,6 +562,16 @@ impl App {
             Control::Press(ADD_CODE) => Some(msg(Event::AddCode)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
+    }
+}
+
+/// A range's end as typed: a date in its one form once it reads (7.10.2026 → 2026-10-07), else as typed.
+fn canonical_end(kind: LayerFieldKind, text: String) -> String {
+    if kind.is_temporal() {
+        kentos_contracts::check_value(&kentos_contracts::LayerField::new("aralık", kind), &text)
+            .unwrap_or(text)
+    } else {
+        text
     }
 }
 

@@ -812,30 +812,48 @@ pub fn check_value(field: &LayerField, text: &str) -> Result<String, Refusal> {
             format!("“{label}” alanı listedeki değerlerden birini ister; “{text}” listede yok."),
         ));
     }
-    if field.kind.is_number() {
+    if field.kind.is_number() || field.kind.is_temporal() {
         let below = field
             .min
             .as_deref()
-            .is_some_and(|lo| compare_decimals(&value, lo) == Some(Ordering::Less));
+            .is_some_and(|lo| range_order(field.kind, &value, lo) == Some(Ordering::Less));
         let above = field
             .max
             .as_deref()
-            .is_some_and(|hi| compare_decimals(&value, hi) == Some(Ordering::Greater));
+            .is_some_and(|hi| range_order(field.kind, &value, hi) == Some(Ordering::Greater));
         if below || above {
+            // A date said as the interface shows it (07.10.2026; docs/adr/0436), a number as it is.
+            let shown = |v: &str| display_value(field, v);
+            let value = shown(&value);
             let message = match (&field.min, &field.max) {
-                (Some(lo), Some(hi)) => {
-                    format!("“{label}” alanı {lo} ile {hi} arasında olmalı; {value} verildi.")
-                }
-                (Some(lo), None) => format!("“{label}” alanı en az {lo} olmalı; {value} verildi."),
+                (Some(lo), Some(hi)) => format!(
+                    "“{label}” alanı {} ile {} arasında olmalı; {value} verildi.",
+                    shown(lo),
+                    shown(hi)
+                ),
+                (Some(lo), None) => format!(
+                    "“{label}” alanı en az {} olmalı; {value} verildi.",
+                    shown(lo)
+                ),
                 (_, hi) => format!(
                     "“{label}” alanı en çok {} olmalı; {value} verildi.",
-                    hi.as_deref().unwrap_or_default()
+                    shown(hi.as_deref().unwrap_or_default())
                 ),
             };
             return Err(refusal("range", message));
         }
     }
     Ok(value)
+}
+
+/// Two canonical values' order in a range: numbers by their exact values, a date, a date and time or
+/// a time of day by its text (docs/adr/0436: `YYYY-AA-GG`, `…TSS:DD:SS`, `SS:DD:SS` sort as written).
+fn range_order(kind: LayerFieldKind, a: &str, b: &str) -> Option<Ordering> {
+    if kind.is_temporal() {
+        Some(a.cmp(b))
+    } else {
+        compare_decimals(a, b)
+    }
 }
 
 /// Whether `v` is already the canonical text of `field`'s kind (its scale
@@ -924,9 +942,9 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
         }
     }
     if field.min.is_some() || field.max.is_some() {
-        if !kind.is_number() {
+        if !kind.is_number() && !kind.is_temporal() {
             return Some(format!(
-                "“{name}” alanında aralık yalnız sayı alanlarında olur."
+                "“{name}” alanında aralık yalnız sayı, tarih ve saat alanlarında olur."
             ));
         }
         for (end, word) in [(&field.min, "en azı"), (&field.max, "en çoğu")] {
@@ -939,7 +957,7 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
             }
         }
         if let (Some(lo), Some(hi)) = (&field.min, &field.max)
-            && compare_decimals(lo, hi) == Some(Ordering::Greater)
+            && range_order(kind, lo, hi) == Some(Ordering::Greater)
         {
             return Some(format!(
                 "“{name}” alanının en azı en çoğundan büyük olamaz."

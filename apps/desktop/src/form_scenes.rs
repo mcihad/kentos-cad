@@ -1066,6 +1066,50 @@ fn imported_form(app: &mut App) {
     app.form_imported(Some(("bina-denetimi.kform".into(), text)));
 }
 
+/// A parcel's registration date out of its range (docs/adr/0436): the date field takes 2000-01-01 to
+/// 2026-12-31, and 1.1.2027 is typed.
+fn dated_parcel(app: &mut App) {
+    located_parcel(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut fields = doc
+        .model
+        .layers()
+        .get("kadastro")
+        .expect("kadastro")
+        .fields
+        .clone();
+    fields.push(kentos_contracts::LayerField {
+        min: Some("2000-01-01".into()),
+        max: Some("2026-12-31".into()),
+        ..kentos_contracts::LayerField::new("Tescil", kentos_contracts::LayerFieldKind::Date)
+    });
+    let _ = doc.model.set_layer_fields("kadastro", fields, &[]);
+    let mut settings = doc.model.settings().clone();
+    if let Some(f) = settings.forms.first_mut()
+        && let Some(kentos_contracts::FormItem::Group { items, .. }) = f.draft.items.first_mut()
+    {
+        items.push(
+            serde_json::from_value(json!({ "type": "field", "id": "tescil", "field": "Tescil" }))
+                .expect("an item"),
+        );
+        let body = f.draft.clone();
+        f.releases = vec![kentos_contracts::FormRelease {
+            version: 1,
+            digest: kentos_contracts::body_digest(&body),
+            body,
+            note: None,
+        }];
+    }
+    doc.model.set_settings(settings);
+    app.form_entry = None;
+    app.dialog = None;
+    run(app, "data.formEdit");
+    let _ = app.update(Message::FormEntry(entry::Event::Value(
+        "Tescil".into(),
+        "1.1.2027".into(),
+    )));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1876,6 +1920,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-taslak", workflow_draft),
         ("form-konum", located_parcel),
         ("form-paket", imported_form),
+        ("form-tarih-araligi", dated_parcel),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),

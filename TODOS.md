@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AS` tarih ve saat aralığı (ADR 0436, 17 Ekim): web'de gerekenler: `model/layerFields.ts`'in kuralı (tarih, tarih ve saat,
+  saat alanında aralık; iletide gösterilen tarih), Alanlar penceresinde açık uçlar; ortak `fixtures/layer-fields/v1/cases.json`.
 - [ ] `FORM-AR` form paketi (ADR 0435, 17 Ekim): web'de gerekenler: `cad.forms.export` ve `cad.forms.import`'un TS işleyicileri
   (`fixtures/commands/v1/cad.forms.{export,import}.json`), `.kform` dosyası, tasarımcıda Dışa aktar ve İçe aktar.
 - [ ] `FORM-AP` formda konum (ADR 0433, 17 Ekim): web'de gerekenler: `location` öğesi (TS türleri üretildi), formda kaydın şekli,
@@ -1522,6 +1524,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AS` Tarih ve saat aralığı: tarih, tarih ve saat, saat alanında en az ve en çok; ileti arayüzün tarih gösterimiyle. —
+  **17 Ekim, [ADR 0436](docs/adr/0436-temporal-ranges.md).**
 - [x] `FORM-AR` Form paketi: form alanları ve değer listeleriyle `.kform` dosyasına (`cad.forms.export`), başka katmana ya da projeye
   (`cad.forms.import`: eşleme, anahtar ve ad, eksik alanlar listeleriyle; ifadeler yeniden yazılır). —
   **17 Ekim, [ADR 0435](docs/adr/0435-form-packages.md).**

@@ -1309,6 +1309,117 @@
       "want": {
         "value": "06:00:00"
       }
+    },
+    {
+      "field": {
+        "name": "Tespit tarihi",
+        "kind": "date",
+        "min": "2000-01-01",
+        "max": "2026-12-31"
+      },
+      "text": "1999-12-31",
+      "want": {
+        "error": "range",
+        "message": "“Tespit tarihi” alanı 01.01.2000 ile 31.12.2026 arasında olmalı; 31.12.1999 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Tespit tarihi",
+        "kind": "date",
+        "min": "2000-01-01",
+        "max": "2026-12-31"
+      },
+      "text": "01.01.2000",
+      "want": {
+        "value": "2000-01-01"
+      }
+    },
+    {
+      "field": {
+        "name": "Tespit tarihi",
+        "kind": "date",
+        "min": "2000-01-01",
+        "max": "2026-12-31"
+      },
+      "text": "2026-12-31",
+      "want": {
+        "value": "2026-12-31"
+      }
+    },
+    {
+      "field": {
+        "name": "Tespit tarihi",
+        "kind": "date",
+        "min": "2000-01-01",
+        "max": "2026-12-31"
+      },
+      "text": "1.1.2027",
+      "want": {
+        "error": "range",
+        "message": "“Tespit tarihi” alanı 01.01.2000 ile 31.12.2026 arasında olmalı; 01.01.2027 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Tespit",
+        "kind": "datetime",
+        "min": "2026-10-01T08:00:00"
+      },
+      "text": "2026-10-01T07:59:59",
+      "want": {
+        "error": "range",
+        "message": "“Tespit” alanı en az 01.10.2026 08:00 olmalı; 01.10.2026 07:59:59 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Tespit",
+        "kind": "datetime",
+        "min": "2026-10-01T08:00:00"
+      },
+      "text": "01.10.2026 08:00",
+      "want": {
+        "value": "2026-10-01T08:00:00"
+      }
+    },
+    {
+      "field": {
+        "name": "Vardiya",
+        "kind": "time",
+        "min": "08:00:00",
+        "max": "17:30:00"
+      },
+      "text": "7:59",
+      "want": {
+        "error": "range",
+        "message": "“Vardiya” alanı 08:00 ile 17:30 arasında olmalı; 07:59 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Vardiya",
+        "kind": "time",
+        "min": "08:00:00",
+        "max": "17:30:00"
+      },
+      "text": "17:30",
+      "want": {
+        "value": "17:30:00"
+      }
+    },
+    {
+      "field": {
+        "name": "Vardiya",
+        "kind": "time",
+        "min": "08:00:00",
+        "max": "17:30:00"
+      },
+      "text": "17:31",
+      "want": {
+        "error": "range",
+        "message": "“Vardiya” alanı 08:00 ile 17:30 arasında olmalı; 17:31 verildi."
+      }
     }
   ],
   "problems": [
@@ -1510,7 +1621,7 @@
           "min": "2026-01-01"
         }
       ],
-      "want": "“Tarih” alanında aralık yalnız sayı alanlarında olur."
+      "want": null
     },
     {
       "name": "aralık-türü",
@@ -1877,7 +1988,53 @@
           "min": "2026-01-01T00:00:00"
         }
       ],
-      "want": "“Tespit” alanında aralık yalnız sayı alanlarında olur."
+      "want": null
+    },
+    {
+      "name": "tarihte-ters-aralık",
+      "fields": [
+        {
+          "name": "Tarih",
+          "kind": "date",
+          "min": "2026-12-31",
+          "max": "2026-01-01"
+        }
+      ],
+      "want": "“Tarih” alanının en azı en çoğundan büyük olamaz."
+    },
+    {
+      "name": "tarih-aralığı-tek-biçim",
+      "fields": [
+        {
+          "name": "Tarih",
+          "kind": "date",
+          "min": "1.1.2026"
+        }
+      ],
+      "want": "“Tarih” alanının en azı “1.1.2026” alanın türüne uymuyor."
+    },
+    {
+      "name": "saatte-aralık",
+      "fields": [
+        {
+          "name": "Vardiya",
+          "kind": "time",
+          "min": "08:00:00",
+          "max": "17:30:00"
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "metinde-aralık",
+      "fields": [
+        {
+          "name": "Kod",
+          "kind": "text",
+          "min": "a"
+        }
+      ],
+      "want": "“Kod” alanında aralık yalnız sayı, tarih ve saat alanlarında olur."
     },
     {
       "name": "saatte-liste",

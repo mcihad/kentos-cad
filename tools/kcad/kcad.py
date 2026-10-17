@@ -1465,9 +1465,17 @@ def fields_problem(fields):
             return f"“{name}” alanının ondalık basamağı geçersiz"
         ends = [f[k] for k in ("min", "max") if k in f]
         if ends:
-            if kind not in ("integer", "decimal") or any(_canonical(kind, f.get("scale"), v) != v for v in ends):
+            # docs/adr/0436: a date, a date and time or a time of day too, its text sorting as written.
+            temporal = {"date": r"\d{4}-\d{2}-\d{2}", "datetime": r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
+                        "time": r"\d{2}:\d{2}:\d{2}"}
+            if kind in temporal:
+                if any(not re.fullmatch(temporal[kind], v) for v in ends):
+                    return f"“{name}” alanının aralığı geçersiz"
+                if len(ends) == 2 and ends[0] > ends[1]:
+                    return f"“{name}” alanının en azı en çoğundan büyük"
+            elif kind not in ("integer", "decimal") or any(_canonical(kind, f.get("scale"), v) != v for v in ends):
                 return f"“{name}” alanının aralığı geçersiz"
-            if len(ends) == 2 and _number(ends[0]) > _number(ends[1]):
+            elif len(ends) == 2 and _number(ends[0]) > _number(ends[1]):
                 return f"“{name}” alanının en azı en çoğundan büyük"
         if "values" in f:
             vs = f["values"]

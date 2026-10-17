@@ -129,12 +129,22 @@ pub fn field_of(r: &FieldRow) -> LayerField {
         LayerFieldKind::Decimal => f.scale = size,
         _ => {}
     }
-    if r.kind.is_number() {
+    // A number's range, and a date's, a date and time's or a time of day's (docs/adr/0436).
+    if r.kind.is_number() || r.kind.is_temporal() {
+        // A date typed as 7.10.2026 is kept in its one form; what does not read stays, to be said.
+        let canonical = |t: &str| {
+            if r.kind.is_temporal() {
+                kentos_contracts::check_value(&LayerField::new("aralık", r.kind), t)
+                    .unwrap_or_else(|_| t.to_owned())
+            } else {
+                t.to_owned()
+            }
+        };
         if !r.min.trim().is_empty() {
-            f.min = Some(r.min.clone());
+            f.min = Some(canonical(&r.min));
         }
         if !r.max.trim().is_empty() {
-            f.max = Some(r.max.clone());
+            f.max = Some(canonical(&r.max));
         }
     }
     if matches!(
@@ -725,7 +735,7 @@ impl App {
         let mut rows = Column::new().spacing(4);
         for (i, r) in w.rows.iter().enumerate() {
             let sized = matches!(r.kind, LayerFieldKind::Text | LayerFieldKind::Decimal);
-            let ranged = r.kind.is_number();
+            let ranged = r.kind.is_number() || r.kind.is_temporal();
             let listed = matches!(
                 r.kind,
                 LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::Decimal

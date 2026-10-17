@@ -240,6 +240,22 @@ def kind_value(f, s, text):
     return {"value": text}
 
 
+
+def shown(f, v):
+    """A range's value as the interface shows it (docs/adr/0436): a date GG.AA.YYYY, a date and time GG.AA.YYYY SS:DD
+    (its seconds when some), a time of day SS:DD; a number as it is."""
+    if v is None:
+        return None
+    if f["kind"] == "date":
+        return f"{v[8:10]}.{v[5:7]}.{v[0:4]}"
+    if f["kind"] == "datetime":
+        clock = v[11:]
+        clock = clock[:-3] if clock.endswith(":00") else clock
+        return f"{v[8:10]}.{v[5:7]}.{v[0:4]} {clock}"
+    if f["kind"] == "time":
+        return v[:-3] if v.endswith(":00") else v
+    return v
+
 def check(f, text):
     """A value written to field `f`: its canonical text, or why not."""
     L = label_of(f)
@@ -289,10 +305,13 @@ def check(f, text):
     v = s if f["kind"] == "text" and values else r["value"]
     if values and v not in [c["code"] for c in values]:
         return err("choice", f"“{L}” alanı listedeki değerlerden birini ister; “{text}” listede yok.")
-    if f["kind"] in ("integer", "decimal"):
+    # docs/adr/0436: a date, a date and time or a time of day by its text, which sorts as written.
+    if f["kind"] in ("integer", "decimal", "date", "datetime", "time"):
         lo, hi = f.get("min"), f.get("max")
-        x = number(v)
-        if (lo is not None and x < number(lo)) or (hi is not None and x > number(hi)):
+        order = (lambda t: t) if f["kind"] in ("date", "datetime", "time") else number
+        x = order(v)
+        if (lo is not None and x < order(lo)) or (hi is not None and x > order(hi)):
+            lo, hi, v = shown(f, lo), shown(f, hi), shown(f, v)
             if lo is not None and hi is not None:
                 return err("range", f"“{L}” alanı {lo} ile {hi} arasında olmalı; {v} verildi.")
             if lo is not None:
@@ -341,12 +360,13 @@ def field_problem(f):
         if not 0 <= f["scale"] <= 15:
             return f"“{name}” alanının ondalık basamağı 0 ile 15 arasında olmalı."
     if "min" in f or "max" in f:
-        if k not in ("integer", "decimal"):
-            return f"“{name}” alanında aralık yalnız sayı alanlarında olur."
+        if k not in ("integer", "decimal", "date", "datetime", "time"):
+            return f"“{name}” alanında aralık yalnız sayı, tarih ve saat alanlarında olur."
         for key, word in (("min", "en azı"), ("max", "en çoğu")):
             if key in f and not canonical_of(f, f[key]):
                 return f"“{name}” alanının {word} “{f[key]}” alanın türüne uymuyor."
-        if "min" in f and "max" in f and number(f["min"]) > number(f["max"]):
+        order = (lambda t: t) if k in ("date", "datetime", "time") else number
+        if "min" in f and "max" in f and order(f["min"]) > order(f["max"]):
             return f"“{name}” alanının en azı en çoğundan büyük olamaz."
     if "values" in f:
         if k not in ("text", "integer", "decimal"):
@@ -484,6 +504,10 @@ MANY = {**LIST_T, "multiple": True}
 MANY_REQ = {**MANY, "required": True}
 # docs/adr/0409 §1: several free values (objects' ids for a many-to-many reference).
 FREE = {"name": "Malikler", "kind": "text", "multiple": True}
+# docs/adr/0436: ranges of dates, dates and times, and times of day.
+DATE_R = {"name": "Tespit tarihi", "kind": "date", "min": "2000-01-01", "max": "2026-12-31"}
+DT_R = {"name": "Tespit", "kind": "datetime", "min": "2026-10-01T08:00:00"}
+TM_R = {"name": "Vardiya", "kind": "time", "min": "08:00:00", "max": "17:30:00"}
 
 CHECKS = [
     (INT, "12"), (INT, "+012"), (INT, "-0"), (INT, " 42 "), (INT, "1.5"), (INT, "1,000"), (INT, "9007199254740991"),
@@ -504,6 +528,8 @@ CHECKS = [
     (DT, "2026-10-16T24:00"), (DT, "2026-10-16T14:3"), (DT, "31.04.2026 10:00"), (DT, "14:30"), (DT, "2026-10-16T14:30:00Z"),
     (TM, "8:05"), (TM, "08:05:09"), (TM, "23:59"), (TM, "24:00"), (TM, "7:5"), (TM, "12:60"), (TM, "12:30:60"), (TM, "12"),
     (TM, "١٢:٣٠"), (TM, " 06:00 "),
+    (DATE_R, "1999-12-31"), (DATE_R, "01.01.2000"), (DATE_R, "2026-12-31"), (DATE_R, "1.1.2027"),
+    (DT_R, "2026-10-01T07:59:59"), (DT_R, "01.10.2026 08:00"), (TM_R, "7:59"), (TM_R, "17:30"), (TM_R, "17:31"),
 ]
 
 PROBLEMS = [
@@ -542,6 +568,10 @@ PROBLEMS = [
     ("çok-değerli-noktalı-virgül", [{"name": "Kod", "kind": "text", "multiple": True, "values": [{"code": "a;b", "label": "AB"}]}]),
     ("çok-değerli-varsayılan-sırası", [{**MANY, "default": "T; K"}]),
     ("tarih-saatte-aralık", [{**DT, "min": "2026-01-01T00:00:00"}]),
+    ("tarihte-ters-aralık", [{**DATE, "min": "2026-12-31", "max": "2026-01-01"}]),
+    ("tarih-aralığı-tek-biçim", [{**DATE, "min": "1.1.2026"}]),
+    ("saatte-aralık", [TM_R]),
+    ("metinde-aralık", [{"name": "Kod", "kind": "text", "min": "a"}]),
     ("saatte-liste", [{**TM, "values": [{"code": "08:00:00", "label": "Sabah"}]}]),
     ("saat-varsayılanı", [{**TM, "default": "08:30:00"}, {**DT, "default": "2026-10-16T08:30:00"}]),
     ("saat-varsayılanı-tek-biçim", [{**TM, "default": "8:30"}]),

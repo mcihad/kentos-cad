@@ -178,6 +178,10 @@ def check_value(f, text):
         x = Fraction(value)
         if ("min" in f and x < Fraction(f["min"])) or ("max" in f and x > Fraction(f["max"])):
             return None, "range"
+    # docs/adr/0436: a date, a date and time or a time of day by its text, which sorts as written.
+    if f["kind"] in ("date", "datetime", "time"):
+        if ("min" in f and value < f["min"]) or ("max" in f and value > f["max"]):
+            return None, "range"
     return value, None
 
 

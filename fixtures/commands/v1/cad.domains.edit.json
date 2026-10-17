@@ -1384,7 +1384,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_domain",
-       "message": "“Metin aralığı” listesinde aralık yalnız sayı alanlarında olur.",
+       "message": "“Metin aralığı” listesinde aralık yalnız sayı, tarih ve saat alanlarında olur.",
        "path": "edit"
       }
      },

@@ -129,7 +129,7 @@ def field_words(f):
     name, kind = f["name"], f["kind"]
     if "min" in f or "max" in f:
         if kind not in ("integer", "decimal"):
-            return f"“{name}” alanında aralık yalnız sayı alanlarında olur."
+            return f"“{name}” alanında aralık yalnız sayı, tarih ve saat alanlarında olur."
         if "min" in f and "max" in f and Decimal(f["min"]) > Decimal(f["max"]):
             return f"“{name}” alanının en azı en çoğundan büyük olamaz."
     if "values" in f:
