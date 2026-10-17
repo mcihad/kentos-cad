@@ -21,6 +21,8 @@
 
 use std::collections::BTreeMap;
 
+mod gradient;
+
 use kentos_native_style::batches::{
     BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, Unit,
 };
@@ -510,7 +512,33 @@ fn fill_paths(
             }
             Ok(out)
         }
-        FillPaintBatch::Gradient { .. } => Err("degrade dolgu"),
+        // A gradient as bands of one colour each (docs/adr/0333 §1).
+        FillPaintBatch::Gradient {
+            color,
+            color2,
+            shape,
+            inverted,
+            dir,
+            from,
+            to,
+            centre,
+            radius,
+        } => Ok(gradient::bands(
+            t,
+            &gradient::Gradient {
+                color: *color,
+                color2: *color2,
+                shape: *shape,
+                inverted: *inverted,
+                dir: *dir,
+                from: *from,
+                to: *to,
+                centre: *centre,
+                radius: *radius,
+            },
+            bx,
+            by,
+        )),
         FillPaintBatch::Pattern { .. } => Err("desen dolgusu"),
         FillPaintBatch::Tile { .. } => Err("resimli dolgu"),
         FillPaintBatch::Image { .. } => Err("resim"),
@@ -647,7 +675,7 @@ fn marker_paths(
 }
 
 /// Why a batch has no vector form here, if it has none (the web's `layerPaths` reasons): a
-/// hatch of more than 20 000 lines, a pattern or picture fill, a picture or text marker, a
+/// hatch of more than 20 000 lines, a pattern or picture fill (a gradient is bands, docs/adr/0333 §1), a picture or text marker, a
 /// soft-edged line.
 fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
     match &b.kind {
@@ -683,7 +711,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
             FillPaintBatch::PointCloud { .. } => Some("nokta bulutu"),
             // A map service's sheet output is a later item (docs/adr/0208, Kapsam dışı).
             FillPaintBatch::Service { .. } => Some("harita servisi"),
-            FillPaintBatch::Gradient { .. } => Some("degrade dolgu"),
+            FillPaintBatch::Gradient { .. } => None,
         },
         BatchKind::Marker { look, .. } => match look {
             MarkerLook::Shape { .. } => None,

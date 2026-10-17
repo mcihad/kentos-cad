@@ -542,10 +542,11 @@ pub fn apply_styled_import(
     let mut styles = ImportedStyles::new(doc.settings(), styles);
     let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
     let count = imported.defs.len();
-    let chosen: Vec<Entity> = entities
+    let (places, chosen): (Vec<usize>, Vec<Entity>) = entities
         .into_iter()
-        .filter_map(|e| retarget(e, &prepared.targets, &imported.ids, &styles))
-        .collect();
+        .enumerate()
+        .filter_map(|(i, e)| retarget(e, &prepared.targets, &imported.ids, &styles).map(|e| (i, e)))
+        .unzip();
     let known: HashSet<BlockId> = imported.ids.values().copied().collect();
     if let Some(error) = stray_insert(&chosen, &known, 0) {
         return Err(error);
@@ -554,8 +555,13 @@ pub fn apply_styled_import(
     let slots = doc.transact(&plan.label, |doc| {
         made = make_layers(doc, plan, &mut prepared)?;
         imported.add(doc)?;
-        doc.add_many(chosen, &plan.label)
-            .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))
+        let slots = doc
+            .add_many(chosen, &plan.label)
+            .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))?;
+        let placed: Vec<(usize, Slot)> =
+            places.iter().copied().zip(slots.iter().copied()).collect();
+        tie_placeholders(doc, &placed);
+        Ok::<_, String>(slots)
     })?;
     let styles = styles.add(doc);
     Ok(Applied {
@@ -568,6 +574,48 @@ pub fn apply_styled_import(
         renamed: imported.renamed,
         styles,
     })
+}
+
+/// Puts the objects' ids in the place of an import's stand-ins (docs/adr/0333 §2): each hatch the import added that
+/// names objects by their place among the objects read ([`kentos_contracts::import_placeholder`]) names them by
+/// their ids now. One whose closed object or face's objects were not added follows nothing; its islands left out
+/// leave its list. The hatch is cut again from its objects by the document's rule, in the same step.
+fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
+    use kentos_contracts::{EntityId, import_placeholder_index};
+    let ids: HashMap<usize, EntityId> = placed
+        .iter()
+        .filter_map(|(i, s)| doc.uid(*s).map(|u| (*i, EntityId(u.into_bytes()))))
+        .collect();
+    let real = |id: &EntityId| match import_placeholder_index(id) {
+        Some(i) => ids.get(&(i as usize)).copied(),
+        None => Some(*id),
+    };
+    for &(_, slot) in placed {
+        let Some(Entity::Hatch(h)) = doc.get(slot) else {
+            continue;
+        };
+        let Some(a) = &h.assoc else {
+            continue;
+        };
+        if !a.objects().any(|id| import_placeholder_index(id).is_some()) {
+            continue;
+        }
+        let outer = a.outer.as_ref().map(&real);
+        let bounds: Vec<EntityId> = a.bounds.iter().filter_map(real).collect();
+        let whole = match outer {
+            Some(o) => o.is_some(),
+            None => !bounds.is_empty() && bounds.len() == a.bounds.len(),
+        };
+        let mut next = h.clone();
+        next.assoc = whole.then(|| kentos_contracts::HatchAssoc {
+            outer: outer.flatten(),
+            bounds,
+            islands: a.islands.iter().filter_map(real).collect(),
+            cutouts: a.cutouts.iter().filter_map(real).collect(),
+            ..a.clone()
+        });
+        doc.update(slot, Entity::Hatch(next));
+    }
 }
 
 /// Objects written between two looks at the clock.
@@ -592,6 +640,8 @@ pub struct Progressive {
     /// The text and dimension styles added (docs/adr/0183 §7).
     pub added_styles: (usize, usize),
     entities: std::vec::IntoIter<Entity>,
+    /// Each slot's place among the objects fed (docs/adr/0333 §2).
+    places: Vec<usize>,
     label: String,
     total: usize,
     seen: usize,
@@ -642,6 +692,7 @@ impl Progressive {
             added_styles: (0, 0),
             total: 0,
             entities: Vec::new().into_iter(),
+            places: Vec::new(),
             label: plan.label.clone(),
             seen: 0,
             slots: Vec::new(),
@@ -684,6 +735,7 @@ impl Progressive {
                 self.seen += 1;
                 if let Some(e) = retarget(e, &self.targets, &self.ids, &self.styles) {
                     batch.push(e);
+                    self.places.push(self.seen - 1);
                 }
             }
             let last = self.seen >= self.total;
@@ -701,6 +753,14 @@ impl Progressive {
                 }
             }
             if last {
+                // Every object is in: the hatches' stand-ins take their objects' ids, in the import's step.
+                let placed: Vec<(usize, Slot)> = self
+                    .places
+                    .iter()
+                    .copied()
+                    .zip(self.slots.iter().copied())
+                    .collect();
+                tie_placeholders(doc, &placed);
                 if let Some(group) = self.group.take() {
                     doc.end_group(group);
                 }

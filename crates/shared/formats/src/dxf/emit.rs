@@ -172,8 +172,22 @@ pub struct Out {
     /// the polygons KentOS data names as holes of another (index, owner handle).
     pub handles: HashMap<u64, usize>,
     pub holes: Vec<(usize, u64)>,
+    /// The associative hatches of model space and their boundary objects by handle (docs/adr/0333 §2), tied once
+    /// every object is read ([`Emitter::tie_hatches`]).
+    pub ties: Vec<Tie>,
     /// The attribute definitions of the block being read (docs/adr/0144 §7).
     pub attributes: Vec<AttributeDefinition>,
+}
+
+/// An associative HATCH taken as one hatch (docs/adr/0333 §2): its index among the objects, each path's flags (1
+/// external) and source handles, and its seed points in the drawing.
+#[derive(Debug)]
+pub struct Tie {
+    pub hatch: usize,
+    pub flags: Vec<i64>,
+    pub sources: Vec<Vec<u64>>,
+    pub seeds: Vec<Vec2>,
+    pub line: u32,
 }
 
 impl Out {
@@ -190,6 +204,7 @@ impl Out {
             exhausted: false,
             handles: HashMap::new(),
             holes: Vec::new(),
+            ties: Vec::new(),
             attributes: Vec::new(),
         }
     }
@@ -1068,6 +1083,27 @@ impl<'l> Emitter<'l> {
         if !gone.contains(&true) {
             return;
         }
+        // The objects after it move up: the handles and the ties follow them (docs/adr/0333 §2).
+        let mut moved = Vec::with_capacity(gone.len());
+        let mut kept = 0usize;
+        for &g in &gone {
+            moved.push((!g).then_some(kept));
+            kept += usize::from(!g);
+        }
+        out.handles.retain(|_, at| match moved[*at] {
+            Some(n) => {
+                *at = n;
+                true
+            }
+            None => false,
+        });
+        out.ties.retain_mut(|t| match moved[t.hatch] {
+            Some(n) => {
+                t.hatch = n;
+                true
+            }
+            None => false,
+        });
         let mut i = 0;
         let (per_layer, report) = (&mut out.per_layer, &mut out.report);
         out.entities.retain(|e| {
@@ -1084,6 +1120,97 @@ impl<'l> Emitter<'l> {
             }
             keep
         });
+    }
+
+    /// Ties each associative hatch of model space to its objects (docs/adr/0333 §2), once every object is read and
+    /// the holes merged: the outer path's one closed object is its closed object, else its objects close its face;
+    /// the other paths' objects are its islands. The ids are stand-ins for the objects' places among the objects
+    /// ([`kentos_contracts::import_placeholder`]); the import puts the objects' ids in their place. A hatch whose
+    /// objects are not all read, or whose seed is not in it, follows nothing and is said.
+    pub fn tie_hatches(&mut self) {
+        let out = &mut self.out;
+        for t in std::mem::take(&mut out.ties) {
+            let at = |h: &u64| out.handles.get(h).copied();
+            let resolved: Option<Vec<Vec<usize>>> =
+                t.sources.iter().map(|s| s.iter().map(at).collect()).collect();
+            let Some(resolved) = resolved else {
+                out.report.note(
+                    "Tarama (HATCH)",
+                    "ilişkili taramanın sınır nesnelerinden biri alınmadı; tarama ilişkisiz alındı",
+                    t.line,
+                );
+                continue;
+            };
+            let Some(Entity::Hatch(h)) = out.entities.get(t.hatch) else {
+                continue;
+            };
+            // The outer path: the external one, else the first.
+            let outer_path = t.flags.iter().position(|f| f & 1 != 0).unwrap_or(0);
+            let id = |i: usize| kentos_contracts::import_placeholder(i as u32);
+            let mine = resolved.get(outer_path).cloned().unwrap_or_default();
+            let closed = |i: usize| match out.entities.get(i) {
+                Some(Entity::Polygon(_) | Entity::Circle(_)) => true,
+                Some(Entity::Polyline(p)) => p.closed,
+                Some(Entity::Ellipse(e)) => (e.t1 - e.t0).abs() >= std::f64::consts::TAU - 1e-9,
+                Some(Entity::Nurbs(n)) => n.closed,
+                _ => false,
+            };
+            let (outer, bounds) = match mine.as_slice() {
+                [one] if closed(*one) => (Some(id(*one)), Vec::new()),
+                many => (None, many.iter().map(|&i| id(i)).collect()),
+            };
+            let mut islands: Vec<kentos_contracts::EntityId> = Vec::new();
+            for (k, list) in resolved.iter().enumerate() {
+                if k == outer_path {
+                    continue;
+                }
+                for &i in list {
+                    let x = id(i);
+                    if Some(x) != outer && !bounds.contains(&x) && !islands.contains(&x) {
+                        islands.push(x);
+                    }
+                }
+            }
+            if outer.is_none() && bounds.is_empty() {
+                continue;
+            }
+            // The seed: the file's that is in the hatch, else its outer ring's middle when that is.
+            let inside = |p: Vec2| {
+                let ring = to_core(&h.ring);
+                ring_contains(&ring, p)
+                    && !h
+                        .holes
+                        .iter()
+                        .flatten()
+                        .any(|hole| ring_contains(&to_core(hole), p))
+            };
+            let middle = {
+                let n = h.ring.len() as f64;
+                v(
+                    h.ring.iter().map(|p| p.x).sum::<f64>() / n,
+                    h.ring.iter().map(|p| p.y).sum::<f64>() / n,
+                )
+            };
+            let Some(seed) = t.seeds.iter().copied().chain(std::iter::once(middle)).find(|p| inside(*p)) else {
+                out.report.note(
+                    "Tarama (HATCH)",
+                    "ilişkili taramanın tohum noktası bölgesinde değil; tarama ilişkisiz alındı",
+                    t.line,
+                );
+                continue;
+            };
+            let assoc = kentos_contracts::HatchAssoc {
+                outer,
+                gap: None,
+                bounds,
+                islands,
+                cutouts: Vec::new(),
+                seed,
+            };
+            if let Some(Entity::Hatch(h)) = out.entities.get_mut(t.hatch) {
+                h.assoc = Some(assoc);
+            }
+        }
     }
 
     fn emit_kind(&mut self, e: &Parsed, ctx: &Ctx) {
@@ -2867,13 +2994,17 @@ impl<'l> Emitter<'l> {
         if curved && !exact {
             self.note("Tarama (HATCH)", "sınırdaki yaylar ve eğriler parçalı alındı (72 parça/tur, uygulamanın taramaları gibi)", e.line);
         }
-        if h.assoc {
+        // An associative hatch of model space is tied to its objects once every object is read (docs/adr/0333 §2);
+        // one in a block, or with no source objects, follows nothing.
+        let tied = h.assoc && !self.defining && ctx.chain.is_empty() && h.sources.iter().any(|s| !s.is_empty());
+        if h.assoc && !tied {
             self.note(
                 "Tarama (HATCH)",
                 "ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
                 e.line,
             );
         }
+        let first = self.out.entities.len();
         let mut b = b;
         let mut pattern = self.pattern(m, h, &mut b, e);
         // KentOS data holds a pattern or a gradient exactly; they count while the groups still say it.
@@ -2949,6 +3080,23 @@ impl<'l> Emitter<'l> {
                 boundary,
                 annotative: None,
             }));
+        }
+        if tied {
+            if self.out.entities.len() == first + 1 {
+                self.out.ties.push(Tie {
+                    hatch: first,
+                    flags: h.path_flags.clone(),
+                    sources: h.sources.clone(),
+                    seeds: h.seeds.iter().map(|p| m.apply(v(p[0], p[1]))).collect(),
+                    line: e.line,
+                });
+            } else {
+                self.note(
+                    "Tarama (HATCH)",
+                    "birden çok bölgeli ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
+                    e.line,
+                );
+            }
         }
     }
 

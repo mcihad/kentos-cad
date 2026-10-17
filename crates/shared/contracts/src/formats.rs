@@ -13,6 +13,7 @@ use ts_rs::TS;
 use crate::annotation::{DimensionStyleDef, TextStyleDef};
 use crate::document::{Bounds, DrawingFont, DrawingUnit};
 use crate::entity::{BlockDefinition, Entity, Vec2};
+use crate::identity::EntityId;
 use crate::layer::LineType;
 
 /// Version of this boundary; the WASM module reports the one it was built with.
@@ -1200,6 +1201,12 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportItem>>", optional))]
     pub notes: Vec<ReportItem>,
+    /// The objects' persistent ids by object id (docs/adr/0333 §3): an associative hatch is written with its boundary
+    /// objects' handles (71 1, 97 and 330s) and they with its reactor, when they are written too. Absent: hatches
+    /// are written follows nothing (71 0).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<u32, EntityId>>", optional))]
+    pub uids: BTreeMap<u32, EntityId>,
 }
 
 /// What a dimension or a leader becomes in DXF (docs/adr/0327 §6).

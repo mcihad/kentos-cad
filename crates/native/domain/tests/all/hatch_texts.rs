@@ -229,3 +229,42 @@ fn denetle_finds_a_text_gone_and_a_label_left_open() {
     };
     assert!(r.assoc.expect("tied").cutouts.is_empty());
 }
+
+/// A hatch inside a closed polyline (a closed line, not an area: docs/adr/0258 §1) follows it as it does an area:
+/// the closed object is read closed (docs/adr/0333 §2).
+#[test]
+fn a_hatch_follows_a_closed_polyline() {
+    let mut doc = drawing();
+    let square = match doc.get(Slot(1)).cloned() {
+        Some(Entity::Polygon(p)) => p,
+        _ => panic!("an area"),
+    };
+    assert!(doc.update(
+        Slot(1),
+        Entity::Polyline(kentos_domain::contracts::PathEntity {
+            closed: true,
+            ..square.clone()
+        })
+    ));
+    tie(&mut doc, Vec::new());
+    assert!(hatch(&doc).assoc.is_some(), "tied");
+    let moved: Vec<Vec2> = square
+        .pts
+        .iter()
+        .map(|p| Vec2 {
+            x: p.x + 5.0,
+            y: p.y,
+        })
+        .collect();
+    assert!(doc.update(
+        Slot(1),
+        Entity::Polyline(kentos_domain::contracts::PathEntity {
+            closed: true,
+            pts: moved.clone(),
+            ..square
+        })
+    ));
+    let h = hatch(&doc);
+    assert!(h.assoc.is_some(), "still tied");
+    assert_eq!(middle(&h.ring), (15.0, 10.0));
+}

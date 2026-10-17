@@ -706,3 +706,19 @@ impl HatchAssoc {
         None
     }
 }
+
+/// An import's stand-in id for its object at `index` among the objects it read (docs/adr/0333 §2): a DXF
+/// associative hatch names its boundary objects so; the import puts the objects' own ids in their place once they are
+/// in the drawing. Its first bytes ("KDXF") are no UUIDv7's.
+pub fn import_placeholder(index: u32) -> EntityId {
+    let mut b = [0u8; 16];
+    b[..4].copy_from_slice(b"KDXF");
+    b[12..].copy_from_slice(&index.to_be_bytes());
+    EntityId(b)
+}
+
+/// The place an import's stand-in id names, if it is one ([`import_placeholder`]).
+pub fn import_placeholder_index(id: &EntityId) -> Option<u32> {
+    (id.0[..4] == *b"KDXF" && id.0[4..12].iter().all(|b| *b == 0))
+        .then(|| u32::from_be_bytes([id.0[12], id.0[13], id.0[14], id.0[15]]))
+}

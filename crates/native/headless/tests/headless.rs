@@ -943,3 +943,69 @@ fn a_varied_dynamic_insert_goes_to_dxf_as_the_block_it_draws() {
         .fold(f64::INFINITY, f64::min);
     assert!((min_x + 1.2).abs() < 1e-9, "{min_x}");
 }
+
+/// DXF HATCH round trip with independent files (docs/adr/0333 §4): each file of fixtures/formats/v1/dxf-hatch/in
+/// (written by scripts/fixtures/dxf_hatch_cases.py without KentOS code) taken into a new local drawing and written
+/// out again; the associative ones tie to their objects in the import's step. KENTOS_WRITE_DXF=1 writes the outputs
+/// to out/, which the script checks against the inputs.
+#[test]
+fn dxf_hatches_go_round() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/dxf-hatch");
+    let dir = scratch("dxf-hatch");
+    let write = std::env::var_os("KENTOS_WRITE_DXF").is_some();
+    for name in [
+        "assoc-polyline",
+        "assoc-lines",
+        "edges",
+        "gradients",
+        "custom-pattern",
+    ] {
+        let mut s = Session::new(&NewDrawing {
+            name: "Tarama".into(),
+            srid: 0,
+            plot_scale: 100.0,
+            workspace: Workspace::Cad,
+            drawing_font: DrawingFont::Barlow,
+            province: None,
+            drawing_unit: None,
+        })
+        .expect("a new project");
+        let input = root.join("in").join(format!("{name}.dxf"));
+        let answer = s
+            .call(json!({ "command": "file.import.dxf", "input": { "path": input.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        let hatches: Vec<&kentos_contracts::HatchEntity> = s
+            .document()
+            .entities()
+            .filter_map(|e| match e {
+                kentos_contracts::Entity::Hatch(h) => Some(h),
+                _ => None,
+            })
+            .collect();
+        if name.starts_with("assoc") {
+            assert!(
+                hatches.iter().all(|h| h.assoc.as_ref().is_some_and(|a| a
+                    .objects()
+                    .all(|id| kentos_contracts::import_placeholder_index(id).is_none()))),
+                "{name}: tied to the objects' own ids: {:?} {answer}",
+                hatches.iter().map(|h| &h.assoc).collect::<Vec<_>>()
+            );
+        }
+        let out = dir.join(format!("{name}.dxf"));
+        s.export_dxf(&out).expect("written");
+        let bytes = std::fs::read(&out).expect("read back");
+        let kept = root.join("out").join(format!("{name}.dxf"));
+        if write {
+            std::fs::create_dir_all(kept.parent().expect("a folder")).expect("the folder");
+            std::fs::write(&kept, &bytes).expect("kept");
+        } else {
+            assert_eq!(
+                std::fs::read(&kept).ok().as_deref(),
+                Some(bytes.as_slice()),
+                "{name}: KENTOS_WRITE_DXF=1 writes it; read the difference"
+            );
+        }
+    }
+}

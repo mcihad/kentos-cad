@@ -417,8 +417,8 @@ Mevcut desen/degrade ve ilişkili tarama kodu korunmalıdır. Hedef yeni bir tar
 - [x] **CAD-HATCH-09:** Solid/gradient transparency ve ön/arka çizim sırası tutarlı olsun; text background mask ve wipeout ayrı nesne/özellikler olarak ele alınsın. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §1.*
 - [x] **CAD-HATCH-10:** Bağlı metinleri boş bırakma davranışı metin taşındığında da güncellensin; döngü ve missing text durumu raporlansın. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §2.*
 - [x] **CAD-HATCH-11:** Çok büyük/dense hatch için bütçe ve cancellation olsun; desenin ekranda sadeleşmesi kaynak ölçü/plot doğruluğunu değiştirmesin. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §3.*
-- [ ] **CAD-HATCH-12:** Render ve PDF'de çizgi kalınlığı, dash, kesişim ve clip kuralları aynı görünüşü üretsin.
-- [ ] **CAD-HATCH-13:** DXF HATCH boundary loops, source references, gradients ve custom pattern aktarımı için bağımsız dosyalarla round-trip test et.
+- [x] **CAD-HATCH-12:** Render ve PDF'de çizgi kalınlığı, dash, kesişim ve clip kuralları aynı görünüşü üretsin. — *17 Ekim; [ADR 0333](../docs/adr/0333-hatch-pdf-gradients-and-dxf-round-trip.md) §1.*
+- [x] **CAD-HATCH-13:** DXF HATCH boundary loops, source references, gradients ve custom pattern aktarımı için bağımsız dosyalarla round-trip test et. — *17 Ekim; [ADR 0333](../docs/adr/0333-hatch-pdf-gradients-and-dxf-round-trip.md) §2–§4.*
 
 **Kabul:** Yaylı duvar ve adalı mahal sınırı değiştirildiğinde tarama doğru alanı izler; hiçbir delik kapanmaz. UI/Python/AI aynı pick-point veya boundary-ID girdisinden aynı taramayı oluşturur.
 

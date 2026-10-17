@@ -2546,3 +2546,30 @@ fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
         ]
     );
 }
+
+/// An associative hatch of model space is tied to the objects its paths name (97, 330s) by their places in the
+/// import, its closed polyline the outer object and its circle an island, the file's seed kept (docs/adr/0333 §2).
+#[test]
+fn an_associative_hatch_is_tied_to_its_objects() {
+    let r = read("dxf-hatch/in/assoc-polyline.dxf");
+    let place = |e: &Entity| r.entities.iter().position(|x| std::ptr::eq(x, e)).map(|i| i as u32);
+    let ring = r.entities.iter().find(|e| matches!(e, Entity::Polyline(_) | Entity::Polygon(_)));
+    let circle = r.entities.iter().find(|e| matches!(e, Entity::Circle(_)));
+    let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
+        panic!("a hatch: {:?}", r.report);
+    };
+    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
+    assert_eq!(a.outer.as_ref().and_then(kentos_contracts::import_placeholder_index), ring.and_then(place));
+    assert_eq!(
+        a.islands.iter().map(kentos_contracts::import_placeholder_index).collect::<Vec<_>>(),
+        vec![circle.and_then(place)]
+    );
+    assert!(near(a.seed, Vec2 { x: 1.0, y: 1.0 }));
+    // Lines closing a face are its bounds.
+    let r = read("dxf-hatch/in/assoc-lines.dxf");
+    let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
+        panic!("a hatch");
+    };
+    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
+    assert_eq!((a.outer, a.bounds.len()), (None, 4));
+}

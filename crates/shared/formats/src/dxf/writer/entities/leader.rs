@@ -336,7 +336,7 @@ impl Writer<'_> {
         at: Vec2,
         align: TextAlign,
     ) {
-        self.head("MTEXT", &l.base, h, Some(leader));
+        self.head("MTEXT", &l.base, h, &[leader]);
         self.out.str(100, "AcDbMText");
         self.out.xyz(10, at);
         self.out.real(40, l.height);

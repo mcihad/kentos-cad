@@ -307,6 +307,8 @@ pub(super) struct Writer<'a> {
     pub pen: Pen,
     /// How tables, dimensions and leaders are written (docs/adr/0327 §6).
     pub forms: kentos_contracts::DxfAnnotations,
+    /// The associative hatches and their sources (docs/adr/0333 §3).
+    pub ties: &'a super::hatch_ties::Ties,
 }
 
 /// What the report says of a table, a dimension or a leader as `forms` writes it (docs/adr/0327 §6).
@@ -406,19 +408,34 @@ impl Writer<'_> {
 
     /// The entity's head: type, handle, owner, layer and colour. Returns its handle.
     fn begin(&mut self, kind: &str, base: &EntityBase) -> u64 {
-        let h = self.handles.take();
-        self.head(kind, base, h, None);
+        // An associative hatch and its sources took their handles before (docs/adr/0333 §3); a source reacts to its
+        // hatches.
+        let (h, reactors) = if self.defining {
+            (self.handles.take(), Vec::new())
+        } else {
+            (
+                self.ties
+                    .handles
+                    .get(&base.id)
+                    .copied()
+                    .unwrap_or_else(|| self.handles.take()),
+                self.ties.reactors.get(&base.id).cloned().unwrap_or_default(),
+            )
+        };
+        self.head(kind, base, h, &reactors);
         h
     }
 
     /// `begin` with the handle `h` taken before, and the object this one
     /// reacts to, when there is one (a leader's MTEXT its LEADER, docs/adr/0146 §8).
-    fn head(&mut self, kind: &str, base: &EntityBase, h: u64, reactor: Option<u64>) {
+    fn head(&mut self, kind: &str, base: &EntityBase, h: u64, reactors: &[u64]) {
         self.out.str(0, kind);
         self.out.handle(5, h);
-        if let Some(r) = reactor {
+        if !reactors.is_empty() {
             self.out.str(102, "{ACAD_REACTORS");
-            self.out.handle(330, r);
+            for r in reactors {
+                self.out.handle(330, *r);
+            }
             self.out.str(102, "}");
         }
         self.out.handle(330, self.owner);
@@ -2033,22 +2050,29 @@ impl Writer<'_> {
         };
         self.out.str(2, name);
         self.out.int(70, i64::from(fill));
-        self.out.int(71, 0);
+        // Associative when its objects are written too (docs/adr/0333 §3): each path with its sources.
+        let sources = if self.defining {
+            None
+        } else {
+            self.ties.sources.get(&h.base.id).cloned()
+        };
+        self.out.int(71, i64::from(sources.is_some()));
+        let of = |k: usize| sources.as_ref().and_then(|s| s.get(k)).cloned().unwrap_or_default();
         // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
         // arcs and curves an edge path; else the drawn ring and holes.
         match h.boundary.as_deref().filter(|b| !b.is_empty()) {
             Some(loops) => {
                 self.out.int(91, loops.len() as i64);
                 for (k, l) in loops.iter().enumerate() {
-                    self.exact_boundary(l, k == 0);
+                    self.exact_boundary(l, k == 0, &of(k));
                 }
             }
             None => {
                 self.out.int(91, 1 + holes.len() as i64);
                 // Outer boundary (external polyline), then the islands (polylines).
-                self.boundary(&h.ring, 3);
-                for hole in &holes {
-                    self.boundary(hole, 2);
+                self.boundary(&h.ring, 3, &of(0));
+                for (k, hole) in holes.iter().enumerate() {
+                    self.boundary(hole, 2, &of(k + 1));
                 }
             }
         }
@@ -2129,7 +2153,14 @@ impl Writer<'_> {
             }
             HatchPatternType::Gradient => {}
         }
-        self.out.int(98, 0);
+        // The seed point of an associative hatch (docs/adr/0333 §3): where its region is picked again.
+        match (&sources, &h.assoc) {
+            (Some(_), Some(a)) => {
+                self.out.int(98, 1);
+                self.out.xy(10, a.seed);
+            }
+            _ => self.out.int(98, 0),
+        }
         if let (HatchPatternType::Gradient, Some(g)) = (kind, &p.gradient) {
             self.gradient(&h.base, p.angle, g);
             m.hatch = serde_json::to_string(p).ok();
@@ -2190,7 +2221,7 @@ impl Writer<'_> {
     /// One loop of a hatch's exact boundary: a polyline path (72 bulges) of lines and arcs, else an edge path whose
     /// edges are lines (1), circular arcs (2: a clockwise one's angles negated, 73 = 0), ellipses' arcs (3: angles of
     /// the parameters, negated when clockwise) and splines (4, AC1021: no fit data).
-    fn exact_boundary(&mut self, l: &kentos_contracts::HatchLoop, outer: bool) {
+    fn exact_boundary(&mut self, l: &kentos_contracts::HatchLoop, outer: bool, sources: &[u64]) {
         let n = l.pts.len();
         let bulge = |i: usize| l.bulges.as_ref().map_or(0.0, |b| b[i]);
         if !l.has_curves() {
@@ -2205,7 +2236,7 @@ impl Writer<'_> {
                     self.out.real(42, bulge(i));
                 }
             }
-            self.out.int(97, 0);
+            self.sources(sources);
             return;
         }
         self.out.int(92, i64::from(outer));
@@ -2286,10 +2317,10 @@ impl Writer<'_> {
                 }
             }
         }
-        self.out.int(97, 0);
+        self.sources(sources);
     }
 
-    fn boundary(&mut self, ring: &[Vec2], flags: i64) {
+    fn boundary(&mut self, ring: &[Vec2], flags: i64, sources: &[u64]) {
         self.out.int(92, flags);
         self.out.int(72, 0);
         self.out.int(73, 1);
@@ -2297,7 +2328,15 @@ impl Writer<'_> {
         for p in ring {
             self.out.xy(10, *p);
         }
-        self.out.int(97, 0);
+        self.sources(sources);
+    }
+
+    /// A path's source objects (97 and a 330 each; docs/adr/0333 §3).
+    fn sources(&mut self, sources: &[u64]) {
+        self.out.int(97, sources.len() as i64);
+        for h in sources {
+            self.out.handle(330, *h);
+        }
     }
 }
 

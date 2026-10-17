@@ -115,7 +115,17 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             );
         }
     }
+    // The objects' ids: an associative hatch goes out with its boundary objects' handles (docs/adr/0333 §3).
+    let uids = entities
+        .iter()
+        .filter_map(|e| {
+            let id = e.base().id;
+            doc.uid(kentos_domain::Slot(id))
+                .map(|u| (id, kentos_contracts::EntityId(u.into_bytes())))
+        })
+        .collect();
     DxfWriteInput {
+        uids,
         annotations: Default::default(),
         notes,
         // The project's line types and their scale (docs/adr/0313 §6).

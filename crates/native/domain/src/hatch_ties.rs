@@ -34,10 +34,15 @@ use crate::identity::{Slot, Uuid};
 use crate::linked::font_of;
 use crate::store::Stored;
 
-/// The geometry core's reading of an object (the contract's own JSON).
+/// The geometry core's reading of an object (the contract's own JSON). The JSON reads a polyline open; a closed one
+/// is closed here, so a hatch inside it follows it (docs/adr/0258 §1, 0333 §2).
 fn core(e: &Entity) -> Option<CoreEntity> {
     let json = serde_json::to_string(e).ok()?;
-    CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
+    let mut c = CoreEntity::from_json(&Json::parse(&json).ok()?).ok()?;
+    if let (Entity::Polyline(p), Shape::Polyline { closed, .. }) = (e, &mut c.shape) {
+        *closed = p.closed;
+    }
+    Some(c)
 }
 
 /// A hatch that follows nothing: it stays as it is.

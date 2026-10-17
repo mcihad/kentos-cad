@@ -214,6 +214,10 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-HATCH-12`, `13` taramanın PDF'te degradesi ve DXF'te ilişkili gidiş-dönüşü (ADR 0333, 17 Ekim): web'de gerekenler:
+  paftanın web PDF'inde degradenin bantları (`gradient.rs`'in kuralı); web'in DXF içe aktarmasında yer tutucuların kimliklerle
+  değiştirilmesi (`io/apply.ts`, `tie_placeholders`'ın karşılığı) ve dışa aktarmanın `uids`'i; belgenin tarama izleyicisinde
+  kapalı çoklu çizgi (`model/hatchTies.ts`); ortak dosyalar `fixtures/formats/v1/dxf-hatch`.
 - [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
   `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
   WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in

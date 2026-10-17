@@ -520,6 +520,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         })
         .collect();
     DxfWriteInput {
+        uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,
@@ -1031,6 +1032,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         }),
     ];
     let (text, report) = write(&DxfWriteInput {
+        uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,
@@ -1092,6 +1094,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 #[test]
 fn nothing_to_write_is_still_a_file_autocad_opens() {
     let (text, report) = write(&DxfWriteInput {
+        uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,

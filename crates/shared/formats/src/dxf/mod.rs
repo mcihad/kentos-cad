@@ -813,6 +813,8 @@ fn read_once(
     }
     em.notes_done();
     em.merge_holes();
+    // After the holes: the associative hatches are tied to their objects by place (docs/adr/0333 §2).
+    em.tie_hatches();
     let blocks = if opts.explode_blocks {
         Vec::new()
     } else {

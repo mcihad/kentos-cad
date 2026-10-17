@@ -19,6 +19,7 @@
 
 mod blocks;
 mod entities;
+mod hatch_ties;
 mod input;
 mod layers;
 mod styles;
@@ -314,6 +315,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut handles = Handles {
         next: template::FIRST_FREE,
     };
+    // The associative hatches and their sources take their handles first (docs/adr/0333 §3).
+    let ties = hatch_ties::ties_of(input, &mut handles);
     let layers = Layers::new(&input.layers, &mut report);
     let mut body = Out::default();
     // The blocks (the drawing's and the dimensions' own) and their block records.
@@ -376,6 +379,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 arrows: &mut arrows,
                 pen: entities::Pen::default(),
                 forms: Default::default(),
+                ties: &ties,
             };
             for e in &def.entities {
                 w.entity(e);
@@ -435,6 +439,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             arrows: &mut arrows,
             pen: entities::Pen::default(),
             forms: input.annotations,
+            ties: &ties,
         };
         // In their drawing order (docs/adr/0260 §5): AutoCAD draws a file's objects in its order.
         let mut drawn: Vec<&kentos_contracts::Entity> = input.entities.iter().collect();
