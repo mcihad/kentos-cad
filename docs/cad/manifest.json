@@ -2707,6 +2707,22 @@
    "tests": 1
   },
   {
+   "id": "hatchPatterns.manage",
+   "kind": "command",
+   "title": "Tarama desenleri",
+   "level": "semantic",
+   "via": [
+    "cad.hatchpatterns.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.hatchpatterns.edit",
+   "mcp": "cad.hatchpatterns.edit",
+   "note": "Yükleme (birimiyle), silme ve dışa aktarma komuta verilir; desen taramaya cad.entities.hatch ve cad.hatches.edit'in pattern'iyle adıyla verilir (ADR 0331 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "help.about",
    "kind": "command",
    "title": "KentOS CAD hakkında",

@@ -40,16 +40,19 @@ pub enum Mode {
     Reselect,
     Recreate,
     Untie,
+    /// Hizala (docs/adr/0331 §2): the hatches clicked continue the picked one's lines.
+    Align,
 }
 
 impl Mode {
     /// The modes in the order the memory keeps them.
-    pub const ALL: [Mode; 5] = [
+    pub const ALL: [Mode; 6] = [
         Mode::AddIslands,
         Mode::RemoveIslands,
         Mode::Reselect,
         Mode::Recreate,
         Mode::Untie,
+        Mode::Align,
     ];
 
     fn key(self) -> &'static str {
@@ -59,6 +62,7 @@ impl Mode {
             Mode::Reselect => "S",
             Mode::Recreate => "O",
             Mode::Untie => "K",
+            Mode::Align => "H",
         }
     }
 
@@ -69,6 +73,7 @@ impl Mode {
             Mode::Reselect => "Yeniden seç",
             Mode::Recreate => "Yeniden oluştur",
             Mode::Untie => "İlişkiyi kopar",
+            Mode::Align => "Hizala",
         }
     }
 
@@ -79,6 +84,7 @@ impl Mode {
             Mode::RemoveIslands => "çıkarılacak adaya tıklayın",
             Mode::Reselect => "taramanın yeni bölgesinin içine tıklayın",
             Mode::Recreate | Mode::Untie => "Enter'la başka taramaya geçin",
+            Mode::Align => "çizgileri bu taramanınkileri sürdürecek taramalara tıklayın",
         }
     }
 }
@@ -160,6 +166,8 @@ impl HatchEditor {
             Edit::Reselect { .. } => "Taramanın bölgesi yeniden bulundu.",
             Edit::Recreate { .. } => "Taramanın sınırı yeniden oluşturuldu.",
             Edit::Untie { .. } => "Taramanın ilişkisi koptu; artık bir şeyi izlemiyor.",
+            Edit::Pattern { .. } => "Taramanın deseni değişti.",
+            Edit::Align { .. } => "Tarama hizalandı; çizgileri seçilen taramanınkileri sürdürüyor.",
         };
         let input = HatchesEdit {
             edit,
@@ -263,6 +271,23 @@ impl HatchEditor {
             Mode::Reselect => {
                 let region = Self::region_at(p.world, cx);
                 self.apply(Edit::Reselect { uid, region }, cx);
+            }
+            Mode::Align => {
+                let other = crate::selectable::candidates(cx, p.raw)
+                    .into_iter()
+                    .filter(|s| Some(*s) != self.picked)
+                    .find(|s| matches!(cx.doc.get(*s), Some(Entity::Hatch(_))))
+                    .and_then(|s| cx.doc.uid(s));
+                match other {
+                    Some(u) => self.apply(
+                        Edit::Align {
+                            uids: vec![u.to_string()],
+                            reference: uid,
+                        },
+                        cx,
+                    ),
+                    None => cx.say(Level::Warn, "Hizalanacak başka bir taramaya tıklayın."),
+                }
             }
             Mode::Recreate | Mode::Untie => {}
         }

@@ -408,6 +408,130 @@
         "ratio": 0.5,
         "t0": 0,
         "t1": 6.283185307179586
+      },
+      {
+        "kind": "hatch",
+        "id": 14,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+          {
+            "x": 100,
+            "y": 0
+          },
+          {
+            "x": 110,
+            "y": 0
+          },
+          {
+            "x": 110,
+            "y": 8
+          },
+          {
+            "x": 100,
+            "y": 8
+          }
+        ],
+        "pattern": {
+          "type": "pattern",
+          "angle": 0.0,
+          "spacing": 1,
+          "name": "ANSI31",
+          "scale": 0.5,
+          "lines": [
+            {
+              "angle": 45,
+              "origin": [
+                0,
+                0
+              ],
+              "offset": [
+                0,
+                3.175
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "kind": "hatch",
+        "id": 15,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+          {
+            "x": 112,
+            "y": 0
+          },
+          {
+            "x": 122,
+            "y": 0
+          },
+          {
+            "x": 122,
+            "y": 8
+          },
+          {
+            "x": 112,
+            "y": 8
+          }
+        ],
+        "pattern": {
+          "type": "pattern",
+          "angle": 30.0,
+          "spacing": 1,
+          "name": "ANSI31",
+          "scale": 1.0,
+          "lines": [
+            {
+              "angle": 45,
+              "origin": [
+                0,
+                0
+              ],
+              "offset": [
+                0,
+                3.175
+              ]
+            }
+          ],
+          "origin": {
+            "x": 101,
+            "y": 1
+          }
+        }
+      },
+      {
+        "kind": "hatch",
+        "id": 16,
+        "layerId": "tarama",
+        "attrs": {},
+        "ring": [
+          {
+            "x": 124,
+            "y": 0
+          },
+          {
+            "x": 134,
+            "y": 0
+          },
+          {
+            "x": 134,
+            "y": 8
+          },
+          {
+            "x": 124,
+            "y": 8
+          }
+        ],
+        "pattern": {
+          "type": "lines",
+          "angle": 45.0,
+          "spacing": 1.5
+        },
+        "annotative": {
+          "at": 500
+        }
       }
     ],
     "styles": {
@@ -439,10 +563,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -455,7 +579,7 @@
             "edit": {
               "kind": "untie",
               "uids": [
-                "$uidOf:14"
+                "$uidOf:17"
               ]
             }
           },
@@ -463,7 +587,7 @@
             "status": "completed",
             "output": {
               "changed": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "revision": "$current"
             },
@@ -484,12 +608,15 @@
               11,
               12,
               13,
-              14
+              14,
+              15,
+              16,
+              17
             ],
             "entities": {
-              "14": {
+              "17": {
                 "kind": "hatch",
-                "id": 14,
+                "id": 17,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -601,7 +728,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "entities": {
               "4": {
@@ -682,10 +812,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -697,7 +827,7 @@
           "input": {
             "edit": {
               "kind": "addIslands",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "uids": [
                 "$uidOf:3"
               ]
@@ -707,7 +837,7 @@
             "status": "completed",
             "output": {
               "changed": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "revision": "$current"
             },
@@ -728,12 +858,15 @@
               11,
               12,
               13,
-              14
+              14,
+              15,
+              16,
+              17
             ],
             "entities": {
-              "14": {
+              "17": {
                 "kind": "hatch",
-                "id": 14,
+                "id": 17,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -825,10 +958,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -840,7 +973,7 @@
           "input": {
             "edit": {
               "kind": "addIslands",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "uids": [
                 "$uidOf:2"
               ]
@@ -895,7 +1028,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "entities": {
               "4": {
@@ -1009,7 +1145,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -1042,10 +1181,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -1057,7 +1196,7 @@
           "input": {
             "edit": {
               "kind": "removeIslands",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "uids": [
                 "$uidOf:2"
               ]
@@ -1067,7 +1206,7 @@
             "status": "completed",
             "output": {
               "changed": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "revision": "$current"
             },
@@ -1088,12 +1227,15 @@
               11,
               12,
               13,
-              14
+              14,
+              15,
+              16,
+              17
             ],
             "entities": {
-              "14": {
+              "17": {
                 "kind": "hatch",
-                "id": 14,
+                "id": 17,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1200,7 +1342,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "entities": {
               "4": {
@@ -1290,7 +1435,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "entities": {
               "4": {
@@ -1439,7 +1587,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "entities": {
               "4": {
@@ -1540,10 +1691,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -1555,18 +1706,18 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14"
+              "uid": "$uidOf:17"
             }
           },
           "result": {
             "status": "completed",
             "output": {
               "changed": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "revision": "$current",
               "created": [
-                "$uidOf:15"
+                "$uidOf:18"
               ]
             },
             "warnings": []
@@ -1587,12 +1738,15 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17,
+              18
             ],
             "entities": {
-              "15": {
+              "18": {
                 "kind": "polygon",
-                "id": 15,
+                "id": 18,
                 "layerId": "tarama",
                 "attrs": {},
                 "pts": [
@@ -1656,9 +1810,9 @@
                   }
                 ]
               },
-              "14": {
+              "17": {
                 "kind": "hatch",
-                "id": 14,
+                "id": 17,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1723,7 +1877,7 @@
                   "spacing": 1
                 },
                 "assoc": {
-                  "outer": "$uidOf:15",
+                  "outer": "$uidOf:18",
                   "seed": {
                     "x": 2,
                     "y": 2
@@ -1765,10 +1919,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -1780,7 +1934,7 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "layerId": "alan",
               "associative": false
             }
@@ -1791,7 +1945,7 @@
               "changed": [],
               "revision": "$current",
               "created": [
-                "$uidOf:15"
+                "$uidOf:18"
               ]
             },
             "warnings": []
@@ -1812,12 +1966,15 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17,
+              18
             ],
             "entities": {
-              "15": {
+              "18": {
                 "kind": "polygon",
-                "id": 15,
+                "id": 18,
                 "layerId": "alan",
                 "attrs": {},
                 "pts": [
@@ -1881,9 +2038,9 @@
                   }
                 ]
               },
-              "14": {
+              "17": {
                 "kind": "hatch",
-                "id": 14,
+                "id": 17,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1990,10 +2147,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2005,7 +2162,7 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "layerId": "gizli",
               "associative": false
             }
@@ -2016,7 +2173,7 @@
               "changed": [],
               "revision": "$current",
               "created": [
-                "$uidOf:15"
+                "$uidOf:18"
               ]
             },
             "warnings": [
@@ -2053,10 +2210,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2068,7 +2225,7 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "form": "polyline",
               "associative": false
             }
@@ -2079,9 +2236,9 @@
               "changed": [],
               "revision": "$current",
               "created": [
-                "$uidOf:15",
-                "$uidOf:16",
-                "$uidOf:17"
+                "$uidOf:18",
+                "$uidOf:19",
+                "$uidOf:20"
               ]
             },
             "warnings": []
@@ -2104,12 +2261,15 @@
               14,
               15,
               16,
-              17
+              17,
+              18,
+              19,
+              20
             ],
             "entities": {
-              "15": {
+              "18": {
                 "kind": "polyline",
-                "id": 15,
+                "id": 18,
                 "layerId": "tarama",
                 "attrs": {},
                 "pts": [
@@ -2132,9 +2292,9 @@
                 ],
                 "closed": true
               },
-              "16": {
+              "19": {
                 "kind": "polyline",
-                "id": 16,
+                "id": 19,
                 "layerId": "tarama",
                 "attrs": {},
                 "pts": [
@@ -2157,9 +2317,9 @@
                 ],
                 "closed": true
               },
-              "17": {
+              "20": {
                 "kind": "polyline",
-                "id": 17,
+                "id": 20,
                 "layerId": "tarama",
                 "attrs": {},
                 "pts": [
@@ -2213,10 +2373,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2228,7 +2388,7 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "form": "polyline",
               "associative": false
             }
@@ -2239,7 +2399,7 @@
               "changed": [],
               "revision": "$current",
               "created": [
-                "$uidOf:15"
+                "$uidOf:18"
               ]
             },
             "warnings": []
@@ -2260,12 +2420,15 @@
               12,
               13,
               14,
-              15
+              15,
+              16,
+              17,
+              18
             ],
             "entities": {
-              "15": {
+              "18": {
                 "kind": "ellipse",
-                "id": 15,
+                "id": 18,
                 "layerId": "tarama",
                 "attrs": {},
                 "c": {
@@ -2311,10 +2474,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2326,7 +2489,7 @@
           "input": {
             "edit": {
               "kind": "recreate",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "associative": false
             }
           },
@@ -2336,7 +2499,7 @@
               "changed": [],
               "revision": "$current",
               "created": [
-                "$uidOf:15"
+                "$uidOf:18"
               ]
             },
             "warnings": [
@@ -2454,7 +2617,2184 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: dolu tarama ANSI31 olur, bölgesi kalır; adım “Deseni değiştir”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "pattern": {
+                "name": "ANSI31"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "4": {
+                "kind": "hatch",
+                "id": 4,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 30,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 8
+                  },
+                  {
+                    "x": 30,
+                    "y": 8
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 34,
+                      "y": 2
+                    },
+                    {
+                      "x": 32,
+                      "y": 2
+                    },
+                    {
+                      "x": 32,
+                      "y": 4
+                    },
+                    {
+                      "x": 34,
+                      "y": 4
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Deseni değiştir"
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçek ve açı Tarama'nınki gibi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "scale": 2,
+                "angle": 15
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:14"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 15.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 1.0,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: başlangıç verilmezse her tarama kendininkini korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:15"
+              ],
+              "pattern": {
+                "name": "ANSI31"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 101,
+                    "y": 1
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: başlangıç sol alt, her taramanın kendi kutusunun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14",
+                "$uidOf:15"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "origin": {
+                  "kind": "corner",
+                  "corner": "bottomLeft"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:14",
+                "$uidOf:15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 100,
+                    "y": 0
+                  }
+                }
+              },
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 112,
+                    "y": 0
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: başlangıç sol alt, nesneler boyunca hizalı: ikisinin kutusunun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14",
+                "$uidOf:15"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "origin": {
+                  "kind": "corner",
+                  "corner": "bottomLeft",
+                  "across": true
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:14",
+                "$uidOf:15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 100,
+                    "y": 0
+                  }
+                }
+              },
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 100,
+                    "y": 0
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: başlangıç dünya kendi başlangıcını kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:15"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "origin": {
+                  "kind": "world"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçekli yapılır, çizim ölçeğinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "annotative": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:14"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "annotative": {
+                  "at": 500
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçekli tarama çizgili kalırken ölçeklerini korur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:16"
+              ],
+              "pattern": {
+                "name": "Çizgili",
+                "angle": 10
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:16"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "16": {
+                "kind": "hatch",
+                "id": 16,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 124,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 8
+                  },
+                  {
+                    "x": 124,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 55.0,
+                  "spacing": 1.5
+                },
+                "annotative": {
+                  "at": 500
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: dolu olunca ölçekleri ve başlangıcı düşer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "pattern": {
+                "name": "Dolu"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              },
+              "16": {
+                "kind": "hatch",
+                "id": 16,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 124,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 8
+                  },
+                  {
+                    "x": 124,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçekli kapatılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:16"
+              ],
+              "pattern": {
+                "name": "Çizgili",
+                "annotative": false
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:16"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "16": {
+                "kind": "hatch",
+                "id": 16,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 124,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 8
+                  },
+                  {
+                    "x": 124,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45.0,
+                  "spacing": 1.5
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: aynı desen değişiklik değil, yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "ANSI31"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: aynı desen başlangıcı, açıyı ve ölçeği alır; adım “Taramaları hizala”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "reference": "$uidOf:15"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:14"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "14": {
+                "kind": "hatch",
+                "id": 14,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 100,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 0
+                  },
+                  {
+                    "x": 110,
+                    "y": 8
+                  },
+                  {
+                    "x": 100,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 30.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 1.0,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ],
+                  "origin": {
+                    "x": 101,
+                    "y": 1
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Taramaları hizala"
+        }
+      ]
+    },
+    {
+      "name": "Hizala: başka desen yalnız başlangıcı alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:16"
+              ],
+              "reference": "$uidOf:15"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:16"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "16": {
+                "kind": "hatch",
+                "id": 16,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 124,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 0
+                  },
+                  {
+                    "x": 134,
+                    "y": 8
+                  },
+                  {
+                    "x": 124,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "lines",
+                  "angle": 45.0,
+                  "spacing": 1.5,
+                  "origin": {
+                    "x": 101,
+                    "y": 1
+                  }
+                },
+                "annotative": {
+                  "at": 500
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: dolu tarama değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "reference": "$uidOf:15"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "4": {
+                "kind": "hatch",
+                "id": 4,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 30,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 0
+                  },
+                  {
+                    "x": 40,
+                    "y": 8
+                  },
+                  {
+                    "x": 30,
+                    "y": 8
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 34,
+                      "y": 2
+                    },
+                    {
+                      "x": 32,
+                      "y": 2
+                    },
+                    {
+                      "x": 32,
+                      "y": 4
+                    },
+                    {
+                      "x": 34,
+                      "y": 4
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: dünya başlangıçlı başvuru başlangıcı kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:15"
+              ],
+              "reference": "$uidOf:14"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "15": {
+                "kind": "hatch",
+                "id": 15,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 112,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 0
+                  },
+                  {
+                    "x": 122,
+                    "y": 8
+                  },
+                  {
+                    "x": 112,
+                    "y": 8
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: desen değişmiş tarama; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "pattern": {
+                "name": "ANSI31"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "hatches": [
+                {
+                  "kind": "hatch",
+                  "id": 4,
+                  "layerId": "tarama",
+                  "attrs": {},
+                  "ring": [
+                    {
+                      "x": 30,
+                      "y": 0
+                    },
+                    {
+                      "x": 40,
+                      "y": 0
+                    },
+                    {
+                      "x": 40,
+                      "y": 8
+                    },
+                    {
+                      "x": 30,
+                      "y": 8
+                    }
+                  ],
+                  "holes": [
+                    [
+                      {
+                        "x": 34,
+                        "y": 2
+                      },
+                      {
+                        "x": 32,
+                        "y": 2
+                      },
+                      {
+                        "x": 32,
+                        "y": 4
+                      },
+                      {
+                        "x": 34,
+                        "y": 4
+                      }
+                    ]
+                  ],
+                  "pattern": {
+                    "type": "pattern",
+                    "angle": 0.0,
+                    "spacing": 1,
+                    "name": "ANSI31",
+                    "scale": 0.5,
+                    "lines": [
+                      {
+                        "angle": 45,
+                        "origin": [
+                          0,
+                          0
+                        ],
+                        "offset": [
+                          0,
+                          3.175
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: bilinmeyen ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "Yok"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_pattern",
+              "message": "“Yok” adında desen yok. Desen kitaplığındaki ya da projenin desenlerindeki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
+              "path": "edit.pattern.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: tarama yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [],
+              "pattern": {
+                "name": "ANSI31"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Tarama yok. En az bir taramanın kalıcı kimliğini verin.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçekli ve çizimde birlikte olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "basis": "world",
+                "annotative": true
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_annotative",
+              "message": "Ölçekli taramanın deseni kâğıttaki ölçüsüyle çizilir; çizimdeki ölçekle (basis: world) ölçekli olmaz.",
+              "path": "edit.pattern.annotative"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ölçek sıfır olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "ANSI31",
+                "scale": 0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_scale",
+              "message": "Desenin ölçeği sıfırdan büyük, en çok 10 000 olan sonlu bir sayı olmalı.",
+              "path": "edit.pattern.scale"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: ikinci renk renk değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "Degrade küre",
+                "secondColor": "mor-ötesi"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_color",
+              "message": "“mor-ötesi” bir renk değil: #RRGGBB ya da bir renk adı (Beyaz, Siyah, Kırmızı …) verin.",
+              "path": "edit.pattern.secondColor"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desen: çok sık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "pattern",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "pattern": {
+                "name": "Çizgili",
+                "scale": 0.0001
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "pattern_too_dense",
+              "message": "Desen bir tarama için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.",
+              "path": "edit.pattern"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: başvuru dolu tarama",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "reference": "$uidOf:4"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_hatch",
+              "message": "Başvuru taramasının çizgisi yok (dolu ya da degrade); çizgili ya da desenli bir tarama verin.",
+              "path": "edit.reference"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: başvuru tarama değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:14"
+              ],
+              "reference": "$uidOf:1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_hatch",
+              "message": "Verilen nesne bir tarama değil; bu komut yalnız taramaları değiştirir.",
+              "path": "edit.reference"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: kilitli katmandaki tarama değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:7"
+              ],
+              "reference": "$uidOf:15"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki tarama değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2499,7 +4839,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2545,7 +4888,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2588,7 +4934,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2633,7 +4982,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2677,7 +5029,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2723,7 +5078,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2756,10 +5114,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2771,7 +5129,7 @@
           "input": {
             "edit": {
               "kind": "removeIslands",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "uids": [
                 "$uidOf:5"
               ]
@@ -2811,10 +5169,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -2826,7 +5184,7 @@
           "input": {
             "edit": {
               "kind": "removeIslands",
-              "uid": "$uidOf:14",
+              "uid": "$uidOf:17",
               "holes": [
                 0
               ]
@@ -2879,7 +5237,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2925,7 +5286,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2968,7 +5332,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3017,7 +5384,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3073,7 +5443,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3123,7 +5496,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3176,7 +5552,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3227,7 +5606,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3279,7 +5661,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3323,7 +5708,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3367,7 +5755,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3410,7 +5801,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3456,7 +5850,10 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15,
+              16
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3493,10 +5890,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:14"
+                "$uidOf:17"
               ],
               "ids": [
-                14
+                17
               ],
               "revision": "$current"
             },
@@ -3509,7 +5906,7 @@
             "edit": {
               "kind": "untie",
               "uids": [
-                "$uidOf:14"
+                "$uidOf:17"
               ]
             },
             "expectedRevision": "$old"

@@ -229,6 +229,9 @@ SCHEMA_WITH_TABLE_CELLS = 68
 SCHEMA_WITH_HATCH_BOUNDARIES = 69
 # Schema 70: schema 69 and a face's tie's `gap` (docs/adr/0329 §3).
 SCHEMA_WITH_HATCH_GAPS = 70
+# Schema 71: schema 70, the settings' `hatchPatterns` (a project's own patterns), a pattern's `origin` and a hatch's
+# `annotative` (docs/adr/0331).
+SCHEMA_WITH_HATCH_EXTRAS = 71
 MAX_HATCH_GAP = 1000.0
 MAX_BOUNDARY_LOOPS = 100_000
 MAX_LOOP_EDGES = 1_000_000
@@ -433,7 +436,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1949,6 +1952,7 @@ class _Schema:
         self.table_cells = version >= SCHEMA_WITH_TABLE_CELLS
         self.hatch_boundaries = version >= SCHEMA_WITH_HATCH_BOUNDARIES
         self.hatch_gaps = version >= SCHEMA_WITH_HATCH_GAPS
+        self.hatch_extras = version >= SCHEMA_WITH_HATCH_EXTRAS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2273,6 +2277,7 @@ class _Schema:
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
+                **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3253,6 +3258,38 @@ class _Schema:
             self.fail("bad_value", "çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı; 1 yazılmaz")
         return v
 
+    def hatch_patterns_(self, v):
+        """The project's own hatch patterns (schema 71, docs/adr/0331 §1): a name trimmed, not empty, without a comma, at
+        most 64 letters, once (case aside); 1 to 64 families, each at most 16 dashes not all 0, its numbers finite and
+        at most 10⁶ in size, its lines' distance not 0; the unit mm, inch or drawing; an empty list is not written."""
+        family = self.fields({"angle": (self.float, True), "origin": (self.pair, True), "offset": (self.pair, True),
+                              "dashes": (self.array(self.float), False)})
+        read = self.fields({"name": (self.text, True), "description": (self.text, False), "unit": (self.enum(("mm", "inch", "drawing")), True),
+                            "lines": (self.array(family), True), "source": (self.text, False)})
+        all_ = self.array(read)(v)
+        if not all_:
+            self.fail("bad_value", "boş liste yazılmaz; tarama deseni yoksa alan hiç yazılmaz")
+        seen = set()
+        fits = lambda x: math.isfinite(x) and abs(x) <= MAX_PATTERN_SIZE  # noqa: E731
+        for d in all_:
+            name = d["name"]
+            if not name or name != name.strip() or "," in name or len(name) > MAX_PATTERN_NAME:
+                self.fail("bad_value", f"“{name}” bir tarama deseni adı olamaz")
+            if name.lower() in seen:
+                self.fail("bad_value", f"“{name}” tarama deseni iki kez var")
+            seen.add(name.lower())
+            if "description" in d and not d["description"]:
+                self.fail("bad_value", "boş açıklama yazılmaz")
+            if not 1 <= len(d["lines"]) <= MAX_PATTERN_LINES:
+                self.fail("bad_value", f"“{name}” tarama deseninin ailesi en az 1, en çok {MAX_PATTERN_LINES} olur")
+            for l in d["lines"]:
+                dashes = l.get("dashes", [])
+                if len(dashes) > MAX_PATTERN_DASHES or not all(fits(x) for x in [l["angle"], *l["origin"], *l["offset"], *dashes]):
+                    self.fail("bad_value", f"“{name}” tarama deseninin bir ailesi geçersiz")
+                if l["offset"][1] == 0.0 or (dashes and all(x == 0.0 for x in dashes)):
+                    self.fail("bad_value", f"“{name}” tarama deseninin bir ailesi çizmiyor")
+        return all_
+
     def line_types_(self, v):
         """The project's line types (schema 56, docs/adr/0313 §1): a name trimmed, not empty, once (case aside); at most
         12 elements, a text or a shape of length 0, the first that draws not a gap; the unit paper or drawing; an empty
@@ -3457,6 +3494,10 @@ class _Schema:
             if kind == "text" and "annotative" in fields and ("path" in fields or "labelOf" in fields):
                 self.path.append("annotative")
                 self.fail("bad_value", "eğri boyunca ve nesneye bağlı yazı ölçekli olamaz")
+            # A solid or gradient hatch has no pattern to scale (docs/adr/0331 §3).
+            if kind == "hatch" and "annotative" in fields and fields["pattern"]["type"] in ("solid", "gradient"):
+                self.path.append("annotative")
+                self.fail("bad_value", "dolu ve degrade tarama ölçekli olamaz")
             if kind == "text" and "path" in fields:
                 self.path.append("path")
                 self.text_path_rules(fields)
@@ -3871,7 +3912,7 @@ class _Schema:
 
     def annotative_of(self, kind):
         """An annotation's scales (docs/adr/0323): its own scale, the others ascending, each with what its kind sets apart."""
-        values = ("offset", "textShift") if kind == "dimension" else ("point", "rotation")
+        values = {"dimension": ("offset", "textShift"), "hatch": ()}.get(kind, ("point", "rotation"))
 
         def scale(v):
             x = self.float(v)
@@ -4575,8 +4616,16 @@ class _Schema:
                     "gradient": (self.hatch_gradient, False),
                 }
             )
+        if self.hatch_extras:
+            # Schema 71 (docs/adr/0331 §2): where its lines are anchored; only lines' and a pattern's.
+            table["origin"] = (self.point, False)
         p = self.fields(table)(v)
         self.pattern_rules(p)
+        if "origin" in p:
+            if p["type"] in ("solid", "gradient"):
+                self.fail("bad_value", "dolu ve degrade taramanın başlangıç noktası olmaz")
+            if not all(math.isfinite(p["origin"][k]) for k in ("x", "y")):
+                self.fail("bad_value", "desenin başlangıç noktası sonlu olmalı")
         return p
 
     def pair(self, v):
@@ -5324,6 +5373,8 @@ ENTITY_KINDS = {
         **({"assoc": (s.hatch_assoc, False)} if s.hatches and s.inside is None else {}),
         # Schema 69 (docs/adr/0328 §1): its exact boundary.
         **({"boundary": (s.hatch_boundary, False)} if s.hatch_boundaries else {}),
+        # Schema 71 (docs/adr/0331 §3): its scales; a pattern with lines only.
+        **({"annotative": (s.annotative_of("hatch"), False)} if s.hatch_extras else {}),
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
@@ -5526,8 +5577,6 @@ def main(argv):
     return status
 
 
-if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
 
 
 # Dynamic blocks (docs/adr/0318): the definition's rules and a value's, written from the ADR.
@@ -5696,3 +5745,7 @@ def values_problem(d, values):
         if value_problem(p, v):
             return f"“{name}” uymuyor"
     return None
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

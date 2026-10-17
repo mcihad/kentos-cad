@@ -286,6 +286,71 @@ pub struct HatchPatternSpec {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub inverted: Option<bool>,
+    /// What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in
+    /// the drawing; absent: paper.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<ScaleBasis>,
+    /// Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub origin: Option<HatchOrigin>,
+    /// Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<bool>,
+}
+
+/// What a pattern's Ölçek is of (docs/adr/0331 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ScaleBasis {
+    /// Kâğıtta: the definition's units on paper, at the project's plot scale.
+    #[default]
+    Paper,
+    /// Çizimde: the definition's units in the drawing (a millimetre pattern's millimetre a millimetre of the world).
+    World,
+}
+
+/// A region's corner, or its middle (docs/adr/0331 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BoxCorner {
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight,
+    Center,
+}
+
+/// Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchOrigin {
+    /// The world's origin: neighbouring hatches line up.
+    World,
+    /// A point.
+    Point {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+    },
+    /// A corner of each region's box; with `across`, of the box of every region the command hatches, so that they
+    /// line up with each other (Nesneler boyunca hizala).
+    Corner {
+        corner: BoxCorner,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        across: bool,
+    },
 }
 
 /// Input of `cad.entities.hatch` v1: the regions of `region` hatched with

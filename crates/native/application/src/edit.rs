@@ -804,6 +804,7 @@ pub(crate) fn check_geometry(
             pattern,
             assoc,
             boundary,
+            ..
         } => {
             // Its pattern's own fields within their bounds, its tie's too (docs/adr/0186 §1, §6); a
             // number that is not finite is said as such below (`not_finite`).
@@ -1661,6 +1662,7 @@ fn finite(g: &EntityGeometry) -> bool {
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
                 && pattern.scale.is_none_or(f64::is_finite)
+                && pattern.origin.is_none_or(|o| o.x.is_finite() && o.y.is_finite())
                 && pattern.lines.iter().flatten().all(|l| {
                     [l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]]
                         .iter()

@@ -148,6 +148,7 @@ pub mod layers_states;
 pub mod layers_time;
 pub mod layers_translate;
 pub mod line;
+pub mod hatch_patterns_edit;
 pub mod line_types_edit;
 pub mod match_props;
 pub mod network_define;
@@ -531,6 +532,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LINE_TYPES_EDIT,
         kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
+    ),
+    // The project's own hatch patterns ([`hatch_patterns_edit`], docs/adr/0331 §1).
+    (
+        kentos_contracts::CAD_HATCH_PATTERNS_EDIT,
+        kentos_contracts::CAD_HATCH_PATTERNS_EDIT_VERSION,
     ),
     // Blocks from a drawing file ([`file_import_block`], docs/adr/0316 §3).
     (

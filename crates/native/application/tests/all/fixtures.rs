@@ -16,7 +16,7 @@ use kentos_domain::contracts::{
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     AnnotationsScales, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersService,
-    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
+    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit, HatchPatternsEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
@@ -53,7 +53,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
-    file_import_block, library_edit, line_types_edit, styles_impact,
+    file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
 use serde_json::{Value, json};
 
@@ -1134,6 +1134,13 @@ impl Input for EntitiesHatch {
             "pattern.scale" => return self.pattern.scale.as_mut(),
             "pattern.angle" => return self.pattern.angle.as_mut(),
             "lineWeight" => return self.look.line_weight.as_mut(),
+            // docs/adr/0331 §2.
+            "pattern.origin.at.x" | "pattern.origin.at.y" => {
+                let Some(kentos_contracts::HatchOrigin::Point { at }) = &mut self.pattern.origin else {
+                    return None;
+                };
+                return Some(if path.ends_with('x') { &mut at.x } else { &mut at.y });
+            }
             _ => {}
         }
         let HatchRegion::Point {
@@ -1330,6 +1337,12 @@ impl Input for LineTypesEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         (path == "scale").then_some(())?;
         self.scale.as_mut()
+    }
+}
+
+impl Input for HatchPatternsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -2235,6 +2248,7 @@ fn run_op(
         kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_domain::contracts::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
+        kentos_domain::contracts::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
         kentos_domain::contracts::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
         kentos_domain::contracts::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),

@@ -4,6 +4,7 @@ import type { HatchEdit } from "./HatchEdit";
 /**
  * Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,
  * `layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,
- * `not_finite`, `invalid_gap`; `invalid_revision`, `revision_conflict`.
+ * `not_finite`, `invalid_gap`, `unknown_pattern`, `invalid_scale`, `not_annotative`, `pattern_too_dense`;
+ * `invalid_revision`, `revision_conflict`.
  */
 export type HatchesEdit = { edit: HatchEdit, expectedRevision?: string, };

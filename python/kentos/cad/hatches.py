@@ -35,8 +35,13 @@ class _HatchesEdit(LocalCommand[HatchesEdit, HatchesEdited, HatchesPlan]):
     taramanın bölgesinden alanları çıkarılır. removeIslands (Ada çıkar) ilişkili
     taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin
     sırasıyla (holes, 0 ilki) kaldırır. untie (İlişkiyi kopar) taramalar bir şeyi
-    izlemez. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim
-    o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    izlemez. pattern (Deseni değiştir) taramaların desenini cad.entities.hatch'in
+    pattern'iyle değiştirir (bölge, bağ ve görünüş kalır; origin köşesi her taramanın
+    kutusunun, across ile hepsininkinin; origin verilmezse her biri kendininkini korur;
+    annotative verilmezse ölçekleri kalır). align (Hizala) taramaların çizgilerini
+    reference'ınkileri sürdürecek biçimde başlangıcını, aynı desendeyseler açısını ve
+    ölçeğini de alır. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse
+    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.hatches.edit"
@@ -69,9 +74,14 @@ class _HatchesEdit(LocalCommand[HatchesEdit, HatchesEdited, HatchesPlan]):
         onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın
         bölgesinden alanları çıkarılır. removeIslands (Ada çıkar) ilişkili taramanın
         adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla
-        (holes, 0 ilki) kaldırır. untie (İlişkiyi kopar) taramalar bir şeyi izlemez. Kilitli
-        katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        (holes, 0 ilki) kaldırır. untie (İlişkiyi kopar) taramalar bir şeyi izlemez. pattern
+        (Deseni değiştir) taramaların desenini cad.entities.hatch'in pattern'iyle değiştirir
+        (bölge, bağ ve görünüş kalır; origin köşesi her taramanın kutusunun, across ile
+        hepsininkinin; origin verilmezse her biri kendininkini korur; annotative verilmezse
+        ölçekleri kalır). align (Hizala) taramaların çizgilerini reference'ınkileri
+        sürdürecek biçimde başlangıcını, aynı desendeyseler açısını ve ölçeğini de alır.
+        Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

@@ -46,6 +46,7 @@ fn hatch(ring: Vec<Vec2>, boundary: Option<Vec<HatchLoop>>, assoc: Option<HatchA
         pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
         assoc,
         boundary,
+        annotative: None,
     })
 }
 

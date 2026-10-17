@@ -93,6 +93,7 @@ impl Donut {
             // A solid fill with the inner circle left out: AutoCAD's wide polyline.
             pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
             assoc: None,
+            annotative: None,
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx)
             && let Some(&id) = out.ids.first()

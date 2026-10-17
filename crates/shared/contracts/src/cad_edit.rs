@@ -539,6 +539,10 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         boundary: Option<Vec<crate::HatchLoop>>,
+        /// Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A block placed (docs/adr/0144): the definition's base point goes to
     /// `p`, its objects are mirrored in the definition's x axis when

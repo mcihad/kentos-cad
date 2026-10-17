@@ -1559,6 +1559,227 @@
    ]
   },
   {
+   "note": "çizgili, başlangıç noktasıyla",
+   "pattern": {
+    "type": "lines",
+    "angle": 30.0,
+    "spacing": 1.5,
+    "origin": {
+     "x": 487003.25,
+     "y": 4420001.5
+    }
+   },
+   "expect": [
+    {
+     "angle": 30.0,
+     "spacing": 1.5,
+     "offset": 3584331.9587653247,
+     "stagger": 0.0,
+     "dashOffset": 0.0
+    }
+   ]
+  },
+  {
+   "note": "çapraz, başlangıç noktasıyla",
+   "pattern": {
+    "type": "cross",
+    "angle": 0.0,
+    "spacing": 2.0,
+    "origin": {
+     "x": 0.5,
+     "y": -0.75
+    }
+   },
+   "expect": [
+    {
+     "angle": 0.0,
+     "spacing": 2.0,
+     "offset": -0.75,
+     "stagger": 0.0,
+     "dashOffset": 0.0
+    },
+    {
+     "angle": 90.0,
+     "spacing": 2.0,
+     "offset": -0.5,
+     "stagger": 0.0,
+     "dashOffset": 0.0
+    }
+   ]
+  },
+  {
+   "note": "ANSI31, başlangıç noktasıyla",
+   "pattern": {
+    "type": "pattern",
+    "angle": 0.0,
+    "spacing": 1.0,
+    "name": "ANSI31",
+    "scale": 0.5,
+    "lines": [
+     {
+      "angle": 45.0,
+      "origin": [
+       0.0,
+       0.0
+      ],
+      "offset": [
+       0.0,
+       3.175
+      ]
+     }
+    ],
+    "origin": {
+     "x": 487001.0,
+     "y": 4420002.0
+    }
+   },
+   "expect": [
+    {
+     "angle": 45.0,
+     "spacing": 1.5875,
+     "offset": 2781051.6775134727,
+     "stagger": 0.0,
+     "dashOffset": 0.0
+    }
+   ]
+  },
+  {
+   "note": "ANSI36, dönük ve başlangıçlı: kesiklerin evresi de kayar",
+   "pattern": {
+    "type": "pattern",
+    "angle": 20.0,
+    "spacing": 1.0,
+    "name": "ANSI36",
+    "scale": 1.0,
+    "lines": [
+     {
+      "angle": 45.0,
+      "origin": [
+       0.0,
+       0.0
+      ],
+      "offset": [
+       5.5562499999999995,
+       3.175
+      ],
+      "dashes": [
+       7.9375,
+       -1.5875,
+       0.0,
+       -1.5875
+      ]
+     }
+    ],
+    "origin": {
+     "x": 3.5,
+     "y": 1.25
+    }
+   },
+   "expect": [
+    {
+     "angle": 65.0,
+     "spacing": 3.175,
+     "offset": -2.6438044274524004,
+     "stagger": 5.5562499999999995,
+     "dash": [
+      7.9375,
+      1.5875,
+      0.0,
+      1.5875
+     ],
+     "dashOffset": -2.6120486498882602
+    }
+   ]
+  },
+  {
+   "note": "tuğla, başlangıç noktasıyla",
+   "pattern": {
+    "type": "pattern",
+    "angle": 0.0,
+    "spacing": 1.0,
+    "name": "BRICK",
+    "scale": 0.25,
+    "lines": [
+     {
+      "angle": 0.0,
+      "origin": [
+       0.0,
+       0.0
+      ],
+      "offset": [
+       0.0,
+       6.35
+      ]
+     },
+     {
+      "angle": 90.0,
+      "origin": [
+       0.0,
+       0.0
+      ],
+      "offset": [
+       6.35,
+       6.35
+      ],
+      "dashes": [
+       6.35,
+       -6.35
+      ]
+     },
+     {
+      "angle": 90.0,
+      "origin": [
+       6.35,
+       0.0
+      ],
+      "offset": [
+       6.35,
+       6.35
+      ],
+      "dashes": [
+       -6.35,
+       6.35
+      ]
+     }
+    ],
+    "origin": {
+     "x": -2.0,
+     "y": 7.5
+    }
+   },
+   "expect": [
+    {
+     "angle": 0.0,
+     "spacing": 1.5875,
+     "offset": 7.5,
+     "stagger": 0.0,
+     "dashOffset": 0.0
+    },
+    {
+     "angle": 90.0,
+     "spacing": 1.5875,
+     "offset": 2.0000000000000004,
+     "stagger": 1.5875,
+     "dash": [
+      1.5875,
+      1.5875
+     ],
+     "dashOffset": -7.5
+    },
+    {
+     "angle": 90.0,
+     "spacing": 1.5875,
+     "offset": 0.41250000000000053,
+     "stagger": 1.5875,
+     "dash": [
+      1.5875,
+      1.5875
+     ],
+     "dashOffset": -9.0875
+    }
+   ]
+  },
+  {
    "note": "aralıksız aile ve hep boşluk aile çizilmez; eksi aralık",
    "pattern": {
     "type": "pattern",

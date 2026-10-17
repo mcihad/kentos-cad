@@ -34,7 +34,7 @@ type Shot = (&'static str, fn(&mut App), Option<Pointing>);
 /// small split button's arrow). A caption that is also the ribbon's (the layer
 /// box says “Parsel”) is looked for in the docked panels first: the right of
 /// the window, under the ribbon.
-fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
+pub(crate) fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
     let docked = find_texts(snapshot, app, caption)
         .into_iter()
         .find(|at| at.x > 900.0 && at.y > 150.0);
@@ -119,6 +119,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::dimension_scenes::pointed());
     all.extend(crate::topology_scenes::pointed());
     all.extend(crate::hatch_scenes::pointed());
+    all.extend(crate::hatch_pattern_scenes::pointed());
     all.extend(crate::selection_scenes::pointed());
     all.extend(crate::point_calc_scenes::pointed());
     all.extend(crate::raster_scenes::pointed());
@@ -449,6 +450,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::coordinate_scenes::scenes());
     all.extend(crate::hatch_scenes::scenes());
     all.extend(crate::hatch_boundary_scenes::scenes());
+    all.extend(crate::hatch_pattern_scenes::scenes());
     all.extend(crate::selection_scenes::scenes());
     all.extend(crate::point_calc_scenes::scenes());
     all.extend(crate::stationing_scenes::scenes());

@@ -465,6 +465,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 holes: rng.chance(50).then(|| vec![points(rng, 3)]),
                 pattern: HatchPattern::user(HatchPatternType::Cross, rng.float(), rng.float()),
                 assoc: None,
+                annotative: None,
             }),
         });
     }
@@ -506,6 +507,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             networks: Vec::new(),
             variables: Vec::new(),
             address_locators: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

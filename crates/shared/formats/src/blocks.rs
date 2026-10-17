@@ -1030,6 +1030,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             pattern: contract_pattern(pattern),
             assoc: None,
             boundary: boundary.as_deref().and_then(contract_boundary),
+            annotative: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
         Shape::Insert { .. }

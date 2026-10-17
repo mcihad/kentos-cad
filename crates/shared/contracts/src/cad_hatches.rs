@@ -81,6 +81,22 @@ pub enum HatchEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         holes: Vec<u32>,
     },
+    /// Desen: the hatches' pattern as Tarama makes it (`pattern`: its name, Ölçek, Açı, basis, origin and Ölçekli;
+    /// docs/adr/0331); their regions, ties and looks kept. A corner origin is each hatch's own box's, with `across`
+    /// the box of them all; Ölçekli absent keeps each one's scales.
+    Pattern {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        pattern: crate::HatchPatternSpec,
+    },
+    /// Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
+    /// each takes its origin, and the angle and scale too where its pattern is the reference's.
+    Align {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        reference: String,
+    },
     /// İlişkiyi kopar: the hatches follow nothing; they stay as they are.
     Untie {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -90,7 +106,8 @@ pub enum HatchEdit {
 
 /// Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,
 /// `layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,
-/// `not_finite`, `invalid_gap`; `invalid_revision`, `revision_conflict`.
+/// `not_finite`, `invalid_gap`, `unknown_pattern`, `invalid_scale`, `not_annotative`, `pattern_too_dense`;
+/// `invalid_revision`, `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

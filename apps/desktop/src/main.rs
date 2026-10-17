@@ -120,6 +120,8 @@ mod grids;
 mod hatch_scenes;
 #[cfg(test)]
 mod hatch_boundary_scenes;
+#[cfg(test)]
+mod hatch_pattern_scenes;
 mod history;
 #[cfg(test)]
 mod history_scenes;
@@ -171,6 +173,7 @@ mod leader_scenes;
 mod lengthen_scenes;
 #[cfg(test)]
 mod line_type_scenes;
+mod hatch_patterns_window;
 mod line_types_window;
 mod locks;
 mod log_plan;

@@ -16,7 +16,7 @@ use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
 
-const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
+const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Özellik al (Z) / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
 
 fn bench() -> Bench {
     let mut b = Bench::on(HATCH);
@@ -130,7 +130,7 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(b.type_text("B"));
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
     b.click(8.0, -3.0);
     let (bx, holes, _, area) = newest(&b);
@@ -234,7 +234,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
         b.session
             .prompt()
             .text()
-            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Sınır (B):"),
+            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Özellik al (Z) / Sınır (B):"),
         "{}",
         b.session.prompt().text()
     );
@@ -252,7 +252,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
     b.start("hatch");
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
 }
 

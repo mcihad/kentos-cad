@@ -560,6 +560,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çoklu çizgi, bağlı; Yeniden seç; Ada ekle ve çıkar; İlişkiyi kopar), bağı değişen tarama yeniden kesilir
   (`Document::recut_hatch`); Taramayı düzenle aracı, Tarama'nın Boşluk (G) ve Adalar'ın iç içe değeri, Öznitelikler'de Sınır
   (ADR 0329);
+  tarama desenleri, başlangıç ve ölçekli tarama: projenin desenleri (`hatchPatterns`: ad, birim mm, inç ya da çizim, PAT aileleri;
+  kitaplığınkinden önce), PAT okuyucu ve yazıcı `kentos_formats::pat`, `cad.hatchpatterns.edit` (yükle, ekle, sil, dışa aktar;
+  ayar), Tarama desenleri penceresi; desenin `origin`'i (çizgiler ona bağlanır, dönüşümler taşır), desen spec'inin `origin`'i
+  (dünya, nokta, köşe, ortak kutu), `basis` (kâğıtta ya da çizimde) ve `annotative`'i; ölçekli tarama (`HatchEntity.annotative`,
+  çizim ölçeğiyle taşınır); `cad.hatches.edit`'in Deseni değiştir ve Taramaları hizala'sı; Tarama'nın Ölçek tabanı (E),
+  Başlangıç (S), Ölçekli (L), Özellik al (Z), Taramayı düzenle'nin Hizala (H)'sı; `.kcad` şema 71, `FORMATS_VERSION` 80
+  (ADR 0331);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1116,6 +1123,7 @@ python3 scripts/fixtures/paragraph_cases.py --check; python3 scripts/fixtures/fo
 cargo test -p kentos-desktop text_outputs; KENTOS_SHOTS_ONLY=yazi-duzeni,yazi-liste,yazi-tipleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # aynı yazılar .kcad, DXF ve paftanın PDF'iyle (pdftotext), resimler .run/shots/arac-yazi-* (ADR 0324)
 KENTOS_SHOTS_ONLY=tarama-yuz-bagi,tarama-kesin-sinir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-domain --test all hatch_boundaries; cargo test -p kentos-formats --test dxf_write a_hatch_boundary   # taramanın kaynak sınırı (yay, elips, NURBS kesin; DXF HATCH kenarlarıyla) ve çizgilerle kapanan yüzün bağı, .run/shots/arac-tarama-yuz-bagi-*, -kesin-sinir-* (ADR 0328)
 python3 scripts/fixtures/hatch_edit_cases.py --check; KENTOS_SHOTS_ONLY=tarama-ic-ice,tarama-bosluk,tarama-duzenle cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # cad.hatches.edit'in 40 durumu KentOS kodu olmadan; iç içe adalar, boşluğu kapanan oda ve Taramayı düzenle'nin resimleri, .run/shots/arac-tarama-* (ADR 0329)
+python3 scripts/fixtures/hatch_pattern_file_cases.py --check; KENTOS_SHOTS_ONLY=tarama-desenleri,tarama-hizala,tarama-baslangic,tarama-olcekli,tarama-desen-proje cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # PAT okuma ve yazma, cad.hatchpatterns.edit'in 30 durumu KentOS kodu olmadan; Tarama desenleri, Hizala, Başlangıç, ölçekli tarama ve Desen menüsünün proje desenleri, .run/shots/arac-tarama-* (ADR 0331)
 KENTOS_SHOTS_ONLY=olcu-bag,olcu-yakin,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # bağ vurgusu (yakında kâğıt zeminde de), izleyen ölçüler ve zincir, .run/shots/arac-olcu-bag-*, -yakin-*, -izleme-*, -zincir-* (ADR 0320)
 cargo test --release -p kentos-desktop label_picture::tests::timing -- --ignored --nocapture   # 1 300 eğik yazının resmi, haleyle ve halesiz (ADR 0055'in 17 Ekim eki)
 KENTOS_SHOTS_ONLY=blok-dinamik,blok-kitaplik,blok-kitaplik-kategori cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-geometry-core --test all block_dynamic   # KentOS blok kitaplığı ve dinamik blokların değerleri (.run/shots/arac-blok-*), varyantlar çekirdekte (ADR 0318)

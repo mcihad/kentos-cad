@@ -640,6 +640,21 @@
       "status": "implemented"
     },
     {
+      "id": "hatchPatterns.manage",
+      "title": "Tarama desenleri",
+      "short": "Desenler",
+      "icon": "hatchPatterns",
+      "description": "Projenin kendi tarama desenleri: PAT dosyasından yükle (birimi mm, inç ya da çizim birimi), dışa aktar, sil; desenlerin örneği. cad.hatchpatterns.edit ile; Tarama'nın Desen menüsünde kitaplığın desenlerinden sonra gelir.",
+      "aliases": [
+        "HATCHPATTERNS",
+        "TARAMADESENLERI",
+        "PAT"
+      ],
+      "shortcuts": [],
+      "category": "Yönet",
+      "status": "implemented"
+    },
+    {
       "id": "block.export",
       "title": "Blokları dışa aktar",
       "short": "Dışa aktar",
@@ -1222,6 +1237,8 @@
     "tableBold": "<path d=\"M6 3.5h5a3 3 0 0 1 0 6H6Z\"/><path d=\"M6 9.5h6a3.5 3.5 0 0 1 0 7H6Z\"/>",
     "tableClearStyle": "<path d=\"M7.5 16.5 4 13l8.5-8.5L16 8l-8.5 8.5h9\"/><path d=\"M8.5 9 12 12.5\"/>",
     "tableUnfield": "<path d=\"M7 3.5c-2 0-2 1.2-2 3.2S4 9.8 3 10c1 .2 2 1 2 3.1s0 3.4 2 3.4\"/><path d=\"M13 3.5c2 0 2 1.2 2 3.2s1 3.1 2 3.3c-1 .2-2 1-2 3.1s0 3.4-2 3.4\"/><path d=\"M4 16.5 16 3.5\"/>",
+    "hatchPatterns": "<rect x=\"5.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M3.5 6.5v10a1 1 0 0 0 1 1h10\"/><path d=\"M6 8l5.5-5.5M6 13l10.5-10.5M11 13l5.5-5.5\" stroke-width=\"1\"/>",
+    "hatchAlign": "<rect x=\"2.5\" y=\"4.5\" width=\"7\" height=\"11\" rx=\"1\"/><rect x=\"10.5\" y=\"4.5\" width=\"7\" height=\"11\" rx=\"1\"/><path d=\"M2.5 11l7-6.5M2.5 15.5l7-6.5M10.5 11l7-6.5M10.5 15.5l7-6.5\" stroke-width=\"1\"/><path d=\"M1.5 18.5h17\" stroke-dasharray=\"2 1.5\"/>",
     "hatchEdit": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8 8 2.5M3.5 13.5l10-10M8 13.5l5.5-5.5\" stroke-width=\"1\"/><path d=\"M11.2 18.2l.7-2.7 5-5a1.5 1.5 0 0 1 2.1 2.1l-5 5z\"/>",
     "hatchIslandAdd": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 6.5l4-4M9.5 13.5l4-4\" stroke-width=\"1\"/><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\"/><path d=\"M16 12.5v6M13 15.5h6\" stroke-width=\"1.4\"/>",
     "hatchIslandRemove": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 6.5l4-4M9.5 13.5l4-4M6 10l4-4\" stroke-width=\"1\"/><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\" stroke-dasharray=\"1.2 1\"/><path d=\"M13 15.5h6\" stroke-width=\"1.4\"/>",
@@ -1700,6 +1717,10 @@
           "size": "small"
         },
         {
+          "command": "hatchPatterns.manage",
+          "size": "small"
+        },
+        {
           "command": "layer.impact",
           "size": "small"
         }
@@ -1723,6 +1744,10 @@
         },
         {
           "command": "lineTypes.manage",
+          "size": "small"
+        },
+        {
+          "command": "hatchPatterns.manage",
           "size": "small"
         },
         {
@@ -2110,6 +2135,12 @@
       "label": "İlişkiyi kopar",
       "option": "K",
       "icon": "hatchUntie"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "Hizala",
+      "option": "H",
+      "icon": "hatchAlign"
     }
   ]
 }

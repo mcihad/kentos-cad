@@ -8,6 +8,7 @@ import type { DatumTransform } from "./DatumTransform";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { HatchPatternDef } from "./HatchPatternDef";
 import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
@@ -45,6 +46,10 @@ drawingFont?: DrawingFont,
  * The project's line types with patterns (docs/adr/0313 §1).
  */
 lineTypes?: Array<LineTypeDef>, 
+/**
+ * The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
+ */
+hatchPatterns?: Array<HatchPatternDef>, 
 /**
  * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.

@@ -2220,12 +2220,18 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
     yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı
     nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan
     not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31,
-    ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece),
-    secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için
-    çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri
-    çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı
-    halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit),
+    scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world:
+    desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), origin
+    (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin
+    kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili
+    ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta
+    aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). Bilinmeyen
+    ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa
+    not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara
+    araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan
+    cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.hatch"
@@ -2268,13 +2274,18 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region
         objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden
         taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili,
-        Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır),
-        angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern;
-        desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri
-        paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan
-        aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce,
+        cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle
+        çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve
+        inverted (degrade), origin (desenin başlangıcı: world dünya başlangıcı, point bir
+        nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün
+        bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim
+        ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da
+        dolu ve degradede not_annotative). Bilinmeyen ad unknown_pattern; desen bölge için
+        çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri
+        çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı
+        halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision
+        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

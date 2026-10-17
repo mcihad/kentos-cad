@@ -129,6 +129,7 @@ pub fn annotative_of(e: &Entity) -> Option<&Annotative> {
         Entity::Text(t) => t.annotative.as_deref(),
         Entity::Dimension(d) => d.annotative.as_deref(),
         Entity::Leader(l) => l.annotative.as_deref(),
+        Entity::Hatch(h) => h.annotative.as_deref(),
         _ => None,
     }
 }
@@ -139,6 +140,7 @@ pub fn annotative_field(e: &mut Entity) -> Option<&mut Option<Box<Annotative>>> 
         Entity::Text(t) => Some(&mut t.annotative),
         Entity::Dimension(d) => Some(&mut d.annotative),
         Entity::Leader(l) => Some(&mut l.annotative),
+        Entity::Hatch(h) => Some(&mut h.annotative),
         _ => None,
     }
 }
@@ -155,8 +157,16 @@ pub fn why_not_annotative(e: &Entity) -> Option<&'static str> {
         Entity::Text(t) if t.label_of.is_some() => {
             Some("Nesneye bağlı yazı ölçekli olamaz: kendi etiket ölçeğini izler; önce Bağı kopar.")
         }
-        Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_) => None,
-        _ => Some("Yalnız yazı, ölçü ve kılavuz ölçekli olur."),
+        Entity::Hatch(h)
+            if matches!(
+                h.pattern.kind,
+                crate::HatchPatternType::Solid | crate::HatchPatternType::Gradient
+            ) =>
+        {
+            Some("Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.")
+        }
+        Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_) | Entity::Hatch(_) => None,
+        _ => Some("Yalnız yazı, ölçü, kılavuz ve tarama ölçekli olur."),
     }
 }
 
@@ -295,6 +305,21 @@ fn represented(e: &Entity, at: f64, entry: &AnnotativeScale) -> Entity {
                 }),
             };
             Entity::Dimension(out)
+        }
+        // A hatch's pattern as large on paper at the scale as at its own: its lines' spacing and its families' scale
+        // times the ratio; its region and its origin stay (docs/adr/0331 §3).
+        Entity::Hatch(h) => {
+            let mut out = h.clone();
+            match out.pattern.kind {
+                crate::HatchPatternType::Lines | crate::HatchPatternType::Cross => {
+                    out.pattern.spacing = h.pattern.spacing * f;
+                }
+                crate::HatchPatternType::Pattern => {
+                    out.pattern.scale = h.pattern.scale.map(|s| s * f);
+                }
+                _ => {}
+            }
+            Entity::Hatch(out)
         }
         other => other.clone(),
     }

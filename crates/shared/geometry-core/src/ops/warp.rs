@@ -824,6 +824,12 @@ fn common<M: Map + ?Sized>(
                     pattern
                 }
             };
+            // Its own origin goes with it (docs/adr/0331 §2).
+            let mut pattern = pattern;
+            pattern.origin = match pattern.origin {
+                Some(o) => Some(m.at(o)?),
+                None => None,
+            };
             let map = |ps: &Vec<Vec2>| ps.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>();
             // The exact boundary under a linear warp (docs/adr/0328 §1); a projective one or a sheet bends it: the
             // drawn ring alone goes on.

@@ -107,9 +107,18 @@ ENTITIES = [
     {"kind": "ellipse", "id": 13, "layerId": "yapi", "attrs": {}, "c": P(*ELL_C), "major": {"x": 4, "y": 0}, "ratio": 0.5,
      "t0": 0, "t1": TAU},
 ]
+# docs/adr/0331: patterned hatches to change and line up; their patterns as cad.entities.hatch writes them at 1:500.
+ANSI_A = (100, 0, 110, 8)
+ANSI_B = (112, 0, 122, 8)
+LINED = (124, 0, 134, 8)
+ENTITIES += [
+    {**hatch(14, rect(*ANSI_A)), "pattern": R.pattern("ANSI31")},
+    {**hatch(15, rect(*ANSI_B)), "pattern": {**R.pattern("ANSI31", 2.0, 30.0), "origin": {"x": 101, "y": 1}}},
+    {**hatch(16, rect(*LINED)), "pattern": R.pattern("Çizgili"), "annotative": {"at": 500}},
+]
 IDS = [e["id"] for e in ENTITIES]
 BY_ID = {e["id"]: e for e in ENTITIES}
-NEXT = 14
+NEXT = 17
 SETUP = {
     "format": "kentos.document", "version": 1, "name": "Taramaları düzenle",
     "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 500},
@@ -276,6 +285,8 @@ def cases():
         {"op": "plan", "input": edit({"kind": "addIslands", "uid": UID(4), "uids": [UID(5)]}),
          "result": R.completed({"hatches": [hatch(4, outer_ring(ROOM), [hole_ring(ROOM_HOLE), hole_ring(COL)])], "revision": "$current"}),
          "expect": UNCHANGED}]))
+    # ── Desen ve Hizala (docs/adr/0331) ──
+    out += pattern_cases()
     # ── Retler ──
     out += [
         refused("Kimlik geçersiz", edit({"kind": "untie", "uids": [R.BAD]}), "invalid_uid", R.bad_uid(R.BAD), "edit.uids[0]"),
@@ -332,6 +343,82 @@ def cases():
          "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": R.CONFLICT, "path": "expectedRevision",
                                                      "revision": "$current"}}}]))
     return out
+
+
+def patterned(i, pat, **more):
+    """Hatch `i` with `pat` (and its scales `more`), the rest of it as it is."""
+    e = {k: v for k, v in BY_ID[i].items() if k not in ("pattern", "annotative")}
+    return {**e, "pattern": pat, **more}
+
+
+def origin(pat, x, y):
+    return {**pat, "origin": {"x": x, "y": y}}
+
+
+def pattern_cases():
+    ansi = R.pattern("ANSI31")
+    pat = lambda uids, spec: edit({"kind": "pattern", "uids": [UID(u) for u in uids], "pattern": spec})  # noqa: E731
+    align = lambda uids, ref: edit({"kind": "align", "uids": [UID(u) for u in uids], "reference": UID(ref)})  # noqa: E731
+    return [
+        case("Desen: dolu tarama ANSI31 olur, bölgesi kalır; adım “Deseni değiştir”",
+             written(pat([4], {"name": "ANSI31"}), done([UID(4)]), {"4": patterned(4, ansi)}, IDS, undo="Deseni değiştir")),
+        case("Desen: ölçek ve açı Tarama'nınki gibi",
+             written(pat([14], {"name": "ANSI31", "scale": 2, "angle": 15}), done([UID(14)]),
+                     {"14": patterned(14, R.pattern("ANSI31", 2.0, 15.0))}, IDS)),
+        case("Desen: başlangıç verilmezse her tarama kendininkini korur",
+             written(pat([15], {"name": "ANSI31"}), done([UID(15)]), {"15": patterned(15, origin(ansi, 101, 1))}, IDS)),
+        case("Desen: başlangıç sol alt, her taramanın kendi kutusunun",
+             written(pat([14, 15], {"name": "ANSI31", "origin": {"kind": "corner", "corner": "bottomLeft"}}), done([UID(14), UID(15)]),
+                     {"14": patterned(14, origin(ansi, 100, 0)), "15": patterned(15, origin(ansi, 112, 0))}, IDS)),
+        case("Desen: başlangıç sol alt, nesneler boyunca hizalı: ikisinin kutusunun",
+             written(pat([14, 15], {"name": "ANSI31", "origin": {"kind": "corner", "corner": "bottomLeft", "across": True}}),
+                     done([UID(14), UID(15)]), {"14": patterned(14, origin(ansi, 100, 0)), "15": patterned(15, origin(ansi, 100, 0))}, IDS)),
+        case("Desen: başlangıç dünya kendi başlangıcını kaldırır",
+             written(pat([15], {"name": "ANSI31", "origin": {"kind": "world"}}), done([UID(15)]), {"15": patterned(15, ansi)}, IDS)),
+        case("Desen: ölçekli yapılır, çizim ölçeğinde",
+             written(pat([14], {"name": "ANSI31", "annotative": True}), done([UID(14)]),
+                     {"14": patterned(14, ansi, annotative={"at": 500})}, IDS)),
+        case("Desen: ölçekli tarama çizgili kalırken ölçeklerini korur",
+             written(pat([16], {"name": "Çizgili", "angle": 10}), done([UID(16)]),
+                     {"16": patterned(16, R.pattern("Çizgili", 1.0, 10.0), annotative={"at": 500})}, IDS)),
+        case("Desen: dolu olunca ölçekleri ve başlangıcı düşer",
+             written(pat([15, 16], {"name": "Dolu"}), done([UID(15), UID(16)]),
+                     {"15": patterned(15, SOLID), "16": patterned(16, SOLID)}, IDS)),
+        case("Desen: ölçekli kapatılır",
+             written(pat([16], {"name": "Çizgili", "annotative": False}), done([UID(16)]),
+                     {"16": patterned(16, R.pattern("Çizgili"))}, IDS)),
+        case("Desen: aynı desen değişiklik değil, yazılmaz",
+             [{"op": "execute", "input": pat([14], {"name": "ANSI31"}), "result": done([]), "expect": {"ids": IDS, "entities": {"14": BY_ID[14]}}}]),
+        case("Hizala: aynı desen başlangıcı, açıyı ve ölçeği alır; adım “Taramaları hizala”",
+             written(align([14], 15), done([UID(14)]), {"14": patterned(14, origin(R.pattern("ANSI31", 2.0, 30.0), 101, 1))}, IDS,
+                     undo="Taramaları hizala")),
+        case("Hizala: başka desen yalnız başlangıcı alır",
+             written(align([16], 15), done([UID(16)]), {"16": patterned(16, origin(R.pattern("Çizgili"), 101, 1), annotative={"at": 500})}, IDS)),
+        case("Hizala: dolu tarama değişmez",
+             [{"op": "execute", "input": align([4], 15), "result": done([]), "expect": {"ids": IDS, "entities": {"4": BY_ID[4]}}}]),
+        case("Hizala: dünya başlangıçlı başvuru başlangıcı kaldırır",
+             written(align([15], 14), done([UID(15)]), {"15": patterned(15, ansi)}, IDS)),
+        case("Plan: desen değişmiş tarama; hiçbir şey yazılmaz",
+             [{"op": "plan", "input": pat([4], {"name": "ANSI31"}),
+               "result": R.completed({"hatches": [patterned(4, ansi)], "revision": "$current"}), "expect": UNCHANGED}]),
+        refused("Desen: bilinmeyen ad", pat([14], {"name": "Yok"}), "unknown_pattern",
+                "“Yok” adında desen yok. Desen kitaplığındaki ya da projenin desenlerindeki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
+                "edit.pattern.name"),
+        refused("Desen: tarama yok", pat([], {"name": "ANSI31"}), "no_entities", "Tarama yok. En az bir taramanın kalıcı kimliğini verin.", "edit.uids"),
+        refused("Desen: ölçekli ve çizimde birlikte olmaz", pat([14], {"name": "ANSI31", "basis": "world", "annotative": True}), "not_annotative",
+                "Ölçekli taramanın deseni kâğıttaki ölçüsüyle çizilir; çizimdeki ölçekle (basis: world) ölçekli olmaz.", "edit.pattern.annotative"),
+        refused("Desen: ölçek sıfır olamaz", pat([14], {"name": "ANSI31", "scale": 0}), "invalid_scale",
+                "Desenin ölçeği sıfırdan büyük, en çok 10 000 olan sonlu bir sayı olmalı.", "edit.pattern.scale"),
+        refused("Desen: ikinci renk renk değil", pat([14], {"name": "Degrade küre", "secondColor": "mor-ötesi"}), "invalid_color",
+                "“mor-ötesi” bir renk değil: #RRGGBB ya da bir renk adı (Beyaz, Siyah, Kırmızı …) verin.", "edit.pattern.secondColor"),
+        refused("Desen: çok sık", pat([14], {"name": "Çizgili", "scale": 0.0001}), "pattern_too_dense",
+                "Desen bir tarama için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.", "edit.pattern"),
+        refused("Hizala: başvuru dolu tarama", align([14], 4), "not_a_hatch",
+                "Başvuru taramasının çizgisi yok (dolu ya da degrade); çizgili ya da desenli bir tarama verin.", "edit.reference"),
+        refused("Hizala: başvuru tarama değil", align([14], 1), "not_a_hatch", NOT_A_HATCH, "edit.reference"),
+        refused("Hizala: kilitli katmandaki tarama değişmez", align([7], 15), "layer_locked",
+                "“Kilitli” katmanı kilitli; üzerindeki tarama değişmez. Kilidi Katmanlar panelinden açın.", "edit.uids[0]"),
+    ]
 
 
 def build():

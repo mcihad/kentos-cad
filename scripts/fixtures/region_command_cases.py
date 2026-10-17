@@ -273,8 +273,8 @@ def turn_of(a):
     return t + 360.0 if t < 0 else t
 
 
-def pattern(name, scale=1.0, angle=0.0, second="#FFFFFF", inverted=False):
-    metres = scale * PLOT_SCALE / 1000.0
+def pattern(name, scale=1.0, angle=0.0, second="#FFFFFF", inverted=False, plot=PLOT_SCALE):
+    metres = scale * plot / 1000.0
     if name == "Dolu":
         return {"type": "solid", "angle": 0, "spacing": 1}
     if name == "Çizgili":
@@ -468,10 +468,11 @@ def hatch_cases():
                      {**face_tie(GAP_ROOM, [], (X + 115, Y + 4)), "gap": 0.25})],
                    warnings=[warning("gaps_closed", "1 boşluk kapatıldı (toplam 0.125 m, en uzunu 0.125 m); taranan alan 80.00 m².", "region.gap")]),
     ]
+    out += pattern_extra_cases(p_in, n_in, inner_seed)
     one = {"region": at_point(*p_in), "pattern": DOLU, "layerId": "tarama"}
     out += [
         refused("Bilinmeyen desen", {**one, "pattern": {"name": "Yok"}}, "unknown_pattern",
-                "“Yok” adında desen yok. Desen kitaplığındaki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).", "pattern.name"),
+                "“Yok” adında desen yok. Desen kitaplığındaki ya da projenin desenlerindeki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).", "pattern.name"),
         refused("Ölçek sıfır olamaz", {**one, "pattern": {"name": "ANSI31", "scale": 0}}, "invalid_scale",
                 "Desenin ölçeği sıfırdan büyük, en çok 10 000 olan sonlu bir sayı olmalı.", "pattern.scale"),
         refused("Ölçek 10 000'i aşamaz", {**one, "pattern": {"name": "ANSI31", "scale": 20000}}, "invalid_scale",
@@ -517,6 +518,87 @@ def hatch_cases():
         {"op": "execute", "input": {**one, "expectedRevision": "$old"},
          "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}}}]})
     return out
+
+
+# ── Desenin başlangıcı, ölçek tabanı, ölçekli tarama ve projenin desenleri (docs/adr/0331) ─────────────────────────
+
+TUGLA_LINES = [{"angle": 0, "origin": [0, 0], "offset": [0, 6.35]},
+               {"angle": 90, "origin": [0, 0], "offset": [6.35, 6.35], "dashes": [6.35, -6.35]}]
+PARKE_LINES = [{"angle": 0, "origin": [0, 0], "offset": [0.2, 0.1], "dashes": [0.3, -0.1]}]
+INCH_LINES = [{"angle": 45, "origin": [0, 0], "offset": [0, 0.125]}]
+PROJECT_PATTERNS = [
+    {"name": "TUGLA", "description": "Tuğla", "unit": "mm", "lines": TUGLA_LINES},
+    {"name": "PARKE", "unit": "drawing", "lines": PARKE_LINES},
+    # A project pattern of a library pattern's name is found first.
+    {"name": "ANSI31", "unit": "inch", "lines": INCH_LINES, "source": "acad.pat"},
+]
+WITH_PATTERNS = {**SETUP, "settings": {**SETUP["settings"], "hatchPatterns": PROJECT_PATTERNS}}
+
+
+def own_pattern(name, lines, metres, angle=0.0):
+    return {"type": "pattern", "angle": turn_of(angle), "spacing": 1, "name": name, "scale": metres, "lines": lines}
+
+
+def with_origin(pat, x, y):
+    return {**pat, "origin": {"x": plain(x), "y": plain(y)}}
+
+
+def on_setup(case, setup):
+    return {**case, "setup": setup}
+
+
+def annotative(case, at):
+    """The case's hatches written annotative at 1:`at`."""
+    for step in case["steps"]:
+        for e in step.get("expect", {}).get("entities", {}).values():
+            e["annotative"] = {"at": at}
+        for e in step.get("result", {}).get("output", {}).get("entities", []):
+            e["annotative"] = {"at": at}
+    return case
+
+
+def pattern_extra_cases(p_in, n_in, inner_seed):
+    ansi = pattern("ANSI31")
+    lone = at_point(*p_in, associative=False)
+    nest = at_point(*n_in, associative=False, alsoAt=[P(X + 140, Y + 10)])
+    return [
+        hatch_case("Başlangıç noktası: desenin aileleri o noktadan geçer", lone, {"name": "ANSI31", "origin": {"kind": "point", "at": P(X + 41, Y + 3)}},
+                   [(PARCEL, [BUILDING], with_origin(ansi, X + 41, Y + 3), None)]),
+        hatch_case("Başlangıç sol alt köşe: bölgenin kutusunun", lone, {"name": "ANSI31", "origin": {"kind": "corner", "corner": "bottomLeft"}},
+                   [(PARCEL, [BUILDING], with_origin(ansi, X + 40, Y), None)]),
+        hatch_case("Başlangıç orta: kutunun ortası", lone, {"name": "Çizgili", "origin": {"kind": "corner", "corner": "center"}},
+                   [(PARCEL, [BUILDING], with_origin(pattern("Çizgili"), X + 50, Y + 10), None)]),
+        hatch_case("Başlangıç dünya: alan yazılmaz", lone, {"name": "ANSI31", "origin": {"kind": "world"}}, [(PARCEL, [BUILDING], ansi, None)]),
+        hatch_case("Başlangıç sağ üst, her bölge kendi kutusunun", nest, {"name": "ANSI31", "origin": {"kind": "corner", "corner": "topRight"}},
+                   [(NEST_OUTER, [NEST_MID], with_origin(ansi, X + 150, Y + 20), None),
+                    (NEST_IN, [], with_origin(ansi, X + 142, Y + 12), None)]),
+        hatch_case("Başlangıç sağ üst, nesneler boyunca hizalı: bütün bölgelerin kutusunun", nest,
+                   {"name": "ANSI31", "origin": {"kind": "corner", "corner": "topRight", "across": True}},
+                   [(NEST_OUTER, [NEST_MID], with_origin(ansi, X + 150, Y + 20), None),
+                    (NEST_IN, [], with_origin(ansi, X + 150, Y + 20), None)]),
+        hatch_case("Ölçek tabanı çizimde: desenin milimetresi çizimin milimetresi", lone, {"name": "ANSI31", "scale": 100, "basis": "world"},
+                   [(PARCEL, [BUILDING], pattern("ANSI31", 100.0, plot=1), None)]),
+        hatch_case("Ölçek tabanı kâğıtta açıkça: varsayılanla aynı", lone, {"name": "ANSI31", "basis": "paper"}, [(PARCEL, [BUILDING], ansi, None)]),
+        annotative(hatch_case("Ölçekli: tarama çizim ölçeğinde (1:500) ölçekli yazılır", lone, {"name": "ANSI31", "annotative": True},
+                              [(PARCEL, [BUILDING], ansi, None)]), PLOT_SCALE),
+        hatch_case("Ölçekli kapalı: alan yazılmaz", lone, {"name": "ANSI31", "annotative": False}, [(PARCEL, [BUILDING], ansi, None)]),
+        on_setup(hatch_case("Projenin deseni adıyla: kâğıtta mm × ölçek × çizim ölçeği", lone, {"name": "tugla", "scale": 2, "angle": 30},
+                            [(PARCEL, [BUILDING], own_pattern("TUGLA", TUGLA_LINES, 2.0 * (PLOT_SCALE / 1000.0), 30.0), None)]), WITH_PATTERNS),
+        on_setup(hatch_case("Projenin çizim birimli deseni: birimi metre", lone, {"name": "PARKE"},
+                            [(PARCEL, [BUILDING], own_pattern("PARKE", PARKE_LINES, 1.0), None)]), WITH_PATTERNS),
+        on_setup(hatch_case("Projenin deseni kitaplığınkinden önce: inç biriminde ANSI31", lone, {"name": "ansi31"},
+                            [(PARCEL, [BUILDING], own_pattern("ANSI31", INCH_LINES, 1.0 * (25.4 * PLOT_SCALE / 1000.0)), None)]), WITH_PATTERNS),
+        on_setup(hatch_case("Projenin deseni çizimde: inç çizimin inçi", lone, {"name": "ANSI31", "scale": 4, "basis": "world"},
+                            [(PARCEL, [BUILDING], own_pattern("ANSI31", INCH_LINES, 4.0 * (25.4 * 1 / 1000.0)), None)]), WITH_PATTERNS),
+        refused("Ölçekli ve çizimde birlikte olmaz", {"region": lone, "pattern": {"name": "ANSI31", "basis": "world", "annotative": True}, "layerId": "tarama"},
+                "not_annotative", "Ölçekli taramanın deseni kâğıttaki ölçüsüyle çizilir; çizimdeki ölçekle (basis: world) ölçekli olmaz.", "pattern.annotative"),
+        refused("Dolu tarama ölçekli olmaz", {"region": lone, "pattern": {"name": "Dolu", "annotative": True}, "layerId": "tarama"},
+                "not_annotative", "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.", "pattern.annotative"),
+        refused("Dolu taramanın başlangıcı olmaz", {"region": lone, "pattern": {"name": "Dolu", "origin": {"kind": "point", "at": P(X, Y)}}, "layerId": "tarama"},
+                "invalid_scale", "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.", "pattern.origin"),
+        refused("Başlangıç noktası sonlu olmalı", {"region": lone, "pattern": {"name": "ANSI31", "origin": {"kind": "point", "at": P(X, Y)}}, "layerId": "tarama"},
+                "not_finite", not_finite_point("Desenin başlangıç noktasının", "x"), "pattern.origin.at.x", non_finite={"pattern.origin.at.x": "NaN"}),
+    ]
 
 
 FILES = [

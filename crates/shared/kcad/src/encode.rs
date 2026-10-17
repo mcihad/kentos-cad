@@ -370,6 +370,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.named_ucs.is_empty())
             + usize::from(!s.named_views.is_empty())
             + usize::from(!s.line_types.is_empty())
+            + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
@@ -490,6 +491,16 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
                 }
                 e.json(&serde_json::to_value(&s.leader_styles).unwrap_or_default())
+            })?;
+        }
+        // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+        if !s.hatch_patterns.is_empty() {
+            self.key("hatchPatterns");
+            self.at(Seg::Name("hatchPatterns"), |e| {
+                if let Some(problem) = kentos_contracts::hatch_patterns_problem(&s.hatch_patterns) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                e.json(&serde_json::to_value(&s.hatch_patterns).unwrap_or_default())
             })?;
         }
         if let Some(scale) = s.line_type_scale {
@@ -1402,6 +1413,19 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 71 (docs/adr/0331): the project's hatch patterns, a pattern's own origin, an annotative hatch.
+    if !doc.settings.hatch_patterns.is_empty()
+        || doc.entities.iter().any(|e| {
+            matches!(e, Entity::Hatch(h) if h.pattern.origin.is_some() || h.annotative.is_some())
+        })
+        || doc.blocks.iter().any(|b| {
+            b.entities.iter().any(|e| {
+                matches!(e, Entity::Hatch(h) if h.pattern.origin.is_some() || h.annotative.is_some())
+            })
+        })
+    {
+        return crate::SCHEMA_WITH_HATCH_EXTRAS;
     }
     // Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
     if doc.entities.iter().any(|e| {

@@ -475,11 +475,15 @@ pub const SCHEMA_WITH_HATCH_BOUNDARIES: u32 = 69;
 /// Schema 70 (docs/adr/0329 §3): a face's tie's `gap` (the gaps its line work was closed across), written only when a
 /// tie has one; older readers refuse the file instead of losing the hatch's way of following.
 pub const SCHEMA_WITH_HATCH_GAPS: u32 = 70;
+/// Schema 71 (docs/adr/0331): the settings' `hatchPatterns` (a project's own patterns), a pattern's `origin` and a
+/// hatch's `annotative`, written only when the drawing has one; older readers refuse the file instead of losing
+/// them or drawing an annotative hatch's pattern at one scale.
+pub const SCHEMA_WITH_HATCH_EXTRAS: u32 = 71;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 69] = [
+pub const SCHEMAS: [u32; 70] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -549,6 +553,7 @@ pub const SCHEMAS: [u32; 69] = [
     SCHEMA_WITH_TABLE_CELLS,
     SCHEMA_WITH_HATCH_BOUNDARIES,
     SCHEMA_WITH_HATCH_GAPS,
+    SCHEMA_WITH_HATCH_EXTRAS,
 ];
 
 /// The file a drawing is saved as.

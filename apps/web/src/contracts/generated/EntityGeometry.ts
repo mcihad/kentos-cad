@@ -280,7 +280,11 @@ assoc?: HatchAssoc,
  * Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
  * drawn from it and may be left empty.
  */
-boundary?: Array<HatchLoop>, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, yScale?: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
+boundary?: Array<HatchLoop>, 
+/**
+ * Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each.
+ */
+annotative?: Annotative, } | { "kind": "insert", block: BlockId, p: Vec2, scale: number, yScale?: number, rotation: number, mirror?: boolean, } | { "kind": "leader", 
 /**
  * At least two: the arrow's tip first.
  */

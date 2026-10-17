@@ -417,6 +417,19 @@ BoundaryFormName = Literal["area", "polyline"]
 """The names of :class:`BoundaryForm`, for a plain string."""
 
 
+class BoxCorner(_StrEnum):
+    """A region's corner, or its middle (docs/adr/0331 §2)."""
+    BOTTOM_LEFT = "bottomLeft"
+    BOTTOM_RIGHT = "bottomRight"
+    TOP_LEFT = "topLeft"
+    TOP_RIGHT = "topRight"
+    CENTER = "center"
+
+
+BoxCornerName = Literal["bottomLeft", "bottomRight", "topLeft", "topRight", "center"]
+"""The names of :class:`BoxCorner`, for a plain string."""
+
+
 class BreakLine(_StrEnum):
     """Which of a dimension's lines a break is on.
 
@@ -1106,6 +1119,40 @@ class HatchPatternType(_StrEnum):
 
 HatchPatternTypeName = Literal["solid", "lines", "cross", "pattern", "gradient"]
 """The names of :class:`HatchPatternType`, for a plain string."""
+
+
+class HatchPatternUnit(_StrEnum):
+    """What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.
+
+    - ``mm``: Millimetres on paper (acadiso.pat's, the library's).
+    - ``inch``: Inches on paper (acad.pat's).
+    - ``drawing``: The drawing's own lengths, in the project's unit.
+    """
+    MM = "mm"
+    INCH = "inch"
+    DRAWING = "drawing"
+
+
+HatchPatternUnitName = Literal["mm", "inch", "drawing"]
+"""The names of :class:`HatchPatternUnit`, for a plain string."""
+
+
+class HatchPatternsOperation(_StrEnum):
+    """What `cad.hatchpatterns.edit` does.
+
+    - ``load``: The patterns of a PAT file's text taken in.
+    - ``add``: One pattern added, or one of its name replaced.
+    - ``remove``: One pattern taken away.
+    - ``export``: The project's patterns as a PAT file's text; writes nothing.
+    """
+    LOAD = "load"
+    ADD = "add"
+    REMOVE = "remove"
+    EXPORT = "export"
+
+
+HatchPatternsOperationName = Literal["load", "add", "remove", "export"]
+"""The names of :class:`HatchPatternsOperation`, for a plain string."""
 
 
 class HatchWay(_StrEnum):
@@ -2106,6 +2153,20 @@ class ResourceKind(_StrEnum):
 
 ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionStyle"]
 """The names of :class:`ResourceKind`, for a plain string."""
+
+
+class ScaleBasis(_StrEnum):
+    """What a pattern's Ölçek is of (docs/adr/0331 §3).
+
+    - ``paper``: Kâğıtta: the definition's units on paper, at the project's plot scale.
+    - ``world``: Çizimde: the definition's units in the drawing (a millimetre pattern's millimetre a millimetre of the world).
+    """
+    PAPER = "paper"
+    WORLD = "world"
+
+
+ScaleBasisName = Literal["paper", "world"]
+"""The names of :class:`ScaleBasis`, for a plain string."""
 
 
 class ScenarioOperation(_StrEnum):
@@ -3191,6 +3252,8 @@ class HatchEdit(_Union):
     - :class:`ReselectHatchEdit` (``kind: reselect``)
     - :class:`AddIslandsHatchEdit` (``kind: addIslands``)
     - :class:`RemoveIslandsHatchEdit` (``kind: removeIslands``)
+    - :class:`PatternHatchEdit` (``kind: pattern``)
+    - :class:`AlignHatchEdit` (``kind: align``)
     - :class:`UntieHatchEdit` (``kind: untie``)
     """
     __slots__ = ()
@@ -3204,6 +3267,28 @@ class HatchEdit(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchEdit:
         return _variant(_HATCH_EDIT, "HatchEdit", "kind", data).from_json(data)
+
+
+class HatchOrigin(_Union):
+    """Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+
+    One of:
+
+    - :class:`WorldHatchOrigin` (``kind: world``)
+    - :class:`PointHatchOrigin` (``kind: point``)
+    - :class:`CornerHatchOrigin` (``kind: corner``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchOrigin:
+        return _variant(_HATCH_ORIGIN, "HatchOrigin", "kind", data).from_json(data)
 
 
 class HatchRegion(_Union):
@@ -12074,6 +12159,8 @@ class HatchEntity(Entity):
         id: Unit: id.
         attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
         ring: Unit: length.
+        annotative: Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large
+            on paper as at its own; absent: one pattern for every scale.
         assoc: The objects its region follows (docs/adr/0186 §6); none: it stays as drawn.
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
@@ -12108,6 +12195,7 @@ class HatchEntity(Entity):
     attrs: dict[str, str]
     ring: list[Vec2]
     pattern: HatchPattern
+    annotative: Annotative | None | Unset = UNSET
     assoc: HatchAssoc | None | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     boundary: list[HatchLoop] | None | Unset = UNSET
@@ -12132,6 +12220,8 @@ class HatchEntity(Entity):
         out["attrs"] = dict(self.attrs)
         out["ring"] = [_vec2_out(e0) for e0 in self.ring]
         out["pattern"] = self.pattern.to_json()
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.assoc is not UNSET:
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.attachments is not UNSET:
@@ -12174,6 +12264,7 @@ class HatchEntity(Entity):
             attrs=dict(data["attrs"]),
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else [HatchLoop.from_json(e0) for e0 in data["boundary"]],
@@ -12262,6 +12353,8 @@ class HatchPattern(_Model):
         gradient: A gradient's shape and second colour.
         lines: A pattern's line families.
         name: A pattern's name (`ANSI31`).
+        origin: Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+            it as the definition says instead of through the world's origin. Absent: the world's origin. Unit: length.
         scale: A pattern's metres per unit of its definition. Unit: length.
     """
     type: HatchPatternType | HatchPatternTypeName
@@ -12270,6 +12363,7 @@ class HatchPattern(_Model):
     gradient: HatchGradient | None | Unset = UNSET
     lines: list[PatternLine] | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    origin: Vec2 | None | Unset = UNSET
     scale: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12283,6 +12377,8 @@ class HatchPattern(_Model):
             out["lines"] = None if self.lines is None else [e0.to_json() for e0 in self.lines]
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else _vec2_out(self.origin)
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
         return out
@@ -12296,7 +12392,43 @@ class HatchPattern(_Model):
             gradient=UNSET if "gradient" not in data else None if data["gradient"] is None else HatchGradient.from_json(data["gradient"]),
             lines=UNSET if "lines" not in data else None if data["lines"] is None else [PatternLine.from_json(e0) for e0 in data["lines"]],
             name=data.get("name", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else Vec2.from_json(data["origin"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchPatternDef(_Model):
+    """A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.
+    Attributes:
+        name: One of its kind among the project's, letters' case aside; no comma.
+        source: The file it came from (`kentos.pat`).
+    """
+    name: str
+    lines: list[PatternLine]
+    description: str | Unset = UNSET
+    source: str | None | Unset = UNSET
+    unit: HatchPatternUnit | HatchPatternUnitName = HatchPatternUnit.MM
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.source is not UNSET:
+            out["source"] = self.source
+        out["unit"] = _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchPatternDef:
+        return cls(
+            name=data["name"],
+            lines=[PatternLine.from_json(e0) for e0 in data["lines"]],
+            description=data.get("description", UNSET),
+            source=data.get("source", UNSET),
+            unit=_enum_in(HatchPatternUnit, data["unit"]) if "unit" in data else HatchPatternUnit.MM,
         )
 
 
@@ -12308,13 +12440,20 @@ class HatchPatternSpec(_Model):
             ISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its
             case aside, Turkish, and a gradient by its shape's word too.
         angle: Açı, degrees; absent: 0. Unit: deg.
+        annotative: Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.
+        basis: What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in
+            the drawing; absent: paper.
         inverted: Ters: a gradient's colours swapped; absent: false.
+        origin: Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin.
         scale: Ölçek: on paper, times the project's plot scale; absent: 1. Unit: 1.
         second_color: İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.
     """
     name: str
     angle: float | None | Unset = UNSET
+    annotative: bool | None | Unset = UNSET
+    basis: ScaleBasis | ScaleBasisName | None | Unset = UNSET
     inverted: bool | None | Unset = UNSET
+    origin: HatchOrigin | None | Unset = UNSET
     scale: float | None | Unset = UNSET
     second_color: str | None | Unset = UNSET
 
@@ -12323,8 +12462,14 @@ class HatchPatternSpec(_Model):
         out["name"] = self.name
         if self.angle is not UNSET:
             out["angle"] = None if self.angle is None else float(self.angle)
+        if self.annotative is not UNSET:
+            out["annotative"] = self.annotative
+        if self.basis is not UNSET:
+            out["basis"] = None if self.basis is None else _enum_out(self.basis)
         if self.inverted is not UNSET:
             out["inverted"] = self.inverted
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
         if self.second_color is not UNSET:
@@ -12336,9 +12481,117 @@ class HatchPatternSpec(_Model):
         return cls(
             name=data["name"],
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            annotative=data.get("annotative", UNSET),
+            basis=UNSET if "basis" not in data else None if data["basis"] is None else _enum_in(ScaleBasis, data["basis"]),
             inverted=data.get("inverted", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else HatchOrigin.from_json(data["origin"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
             second_color=data.get("secondColor", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchPatternsEdit(_Model):
+    """Input of `cad.hatchpatterns.edit` v1. Refusals: `no_pat`, `no_definition`, `invalid_hatch_pattern`, `empty_name`,
+    `hatch_pattern_not_found`, `invalid_revision`, `revision_conflict`.
+    Attributes:
+        name: remove: its name.
+        names: load: the patterns to take, by name; export: those to write. Absent: all.
+        pat: load: a PAT file's text.
+        pattern: add: the pattern.
+        replace: load, add: a pattern of a name the project has replaces it; else load skips it and add refuses.
+        source: load: the file's name, each pattern's source; absent: `dosya.pat`.
+        unit: load: what the file's numbers are in (a PAT file says not); absent: millimetres on paper.
+    """
+    operation: HatchPatternsOperation | HatchPatternsOperationName
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    names: list[str] | None | Unset = UNSET
+    pat: str | None | Unset = UNSET
+    pattern: HatchPatternDef | None | Unset = UNSET
+    replace: bool | Unset = UNSET
+    source: str | None | Unset = UNSET
+    unit: HatchPatternUnit | HatchPatternUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.names is not UNSET:
+            out["names"] = None if self.names is None else list(self.names)
+        if self.pat is not UNSET:
+            out["pat"] = self.pat
+        if self.pattern is not UNSET:
+            out["pattern"] = None if self.pattern is None else self.pattern.to_json()
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchPatternsEdit:
+        return cls(
+            operation=_enum_in(HatchPatternsOperation, data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
+            pat=data.get("pat", UNSET),
+            pattern=UNSET if "pattern" not in data else None if data["pattern"] is None else HatchPatternDef.from_json(data["pattern"]),
+            replace=data.get("replace", UNSET),
+            source=data.get("source", UNSET),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(HatchPatternUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchPatternsEdited(_Model):
+    """What `cad.hatchpatterns.edit` did.
+    Attributes:
+        added: The patterns added, by name, in their order.
+        replaced: The project's patterns a load or an add replaced.
+        skipped: load: the file's patterns of a name the project has, kept as they are.
+        problems: load: the file's lines that did not read.
+        pat: export: the PAT file's text.
+    """
+    changed: bool
+    added: list[str]
+    replaced: list[str]
+    skipped: list[str]
+    removed: list[str]
+    problems: list[PatLineProblem]
+    revision: str
+    pat: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["added"] = list(self.added)
+        out["replaced"] = list(self.replaced)
+        out["skipped"] = list(self.skipped)
+        out["removed"] = list(self.removed)
+        out["problems"] = [e0.to_json() for e0 in self.problems]
+        out["revision"] = self.revision
+        if self.pat is not UNSET:
+            out["pat"] = self.pat
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchPatternsEdited:
+        return cls(
+            changed=data["changed"],
+            added=list(data["added"]),
+            replaced=list(data["replaced"]),
+            skipped=list(data["skipped"]),
+            removed=list(data["removed"]),
+            problems=[PatLineProblem.from_json(e0) for e0 in data["problems"]],
+            revision=data["revision"],
+            pat=data.get("pat", UNSET),
         )
 
 
@@ -12346,7 +12599,8 @@ class HatchPatternSpec(_Model):
 class HatchesEdit(_Model):
     """Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,
     `layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,
-    `not_finite`, `invalid_gap`; `invalid_revision`, `revision_conflict`.
+    `not_finite`, `invalid_gap`, `unknown_pattern`, `invalid_scale`, `not_annotative`, `pattern_too_dense`;
+    `invalid_revision`, `revision_conflict`.
     """
     edit: HatchEdit
     expected_revision: str | None | Unset = UNSET
@@ -17524,6 +17778,29 @@ class PasteReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PatLineProblem(_Model):
+    """A PAT file's line that did not read.
+    Attributes:
+        line: Unit: count.
+    """
+    line: int
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["line"] = self.line
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatLineProblem:
+        return cls(
+            line=data["line"],
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PathEntity(_Model):
     """Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
     Attributes:
@@ -19625,6 +19902,7 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
@@ -19664,6 +19942,7 @@ class ProjectSettings(_Model):
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
@@ -19705,6 +19984,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.hatch_patterns is not UNSET:
+            out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.leader_styles is not UNSET:
@@ -19756,6 +20037,7 @@ class ProjectSettings(_Model):
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
@@ -27129,6 +27411,7 @@ class HatchEntityGeometry(EntityGeometry):
     """A hatched area: its ring, its holes when it has any, and its pattern.
     Attributes:
         ring: Unit: length.
+        annotative: Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each.
         assoc: The objects its region follows (docs/adr/0186 §6).
         boundary: Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
             drawn from it and may be left empty.
@@ -27137,6 +27420,7 @@ class HatchEntityGeometry(EntityGeometry):
     TAG_VALUE: ClassVar[str] = "hatch"
     ring: list[Vec2]
     pattern: HatchPattern
+    annotative: Annotative | None | Unset = UNSET
     assoc: HatchAssoc | None | Unset = UNSET
     boundary: list[HatchLoop] | None | Unset = UNSET
     holes: list[list[Vec2]] | None | Unset = UNSET
@@ -27145,6 +27429,8 @@ class HatchEntityGeometry(EntityGeometry):
         out: dict[str, Any] = {"kind": "hatch"}
         out["ring"] = [_vec2_out(e0) for e0 in self.ring]
         out["pattern"] = self.pattern.to_json()
+        if self.annotative is not UNSET:
+            out["annotative"] = None if self.annotative is None else self.annotative.to_json()
         if self.assoc is not UNSET:
             out["assoc"] = None if self.assoc is None else self.assoc.to_json()
         if self.boundary is not UNSET:
@@ -27158,6 +27444,7 @@ class HatchEntityGeometry(EntityGeometry):
         return cls(
             ring=[Vec2.from_json(e0) for e0 in data["ring"]],
             pattern=HatchPattern.from_json(data["pattern"]),
+            annotative=UNSET if "annotative" not in data else None if data["annotative"] is None else Annotative.from_json(data["annotative"]),
             assoc=UNSET if "assoc" not in data else None if data["assoc"] is None else HatchAssoc.from_json(data["assoc"]),
             boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else [HatchLoop.from_json(e0) for e0 in data["boundary"]],
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]],
@@ -27894,6 +28181,53 @@ class RemoveIslandsHatchEdit(HatchEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class PatternHatchEdit(HatchEdit):
+    """Desen: the hatches' pattern as Tarama makes it (`pattern`: its name, Ölçek, Açı, basis, origin and Ölçekli;
+    docs/adr/0331); their regions, ties and looks kept. A corner origin is each hatch's own box's, with `across`
+    the box of them all; Ölçekli absent keeps each one's scales.
+    """
+    TAG_VALUE: ClassVar[str] = "pattern"
+    uids: list[str]
+    pattern: HatchPatternSpec
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "pattern"}
+        out["uids"] = list(self.uids)
+        out["pattern"] = self.pattern.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PatternHatchEdit:
+        return cls(
+            uids=list(data["uids"]),
+            pattern=HatchPatternSpec.from_json(data["pattern"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlignHatchEdit(HatchEdit):
+    """Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):
+    each takes its origin, and the angle and scale too where its pattern is the reference's.
+    """
+    TAG_VALUE: ClassVar[str] = "align"
+    uids: list[str]
+    reference: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "align"}
+        out["uids"] = list(self.uids)
+        out["reference"] = self.reference
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlignHatchEdit:
+        return cls(
+            uids=list(data["uids"]),
+            reference=data["reference"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UntieHatchEdit(HatchEdit):
     """İlişkiyi kopar: the hatches follow nothing; they stay as they are."""
     TAG_VALUE: ClassVar[str] = "untie"
@@ -27908,6 +28242,65 @@ class UntieHatchEdit(HatchEdit):
     def from_json(cls, data: Mapping[str, Any]) -> UntieHatchEdit:
         return cls(
             uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorldHatchOrigin(HatchOrigin):
+    """The world's origin: neighbouring hatches line up."""
+    TAG_VALUE: ClassVar[str] = "world"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "world"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorldHatchOrigin:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class PointHatchOrigin(HatchOrigin):
+    """A point.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "point"
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "point"}
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointHatchOrigin:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CornerHatchOrigin(HatchOrigin):
+    """A corner of each region's box; with `across`, of the box of every region the command hatches, so that they
+    line up with each other (Nesneler boyunca hizala).
+    """
+    TAG_VALUE: ClassVar[str] = "corner"
+    corner: BoxCorner | BoxCornerName
+    across: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "corner"}
+        out["corner"] = _enum_out(self.corner)
+        if self.across is not UNSET:
+            out["across"] = self.across
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CornerHatchOrigin:
+        return cls(
+            corner=_enum_in(BoxCorner, data["corner"]),
+            across=data.get("across", UNSET),
         )
 
 
@@ -30964,7 +31357,10 @@ _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "pro
 _HATCH_CURVE: dict[str, type[HatchCurve]] = {"ellipse": EllipseHatchCurve, "nurbs": NurbsHatchCurve}
 
 
-_HATCH_EDIT: dict[str, type[HatchEdit]] = {"recreate": RecreateHatchEdit, "reselect": ReselectHatchEdit, "addIslands": AddIslandsHatchEdit, "removeIslands": RemoveIslandsHatchEdit, "untie": UntieHatchEdit}
+_HATCH_EDIT: dict[str, type[HatchEdit]] = {"recreate": RecreateHatchEdit, "reselect": ReselectHatchEdit, "addIslands": AddIslandsHatchEdit, "removeIslands": RemoveIslandsHatchEdit, "pattern": PatternHatchEdit, "align": AlignHatchEdit, "untie": UntieHatchEdit}
+
+
+_HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point": PointHatchOrigin, "corner": CornerHatchOrigin}
 
 
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
@@ -31044,6 +31440,7 @@ __all__ = [
     "AddressesDefined",
     "AffineCrsPlane",
     "AffineTransform",
+    "AlignHatchEdit",
     "AlignLeaderEdit",
     "AlignTransform",
     "AlignedDimensionMeasure",
@@ -31167,6 +31564,8 @@ __all__ = [
     "BoundaryForm",
     "BoundaryFormName",
     "Bounds",
+    "BoxCorner",
+    "BoxCornerName",
     "BreakDimensionEdit",
     "BreakLine",
     "BreakLineName",
@@ -31230,6 +31629,7 @@ __all__ = [
     "Convention",
     "ConventionName",
     "CoordinatesTableSource",
+    "CornerHatchOrigin",
     "CornerPick",
     "CornersRectangleFrame",
     "CountExplodeDensity",
@@ -31450,10 +31850,18 @@ __all__ = [
     "HatchEntityGeometry",
     "HatchGradient",
     "HatchLoop",
+    "HatchOrigin",
     "HatchPattern",
+    "HatchPatternDef",
     "HatchPatternSpec",
     "HatchPatternType",
     "HatchPatternTypeName",
+    "HatchPatternUnit",
+    "HatchPatternUnitName",
+    "HatchPatternsEdit",
+    "HatchPatternsEdited",
+    "HatchPatternsOperation",
+    "HatchPatternsOperationName",
     "HatchRegion",
     "HatchWay",
     "HatchWayName",
@@ -31697,9 +32105,11 @@ __all__ = [
     "ParametersOperationName",
     "PartsDivision",
     "PasteReport",
+    "PatLineProblem",
     "PathArrayLayout",
     "PathEntity",
     "PatternElement",
+    "PatternHatchEdit",
     "PatternLine",
     "PatternShape",
     "PatternText",
@@ -31722,6 +32132,7 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointHatchOrigin",
     "PointHatchRegion",
     "PointLabelMode",
     "PointLabelModeName",
@@ -31848,6 +32259,8 @@ __all__ = [
     "RubbersheetTransform",
     "SaveUcsTo",
     "SaveViewsOp",
+    "ScaleBasis",
+    "ScaleBasisName",
     "ScaleBlockAction",
     "ScaleTransform",
     "ScenarioInfo",
@@ -32030,6 +32443,7 @@ __all__ = [
     "Wipeout",
     "Workspace",
     "WorkspaceName",
+    "WorldHatchOrigin",
     "WorldUcsTo",
     "XlineEntity",
     "XlineEntityGeometry",

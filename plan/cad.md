@@ -411,9 +411,9 @@ Mevcut desen/degrade ve ilişkili tarama kodu korunmalıdır. Hedef yeni bir tar
 - [x] **CAD-HATCH-03:** Pick point / select boundaries / çoklu bölge / island detection yöntemlerinin sayısal ve UI kapsamını doğrula.
 - [x] **CAD-HATCH-04:** Gap tolerance ve boundary repair; kapanan boşluk ve değişen alanı plan raporunda göstersin.
 - [x] **CAD-HATCH-05:** Boundary oluşturma, boundary yeniden seçme, add/remove island ve ilişkiyi koparma işlemleri API'de olsun.
-- [ ] **CAD-HATCH-06:** PAT import/export ve kullanıcı desenleri; pattern name, family, dash ve origin bilgilerini korusun.
-- [ ] **CAD-HATCH-07:** Pattern scale/angle/origin, match hatch properties ve align across objects seçeneklerini tamamla.
-- [ ] **CAD-HATCH-08:** Çok ölçekli/annotative pattern ile kaynak world ölçeğinde pattern açık ayrı seçenekler olsun.
+- [x] **CAD-HATCH-06:** PAT import/export ve kullanıcı desenleri; pattern name, family, dash ve origin bilgilerini korusun. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §1.*
+- [x] **CAD-HATCH-07:** Pattern scale/angle/origin, match hatch properties ve align across objects seçeneklerini tamamla. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §2.*
+- [x] **CAD-HATCH-08:** Çok ölçekli/annotative pattern ile kaynak world ölçeğinde pattern açık ayrı seçenekler olsun. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §3.*
 - [ ] **CAD-HATCH-09:** Solid/gradient transparency ve ön/arka çizim sırası tutarlı olsun; text background mask ve wipeout ayrı nesne/özellikler olarak ele alınsın.
 - [ ] **CAD-HATCH-10:** Bağlı metinleri boş bırakma davranışı metin taşındığında da güncellensin; döngü ve missing text durumu raporlansın.
 - [ ] **CAD-HATCH-11:** Çok büyük/dense hatch için bütçe ve cancellation olsun; desenin ekranda sadeleşmesi kaynak ölçü/plot doğruluğunu değiştirmesin.

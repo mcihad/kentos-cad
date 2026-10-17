@@ -41,7 +41,60 @@ fn label(e: &HatchEdit) -> &'static str {
         HatchEdit::AddIslands { .. } => "Ada ekle",
         HatchEdit::RemoveIslands { .. } => "Ada çıkar",
         HatchEdit::Untie { .. } => "İlişkiyi kopar",
+        HatchEdit::Pattern { .. } => "Deseni değiştir",
+        HatchEdit::Align { .. } => "Taramaları hizala",
     }
+}
+
+/// The hatch `uid` names, whatever its layer (a reference is only read).
+fn hatch_read(doc: &Document, uid: &str, path: &str) -> Result<HatchEntity, Stop> {
+    let (slot, _) = object_at(doc, uid, path)?;
+    match doc.get(slot) {
+        Some(Entity::Hatch(h)) => Ok(h.clone()),
+        _ => Err(fail(
+            codes::NOT_A_HATCH,
+            "Verilen nesne bir tarama değil; bu komut yalnız taramaları değiştirir.".into(),
+            path,
+        )),
+    }
+}
+
+/// Whether two hatches draw the same family of lines: user lines or crosses, or a pattern of the same name and
+/// definition (docs/adr/0331 §2).
+fn same_lines(a: &kentos_contracts::HatchPattern, b: &kentos_contracts::HatchPattern) -> bool {
+    use kentos_contracts::HatchPatternType as T;
+    a.kind == b.kind
+        && match a.kind {
+            T::Lines | T::Cross => true,
+            T::Pattern => a.name == b.name && a.lines == b.lines,
+            T::Solid | T::Gradient => false,
+        }
+}
+
+/// Whether a pattern draws lines (an origin anchors them).
+fn lined(p: &kentos_contracts::HatchPattern) -> bool {
+    use kentos_contracts::HatchPatternType as T;
+    matches!(p.kind, T::Lines | T::Cross | T::Pattern)
+}
+
+/// The hatches `uids` name, once each, on unlocked layers; none given: `no_entities`.
+fn hatches_at(doc: &Document, uids: &[String]) -> Result<Vec<(Slot, Uuid, HatchEntity)>, Stop> {
+    if uids.is_empty() {
+        return Err(fail(
+            codes::NO_ENTITIES,
+            "Tarama yok. En az bir taramanın kalıcı kimliğini verin.".into(),
+            "edit.uids",
+        ));
+    }
+    let mut seen = HashSet::new();
+    let mut out = Vec::new();
+    for (i, uid) in uids.iter().enumerate() {
+        let (slot, u, h) = hatch_at(doc, uid, &format!("edit.uids[{i}]"))?;
+        if seen.insert(u) {
+            out.push((slot, u, h));
+        }
+    }
+    Ok(out)
 }
 
 fn bad_uid(uid: &str, path: &str) -> Stop {
@@ -509,6 +562,87 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 }
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
+        }
+        HatchEdit::Pattern { uids, pattern: spec } => {
+            let base = crate::region::pattern_of_spec(spec, doc.settings())
+                .map_err(|stop| reroot(stop, "pattern", "edit.pattern"))?;
+            let hatches = hatches_at(doc, uids)?;
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            let rings: Vec<Vec<Vec2>> = hatches
+                .iter()
+                .map(|(_, _, h)| h.ring.iter().map(|q| Vec2::new(q.x, q.y)).collect())
+                .collect();
+            let all = crate::region::box_of(rings.iter().map(Vec::as_slice));
+            let plot = doc.settings().plot_scale;
+            for ((slot, u, h), ring) in hatches.into_iter().zip(&rings) {
+                let mut p = base.clone();
+                // An origin given: each hatch's own (a corner of its box, or of them all); none: each keeps its own.
+                p.origin = match &spec.origin {
+                    Some(_) => crate::region::origin_of(
+                        spec.origin.as_ref(),
+                        crate::region::box_of([ring.as_slice()]),
+                        all,
+                    ),
+                    None => h.pattern.origin,
+                };
+                if !lined(&p) {
+                    p.origin = None;
+                }
+                let holes = h.holes.clone().unwrap_or_default();
+                if crate::region::pattern_too_dense(&h.ring, &holes, &p) {
+                    return Err(fail(
+                        codes::PATTERN_TOO_DENSE,
+                        "Desen bir tarama için çok sık; ölçeği ya da çizim ölçeğini büyütün ya da başka bir desen seçin.".into(),
+                        "edit.pattern",
+                    ));
+                }
+                // Ölçekli: made at the drawing's scale (kept when it is already), taken away, or as it was; a pattern
+                // with no lines has no scales (docs/adr/0331 §3).
+                let annotative = match spec.annotative {
+                    Some(true) => h.annotative.clone().or_else(|| {
+                        Some(Box::new(kentos_contracts::Annotative {
+                            at: plot,
+                            scales: Vec::new(),
+                        }))
+                    }),
+                    Some(false) => None,
+                    None => h.annotative.clone().filter(|_| lined(&p)),
+                };
+                changed.push((
+                    slot,
+                    u,
+                    HatchEntity {
+                        pattern: p,
+                        annotative,
+                        ..h
+                    },
+                ));
+            }
+        }
+        HatchEdit::Align { uids, reference } => {
+            let hatches = hatches_at(doc, uids)?;
+            let r = hatch_read(doc, reference, "edit.reference")?;
+            if !lined(&r.pattern) {
+                return Err(fail(
+                    codes::NOT_A_HATCH,
+                    "Başvuru taramasının çizgisi yok (dolu ya da degrade); çizgili ya da desenli bir tarama verin.".into(),
+                    "edit.reference",
+                ));
+            }
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            for (slot, u, h) in hatches {
+                if !lined(&h.pattern) {
+                    continue;
+                }
+                let mut p = h.pattern.clone();
+                p.origin = r.pattern.origin;
+                if same_lines(&p, &r.pattern) {
+                    p.angle = r.pattern.angle;
+                    p.spacing = r.pattern.spacing;
+                    p.scale = r.pattern.scale;
+                }
+                changed.push((slot, u, HatchEntity { pattern: p, ..h }));
+            }
         }
     }
     changed.retain(|(slot, _, h)| doc.get(*slot) != Some(&Entity::Hatch(h.clone())));

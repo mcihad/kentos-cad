@@ -2,6 +2,7 @@
 import type { HatchGradient } from "./HatchGradient";
 import type { HatchPatternType } from "./HatchPatternType";
 import type { PatternLine } from "./PatternLine";
+import type { Vec2 } from "./Vec2";
 
 export type HatchPattern = { type: HatchPatternType, 
 /**
@@ -28,4 +29,9 @@ lines?: Array<PatternLine>,
 /**
  * A gradient's shape and second colour.
  */
-gradient?: HatchGradient, };
+gradient?: HatchGradient, 
+/**
+ * Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+ * it as the definition says instead of through the world's origin. Absent: the world's origin.
+ */
+origin?: Vec2, };

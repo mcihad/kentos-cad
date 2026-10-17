@@ -1,0 +1,241 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tarama ekleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0,
+    "hatchPatterns": [
+      {
+        "name": "TUGLA",
+        "description": "Tuğla örgü",
+        "unit": "mm",
+        "lines": [
+          {
+            "angle": 0.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              0.0,
+              6.35
+            ]
+          },
+          {
+            "angle": 90.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              6.35,
+              6.35
+            ],
+            "dashes": [
+              6.35,
+              -6.35
+            ]
+          }
+        ],
+        "source": "ofis.pat"
+      },
+      {
+        "name": "PARKE",
+        "unit": "drawing",
+        "lines": [
+          {
+            "angle": 0.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              0.2,
+              0.1
+            ],
+            "dashes": [
+              0.3,
+              -0.1
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "hatch",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400008.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400008.0
+        }
+      ],
+      "pattern": {
+        "type": "pattern",
+        "angle": 0.0,
+        "spacing": 1.0,
+        "name": "TUGLA",
+        "scale": 0.1,
+        "lines": [
+          {
+            "angle": 0.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              0.0,
+              6.35
+            ]
+          },
+          {
+            "angle": 90.0,
+            "origin": [
+              0.0,
+              0.0
+            ],
+            "offset": [
+              6.35,
+              6.35
+            ],
+            "dashes": [
+              6.35,
+              -6.35
+            ]
+          }
+        ],
+        "origin": {
+          "x": 500001.5,
+          "y": 4400002.5
+        }
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500012.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500022.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500022.0,
+          "y": 4400008.0
+        },
+        {
+          "x": 500012.0,
+          "y": 4400008.0
+        }
+      ],
+      "pattern": {
+        "type": "lines",
+        "angle": 45.0,
+        "spacing": 0.3,
+        "origin": {
+          "x": 500012.0,
+          "y": 4400000.0
+        }
+      },
+      "annotative": {
+        "at": 100.0,
+        "scales": [
+          {
+            "scale": 50.0
+          },
+          {
+            "scale": 200.0
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500024.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500034.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500034.0,
+          "y": 4400008.0
+        },
+        {
+          "x": 500024.0,
+          "y": 4400008.0
+        }
+      ],
+      "pattern": {
+        "type": "cross",
+        "angle": 0.0,
+        "spacing": 0.5
+      },
+      "annotative": {
+        "at": 100.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4f01",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4f02",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4f03"
+  ]
+}

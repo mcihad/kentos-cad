@@ -1817,9 +1817,10 @@ impl<'d> Encoder<'d> {
                     + usize::from(p.name.is_some())
                     + usize::from(p.scale.is_some())
                     + usize::from(p.lines.is_some())
-                    + usize::from(p.gradient.is_some());
+                    + usize::from(p.gradient.is_some())
+                    + usize::from(p.origin.is_some());
                 self.open(n, true)?;
-                // name (4), type (4), angle (5), lines (5), scale (5), spacing (7), gradient (8).
+                // name (4), type (4), angle (5), lines (5), scale (5), origin (6), spacing (7), gradient (8).
                 if let Some(name) = &p.name {
                     self.key("name");
                     self.at(Seg::Name("name"), |e| e.text(name))?;
@@ -1842,6 +1843,10 @@ impl<'d> Encoder<'d> {
                 if let Some(scale) = p.scale {
                     self.key("scale");
                     self.at(Seg::Name("scale"), |e| e.float(scale))?;
+                }
+                if let Some(o) = &p.origin {
+                    self.key("origin");
+                    self.at(Seg::Name("origin"), |e| e.point(o))?;
                 }
                 self.key("spacing");
                 self.at(Seg::Name("spacing"), |e| e.float(p.spacing))?;

@@ -367,6 +367,7 @@ fn objects() -> Vec<Entity> {
             ]),
             pattern: HatchPattern::user(HatchPatternType::Cross, 30.0, 2.0),
             assoc: None,
+            annotative: None,
         }),
         Entity::Hatch(HatchEntity {
             boundary: None,
@@ -375,6 +376,7 @@ fn objects() -> Vec<Entity> {
             holes: None,
             pattern: HatchPattern::user(HatchPatternType::Lines, 37.5, 0.75),
             assoc: None,
+            annotative: None,
         }),
         Entity::Hatch(HatchEntity {
             boundary: None,
@@ -383,6 +385,7 @@ fn objects() -> Vec<Entity> {
             holes: None,
             pattern: HatchPattern::user(HatchPatternType::Solid, 12.0, 3.0),
             assoc: None,
+            annotative: None,
         }),
         Entity::Hatch(HatchEntity {
             boundary: None,
@@ -391,6 +394,7 @@ fn objects() -> Vec<Entity> {
             holes: None,
             pattern: HatchPattern::user(HatchPatternType::Lines, 0.0, 1.0),
             assoc: None,
+            annotative: None,
         }),
     ]
     .into_iter()
@@ -3390,6 +3394,7 @@ fn a_hatch_boundary_goes_out_and_comes_back_exact() {
         pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
         assoc: None,
         boundary: Some(boundary.clone()),
+        annotative: None,
     });
     let (text, _) = write(&input(vec![hatch]));
     let r = read(&text);

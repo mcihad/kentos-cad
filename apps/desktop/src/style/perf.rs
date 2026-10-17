@@ -196,6 +196,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             networks: Vec::new(),
             variables: Vec::new(),
             address_locators: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

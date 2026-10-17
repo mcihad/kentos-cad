@@ -557,21 +557,36 @@ fn cut_part(
     })
 }
 
-/// The pattern the spec names at the drawing's plot scale (1:N).
+/// The pattern a tool previews for the spec: [`pattern_of_spec`]'s, none where the command would refuse it.
+pub fn spec_pattern(
+    spec: &HatchPatternSpec,
+    settings: &kentos_contracts::ProjectSettings,
+) -> Option<ContractPattern> {
+    pattern_of_spec(spec, settings).ok()
+}
+
+/// The pattern the spec names at the drawing's plot scale (1:N), its origin left to [`origin_of`]: a project pattern
+/// of the name first (docs/adr/0331 §1), else the library's; Ölçek on paper or of the definition's unit in the
+/// drawing (`basis`); Ölçekli only on paper.
 pub(crate) fn pattern_of_spec(
     spec: &HatchPatternSpec,
-    plot_scale: f64,
+    settings: &kentos_contracts::ProjectSettings,
 ) -> Result<ContractPattern, Stop> {
-    let Some(choice) = choice_named(&spec.name) else {
+    let own = settings
+        .hatch_patterns
+        .iter()
+        .find(|d| kentos_contracts::same_hatch_pattern_name(&d.name, &spec.name));
+    let choice = choice_named(&spec.name);
+    if own.is_none() && choice.is_none() {
         return Err(refuse(
             codes::UNKNOWN_PATTERN,
             format!(
-                "“{}” adında desen yok. Desen kitaplığındaki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
+                "“{}” adında desen yok. Desen kitaplığındaki ya da projenin desenlerindeki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
                 spec.name
             ),
             "pattern.name",
         ));
-    };
+    }
     let scale = spec.scale.unwrap_or(1.0);
     if !(scale.is_finite() && scale > 0.0 && scale <= MOST_SCALE) {
         return Err(refuse(
@@ -597,21 +612,125 @@ pub(crate) fn pattern_of_spec(
             )
         })?,
     };
-    contract_pattern(pattern_of(&Options {
-        choice,
-        scale,
-        angle,
-        color2,
-        inverted: spec.inverted.unwrap_or(false),
-        plot_scale,
-    }))
-    .ok_or_else(|| {
-        refuse(
-            codes::UNKNOWN_PATTERN,
-            format!("“{}” deseni yazılamıyor.", spec.name),
-            "pattern.name",
-        )
-    })
+    let world = spec.basis == Some(kentos_contracts::ScaleBasis::World);
+    if let Some(kentos_contracts::HatchOrigin::Point { at }) = &spec.origin {
+        checks::point(*at, "Desenin başlangıç noktasının", "pattern.origin.at")?;
+    }
+    if spec.annotative == Some(true) && world {
+        return Err(refuse(
+            codes::NOT_ANNOTATIVE,
+            "Ölçekli taramanın deseni kâğıttaki ölçüsüyle çizilir; çizimdeki ölçekle (basis: world) ölçekli olmaz.".into(),
+            "pattern.annotative",
+        ));
+    }
+    // The paper's metres per definition unit, or the drawing's (a world millimetre a millimetre).
+    let plot = if world { 1.0 } else { settings.plot_scale };
+    let pattern = match own {
+        Some(def) => {
+            let (mul, div) = settings.drawing_unit.unwrap_or_default().metres();
+            ContractPattern {
+                kind: HatchPatternType::Pattern,
+                angle: kentos_geometry_core::geom::hatch_pattern::turn_of(angle),
+                spacing: 1.0,
+                name: Some(def.name.clone()),
+                scale: Some(scale * def.unit.metres(plot, mul / div)),
+                lines: Some(def.lines.clone()),
+                gradient: None,
+                origin: None,
+            }
+        }
+        None => contract_pattern(pattern_of(&Options {
+            choice: choice.unwrap_or_default(),
+            scale,
+            angle,
+            color2,
+            inverted: spec.inverted.unwrap_or(false),
+            plot_scale: plot,
+        }))
+        .ok_or_else(|| {
+            refuse(
+                codes::UNKNOWN_PATTERN,
+                format!("“{}” deseni yazılamıyor.", spec.name),
+                "pattern.name",
+            )
+        })?,
+    };
+    if spec.annotative == Some(true)
+        && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient)
+    {
+        return Err(refuse(
+            codes::NOT_ANNOTATIVE,
+            "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.".into(),
+            "pattern.annotative",
+        ));
+    }
+    if spec.origin.is_some() && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+        return Err(refuse(
+            codes::INVALID_SCALE,
+            "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.".into(),
+            "pattern.origin",
+        ));
+    }
+    Ok(pattern)
+}
+
+/// A box's corner or middle.
+fn corner_of(b: (Vec2, Vec2), c: kentos_contracts::BoxCorner) -> Point {
+    use kentos_contracts::BoxCorner as C;
+    let (lo, hi) = b;
+    let (x, y) = match c {
+        C::BottomLeft => (lo.x, lo.y),
+        C::BottomRight => (hi.x, lo.y),
+        C::TopLeft => (lo.x, hi.y),
+        C::TopRight => (hi.x, hi.y),
+        C::Center => ((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0),
+    };
+    Point { x, y }
+}
+
+/// The box of rings.
+pub fn box_of<'a>(rings: impl IntoIterator<Item = &'a [Vec2]>) -> Option<(Vec2, Vec2)> {
+    let mut b: Option<(Vec2, Vec2)> = None;
+    for r in rings {
+        for p in r {
+            b = Some(match b {
+                None => (*p, *p),
+                Some((lo, hi)) => (
+                    Vec2::new(lo.x.min(p.x), lo.y.min(p.y)),
+                    Vec2::new(hi.x.max(p.x), hi.y.max(p.y)),
+                ),
+            });
+        }
+    }
+    b
+}
+
+/// The pattern's origin for a region of box `own` among regions of box `all` (docs/adr/0331 §2): the world's (none),
+/// a point, or a corner of the region's box or, `across`, of them all.
+pub fn origin_of(
+    spec: Option<&kentos_contracts::HatchOrigin>,
+    own: Option<(Vec2, Vec2)>,
+    all: Option<(Vec2, Vec2)>,
+) -> Option<Point> {
+    use kentos_contracts::HatchOrigin as O;
+    match spec? {
+        O::World => None,
+        O::Point { at } => Some(*at),
+        O::Corner { corner, across } => {
+            let b = if *across { all } else { own };
+            b.map(|b| corner_of(b, *corner))
+        }
+    }
+}
+
+/// A pattern too dense for a region: the core's family count, or user lines past ADR 0062's count.
+pub(crate) fn pattern_too_dense(ring: &[Point], holes: &[Vec<Point>], p: &ContractPattern) -> bool {
+    let ring: Vec<Vec2> = ring.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+    let holes: Vec<Vec<Vec2>> = holes
+        .iter()
+        .map(|h| h.iter().map(|q| Vec2::new(q.x, q.y)).collect())
+        .collect();
+    too_dense(&ring, &core_pattern(p)) || dense_lines(&ring, &holes, p)
 }
 
 /// A user-defined pattern's lines too many (the core's line count, ADR 0062's refusal).
@@ -1092,7 +1211,7 @@ fn check_hatch(
     store: Option<&Store>,
     input: &EntitiesHatch,
 ) -> Result<(Vec<Planned>, EntitiesCreate, Vec<CommandWarning>), Stop> {
-    let pattern = pattern_of_spec(&input.pattern, doc.settings().plot_scale)?;
+    let pattern = pattern_of_spec(&input.pattern, doc.settings())?;
     let (associative, _way) = match &input.region {
         HatchRegion::Point {
             at,
@@ -1196,10 +1315,20 @@ fn check_hatch(
         regions(doc, store, &input.region, &mut RegionCache::default())?;
     warnings.extend(planned.iter().filter_map(|p| gaps_said(doc, p)));
     let core = core_pattern(&pattern);
+    let rings: Vec<Vec<Vec2>> = planned.iter().map(|p| ring_points(&p.area.outer)).collect();
+    let all = box_of(rings.iter().map(Vec::as_slice));
+    // Ölçekli (docs/adr/0331 §3): at the drawing's scale, its pattern as large on paper at each other.
+    let annotative = (input.pattern.annotative == Some(true)).then(|| {
+        Box::new(kentos_contracts::Annotative {
+            at: doc.settings().plot_scale,
+            scales: Vec::new(),
+        })
+    });
     let mut geometries = Vec::with_capacity(planned.len());
-    for p in &planned {
-        let ring = ring_points(&p.area.outer);
+    for (p, ring) in planned.iter().zip(rings) {
         let holes: Vec<Vec<Vec2>> = p.area.holes.iter().map(ring_points).collect();
+        let mut pattern = pattern.clone();
+        pattern.origin = origin_of(input.pattern.origin.as_ref(), box_of([ring.as_slice()]), all);
         if too_dense(&ring, &core) || dense_lines(&ring, &holes, &pattern) {
             return Err(refuse(
                 codes::PATTERN_TOO_DENSE,
@@ -1211,9 +1340,10 @@ fn check_hatch(
         geometries.push(EntityGeometry::Hatch {
             ring: wire(&ring),
             holes: (!holes.is_empty()).then(|| holes.iter().map(|h| wire(h)).collect()),
-            pattern: pattern.clone(),
+            pattern,
             assoc,
             boundary,
+            annotative: annotative.clone(),
         });
     }
     let objects = creating::input(

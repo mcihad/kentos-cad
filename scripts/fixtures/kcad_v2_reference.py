@@ -331,6 +331,8 @@ def settings(s):
                 # Schema 56 (docs/adr/0313 §1): the project's line types with patterns and its line type scale.
                 "lineTypes": (line_types, False),
                 "lineTypeScale": (line_type_scale, False),
+                # Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+                "hatchPatterns": (opaque, False),
             },
             "settings",
         )
@@ -1489,6 +1491,8 @@ KINDS = {
         "assoc": (lambda a: hatch_assoc(a), False),
         # Schema 69 (docs/adr/0328 §1): its exact boundary, as its JSON.
         "boundary": (opaque, False),
+        # Schema 71 (docs/adr/0331 §3): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False),
@@ -1612,6 +1616,8 @@ def hatch_pattern(p):
         "scale": (f64, False),
         "lines": (lambda ls: array([pattern_line(l) for l in ls]), False),
         "gradient": (hatch_gradient, False),
+        # Schema 71 (docs/adr/0331 §2): where its lines are anchored.
+        "origin": (point, False),
     }
     return cmap(fields(p, table, "pattern"))
 
@@ -2017,6 +2023,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 71 (docs/adr/0331): the project's hatch patterns, a pattern's own origin, an annotative hatch.
+    def extras(es):
+        return any(e["kind"] == "hatch" and ("origin" in e["pattern"] or "annotative" in e) for e in es)
+    if (settings or {}).get("hatchPatterns") or extras(entities) or any(extras(b["entities"]) for b in blocks or []):
+        return 71
     # Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
     if any(e["kind"] == "hatch" and "gap" in e.get("assoc", {}) for e in entities):
         return 70
@@ -2416,7 +2427,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-71.kcad"] = container(root(cmap(parts), version=uint(71)))
+    files["schema-version-72.kcad"] = container(root(cmap(parts), version=uint(72)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3828,6 +3839,25 @@ def build():
         a.pop("bounds")
         a["outer"] = d["uids"][0]
     out["broken/hatch-gap-with-outer.kcad"] = gap_broken(gap_with_outer)
+    # A pattern's origin, an annotative hatch and the project's patterns are schema 71's (docs/adr/0331): in schema
+    # 70 unknown fields; a solid hatch's origin or scales, an empty list of patterns, a pattern named twice, refused.
+    out["hatch-extras.kcad"] = container(document(load("hatch-extras.json")))
+    payload = document(load("hatch-extras.json"))
+    assert payload.count(b"\x67version\x18\x47") == 1
+    out["broken/hatch-extras-in-schema-70.kcad"] = container(payload.replace(b"\x67version\x18\x47", b"\x67version\x18\x46"))
+
+    def extras_broken(change):
+        d = load("hatch-extras.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-origin-solid.kcad"] = extras_broken(
+        lambda d: d["entities"][2].update(pattern={"type": "solid", "angle": 0.0, "spacing": 1.0, "origin": {"x": 500000.0, "y": 4400000.0}}))
+    out["broken/hatch-annotative-solid.kcad"] = extras_broken(
+        lambda d: d["entities"][2]["pattern"].update(type="solid"))
+    out["broken/hatch-patterns-empty.kcad"] = extras_broken(lambda d: d["settings"].update(hatchPatterns=[]))
+    out["broken/hatch-patterns-twice.kcad"] = extras_broken(
+        lambda d: d["settings"]["hatchPatterns"].append({**d["settings"]["hatchPatterns"][0], "name": "tugla"}))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

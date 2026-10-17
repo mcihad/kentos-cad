@@ -129,9 +129,11 @@ pub struct HatchPattern {
     pub scale: Option<f64>,
     pub lines: Option<Vec<crate::geom::hatch_pattern::PatternLine>>,
     pub gradient: Option<crate::geom::hatch_pattern::Gradient>,
+    /// Where its lines are anchored in the world (docs/adr/0331 §2); none: the world's origin.
+    pub origin: Option<crate::Vec2>,
 }
 
-crate::json_struct!(HatchPattern { kind => "type", angle, spacing, name, scale, lines, gradient });
+crate::json_struct!(HatchPattern { kind => "type", angle, spacing, name, scale, lines, gradient, origin });
 
 impl HatchPattern {
     /// A user-defined pattern: solid, lines or crossed lines.
@@ -144,6 +146,7 @@ impl HatchPattern {
             scale: None,
             lines: None,
             gradient: None,
+            origin: None,
         }
     }
 }

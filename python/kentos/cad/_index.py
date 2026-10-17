@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, hatches, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -62,6 +62,7 @@ COMMANDS: dict[str, Any] = {
     "cad.fields.edit": fields.edit,
     "cad.fonts.report": fonts.report,
     "cad.hatches.edit": hatches.edit,
+    "cad.hatchpatterns.edit": hatchpatterns.edit,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
     "cad.layers.edit": layers.edit,
@@ -130,4 +131,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "fonts", "hatches", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "tables", "texts", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "fonts", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "tables", "texts", "ucs", "units", "views",)

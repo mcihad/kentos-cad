@@ -772,6 +772,12 @@ codes! {
     ISLANDS_NOT_NESTED = "islands_not_nested", Warning, false, "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı.";
     /// A boundary's ellipse or curve written as its chords (an area holds lines and arcs).
     CURVES_APPROXIMATED = "curves_approximated", Warning, false, "Sınırın elips ya da eğri kenarları 0,1 mm'lik kirişleriyle yazıldı.";
+    /// No PAT text to take in.
+    NO_PAT = "no_pat", Failed, false, "Yüklenecek PAT dosyası verilmedi.";
+    /// A project hatch pattern against its rules, or of a name the project has.
+    INVALID_HATCH_PATTERN = "invalid_hatch_pattern", Failed, false, "Tarama deseni kurallarına uymuyor.";
+    /// A name the project's hatch patterns do not have.
+    HATCH_PATTERN_NOT_FOUND = "hatch_pattern_not_found", Failed, false, "Projede bu adda tarama deseni yok.";
     /// A table that names a file but is linked to none.
     SOURCE_UNLINKED = "source_unlinked", Warning, false, "Tablo bir dosyanın adını taşıyor ama ona bağlı değil; Dosyaya bağla ile seçin.";
     /// An object given as a content block that is not a block insert.

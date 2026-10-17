@@ -2163,7 +2163,9 @@ pub fn catalog() -> CommandCatalog {
                       reselect (Sınırı yeniden seç) bölgeyi cad.entities.hatch'in point bölgesiyle yeniden bulur (desen, katman ve görünüş kalır). \
                       addIslands (Ada ekle) kapalı nesneleri ada yapar: ilişkili tarama onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın bölgesinden alanları çıkarılır. \
                       removeIslands (Ada çıkar) ilişkili taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla (holes, 0 ilki) kaldırır. \
-                      untie (İlişkiyi kopar) taramalar bir şeyi izlemez. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      untie (İlişkiyi kopar) taramalar bir şeyi izlemez. \
+                      pattern (Deseni değiştir) taramaların desenini cad.entities.hatch'in pattern'iyle değiştirir (bölge, bağ ve görünüş kalır; origin köşesi her taramanın kutusunun, across ile hepsininkinin; origin verilmezse her biri kendininkini korur; annotative verilmezse ölçekleri kalır). \
+                      align (Hizala) taramaların çizgilerini reference'ınkileri sürdürecek biçimde başlangıcını, aynı desendeyseler açısını ve ölçeğini de alır. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -2783,7 +2785,9 @@ pub fn catalog() -> CommandCatalog {
             summary: "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. \
                       region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
                       region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. \
-                      pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
+                      pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), \
+                      origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). \
+                      Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
                       Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -4132,6 +4136,42 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Çizgi tipi ölçeğini 2 yap".into(),
                     input: json!({ "operation": "scale", "scale": 2.0 }),
+                    output: None,
+                },
+            ],
+        },
+        // Tarama desenleri (docs/adr/0331 §1), held together by fixtures/commands/v1/cad.hatchpatterns.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_HATCH_PATTERNS_EDIT.into(),
+            version: crate::CAD_HATCH_PATTERNS_EDIT_VERSION,
+            title: "Tarama desenleri".into(),
+            summary: "Projenin kendi tarama desenlerini değiştirir (AutoCAD'in PAT dosyaları): load bir PAT dosyasının metnindeki (pat; source dosyanın adı, her desenin kaynağı; unit sayıların birimi: mm ya da inch kâğıtta, drawing çizimde, yoksa mm) desenleri alır, names verilmişse yalnız onları; \
+                      projede aynı adlı desen (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla söylenir ve o desen alınmaz. add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı, başlangıç, öteleme, kesikler) ekler, replace ile aynı adlıyı değiştirir. \
+                      remove adı verilen deseni siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez. export desenleri (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi değiştirmez. \
+                      Projenin desenleri kitaplığınkilerden önce aranır: cad.entities.hatch'in pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["hatchpattern".into(), "pat".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HatchPatternsEdit>(),
+            output: schema::<crate::HatchPatternsEdited>(),
+            plan: Some(schema::<crate::HatchPatternsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir PAT dosyasının desenlerini al".into(),
+                    input: json!({ "operation": "load", "pat": "*TUGLA, Tuğla\n0, 0,0, 0,6.35\n90, 0,0, 6.35,6.35, 6.35,-6.35\n", "source": "ofis.pat", "unit": "mm" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin desenlerini PAT olarak ver".into(),
+                    input: json!({ "operation": "export" }),
                     output: None,
                 },
             ],
@@ -5495,6 +5535,9 @@ mod tests {
                     crate::CAD_LINE_TYPES_EDIT => {
                         serde_json::from_value::<crate::LineTypesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_HATCH_PATTERNS_EDIT => {
+                        serde_json::from_value::<crate::HatchPatternsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LIBRARY_EDIT => {
                         serde_json::from_value::<crate::LibraryEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5782,6 +5825,10 @@ mod tests {
                         }
                         crate::CAD_LINE_TYPES_EDIT => {
                             serde_json::from_value::<crate::LineTypesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_HATCH_PATTERNS_EDIT => {
+                            serde_json::from_value::<crate::HatchPatternsEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_LIBRARY_EDIT => {

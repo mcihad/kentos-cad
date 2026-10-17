@@ -53,6 +53,15 @@ ENTITIES = [
     {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": P(X, Y + 50), "b": P(X + 4, Y + 50), "offset": 0.5, "height": H,
      "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.3}]}},
 ]
+RING = [P(X + 20, Y), P(X + 30, Y), P(X + 30, Y + 8), P(X + 20, Y + 8)]
+ANSI31 = {"type": "pattern", "angle": 0, "spacing": 1, "name": "ANSI31", "scale": 0.1, "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 3.175]}]}
+ENTITIES += [
+    # docs/adr/0331 §3: a patterned and a solid hatch, a lined hatch annotative at 1:100 and 1:50.
+    {"kind": "hatch", "id": 9, "layerId": "yazi", "attrs": {}, "ring": RING, "pattern": ANSI31},
+    {"kind": "hatch", "id": 10, "layerId": "yazi", "attrs": {}, "ring": RING, "pattern": {"type": "solid", "angle": 0, "spacing": 1}},
+    {"kind": "hatch", "id": 11, "layerId": "yazi", "attrs": {}, "ring": RING, "pattern": {"type": "lines", "angle": 45, "spacing": 0.2},
+     "annotative": {"at": 100, "scales": [{"scale": 50}]}},
+]
 LAYERS = [layer("yazi", "Yazı"), layer("kilitli", "Kilitli katman", locked=True)]
 SETUP = {
     "format": "kentos.document",
@@ -81,15 +90,24 @@ def why_not(e):
         return "Eğri boyunca yazı ölçekli olamaz: harfleri eğrisinin üstündedir."
     if e["kind"] == "text" and "labelOf" in e:
         return "Nesneye bağlı yazı ölçekli olamaz: kendi etiket ölçeğini izler; önce Bağı kopar."
-    if e["kind"] in ("text", "dimension", "leader"):
+    if e["kind"] == "hatch" and e["pattern"]["type"] in ("solid", "gradient"):
+        return "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur."
+    if e["kind"] in ("text", "dimension", "leader", "hatch"):
         return None
-    return "Yalnız yazı, ölçü ve kılavuz ölçekli olur."
+    return "Yalnız yazı, ölçü, kılavuz ve tarama ölçekli olur."
 
 
 def represented(e, at, entry):
     """`e` (its own at `at`) as it is drawn at `entry`'s scale."""
     f = entry["scale"] / at
     out = copy.deepcopy(e)
+    if e["kind"] == "hatch":
+        # Its pattern as large on paper: the lines' spacing or the families' scale times the ratio (docs/adr/0331 §3).
+        if e["pattern"]["type"] in ("lines", "cross"):
+            out["pattern"]["spacing"] = e["pattern"]["spacing"] * f
+        elif e["pattern"]["type"] == "pattern":
+            out["pattern"]["scale"] = e["pattern"]["scale"] * f
+        return out
     out["height"] = e["height"] * f
     if e["kind"] == "text":
         if "boxWidth" in e:
@@ -131,6 +149,8 @@ def near(a, b):
 
 
 def values(e):
+    if e["kind"] == "hatch":
+        return {}
     if e["kind"] == "text":
         return {"point": e["p"], "rotation": e["rotation"]}
     if e["kind"] == "leader":
@@ -235,7 +255,11 @@ case("Ölçekli yap ölçeklerle: kendi ölçeği (100) ve yinelenen 50 bir kez,
      run("make", [1], {"1": with_scales(E(1), PLOT, [{"scale": 200}, {"scale": 50}])}, scales=[200, 50, 100, 50]))
 case("Ölçekli yap ölçü ve kılavuzda", run("make", [2, 3], {"2": with_scales(E(2), PLOT, []), "3": with_scales(E(3), PLOT, [])}))
 case("Ölçekli yap: çizgi ölçekli olamaz; başka nesne kalmayınca ret",
-     refused("make", [5], "not_annotative", "Yalnız yazı, ölçü ve kılavuz ölçekli olur.", "uids[0]"))
+     refused("make", [5], "not_annotative", "Yalnız yazı, ölçü, kılavuz ve tarama ölçekli olur.", "uids[0]"))
+case("Ölçekli yap: desenli tarama ölçekli olur (docs/adr/0331 §3)",
+     run("make", [9], {"9": with_scales(E(9), PLOT, [{"scale": 50}])}, scales=[50]))
+case("Ölçekli yap: dolu taramanın deseni yok; ret",
+     refused("make", [10], "not_annotative", "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.", "uids[0]"))
 case("Ölçekli yap: eğri boyunca yazı ölçekli olamaz",
      refused("make", [4], "not_annotative", "Eğri boyunca yazı ölçekli olamaz: harfleri eğrisinin üstündedir.", "uids[0]"))
 case("Ölçekli yap: yazı ve çizgi birlikte; çizgi uyarıyla atlanır",
@@ -305,6 +329,10 @@ case("Plan: yazacağını verir, yazmaz",
 # ── Çizim ölçeği değişince (docs/adr/0323 §3) ───────────────────────────
 follow = {}
 for e in ENTITIES:
+    if e["kind"] == "hatch" and "annotative" in e:
+        # An annotative hatch takes the new scale as its own (docs/adr/0331 §3); a hatch has no height to follow.
+        follow[str(e["id"])] = rebase(e, 50)
+        continue
     if e["kind"] not in ("text", "dimension", "leader") or e["layerId"] == "kilitli":
         continue
     if "annotative" in e:
@@ -338,7 +366,7 @@ def representation_cases():
         for scale in (50, 100, 200):
             drawn = at_scale(e, scale)
             out.append({"object": e, "scale": scale, "drawn": "own" if drawn is e else drawn})
-    for e in (E(7), E(8)):
+    for e in (E(7), E(8), E(11)):
         out.append({"object": e, "rebase": 50, "result": rebase(e, 50)})
         out.append({"object": e, "rebase": 200, "result": rebase(e, 200)})
     lead = E(3)

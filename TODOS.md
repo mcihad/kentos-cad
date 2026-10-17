@@ -202,6 +202,13 @@ Liste:
   `islandStyle`, `alsoAt`, `gap`'i ve `cad.hatches.edit`'in web işleyicisi (ortak durumlar `cad.entities.hatch.json`,
   `cad.hatches.edit.json`); Taramayı düzenle aracı, Tarama'nın Boşluk (G) seçeneği ve Adalar'ın iç içe değeri, Öznitelikler'in Sınır
   satırı; iz `hatches.json`'un G seçeneği.
+- [ ] `CAD-HATCH-06`…`08` tarama desenleri, başlangıç ve ölçekli tarama (ADR 0331, 17 Ekim): web'de gerekenler: `.kcad` şema 71
+  (`hatchPatterns`, desenin `origin`'i, taramanın `annotative`'i; sütunların OPT[6]'sı), boyaların başlangıca bağlanması (çekirdekten),
+  projenin desenlerinin çözümü ve ölçek tabanı; `cad.hatchpatterns.edit` ve `cad.hatches.edit`'in `pattern` ve `align`'ının web
+  işleyicileri (ortak durumlar `cad.hatchpatterns.edit.json`, `cad.entities.hatch.json`, `cad.hatches.edit.json`,
+  `cad.annotations.scales.json`); PAT okuma ve yazma biçim işçisinde; Tarama desenleri penceresi; Tarama'nın Ölçek tabanı,
+  Başlangıç, Ölçekli ve Özellik al seçenekleri, Taramayı düzenle'nin Hizala'sı; Öznitelikler'in Başlangıç ve ölçekli satırları;
+  izler `hatch-patterns.json` ve `hatches.json`.
 - [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
   `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
   WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in

@@ -1478,6 +1478,11 @@ pub struct HatchEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary: Option<Vec<crate::HatchLoop>>,
+    /// Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large
+    /// on paper as at its own; absent: one pattern for every scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 /// A leader (docs/adr/0146): an arrowhead at its first vertex, a line

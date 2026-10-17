@@ -118,6 +118,118 @@ pub struct HatchPattern {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub gradient: Option<HatchGradient>,
+    /// Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+    /// it as the definition says instead of through the world's origin. Absent: the world's origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: Option<Vec2>,
+}
+
+/// What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchPatternUnit {
+    /// Millimetres on paper (acadiso.pat's, the library's).
+    #[default]
+    Mm,
+    /// Inches on paper (acad.pat's).
+    Inch,
+    /// The drawing's own lengths, in the project's unit.
+    Drawing,
+}
+
+impl HatchPatternUnit {
+    /// Metres in the drawing per unit of the definition, at 1:`plot_scale` and a project unit of `unit_metres`.
+    pub fn metres(self, plot_scale: f64, unit_metres: f64) -> f64 {
+        match self {
+            HatchPatternUnit::Mm => plot_scale / 1000.0,
+            HatchPatternUnit::Inch => 25.4 * plot_scale / 1000.0,
+            HatchPatternUnit::Drawing => unit_metres,
+        }
+    }
+}
+
+/// A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HatchPatternDef {
+    /// One of its kind among the project's, letters' case aside; no comma.
+    pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub description: String,
+    #[serde(default)]
+    pub unit: HatchPatternUnit,
+    pub lines: Vec<PatternLine>,
+    /// The file it came from (`kentos.pat`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+}
+
+/// Whether two pattern names are the same one (AutoCAD's: letters' case aside).
+pub fn same_hatch_pattern_name(a: &str, b: &str) -> bool {
+    a.trim().to_lowercase() == b.trim().to_lowercase()
+}
+
+/// What is wrong with a project's patterns, said so a reader can fix it; none: they hold.
+pub fn hatch_patterns_problem(defs: &[HatchPatternDef]) -> Option<String> {
+    for (i, d) in defs.iter().enumerate() {
+        let name = d.name.trim();
+        if name.is_empty() {
+            return Some("bir tarama deseninin adı boş".into());
+        }
+        if name != d.name {
+            return Some(format!(
+                "“{}” tarama deseninin adının başında ya da sonunda boşluk var",
+                d.name
+            ));
+        }
+        if name.contains(',') || name.chars().count() > MAX_PATTERN_NAME {
+            return Some(format!(
+                "“{name}” tarama deseninin adı virgül içeremez ve en çok {MAX_PATTERN_NAME} harf olur"
+            ));
+        }
+        if defs[..i].iter().any(|o| same_hatch_pattern_name(&o.name, name)) {
+            return Some(format!("“{name}” tarama deseni iki kez var"));
+        }
+        let n = d.lines.len();
+        if n == 0 || n > MAX_PATTERN_LINES {
+            return Some(format!(
+                "“{name}” tarama deseninin ailesi en az 1, en çok {MAX_PATTERN_LINES} olur, {n} var"
+            ));
+        }
+        for l in &d.lines {
+            if l.dashes.len() > MAX_PATTERN_DASHES {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinde en çok {MAX_PATTERN_DASHES} kesik olur"
+                ));
+            }
+            if !finite_all(&[l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]])
+                || !finite_all(&l.dashes)
+            {
+                return Some(format!("“{name}” tarama deseninin bir sayısı geçersiz"));
+            }
+            if l.offset[1] == 0.0 {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinde çizgiler arası (dy) 0"
+                ));
+            }
+            if !l.dashes.is_empty() && l.dashes.iter().all(|d| *d == 0.0) {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinin kesiklerinin hepsi 0"
+                ));
+            }
+        }
+    }
+    None
 }
 
 /// The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
@@ -387,6 +499,7 @@ impl HatchPattern {
             scale: None,
             lines: None,
             gradient: None,
+            origin: None,
         }
     }
 
@@ -494,6 +607,20 @@ impl HatchPattern {
                         ),
                     ));
                 }
+            }
+        }
+        if let Some(o) = self.origin {
+            if matches!(kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+                return Some((
+                    "pattern.origin",
+                    "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.".to_owned(),
+                ));
+            }
+            if !(o.x.is_finite() && o.y.is_finite()) {
+                return Some((
+                    "pattern.origin",
+                    "Desenin başlangıç noktası sonlu olmalı.".to_owned(),
+                ));
             }
         }
         if kind == HatchPatternType::Gradient {

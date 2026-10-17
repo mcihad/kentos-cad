@@ -202,7 +202,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 23.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 26.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -554,7 +554,8 @@ impl Reader<'_> {
                     },
                 }
             }
-            12 => {
+            12 | 26 => {
+                let with_origin = kind == 26.0;
                 let ring = self.points()?;
                 let holes = match self.int()? {
                     None => None,
@@ -595,6 +596,8 @@ impl Reader<'_> {
                         })
                     }
                 };
+                // docs/adr/0331 §2: kind 26, a hatch whose pattern has its own origin.
+                let origin = if with_origin { Some(self.pt()?) } else { None };
                 let assoc = match self.string()? {
                     None => None,
                     // The packed record keeps the closed object's id; a face's line work is not drawn.
@@ -619,6 +622,7 @@ impl Reader<'_> {
                         scale: (!scale.is_nan()).then_some(scale),
                         lines,
                         gradient,
+                        origin,
                     },
                     assoc,
                 }
@@ -1187,7 +1191,7 @@ impl Packer {
                 assoc,
                 ..
             } => {
-                self.put(&[12.0]);
+                self.put(&[if pattern.origin.is_some() { 26.0 } else { 12.0 }]);
                 self.points(ring);
                 self.put(&[count(holes.as_deref())]);
                 for h in holes.iter().flatten() {
@@ -1210,6 +1214,9 @@ impl Packer {
                         let inverted = g.inverted.map_or(-1.0, flag);
                         self.put(&[shape, inverted, color2]);
                     }
+                }
+                if let Some(o) = pattern.origin {
+                    self.put(&[o.x, o.y]);
                 }
                 match assoc {
                     None => self.put(&[-1.0]),

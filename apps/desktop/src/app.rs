@@ -176,6 +176,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
+    /// Tarama desenleri (hatch_patterns_window.rs, docs/adr/0331 §1); the window is `App::hatch_patterns_window`.
+    HatchPatterns,
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4); the window is `App::style_impact`.
     StyleImpact,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
@@ -437,6 +439,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
+    /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
+    HatchPatterns(crate::hatch_patterns_window::Event),
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4).
     StyleImpact(crate::style_impact::Event),
     /// Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
@@ -862,6 +866,8 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
+    /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
+    pub(crate) hatch_patterns_window: Option<crate::hatch_patterns_window::Window>,
     /// Değişikliğin etkisi's window (style_impact.rs, docs/adr/0314 §4).
     pub(crate) style_impact: Option<crate::style_impact::Window>,
     /// Blok düzenleyici, while it is open (block_editor.rs, docs/adr/0316 §1).
@@ -1170,6 +1176,7 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             line_types_window: None,
+            hatch_patterns_window: None,
             style_impact: None,
             block_editor: None,
             layer_filter: None,
@@ -1695,6 +1702,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
+            Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::BlockEditor(event) => return self.block_editor_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
@@ -2529,6 +2537,7 @@ impl App {
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
+            "hatchPatterns.manage" => self.open_hatch_patterns(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),

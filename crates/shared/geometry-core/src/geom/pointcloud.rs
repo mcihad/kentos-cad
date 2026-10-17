@@ -349,11 +349,11 @@ mod tests {
         // The first number that is no kind.
         let mut bad = Packer::default();
         bad.object(3.0, "a", false, &cloud);
-        bad.nums[3] = 24.0;
+        bad.nums[3] = 27.0;
         assert!(
             Store::new()
                 .put_packed(&bad.nums, &bad.strings)
-                .is_err_and(|e| e.contains("bilinmeyen bir nesne türü (24)"))
+                .is_err_and(|e| e.contains("bilinmeyen bir nesne türü (27)"))
         );
     }
 }

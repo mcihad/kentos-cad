@@ -455,6 +455,7 @@ pub fn core_pattern(p: &ContractPattern) -> HatchPattern {
             inverted: g.inverted.then_some(true),
             color2: g.color2.clone(),
         }),
+        origin: p.origin.as_ref().map(v),
     }
 }
 
@@ -484,6 +485,7 @@ pub fn contract_pattern(p: HatchPattern) -> Option<ContractPattern> {
             }),
             None => None,
         },
+        origin: p.origin.map(|o| Point { x: o.x, y: o.y }),
     })
 }
 
@@ -1531,6 +1533,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             pattern,
             assoc,
             boundary,
+            annotative,
         } => {
             // A boundary draws the ring (docs/adr/0328 §1).
             let (ring, holes) = match boundary.as_deref().and_then(kentos_domain::hatch_boundaries::drawn) {
@@ -1544,6 +1547,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 pattern,
                 assoc,
                 boundary,
+                annotative,
             })
         }
         EntityGeometry::Insert {
@@ -1649,7 +1653,8 @@ pub fn edit_geometry_of(entity: &Entity, shape: Shape) -> Option<EntityGeometry>
         Some(scales),
         EntityGeometry::Text { annotative, .. }
         | EntityGeometry::Dimension { annotative, .. }
-        | EntityGeometry::Leader { annotative, .. },
+        | EntityGeometry::Leader { annotative, .. }
+        | EntityGeometry::Hatch { annotative, .. },
     ) = (kentos_contracts::annotative_of(entity), &mut g)
     {
         *annotative = Some(Box::new(scales.clone()));
@@ -1839,6 +1844,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 Some(a) => Some(contract_assoc(a)?),
                 None => None,
             },
+            annotative: None,
         },
         // An arrowhead the contract does not name is none of a leader's (docs/adr/0146 §1).
         Shape::Leader {

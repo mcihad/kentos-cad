@@ -57,6 +57,7 @@ fn hatch(pattern: HatchPattern, assoc: Option<HatchAssoc>) -> Entity {
         holes: None,
         pattern,
         assoc,
+        annotative: None,
     })
 }
 

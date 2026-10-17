@@ -437,6 +437,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut survey = None;
     let mut layer_states = Vec::new();
     let (mut line_types, mut line_type_scale) = (Vec::new(), None);
+    let mut hatch_patterns = Vec::new();
     let mut topology = None;
     let mut annotation = None;
     let mut connections = Vec::new();
@@ -489,6 +490,26 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 line_types = types;
+            }
+            // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+            "hatchPatterns" if has.hatch_extras => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let defs: Vec<kentos_contracts::HatchPatternDef> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        r.fail_at(Code::BadValue, at, &format!("tarama desenleri okunamadı: {e}"))
+                    })?;
+                if defs.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; tarama deseni yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::hatch_patterns_problem(&defs) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                hatch_patterns = defs;
             }
             "lineTypeScale" if has.patterns => {
                 let at = r.position();
@@ -649,6 +670,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     Ok(ProjectSettings {
         line_type_scale,
         line_types,
+        hatch_patterns,
         srid,
         length_decimals: required(r, length_decimals, "lengthDecimals")?,
         area_decimals: required(r, area_decimals, "areaDecimals")?,

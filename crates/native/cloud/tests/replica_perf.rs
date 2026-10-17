@@ -111,6 +111,7 @@ fn opened(n: usize) -> Opened {
         networks: Vec::new(),
         variables: Vec::new(),
         address_locators: Vec::new(),
+        hatch_patterns: Vec::new(),
     };
     let layers = vec![LayerNode {
         frozen: None,

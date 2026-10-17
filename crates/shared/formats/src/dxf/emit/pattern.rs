@@ -173,6 +173,7 @@ fn gradient(m: Tf, h: &Hatch, own: Option<&str>, t: &mut Taken) {
             inverted,
             color2,
         }),
+        origin: None,
     };
 }
 
@@ -364,6 +365,7 @@ pub fn pattern_of(m: Tf, h: &Hatch, own: Option<&str>) -> Taken {
         scale: Some(s * k),
         lines: Some(lines),
         gradient: None,
+        origin: None,
     };
     t
 }
@@ -591,6 +593,7 @@ mod tests {
                 inverted: true,
                 color2: "#FFFFFF".into(),
             }),
+            origin: None,
         };
         let json = serde_json::to_string(&kept).expect("json");
         // DXF has no inverted linear gradient: it reads the linear one half round.

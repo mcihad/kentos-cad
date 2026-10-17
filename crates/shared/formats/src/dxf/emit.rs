@@ -2947,6 +2947,7 @@ impl<'l> Emitter<'l> {
                 pattern: pattern.clone(),
                 assoc: None,
                 boundary,
+                annotative: None,
             }));
         }
     }

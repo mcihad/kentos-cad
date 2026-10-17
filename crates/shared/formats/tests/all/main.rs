@@ -18,6 +18,7 @@ mod gnss;
 mod kml;
 mod kml_timing;
 mod lin;
+mod pat;
 mod multidim;
 mod raster;
 mod raster_georef;

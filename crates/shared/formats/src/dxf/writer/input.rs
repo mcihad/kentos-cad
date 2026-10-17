@@ -427,6 +427,7 @@ impl Fields {
                 // Written without it (docs/adr/0186 §6), and said.
                 assoc: self.assoc,
                 boundary: self.boundary,
+                annotative: None,
             }),
             "insert" => Entity::Insert(InsertEntity {
                 parameters: Default::default(),

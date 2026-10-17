@@ -236,6 +236,7 @@ pub(super) struct Features {
     pub(super) hatch_boundaries: bool,
     /// Schema 70: a face's tie's `gap` (docs/adr/0329 §3).
     pub(super) hatch_gaps: bool,
+    pub(super) hatch_extras: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -321,6 +322,7 @@ impl Features {
             table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
             hatch_boundaries: schema >= crate::SCHEMA_WITH_HATCH_BOUNDARIES,
             hatch_gaps: schema >= crate::SCHEMA_WITH_HATCH_GAPS,
+            hatch_extras: schema >= crate::SCHEMA_WITH_HATCH_EXTRAS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -440,6 +442,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 matches!(key, "ring" | "holes" | "pattern")
                     || (has.hatches && has.uids && key == "assoc")
                     || (has.hatch_boundaries && key == "boundary")
+                    || (has.hatch_extras && key == "annotative")
             }
             Kind::Insert => {
                 matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
@@ -1950,6 +1953,7 @@ fn build(
             pattern: required(r, f.pattern.take(), "pattern")?,
             assoc: f.assoc.take(),
             boundary: f.hatch_boundary.take(),
+            annotative: f.annotative.take(),
         }),
         Kind::Insert => {
             let scale = required(r, f.scale, "scale")?;
@@ -2674,6 +2678,7 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
     let at = r.position();
     let (mut kind, mut angle, mut spacing) = (None, None, None);
     let (mut name, mut scale, mut lines, mut gradient) = (None, None, None, None);
+    let mut origin = None;
     map(r, |r, key| {
         match key {
             "type" => {
@@ -2688,6 +2693,8 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
             "scale" if has.hatches => scale = Some(r.float()?),
             "lines" if has.hatches => lines = Some(list(r, |r, _| pattern_line(r))?),
             "gradient" if has.hatches => gradient = Some(hatch_gradient(r)?),
+            // Schema 71 (docs/adr/0331 §2).
+            "origin" if has.hatch_extras => origin = Some(point(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -2700,8 +2707,9 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
         scale,
         lines,
         gradient,
+        origin,
     };
-    if p.has_definition()
+    if (p.has_definition() || p.origin.is_some())
         && let Some((_, words)) = p.problem()
     {
         return Err(r.fail_at(Code::BadValue, at, &words));

@@ -388,6 +388,7 @@
     "standards.check",
     "standards.apply",
     "lineTypes.manage",
+    "hatchPatterns.manage",
     "tool.layerMatch",
     "tool.copyToLayer",
     "layer.duplicate",

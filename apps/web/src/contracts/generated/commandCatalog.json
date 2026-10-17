@@ -4588,6 +4588,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -4867,6 +4878,18 @@
                   "null"
                 ]
               },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
+              },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
                 "format": "double",
@@ -4890,6 +4913,40 @@
               "type",
               "angle",
               "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternDef": {
+            "description": "A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "lines": {
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "One of its kind among the project's, letters' case aside; no comma.",
+                "type": "string"
+              },
+              "source": {
+                "description": "The file it came from (`kentos.pat`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "$ref": "#/$defs/HatchPatternUnit",
+                "default": "mm"
+              }
+            },
+            "required": [
+              "name",
+              "lines"
             ],
             "type": "object"
           },
@@ -4919,6 +4976,26 @@
               {
                 "const": "gradient",
                 "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchPatternUnit": {
+            "description": "What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.",
+            "oneOf": [
+              {
+                "const": "mm",
+                "description": "Millimetres on paper (acadiso.pat's, the library's).",
+                "type": "string"
+              },
+              {
+                "const": "inch",
+                "description": "Inches on paper (acad.pat's).",
+                "type": "string"
+              },
+              {
+                "const": "drawing",
+                "description": "The drawing's own lengths, in the project's unit.",
                 "type": "string"
               }
             ]
@@ -9219,6 +9296,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "hatchPatterns": {
+                "description": "The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.",
+                "items": {
+                  "$ref": "#/$defs/HatchPatternDef"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -14289,6 +14373,60 @@
             ],
             "type": "object"
           },
+          "HatchPatternDef": {
+            "description": "A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "lines": {
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "One of its kind among the project's, letters' case aside; no comma.",
+                "type": "string"
+              },
+              "source": {
+                "description": "The file it came from (`kentos.pat`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "$ref": "#/$defs/HatchPatternUnit",
+                "default": "mm"
+              }
+            },
+            "required": [
+              "name",
+              "lines"
+            ],
+            "type": "object"
+          },
+          "HatchPatternUnit": {
+            "description": "What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.",
+            "oneOf": [
+              {
+                "const": "mm",
+                "description": "Millimetres on paper (acadiso.pat's, the library's).",
+                "type": "string"
+              },
+              {
+                "const": "inch",
+                "description": "Inches on paper (acad.pat's).",
+                "type": "string"
+              },
+              {
+                "const": "drawing",
+                "description": "The drawing's own lengths, in the project's unit.",
+                "type": "string"
+              }
+            ]
+          },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
             "properties": {
@@ -16266,6 +16404,50 @@
             ],
             "type": "object"
           },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "pattern"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "pattern"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "pattern"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
+            ],
+            "type": "object"
+          },
           "PatternShape": {
             "description": "A shape of a shape file in a pattern (`[CIRC1,ltypeshp.shx]`).",
             "properties": {
@@ -16498,6 +16680,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "hatchPatterns": {
+                "description": "The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.",
+                "items": {
+                  "$ref": "#/$defs/HatchPatternDef"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -22379,6 +22568,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -22658,6 +22858,18 @@
                   "null"
                 ]
               },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
+              },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
                 "format": "double",
@@ -22681,6 +22893,40 @@
               "type",
               "angle",
               "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternDef": {
+            "description": "A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "lines": {
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "One of its kind among the project's, letters' case aside; no comma.",
+                "type": "string"
+              },
+              "source": {
+                "description": "The file it came from (`kentos.pat`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "$ref": "#/$defs/HatchPatternUnit",
+                "default": "mm"
+              }
+            },
+            "required": [
+              "name",
+              "lines"
             ],
             "type": "object"
           },
@@ -22710,6 +22956,26 @@
               {
                 "const": "gradient",
                 "description": "A gradient from the hatch's colour to `gradient.color2`.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchPatternUnit": {
+            "description": "What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.",
+            "oneOf": [
+              {
+                "const": "mm",
+                "description": "Millimetres on paper (acadiso.pat's, the library's).",
+                "type": "string"
+              },
+              {
+                "const": "inch",
+                "description": "Inches on paper (acad.pat's).",
+                "type": "string"
+              },
+              {
+                "const": "drawing",
+                "description": "The drawing's own lengths, in the project's unit.",
                 "type": "string"
               }
             ]
@@ -27039,6 +27305,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "hatchPatterns": {
+                "description": "The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.",
+                "items": {
+                  "$ref": "#/$defs/HatchPatternDef"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -38470,6 +38743,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -38748,6 +39032,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -45671,6 +45967,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -45949,6 +46256,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -52851,6 +53170,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -53129,6 +53459,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -60190,6 +60532,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -60468,6 +60821,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -67333,6 +67698,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -67611,6 +67987,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -74490,6 +74878,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -74768,6 +75167,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -81945,6 +82356,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -82223,6 +82645,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -88806,6 +89240,17 @@
               {
                 "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
                 "properties": {
+                  "annotative": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Annotative"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each."
+                  },
                   "assoc": {
                     "anyOf": [
                       {
@@ -89625,6 +90070,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -93794,6 +94251,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -94072,6 +94540,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -101147,6 +101627,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -101425,6 +101916,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -108592,6 +109095,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -108870,6 +109384,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -115759,6 +116285,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -116037,6 +116574,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -123183,6 +123732,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -123461,6 +124021,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -130364,6 +130936,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -130642,6 +131225,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -137626,6 +138221,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -137904,6 +138510,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -145711,6 +146329,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -145989,6 +146618,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -155536,6 +156177,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -155814,6 +156466,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -165484,6 +166148,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -165762,6 +166437,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -174327,6 +175014,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -174605,6 +175303,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -181907,6 +182617,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -182185,6 +182906,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -189091,6 +189824,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -189369,6 +190113,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -196299,6 +197055,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -196577,6 +197344,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -203556,6 +204335,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -203834,6 +204624,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -210924,6 +211726,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -211202,6 +212015,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -218774,6 +219599,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -219052,6 +219888,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -226304,6 +227152,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -226582,6 +227441,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -231371,7 +232242,7 @@
       "id": "cad.hatches.edit",
       "version": 1,
       "title": "Taramaları düzenle",
-      "summary": "Taramalarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. recreate (Sınırı yeniden oluştur) taramanın sınırını layerId'ye (yoksa taramanın katmanı) nesne olarak yazar: form area tek alan (delikleri taramanınkiler; yaylar kesin, elips ve eğri kenarları 0,1 mm'lik kirişlerle, curves_approximated uyarısıyla), form polyline her halkayı ayrı nesne (doğru ve yaylardan kapalı çoklu çizgi, tam elips elips, tam kapalı eğri NURBS); associative (varsayılan açık) tarama sonra bu nesneleri izler. reselect (Sınırı yeniden seç) bölgeyi cad.entities.hatch'in point bölgesiyle yeniden bulur (desen, katman ve görünüş kalır). addIslands (Ada ekle) kapalı nesneleri ada yapar: ilişkili tarama onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın bölgesinden alanları çıkarılır. removeIslands (Ada çıkar) ilişkili taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla (holes, 0 ilki) kaldırır. untie (İlişkiyi kopar) taramalar bir şeyi izlemez. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Taramalarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. recreate (Sınırı yeniden oluştur) taramanın sınırını layerId'ye (yoksa taramanın katmanı) nesne olarak yazar: form area tek alan (delikleri taramanınkiler; yaylar kesin, elips ve eğri kenarları 0,1 mm'lik kirişlerle, curves_approximated uyarısıyla), form polyline her halkayı ayrı nesne (doğru ve yaylardan kapalı çoklu çizgi, tam elips elips, tam kapalı eğri NURBS); associative (varsayılan açık) tarama sonra bu nesneleri izler. reselect (Sınırı yeniden seç) bölgeyi cad.entities.hatch'in point bölgesiyle yeniden bulur (desen, katman ve görünüş kalır). addIslands (Ada ekle) kapalı nesneleri ada yapar: ilişkili tarama onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın bölgesinden alanları çıkarılır. removeIslands (Ada çıkar) ilişkili taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla (holes, 0 ilki) kaldırır. untie (İlişkiyi kopar) taramalar bir şeyi izlemez. pattern (Deseni değiştir) taramaların desenini cad.entities.hatch'in pattern'iyle değiştirir (bölge, bağ ve görünüş kalır; origin köşesi her taramanın kutusunun, across ile hepsininkinin; origin verilmezse her biri kendininkini korur; annotative verilmezse ölçekleri kalır). align (Hizala) taramaların çizgilerini reference'ınkileri sürdürecek biçimde başlangıcını, aynı desendeyseler açısını ve ölçeğini de alır. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -231400,6 +232271,17 @@
                 "type": "string"
               }
             ]
+          },
+          "BoxCorner": {
+            "description": "A region's corner, or its middle (docs/adr/0331 §2).",
+            "enum": [
+              "bottomLeft",
+              "bottomRight",
+              "topLeft",
+              "topRight",
+              "center"
+            ],
+            "type": "string"
           },
           "HatchEdit": {
             "description": "One edit of `cad.hatches.edit`.",
@@ -231527,6 +232409,57 @@
                 "type": "object"
               },
               {
+                "description": "Desen: the hatches' pattern as Tarama makes it (`pattern`: its name, Ölçek, Açı, basis, origin and Ölçekli;\ndocs/adr/0331); their regions, ties and looks kept. A corner origin is each hatch's own box's, with `across`\nthe box of them all; Ölçekli absent keeps each one's scales.",
+                "properties": {
+                  "kind": {
+                    "const": "pattern",
+                    "type": "string"
+                  },
+                  "pattern": {
+                    "$ref": "#/$defs/HatchPatternSpec"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids",
+                  "pattern"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Hizala: the hatches' lines continue the reference's (AutoCAD's hatch origin across objects, docs/adr/0331 §2):\neach takes its origin, and the angle and scale too where its pattern is the reference's.",
+                "properties": {
+                  "kind": {
+                    "const": "align",
+                    "type": "string"
+                  },
+                  "reference": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids",
+                  "reference"
+                ],
+                "type": "object"
+              },
+              {
                 "description": "İlişkiyi kopar: the hatches follow nothing; they stay as they are.",
                 "properties": {
                   "kind": {
@@ -231548,6 +232481,136 @@
                 "type": "object"
               }
             ]
+          },
+          "HatchOrigin": {
+            "description": "Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).",
+            "oneOf": [
+              {
+                "description": "The world's origin: neighbouring hatches line up.",
+                "properties": {
+                  "kind": {
+                    "const": "world",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A corner of each region's box; with `across`, of the box of every region the command hatches, so that they\nline up with each other (Nesneler boyunca hizala).",
+                "properties": {
+                  "across": {
+                    "type": "boolean"
+                  },
+                  "corner": {
+                    "$ref": "#/$defs/BoxCorner"
+                  },
+                  "kind": {
+                    "const": "corner",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "corner"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "HatchPatternSpec": {
+            "description": "The pattern by its name, as Tarama's Desen lists it, and its options.",
+            "properties": {
+              "angle": {
+                "description": "Açı, degrees; absent: 0.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "annotative": {
+                "description": "Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "basis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScaleBasis"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in\nthe drawing; absent: paper."
+              },
+              "inverted": {
+                "description": "Ters: a gradient's colours swapped; absent: false.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "name": {
+                "description": "The pattern's name: Çizgili, Çapraz, Dolu, a library pattern (ANSI31,\nISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its\ncase aside, Turkish, and a gradient by its shape's word too.",
+                "type": "string"
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin."
+              },
+              "scale": {
+                "description": "Ölçek: on paper, times the project's plot scale; absent: 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "secondColor": {
+                "description": "İkinci renk of a gradient, `#RRGGBB` or a colour's name; absent: white.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
           },
           "HatchRegion": {
             "description": "Where Tarama hatches.",
@@ -231738,6 +232801,21 @@
               }
             ]
           },
+          "ScaleBasis": {
+            "description": "What a pattern's Ölçek is of (docs/adr/0331 §3).",
+            "oneOf": [
+              {
+                "const": "paper",
+                "description": "Kâğıtta: the definition's units on paper, at the project's plot scale.",
+                "type": "string"
+              },
+              {
+                "const": "world",
+                "description": "Çizimde: the definition's units in the drawing (a millimetre pattern's millimetre a millimetre of the world).",
+                "type": "string"
+              }
+            ]
+          },
           "TrimBoundaries": {
             "description": "Which objects bound the cut or the growth. An object never bounds itself.",
             "oneOf": [
@@ -231821,7 +232899,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,\n`layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,\n`not_finite`, `invalid_gap`; `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,\n`layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,\n`not_finite`, `invalid_gap`, `unknown_pattern`, `invalid_scale`, `not_annotative`, `pattern_too_dense`;\n`invalid_revision`, `revision_conflict`.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/HatchEdit"
@@ -234440,6 +235518,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -234718,6 +235807,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -238833,6 +239934,11 @@
           "invalid_region",
           "not_finite",
           "invalid_gap",
+          "unknown_pattern",
+          "invalid_scale",
+          "not_annotative",
+          "pattern_too_dense",
+          "invalid_color",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -242035,6 +243141,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -242313,6 +243430,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -250157,6 +251286,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -250435,6 +251575,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -257652,6 +258804,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -257930,6 +259093,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -264885,6 +266060,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -265163,6 +266349,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -272421,6 +273619,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -272699,6 +273908,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -279750,6 +280971,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -280028,6 +281260,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -286984,6 +288228,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -287262,6 +288517,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -294244,6 +295511,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -294522,6 +295800,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -301427,6 +302717,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -301705,6 +303006,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -308572,6 +309885,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -308850,6 +310174,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -315774,6 +317110,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -316052,6 +317399,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -322883,6 +324242,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -323161,6 +324531,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -330106,6 +331488,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -330384,6 +331777,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -337371,6 +338776,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -337649,6 +339065,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -344627,6 +346055,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -344905,6 +346344,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -349047,7 +350498,7 @@
       "id": "cad.entities.hatch",
       "version": 1,
       "title": "Tara",
-      "summary": "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -349062,6 +350513,73 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "BoxCorner": {
+            "description": "A region's corner, or its middle (docs/adr/0331 §2).",
+            "enum": [
+              "bottomLeft",
+              "bottomRight",
+              "topLeft",
+              "topRight",
+              "center"
+            ],
+            "type": "string"
+          },
+          "HatchOrigin": {
+            "description": "Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).",
+            "oneOf": [
+              {
+                "description": "The world's origin: neighbouring hatches line up.",
+                "properties": {
+                  "kind": {
+                    "const": "world",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A point.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A corner of each region's box; with `across`, of the box of every region the command hatches, so that they\nline up with each other (Nesneler boyunca hizala).",
+                "properties": {
+                  "across": {
+                    "type": "boolean"
+                  },
+                  "corner": {
+                    "$ref": "#/$defs/BoxCorner"
+                  },
+                  "kind": {
+                    "const": "corner",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "corner"
+                ],
+                "type": "object"
+              }
+            ]
+          },
           "HatchPatternSpec": {
             "description": "The pattern by its name, as Tarama's Desen lists it, and its options.",
             "properties": {
@@ -349074,6 +350592,24 @@
                 ],
                 "x-unit": "deg"
               },
+              "annotative": {
+                "description": "Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "basis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ScaleBasis"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in\nthe drawing; absent: paper."
+              },
               "inverted": {
                 "description": "Ters: a gradient's colours swapped; absent: false.",
                 "type": [
@@ -349084,6 +350620,17 @@
               "name": {
                 "description": "The pattern's name: Çizgili, Çapraz, Dolu, a library pattern (ANSI31,\nISO02W100 …) or a gradient (Degrade doğrusal, silindir, küre); its\ncase aside, Turkish, and a gradient by its shape's word too.",
                 "type": "string"
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HatchOrigin"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin."
               },
               "scale": {
                 "description": "Ölçek: on paper, times the project's plot scale; absent: 1.",
@@ -349292,6 +350839,21 @@
               {
                 "const": "ignore",
                 "description": "Yok say: the islands are hatched over.",
+                "type": "string"
+              }
+            ]
+          },
+          "ScaleBasis": {
+            "description": "What a pattern's Ölçek is of (docs/adr/0331 §3).",
+            "oneOf": [
+              {
+                "const": "paper",
+                "description": "Kâğıtta: the definition's units on paper, at the project's plot scale.",
+                "type": "string"
+              },
+              {
+                "const": "world",
+                "description": "Çizimde: the definition's units in the drawing (a millimetre pattern's millimetre a millimetre of the world).",
                 "type": "string"
               }
             ]
@@ -352054,6 +353616,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -352332,6 +353905,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -356446,6 +358031,7 @@
           "pattern_too_dense",
           "invalid_region",
           "invalid_gap",
+          "not_annotative",
           "not_a_layer",
           "layer_locked",
           "invalid_line_weight",
@@ -358572,6 +360158,17 @@
               {
                 "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
                 "properties": {
+                  "annotative": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Annotative"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each."
+                  },
                   "assoc": {
                     "anyOf": [
                       {
@@ -359391,6 +360988,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -363649,6 +365258,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -363927,6 +365547,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -371089,6 +372721,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -371367,6 +373010,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -378917,6 +380572,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -379195,6 +380861,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -386662,6 +388340,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -386940,6 +388629,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -394675,6 +396376,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -394953,6 +396665,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -402705,6 +404429,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -402983,6 +404718,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -409669,6 +411416,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -409947,6 +411705,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -417547,6 +419317,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -417825,6 +419606,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -445934,6 +447727,430 @@
       ]
     },
     {
+      "id": "cad.hatchpatterns.edit",
+      "version": 1,
+      "title": "Tarama desenleri",
+      "summary": "Projenin kendi tarama desenlerini değiştirir (AutoCAD'in PAT dosyaları): load bir PAT dosyasının metnindeki (pat; source dosyanın adı, her desenin kaynağı; unit sayıların birimi: mm ya da inch kâğıtta, drawing çizimde, yoksa mm) desenleri alır, names verilmişse yalnız onları; projede aynı adlı desen (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla söylenir ve o desen alınmaz. add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı, başlangıç, öteleme, kesikler) ekler, replace ile aynı adlıyı değiştirir. remove adı verilen deseni siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez. export desenleri (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi değiştirmez. Projenin desenleri kitaplığınkilerden önce aranır: cad.entities.hatch'in pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "hatchpattern",
+        "pat"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "HatchPatternDef": {
+            "description": "A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "lines": {
+                "items": {
+                  "$ref": "#/$defs/PatternLine"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "One of its kind among the project's, letters' case aside; no comma.",
+                "type": "string"
+              },
+              "source": {
+                "description": "The file it came from (`kentos.pat`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "$ref": "#/$defs/HatchPatternUnit",
+                "default": "mm"
+              }
+            },
+            "required": [
+              "name",
+              "lines"
+            ],
+            "type": "object"
+          },
+          "HatchPatternUnit": {
+            "description": "What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.",
+            "oneOf": [
+              {
+                "const": "mm",
+                "description": "Millimetres on paper (acadiso.pat's, the library's).",
+                "type": "string"
+              },
+              {
+                "const": "inch",
+                "description": "Inches on paper (acad.pat's).",
+                "type": "string"
+              },
+              {
+                "const": "drawing",
+                "description": "The drawing's own lengths, in the project's unit.",
+                "type": "string"
+              }
+            ]
+          },
+          "HatchPatternsOperation": {
+            "description": "What `cad.hatchpatterns.edit` does.",
+            "oneOf": [
+              {
+                "const": "load",
+                "description": "The patterns of a PAT file's text taken in.",
+                "type": "string"
+              },
+              {
+                "const": "add",
+                "description": "One pattern added, or one of its name replaced.",
+                "type": "string"
+              },
+              {
+                "const": "remove",
+                "description": "One pattern taken away.",
+                "type": "string"
+              },
+              {
+                "const": "export",
+                "description": "The project's patterns as a PAT file's text; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "PatternLine": {
+            "description": "One family of a pattern's lines (docs/adr/0186 §1), in the pattern's\nunits, before the pattern turns: lines at `angle` (degrees) through\n`origin`, each the next `offset` on (`[along, across]` the line), drawn\nas `dashes` say (plus drawn, minus a gap, 0 a dot; none: whole).",
+            "properties": {
+              "angle": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "dashes": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": "array",
+                "x-unit": "pattern"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "pattern"
+              },
+              "origin": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "pattern"
+              }
+            },
+            "required": [
+              "angle",
+              "origin",
+              "offset"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.hatchpatterns.edit` v1. Refusals: `no_pat`, `no_definition`, `invalid_hatch_pattern`, `empty_name`,\n`hatch_pattern_not_found`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "remove: its name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "names": {
+            "description": "load: the patterns to take, by name; export: those to write. Absent: all.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/HatchPatternsOperation"
+          },
+          "pat": {
+            "description": "load: a PAT file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pattern": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HatchPatternDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "add: the pattern."
+          },
+          "replace": {
+            "description": "load, add: a pattern of a name the project has replaces it; else load skips it and add refuses.",
+            "type": "boolean"
+          },
+          "source": {
+            "description": "load: the file's name, each pattern's source; absent: `dosya.pat`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HatchPatternUnit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "load: what the file's numbers are in (a PAT file says not); absent: millimetres on paper."
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "HatchPatternsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "PatLineProblem": {
+            "description": "A PAT file's line that did not read.",
+            "properties": {
+              "line": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "line",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.hatchpatterns.edit` did.",
+        "properties": {
+          "added": {
+            "description": "The patterns added, by name, in their order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "pat": {
+            "description": "export: the PAT file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "problems": {
+            "description": "load: the file's lines that did not read.",
+            "items": {
+              "$ref": "#/$defs/PatLineProblem"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "The project's patterns a load or an add replaced.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "description": "load: the file's patterns of a name the project has, kept as they are.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "added",
+          "replaced",
+          "skipped",
+          "removed",
+          "problems",
+          "revision"
+        ],
+        "title": "HatchPatternsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "PatLineProblem": {
+            "description": "A PAT file's line that did not read.",
+            "properties": {
+              "line": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "line",
+              "message"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.hatchpatterns.edit` did.",
+        "properties": {
+          "added": {
+            "description": "The patterns added, by name, in their order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "pat": {
+            "description": "export: the PAT file's text.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "problems": {
+            "description": "load: the file's lines that did not read.",
+            "items": {
+              "$ref": "#/$defs/PatLineProblem"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "description": "The project's patterns a load or an add replaced.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "skipped": {
+            "description": "load: the file's patterns of a name the project has, kept as they are.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "added",
+          "replaced",
+          "skipped",
+          "removed",
+          "problems",
+          "revision"
+        ],
+        "title": "HatchPatternsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_pat",
+          "no_definition",
+          "invalid_hatch_pattern",
+          "empty_name",
+          "hatch_pattern_not_found",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir PAT dosyasının desenlerini al",
+          "input": {
+            "operation": "load",
+            "pat": "*TUGLA, Tuğla\n0, 0,0, 0,6.35\n90, 0,0, 6.35,6.35, 6.35,-6.35\n",
+            "source": "ofis.pat",
+            "unit": "mm"
+          }
+        },
+        {
+          "title": "Projenin desenlerini PAT olarak ver",
+          "input": {
+            "operation": "export"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.library.edit",
       "version": 1,
       "title": "Stil kitaplığı",
@@ -454632,6 +456849,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -454910,6 +457138,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -461838,6 +464078,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -462116,6 +464367,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -469170,6 +471433,17 @@
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
+              "annotative": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Annotative"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large\non paper as at its own; absent: one pattern for every scale."
+              },
               "assoc": {
                 "anyOf": [
                   {
@@ -469448,6 +471722,18 @@
                   "string",
                   "null"
                 ]
+              },
+              "origin": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through\nit as the definition says instead of through the world's origin. Absent: the world's origin.",
+                "x-unit": "length"
               },
               "scale": {
                 "description": "A pattern's metres per unit of its definition.",
@@ -479853,6 +482139,24 @@
       "meaning": "Sınırın elips ya da eğri kenarları 0,1 mm'lik kirişleriyle yazıldı."
     },
     {
+      "code": "no_pat",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yüklenecek PAT dosyası verilmedi."
+    },
+    {
+      "code": "invalid_hatch_pattern",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarama deseni kurallarına uymuyor."
+    },
+    {
+      "code": "hatch_pattern_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu adda tarama deseni yok."
+    },
+    {
       "code": "source_unlinked",
       "kind": "warning",
       "retryable": false,
@@ -480579,6 +482883,19 @@
       "id": "line-types",
       "change": "Çizgi tipleri ve çizgi tipi ölçeği (LTSCALE)",
       "command": "cad.linetypes.edit",
+      "undo": "outside",
+      "dirty": true,
+      "parts": [
+        "settings"
+      ],
+      "cloud": [
+        "ProjectPatch.settings: proje ayarları bütün olarak"
+      ]
+    },
+    {
+      "id": "hatch-patterns",
+      "change": "Projenin tarama desenleri",
+      "command": "cad.hatchpatterns.edit",
       "undo": "outside",
       "dirty": true,
       "parts": [

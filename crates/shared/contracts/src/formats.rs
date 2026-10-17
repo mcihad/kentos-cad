@@ -188,7 +188,9 @@ use crate::layer::LineType;
 ///    web's copy stays 53.
 /// 79 (docs/adr/0329 §3): a face's tie's `gap`: `.kcad` document schema 70; in the typed columns inside the hatch's
 ///    option 6 JSON. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 79;
+/// 80 (docs/adr/0331): a pattern's `origin` and a hatch's `annotative`: `.kcad` document schema 71; in the typed
+///    columns inside the hatch's option 6 JSON. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 80;
 
 // ── Every import ────────────────────────────────────────────────────────
 

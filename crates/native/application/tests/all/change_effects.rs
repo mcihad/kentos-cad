@@ -99,6 +99,10 @@ fn sample(id: &str, uid: impl Fn(u32) -> String) -> Option<(&'static str, Value)
             "cad.linetypes.edit",
             json!({ "operation": "scale", "scale": 2.0 }),
         ),
+        "hatch-patterns" => (
+            "cad.hatchpatterns.edit",
+            json!({ "operation": "load", "pat": "*CIM, Çim\n60, 0,0, 2,4, 1,-3\n", "source": "ofis.pat" }),
+        ),
         "standards" => ("cad.standards.apply", json!({ "name": "mimari-ofis" })),
         "library" => (
             "cad.library.edit",

@@ -1162,6 +1162,7 @@ impl Packer {
                 pattern,
                 assoc,
                 boundary,
+                annotative,
             }) => {
                 let HatchPattern {
                     kind,
@@ -1171,6 +1172,7 @@ impl Packer {
                     scale,
                     lines,
                     gradient,
+                    origin,
                 } = pattern;
                 self.points(ring);
                 let at = HATCH_PATTERNS.iter().position(|x| x == kind).unwrap_or(0);
@@ -1231,9 +1233,17 @@ impl Packer {
                 // Schema 69's exact boundary and a face's bounds (docs/adr/0328): one JSON object.
                 let bounds = assoc.as_ref().map_or(&[][..], |a| &a.bounds[..]);
                 let gap = assoc.as_ref().and_then(|a| a.gap);
-                if boundary.is_some() || !bounds.is_empty() || gap.is_some() {
+                if boundary.is_some() || !bounds.is_empty() || gap.is_some() || origin.is_some() || annotative.is_some()
+                {
                     flags |= OPT[6];
                     let mut more = serde_json::Map::new();
+                    // Schema 71 (docs/adr/0331): the pattern's own origin and the hatch's scales.
+                    if let Some(o) = origin {
+                        more.insert("origin".into(), serde_json::to_value(o).unwrap_or_default());
+                    }
+                    if let Some(a) = annotative {
+                        more.insert("annotative".into(), serde_json::to_value(a).unwrap_or_default());
+                    }
                     if let Some(b) = boundary {
                         more.insert("boundary".into(), serde_json::to_value(b).unwrap_or_default());
                     }
@@ -2792,6 +2802,7 @@ fn geometry(
                 None
             };
             let mut assoc = assoc;
+            let (mut origin, mut hatch_annotative) = (None, None);
             let boundary = if has(6) {
                 #[derive(serde::Deserialize)]
                 struct More {
@@ -2801,6 +2812,10 @@ fn geometry(
                     bounds: Vec<EntityId>,
                     #[serde(default)]
                     gap: Option<f64>,
+                    #[serde(default)]
+                    origin: Option<kentos_contracts::Vec2>,
+                    #[serde(default)]
+                    annotative: Option<Box<kentos_contracts::Annotative>>,
                 }
                 let t = c.text(|| place("boundary"))?;
                 let more: More = serde_json::from_str(&t)
@@ -2814,6 +2829,8 @@ fn geometry(
                         None => return Err(broken("ilişkisi olmayan taramanın sınır nesneleri")),
                     }
                 }
+                origin = more.origin;
+                hatch_annotative = more.annotative;
                 more.boundary
             } else {
                 None
@@ -2830,9 +2847,11 @@ fn geometry(
                     scale,
                     lines,
                     gradient,
+                    origin,
                 },
                 assoc,
                 boundary,
+                annotative: hatch_annotative,
             })
         }
         15 => {
@@ -3692,6 +3711,7 @@ mod tests {
                 holes: Some(vec![vec![Vec2 { x: 1.0, y: 1.0 }; 3]]),
                 pattern: HatchPattern::user(HatchPatternType::Cross, 45.0, 2.0),
                 assoc: None,
+                annotative: None,
             }),
             // A pattern of families, tied to its objects (docs/adr/0186).
             Entity::Hatch(HatchEntity {
@@ -3726,6 +3746,7 @@ mod tests {
                     cutouts: Vec::new(),
                     seed: Vec2 { x: 1.0, y: 0.5 },
                 }),
+                annotative: None,
             }),
             Entity::Hatch(HatchEntity {
                 boundary: None,
@@ -3741,6 +3762,7 @@ mod tests {
                     ..HatchPattern::user(HatchPatternType::Gradient, 90.0, 1.0)
                 },
                 assoc: None,
+                annotative: None,
             }),
         ];
         let cols = pack(entities.clone(), vec![id(1), id(2), id(3), id(4)]);

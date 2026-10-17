@@ -1298,6 +1298,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 doc.model.settings().plot_scale,
                 &f,
             ));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
         Entity::Text(t) => {
@@ -2362,6 +2363,14 @@ fn hatch_rows(
         ],
     });
     rows.push(Row::text("Sınır", exact).editor(recreate));
+    // Where its lines are anchored (docs/adr/0331 §2): the world's origin or its own point.
+    if !matches!(p.kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+        let origin = p.origin.map_or_else(
+            || "Dünya başlangıcı".to_owned(),
+            |o| f.point(kentos_geometry_core::Vec2::new(o.x, o.y)),
+        );
+        rows.push(Row::text("Başlangıç", origin));
+    }
     rows
 }
 
@@ -2592,7 +2601,12 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     let scaled: Vec<&Entity> = objects
         .iter()
         .copied()
-        .filter(|e| matches!(e, Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)))
+        .filter(|e| {
+            matches!(
+                e,
+                Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_) | Entity::Hatch(_)
+            )
+        })
         .collect();
     if !scaled.is_empty() {
         let slots: Vec<Slot> = scaled

@@ -671,6 +671,15 @@ pub struct Memory {
     pub hatch_edit_mode: u8,
     pub hatch_recreate_polyline: bool,
     pub hatch_texts: bool,
+    /// docs/adr/0331: a project pattern chosen (its place among the project's; none: the library's choice), Ölçek of
+    /// the drawing instead of the paper, the origin's rule (0 the world's, 1 bottom left, 2 bottom right, 3 top left,
+    /// 4 top right, 5 the middle, 6 a point) and its point, the boxes of every region at once, Ölçekli.
+    pub hatch_user: Option<u16>,
+    pub hatch_world: bool,
+    pub hatch_origin: u8,
+    pub hatch_origin_at: Option<kentos_geometry_core::Vec2>,
+    pub hatch_origin_across: bool,
+    pub hatch_annotative: bool,
     /// Alan kesiştir's Kaynakları sil, Alan çıkar's Çıkarılanları sil and
     /// İçine tıklayarak alan's Adalar (`AreaIntersectTool.erase`,
     /// `AreaSubtractTool.eraseCutters`, `BoundaryTool.islands`).
@@ -1078,6 +1087,12 @@ impl Default for Memory {
             hatch_edit_mode: 0,
             hatch_recreate_polyline: false,
             hatch_texts: false,
+            hatch_user: None,
+            hatch_world: false,
+            hatch_origin: 0,
+            hatch_origin_at: None,
+            hatch_origin_across: false,
+            hatch_annotative: false,
             area_intersect_erase: false,
             area_subtract_erase: false,
             boundary_islands: true,

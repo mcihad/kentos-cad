@@ -421,6 +421,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             holes: None,
             pattern: HatchPattern::user(HatchPatternType::Lines, 45.0, 3.0),
             assoc: None,
+            annotative: None,
         }),
     );
     let s = Slot(hatch);

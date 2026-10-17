@@ -570,6 +570,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.translate"
             | "cad.standards.apply"
             | "cad.linetypes.edit"
+            // Its remove and replace take a project pattern away (docs/adr/0331 §1).
+            | "cad.hatchpatterns.edit"
             | "cad.library.edit"
             | "cad.styles.edit"
             | "cad.settings.set"

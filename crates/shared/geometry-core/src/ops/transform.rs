@@ -430,6 +430,9 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                     pattern
                 }
             };
+            // Its own origin goes with it (docs/adr/0331 §2); one at the world's stays there.
+            let mut pattern = pattern;
+            pattern.origin = pattern.origin.map(|o| apply(m, o));
             Shape::Hatch {
                 // The exact boundary goes along (docs/adr/0328 §1): arcs, ellipses and curves by `m`.
                 boundary: boundary.as_ref().and_then(|b| {
