@@ -142,7 +142,7 @@ pub enum Text {
     Default,
     Note,
     CheckMessage(usize),
-    /// An attachments item's fewest and most (docs/adr/0407 §1).
+    /// An attachments or related item's fewest and most (docs/adr/0407 §1, 0444 §1).
     AttachMin,
     AttachMax,
 }
@@ -1235,6 +1235,8 @@ impl App {
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
                 let id = kentos_forms::item_id_of("iliskili", &taken);
                 let item = FormItem::Related {
+                    min: None,
+                    max: None,
                     id: id.clone(),
                     label: Some("İlişkili kayıtlar".into()),
                     layer: String::new(),
@@ -1348,6 +1350,8 @@ impl App {
                 if Some(&r.parent) == form_layer.as_ref() {
                     let id = kentos_forms::item_id_of(&r.id, &taken);
                     let item = FormItem::Related {
+                        min: None,
+                        max: None,
                         id: id.clone(),
                         label: Some(r.name.clone()),
                         layer: r.child.clone(),
@@ -2554,6 +2558,16 @@ fn set_text(body: &mut FormBody, id: &str, which: &Text, text: &str) {
     match find_mut(&mut body.items, id) {
         Some(FormItem::Tab { label, .. }) if *which == Text::Label => *label = text.to_owned(),
         Some(FormItem::Group { label, .. }) if *which == Text::Label => *label = some(text),
+        Some(FormItem::Related { min, max, .. })
+            if matches!(which, Text::AttachMin | Text::AttachMax) =>
+        {
+            // A count that is not a whole number leaves the bound off (docs/adr/0444 §1).
+            let count = text.trim().parse::<u32>().ok();
+            match which {
+                Text::AttachMin => *min = count,
+                _ => *max = count,
+            }
+        }
         Some(FormItem::Related { label, .. })
         | Some(FormItem::Location { label, .. })
         | Some(FormItem::Divider { label, .. })

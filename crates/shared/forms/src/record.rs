@@ -34,6 +34,9 @@ pub struct Object {
     /// Its geometry: what a spatial list asks the other layer's objects about (docs/adr/0439 §5);
     /// none for a record without geometry.
     pub shape: Option<std::sync::Arc<kentos_geometry_core::entity::Shape>>,
+    /// The objects a submission adds referring to the record, by [`added_key`](crate::added_key) (the
+    /// other layer and field; docs/adr/0444 §1): counted with those already there, a link taken off -1.
+    pub added: std::collections::BTreeMap<String, i32>,
 }
 
 /// How many attachments an object holds: all of them and its photos.

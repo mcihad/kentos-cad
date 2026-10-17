@@ -16,4 +16,9 @@ digest: string, body: FormBody,
 /**
  * What changed, as the publisher wrote it.
  */
-note?: string, };
+note?: string, 
+/**
+ * The layer's fields the body binds as they were at publishing ([`bound_fields_digest`]): a
+ * release whose fields changed since is said (docs/adr/0444 §2). None: published before it was kept.
+ */
+fields?: string, };

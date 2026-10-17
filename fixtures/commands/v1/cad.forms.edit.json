@@ -9908,7 +9908,8 @@
             }
            ]
           },
-          "note": "İlk yayın"
+          "note": "İlk yayın",
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -10078,7 +10079,8 @@
              }
             ]
            },
-           "note": "İlk yayın"
+           "note": "İlk yayın",
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -10268,7 +10270,8 @@
             }
            ]
           },
-          "note": "İlk yayın"
+          "note": "İlk yayın",
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -10438,7 +10441,8 @@
              }
             ]
            },
-           "note": "İlk yayın"
+           "note": "İlk yayın",
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -10699,7 +10703,8 @@
             }
            ]
           },
-          "note": "İlk yayın"
+          "note": "İlk yayın",
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -10869,7 +10874,8 @@
              }
             ]
            },
-           "note": "İlk yayın"
+           "note": "İlk yayın",
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -11059,7 +11065,8 @@
             }
            ]
           },
-          "note": "İlk yayın"
+          "note": "İlk yayın",
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          },
          {
           "version": 2,
@@ -11136,7 +11143,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -11306,7 +11314,8 @@
              }
             ]
            },
-           "note": "İlk yayın"
+           "note": "İlk yayın",
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           },
           {
            "version": 2,
@@ -11383,7 +11392,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -20025,7 +20035,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -23973,7 +23984,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -24632,7 +24644,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -24801,7 +24814,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }
@@ -24991,7 +25005,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ],
         "enforce": true
@@ -25161,7 +25176,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ],
          "enforce": true
@@ -25352,7 +25368,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ],
         "enforce": true
@@ -25522,7 +25539,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ],
          "enforce": true
@@ -25711,7 +25729,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "65c49d30e83e010ef33af1897d2ca0b0"
          }
         ]
        }
@@ -25880,7 +25899,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "65c49d30e83e010ef33af1897d2ca0b0"
           }
          ]
         }

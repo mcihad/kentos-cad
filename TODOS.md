@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-BA` ilişkili kayıtların sayısı ve yayının alanları (ADR 0444, 17 Ekim): web'de gerekenler: ilişkili öğenin `min` ve
+  `max`'ı, yayının `fields`'ı, `FormsValidated.fieldsChanged` (TS türleri üretildi); web'in gönderiminde alt kayıtların sayılması,
+  yayında alanların özeti, Formla düzenle'de ⓘ ve alanlar değişti uyarısı, tasarımcıda En az ve En çok.
 - [ ] `FORM-AZ` formların erişimi ve kabulü (ADR 0443, 17 Ekim): web'de gerekenler: `cad.schema.describe`'ın türleri, formun
   `translations`'ı (`FormTranslation`, `ItemWords`), grubun `across`'u, alanın `redact`'ı (TS türleri üretildi); web'in Formla
   düzenle'sinde dil seçici, Sonraki sorun, kapanış sorusu ve Esc; tasarımcıda Çeviriler, Satır satır, Örneklerde gizle; komut
@@ -1554,6 +1557,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-BA` İlişkili kayıtların sayısı (bire bir, zorunlu alt kayıt; gönderimin alt kayıtlarıyla), yayının bağlı alanlarının özeti
+  ve alanlar değişince uyarı ve yeniden yayın, Formla düzenle'de formun nasıl açıldığı, pencere ile komutun eşdeğerlik testi. —
+  **17 Ekim, [ADR 0444](docs/adr/0444-related-bounds-release-fields-and-conformance.md).**
 - [x] `FORM-AZ` Formların erişimi ve kabulü: şemayı sayfa sayfa keşif (`cad.schema.describe`), örneklerde gizlenen alanlar ve
   komut geçmişinin Python betiği, SDK'nın sürüm uzlaşması ve biçimin adı, her girişte aynı kod, gerektirdikleri ve desteklenmeyenler,
   çeviriler, satır satır sütunlar, Sonraki sorun, kapanış sorusu, gerçek klavye testi ve Python'dan kabul; Kaydet'in bütün taslağı

@@ -106,7 +106,24 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
             "uid",
         ));
     }
-    let object = forms::object(doc, slot, e);
+    let mut object = forms::object(doc, slot, e);
+    // The children this submission links or unlinks count with those already there (docs/adr/0444 §1).
+    let parent_uid = doc.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+    for c in &input.children {
+        let Some(r) = doc.settings().relations.iter().find(|r| r.id == c.relation) else {
+            continue;
+        };
+        let linked = linked_to(doc, r, &c.uid, &parent_uid);
+        let delta = match (c.unlink, linked) {
+            (true, true) => -1,
+            (false, false) => 1,
+            _ => 0,
+        };
+        *object
+            .added
+            .entry(kentos_forms::added_key(&r.child, &r.field))
+            .or_default() += delta;
+    }
     let values: Vec<(String, String)> = input
         .values
         .iter()
@@ -567,4 +584,36 @@ fn write_execute(
         output: answer(cx.doc, &c, true, &input.uid),
         warnings,
     }
+}
+
+/// Whether the object `child` already refers to `parent` through `r`'s field.
+fn linked_to(
+    doc: &Document,
+    r: &kentos_contracts::ProjectRelation,
+    child: &str,
+    parent: &str,
+) -> bool {
+    let Some(slot) = kentos_domain::Uuid::parse_str(child)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+    else {
+        return false;
+    };
+    let Some(e) = doc.get(slot).filter(|e| e.base().layer_id == r.child) else {
+        return false;
+    };
+    let name = doc
+        .layers()
+        .get(&r.child)
+        .and_then(|n| {
+            n.fields
+                .iter()
+                .find(|f| f.key() == r.field)
+                .map(|f| f.name.clone())
+        })
+        .unwrap_or_else(|| r.field.clone());
+    e.base()
+        .attrs
+        .get(&name)
+        .is_some_and(|v| v.split(';').any(|h| h.trim() == parent))
 }

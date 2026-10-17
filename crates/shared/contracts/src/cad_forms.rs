@@ -279,6 +279,11 @@ pub struct FormsValidated {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub requires: Vec<String>,
+    /// The layer's fields the release binds changed since it was published (docs/adr/0444 §2): review the
+    /// form and publish it again. Written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub fields_changed: bool,
 }
 
 /// Input of `cad.forms.submit` v1.

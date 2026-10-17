@@ -138,6 +138,57 @@ def cases():
         {**failing(p, ft.FAILING[0]), "op": "plan"}])
     case("olmayan formun yayını", [form(passing)], lambda p: [p.refused({"kind": "publish", "id": "yok"},
                                                                        fc.unknown_form("yok", "edit.id"))])
+    # docs/adr/0444 §2: the release keeps its bound fields' digest; a field changed since publishes again and
+    # validate says so.
+    lower = copy.deepcopy(FIELDS)
+    lower[1]["max"] = "30"
+    extra = FIELDS + [{"name": "Not", "kind": "text"}]
+
+    def fields_step(fields):
+        return {"op": "execute", "command": "cad.layers.edit",
+                "input": {"operation": "fields", "layer": "bina", "fields": copy.deepcopy(fields)},
+                "result": {"status": "completed", "output": fc.ANY, "warnings": fc.ANY},
+                "expect": {"ids": fc.IDS, "revision": "changed"}}
+
+    def validated(changed, version=1):
+        out = {"version": version, "issues": fc.ANY, "valid": fc.ANY, "items": []}
+        if changed:
+            out["fieldsChanged"] = True
+        return {"op": "execute", "command": "cad.forms.validate", "input": {"form": "bina"},
+                "result": {"status": "completed", "output": out, "warnings": []},
+                "expect": {"ids": fc.IDS}}
+
+    def relayer(fields):
+        def go(p):
+            p.fields_of = {"bina": fields}
+        return go
+
+    def steps_of(*parts):
+        def run(p):
+            out, undoable = [], False
+            for part in parts:
+                if callable(part):
+                    part(p)
+                elif part == "publish":
+                    s = publish(p)
+                    if undoable:
+                        # The fields' edit before is an undo step of its own.
+                        s["expect"].pop("canUndo", None)
+                    out.append(s)
+                else:
+                    undoable = undoable or part.get("command") == "cad.layers.edit"
+                    out.append(part)
+            return out
+        return run
+
+    case("alanı değişen yayın: doğrulama söyler, aynı taslak yeniden yayınlanır",
+         [form(body(ITEMS, revision=2))],
+         steps_of("publish", validated(False), fields_step(lower), relayer(lower), validated(True), "publish",
+                  validated(False, 2)))
+    case("bağlanmayan alan eklenmesi yayını değiştirmez", [form(body(ITEMS, revision=2))],
+         steps_of("publish", fields_step(extra), relayer(extra), validated(False), "publish"))
+    case("özeti olmayan eski yayın: aynı taslak yeniden yayınlanmaz", [form(RELEASED, [RELEASED])],
+         lambda p: [publish(p), validated(False)])
     return out
 
 

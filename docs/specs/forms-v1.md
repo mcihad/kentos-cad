@@ -13,7 +13,7 @@ Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.k
 | `name` | Adı, 1–64 karakter |
 | `layer` | Bağlı olduğu katmanın kimliği |
 | `draft` | Taslağın gövdesi (`FormBody`): `revision`, `items`, isteğe bağlı `clearHidden`, `tests`, `workflow`, `steps`, `translations` |
-| `releases` | Yayınlar, eskiden yeniye: `version` (1, 2, …), `digest`, `body`, isteğe bağlı `note` |
+| `releases` | Yayınlar, eskiden yeniye: `version` (1, 2, …), `digest`, `body`, isteğe bağlı `note` ve bağlı alanların özeti `fields` (ADR 0444 §2) |
 | `enforce` | Son yayın katmanın yazma kuralıdır (yalnız `true` yazılır) |
 | `comments` | Gözden geçirenlerin yorumları (ADR 0441 §5): `id` (1, 2, …), isteğe bağlı `item`, `author`, `at`, `text`, `resolved`; en çok 200 |
 
@@ -23,7 +23,8 @@ kimliğiyle anar (`tool`, `attributes.calculate` gibi noktalı parçalar); adres
 şema onu reddeder. Eylemin türü `kind` (`tool` varsayılan, `recompute`, `step` ile adımın adı `step`, `show`) ve araç eyleminin
 çalıştığı yer `runs` (`auto`, `here`, `background`; ADR 0442 §5, §6). İş akışının `notes`'u adımların alan notlarını tutan metin alanıdır
 (ADR 0442 §4). Grubun `across`'u iki sütunu satır satır doldurur (ADR 0443 §6); alanın `redact`'ı değerini kaydın örneklerinden
-(komut geçmişinin Python'u, tekrar oynatma girdisi) gizler (ADR 0443 §2).
+(komut geçmişinin Python'u, tekrar oynatma girdisi) gizler (ADR 0443 §2). İlişkili kayıtlar öğesinin `min` ve `max`'ı kayda başvuran
+nesnelerin sayısını sınırlar: `max: 1` bire bir, `min: 1` zorunlu alt kayıt (ADR 0444 §1).
 
 ## 2. Özet
 

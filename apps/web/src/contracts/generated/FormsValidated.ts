@@ -30,4 +30,9 @@ attrs?: { [key in string]: string },
  * What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
  * `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
  */
-requires?: Array<string>, };
+requires?: Array<string>, 
+/**
+ * The layer's fields the release binds changed since it was published (docs/adr/0444 §2): review the
+ * form and publish it again. Written only as `true`.
+ */
+fieldsChanged?: boolean, };

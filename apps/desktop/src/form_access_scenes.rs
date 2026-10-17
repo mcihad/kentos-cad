@@ -76,6 +76,42 @@ pub(crate) fn across_group(app: &mut App) {
     entry(app, fe::Event::Tab(1));
 }
 
+/// The first building's meters bounded one to one (docs/adr/0444 §1): it holds more, the form says so and
+/// Kaydet stays.
+pub(crate) fn related_bounded(app: &mut App) {
+    let mut items = crate::form_scenes::meters_items();
+    items[2]["max"] = json!(1);
+    items[2]["view"] = json!("list");
+    crate::form_scenes::meters_rebodied(app, items);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The first building's form opened with its release's fields changed since (docs/adr/0444 §2).
+pub(crate) fn stale_release(app: &mut App) {
+    // The release as a publish now writes it: its bound fields' digest.
+    let mut f = form(true);
+    let body: kentos_contracts::FormBody =
+        serde_json::from_value(f["draft"].clone()).expect("a body");
+    let fields: Vec<kentos_contracts::LayerField> =
+        serde_json::from_value(crate::form_scenes::fields()).expect("fields");
+    f["releases"][0]["fields"] = json!(kentos_contracts::bound_fields_digest(&body, &fields));
+    buildings_with(app, f);
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut fields = doc.model.layers().get("bina").expect("bina").fields.clone();
+    if let Some(f) = fields.iter_mut().find(|f| f.name == "Kat") {
+        f.max = Some("30".into());
+    }
+    let _ = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        kentos_contracts::CAD_LAYERS_EDIT,
+        kentos_contracts::CallOp::Execute,
+        json!({ "operation": "fields", "layer": "bina", "fields": fields }),
+    );
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::{Arc, Mutex};
@@ -369,6 +405,158 @@ mod tests {
         );
         let issues = kentos_forms::preflight(&stale, &app.layer_fields_of("bina"), &[]);
         assert!(issues.iter().any(|i| i.code == "form_translation_item"));
+    }
+
+    /// The window and the command agree (docs/adr/0444 §4, FORM-STD-09): the same values typed into Formla
+    /// düzenle and given to `cad.forms.validate` leave the same record, the same issues and the same items
+    /// shown, required and read-only.
+    #[test]
+    fn the_window_and_the_command_judge_a_record_alike() {
+        let inputs: [(u32, &[(&str, &str)]); 6] = [
+            (1, &[]),
+            (1, &[("kat-sayisi", "99")]),
+            (1, &[("Açıklama", "kısa")]),
+            (1, &[("Durum", "iyi"), ("kat-sayisi", " 07 ")]),
+            (2, &[("Onaylı", "false")]),
+            (
+                2,
+                &[
+                    ("Durum", "inceleme"),
+                    ("Açıklama", "Çatı arası ayrıca bakılmalı."),
+                ],
+            ),
+        ];
+        for (slot, values) in inputs {
+            let mut app = crate::files_testing::app_with_drawing();
+            buildings(&mut app, true);
+            app.selection.set([Slot(slot)]);
+            run(&mut app, "data.formEdit");
+            for (k, v) in values {
+                entry(&mut app, fe::Event::Value((*k).into(), (*v).into()));
+            }
+            let e = app.form_entry.as_ref().expect("the form");
+            let doc = app.document.as_mut().expect("a drawing");
+            let uid = doc.model.uid(Slot(slot)).expect("a uid").to_string();
+            let given: std::collections::BTreeMap<String, String> = values
+                .iter()
+                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .collect();
+            let got = kentos_native_application::registry::run(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                kentos_contracts::CAD_FORMS_VALIDATE,
+                kentos_contracts::CallOp::Execute,
+                json!({ "form": "bina-denetimi", "uid": uid, "values": given }),
+            )
+            .expect("runs");
+            let out = &got["output"];
+            let at = format!("B-{slot} {values:?}");
+            assert_eq!(
+                serde_json::to_value(e.after_attrs()).unwrap(),
+                out["attrs"],
+                "{at}: the record"
+            );
+            let issues = |list: &Value| -> Vec<(String, String, String, String)> {
+                let mut v: Vec<_> = list
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(|i| {
+                        let s = |k: &str| i[k].as_str().unwrap_or_default().to_owned();
+                        (s("code"), s("severity"), s("item"), s("field"))
+                    })
+                    .collect();
+                v.sort();
+                v
+            };
+            assert_eq!(
+                issues(&serde_json::to_value(&e.issues).unwrap()),
+                issues(&out["issues"]),
+                "{at}: the issues"
+            );
+            let states = |list: &Value| -> Vec<(String, bool, bool, bool)> {
+                list.as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(|s| {
+                        let b = |k: &str| s[k].as_bool().unwrap_or(false);
+                        (
+                            s["id"].as_str().unwrap_or_default().to_owned(),
+                            b("shown"),
+                            b("required"),
+                            b("readOnly"),
+                        )
+                    })
+                    .collect()
+            };
+            assert_eq!(
+                states(&serde_json::to_value(e.item_states()).unwrap()),
+                states(&out["items"]),
+                "{at}: the items"
+            );
+        }
+    }
+
+    #[test]
+    fn a_related_item_bounded_one_to_one_refuses_a_record_holding_more() {
+        let mut app = crate::files_testing::app_with_drawing();
+        related_bounded(&mut app);
+        let e = app.form_entry.as_ref().expect("the form");
+        assert!(
+            e.issues.iter().any(|i| i.code == "form_related_many"),
+            "{:?}",
+            e.issues
+        );
+        entry(&mut app, fe::Event::Save);
+        assert!(app.form_entry.is_some(), "refused: the window stays");
+    }
+
+    #[test]
+    fn a_link_taken_off_in_the_window_counts_before_it_is_written() {
+        let mut app = crate::files_testing::app_with_drawing();
+        related_bounded(&mut app);
+        let held = app.form_entry.as_ref().unwrap().related_now("sayaclar");
+        let n = held.len();
+        assert!(n >= 2, "{n}");
+        // One fewer allowed than the building holds: one taken off in the window clears it.
+        let mut items = crate::form_scenes::meters_items();
+        items[2]["max"] = json!(n - 1);
+        items[2]["view"] = json!("list");
+        crate::form_scenes::meters_rebodied(&mut app, items);
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        let many = |app: &App| {
+            app.form_entry
+                .as_ref()
+                .unwrap()
+                .issues
+                .iter()
+                .any(|i| i.code == "form_related_many")
+        };
+        assert!(many(&app));
+        entry(
+            &mut app,
+            fe::Event::Unlink("sayaclar".into(), held[0].clone()),
+        );
+        assert!(!many(&app), "the window counts the link taken off");
+        entry(&mut app, fe::Event::Save);
+        assert!(
+            app.form_entry.is_none(),
+            "the command counts it alike and writes"
+        );
+    }
+
+    #[test]
+    fn a_release_whose_fields_changed_is_said_in_the_window() {
+        let mut app = crate::files_testing::app_with_drawing();
+        stale_release(&mut app);
+        let r = app.project_forms()[0].releases[0].clone();
+        let fields = app.layer_fields_of("bina");
+        assert_ne!(
+            r.fields.as_deref(),
+            Some(kentos_contracts::bound_fields_digest(&r.body, &fields).as_str()),
+            "the storeys' bound changed since"
+        );
+        assert!(app.form_entry.is_some());
     }
 
     fn app_body(app: &App) -> kentos_contracts::FormBody {

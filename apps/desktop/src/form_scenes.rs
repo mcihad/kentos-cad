@@ -28,7 +28,7 @@ use crate::tools_screens::Scene;
 
 /// The buildings' fields: a status from a list (required), the storeys by a stable id, a note, a date
 /// and a yes/no.
-fn fields() -> Value {
+pub(crate) fn fields() -> Value {
     json!([
         { "name": "Durum", "kind": "text", "required": true,
           "values": [{ "code": "iyi", "label": "İyi" }, { "code": "inceleme", "label": "Ek inceleme gerekli" }] },
@@ -1406,7 +1406,7 @@ fn meters_snapshot(app: &mut App) {
 }
 
 /// The meters' building form with new items (docs/adr/0441): its draft and release replaced by `items`.
-fn meters_rebodied(app: &mut App, items: Value) {
+pub(crate) fn meters_rebodied(app: &mut App, items: Value) {
     meters(app);
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
@@ -1419,6 +1419,7 @@ fn meters_rebodied(app: &mut App, items: Value) {
     body.items = serde_json::from_value(items).expect("items");
     form.draft = body.clone();
     form.releases = vec![kentos_contracts::FormRelease {
+        fields: None,
         version: 1,
         digest: kentos_contracts::body_digest(&body),
         body,
@@ -1430,7 +1431,7 @@ fn meters_rebodied(app: &mut App, items: Value) {
 }
 
 /// The building items of ADR 0441's pictures: a divider, the meters as a chart by kind, an action.
-fn meters_items() -> Value {
+pub(crate) fn meters_items() -> Value {
     json!([
         { "type": "field", "id": "ad", "field": "Ad" },
         { "type": "divider", "id": "sayac-bolumu", "label": "Sayaçlar" },
@@ -1532,6 +1533,7 @@ fn noted_buildings(app: &mut App) {
     }
     let body = form.draft.clone();
     form.releases = vec![kentos_contracts::FormRelease {
+        fields: None,
         version: 1,
         digest: kentos_contracts::body_digest(&body),
         body,
@@ -1797,6 +1799,7 @@ fn dated_parcel(app: &mut App) {
         );
         let body = f.draft.clone();
         f.releases = vec![kentos_contracts::FormRelease {
+            fields: None,
             version: 1,
             digest: kentos_contracts::body_digest(&body),
             body,
@@ -2907,6 +2910,14 @@ pub(crate) fn scenes() -> Vec<Scene> {
             crate::form_access_scenes::closing_asked,
         ),
         ("form-satir-satir", crate::form_access_scenes::across_group),
+        (
+            "form-iliskili-sayi",
+            crate::form_access_scenes::related_bounded,
+        ),
+        (
+            "form-yayin-alanlari",
+            crate::form_access_scenes::stale_release,
+        ),
     ]
 }
 
@@ -2998,6 +3009,7 @@ mod tests {
         );
         form.draft = body.clone();
         form.releases = vec![kentos_contracts::FormRelease {
+            fields: None,
             version: 1,
             digest: kentos_contracts::body_digest(&body),
             body,

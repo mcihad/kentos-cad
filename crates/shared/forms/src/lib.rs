@@ -35,7 +35,7 @@ pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attached, Attrs, Object, schema_in, schema_of};
 pub use requirements::{requirements, unsupported};
-pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Moment, Prepared};
+pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Moment, Prepared, added_key};
 
 use kentos_contracts::{FormIssue, FormSeverity};
 
@@ -73,6 +73,10 @@ pub mod codes {
     pub const ATTACHMENTS_FEW: &str = "form_attachments_few";
     /// More attachments than the item allows.
     pub const ATTACHMENTS_MANY: &str = "form_attachments_many";
+    /// Fewer objects refer to the record than its related item asks (docs/adr/0444 §1).
+    pub const RELATED_FEW: &str = "form_related_few";
+    /// More objects refer to the record than its related item allows.
+    pub const RELATED_MANY: &str = "form_related_many";
     /// The default does not keep the field's rules.
     pub const DEFAULT_INVALID: &str = "form_default_invalid";
     /// A rule or a check does not compile.

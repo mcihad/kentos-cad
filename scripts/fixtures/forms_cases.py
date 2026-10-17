@@ -1110,6 +1110,13 @@ class Form:
                     issues.append(issue("form_attachments_few", True, x["id"], None, "min"))
                 elif n is not None and "max" in x and n > x["max"]:
                     issues.append(issue("form_attachments_many", True, x["id"], None, "max"))
+            # docs/adr/0444 §1: a related item's bounds, judged where the record's attachments are.
+            if x["type"] == "related" and state["shown"] and counted(obj, "any") is not None and (obj or {}).get("uid"):
+                n = max(len(state.get("related", [])) + (obj.get("added") or {}).get(f"{x['layer']}\x1f{x['field']}", 0), 0)
+                if "min" in x and n < x["min"]:
+                    issues.append(issue("form_related_few", True, x["id"], None, "min"))
+                elif "max" in x and n > x["max"]:
+                    issues.append(issue("form_related_many", True, x["id"], None, "max"))
             if x["type"] != "field" or x.get("mirror") or not state["shown"]:
                 continue
             f = self.layer(x)
@@ -2295,6 +2302,19 @@ def form_json(f):
     return copy.deepcopy(out)
 
 
+def bound_fields_digest(body, fields):
+    """docs/adr/0444 §2: the digest of the layer's fields the body binds, in the layer's order."""
+    keys = set()
+
+    def walk(xs):
+        for x in xs:
+            if x["type"] == "field":
+                keys.add(x["field"])
+            walk(x.get("items", []))
+    walk(body["items"])
+    return digest([f for f in fields if key_of(f) in keys])
+
+
 def release_of(body, version, note=None):
     out = {"version": version, "digest": digest(body), "body": copy.deepcopy(body)}
     if note:
@@ -2399,9 +2419,12 @@ class Project:
                 if broken:
                     warnings.append(breaking_warning(f["name"], broken))
                     more_out["breaking"] = broken
-            if not rel or rel[-1]["body"] != f["draft"]:
+            # docs/adr/0444 §2: the bound fields' digest; fields changed since the last release publish again.
+            bound = bound_fields_digest(f["draft"], self.fields_of.get(f["layer"], []))
+            if not rel or rel[-1]["body"] != f["draft"] or rel[-1].get("fields", bound) != bound:
                 note = op.get("note")
-                rel.append(release_of(f["draft"], rel[-1]["version"] + 1 if rel else 1, note if note and note.strip() else None))
+                rel.append({**release_of(f["draft"], rel[-1]["version"] + 1 if rel else 1,
+                                         note if note and note.strip() else None), "fields": bound})
                 if len(rel) > 50:
                     gone = rel.pop(0)
                     warnings.append({"code": "form_release_dropped", "path": "edit.id",

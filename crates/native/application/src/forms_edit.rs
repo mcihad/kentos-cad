@@ -292,15 +292,23 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     });
                 }
             }
+            let bound = kentos_contracts::bound_fields_digest(
+                &s.forms[i].draft,
+                forms::fields(doc, &s.forms[i].layer),
+            );
             let form = &mut s.forms[i];
-            // The draft as it was last published: nothing to publish.
-            if form.releases.last().is_none_or(|r| r.body != form.draft) {
+            // The draft as it was last published, over the same fields: nothing to publish. The layer's
+            // fields changed since: published again over them (docs/adr/0444 §2).
+            if form.releases.last().is_none_or(|r| {
+                r.body != form.draft || r.fields.as_ref().is_some_and(|d| *d != bound)
+            }) {
                 let version = form.releases.last().map_or(1, |r| r.version + 1);
                 form.releases.push(FormRelease {
                     version,
                     digest: body_digest(&form.draft),
                     body: form.draft.clone(),
                     note: note.clone().filter(|n| !n.trim().is_empty()),
+                    fields: Some(bound),
                 });
                 if form.releases.len() > MOST_FORM_RELEASES {
                     let gone = form.releases.remove(0);

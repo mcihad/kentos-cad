@@ -521,6 +521,26 @@
               "description": "The other layer's id.",
               "type": "string"
             },
+            "max": {
+              "description": "The most (1–1000): 1 one to one.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
+            "min": {
+              "description": "The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it\nmust have (docs/adr/0444 §1).",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
             "type": {
               "const": "related",
               "type": "string"
@@ -814,6 +834,13 @@
         "digest": {
           "description": "The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).",
           "type": "string"
+        },
+        "fields": {
+          "description": "The layer's fields the body binds as they were at publishing ([`bound_fields_digest`]): a\nrelease whose fields changed since is said (docs/adr/0444 §2). None: published before it was kept.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "note": {
           "description": "What changed, as the publisher wrote it.",

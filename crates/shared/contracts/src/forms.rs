@@ -489,6 +489,11 @@ pub struct FormRelease {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
+    /// The layer's fields the body binds as they were at publishing ([`bound_fields_digest`]): a
+    /// release whose fields changed since is said (docs/adr/0444 §2). None: published before it was kept.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fields: Option<String>,
 }
 
 /// How a related item shows its objects (docs/adr/0425).
@@ -518,6 +523,9 @@ impl RelatedView {
 
 /// A related table holds at most this many columns.
 pub const MOST_RELATED_COLUMNS: usize = 8;
+
+/// The largest count a related item bounds its objects by (docs/adr/0444 §1).
+pub const MOST_RELATED_COUNT: u32 = 1000;
 
 /// An item of a form: a tab (only at the top), a group, a field or a note.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -595,6 +603,17 @@ pub enum FormItem {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         columns: Vec<String>,
+        /// The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it
+        /// must have (docs/adr/0444 §1).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        min: Option<u32>,
+        /// The most (1–1000): 1 one to one.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        max: Option<u32>,
     },
     /// The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
     /// and removed in the form; their count may be bounded.
@@ -1437,6 +1456,22 @@ impl ProjectForm {
 
 /// The digest a release keeps of its body: the first 32 hex digits of the SHA-256 of its
 /// canonical JSON (docs/adr/0253 §2's rule).
+/// The digest of the layer's fields `body` binds, in the layer's order (docs/adr/0444 §2): the first 32 hex
+/// digits of the SHA-256 of their canonical JSON.
+pub fn bound_fields_digest(body: &FormBody, fields: &[crate::LayerField]) -> String {
+    let keys: std::collections::BTreeSet<&str> = body
+        .walk()
+        .into_iter()
+        .filter_map(|(_, i)| match i {
+            FormItem::Field(f) => Some(f.field.as_str()),
+            _ => None,
+        })
+        .collect();
+    let bound: Vec<&crate::LayerField> = fields.iter().filter(|f| keys.contains(f.key())).collect();
+    let value = serde_json::to_value(&bound).unwrap_or(serde_json::Value::Null);
+    crate::canonical::id_of(&value)
+}
+
 pub fn body_digest(body: &FormBody) -> String {
     let value = serde_json::to_value(body).unwrap_or(serde_json::Value::Null);
     crate::canonical::id_of(&value)
@@ -1546,8 +1581,20 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 field,
                 visible_when,
                 columns,
+                min,
+                max,
                 ..
             } => {
+                if [min, max]
+                    .iter()
+                    .any(|n| n.is_some_and(|n| n > MOST_RELATED_COUNT))
+                    || *max == Some(0)
+                    || matches!((min, max), (Some(a), Some(b)) if a > b)
+                {
+                    return Some(format!(
+                        "“{id}” öğesinin en az sayısı 0 ile {MOST_RELATED_COUNT}, en çok sayısı 1 ile {MOST_RELATED_COUNT} arasındadır; en az en çoktan büyük olamaz."
+                    ));
+                }
                 if columns.len() > MOST_RELATED_COLUMNS {
                     return Some(format!(
                         "“{id}” öğesinin tablosu en çok {MOST_RELATED_COLUMNS} sütun olur; {} var.",
@@ -2039,6 +2086,7 @@ mod tests {
     fn a_release_keeps_its_digest_and_its_number() {
         let mut f = form(vec![field("durum", "Durum")]);
         f.releases.push(FormRelease {
+            fields: None,
             version: 1,
             digest: body_digest(&f.draft),
             body: f.draft.clone(),

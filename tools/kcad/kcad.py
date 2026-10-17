@@ -3787,6 +3787,9 @@ class _Schema:
                     # docs/adr/0425: a table of the other layer's fields; a list is not written.
                     "view": (self.enum(("table", "cards", "chart")), False),
                     "columns": (self.array(self.text), False),
+                    # docs/adr/0444 §1: the fewest and most related objects.
+                    "min": (self.uint(32), False),
+                    "max": (self.uint(32), False),
                 },
                 # docs/adr/0407 §1: the record's photos and documents.
                 "attachments": {
@@ -3857,7 +3860,9 @@ class _Schema:
                             # docs/adr/0443 §5: the form's words in other languages, by tag.
                             "translations": (lambda v: nonempty(self.keyed(translation))(v), False)})
         release = self.fields(
-            {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
+            {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False),
+             # docs/adr/0444 §2: the bound fields' digest at publishing.
+             "fields": (self.text, False)}
         )
         form = self.fields(
             {

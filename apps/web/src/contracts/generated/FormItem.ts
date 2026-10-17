@@ -41,7 +41,16 @@ view?: RelatedView,
 /**
  * The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
  */
-columns?: Array<string>, } | { "type": "attachments", id: string, label?: string, 
+columns?: Array<string>, 
+/**
+ * The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it
+ * must have (docs/adr/0444 §1).
+ */
+min?: number, 
+/**
+ * The most (1–1000): 1 one to one.
+ */
+max?: number, } | { "type": "attachments", id: string, label?: string, 
 /**
  * What counts and is added: every attachment, only photos or only documents and addresses.
  */

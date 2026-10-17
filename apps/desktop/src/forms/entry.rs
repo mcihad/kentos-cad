@@ -321,6 +321,17 @@ impl Entry {
         self.errors().filter_map(|i| i.field.clone()).collect()
     }
 
+    /// The record as the window holds it and its items' states (for the conformance test).
+    #[cfg(test)]
+    pub(crate) fn after_attrs(&self) -> &Attrs {
+        &self.after
+    }
+
+    #[cfg(test)]
+    pub(crate) fn item_states(&self) -> &[FormItemState] {
+        &self.items
+    }
+
     /// A listed value's label in the chosen language (for the tests).
     #[cfg(test)]
     pub(crate) fn translated_choice(&self, id: &str, code: &str) -> Option<String> {
@@ -403,6 +414,26 @@ impl Entry {
             self.recompute_many();
             return;
         }
+        // The links made or taken off in this window count with the record's related objects
+        // (docs/adr/0444 §1), as the submission counts them.
+        let mut added: BTreeMap<String, i32> = BTreeMap::new();
+        for (item, c) in &self.links {
+            if let Some(FormItem::Related { layer, field, .. }) =
+                crate::forms::designer::find(&self.body.items, item)
+            {
+                let linked = self
+                    .state(item)
+                    .and_then(|s| s.related.as_ref())
+                    .is_some_and(|r| r.contains(&c.uid));
+                let delta = match (c.unlink, linked) {
+                    (true, true) => -1,
+                    (false, false) => 1,
+                    _ => 0,
+                };
+                *added.entry(kentos_forms::added_key(layer, field)).or_default() += delta;
+            }
+        }
+        self.screen.object.added = added;
         let prepared = &self.screen.prepared;
         // The checks kept for saving are asked once Kaydet was pressed (docs/adr/0438 §2).
         let moment = if self.tried {
@@ -1157,6 +1188,10 @@ impl App {
                         },
                     )),
                 }
+            }
+            // The bounds count the pending link now (docs/adr/0444 §1).
+            if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+                e.recompute(&doc.model);
             }
             self.say(
                 Level::Info,
@@ -2078,6 +2113,44 @@ impl App {
         }
     }
 
+    /// How the record's form is opened, a line a fact, and whether its release's fields changed since it
+    /// was published (docs/adr/0444 §2, §3).
+    fn entry_how(&self, e: &Entry, locked: bool) -> (Vec<String>, bool) {
+        let form = self.project_forms().iter().find(|f| f.id == e.form).cloned();
+        let mut lines = Vec::new();
+        let release = form.as_ref().and_then(|f| f.releases.last().cloned());
+        lines.push(match (&release, e.draft) {
+            (_, true) | (None, _) => "Taslağıyla açıldı (yayın yok).".to_owned(),
+            (Some(r), false) => format!("{}. yayınla açıldı.", r.version),
+        });
+        if form.as_ref().is_some_and(|f| f.enforce) {
+            lines.push("Kuralları katmanın yazma kuralı: başka yoldan yazılan kayıt da bu formla denetlenir.".into());
+        }
+        let needs = kentos_forms::requirements(&e.body);
+        lines.push(if needs.is_empty() {
+            "Saf form: yalnız kaydın değerleriyle çalışır.".into()
+        } else {
+            format!("Gerektirdikleri: {}; bu bilgisayar hepsini sağlar.", needs.join(", "))
+        });
+        if locked {
+            lines.push("Salt okunur: katman kilitli.".into());
+        } else if e.screen.prepared.locked_by_state(&e.before) {
+            lines.push("Salt okunur: kaydın iş akışı durumu kilitli.".into());
+        } else {
+            lines.push("Yazılabilir: yazma komutun kendi kurallarıyla.".into());
+        }
+        let stale = !e.draft
+            && release.as_ref().is_some_and(|r| {
+                r.fields
+                    .as_ref()
+                    .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, &e.fields))
+            });
+        if stale {
+            lines.push("Katmanın alanları bu yayından sonra değişti.".into());
+        }
+        (lines, stale)
+    }
+
     pub(crate) fn form_entry_view(&self) -> Element<'_, Message> {
         let Some(e) = &self.form_entry else {
             return iced::widget::text("").into();
@@ -2175,7 +2248,21 @@ impl App {
                 .push(label::caption(format!("{} / {n}", at + 1)).style(muted))
                 .push(step(Icon::ChevronRight, 1, at + 1 < n));
         }
+        // How the form is opened (docs/adr/0444 §3): its release, whose rules write, what it needs and
+        // why it is read-only.
+        let (lines, stale) = self.entry_how(e, locked);
+        top = top.push(kentos_ui::widget::tip(
+            icon(Icon::Info).size(13.0).tone(kentos_ui::icon::Tone::Muted),
+            kentos_ui::widget::Tip::new("Bu form").body(lines.join("\n")),
+            iced::widget::tooltip::Position::Bottom,
+        ));
         body = body.push(top);
+        if stale && !e.preview {
+            body = body.push(words::summary(vec![words::text_line(
+                Kind::Warn,
+                "Katmanın alanları bu yayından sonra değişti; tasarımcı formu gözden geçirip yeniden yayınlamalı.",
+            )]));
+        }
         if locked {
             body = body.push(words::summary(vec![words::text_line(
                 Kind::Warn,
@@ -3065,6 +3152,10 @@ impl App {
             .spacing(6)
             .align_y(Center),
         );
+        // Its bounds' issue under its title, before a long list (docs/adr/0444 §1).
+        if let Some(issue) = e.issues.iter().find(|i| i.item.as_deref() == Some(id)) {
+            col = col.push(words::text_line(Kind::Error, issue.message.clone()));
+        }
         if uids.is_empty() {
             col = col.push(label::caption("Bu kayda başvuran nesne yok.").style(muted));
         }

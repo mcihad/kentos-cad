@@ -25,6 +25,13 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         None => None,
     };
     let fields = forms::fields(doc, &form.layer);
+    // The release's fields changed since it was published (docs/adr/0444 §2); a draft has none.
+    let fields_changed = !input.draft
+        && form.releases.last().is_some_and(|r| {
+            r.fields
+                .as_ref()
+                .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, fields))
+        });
     let mut issues = forms::preflight_of(doc, body, &form.layer, &variables);
     let mut items = Vec::new();
     let mut attrs = None;
@@ -73,6 +80,7 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         items,
         attrs,
         requires: kentos_forms::requirements(body),
+        fields_changed,
     })
 }
 

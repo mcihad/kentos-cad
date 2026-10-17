@@ -12016,11 +12016,14 @@ class FormRelease(_Model):
     Attributes:
         version: 1, 2, …: one more than the release before. Unit: version.
         digest: The first 32 hex digits of the SHA-256 of the body's canonical JSON ([`body_digest`]).
+        fields: The layer's fields the body binds as they were at publishing ([`bound_fields_digest`]): a
+            release whose fields changed since is said (docs/adr/0444 §2). None: published before it was kept.
         note: What changed, as the publisher wrote it.
     """
     version: int
     digest: str
     body: FormBody
+    fields: str | None | Unset = UNSET
     note: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12028,6 +12031,8 @@ class FormRelease(_Model):
         out["version"] = self.version
         out["digest"] = self.digest
         out["body"] = self.body.to_json()
+        if self.fields is not UNSET:
+            out["fields"] = self.fields
         if self.note is not UNSET:
             out["note"] = self.note
         return out
@@ -12038,6 +12043,7 @@ class FormRelease(_Model):
             version=data["version"],
             digest=data["digest"],
             body=FormBody.from_json(data["body"]),
+            fields=data.get("fields", UNSET),
             note=data.get("note", UNSET),
         )
 
@@ -13154,6 +13160,8 @@ class FormsValidated(_Model):
         valid: Whether the record (or the form alone) has no error.
         items: The record's items, in the form's order; empty without a record.
         attrs: The record's attributes afterwards; none without a record.
+        fields_changed: The layer's fields the release binds changed since it was published (docs/adr/0444 §2): review the
+            form and publish it again. Written only as `true`.
         requires: What the form needs of the host that shows it (docs/adr/0441 §4): `moment`, `user`, `layers`,
             `geometry`, `attachments`, `workflow`, `tool:<id>`; none: a pure form.
         version: The release asked; none: the draft. Unit: version.
@@ -13162,6 +13170,7 @@ class FormsValidated(_Model):
     valid: bool
     items: list[FormItemState]
     attrs: dict[str, str] | None | Unset = UNSET
+    fields_changed: bool | Unset = UNSET
     requires: list[str] | Unset = UNSET
     version: int | None | Unset = UNSET
 
@@ -13172,6 +13181,8 @@ class FormsValidated(_Model):
         out["items"] = [e0.to_json() for e0 in self.items]
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.fields_changed is not UNSET:
+            out["fieldsChanged"] = self.fields_changed
         if self.requires is not UNSET:
             out["requires"] = list(self.requires)
         if self.version is not UNSET:
@@ -13185,6 +13196,7 @@ class FormsValidated(_Model):
             valid=data["valid"],
             items=[FormItemState.from_json(e0) for e0 in data["items"]],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            fields_changed=data.get("fieldsChanged", UNSET),
             requires=list(data["requires"]) if "requires" in data else UNSET,
             version=data.get("version", UNSET),
         )
@@ -29341,6 +29353,9 @@ class RelatedFormItem(FormItem):
         layer: The other layer's id.
         field: Its field's key that holds this record's id.
         columns: The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
+        max: The most (1–1000): 1 one to one. Unit: count.
+        min: The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it
+            must have (docs/adr/0444 §1). Unit: count.
         view: How the objects are shown (docs/adr/0425): a list of their names, or a table of `columns`.
     """
     TAG_VALUE: ClassVar[str] = "related"
@@ -29349,6 +29364,8 @@ class RelatedFormItem(FormItem):
     field: str
     columns: list[str] | Unset = UNSET
     label: str | None | Unset = UNSET
+    max: int | None | Unset = UNSET
+    min: int | None | Unset = UNSET
     view: RelatedView | RelatedViewName | Unset = UNSET
     visible_when: str | None | Unset = UNSET
 
@@ -29361,6 +29378,10 @@ class RelatedFormItem(FormItem):
             out["columns"] = list(self.columns)
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
         if self.view is not UNSET:
             out["view"] = _enum_out(self.view)
         if self.visible_when is not UNSET:
@@ -29375,6 +29396,8 @@ class RelatedFormItem(FormItem):
             field=data["field"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
             label=data.get("label", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
             view=_enum_in(RelatedView, data["view"]) if "view" in data else UNSET,
             visible_when=data.get("visibleWhen", UNSET),
         )

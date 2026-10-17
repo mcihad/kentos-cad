@@ -1351,7 +1351,8 @@
              }
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -1736,7 +1737,8 @@
               }
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -4329,7 +4331,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -4434,7 +4437,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -4993,7 +4997,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -5160,7 +5165,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -5719,7 +5725,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -5890,7 +5897,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -6449,7 +6457,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -6739,7 +6748,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -6906,7 +6916,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -7477,7 +7488,8 @@
              "text": "Kat sayısı zemin dahil."
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -7637,7 +7649,8 @@
               "text": "Kat sayısı zemin dahil."
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -8104,7 +8117,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -8211,7 +8225,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -9433,7 +9448,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -9646,7 +9662,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -10532,7 +10549,8 @@
             }
            ]
           },
-          "note": "Senaryolar geçti"
+          "note": "Senaryolar geçti",
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -10918,7 +10936,8 @@
              }
             ]
            },
-           "note": "Senaryolar geçti"
+           "note": "Senaryolar geçti",
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -12438,7 +12457,8 @@
              }
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        }
@@ -12603,7 +12623,8 @@
               }
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -13434,7 +13455,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -13601,7 +13623,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -14160,7 +14183,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -14327,7 +14351,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -14500,7 +14525,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ],
         "enforce": true
@@ -14653,7 +14679,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ],
          "enforce": true
@@ -19578,7 +19605,8 @@
              ]
             }
            ]
-          }
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
          }
         ]
        },
@@ -21910,7 +21938,8 @@
               ]
              }
             ]
-           }
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
           }
          ]
         }
@@ -23370,6 +23399,2564 @@
       "canRedo": false,
       "revision": "same",
       "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı değişen yayın: doğrulama söyler, aynı taslak yeniden yayınlanır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "bina",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         },
+         {
+          "type": "field",
+          "id": "kod",
+          "field": "Kod",
+          "defaultExpr": "'B-' || Kat"
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama",
+          "visibleWhen": "Durum = 'inceleme'",
+          "requiredWhen": "Durum = 'inceleme'",
+          "checks": [
+           {
+            "rule": "uzunluk(Açıklama) >= 10",
+            "message": "Açıklama en az 10 karakter olmalı."
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Yükseklik",
+        "kind": "decimal",
+        "scale": 1
+       },
+       {
+        "name": "Kod",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi",
+       "Kat": "3"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "inceleme",
+       "Kat": "2",
+       "Açıklama": "Çatı katı ayrıca ölçülmeli."
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "Kod": "B-4"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "publish",
+       "id": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "revision": 2,
+         "version": 1
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "issues": [],
+       "form": {
+        "id": "bina",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+         "revision": 2,
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi"
+          },
+          {
+           "type": "field",
+           "id": "kod",
+           "field": "Kod",
+           "defaultExpr": "'B-' || Kat"
+          },
+          {
+           "type": "field",
+           "id": "yukseklik",
+           "field": "Yükseklik",
+           "calculate": "Kat * 3"
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        "releases": [
+         {
+          "version": 1,
+          "digest": "9f39258a621058995f6c5635d3113081",
+          "body": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "draft": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         },
+         "releases": [
+          {
+           "version": 1,
+           "digest": "9f39258a621058995f6c5635d3113081",
+           "body": {
+            "revision": 2,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
+          }
+         ]
+        }
+       ]
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.forms.validate",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": "$any",
+       "valid": "$any",
+       "items": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.edit",
+     "input": {
+      "operation": "fields",
+      "layer": "bina",
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "30"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Yükseklik",
+        "kind": "decimal",
+        "scale": 1
+       },
+       {
+        "name": "Kod",
+        "kind": "text"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.forms.validate",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": "$any",
+       "valid": "$any",
+       "items": [],
+       "fieldsChanged": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "publish",
+       "id": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "revision": 2,
+         "version": 2
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "issues": [],
+       "form": {
+        "id": "bina",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+         "revision": 2,
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi"
+          },
+          {
+           "type": "field",
+           "id": "kod",
+           "field": "Kod",
+           "defaultExpr": "'B-' || Kat"
+          },
+          {
+           "type": "field",
+           "id": "yukseklik",
+           "field": "Yükseklik",
+           "calculate": "Kat * 3"
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        "releases": [
+         {
+          "version": 1,
+          "digest": "9f39258a621058995f6c5635d3113081",
+          "body": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
+         },
+         {
+          "version": 2,
+          "digest": "9f39258a621058995f6c5635d3113081",
+          "body": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          },
+          "fields": "4b4b5a3e0792168be6e74d67d549567e"
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "draft": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         },
+         "releases": [
+          {
+           "version": 1,
+           "digest": "9f39258a621058995f6c5635d3113081",
+           "body": {
+            "revision": 2,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
+          },
+          {
+           "version": 2,
+           "digest": "9f39258a621058995f6c5635d3113081",
+           "body": {
+            "revision": 2,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           },
+           "fields": "4b4b5a3e0792168be6e74d67d549567e"
+          }
+         ]
+        }
+       ]
+      },
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.forms.validate",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 2,
+       "issues": "$any",
+       "valid": "$any",
+       "items": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlanmayan alan eklenmesi yayını değiştirmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "bina",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         },
+         {
+          "type": "field",
+          "id": "kod",
+          "field": "Kod",
+          "defaultExpr": "'B-' || Kat"
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama",
+          "visibleWhen": "Durum = 'inceleme'",
+          "requiredWhen": "Durum = 'inceleme'",
+          "checks": [
+           {
+            "rule": "uzunluk(Açıklama) >= 10",
+            "message": "Açıklama en az 10 karakter olmalı."
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Yükseklik",
+        "kind": "decimal",
+        "scale": 1
+       },
+       {
+        "name": "Kod",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi",
+       "Kat": "3"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "inceleme",
+       "Kat": "2",
+       "Açıklama": "Çatı katı ayrıca ölçülmeli."
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "Kod": "B-4"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "publish",
+       "id": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "revision": 2,
+         "version": 1
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "issues": [],
+       "form": {
+        "id": "bina",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+         "revision": 2,
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi"
+          },
+          {
+           "type": "field",
+           "id": "kod",
+           "field": "Kod",
+           "defaultExpr": "'B-' || Kat"
+          },
+          {
+           "type": "field",
+           "id": "yukseklik",
+           "field": "Yükseklik",
+           "calculate": "Kat * 3"
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        "releases": [
+         {
+          "version": 1,
+          "digest": "9f39258a621058995f6c5635d3113081",
+          "body": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "draft": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         },
+         "releases": [
+          {
+           "version": 1,
+           "digest": "9f39258a621058995f6c5635d3113081",
+           "body": {
+            "revision": 2,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
+          }
+         ]
+        }
+       ]
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.layers.edit",
+     "input": {
+      "operation": "fields",
+      "layer": "bina",
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Yükseklik",
+        "kind": "decimal",
+        "scale": 1
+       },
+       {
+        "name": "Kod",
+        "kind": "text"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.forms.validate",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": "$any",
+       "valid": "$any",
+       "items": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "publish",
+       "id": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "revision": 2,
+         "version": 1
+        }
+       ],
+       "changed": false,
+       "revision": "$current",
+       "issues": [],
+       "form": {
+        "id": "bina",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+         "revision": 2,
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi"
+          },
+          {
+           "type": "field",
+           "id": "kod",
+           "field": "Kod",
+           "defaultExpr": "'B-' || Kat"
+          },
+          {
+           "type": "field",
+           "id": "yukseklik",
+           "field": "Yükseklik",
+           "calculate": "Kat * 3"
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        "releases": [
+         {
+          "version": 1,
+          "digest": "9f39258a621058995f6c5635d3113081",
+          "body": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          },
+          "fields": "5138035e5d38f99de7797cf467b9d207"
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "draft": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         },
+         "releases": [
+          {
+           "version": 1,
+           "digest": "9f39258a621058995f6c5635d3113081",
+           "body": {
+            "revision": 2,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           },
+           "fields": "5138035e5d38f99de7797cf467b9d207"
+          }
+         ]
+        }
+       ]
+      },
+      "canRedo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "özeti olmayan eski yayın: aynı taslak yeniden yayınlanmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Formlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "bina",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         },
+         {
+          "type": "field",
+          "id": "kod",
+          "field": "Kod",
+          "defaultExpr": "'B-' || Kat"
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama",
+          "visibleWhen": "Durum = 'inceleme'",
+          "requiredWhen": "Durum = 'inceleme'",
+          "checks": [
+           {
+            "rule": "uzunluk(Açıklama) >= 10",
+            "message": "Açıklama en az 10 karakter olmalı."
+           }
+          ]
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "bd1e98cce97252c37e52e5786a4a6f1c",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Yükseklik",
+        "kind": "decimal",
+        "scale": 1
+       },
+       {
+        "name": "Kod",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli bina",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ],
+        "required": true
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text",
+        "length": 500
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Onaylı",
+        "kind": "boolean"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "alt",
+        "name": "Alt katman",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi",
+       "Kat": "3"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "inceleme",
+       "Kat": "2",
+       "Açıklama": "Çatı katı ayrıca ölçülmeli."
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "bina",
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "Kod": "B-4"
+      },
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420000
+       },
+       {
+        "x": 487070,
+        "y": 4420010
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "publish",
+       "id": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "revision": 1,
+         "version": 1
+        }
+       ],
+       "changed": false,
+       "revision": "$current",
+       "issues": [],
+       "form": {
+        "id": "bina",
+        "name": "Bina denetimi",
+        "layer": "bina",
+        "draft": {
+         "revision": 1,
+         "items": [
+          {
+           "type": "field",
+           "id": "durum",
+           "field": "Durum",
+           "required": true
+          },
+          {
+           "type": "field",
+           "id": "kat",
+           "field": "kat-sayisi"
+          },
+          {
+           "type": "field",
+           "id": "kod",
+           "field": "Kod",
+           "defaultExpr": "'B-' || Kat"
+          },
+          {
+           "type": "field",
+           "id": "yukseklik",
+           "field": "Yükseklik",
+           "calculate": "Kat * 3"
+          },
+          {
+           "type": "field",
+           "id": "aciklama",
+           "field": "Açıklama",
+           "visibleWhen": "Durum = 'inceleme'",
+           "requiredWhen": "Durum = 'inceleme'",
+           "checks": [
+            {
+             "rule": "uzunluk(Açıklama) >= 10",
+             "message": "Açıklama en az 10 karakter olmalı."
+            }
+           ]
+          }
+         ]
+        },
+        "releases": [
+         {
+          "version": 1,
+          "digest": "bd1e98cce97252c37e52e5786a4a6f1c",
+          "body": {
+           "revision": 1,
+           "items": [
+            {
+             "type": "field",
+             "id": "durum",
+             "field": "Durum",
+             "required": true
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "field",
+             "id": "kod",
+             "field": "Kod",
+             "defaultExpr": "'B-' || Kat"
+            },
+            {
+             "type": "field",
+             "id": "yukseklik",
+             "field": "Yükseklik",
+             "calculate": "Kat * 3"
+            },
+            {
+             "type": "field",
+             "id": "aciklama",
+             "field": "Açıklama",
+             "visibleWhen": "Durum = 'inceleme'",
+             "requiredWhen": "Durum = 'inceleme'",
+             "checks": [
+              {
+               "rule": "uzunluk(Açıklama) >= 10",
+               "message": "Açıklama en az 10 karakter olmalı."
+              }
+             ]
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": [
+        {
+         "id": "bina",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "draft": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi"
+           },
+           {
+            "type": "field",
+            "id": "kod",
+            "field": "Kod",
+            "defaultExpr": "'B-' || Kat"
+           },
+           {
+            "type": "field",
+            "id": "yukseklik",
+            "field": "Yükseklik",
+            "calculate": "Kat * 3"
+           },
+           {
+            "type": "field",
+            "id": "aciklama",
+            "field": "Açıklama",
+            "visibleWhen": "Durum = 'inceleme'",
+            "requiredWhen": "Durum = 'inceleme'",
+            "checks": [
+             {
+              "rule": "uzunluk(Açıklama) >= 10",
+              "message": "Açıklama en az 10 karakter olmalı."
+             }
+            ]
+           }
+          ]
+         },
+         "releases": [
+          {
+           "version": 1,
+           "digest": "bd1e98cce97252c37e52e5786a4a6f1c",
+           "body": {
+            "revision": 1,
+            "items": [
+             {
+              "type": "field",
+              "id": "durum",
+              "field": "Durum",
+              "required": true
+             },
+             {
+              "type": "field",
+              "id": "kat",
+              "field": "kat-sayisi"
+             },
+             {
+              "type": "field",
+              "id": "kod",
+              "field": "Kod",
+              "defaultExpr": "'B-' || Kat"
+             },
+             {
+              "type": "field",
+              "id": "yukseklik",
+              "field": "Yükseklik",
+              "calculate": "Kat * 3"
+             },
+             {
+              "type": "field",
+              "id": "aciklama",
+              "field": "Açıklama",
+              "visibleWhen": "Durum = 'inceleme'",
+              "requiredWhen": "Durum = 'inceleme'",
+              "checks": [
+               {
+                "rule": "uzunluk(Açıklama) >= 10",
+                "message": "Açıklama en az 10 karakter olmalı."
+               }
+              ]
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ]
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.forms.validate",
+     "input": {
+      "form": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "version": 1,
+       "issues": "$any",
+       "valid": "$any",
+       "items": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
      }
     }
    ]

@@ -93,6 +93,19 @@ struct Node {
     related: Option<Related>,
     /// An attachments item's bounds (docs/adr/0407 §1).
     attachments: Option<Bounds>,
+    /// A related item's bounds on how many objects refer to the record (docs/adr/0444 §1).
+    counted: Option<Counted>,
+}
+
+/// A related item's bounds: the fewest and most objects referring to the record, the other layer and
+/// field (what a submission's children are counted by) and its name.
+#[derive(Clone, Debug)]
+struct Counted {
+    min: Option<u32>,
+    max: Option<u32>,
+    layer: String,
+    field: String,
+    label: String,
 }
 
 /// An attachments item: what it counts, its bounds and its name.
@@ -777,6 +790,22 @@ impl Prepared {
                     held.counted(bounds.accept),
                 ));
             }
+            // How many objects refer to the record, the submission's children too (docs/adr/0444 §1);
+            // judged where its attachments are, by a command over a whole record.
+            if let (Some(c), Some(related), true, true) = (
+                &node.counted,
+                &node.related,
+                state.shown,
+                object.attachments.is_some() && object.uid.is_some(),
+            ) {
+                let more = object
+                    .added
+                    .get(&added_key(&c.layer, &c.field))
+                    .copied()
+                    .unwrap_or(0);
+                let count = (related.of(object).len() as i64 + i64::from(more)).max(0) as u32;
+                issues.extend(related_issues(&node.id, c, count));
+            }
             let Some(b) = &node.field else { continue };
             if !state.shown {
                 continue;
@@ -1391,6 +1420,7 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
         let at = out.len();
         let mut related = None;
         let mut attachments = None;
+        let mut counted = None;
         let (visible, field, note) = match item {
             FormItem::Attachments {
                 label,
@@ -1420,9 +1450,25 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                 layer,
                 field,
                 visible_when,
+                min,
+                max,
+                label,
                 ..
             } => {
                 related = related_of(layer, field, ctx.world);
+                if min.is_some() || max.is_some() {
+                    counted = Some(Counted {
+                        min: *min,
+                        max: *max,
+                        layer: layer.clone(),
+                        field: field.clone(),
+                        label: label.clone().unwrap_or_else(|| {
+                            ctx.world
+                                .get(layer)
+                                .map_or_else(|| layer.clone(), |o| o.name.clone())
+                        }),
+                    });
+                }
                 (compile(visible_when), None, None)
             }
             // A mirror is shown, not bound: the field's own item writes it (docs/adr/0437).
@@ -1478,9 +1524,50 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
             note,
             related,
             attachments,
+            counted,
         });
         walk(item.items(), Some(at), out, ctx);
     }
+}
+
+/// The key a submission's children are counted under: the other layer and its field.
+pub fn added_key(layer: &str, field: &str) -> String {
+    format!("{layer}\u{1f}{field}")
+}
+
+/// What a related item says of a record `count` objects refer to (docs/adr/0444 §1).
+fn related_issues(id: &str, c: &Counted, count: u32) -> Option<FormIssue> {
+    let at = |code: &str, rule: &str, message: String| {
+        issue(
+            code,
+            FormSeverity::Error,
+            Some(id),
+            None,
+            Some(rule),
+            message,
+        )
+    };
+    if let Some(min) = c.min.filter(|m| count < *m) {
+        return Some(at(
+            codes::RELATED_FEW,
+            "min",
+            format!(
+                "“{}” en az {min} kayıt ister; kayda bağlı {count} var.",
+                c.label
+            ),
+        ));
+    }
+    if let Some(max) = c.max.filter(|m| count > *m) {
+        return Some(at(
+            codes::RELATED_MANY,
+            "max",
+            format!(
+                "“{}” en çok {max} kayıt alır; kayda bağlı {count} var.",
+                c.label
+            ),
+        ));
+    }
+    None
 }
 
 /// What an attachments item says of a record holding `count` of what it counts.

@@ -204,6 +204,20 @@ impl App {
         if let Some(why) = locked {
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
         }
+        // The layer's fields changed since the latest release (docs/adr/0444 §2): published again over them.
+        if let Some(r) = form.and_then(|f| f.releases.last())
+            && r.fields
+                .as_ref()
+                .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, &fields))
+        {
+            body = body.push(words::summary(vec![words::text_line(
+                Kind::Warn,
+                format!(
+                    "Katmanın alanları {}. yayından sonra değişti; formu gözden geçirip yeniden yayınlayın (taslak aynıysa da yayınlanır).",
+                    r.version
+                ),
+            )]));
+        }
         // The records the release would break (docs/adr/0442 §2): published only when asked again.
         if let Some(b) = &w.breaking {
             let fields: Vec<String> = b
@@ -1222,6 +1236,8 @@ impl App {
                 visible_when,
                 view,
                 columns,
+                min,
+                max,
                 ..
             } => {
                 let layers = self.form_layers();
@@ -1290,6 +1306,33 @@ impl App {
                         ),
                     ));
                 }
+                // How many related objects the record holds (docs/adr/0444 §1): 1 one to one, at least 1 a child it
+                // must have.
+                let count = |n: &Option<u32>| n.map(|n| n.to_string()).unwrap_or_default();
+                col = col
+                    .push(
+                        row![
+                            container(words::field(
+                                "En az",
+                                input("Sınırsız", &count(min), Text::AttachMin),
+                                None,
+                            ))
+                            .width(Fill),
+                            container(words::field(
+                                "En çok",
+                                input("Sınırsız", &count(max), Text::AttachMax),
+                                None,
+                            ))
+                            .width(Fill),
+                        ]
+                        .spacing(12),
+                    )
+                    .push(
+                        label::caption(
+                            "En çok 1 bire bir, en az 1 zorunlu alt kayıttır; kayıt formla yazılırken, gönderimin alt kayıtlarıyla sayılır.",
+                        )
+                        .style(muted),
+                    );
                 col = col.push(rule_row(
                     "Görünürlük",
                     Rule::Visible(id.clone()),
