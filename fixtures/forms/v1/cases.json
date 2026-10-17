@@ -6468,6 +6468,372 @@
    "issues": []
   },
   {
+   "name": "çok değerli alan çiplerle",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text"
+    },
+    {
+     "name": "Bakım",
+     "kind": "text",
+     "multiple": true,
+     "values": [
+      {
+       "code": "budama",
+       "label": "Budama"
+      },
+      {
+       "code": "ilaclama",
+       "label": "İlaçlama"
+      },
+      {
+       "code": "sulama",
+       "label": "Sulama"
+      },
+      {
+       "code": "kesim",
+       "label": "Kesim"
+      }
+     ]
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "saglikli",
+       "label": "Sağlıklı"
+      },
+      {
+       "code": "kuru",
+       "label": "Kuru"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "bakim",
+      "field": "Bakım",
+      "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'",
+      "widget": "chips"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "name": "tek değerli alan aranır listeyle",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text"
+    },
+    {
+     "name": "Bakım",
+     "kind": "text",
+     "multiple": true,
+     "values": [
+      {
+       "code": "budama",
+       "label": "Budama"
+      },
+      {
+       "code": "ilaclama",
+       "label": "İlaçlama"
+      },
+      {
+       "code": "sulama",
+       "label": "Sulama"
+      },
+      {
+       "code": "kesim",
+       "label": "Kesim"
+      }
+     ]
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "saglikli",
+       "label": "Sağlıklı"
+      },
+      {
+       "code": "kuru",
+       "label": "Kuru"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum",
+      "widget": "search"
+     },
+     {
+      "type": "field",
+      "id": "bakim",
+      "field": "Bakım",
+      "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "name": "çipler yalnız çok değerli alanda",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text"
+    },
+    {
+     "name": "Bakım",
+     "kind": "text",
+     "multiple": true,
+     "values": [
+      {
+       "code": "budama",
+       "label": "Budama"
+      },
+      {
+       "code": "ilaclama",
+       "label": "İlaçlama"
+      },
+      {
+       "code": "sulama",
+       "label": "Sulama"
+      },
+      {
+       "code": "kesim",
+       "label": "Kesim"
+      }
+     ]
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "saglikli",
+       "label": "Sağlıklı"
+      },
+      {
+       "code": "kuru",
+       "label": "Kuru"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum",
+      "widget": "chips"
+     },
+     {
+      "type": "field",
+      "id": "bakim",
+      "field": "Bakım",
+      "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_widget_unfit",
+     "severity": "error",
+     "item": "durum",
+     "field": "Durum"
+    }
+   ]
+  },
+  {
+   "name": "aranır liste değer listesi ister",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text"
+    },
+    {
+     "name": "Bakım",
+     "kind": "text",
+     "multiple": true,
+     "values": [
+      {
+       "code": "budama",
+       "label": "Budama"
+      },
+      {
+       "code": "ilaclama",
+       "label": "İlaçlama"
+      },
+      {
+       "code": "sulama",
+       "label": "Sulama"
+      },
+      {
+       "code": "kesim",
+       "label": "Kesim"
+      }
+     ]
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "saglikli",
+       "label": "Sağlıklı"
+      },
+      {
+       "code": "kuru",
+       "label": "Kuru"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad",
+      "widget": "search"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "bakim",
+      "field": "Bakım",
+      "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_widget_needs_values",
+     "severity": "error",
+     "item": "ad",
+     "field": "Ad"
+    }
+   ]
+  },
+  {
+   "name": "aranır liste çok değerli alanı düzenleyemez",
+   "fields": [
+    {
+     "name": "Ad",
+     "kind": "text"
+    },
+    {
+     "name": "Bakım",
+     "kind": "text",
+     "multiple": true,
+     "values": [
+      {
+       "code": "budama",
+       "label": "Budama"
+      },
+      {
+       "code": "ilaclama",
+       "label": "İlaçlama"
+      },
+      {
+       "code": "sulama",
+       "label": "Sulama"
+      },
+      {
+       "code": "kesim",
+       "label": "Kesim"
+      }
+     ]
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "saglikli",
+       "label": "Sağlıklı"
+      },
+      {
+       "code": "kuru",
+       "label": "Kuru"
+      }
+     ]
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "bakim",
+      "field": "Bakım",
+      "choiceFilter": "Durum = 'kuru' veya @secenek <> 'kesim'",
+      "widget": "search"
+     }
+    ]
+   },
+   "issues": [
+    {
+     "code": "form_widget_unfit",
+     "severity": "error",
+     "item": "bakim",
+     "field": "Bakım"
+    }
+   ]
+  },
+  {
    "name": "başka katmandan liste, zincir, süzgeç, nesneye bağ ve ilişkili kayıtlar: sorun yok",
    "fields": [
     {

@@ -309,9 +309,9 @@ def text_for(v, f):
 # ── The form ────────────────────────────────────────────────────────────
 
 FITS = {
-    "text": {"text", "textArea", "list", "radio", "segmented", "color", "checkList"},
-    "integer": {"number", "list", "radio", "segmented", "slider"},
-    "decimal": {"number", "list", "radio", "segmented", "slider"},
+    "text": {"text", "textArea", "list", "radio", "segmented", "color", "checkList", "search", "chips"},
+    "integer": {"number", "list", "radio", "segmented", "slider", "search"},
+    "decimal": {"number", "list", "radio", "segmented", "slider", "search"},
     "date": {"date"},
     "boolean": {"check", "switch", "radio", "segmented"},
 }
@@ -421,14 +421,15 @@ def preflight(body, fields, variables=(), world=None):
         w = widget_of(f, layer)
         listed = bool(layer.get("values")) or "lookup" in f
         if layer.get("multiple"):
-            many_fits = w == "checkList" if listed else w in ("text", "textArea", "checkList")
+            many_fits = w in ("checkList", "chips") if listed else w in ("text", "textArea", "checkList", "chips")
         else:
-            many_fits = w != "checkList"
+            many_fits = w not in ("checkList", "chips")
         if w not in FITS[layer["kind"]] or not many_fits:
             issues.append(issue("form_widget_unfit", True, f["id"], key))
         elif w == "slider" and ("min" not in layer or "max" not in layer):
             issues.append(issue("form_widget_needs_range", True, f["id"], key))
-        elif w in ("list", "radio", "segmented", "checkList") and not layer.get("values") and layer["kind"] != "boolean" \
+        elif w in ("list", "radio", "segmented", "checkList", "search", "chips") and not layer.get("values") \
+                and layer["kind"] != "boolean" \
                 and "lookup" not in f:
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
         if "default" in f and check_value(layer, f["default"])[1]:
@@ -2730,6 +2731,12 @@ def multi_core():
     case("çoklu seçim yalnız çok değerli alanda",
          multi_with(lambda b: (item(b, "durum").update(widget="checkList"), item(b, "ad").update(widget="checkList"))))
     case("çok değerli varsayılan listenin sırasıyla", multi_with(lambda b: item(b, "bakim").update(default="Sulama; budama")))
+    # docs/adr/0431: chips on a listed multiple field, a searched list on a single-valued listed one.
+    case("çok değerli alan çiplerle", multi_with(lambda b: item(b, "bakim").update(widget="chips")))
+    case("tek değerli alan aranır listeyle", multi_with(lambda b: item(b, "durum").update(widget="search")))
+    case("çipler yalnız çok değerli alanda", multi_with(lambda b: item(b, "durum").update(widget="chips")))
+    case("aranır liste değer listesi ister", multi_with(lambda b: item(b, "ad").update(widget="search")))
+    case("aranır liste çok değerli alanı düzenleyemez", multi_with(lambda b: item(b, "bakim").update(widget="search")))
 
     def record(name, attrs, body=MULTI_BODY):
         form = Form(body, MULTI_FIELDS)

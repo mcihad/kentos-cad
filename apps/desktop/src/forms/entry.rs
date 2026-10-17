@@ -27,7 +27,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use iced::widget::{Column, Row, container, row, scrollable, space, text_editor, text_input};
+use iced::widget::{
+    Column, Row, button, container, row, scrollable, space, text_editor, text_input,
+};
 use iced::{Center, Element, Fill, Task};
 use kentos_contracts::FormsFill;
 use kentos_contracts::{
@@ -127,6 +129,8 @@ pub struct Entry {
     mixed: BTreeSet<String>,
     /// A suggesting field item's values in the layer, the most used first (docs/adr/0407 §3).
     suggestions: BTreeMap<String, Vec<String>>,
+    /// What is typed into a searched list (docs/adr/0431), by the field's key, until a value is picked.
+    queries: BTreeMap<String, String>,
     /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
     /// the preview and with many records.
     place: Option<(usize, usize)>,
@@ -177,6 +181,8 @@ impl fmt::Debug for Entry {
 #[derive(Debug, Clone)]
 pub enum Event {
     Value(String, String),
+    /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
+    Query(String, String),
     Note(String, text_editor::Action),
     Tab(usize),
     /// A collapsed group's title: open or close it.
@@ -690,6 +696,7 @@ impl App {
             members: Vec::new(),
             mixed: BTreeSet::new(),
             suggestions: BTreeMap::new(),
+            queries: BTreeMap::new(),
             place: None,
             follows: BTreeSet::new(),
         };
@@ -1094,7 +1101,12 @@ impl App {
             return Task::none();
         };
         match event {
+            Event::Query(key, text) => {
+                e.queries.insert(key, text);
+                return Task::none();
+            }
             Event::Value(key, text) => {
+                e.queries.remove(&key);
                 // A long text's editor shows a value given as a whole (a trace's, a pick's) too.
                 if let Some(content) = e.notes.get_mut(&key)
                     && content.text().trim_end_matches('\n') != text
@@ -2447,6 +2459,97 @@ fn entry_control<'a>(
             }
             col.into()
         }
+        // The held codes as chips, one more added from the list (docs/adr/0431).
+        FormWidget::Chips => {
+            let held: Vec<String> = field
+                .codes_of(&code)
+                .into_iter()
+                .map(str::to_owned)
+                .collect();
+            // The list's order, a held code no longer offered after them.
+            let ordered = |codes: &[&str]| -> String {
+                let mut out: Vec<&str> = choices
+                    .iter()
+                    .map(|(c, _)| c.as_str())
+                    .filter(|c| codes.contains(c))
+                    .collect();
+                out.extend(codes.iter().filter(|c| !choices.iter().any(|(x, _)| x == *c)));
+                out.join(kentos_contracts::MULTIPLE_JOIN)
+            };
+            let mut chips = Row::new().spacing(4);
+            for h in &held {
+                let words = choices
+                    .iter()
+                    .find(|(c, _)| c == h)
+                    .map_or_else(|| kentos_contracts::display_value(field, h), |(_, l)| l.clone());
+                let rest: Vec<&str> = held.iter().filter(|x| *x != h).map(String::as_str).collect();
+                let face = row![label::caption(words)].spacing(4).align_y(Center);
+                let face = if read_only {
+                    face
+                } else {
+                    face.push(icon(crate::icons::from_web(Some("close"))).size(10.0))
+                };
+                chips = chips.push(
+                    button(face)
+                        .padding([2, 8])
+                        .style(style::button::chip(true))
+                        .on_press_maybe((!read_only).then(|| set(ordered(&rest)))),
+                );
+            }
+            let mut col = Column::new().spacing(6).push(chips.wrap());
+            if !read_only {
+                let free: Vec<(String, String)> = choices
+                    .iter()
+                    .filter(|(c, _)| !held.contains(c))
+                    .cloned()
+                    .collect();
+                if !free.is_empty() {
+                    let held_now = held.clone();
+                    let set_add = set.clone();
+                    let codes: Vec<String> = free.iter().map(|(c, _)| c.clone()).collect();
+                    let order: Vec<String> = choices.iter().map(|(c, _)| c.clone()).collect();
+                    let add = Select::new(free.iter().map(|(_, l)| Choice::new(l.clone())), None, move |i| {
+                        let mut next: Vec<&str> = held_now.iter().map(String::as_str).collect();
+                        next.push(codes[i].as_str());
+                        set_add(ordered_codes(&next, &order))
+                    })
+                    .placeholder("Ekle…");
+                    col = col.push(container(add).width(220));
+                }
+            }
+            col.into()
+        }
+        // A long list searched by typing (docs/adr/0431): the labels holding what is typed.
+        FormWidget::Search if !read_only => {
+            let query = e.queries.get(&key).cloned();
+            let shown = query
+                .clone()
+                .unwrap_or_else(|| at.map_or_else(|| value.clone(), |i| choices[i].1.clone()));
+            let labels: Vec<String> = choices.iter().map(|(_, l)| l.clone()).collect();
+            let offered: Vec<String> = match &query {
+                Some(q) if !q.is_empty() => kentos_forms::suggestions_for(&labels, q, 12)
+                    .into_iter()
+                    .cloned()
+                    .collect(),
+                _ => labels.iter().take(12).cloned().collect(),
+            };
+            let picked: Vec<String> = offered
+                .iter()
+                .filter_map(|l| choices.iter().find(|(_, x)| x == l).map(|(c, _)| c.clone()))
+                .collect();
+            let k = key.clone();
+            let on_pick = set.clone();
+            kentos_ui::widget::Suggest::new(shown.as_str(), placeholder.as_str())
+                .id(input_id(&key))
+                .on_input(move |t| e.msg(Event::Query(k.clone(), t)))
+                .suggestions(
+                    offered
+                        .into_iter()
+                        .map(kentos_ui::widget::suggest::Suggestion::new),
+                )
+                .on_pick(move |i| on_pick(picked.get(i).cloned().unwrap_or_default()))
+                .into()
+        }
         FormWidget::Check => {
             let on = code == "true";
             let set = set.clone();
@@ -2868,4 +2971,23 @@ fn related_table<'a>(
         rows = rows.push(label::caption(format!("{} nesne daha.", uids.len() - 200)).style(muted));
     }
     rows.into()
+}
+
+/// `codes` in the list's order (`list`), a held code the list no longer offers after them.
+fn ordered_codes(codes: &[&str], list: &[String]) -> String {
+    let mut out: Vec<&str> = Vec::new();
+    for c in codes {
+        if !out.contains(c) {
+            out.push(c);
+        }
+    }
+    let rank = |c: &str| list.iter().position(|x| x == c).unwrap_or(usize::MAX);
+    out.sort_by_key(|c| rank(c));
+    out.join(kentos_contracts::MULTIPLE_JOIN)
+}
+
+#[cfg(test)]
+pub(crate) fn ordered_for_tests(codes: &[&str], list: &[&str]) -> String {
+    let list: Vec<String> = list.iter().map(|s| (*s).to_owned()).collect();
+    ordered_codes(codes, &list)
 }

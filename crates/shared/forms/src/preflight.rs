@@ -111,12 +111,20 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     let kind_fits = match field.kind {
         LayerFieldKind::Text => matches!(
             widget,
-            W::Text | W::TextArea | W::List | W::Radio | W::Segmented | W::Color | W::CheckList
+            W::Text
+                | W::TextArea
+                | W::List
+                | W::Radio
+                | W::Segmented
+                | W::Color
+                | W::CheckList
+                | W::Search
+                | W::Chips
         ),
         LayerFieldKind::Integer | LayerFieldKind::Decimal => {
             matches!(
                 widget,
-                W::Number | W::List | W::Radio | W::Segmented | W::Slider
+                W::Number | W::List | W::Radio | W::Segmented | W::Slider | W::Search
             )
         }
         LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => {
@@ -126,12 +134,13 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     };
     // A listed multiple field is edited by its check list, a free one by text; the check list edits
     // only a multiple field (docs/adr/0408 §2, 0409 §1).
+    // Chips edit a listed multiple field too (docs/adr/0431).
     let many_fits = if field.multiple && listed {
-        widget == W::CheckList
+        matches!(widget, W::CheckList | W::Chips)
     } else if field.multiple {
-        matches!(widget, W::Text | W::TextArea | W::CheckList)
+        matches!(widget, W::Text | W::TextArea | W::CheckList | W::Chips)
     } else {
-        widget != W::CheckList
+        !matches!(widget, W::CheckList | W::Chips)
     };
     if !kind_fits || !many_fits {
         return Err(codes::WIDGET_UNFIT);
@@ -140,7 +149,10 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     if widget == W::Slider && (field.min.is_none() || field.max.is_none()) {
         return Err(codes::WIDGET_NEEDS_RANGE);
     }
-    let needs_list = matches!(widget, W::List | W::Radio | W::Segmented | W::CheckList);
+    let needs_list = matches!(
+        widget,
+        W::List | W::Radio | W::Segmented | W::CheckList | W::Search | W::Chips
+    );
     if needs_list && !listed && field.kind != LayerFieldKind::Boolean {
         return Err(codes::WIDGET_NEEDS_VALUES);
     }

@@ -693,10 +693,14 @@ pub enum FormWidget {
     Color,
     /// A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.
     CheckList,
+    /// A list searched by typing (docs/adr/0431): single-valued fields with a long value list.
+    Search,
+    /// The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.
+    Chips,
 }
 
 impl FormWidget {
-    pub const ALL: [FormWidget; 12] = [
+    pub const ALL: [FormWidget; 14] = [
         FormWidget::Text,
         FormWidget::TextArea,
         FormWidget::Number,
@@ -709,6 +713,8 @@ impl FormWidget {
         FormWidget::Slider,
         FormWidget::Color,
         FormWidget::CheckList,
+        FormWidget::Search,
+        FormWidget::Chips,
     ];
 
     /// Its name in the interface.
@@ -726,6 +732,8 @@ impl FormWidget {
             FormWidget::Slider => "Kaydırıcı",
             FormWidget::Color => "Renk",
             FormWidget::CheckList => "Çoklu seçim",
+            FormWidget::Search => "Aranır liste",
+            FormWidget::Chips => "Etiketler",
         }
     }
 }

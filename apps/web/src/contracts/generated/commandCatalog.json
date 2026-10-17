@@ -4504,6 +4504,16 @@
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
                 "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+                "type": "string"
               }
             ]
           },
@@ -14964,6 +14974,16 @@
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
                 "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+                "type": "string"
               }
             ]
           },
@@ -23373,6 +23393,16 @@
               {
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
                 "type": "string"
               }
             ]
@@ -344088,6 +344118,16 @@
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
                 "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+                "type": "string"
               }
             ]
           },
@@ -345119,6 +345159,16 @@
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
                 "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+                "type": "string"
               }
             ]
           },
@@ -346068,6 +346118,16 @@
               {
                 "const": "checkList",
                 "description": "A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.",
+                "type": "string"
+              },
+              {
+                "const": "search",
+                "description": "A list searched by typing (docs/adr/0431): single-valued fields with a long value list.",
+                "type": "string"
+              },
+              {
+                "const": "chips",
+                "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
                 "type": "string"
               }
             ]

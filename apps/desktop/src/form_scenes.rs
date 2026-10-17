@@ -237,8 +237,17 @@ fn tree_missing(app: &mut App) {
 
 /// The name field focused: the layer's names holding what is typed are offered (docs/adr/0407 §3).
 fn name_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    focused(s, app, "Ad");
+}
+
+/// The province field focused: the provinces holding “an” are offered (docs/adr/0431).
+fn province_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    focused(s, app, "İl");
+}
+
+fn focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App, key: &str) {
     use iced::futures::StreamExt as _;
-    let task: iced::Task<Message> = iced::widget::operation::focus(entry::input_id("Ad"));
+    let task: iced::Task<Message> = iced::widget::operation::focus(entry::input_id(key));
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         while let Some(action) = iced::futures::executor::block_on(stream.next()) {
             if let iced_runtime::Action::Widget(operation) = action {
@@ -250,7 +259,10 @@ fn name_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
 
 /// The pictures that need the window: the suggestions open under a focused field.
 pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
-    vec![("form-agac-oneri", tree_missing, name_focused)]
+    vec![
+        ("form-agac-oneri", tree_missing, name_focused),
+        ("form-aranir-liste", searched_list, province_focused),
+    ]
 }
 
 /// A published form of `layer` with `items`.
@@ -890,6 +902,93 @@ fn domains_field(app: &mut App) {
     let _ = app.open_layer_fields("bina");
     let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
         1,
+    )));
+}
+
+/// Facilities with a province from a long list and the services they have (docs/adr/0431): the province
+/// searched, the services as chips; a published form.
+fn chosen_facilities(app: &mut App) {
+    let mut o = Objects::new();
+    let id = o.path(
+        "tesis",
+        &[[0.0, 0.0], [18.0, 0.0], [18.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.data(
+        id,
+        &[
+            ("Ad", "Merkez arıtma"),
+            ("İl", "06"),
+            ("Hizmetler", "su; elektrik"),
+        ],
+        Some("Merkez arıtma"),
+    );
+    let provinces = [
+        ("01", "Adana"),
+        ("06", "Ankara"),
+        ("07", "Antalya"),
+        ("75", "Ardahan"),
+        ("08", "Artvin"),
+        ("09", "Aydın"),
+        ("10", "Balıkesir"),
+        ("16", "Bursa"),
+        ("20", "Denizli"),
+        ("21", "Diyarbakır"),
+        ("25", "Erzurum"),
+        ("26", "Eskişehir"),
+        ("27", "Gaziantep"),
+        ("31", "Hatay"),
+        ("34", "İstanbul"),
+        ("35", "İzmir"),
+        ("38", "Kayseri"),
+        ("41", "Kocaeli"),
+        ("42", "Konya"),
+        ("55", "Samsun"),
+        ("58", "Sivas"),
+        ("61", "Trabzon"),
+        ("65", "Van"),
+        ("66", "Yozgat"),
+    ];
+    let values: Vec<Value> = provinces
+        .iter()
+        .map(|(c, l)| json!({ "code": c, "label": l }))
+        .collect();
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut tesis = crate::tools_scenes::layer("tesis", "Tesis", "#30A46C", 0.35);
+        tesis["fields"] = json!([{ "name": "Ad", "kind": "text" },
+                                 { "name": "İl", "kind": "text", "values": values },
+                                 { "name": "Hizmetler", "kind": "text", "multiple": true, "values": [
+                                     { "code": "su", "label": "Su" }, { "code": "elektrik", "label": "Elektrik" },
+                                     { "code": "dogalgaz", "label": "Doğal gaz" }, { "code": "internet", "label": "İnternet" },
+                                     { "code": "kanal", "label": "Kanalizasyon" }] }]);
+        layers.push(tesis);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("tesis");
+    });
+    let body = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "ad", "field": "Ad" },
+        { "type": "field", "id": "il", "field": "İl", "widget": "search", "placeholder": "İl adı yazın" },
+        { "type": "field", "id": "hizmet", "field": "Hizmetler", "widget": "chips" }
+    ] });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "tesis", "name": "Tesis kaydı", "layer": "tesis", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("tesis".into());
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// The province being searched: “an” typed.
+fn searched_list(app: &mut App) {
+    chosen_facilities(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Query(
+        "İl".into(),
+        "an".into(),
     )));
 }
 
@@ -1702,6 +1801,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-gecmis", workflow_log),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
+        ("form-cipler", chosen_facilities),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -2023,6 +2123,36 @@ mod tests {
         let doc = &app.document.as_ref().unwrap().model;
         assert!(
             !doc.can_undo() || doc.settings().domains[0].values.as_ref().map(Vec::len) == Some(4)
+        );
+    }
+
+    #[test]
+    fn a_searched_list_and_chips_write_codes() {
+        let mut app = crate::files_testing::app_with_drawing();
+        searched_list(&mut app);
+        // A pick writes the code; the chips' add keeps the list's order.
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "İl".into(),
+            "07".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Hizmetler".into(),
+            "su; elektrik; internet".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        let doc = &app.document.as_ref().unwrap().model;
+        let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
+        assert_eq!(attrs.get("İl").map(String::as_str), Some("07"));
+        assert_eq!(
+            attrs.get("Hizmetler").map(String::as_str),
+            Some("su; elektrik; internet")
+        );
+        assert_eq!(
+            super::super::forms::entry::ordered_for_tests(
+                &["internet", "su"],
+                &["su", "elektrik", "internet"]
+            ),
+            "su; internet"
         );
     }
 

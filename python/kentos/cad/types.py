@@ -945,6 +945,8 @@ class FormWidget(_StrEnum):
     - ``slider``: A slider between the field's least and most (docs/adr/0406 §2): number fields with both.
     - ``color``: A colour, `#RRGGBB` or `#RRGGBBAA` (docs/adr/0407 §2): text fields.
     - ``checkList``: A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.
+    - ``search``: A list searched by typing (docs/adr/0431): single-valued fields with a long value list.
+    - ``chips``: The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.
     """
     TEXT = "text"
     TEXT_AREA = "textArea"
@@ -958,9 +960,11 @@ class FormWidget(_StrEnum):
     SLIDER = "slider"
     COLOR = "color"
     CHECK_LIST = "checkList"
+    SEARCH = "search"
+    CHIPS = "chips"
 
 
-FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color", "checkList"]
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color", "checkList", "search", "chips"]
 """The names of :class:`FormWidget`, for a plain string."""
 
 

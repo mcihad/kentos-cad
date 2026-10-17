@@ -438,7 +438,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-04:** Aynı field birden çok yerde gösterilebilir; tek draft value owner'ı olsun, mirror display ile bağımsız edit kutuları birbirini ezmesin.
 - [ ] **FORM-DESIGN-05:** Master–detail, relation reference, embedded child form, lookup panel ve record grid eklenebilsin.
 - [ ] **FORM-DESIGN-06:** Hesaplı summary, related aggregate, chart, image/attachment, map location ve inline validation bileşenleri olsun.
-- [ ] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin.
+- [ ] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin. — *17 Ekim, kısmen: açılır liste, seçenek düğmeleri, parçalı seçim, çoklu seçim, aranır liste ve etiketler (ADR 0401, 0408, 0431); ağaç açık.*
 - [x] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin. — *Yapıldı (16 Ekim; ADR 0401 §10: İfade oluşturucunun Metin ve Akış'ı).*
 - [x] **FORM-DESIGN-09:** Required/visible/editable/calculate/default/choice filter bağları dependency graph'ta görülebilsin. — *Yapıldı (16 Ekim; ADR 0414 §5: tasarımcıda Bağlar; döngü ön denetimde `form_calc_cycle`).*
 - [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun.

@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AN` aranır liste ve etiketler (ADR 0431, 17 Ekim): web'de gerekenler: `search` ve `chips` giriş biçimleri (TS türleri üretildi),
+  form çekirdeğinin web bağlayıcısında uyum kuralı, formun iki bileşeni.
 - [ ] `FORM-AM` projenin değer listeleri (ADR 0430, 17 Ekim): web'de gerekenler: ayarların `domains`'i ve alanın `domain`'i (TS türleri
   üretildi), `cad.domains.edit`'in TS işleyicisi (`fixtures/commands/v1/cad.domains.edit.json`), belgenin kopyaları izlemesi ve geri
   alması, Değer listeleri penceresi, Alanlar'da Projenin listesi.
@@ -1514,6 +1516,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AN` Aranır liste ve etiketler: uzun listede yazarak seçim (Türkçe katlamayla), çok değerli alanın kodları çip olarak. —
+  **17 Ekim, [ADR 0431](docs/adr/0431-search-and-chip-widgets.md).**
 - [x] `FORM-AM` Projenin değer listeleri: kod listesi ya da aralık projede bir kez, birçok katmanın alanı bağlanır, liste değişince bağlı
   alanlar aynı adımda izler; çıkan kodun kayıtları `recode` ile taşınır; Değer listeleri penceresi, Alanlar'da Projenin listesi;
   `cad.domains.edit`. — **17 Ekim, [ADR 0430](docs/adr/0430-project-value-lists.md).**
