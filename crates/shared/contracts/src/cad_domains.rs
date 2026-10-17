@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+#[cfg(feature = "schema")]
 use crate::REVISION_TEXT;
 use crate::fields::{FieldChoice, LayerFieldKind};
 
@@ -44,6 +45,17 @@ pub enum DomainsOp {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         max: Option<String>,
+        /// The range's ends left out (docs/adr/0438 §4); written only as `true`.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        min_exclusive: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        max_exclusive: bool,
+        /// A number list's unit (docs/adr/0438 §4).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        unit: Option<String>,
     },
     /// Alanın listesinden: a list made of a field's own values (or bounds), the field linked to it.
     FromField {
@@ -73,6 +85,17 @@ pub enum DomainsOp {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         max: Option<String>,
+        /// The range's ends left out (docs/adr/0438 §4); written only as `true`.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        min_exclusive: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        max_exclusive: bool,
+        /// A number list's unit (docs/adr/0438 §4).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        unit: Option<String>,
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
         recode: BTreeMap<String, String>,

@@ -491,6 +491,14 @@ pub struct LayerNode {
         ts(as = "Option<Vec<crate::contingents::FieldGroup>>", optional)
     )]
     pub contingents: Vec<crate::contingents::FieldGroup>,
+    /// Kayıt kuralları (docs/adr/0438 §1): the constraints every write of the layer's records keeps.
+    /// Only a layer holding objects has them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::layer_rules::LayerRule>>", optional)
+    )]
+    pub rules: Vec<crate::layer_rules::LayerRule>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

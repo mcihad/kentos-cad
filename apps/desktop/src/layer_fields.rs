@@ -77,6 +77,11 @@ pub struct FieldRow {
     pub merge: Option<kentos_contracts::MergePolicy>,
     /// The project's value list it links (docs/adr/0430); its values or bounds are that list's.
     pub domain: Option<String>,
+    /// Tekil, the range's ends left out and the unit (docs/adr/0438 §3, §4).
+    pub unique: bool,
+    pub min_exclusive: bool,
+    pub max_exclusive: bool,
+    pub unit: String,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -101,6 +106,10 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         split: f.split,
         merge: f.merge,
         domain: f.domain.clone(),
+        unique: f.unique,
+        min_exclusive: f.min_exclusive,
+        max_exclusive: f.max_exclusive,
+        unit: f.unit.clone().unwrap_or_default(),
     }
 }
 
@@ -142,11 +151,18 @@ pub fn field_of(r: &FieldRow) -> LayerField {
         };
         if !r.min.trim().is_empty() {
             f.min = Some(canonical(&r.min));
+            f.min_exclusive = r.min_exclusive;
         }
         if !r.max.trim().is_empty() {
             f.max = Some(canonical(&r.max));
+            f.max_exclusive = r.max_exclusive;
         }
     }
+    // A number's unit, as typed (docs/adr/0438 §4).
+    if r.kind.is_number() && !r.unit.trim().is_empty() {
+        f.unit = Some(r.unit.clone());
+    }
+    f.unique = r.unique && r.kind != LayerFieldKind::Boolean;
     if matches!(
         r.kind,
         LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::Decimal
@@ -162,6 +178,27 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     f.merge = r.merge;
     f.domain = r.domain.clone();
     f
+}
+
+/// A listed value's first (`from`) or last day as typed (docs/adr/0438 §5): a day typed as 7.10.2026 is
+/// kept in its one form; what does not read stays, for the window to say.
+fn set_day(w: &mut Window, i: usize, typed: String, from: bool) {
+    let day = (!typed.trim().is_empty()).then(|| {
+        kentos_contracts::check_value(&LayerField::new("gün", LayerFieldKind::Date), &typed)
+            .unwrap_or(typed.clone())
+    });
+    if let Some(c) = w
+        .choices
+        .as_mut()
+        .filter(|c| c.domain.is_none())
+        .and_then(|c| c.list.get_mut(i))
+    {
+        if from {
+            c.from = day;
+        } else {
+            c.until = day;
+        }
+    }
 }
 
 /// The renamed fields' keys: (old, new) for each field kept under another
@@ -249,6 +286,15 @@ pub enum Event {
     ListLabel(usize, String),
     /// Kullanımdan kalktı (docs/adr/0418).
     ListRetired(usize, bool),
+    /// A value's description and its days (docs/adr/0438 §5), as typed.
+    ListDescription(usize, String),
+    ListFrom(usize, String),
+    ListUntil(usize, String),
+    /// The chosen row's Tekil, ends left out and unit (docs/adr/0438 §3, §4).
+    Unique(bool),
+    MinExclusive(bool),
+    MaxExclusive(bool),
+    Unit(String),
     /// Bölünce and Birleşince of a row (docs/adr/0419).
     Split(usize, Option<kentos_contracts::SplitPolicy>),
     Merge(usize, Option<kentos_contracts::MergePolicy>),
@@ -393,6 +439,10 @@ impl App {
                     split: None,
                     merge: None,
                     domain: None,
+                    unique: false,
+                    min_exclusive: false,
+                    max_exclusive: false,
+                    unit: String::new(),
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -506,6 +556,39 @@ impl App {
                     .and_then(|c| c.list.get_mut(i))
                 {
                     c.retired = on;
+                }
+            }
+            Event::ListDescription(i, t) => {
+                if let Some(c) = w
+                    .choices
+                    .as_mut()
+                    .filter(|c| c.domain.is_none())
+                    .and_then(|c| c.list.get_mut(i))
+                {
+                    c.description = (!t.trim().is_empty()).then_some(t);
+                }
+            }
+            // A day typed as 7.10.2026 is kept in its one form; what does not read stays, to be said.
+            Event::ListFrom(i, t) => set_day(w, i, t, true),
+            Event::ListUntil(i, t) => set_day(w, i, t, false),
+            Event::Unique(on) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.unique = on;
+                }
+            }
+            Event::MinExclusive(on) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.min_exclusive = on;
+                }
+            }
+            Event::MaxExclusive(on) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.max_exclusive = on;
+                }
+            }
+            Event::Unit(t) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.unit = t;
                 }
             }
             Event::ListAdd => {
@@ -845,7 +928,50 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
-        let usage = iced::widget::column![policy_box(w), self.field_usage_box(w)].spacing(10);
+        // The chosen row's Tekil, ends left out and unit (docs/adr/0438 §3, §4).
+        let extras: Element<'_, Message> = match chosen.and_then(|i| w.rows.get(i)) {
+            Some(r) => {
+                let ranged = (r.kind.is_number() || r.kind.is_temporal()) && r.domain.is_none();
+                let mut line = row![
+                    label::strong(r.name.clone()),
+                    words::check(
+                        r.unique,
+                        "Tekil",
+                        (r.kind != LayerFieldKind::Boolean).then(|| msg(Event::Unique(!r.unique)))
+                    ),
+                    words::check(
+                        r.min_exclusive,
+                        "En az hariç",
+                        (ranged && !r.min.trim().is_empty())
+                            .then(|| msg(Event::MinExclusive(!r.min_exclusive)))
+                    ),
+                    words::check(
+                        r.max_exclusive,
+                        "En çok hariç",
+                        (ranged && !r.max.trim().is_empty())
+                            .then(|| msg(Event::MaxExclusive(!r.max_exclusive)))
+                    ),
+                ]
+                .spacing(16)
+                .align_y(Center);
+                if r.kind.is_number() {
+                    line = line.push(label::body("Birim")).push(
+                        container(
+                            text_input("m², kg …", &r.unit)
+                                .size(typography::body())
+                                .padding([3, 6])
+                                .style(style::field::input)
+                                .on_input(|t| msg(Event::Unit(t))),
+                        )
+                        .width(Length::Fixed(typography::scaled(90.0))),
+                    );
+                }
+                line.into()
+            }
+            None => label::caption("Tekil, hariç uçlar ve birim için bir alan seçin.").into(),
+        };
+        let usage =
+            iced::widget::column![extras, policy_box(w), self.field_usage_box(w)].spacing(10);
         let problem = problem_of(&w.rows);
         let renamed = renames_of(&w.rows).len();
         let line = match (&w.said, &problem) {
@@ -894,8 +1020,11 @@ impl App {
             .unwrap_or_default();
         let mut list = Column::new().spacing(4).push(
             row![
-                container(label::caption("Kod")).width(Length::Fixed(140.0)),
-                container(label::caption("Etiket")).width(Length::Fixed(200.0)),
+                container(label::caption("Kod")).width(Length::Fixed(100.0)),
+                container(label::caption("Etiket")).width(Length::Fixed(150.0)),
+                container(label::caption("Açıklama")).width(Length::Fixed(170.0)),
+                container(label::caption("Geçerlilik başı")).width(Length::Fixed(108.0)),
+                container(label::caption("sonu")).width(Length::Fixed(108.0)),
                 label::caption("Kalktı"),
             ]
             .spacing(6),
@@ -920,6 +1049,25 @@ impl App {
             let label_input = text_input("", label_text)
                 .padding([3, 6])
                 .style(style::field::input);
+            // What the value means and the days it holds (docs/adr/0438 §5).
+            let typed = |placeholder: &'static str, value: &str, on: fn(usize, String) -> Event| {
+                let field = text_input(placeholder, value)
+                    .padding([3, 6])
+                    .style(style::field::input);
+                if own {
+                    field.on_input(move |t| msg(on(i, t)))
+                } else {
+                    field
+                }
+            };
+            let shown_day = |d: &Option<String>| {
+                d.as_deref().map_or_else(String::new, |d| {
+                    kentos_contracts::display_value(
+                        &LayerField::new("gün", LayerFieldKind::Date),
+                        d,
+                    )
+                })
+            };
             list = list.push(
                 row![
                     container(if own {
@@ -927,13 +1075,23 @@ impl App {
                     } else {
                         code_input
                     })
-                    .width(Length::Fixed(140.0)),
+                    .width(Length::Fixed(100.0)),
                     container(if own {
                         label_input.on_input(move |t| msg(Event::ListLabel(i, t)))
                     } else {
                         label_input
                     })
-                    .width(Length::Fixed(200.0)),
+                    .width(Length::Fixed(150.0)),
+                    container(typed(
+                        "",
+                        choice.description.as_deref().unwrap_or(""),
+                        Event::ListDescription
+                    ))
+                    .width(Length::Fixed(170.0)),
+                    container(typed("GG.AA.YYYY", &shown_day(&choice.from), Event::ListFrom))
+                        .width(Length::Fixed(108.0)),
+                    container(typed("GG.AA.YYYY", &shown_day(&choice.until), Event::ListUntil))
+                        .width(Length::Fixed(108.0)),
                     kentos_ui::widget::tip(
                         words::check(retired, "", own.then(|| msg(Event::ListRetired(i, !retired)))),
                         kentos_ui::widget::Tip::new("Kullanımdan kalktı").body(
@@ -1018,7 +1176,7 @@ impl App {
                 .push(body)
                 .action(words::secondary(CANCEL, Some(msg(Event::ListCancel))))
                 .action(words::primary("Tamam", Some(msg(Event::ListOk))))
-                .width(460.0),
+                .width(820.0),
             msg(Event::ListCancel),
         );
         iced::widget::stack![main, sub].into()

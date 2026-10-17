@@ -65,4 +65,22 @@ merge?: MergePolicy,
  * The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that
  * list's copy, written anew whenever the list changes. None: its own.
  */
-domain?: string, };
+domain?: string, 
+/**
+ * No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every
+ * write is refused `not_unique` that would; written only as `true`.
+ */
+unique?: boolean, 
+/**
+ * `min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.
+ */
+minExclusive?: boolean, 
+/**
+ * `max` is not itself in the range; only with `max`; written only as `true`.
+ */
+maxExclusive?: boolean, 
+/**
+ * The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value
+ * stays the number.
+ */
+unit?: string, };

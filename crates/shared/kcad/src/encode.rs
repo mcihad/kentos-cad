@@ -962,7 +962,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.frozen == Some(true))
                 + usize::from(!n.table_styles.is_empty())
                 + usize::from(n.subtypes.is_some())
-                + usize::from(!n.contingents.is_empty()),
+                + usize::from(!n.contingents.is_empty())
+                + usize::from(!n.rules.is_empty()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
@@ -1013,6 +1014,21 @@ impl<'d> Encoder<'d> {
             LayerNodeType::Group => "group",
             LayerNodeType::Layer => "layer",
         });
+        // Schema 60 (docs/adr/0438 §1): the record rules, as their JSON, fitting the fields.
+        if !n.rules.is_empty() {
+            self.key("rules");
+            self.at(Seg::Name("rules"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(Code::BadValue, "grubun kayıt kuralları olmaz; yalnız katmanın olur"));
+                }
+                if let Some((_, problem)) = kentos_contracts::layer_rules_problem(&n.fields, &n.rules) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&n.rules)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         self.key("style");
         self.at(Seg::Name("style"), |e| e.layer_style(&n.style))?;
         if fields {
@@ -1192,7 +1208,11 @@ impl<'d> Encoder<'d> {
             + usize::from(f.required)
             + usize::from(f.split.is_some())
             + usize::from(f.merge.is_some())
-            + usize::from(f.domain.is_some());
+            + usize::from(f.domain.is_some())
+            + usize::from(f.unique)
+            + usize::from(f.min_exclusive)
+            + usize::from(f.max_exclusive)
+            + usize::from(f.unit.is_some());
         self.open(n, true)?;
         if let Some(id) = &f.id {
             self.key("id");
@@ -1210,6 +1230,11 @@ impl<'d> Encoder<'d> {
         self.w.text(f.kind.name());
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&f.name))?;
+        // Schema 60 (docs/adr/0438 §4): the unit, in the keys' canonical order.
+        if let Some(unit) = &f.unit {
+            self.key("unit");
+            self.at(Seg::Name("unit"), |e| e.text(unit))?;
+        }
         if let Some(alias) = &f.alias {
             self.key("alias");
             self.at(Seg::Name("alias"), |e| e.text(alias))?;
@@ -1236,20 +1261,44 @@ impl<'d> Encoder<'d> {
             self.key("length");
             self.w.uint(u64::from(length));
         }
+        // Schema 60 (docs/adr/0438 §3).
+        if f.unique {
+            self.key("unique");
+            self.w.bool(true);
+        }
         if let Some(values) = &f.values {
             self.key("values");
             self.at(Seg::Name("values"), |e| {
                 e.open(values.len(), false)?;
                 for (i, c) in values.iter().enumerate() {
                     e.at(Seg::Index(i), |e| {
-                        e.open(2 + usize::from(c.retired), true)?;
+                        e.open(
+                            2 + usize::from(c.retired)
+                                + usize::from(c.description.is_some())
+                                + usize::from(c.from.is_some())
+                                + usize::from(c.until.is_some()),
+                            true,
+                        )?;
+                        // code from (4), label until (5), retired (7), description (11).
                         e.key("code");
                         e.at(Seg::Name("code"), |e| e.text(&c.code))?;
+                        if let Some(from) = &c.from {
+                            e.key("from");
+                            e.at(Seg::Name("from"), |e| e.text(from))?;
+                        }
                         e.key("label");
                         e.at(Seg::Name("label"), |e| e.text(&c.label))?;
+                        if let Some(until) = &c.until {
+                            e.key("until");
+                            e.at(Seg::Name("until"), |e| e.text(until))?;
+                        }
                         if c.retired {
                             e.key("retired");
                             e.w.bool(true);
+                        }
+                        if let Some(d) = &c.description {
+                            e.key("description");
+                            e.at(Seg::Name("description"), |e| e.text(d))?;
                         }
                         e.close();
                         Ok(())
@@ -1269,6 +1318,14 @@ impl<'d> Encoder<'d> {
         }
         if f.required {
             self.key("required");
+            self.w.bool(true);
+        }
+        if f.max_exclusive {
+            self.key("maxExclusive");
+            self.w.bool(true);
+        }
+        if f.min_exclusive {
+            self.key("minExclusive");
             self.w.bool(true);
         }
         self.close();
@@ -1565,6 +1622,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || f.values.as_ref().is_some_and(|v| v.iter().any(|c| c.retired))
                 || f.split.is_some()
                 || f.merge.is_some()
+                || f.unique
+                || f.min_exclusive
+                || f.max_exclusive
+                || f.unit.is_some()
+                || f.values.as_ref().is_some_and(|v| {
+                    v.iter()
+                        .any(|c| c.description.is_some() || c.from.is_some() || c.until.is_some())
+                })
                 || matches!(
                     f.kind,
                     kentos_contracts::LayerFieldKind::DateTime
@@ -1576,6 +1641,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || !n.table_styles.is_empty()
                 || n.subtypes.is_some()
                 || !n.contingents.is_empty()
+                || !n.rules.is_empty()
                 || keyed(&n.children)
         })
     }
@@ -2118,10 +2184,11 @@ mod tests {
             &["off", "kinds"],
             // A layer's field and its value list's entry (docs/adr/0199 §1).
             &[
-                "id", "max", "min", "kind", "name", "alias", "scale", "length", "values", "default",
-                "multiple", "required",
+                "id", "max", "min", "kind", "name", "unit", "alias", "merge", "scale", "split",
+                "domain", "length", "unique", "values", "default", "multiple", "required",
+                "maxExclusive", "minExclusive",
             ],
-            &["code", "label"],
+            &["code", "from", "label", "until", "retired", "description"],
             &[
                 "fill",
                 "color",

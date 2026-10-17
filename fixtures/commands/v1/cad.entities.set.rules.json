@@ -1,0 +1,1934 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.set",
+ "commandVersion": 1,
+ "title": "Öznitelikler ve kayıt kuralları",
+ "note": "ADR 0438 §1, §3, §4: okuduğu alanı değişen kural sorulur; kural bozulursa reddedilir, uyarı kuralı söylenir; tekil alanın değeri katmanda bir kez; aralığın hariç ucu dışarıdadır. Written by scripts/fixtures/layer_rules_cases.py without KentOS code.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kayıt kuralları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Ruhsatlı yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi",
+        "description": "Taşıyıcı sistemde kusur yok."
+       },
+       {
+        "code": "inceleme",
+        "label": "Ek inceleme gerekli"
+       },
+       {
+        "code": "eski",
+        "label": "Eski sınıf",
+        "until": "2025-12-31"
+       },
+       {
+        "code": "yeni",
+        "label": "Yeni sınıf",
+        "from": "2027-01-01"
+       }
+      ]
+     },
+     {
+      "id": "ada-parsel",
+      "name": "Ada/Parsel",
+      "kind": "text",
+      "unique": true
+     },
+     {
+      "name": "Başlangıç",
+      "kind": "date"
+     },
+     {
+      "name": "Bitiş",
+      "kind": "date"
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "0",
+      "max": "60",
+      "minExclusive": true
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2,
+      "unit": "m²"
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     }
+    ],
+    "rules": [
+     {
+      "id": "tarih-sirasi",
+      "name": "Tarih sırası",
+      "rule": "Bitiş boş veya Başlangıç boş veya Bitiş >= Başlangıç",
+      "message": "Bitiş tarihi başlangıçtan önce olamaz.",
+      "fields": [
+       "Bitiş"
+      ]
+     },
+     {
+      "id": "inceleme-notu",
+      "name": "İnceleme notu",
+      "rule": "Durum <> 'inceleme' veya Açıklama boş değil",
+      "message": "Ek inceleme gereken yapıya açıklama yazın.",
+      "warning": true
+     },
+     {
+      "id": "kat-alan",
+      "name": "Kat ve alan",
+      "rule": "Alan boş veya Kat boş veya Alan <= Kat * 500",
+      "message": "Kat başına en çok 500 m² olur."
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Koruma alanı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sit alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "iyi",
+     "Ada/Parsel": "101/5",
+     "Başlangıç": "2026-03-01",
+     "Bitiş": "2026-09-30",
+     "Kat": "3",
+     "Alan": "900.00"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "inceleme",
+     "Ada/Parsel": "101/6",
+     "Açıklama": "Çatı arası.",
+     "Kat": "2",
+     "Alan": "400.00"
+    },
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420010
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "bina",
+    "attrs": {
+     "Kat": "1",
+     "Alan": "700.00"
+    },
+    "pts": [
+     {
+      "x": 487080,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420010
+     },
+     {
+      "x": 487080,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bitiş başlangıçtan önce: reddedilir, yeri Bitiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Bitiş": "2026-02-01"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Tarih sırası” kuralı: Bitiş tarihi başlangıçtan önce olamaz.",
+       "path": "attrs.Bitiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "başlangıç bitişten sonraya: reddedilir, yeri kuralın alanı Bitiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Başlangıç": "2026-10-01"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Tarih sırası” kuralı: Bitiş tarihi başlangıçtan önce olamaz.",
+       "path": "attrs.Bitiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarihler sıralı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Başlangıç": "2026-01-15",
+       "Bitiş": "2026-12-31"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-01-15",
+         "Bitiş": "2026-12-31",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bitiş boşalır: kural tutar (boş yazılmış)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Bitiş": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız başlangıçlı kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Başlangıç": "2026-05-05"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Başlangıç": "2026-05-05"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "inceleme açıklamasız: uyarılır, yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Durum": "inceleme"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "rule_unmet",
+        "message": "“İnceleme notu” kuralı: Ek inceleme gereken yapıya açıklama yazın.",
+        "path": "attrs.Durum"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "incelemenin açıklaması silinir: uyarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Açıklama": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "ids": [
+        2
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "rule_unmet",
+        "message": "“İnceleme notu” kuralı: Ek inceleme gereken yapıya açıklama yazın.",
+        "path": "attrs.Durum"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "inceleme açıklamasıyla: uyarı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Durum": "inceleme",
+       "Açıklama": "Kolonlarda çatlak."
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00",
+         "Açıklama": "Kolonlarda çatlak."
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan kat başına sınırı aşar: yeri okuduğu ilk alan Alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Alan": "1600"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Kat ve alan” kuralı: Kat başına en çok 500 m² olur.",
+       "path": "attrs.Alan"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat azalınca alan sınırı aşar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Kat": "1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Kat ve alan” kuralı: Kat başına en çok 500 m² olur.",
+       "path": "attrs.Alan"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat ve alan birlikte geçerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Kat": "4",
+       "Alan": "1950.5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "4",
+         "Alan": "1950.5"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kuralı bozuk kayıtta kuralın alanlarına dokunmayan yazma sorulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "Durum": "iyi"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00",
+         "Durum": "iyi"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kuralı bozuk kayıtta alanı değişen kural sorulur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "Alan": "650"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Kat ve alan” kuralı: Kat başına en çok 500 m² olur.",
+       "path": "attrs.Alan"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 0 aralığın hariç ucu: reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Kat": "0"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Kat” alanı 0 ile 60 arasında olmalı (0 hariç); 0 verildi.",
+       "path": "attrs.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 60 aralığın içinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Kat": "60"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "60",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ada/parsel başka kayıtta var: tekil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Ada/Parsel": "101/5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada/Parsel” alanı katmanda tekil; “101/5” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Ada/Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kayda aynı ada/parsel birden: tekil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "Ada/Parsel": "102/1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada/Parsel” alanı katmanda tekil; “102/1” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Ada/Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kendi ada/parselini yeniden yazmak serbest",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Ada/Parsel": "101/5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "ids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ada/parsel boşaltmak serbest",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Ada/Parsel": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "ids": [
+        1,
+        2
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kayıt birden: biri kuralı bozarsa hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Bitiş": "2026-04-01",
+       "Başlangıç": "2026-06-01"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Tarih sırası” kuralı: Bitiş tarihi başlangıçtan önce olamaz.",
+       "path": "attrs.Bitiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "iyi",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kaydın uyarısı tek",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Durum": "inceleme"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:3"
+       ],
+       "ids": [
+        1,
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "rule_unmet",
+        "message": "“İnceleme notu” kuralı: Ek inceleme gereken yapıya açıklama yazın.",
+        "path": "attrs.Durum"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Durum": "inceleme"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "uyarıdan sonra açıklama yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Durum": "inceleme"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "rule_unmet",
+        "message": "“İnceleme notu” kuralı: Ek inceleme gereken yapıya açıklama yazın.",
+        "path": "attrs.Durum"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Açıklama": "Bodrumda nem."
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/5",
+         "Başlangıç": "2026-03-01",
+         "Bitiş": "2026-09-30",
+         "Kat": "3",
+         "Alan": "900.00",
+         "Açıklama": "Bodrumda nem."
+        }
+       },
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "101/6",
+         "Açıklama": "Çatı arası.",
+         "Kat": "2",
+         "Alan": "400.00"
+        }
+       },
+       "3": {
+        "attrs": {}
+       },
+       "4": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "700.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  }
+ ]
+}

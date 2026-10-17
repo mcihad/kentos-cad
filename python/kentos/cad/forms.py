@@ -1052,6 +1052,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        opened: Mapping[str, str] | None | Unset = UNSET,
+        release: int | None | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         request_id: str | None = None,
@@ -1082,6 +1084,12 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
                 (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
                 left out (docs/adr/0402 §5).
+            opened: The record's attributes as the form opened it (docs/adr/0438 §7): the record changed since
+                (another write, an undo) is `record_changed` (status `conflict`) instead of being written over;
+                none: whatever it holds now.
+            release: The release the form was opened with (docs/adr/0438 §6): a later release published since is
+                `form_release_changed` (status `conflict`), so an old screen does not write past a newer form's
+                rules; none: the latest, whichever it is. Unit: version.
             user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
             values: Values by the layer fields' keys (empty: no value).
             request_id: Names this write: sent again with the same call it is answered as
@@ -1103,6 +1111,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            opened=_opt(opened, lambda x: dict(x)),
+            release=release,
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ), request_id=request_id, expected=expected)
@@ -1118,6 +1128,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        opened: Mapping[str, str] | None | Unset = UNSET,
+        release: int | None | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> FormsSubmitted:
@@ -1131,6 +1143,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            opened=_opt(opened, lambda x: dict(x)),
+            release=release,
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
@@ -1146,6 +1160,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        opened: Mapping[str, str] | None | Unset = UNSET,
+        release: int | None | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -1159,6 +1175,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            opened=_opt(opened, lambda x: dict(x)),
+            release=release,
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
@@ -1174,6 +1192,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        opened: Mapping[str, str] | None | Unset = UNSET,
+        release: int | None | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         op: str = "execute",
@@ -1192,6 +1212,8 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            opened=_opt(opened, lambda x: dict(x)),
+            release=release,
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ), op=op, request_id=request_id, expected=expected)

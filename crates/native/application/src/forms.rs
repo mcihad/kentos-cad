@@ -48,6 +48,12 @@ pub(crate) fn variables(doc: &Document) -> Vec<Variable> {
     all
 }
 
+/// Every `@` value a rule may read, the moment's and the user's among them (read empty): what a
+/// layer's record rules compile against (docs/adr/0438 §1).
+pub(crate) fn variables_all(doc: &Document) -> Vec<Variable> {
+    kentos_project::variables::expression_variables(doc.name(), doc.settings(), 0.0, "")
+}
+
 /// [`variables`] with the moment's (`@tarih`, `@simdi`) and the user's (`@kullanici`) when the input
 /// gives them (docs/adr/0402 §5): `invalid_moment` at `moment`, `invalid_user` at `user`.
 pub(crate) fn variables_given(
@@ -122,6 +128,13 @@ pub(crate) fn body<'a>(
         })
 }
 
+/// The layer's record rules (docs/adr/0438 §1), which a form over it shows.
+pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_contracts::LayerRule] {
+    doc.layers()
+        .get(layer)
+        .map_or(&[][..], |n| n.rules.as_slice())
+}
+
 /// The layer's value groups (docs/adr/0423), which a form over it reads.
 pub(crate) fn contingents<'d>(
     doc: &'d Document,
@@ -159,6 +172,7 @@ pub(crate) fn prepared(
     .map(|p| {
         p.with_subtypes(subtypes(doc, &form.layer))
             .with_contingents(contingents(doc, &form.layer))
+            .with_rules(rules(doc, &form.layer))
     })
     .map_err(|issues| {
         let first = first_error(&issues);
@@ -470,6 +484,7 @@ pub(crate) fn enforced(
         .map(|p| {
             p.with_subtypes(subtypes(doc, layer))
                 .with_contingents(contingents(doc, layer))
+                .with_rules(rules(doc, layer))
         })
         .map_err(|issues| refuse(first_error(&issues)))?;
         let mut probe = e.clone();

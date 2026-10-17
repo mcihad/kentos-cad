@@ -20,7 +20,7 @@ const MOST_DESCRIPTION: usize = 500;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldDomain {
     /// Its stable id: what a field links to.
@@ -43,6 +43,18 @@ pub struct FieldDomain {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<String>,
+    /// `min` itself left out of the range (docs/adr/0438 §4); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub min_exclusive: bool,
+    /// `max` itself left out of the range; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub max_exclusive: bool,
+    /// The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
 }
 
 impl FieldDomain {
@@ -57,6 +69,9 @@ impl FieldDomain {
             values: self.values.clone(),
             min: self.min.clone(),
             max: self.max.clone(),
+            min_exclusive: self.min_exclusive,
+            max_exclusive: self.max_exclusive,
+            unit: self.unit.clone(),
             domain: Some(self.id.clone()),
             ..field.clone()
         }
@@ -80,6 +95,10 @@ impl FieldDomain {
             split: None,
             merge: None,
             domain: None,
+            unique: false,
+            min_exclusive: self.min_exclusive,
+            max_exclusive: self.max_exclusive,
+            unit: self.unit.clone(),
         }
     }
 }
@@ -273,6 +292,9 @@ mod tests {
             ]),
             min: None,
             max: None,
+            max_exclusive: false,
+            min_exclusive: false,
+            unit: None,
         }
     }
 

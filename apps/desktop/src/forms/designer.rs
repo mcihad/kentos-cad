@@ -272,6 +272,8 @@ pub enum Event {
     ReuseLast(bool),
     /// A check's failure is a warning, not an error.
     CheckWarning(usize, bool),
+    /// When a check is asked (docs/adr/0438 §2): none as the value changes.
+    CheckMoment(usize, Option<kentos_contracts::CheckMoment>),
     /// A group starts closed.
     Collapsed(bool),
     /// The fields a record hides are emptied (the form's setting).
@@ -1549,6 +1551,17 @@ impl App {
                     });
                 }
             }
+            Event::CheckMoment(i, on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(c) = f.checks.get_mut(i)
+                        {
+                            c.on = on;
+                        }
+                    });
+                }
+            }
             Event::Collapsed(on) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1598,6 +1611,7 @@ impl App {
                                 rule: String::new(),
                                 message: String::new(),
                                 warning: false,
+                                on: None,
                             });
                         }
                     });

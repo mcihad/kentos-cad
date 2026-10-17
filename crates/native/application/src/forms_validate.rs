@@ -39,6 +39,7 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         .map(|p| {
             p.with_subtypes(forms::subtypes(doc, &form.layer))
                 .with_contingents(forms::contingents(doc, &form.layer))
+                .with_rules(forms::rules(doc, &form.layer))
         })
     {
         let object = forms::object(doc, slot, e);

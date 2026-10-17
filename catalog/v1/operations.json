@@ -1180,6 +1180,13 @@
       ],
       "note": "Gruplar cad.layers.contingents ile tek adımda yazılır; yazmalar, formlar ve tablo onları okur (ADR 0423)."
     },
+    "data.layerRules": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.rules"
+      ],
+      "note": "Kurallar cad.layers.rules ile tek adımda yazılır; katmanın her yazması onları sorar, form alanlarında gösterir (ADR 0438)."
+    },
     "data.domains": {
       "level": "semantic",
       "via": [

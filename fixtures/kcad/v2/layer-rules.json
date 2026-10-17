@@ -1,0 +1,150 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kayıt kuralları",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi",
+              "description": "Taşıyıcı sistemde kusur yok."
+            },
+            {
+              "code": "inceleme",
+              "label": "Ek inceleme gerekli",
+              "from": "2026-01-01"
+            },
+            {
+              "code": "eski",
+              "label": "Eski sınıflama",
+              "until": "2025-12-31"
+            }
+          ]
+        },
+        {
+          "id": "ada-parsel",
+          "name": "Ada/Parsel",
+          "kind": "text",
+          "unique": true
+        },
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "0",
+          "max": "60",
+          "minExclusive": true
+        },
+        {
+          "name": "Taban alanı",
+          "kind": "decimal",
+          "scale": 2,
+          "min": "0",
+          "minExclusive": true,
+          "unit": "m²"
+        },
+        {
+          "name": "Başlangıç",
+          "kind": "date"
+        },
+        {
+          "name": "Bitiş",
+          "kind": "date"
+        },
+        {
+          "name": "Açıklama",
+          "kind": "text",
+          "length": 500
+        }
+      ],
+      "rules": [
+        {
+          "id": "tarih-sirasi",
+          "name": "Tarih sırası",
+          "rule": "Bitiş >= Başlangıç",
+          "message": "Bitiş tarihi başlangıçtan önce olamaz.",
+          "fields": [
+            "Bitiş"
+          ]
+        },
+        {
+          "id": "inceleme-notu",
+          "name": "İnceleme notu",
+          "rule": "Durum <> 'inceleme' veya Açıklama boş değil",
+          "message": "Ek inceleme gereken yapıya not yazın.",
+          "warning": true
+        }
+      ]
+    }
+  ],
+  "activeLayer": "bina",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000201"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+        "Durum": "iyi",
+        "Ada/Parsel": "101/5",
+        "Kat": "3",
+        "Taban alanı": "108.00",
+        "Başlangıç": "2026-03-01",
+        "Bitiş": "2026-09-30"
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 9.0
+        },
+        {
+          "x": 0.0,
+          "y": 9.0
+        }
+      ]
+    }
+  ]
+}

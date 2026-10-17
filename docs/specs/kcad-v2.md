@@ -744,6 +744,14 @@ Açık düğme yazılmaz (`broken/card-switch-on.kcad`); boş alan listesi (`bro
 | `default` | metin | | yeni nesnenin değeri, alanın kurallarına uyan tek biçimde |
 | `multiple` | bool | | şema 60'ta, yalnız `true`: metin alanı birden çok değer alır; değer listesi olan alanda kodlar listenin sırasıyla, listesizde değerler kendi sıralarıyla, birer kez `; ` ile birleşir; kodlarda ve etiketlerde `;` olmaz (ADR 0408 §1, 0409 §1; `broken/field-multiple-number.kcad`) |
 | `required` | bool | | yalnız `true`: nesne alanı boş bırakamaz |
+| `unique` | bool | | şema 60'ta, yalnız `true`: katmanda boş olmayan değer bir kez; evet/hayır ve çok değerli alanda olmaz (ADR 0438 §3) |
+| `unit` | metin | | şema 60'ta: sayı alanının birimi, 1–16 karakter, değerin yanında gösterilir (ADR 0438 §4; `broken/field-unit-on-text.kcad`) |
+| `minExclusive`, `maxExclusive` | bool | | şema 60'ta, yalnız `true` ve ucuyla: aralığın ucu hariç (ADR 0438 §4) |
+
+Değer listesinin öğesinde şema 60'ta ayrıca `retired` (yalnız `true`, ADR 0418), `description` (1–500 karakter), `from` ve `until`
+(`YYYY-AA-GG`, ilk ve son geçerli gün; `from` `until`'den sonra değil; ADR 0438 §5; `broken/field-value-day.kcad`) olabilir.
+Katman düğümünde şema 60'ta `rules` (kayıt kuralları, sözleşmenin `LayerRule`'larının JSON'u; boş değil; yalnız katmanda;
+kimlikler bir kez, gösterildikleri alanlar katmanın; ADR 0438 §1; `layer-rules.kcad`, `broken/layer-rules-*.kcad`) yazılır.
 
 Anahtarlar kodlanmış sırasıyladır. Tek biçimler ve alan listesinin kuralları ADR 0199 §1'dedir (`kentos_contracts::fields`): ad boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok, Türkçe katlanarak bir kez; takma ad boş değil, en çok 64 karakter; uzunluk yalnız metinde, ondalık basamak yalnız ondalıkta, aralık yalnız sayılarda (uçları tek biçimde, en az en çoktan büyük değil), değer listesi yalnız metin ve sayılarda (boş değil, kodlar boş değil ve sayılarda tek biçimde, kodlar ve katlanmış etiketler bir kez); varsayılan alanın kurallarına uyan tek biçim; kimlik boş değil, başında ya da sonunda boşluk yok, en çok 64 karakter, denetim karakteri yok ve alanların anahtarları (kimlik, yoksa ad) bir kez (`broken/field-id-twice.kcad`). Kuralı kıran liste, boş liste, `required: false`, bilinmeyen tür ve negatif sayı `bad_value`'dur; bilinmeyen anahtar `unknown_field`, türü ya da etiketi olmayan `missing_field`'dır (`fixtures/kcad/v2/broken/layer-fields-*.kcad`).
 

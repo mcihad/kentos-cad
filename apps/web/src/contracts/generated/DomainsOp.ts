@@ -9,7 +9,15 @@ export type DomainsOp = { "kind": "create", id?: string, name: string, descripti
 /**
  * The kind of field it fits (`domainKind` in the input: `kind` tags the operation).
  */
-domainKind: LayerFieldKind, values?: Array<FieldChoice>, min?: string, max?: string, } | { "kind": "fromField", 
+domainKind: LayerFieldKind, values?: Array<FieldChoice>, min?: string, max?: string, 
+/**
+ * The range's ends left out (docs/adr/0438 §4); written only as `true`.
+ */
+minExclusive?: boolean, maxExclusive?: boolean, 
+/**
+ * A number list's unit (docs/adr/0438 §4).
+ */
+unit?: string, } | { "kind": "fromField", 
 /**
  * The layer's id.
  */
@@ -17,4 +25,12 @@ layer: string,
 /**
  * The field's key.
  */
-field: string, name: string, id?: string, } | { "kind": "update", id: string, name: string, description?: string, values?: Array<FieldChoice>, min?: string, max?: string, recode?: { [key in string]: string }, } | { "kind": "remove", id: string, detach?: boolean, } | { "kind": "link", layer: string, field: string, domain?: string, };
+field: string, name: string, id?: string, } | { "kind": "update", id: string, name: string, description?: string, values?: Array<FieldChoice>, min?: string, max?: string, 
+/**
+ * The range's ends left out (docs/adr/0438 §4); written only as `true`.
+ */
+minExclusive?: boolean, maxExclusive?: boolean, 
+/**
+ * A number list's unit (docs/adr/0438 §4).
+ */
+unit?: string, recode?: { [key in string]: string }, } | { "kind": "remove", id: string, detach?: boolean, } | { "kind": "link", layer: string, field: string, domain?: string, };

@@ -721,6 +721,25 @@ pub struct FormCheck {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub warning: bool,
+    /// When it is asked (docs/adr/0438 §2); none: as the value changes. A check asked later is still
+    /// asked of every save that reaches it: the moment only says when the form shows it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub on: Option<CheckMoment>,
+}
+
+/// When a check is asked (docs/adr/0438 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CheckMoment {
+    /// When the record is saved: not while the value is typed.
+    Save,
+    /// When the record goes forward in the form's workflow (a step); a form without a workflow asks it
+    /// when the record is saved.
+    Submit,
 }
 
 /// How a field is edited.

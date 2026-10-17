@@ -3239,6 +3239,35 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kayıt kuralları (docs/adr/0438 §1), held together by fixtures/commands/v1/cad.layers.rules.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_RULES.into(),
+            version: crate::CAD_LAYERS_RULES_VERSION,
+            title: "Kayıt kuralları".into(),
+            summary: "Katmanın kayıt kurallarını yazar: veri kümesinin kendi kısıtları (id, name, rule: kaydın alanlarını adlarıyla, $alan'ı ve @ değerlerini okuyan ifade, \
+                      message, isteğe bağlı warning ve fields: formun kuralı gösterdiği alanların anahtarları). Kural, kaynağı ne olursa olsun (form, tablo, komut, \
+                      içe aktarma, Python, ajan) katmanın her yazmasında sorulur: okuduğu alanları değiştiren yazma kuralı bozarsa reddedilir (rule_broken), uyarı kuralı \
+                      söylenir (rule_unmet); boş cevap (okunan alan boş) kuralı bozmaz. Form kuralı kendi alanında gösterir. Boş liste kaldırır; tek geri alma adımı “Kayıt kuralları”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersRules>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bitiş tarihi başlangıçtan önce olamaz".into(),
+                input: json!({ "layer": "ruhsat", "rules": [{ "id": "tarih-sirasi", "name": "Tarih sırası",
+                    "rule": "Bitiş >= Başlangıç", "message": "Bitiş tarihi başlangıçtan önce olamaz.", "fields": ["Bitiş"] }] }),
+                output: None,
+            }],
+        },
         // Değer bileşimleri (docs/adr/0423), held together by fixtures/commands/v1/cad.layers.contingents.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_CONTINGENTS.into(),
@@ -5520,6 +5549,9 @@ mod tests {
                     }
                     crate::CAD_LAYERS_CONTINGENTS => {
                         serde_json::from_value::<crate::LayersContingents>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_RULES => {
+                        serde_json::from_value::<crate::LayersRules>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_COMPOSE => {
                         serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())

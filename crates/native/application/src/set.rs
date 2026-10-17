@@ -450,6 +450,8 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     // A layer's enforcing forms are its write profile (docs/adr/0401 §8): an attribute change that
     // breaks one is refused.
     let mut misfits: Vec<CommandWarning> = Vec::new();
+    let mut rules = checks::LayerRules::new(doc);
+    let mut writes: Vec<checks::UniqueWrite<'_>> = Vec::new();
     for c in &changes {
         if let Some(old) = doc.get(c.slot) {
             let after = c.entity.base();
@@ -467,8 +469,23 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
                     misfits.push(w);
                 }
             }
+            // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
+            let object = crate::forms::object(doc, c.slot, &c.entity);
+            for w in rules.fit(&after.layer_id, before, &after.attrs, Some(&object), "attrs")? {
+                if !misfits.iter().any(|m| m.code == w.code && m.path == w.path) {
+                    misfits.push(w);
+                }
+            }
+            writes.push(checks::UniqueWrite {
+                slot: Some(c.slot),
+                layer: &after.layer_id,
+                before,
+                after: &after.attrs,
+                at: "attrs".to_owned(),
+            });
         }
     }
+    checks::unique_fit(doc, &writes)?;
     // On a hidden layer they vanish from the drawing: said when at least one moves there.
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
     warnings.extend(misfits);

@@ -194,6 +194,10 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AU` kayıt kuralları ve alan ekleri (ADR 0438, 17 Ekim): web'de gerekenler: `rules`, `unique`, `minExclusive`,
+  `maxExclusive`, `unit`, değerin `description`, `from`, `until`, `FormCheck.on`, `FormsSubmit.release` ve `opened` (TS türleri
+  üretildi); web'in yazma yollarında kurallar ve tekil alan, Kayıt kuralları penceresi, Alanlar'da ekler, formda birim, açıklama,
+  zaman ve çakışma çubuğu.
 - [ ] `FORM-AT` tasarımcı ekleri (ADR 0437, 17 Ekim): web'de gerekenler: `mirror`, `tree`, `steps` (TS türleri üretildi), form
   çekirdeğinin web bağlayıcısında yansımanın kuralı, formda ağaç ve adımlar, tasarımcıda Yansımasını ekle, Adım adım, Kopyala ve
   Yapıştır, Alt+↑/↓.
@@ -1527,6 +1531,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AU` Kayıt kuralları (her yazmada), kontrol zamanı, ekranın yayını ve kaydı, tekil alan, hariç uç, birim, değerin
+  açıklaması ve günleri. — **17 Ekim, [ADR 0438](docs/adr/0438-record-rules-and-field-extras.md).**
 - [x] `FORM-AT` Tasarımcı ekleri: yansıma, ağaç biçimli seçim, adım adım form, öğeyi kopyala ve yapıştır (yeni kimlikler, alanlar
   adla), Alt+↑/↓. — **17 Ekim, [ADR 0437](docs/adr/0437-designer-batch.md).**
 - [x] `FORM-AS` Tarih ve saat aralığı: tarih, tarih ve saat, saat alanında en az ve en çok; ileti arayüzün tarih gösterimiyle. —

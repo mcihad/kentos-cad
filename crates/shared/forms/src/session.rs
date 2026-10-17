@@ -53,6 +53,24 @@ pub struct Prepared {
     groups: Vec<kentos_contracts::FieldGroup>,
     /// The form's workflow (docs/adr/0428) and its state field's place in `fields`.
     workflow: Option<(kentos_contracts::FormWorkflow, usize)>,
+    /// The layer's record rules (docs/adr/0438 §1), shown on their fields.
+    rules: crate::LayerRules,
+    /// The rules' schema: what the layer's rules compile against.
+    schema: Schema,
+    /// The day the rules read (`@tarih`): what a listed value's validity is judged on (docs/adr/0438 §5).
+    today: Option<String>,
+}
+
+/// When a record's checks are asked (docs/adr/0438 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Moment {
+    /// As a value changes: the checks without a moment.
+    Change,
+    /// When the record is saved: those and the ones asked on saving (and on submitting, without a
+    /// workflow).
+    Save,
+    /// When the record goes forward in the workflow: every check.
+    Submit,
 }
 
 /// An item's state for the record, without its id.
@@ -159,7 +177,14 @@ impl Prepared {
         };
         walk(&body.items, None, &mut items, &ctx);
         let calc_order = calc_order(&items, fields).unwrap_or_default();
+        let today = variables
+            .iter()
+            .find(|v| v.name == "tarih")
+            .map(|v| kentos_expression::value::to_text(&v.value).into_owned())
+            .filter(|t| !t.is_empty());
         Ok(Prepared {
+            rules: crate::LayerRules::default(),
+            today,
             fields: fields.to_vec(),
             items,
             calc_order,
@@ -170,7 +195,32 @@ impl Prepared {
                 let at = fields.iter().position(|f| f.key() == w.field)?;
                 Some((w, at))
             }),
+            schema,
         })
+    }
+
+    /// The form over a layer with record rules (docs/adr/0438 §1): a record breaking one is told on
+    /// the rule's field. Rules that do not compile are the command's to refuse; here they are left out.
+    pub fn with_rules(mut self, rules: &[kentos_contracts::LayerRule]) -> Prepared {
+        self.rules = crate::LayerRules::new(
+            rules,
+            &self.fields,
+            &self.schema.variables,
+            self.schema.unit,
+        )
+        .unwrap_or_default();
+        self
+    }
+
+    /// Whether a check asked at `on` is asked at `moment`.
+    fn asked(&self, on: Option<kentos_contracts::CheckMoment>, moment: Moment) -> bool {
+        use kentos_contracts::CheckMoment;
+        match (on, moment) {
+            (None, _) | (Some(_), Moment::Submit) => true,
+            (Some(_), Moment::Change) => false,
+            (Some(CheckMoment::Save), Moment::Save) => true,
+            (Some(CheckMoment::Submit), Moment::Save) => self.workflow.is_none(),
+        }
     }
 
     /// The form's workflow (docs/adr/0428).
@@ -258,8 +308,9 @@ impl Prepared {
 
     /// The keys of the fields whose values are unique in the layer.
     pub fn unique_keys(&self) -> Vec<&str> {
+        // A field the layer keeps unique is the form's too (docs/adr/0438 §3).
         self.bound()
-            .filter(|(_, b)| b.item.unique)
+            .filter(|(_, b)| b.item.unique || self.fields[b.index].unique)
             .map(|(_, b)| self.fields[b.index].key())
             .collect()
     }
@@ -428,7 +479,9 @@ impl Prepared {
         Some(
             listed
                 .into_iter()
-                .filter(|(code, _)| !field.is_retired(code) || held_codes.contains(code))
+                .filter(|(code, _)| {
+                    !field.is_withdrawn_on(code, self.today.as_deref()) || held_codes.contains(code)
+                })
                 .filter(|(code, _)| {
                     kentos_contracts::subtype_offers(field, subtype, code)
                         || held_codes.contains(code)
@@ -633,6 +686,13 @@ impl Prepared {
     /// What is wrong with the record, in the form's order: errors and the soft checks' warnings. The
     /// record is judged as it is; [`Prepared::complete`] it first.
     pub fn validate(&self, attrs: &Attrs, object: &Object) -> Vec<FormIssue> {
+        self.validate_at(attrs, object, Moment::Save)
+    }
+
+    /// [`Prepared::validate`] asking the checks of `moment` (docs/adr/0438 §2): as the value changes
+    /// the checks without a moment, on saving those asked on saving too, on a workflow step every one.
+    /// The layer's record rules are asked whatever the moment.
+    pub fn validate_at(&self, attrs: &Attrs, object: &Object, moment: Moment) -> Vec<FormIssue> {
         let states = self.flags(attrs, object);
         let draft = self.in_draft(attrs);
         let subtype = self.subtype(attrs);
@@ -754,7 +814,7 @@ impl Prepared {
                 continue;
             }
             for (i, (check, expr)) in b.item.checks.iter().zip(&b.checks).enumerate() {
-                if !holds(expr, attrs, object) {
+                if self.asked(check.on, moment) && !holds(expr, attrs, object) {
                     let (code, severity) = if check.warning {
                         (codes::CHECK_WARNING, FormSeverity::Warning)
                     } else {
@@ -768,6 +828,24 @@ impl Prepared {
                     ));
                 }
             }
+        }
+        for broken in self.rules.broken(&self.fields, None, attrs, object) {
+            let item = broken
+                .field
+                .and_then(|f| self.fields.iter().position(|x| x.key() == f.key()))
+                .and_then(|i| self.item_of(i));
+            issues.push(issue(
+                codes::LAYER_RULE,
+                if broken.rule.warning {
+                    FormSeverity::Warning
+                } else {
+                    FormSeverity::Error
+                },
+                item,
+                broken.field.map(|f| f.key()),
+                Some(&format!("rules/{}", broken.rule.id)),
+                broken.rule.message.clone(),
+            ));
         }
         issues
     }
@@ -795,7 +873,8 @@ impl Prepared {
             .filter_map(|(at, (node, state))| {
                 let b = node.field.as_ref()?;
                 let v = attrs.get(&self.fields[b.index].name)?;
-                (b.item.unique && state.shown && !js_trim(v).is_empty()).then(|| (at, b, v.clone()))
+                let unique = b.item.unique || self.fields[b.index].unique;
+                (unique && state.shown && !js_trim(v).is_empty()).then(|| (at, b, v.clone()))
             })
             .collect();
         if wanted.is_empty() {
@@ -856,6 +935,19 @@ impl Prepared {
         values: &[(String, String)],
         object: &Object,
         new: bool,
+    ) -> (Attrs, Vec<FormIssue>) {
+        self.assess_at(before, values, object, new, Moment::Save)
+    }
+
+    /// [`Prepared::assess`] asking the checks of `moment` (docs/adr/0438 §2): a screen asks as the
+    /// values change, and on saving.
+    pub fn assess_at(
+        &self,
+        before: &Attrs,
+        values: &[(String, String)],
+        object: &Object,
+        new: bool,
+        moment: Moment,
     ) -> (Attrs, Vec<FormIssue>) {
         let mut written = before.clone();
         let mut issues = Vec::new();
@@ -939,7 +1031,7 @@ impl Prepared {
         issues.extend(completed);
         let said: Vec<Option<String>> = issues.iter().map(|i| i.field.clone()).collect();
         issues.extend(
-            self.validate(&after, object)
+            self.validate_at(&after, object, moment)
                 .into_iter()
                 .filter(|i| !said.contains(&i.field)),
         );
@@ -1003,21 +1095,31 @@ impl Prepared {
         let mut issues = Vec::new();
         for &index in changed {
             let field = &self.fields[index];
+            let today = self.today.as_deref();
             let held = before
                 .get(&field.name)
-                .map_or_else(Vec::new, |v| field.retired_in(v));
+                .map_or_else(Vec::new, |v| field.retired_in_on(v, today));
             let now = after
                 .get(&field.name)
-                .map_or_else(Vec::new, |v| field.retired_in(v));
+                .map_or_else(Vec::new, |v| field.retired_in_on(v, today));
             if let Some(r) = now.iter().find(|r| !held.contains(r)) {
+                // Retired, or outside its validity on the day the rules read (docs/adr/0438 §5).
+                let message = if field.is_retired(r) {
+                    format!(
+                        "“{}” alanının “{r}” değeri kullanımdan kalktı; başka bir değer seçin.",
+                        field.label()
+                    )
+                } else {
+                    format!(
+                        "“{}” alanının “{r}” değeri bu tarihte geçerli değil; başka bir değer seçin.",
+                        field.label()
+                    )
+                };
                 issues.push(refused(
                     codes::VALUE_RETIRED,
                     self.item_of(index),
                     field.key(),
-                    format!(
-                        "“{}” alanının “{r}” değeri kullanımdan kalktı; başka bir değer seçin.",
-                        field.label()
-                    ),
+                    message,
                 ));
             }
         }
@@ -1434,11 +1536,17 @@ mod tests {
                 code: "a".into(),
                 label: "Ahşap".into(),
                 retired: false,
+                description: None,
+                from: None,
+                until: None,
             },
             kentos_contracts::FieldChoice {
                 code: "b".into(),
                 label: "Betonarme".into(),
                 retired: false,
+                description: None,
+                from: None,
+                until: None,
             },
         ]);
         let schema = crate::record::schema_of(std::slice::from_ref(&f), &[]);

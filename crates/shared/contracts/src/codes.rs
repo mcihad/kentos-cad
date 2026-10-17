@@ -292,6 +292,8 @@ codes! {
     INVALID_USER = "invalid_user", Failed, false, "Kullanıcının adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// A soft check of the form that is not true: the record is written all the same.
     FORM_CHECK_WARNING = "form_check_warning", Warning, false, "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı.";
+    /// A warning rule of the layer the record breaks, said through a form (docs/adr/0438 §1).
+    FORM_LAYER_RULE = "form_layer_rule", Warning, false, "Katmanın uyarı kurallarından biri kayıtta tutmuyor; kayıt yine yazıldı.";
     /// A form package that does not hold (docs/adr/0435).
     INVALID_PACKAGE = "invalid_package", Failed, false, "Form paketi okunamıyor ya da kurallarına uymuyor.";
     /// A package's binding that names a field the package lacks (docs/adr/0435).
@@ -717,6 +719,18 @@ codes! {
     INVALID_COMBINATION = "invalid_combination", Failed, false, "Bu değer bileşimi katmanın değer grubunda yok.";
     /// A record's values that no row of an advisory value group allows (docs/adr/0423 §2).
     COMBINATION_UNMET = "combination_unmet", Warning, false, "Bu değer bileşimi katmanın değer grubunda yok.";
+    /// A write that breaks a record rule of its layer (docs/adr/0438 §1).
+    RULE_BROKEN = "rule_broken", Failed, false, "Yazma katmanın bir kayıt kuralını bozuyor.";
+    /// A write that breaks a warning rule of its layer (docs/adr/0438 §1).
+    RULE_UNMET = "rule_unmet", Warning, false, "Yazma katmanın bir uyarı kuralına uymuyor.";
+    /// A layer's record rules that do not fit it or do not compile (docs/adr/0438 §1).
+    INVALID_RULES = "invalid_rules", Failed, false, "Kayıt kuralları katmana uymuyor ya da ifadesi derlenmiyor.";
+    /// A value of a unique field another record of the layer holds (docs/adr/0438 §3).
+    NOT_UNIQUE = "not_unique", Failed, false, "Tekil alanın bu değeri katmanın başka bir kaydında var.";
+    /// The form was published anew since it was opened (docs/adr/0438 §6).
+    FORM_RELEASE_CHANGED = "form_release_changed", Conflict, true, "Form açıldıktan sonra yeniden yayınlandı; formu yeniden açın.";
+    /// The record changed since the form opened it (docs/adr/0438 §7).
+    RECORD_CHANGED = "record_changed", Conflict, true, "Kayıt form açıldıktan sonra değişti; yeniden yükleyin ya da üzerine yazın.";
     /// A layer's value groups that do not fit its fields (docs/adr/0423 §3).
     INVALID_CONTINGENTS = "invalid_contingents", Failed, false, "Değer grupları katmanın alanlarına uymuyor.";
     /// A value list that does not hold (docs/adr/0430).

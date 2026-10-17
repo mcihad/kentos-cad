@@ -405,6 +405,20 @@ CalloutKindName = Literal["straight", "manhattan"]
 """The names of :class:`CalloutKind`, for a plain string."""
 
 
+class CheckMoment(_StrEnum):
+    """When a check is asked (docs/adr/0438 §2).
+
+    - ``save``: When the record is saved: not while the value is typed.
+    - ``submit``: When the record goes forward in the form's workflow (a step); a form without a workflow asks it
+    """
+    SAVE = "save"
+    SUBMIT = "submit"
+
+
+CheckMomentName = Literal["save", "submit"]
+"""The names of :class:`CheckMoment`, for a plain string."""
+
+
 class CheckpointKind(_StrEnum):
     """What a checkpoint keeps.
 
@@ -10763,19 +10777,32 @@ class FieldChoice(_Model):
     """One value of a field's value list: the code written to the attribute
     and the label shown for it.
     Attributes:
+        description: What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.
+        from_: The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not
+            offer it, as a retired one.
         retired: Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new
             choice does not offer it, a form does not write it anew. Written only as `true`.
+        until: The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.
     """
     code: str
     label: str
+    description: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
     retired: bool | Unset = UNSET
+    until: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["code"] = self.code
         out["label"] = self.label
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
         if self.retired is not UNSET:
             out["retired"] = self.retired
+        if self.until is not UNSET:
+            out["until"] = self.until
         return out
 
     @classmethod
@@ -10783,7 +10810,10 @@ class FieldChoice(_Model):
         return cls(
             code=data["code"],
             label=data["label"],
+            description=data.get("description", UNSET),
+            from_=data.get("from", UNSET),
             retired=data.get("retired", UNSET),
+            until=data.get("until", UNSET),
         )
 
 
@@ -10794,7 +10824,10 @@ class FieldDomain(_Model):
         id: Its stable id: what a field links to.
         kind: The kind of field it fits: a field linking it is of this kind.
         max: A range's greatest value, in its canonical text; included.
+        max_exclusive: `max` itself left out of the range; written only as `true`.
         min: A range's least value, in its canonical text; included.
+        min_exclusive: `min` itself left out of the range (docs/adr/0438 §4); written only as `true`.
+        unit: The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.
         values: A coded list's values, in their order (labels, retired codes as a field's list has them).
     """
     id: str
@@ -10802,7 +10835,10 @@ class FieldDomain(_Model):
     kind: LayerFieldKind | LayerFieldKindName
     description: str | None | Unset = UNSET
     max: str | None | Unset = UNSET
+    max_exclusive: bool | Unset = UNSET
     min: str | None | Unset = UNSET
+    min_exclusive: bool | Unset = UNSET
+    unit: str | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -10814,8 +10850,14 @@ class FieldDomain(_Model):
             out["description"] = self.description
         if self.max is not UNSET:
             out["max"] = self.max
+        if self.max_exclusive is not UNSET:
+            out["maxExclusive"] = self.max_exclusive
         if self.min is not UNSET:
             out["min"] = self.min
+        if self.min_exclusive is not UNSET:
+            out["minExclusive"] = self.min_exclusive
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
         return out
@@ -10828,7 +10870,10 @@ class FieldDomain(_Model):
             kind=_enum_in(LayerFieldKind, data["kind"]),
             description=data.get("description", UNSET),
             max=data.get("max", UNSET),
+            max_exclusive=data.get("maxExclusive", UNSET),
             min=data.get("min", UNSET),
+            min_exclusive=data.get("minExclusive", UNSET),
+            unit=data.get("unit", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
         )
 
@@ -11107,16 +11152,21 @@ class FormCheck(_Model):
     """A check of a field: an expression that must be true when the field is shown and filled, and what
     the form says when it is not.
     Attributes:
+        on: When it is asked (docs/adr/0438 §2); none: as the value changes. A check asked later is still
+            asked of every save that reaches it: the moment only says when the form shows it.
         warning: A soft check: when not true it warns and the record is still written; written only as `true`.
     """
     rule: str
     message: str
+    on: CheckMoment | CheckMomentName | None | Unset = UNSET
     warning: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["rule"] = self.rule
         out["message"] = self.message
+        if self.on is not UNSET:
+            out["on"] = None if self.on is None else _enum_out(self.on)
         if self.warning is not UNSET:
             out["warning"] = self.warning
         return out
@@ -11126,6 +11176,7 @@ class FormCheck(_Model):
         return cls(
             rule=data["rule"],
             message=data["message"],
+            on=UNSET if "on" not in data else None if data["on"] is None else _enum_in(CheckMoment, data["on"]),
             warning=data.get("warning", UNSET),
         )
 
@@ -12039,8 +12090,10 @@ class FormsSubmit(_Model):
 
     Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`
     (status `conflict`);
-    `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
-    `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
+    `unknown_form`, `form_unpublished`, `form_preflight`, `form_release_changed` (status `conflict`),
+    `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),
+    `form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse
+    as every write's (`rule_broken`, `not_unique`).
     Attributes:
         form: The form's id.
         uid: The object (lowercase UUID text with hyphens).
@@ -12050,6 +12103,12 @@ class FormsSubmit(_Model):
         moment: The moment the rules' `@tarih` and `@simdi` read: a date, or a date and a local time
             (`2026-10-16T14:30:00`); none: they read empty, and a calculation or default that reads them is
             left out (docs/adr/0402 §5).
+        opened: The record's attributes as the form opened it (docs/adr/0438 §7): the record changed since
+            (another write, an undo) is `record_changed` (status `conflict`) instead of being written over;
+            none: whatever it holds now.
+        release: The release the form was opened with (docs/adr/0438 §6): a later release published since is
+            `form_release_changed` (status `conflict`), so an old screen does not write past a newer form's
+            rules; none: the latest, whichever it is. Unit: version.
         user: The person the rules' `@kullanici` reads (1–64 characters); none: it reads empty.
         values: Values by the layer fields' keys (empty: no value).
     """
@@ -12059,6 +12118,8 @@ class FormsSubmit(_Model):
     draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     moment: str | None | Unset = UNSET
+    opened: dict[str, str] | None | Unset = UNSET
+    release: int | None | Unset = UNSET
     user: str | None | Unset = UNSET
     values: dict[str, str] | Unset = UNSET
 
@@ -12074,6 +12135,10 @@ class FormsSubmit(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.moment is not UNSET:
             out["moment"] = self.moment
+        if self.opened is not UNSET:
+            out["opened"] = None if self.opened is None else dict(self.opened)
+        if self.release is not UNSET:
+            out["release"] = self.release
         if self.user is not UNSET:
             out["user"] = self.user
         if self.values is not UNSET:
@@ -12089,6 +12154,8 @@ class FormsSubmit(_Model):
             draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             moment=data.get("moment", UNSET),
+            opened=UNSET if "opened" not in data else None if data["opened"] is None else dict(data["opened"]),
+            release=data.get("release", UNSET),
             user=data.get("user", UNSET),
             values=dict(data["values"]) if "values" in data else UNSET,
         )
@@ -14116,9 +14183,11 @@ class LayerField(_Model):
             rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
         length: A text's most characters (1–10 000). Unit: count.
         max: A number's greatest value, in its canonical text; included.
+        max_exclusive: `max` is not itself in the range; only with `max`; written only as `true`.
         merge: What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,
             Parçaları birleştir; docs/adr/0419). None: the first object's.
         min: A number's least value, in its canonical text; included.
+        min_exclusive: `min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.
         multiple: A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the
             list's order, an unlisted one its values in their order (objects' persistent ids for a
             many-to-many reference), joined with `; `; written only as `true`.
@@ -14126,6 +14195,10 @@ class LayerField(_Model):
         scale: A decimal's most fraction digits (0–15). Unit: count.
         split: What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,
             Kır, Parçalara ayır; docs/adr/0419). None: each piece keeps it.
+        unique: No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every
+            write is refused `not_unique` that would; written only as `true`.
+        unit: The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value
+            stays the number.
         values: The values a text or a number takes, when only some.
     """
     name: str
@@ -14136,12 +14209,16 @@ class LayerField(_Model):
     id: str | None | Unset = UNSET
     length: int | None | Unset = UNSET
     max: str | None | Unset = UNSET
+    max_exclusive: bool | Unset = UNSET
     merge: MergePolicy | MergePolicyName | None | Unset = UNSET
     min: str | None | Unset = UNSET
+    min_exclusive: bool | Unset = UNSET
     multiple: bool | Unset = UNSET
     required: bool | Unset = UNSET
     scale: int | None | Unset = UNSET
     split: SplitPolicy | SplitPolicyName | None | Unset = UNSET
+    unique: bool | Unset = UNSET
+    unit: str | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -14160,10 +14237,14 @@ class LayerField(_Model):
             out["length"] = self.length
         if self.max is not UNSET:
             out["max"] = self.max
+        if self.max_exclusive is not UNSET:
+            out["maxExclusive"] = self.max_exclusive
         if self.merge is not UNSET:
             out["merge"] = None if self.merge is None else _enum_out(self.merge)
         if self.min is not UNSET:
             out["min"] = self.min
+        if self.min_exclusive is not UNSET:
+            out["minExclusive"] = self.min_exclusive
         if self.multiple is not UNSET:
             out["multiple"] = self.multiple
         if self.required is not UNSET:
@@ -14172,6 +14253,10 @@ class LayerField(_Model):
             out["scale"] = self.scale
         if self.split is not UNSET:
             out["split"] = None if self.split is None else _enum_out(self.split)
+        if self.unique is not UNSET:
+            out["unique"] = self.unique
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
         return out
@@ -14187,12 +14272,16 @@ class LayerField(_Model):
             id=data.get("id", UNSET),
             length=data.get("length", UNSET),
             max=data.get("max", UNSET),
+            max_exclusive=data.get("maxExclusive", UNSET),
             merge=UNSET if "merge" not in data else None if data["merge"] is None else _enum_in(MergePolicy, data["merge"]),
             min=data.get("min", UNSET),
+            min_exclusive=data.get("minExclusive", UNSET),
             multiple=data.get("multiple", UNSET),
             required=data.get("required", UNSET),
             scale=data.get("scale", UNSET),
             split=UNSET if "split" not in data else None if data["split"] is None else _enum_in(SplitPolicy, data["split"]),
+            unique=data.get("unique", UNSET),
+            unit=data.get("unit", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
         )
 
@@ -14371,6 +14460,8 @@ class LayerNode(_Model):
             on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
         replaces: A scenario's layer: the base layer it stands for (docs/adr/0210 §9).
+        rules: Kayıt kuralları (docs/adr/0438 §1): the constraints every write of the layer's records keeps.
+            Only a layer holding objects has them.
         scenario: A group made a scenario (docs/adr/0210 §9). Only a group has it.
         service: A layer drawn from a map service (docs/adr/0208 §2): it holds no
             objects. Only a layer has it, never a group.
@@ -14401,6 +14492,7 @@ class LayerNode(_Model):
     frozen: bool | None | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
+    rules: list[LayerRule] | Unset = UNSET
     scenario: ScenarioInfo | None | Unset = UNSET
     service: ServiceLayer | None | Unset = UNSET
     snap: LayerSnap | None | Unset = UNSET
@@ -14438,6 +14530,8 @@ class LayerNode(_Model):
             out["plot"] = self.plot
         if self.replaces is not UNSET:
             out["replaces"] = self.replaces
+        if self.rules is not UNSET:
+            out["rules"] = [e0.to_json() for e0 in self.rules]
         if self.scenario is not UNSET:
             out["scenario"] = None if self.scenario is None else self.scenario.to_json()
         if self.service is not UNSET:
@@ -14473,12 +14567,57 @@ class LayerNode(_Model):
             frozen=data.get("frozen", UNSET),
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
+            rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             scenario=UNSET if "scenario" not in data else None if data["scenario"] is None else ScenarioInfo.from_json(data["scenario"]),
             service=UNSET if "service" not in data else None if data["service"] is None else ServiceLayer.from_json(data["service"]),
             snap=UNSET if "snap" not in data else None if data["snap"] is None else LayerSnap.from_json(data["snap"]),
             subtypes=UNSET if "subtypes" not in data else None if data["subtypes"] is None else LayerSubtypes.from_json(data["subtypes"]),
             table_styles=[TableStyle.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             time=UNSET if "time" not in data else None if data["time"] is None else LayerTime.from_json(data["time"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerRule(_Model):
+    """A record rule of a layer.
+    Attributes:
+        id: Its id, once in the layer: what a form or a refusal names it by (1–64 characters).
+        name: Its name as the interface shows it (1–64 characters).
+        rule: The expression that must hold (the record's fields by name, `$alan` and the project's `@`
+            values).
+        message: What a write breaking it is told (1–500 characters).
+        fields: The fields' keys a form shows it on and a refusal points at, in order; none: the first field it
+            reads.
+        warning: A soft rule: broken, it warns and the write goes in; written only as `true`.
+    """
+    id: str
+    name: str
+    rule: str
+    message: str
+    fields: list[str] | Unset = UNSET
+    warning: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["rule"] = self.rule
+        out["message"] = self.message
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.warning is not UNSET:
+            out["warning"] = self.warning
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerRule:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            rule=data["rule"],
+            message=data["message"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            warning=data.get("warning", UNSET),
         )
 
 
@@ -15719,6 +15858,41 @@ class LayersRendererPlan(_Model):
             node=LayerNode.from_json(data["node"]),
             changed=data["changed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersRules(_Model):
+    """Input of `cad.layers.rules` v1: a layer's record rules written as one undo step “Kayıt kuralları”;
+    none takes them away. A layer that already has them is left as it is. A rule is asked of every
+    later write of the layer's records; the records already there are not judged anew.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+    `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_rules` (rules that do not fit the
+    layer, `layer_rules_problem`, or an expression that does not compile, path `rules/<where>`).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        rules: The rules, in their order.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    rules: list[LayerRule] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["rules"] = [e0.to_json() for e0 in self.rules]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersRules:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else list(),
         )
 
 
@@ -26382,6 +26556,8 @@ class CreateDomainsOp(DomainsOp):
     """Yeni liste: a coded list (`values`) or a range (`min`, `max`); no id: one made of the name.
     Attributes:
         domain_kind: The kind of field it fits (`domainKind` in the input: `kind` tags the operation).
+        min_exclusive: The range's ends left out (docs/adr/0438 §4); written only as `true`.
+        unit: A number list's unit (docs/adr/0438 §4).
     """
     TAG_VALUE: ClassVar[str] = "create"
     name: str
@@ -26389,7 +26565,10 @@ class CreateDomainsOp(DomainsOp):
     description: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
     max: str | None | Unset = UNSET
+    max_exclusive: bool | Unset = UNSET
     min: str | None | Unset = UNSET
+    min_exclusive: bool | Unset = UNSET
+    unit: str | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -26402,8 +26581,14 @@ class CreateDomainsOp(DomainsOp):
             out["id"] = self.id
         if self.max is not UNSET:
             out["max"] = self.max
+        if self.max_exclusive is not UNSET:
+            out["maxExclusive"] = self.max_exclusive
         if self.min is not UNSET:
             out["min"] = self.min
+        if self.min_exclusive is not UNSET:
+            out["minExclusive"] = self.min_exclusive
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
         return out
@@ -26416,7 +26601,10 @@ class CreateDomainsOp(DomainsOp):
             description=data.get("description", UNSET),
             id=data.get("id", UNSET),
             max=data.get("max", UNSET),
+            max_exclusive=data.get("maxExclusive", UNSET),
             min=data.get("min", UNSET),
+            min_exclusive=data.get("minExclusive", UNSET),
+            unit=data.get("unit", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
         )
 
@@ -26457,14 +26645,20 @@ class FromFieldDomainsOp(DomainsOp):
 class UpdateDomainsOp(DomainsOp):
     """Kaydet: the list replaced, its kind kept; `recode` moves the linked fields' records from a code
     to another of the new list in the same step (a code a record holds may not just go).
+    Attributes:
+        min_exclusive: The range's ends left out (docs/adr/0438 §4); written only as `true`.
+        unit: A number list's unit (docs/adr/0438 §4).
     """
     TAG_VALUE: ClassVar[str] = "update"
     id: str
     name: str
     description: str | None | Unset = UNSET
     max: str | None | Unset = UNSET
+    max_exclusive: bool | Unset = UNSET
     min: str | None | Unset = UNSET
+    min_exclusive: bool | Unset = UNSET
     recode: dict[str, str] | Unset = UNSET
+    unit: str | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -26475,10 +26669,16 @@ class UpdateDomainsOp(DomainsOp):
             out["description"] = self.description
         if self.max is not UNSET:
             out["max"] = self.max
+        if self.max_exclusive is not UNSET:
+            out["maxExclusive"] = self.max_exclusive
         if self.min is not UNSET:
             out["min"] = self.min
+        if self.min_exclusive is not UNSET:
+            out["minExclusive"] = self.min_exclusive
         if self.recode is not UNSET:
             out["recode"] = dict(self.recode)
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
         return out
@@ -26490,8 +26690,11 @@ class UpdateDomainsOp(DomainsOp):
             name=data["name"],
             description=data.get("description", UNSET),
             max=data.get("max", UNSET),
+            max_exclusive=data.get("maxExclusive", UNSET),
             min=data.get("min", UNSET),
+            min_exclusive=data.get("minExclusive", UNSET),
             recode=dict(data["recode"]) if "recode" in data else UNSET,
+            unit=data.get("unit", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
         )
 
@@ -30515,6 +30718,8 @@ __all__ = [
     "ChangesetApply",
     "ChangesetStep",
     "ChangesetStepDone",
+    "CheckMoment",
+    "CheckMomentName",
     "Checkpoint",
     "CheckpointChange",
     "CheckpointCreate",
@@ -30865,6 +31070,7 @@ __all__ = [
     "LayerNode",
     "LayerNodeType",
     "LayerNodeTypeName",
+    "LayerRule",
     "LayerServiceOperation",
     "LayerServiceOperationName",
     "LayerSetOperation",
@@ -30901,6 +31107,7 @@ __all__ = [
     "LayersRendered",
     "LayersRenderer",
     "LayersRendererPlan",
+    "LayersRules",
     "LayersService",
     "LayersServicePlan",
     "LayersServiced",

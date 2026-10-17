@@ -466,6 +466,35 @@ pub struct LayersTable {
     pub expected_revision: Option<String>,
 }
 
+/// Writes a layer's record rules (Kayıt kuralları, docs/adr/0438 §1).
+pub const CAD_LAYERS_RULES: &str = "cad.layers.rules";
+pub const CAD_LAYERS_RULES_VERSION: u32 = 1;
+
+/// Input of `cad.layers.rules` v1: a layer's record rules written as one undo step “Kayıt kuralları”;
+/// none takes them away. A layer that already has them is left as it is. A rule is asked of every
+/// later write of the layer's records; the records already there are not judged anew.
+///
+/// Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `layer_not_found`, `not_a_layer`, `service_layer`; then `invalid_rules` (rules that do not fit the
+/// layer, `layer_rules_problem`, or an expression that does not compile, path `rules/<where>`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersRules {
+    /// The layer's id.
+    pub layer: String,
+    /// The rules, in their order.
+    #[serde(default)]
+    pub rules: Vec<crate::layer_rules::LayerRule>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Writes a layer's value groups (Değer bileşimleri, docs/adr/0423).
 pub const CAD_LAYERS_CONTINGENTS: &str = "cad.layers.contingents";
 pub const CAD_LAYERS_CONTINGENTS_VERSION: u32 = 1;

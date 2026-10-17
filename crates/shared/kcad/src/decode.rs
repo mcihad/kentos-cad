@@ -1068,6 +1068,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
+    let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -1170,6 +1171,36 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 contingents = Some((at, read));
             }
+            // Schema 60 (docs/adr/0438 §1): the record rules, read whole; checked below.
+            "rules" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: Vec<kentos_contracts::LayerRule> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("kayıt kuralları okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kayıt kuralları yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if read.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; kural yoksa alan hiç yazılmaz",
+                    ));
+                }
+                rules = Some((at, read));
+            }
             "plot" if has.look => {
                 if r.bool()? {
                     return Err(r.fail(
@@ -1243,7 +1274,22 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             return Err(r.fail_at(Code::BadValue, *at, &problem));
         }
     }
+    if let Some((at, read)) = &rules {
+        if kind == Some(LayerNodeType::Group) {
+            return Err(r.fail_at(
+                Code::BadValue,
+                *at,
+                "grubun kayıt kuralları olmaz; yalnız katmanın olur",
+            ));
+        }
+        let none = Vec::new();
+        let fields_now: &Vec<_> = fields.as_ref().unwrap_or(&none);
+        if let Some((_, problem)) = kentos_contracts::layer_rules_problem(fields_now, read) {
+            return Err(r.fail_at(Code::BadValue, *at, &problem));
+        }
+    }
     Ok(LayerNode {
+        rules: rules.map(|(_, c)| c).unwrap_or_default(),
         contingents: contingents.map(|(_, c)| c).unwrap_or_default(),
         subtypes: subtypes.map(|(_, s)| s),
         table_styles,
@@ -1385,6 +1431,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     let mut many = None;
     let (mut split, mut merge) = (None, None);
     let mut domain = None;
+    let (mut unique, mut min_out, mut max_out, mut unit) = (None, None, None, None);
     let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
     map(r, |r, key| {
         match key {
@@ -1412,6 +1459,11 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "multiple" if ids => many = Some(r.bool()?),
             // Schema 60 (docs/adr/0430): the value list it links.
             "domain" if ids => domain = Some(text(r)?),
+            // Schema 60 (docs/adr/0438 §3, §4): unique, the range's left-out ends, the unit.
+            "unique" if ids => unique = Some(r.bool()?),
+            "minExclusive" if ids => min_out = Some(r.bool()?),
+            "maxExclusive" if ids => max_out = Some(r.bool()?),
+            "unit" if ids => unit = Some(text(r)?),
             // Schema 60 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
@@ -1439,6 +1491,12 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "required ve multiple yalnız true yazılır; değilse yazılmaz",
         ));
     }
+    if unique == Some(false) || min_out == Some(false) || max_out == Some(false) {
+        return Err(r.fail(
+            Code::BadValue,
+            "unique, minExclusive ve maxExclusive yalnız true yazılır; değilse yazılmaz",
+        ));
+    }
     Ok(LayerField {
         id,
         name: required(r, name, "name")?,
@@ -1455,17 +1513,26 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
         split,
         merge,
         domain,
+        unique: unique == Some(true),
+        min_exclusive: min_out == Some(true),
+        max_exclusive: max_out == Some(true),
+        unit,
     })
 }
 
 /// A value of a field's list; `later`: schema 60's `retired` is read (docs/adr/0418).
 fn field_choice(r: &mut Reader<'_>, later: bool) -> Result<FieldChoice, KcadError> {
     let (mut code, mut label, mut retired) = (None, None, None);
+    let (mut description, mut from, mut until) = (None, None, None);
     map(r, |r, key| {
         match key {
             "code" => code = Some(text(r)?),
             "label" => label = Some(text(r)?),
             "retired" if later => retired = Some(r.bool()?),
+            // Schema 60 (docs/adr/0438 §5): what it means and its days.
+            "description" if later => description = Some(text(r)?),
+            "from" if later => from = Some(text(r)?),
+            "until" if later => until = Some(text(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -1480,6 +1547,9 @@ fn field_choice(r: &mut Reader<'_>, later: bool) -> Result<FieldChoice, KcadErro
         code: required(r, code, "code")?,
         label: required(r, label, "label")?,
         retired: retired == Some(true),
+        description,
+        from,
+        until,
     })
 }
 

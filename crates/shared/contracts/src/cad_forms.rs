@@ -228,8 +228,10 @@ pub struct FormsValidated {
 ///
 /// Refusals: `invalid_uid`, `invalid_moment`, `invalid_user`; `invalid_revision`, `revision_conflict`
 /// (status `conflict`);
-/// `unknown_form`, `form_unpublished`, `form_preflight`, `entity_not_found`, `form_layer_mismatch`,
-/// `layer_locked`, `form_invalid` (the first issue, `path` its field's value).
+/// `unknown_form`, `form_unpublished`, `form_preflight`, `form_release_changed` (status `conflict`),
+/// `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),
+/// `form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse
+/// as every write's (`rule_broken`, `not_unique`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -263,6 +265,19 @@ pub struct FormsSubmit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub user: Option<String>,
+    /// The release the form was opened with (docs/adr/0438 §6): a later release published since is
+    /// `form_release_changed` (status `conflict`), so an old screen does not write past a newer form's
+    /// rules; none: the latest, whichever it is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub release: Option<u32>,
+    /// The record's attributes as the form opened it (docs/adr/0438 §7): the record changed since
+    /// (another write, an undo) is `record_changed` (status `conflict`) instead of being written over;
+    /// none: whatever it holds now.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub opened: Option<BTreeMap<String, String>>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

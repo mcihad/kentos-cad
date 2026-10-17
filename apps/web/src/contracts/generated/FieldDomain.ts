@@ -25,4 +25,16 @@ min?: string,
 /**
  * A range's greatest value, in its canonical text; included.
  */
-max?: string, };
+max?: string, 
+/**
+ * `min` itself left out of the range (docs/adr/0438 §4); written only as `true`.
+ */
+minExclusive?: boolean, 
+/**
+ * `max` itself left out of the range; written only as `true`.
+ */
+maxExclusive?: boolean, 
+/**
+ * The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.
+ */
+unit?: string, };

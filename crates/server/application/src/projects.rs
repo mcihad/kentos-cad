@@ -822,6 +822,7 @@ mod tests {
             card: None,
             compose: None,
             filter: None,
+            rules: Vec::new(),
         }
     }
 

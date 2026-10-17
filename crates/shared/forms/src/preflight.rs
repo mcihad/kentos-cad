@@ -320,6 +320,9 @@ impl Preflight<'_> {
                 code: "-".into(),
                 label: "-".into(),
                 retired: false,
+                description: None,
+                from: None,
+                until: None,
             }]);
         }
         if let Err(code) = widget_fits(widget, &probe) {

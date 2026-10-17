@@ -15,7 +15,7 @@ use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
-    FieldsUsage, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersContingents, LayersSubtypes, LayersTable, LayersRenderer, LayersService,
+    FieldsUsage, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersContingents, LayersRules, LayersSubtypes, LayersTable, LayersRenderer, LayersService,
     LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
@@ -39,7 +39,7 @@ use kentos_native_application::{
     circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
     entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
     entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_contingents, layers_subtypes, layers_table,
+    fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_contingents, layers_rules, layers_subtypes, layers_table,
     layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
     points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
     settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
@@ -375,6 +375,12 @@ impl Input for FormsAudit {
 }
 
 impl Input for LayersContingents {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersRules {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2175,6 +2181,7 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_TABLE => run!(layers_table, LayersTable),
         kentos_domain::contracts::CAD_LAYERS_SUBTYPES => run!(layers_subtypes, LayersSubtypes),
         kentos_domain::contracts::CAD_LAYERS_CONTINGENTS => run!(layers_contingents, LayersContingents),
+        kentos_domain::contracts::CAD_LAYERS_RULES => run!(layers_rules, LayersRules),
         kentos_domain::contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
         kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),

@@ -148,6 +148,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::FieldGroup>,
         after: Vec<kentos_contracts::FieldGroup>,
     },
+    /// A layer's record rules (Kayıt kuralları, docs/adr/0438 §1), before and after.
+    LayerRules {
+        layer: String,
+        before: Vec<kentos_contracts::LayerRule>,
+        after: Vec<kentos_contracts::LayerRule>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -326,6 +332,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerContingents {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerRules {
+                layer,
+                before,
+                after,
+            } => Op::LayerRules {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -763,6 +778,7 @@ impl Document {
                 | Op::LayerTableStyles { .. }
                 | Op::LayerSubtypes { .. }
                 | Op::LayerContingents { .. }
+                | Op::LayerRules { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerMove { .. }
@@ -929,6 +945,10 @@ impl Document {
             }
             Op::LayerContingents { layer, after, .. } => {
                 self.layers.replace_contingents(layer, after);
+                return;
+            }
+            Op::LayerRules { layer, after, .. } => {
+                self.layers.replace_rules(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

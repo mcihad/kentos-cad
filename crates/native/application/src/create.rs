@@ -206,7 +206,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
         check_link(object, i)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let warnings = checks::layer(doc, &input.layer_id)?;
+    let mut warnings = checks::layer(doc, &input.layer_id)?;
     // An insert's block is the drawing's (docs/adr/0144).
     check_blocks(
         doc,
@@ -247,6 +247,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     // The values given to the layer's fields in their canonical text, and its (and the record's
     // subtype's) defaults where an object gives none (docs/adr/0199 §2, 0422 §2).
     let mut attrs = Vec::with_capacity(input.objects.len());
+    let mut rules = checks::LayerRules::new(doc);
     for (i, object) in input.objects.iter().enumerate() {
         let given: BTreeMap<String, Option<String>> = object
             .attrs
@@ -263,8 +264,21 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
         checks::new_defaults(doc, &input.layer_id, &mut own);
         checks::subtype_fit(doc, &input.layer_id, None, &own, &at)?;
         checks::combination_fit(doc, &input.layer_id, None, &own, &at)?;
+        warnings.extend(rules.fit(&input.layer_id, None, &own, None, &at)?);
         attrs.push(own);
     }
+    let writes: Vec<checks::UniqueWrite<'_>> = attrs
+        .iter()
+        .enumerate()
+        .map(|(i, a)| checks::UniqueWrite {
+            slot: None,
+            layer: &input.layer_id,
+            before: None,
+            after: a,
+            at: format!("objects[{i}].attrs"),
+        })
+        .collect();
+    checks::unique_fit(doc, &writes)?;
     let placed = placed_points(doc, input)?;
     Ok(Checked {
         warnings,

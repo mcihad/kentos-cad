@@ -1162,6 +1162,160 @@ fn stepped_survey(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// Ruhsatlı yapılar (docs/adr/0438): a layer with record rules (dates in order, a note for an
+/// inspection, floors and area), a unique parcel, a floor count whose 0 is left out, an area in m², a
+/// status list with a value's description and days; a form whose note check is asked on saving.
+fn permits(app: &mut App) {
+    let mut o = Objects::new();
+    let first = o.path(
+        "ruhsat",
+        &[[0.0, 0.0], [18.0, 0.0], [18.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    o.data(
+        first,
+        &[
+            ("Durum", "iyi"),
+            ("Ada/Parsel", "101/5"),
+            ("Başlangıç", "2026-03-01"),
+            ("Bitiş", "2026-09-30"),
+            ("Kat", "3"),
+            ("Alan", "900.00"),
+        ],
+        Some("101/5"),
+    );
+    let second = o.path(
+        "ruhsat",
+        &[[26.0, 0.0], [40.0, 0.0], [40.0, 12.0], [26.0, 12.0]],
+        true,
+    );
+    o.data(
+        second,
+        &[
+            ("Durum", "inceleme"),
+            ("Ada/Parsel", "101/6"),
+            ("Kat", "1"),
+            ("Alan", "700.00"),
+        ],
+        Some("101/6"),
+    );
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut ruhsat = crate::tools_scenes::layer("ruhsat", "Ruhsatlı yapı", "#0E7490", 0.35);
+        ruhsat["fields"] = json!([
+            { "name": "Durum", "kind": "text", "values": [
+                { "code": "iyi", "label": "İyi", "description": "Taşıyıcı sistemde kusur yok." },
+                { "code": "inceleme", "label": "Ek inceleme gerekli" },
+                { "code": "eski", "label": "Eski sınıf", "until": "2025-12-31" },
+                { "code": "yeni", "label": "Yeni sınıf", "from": "2027-01-01" }] },
+            { "id": "ada-parsel", "name": "Ada/Parsel", "kind": "text", "unique": true },
+            { "name": "Başlangıç", "kind": "date" },
+            { "name": "Bitiş", "kind": "date" },
+            { "name": "Kat", "kind": "integer", "min": "0", "max": "60", "minExclusive": true },
+            { "name": "Alan", "kind": "decimal", "scale": 2, "unit": "m²" },
+            { "name": "Açıklama", "kind": "text" }]);
+        ruhsat["rules"] = json!([
+            { "id": "tarih-sirasi", "name": "Tarih sırası",
+              "rule": "Bitiş boş veya Başlangıç boş veya Bitiş >= Başlangıç",
+              "message": "Bitiş tarihi başlangıçtan önce olamaz.", "fields": ["Bitiş"] },
+            { "id": "inceleme-notu", "name": "İnceleme notu",
+              "rule": "Durum <> 'inceleme' veya Açıklama boş değil",
+              "message": "Ek inceleme gereken yapıya açıklama yazın.", "warning": true },
+            { "id": "kat-alan", "name": "Kat ve alan", "rule": "Alan boş veya Kat boş veya Alan <= Kat * 500",
+              "message": "Kat başına en çok 500 m² olur." }]);
+        layers.push(ruhsat);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("ruhsat");
+    });
+    let body = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "durum", "field": "Durum" },
+        { "type": "field", "id": "ada", "field": "ada-parsel" },
+        { "type": "field", "id": "baslangic", "field": "Başlangıç" },
+        { "type": "field", "id": "bitis", "field": "Bitiş" },
+        { "type": "field", "id": "kat", "field": "Kat" },
+        { "type": "field", "id": "alan", "field": "Alan" },
+        { "type": "field", "id": "aciklama", "field": "Açıklama", "checks": [
+            { "rule": "uzunluk(Açıklama) >= 5", "message": "Açıklama en az 5 karakter olmalı.", "on": "save" }] }
+    ] });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "ruhsat", "name": "Ruhsat", "layer": "ruhsat", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("ruhsat".into());
+}
+
+/// Kayıt kuralları on the permits, the dates' rule chosen.
+fn permit_rules(app: &mut App) {
+    permits(app);
+    run(app, "data.layerRules");
+    let _ = app.update(Message::LayerRules(
+        crate::forms::layer_rules::Event::Choose(2),
+    ));
+}
+
+/// Formla düzenle on the first permit: the end before the start (the rule under Bitiş), the area over
+/// the floors' (under Alan, its unit after it), the status's description under it.
+fn permit_entry(app: &mut App) {
+    permits(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(
+        app,
+        entry::Event::Value("Bitiş".into(), "01.02.2026".into()),
+    );
+    entry(app, entry::Event::Value("Alan".into(), "1600".into()));
+}
+
+/// The record changed while the window was open: Kaydet says so, Yeniden yükle and Üzerine yaz.
+fn permit_conflict(app: &mut App) {
+    permits(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Kat".into(), "4".into()));
+    let uid = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(Slot(1)))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    let doc = app.document.as_mut().expect("a drawing");
+    let _ = kentos_native_application::set::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        serde_json::from_value(
+            json!({ "uids": [uid], "attrs": { "Açıklama": "Başkası yazdı." },
+                                       "operation": "attributes" }),
+        )
+        .expect("an input"),
+    );
+    entry(app, entry::Event::Save);
+}
+
+/// Alanlar on the permits, the floor count chosen: Tekil, En az hariç, Birim.
+fn permit_fields(app: &mut App) {
+    permits(app);
+    let _ = app.open_layer_fields("ruhsat");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(4)));
+}
+
+/// The status's value list: a description and the days a value holds.
+fn permit_values(app: &mut App) {
+    permits(app);
+    let _ = app.open_layer_fields("ruhsat");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
+        0,
+    )));
+}
+
+/// Formlar on the permit form, the note chosen: its links name the layer rule reading it.
+fn permit_designer(app: &mut App) {
+    permits(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("aciklama".into()));
+}
+
 /// Its last step: the mirrors, Geri and Kaydet.
 fn stepped_summary(app: &mut App) {
     stepped_survey(app);
@@ -1996,6 +2150,12 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-adim-adim", stepped_survey),
         ("form-adim-ozet", stepped_summary),
         ("form-adim-tasarim", stepped_designer),
+        ("form-kayit-kurallari", permit_rules),
+        ("form-kural-formda", permit_entry),
+        ("form-cakisma", permit_conflict),
+        ("form-alan-ekleri", permit_fields),
+        ("form-deger-gunleri", permit_values),
+        ("form-kural-baglari", permit_designer),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),
@@ -2370,6 +2530,98 @@ mod tests {
         assert_eq!(
             app.forms_window.as_ref().and_then(|w| w.chosen.clone()),
             Some(copy.id.clone())
+        );
+    }
+
+    #[test]
+    fn a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet() {
+        let mut app = crate::files_testing::app_with_drawing();
+        permits(&mut app);
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        entry(
+            &mut app,
+            entry::Event::Value("Bitiş".into(), "01.02.2026".into()),
+        );
+        let codes = |app: &App| -> Vec<String> {
+            app.form_entry
+                .as_ref()
+                .map(|e| e.issues.iter().map(|i| i.code.clone()).collect())
+                .unwrap_or_default()
+        };
+        assert!(codes(&app).contains(&"form_layer_rule".to_owned()));
+        entry(
+            &mut app,
+            entry::Event::Value("Bitiş".into(), "30.09.2026".into()),
+        );
+        // Açıklama kısa: its check is kept for saving, not said while typing.
+        entry(
+            &mut app,
+            entry::Event::Value("Açıklama".into(), "kısa".into()),
+        );
+        assert!(!codes(&app).contains(&"form_check_failed".to_owned()));
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_some(), "the check refused Kaydet");
+        assert!(codes(&app).contains(&"form_check_failed".to_owned()));
+        entry(
+            &mut app,
+            entry::Event::Value("Açıklama".into(), "Kolonlarda çatlak.".into()),
+        );
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none(), "written and closed");
+    }
+
+    #[test]
+    fn a_record_changed_meanwhile_is_reloaded_with_what_was_typed_or_written_over() {
+        let mut app = crate::files_testing::app_with_drawing();
+        permit_conflict(&mut app);
+        let e = app.form_entry.as_ref().expect("still open");
+        assert!(e.conflict_for_tests(), "the bar says it changed");
+        entry(&mut app, entry::Event::Reload);
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none());
+        let doc = &app.document.as_ref().unwrap().model;
+        let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
+        assert_eq!(
+            attrs.get("Kat").map(String::as_str),
+            Some("4"),
+            "typed kept"
+        );
+        assert_eq!(
+            attrs.get("Açıklama").map(String::as_str),
+            Some("Başkası yazdı."),
+            "theirs kept"
+        );
+    }
+
+    #[test]
+    fn the_rules_window_writes_through_the_command_in_one_step() {
+        let mut app = crate::files_testing::app_with_drawing();
+        permits(&mut app);
+        run(&mut app, "data.layerRules");
+        use crate::forms::layer_rules::Event as R;
+        let _ = app.update(Message::LayerRules(R::New));
+        let _ = app.update(Message::LayerRules(R::Name("Kat sınırı".into())));
+        let _ = app.update(Message::LayerRules(R::Rule(
+            "Kat boş veya Kat <= 40".into(),
+        )));
+        let _ = app.update(Message::LayerRules(R::Message("En çok 40 kat.".into())));
+        let _ = app.update(Message::LayerRules(R::Save));
+        assert!(app.layer_rules.is_none(), "closed on Kaydet");
+        let doc = &app.document.as_ref().unwrap().model;
+        assert_eq!(doc.layers().get("ruhsat").unwrap().rules.len(), 4);
+        // A write breaking it is refused, whatever writes it.
+        let uid = doc.uid(Slot(1)).unwrap().to_string();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let refused = kentos_native_application::set::execute(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            serde_json::from_value(
+                json!({ "uids": [uid], "attrs": { "Kat": "45" }, "operation": "attributes" }),
+            )
+            .unwrap(),
+        );
+        assert!(
+            matches!(refused, kentos_contracts::CommandResult::Failed { error } if error.code == "rule_broken")
         );
     }
 

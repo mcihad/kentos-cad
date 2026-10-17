@@ -1,0 +1,1361 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.polygon.create",
+ "commandVersion": 1,
+ "title": "Alan çiz ve kayıt kuralları",
+ "note": "ADR 0438 §1, §3, §4: yeni kayıt kuralları bozamaz, tekil değeri yineleyemez; çizim komutlarında uyarı kuralı söylenmez. Written by scripts/fixtures/layer_rules_cases.py without KentOS code.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kayıt kuralları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Ruhsatlı yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi",
+        "description": "Taşıyıcı sistemde kusur yok."
+       },
+       {
+        "code": "inceleme",
+        "label": "Ek inceleme gerekli"
+       },
+       {
+        "code": "eski",
+        "label": "Eski sınıf",
+        "until": "2025-12-31"
+       },
+       {
+        "code": "yeni",
+        "label": "Yeni sınıf",
+        "from": "2027-01-01"
+       }
+      ]
+     },
+     {
+      "id": "ada-parsel",
+      "name": "Ada/Parsel",
+      "kind": "text",
+      "unique": true
+     },
+     {
+      "name": "Başlangıç",
+      "kind": "date"
+     },
+     {
+      "name": "Bitiş",
+      "kind": "date"
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "0",
+      "max": "60",
+      "minExclusive": true
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2,
+      "unit": "m²"
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     }
+    ],
+    "rules": [
+     {
+      "id": "tarih-sirasi",
+      "name": "Tarih sırası",
+      "rule": "Bitiş boş veya Başlangıç boş veya Bitiş >= Başlangıç",
+      "message": "Bitiş tarihi başlangıçtan önce olamaz.",
+      "fields": [
+       "Bitiş"
+      ]
+     },
+     {
+      "id": "inceleme-notu",
+      "name": "İnceleme notu",
+      "rule": "Durum <> 'inceleme' veya Açıklama boş değil",
+      "message": "Ek inceleme gereken yapıya açıklama yazın.",
+      "warning": true
+     },
+     {
+      "id": "kat-alan",
+      "name": "Kat ve alan",
+      "rule": "Alan boş veya Kat boş veya Alan <= Kat * 500",
+      "message": "Kat başına en çok 500 m² olur."
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Koruma alanı",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sit alanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "attrs": {
+     "Durum": "iyi",
+     "Ada/Parsel": "101/5",
+     "Başlangıç": "2026-03-01",
+     "Bitiş": "2026-09-30",
+     "Kat": "3",
+     "Alan": "900.00"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "değersiz kayıt: kurallar boş cevapla tutar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarihleri sıralı yeni kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Başlangıç": "2026-01-01",
+       "Bitiş": "2026-06-30"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Başlangıç": "2026-01-01",
+         "Bitiş": "2026-06-30"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "bitişi başlangıçtan önce yeni kayıt reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Başlangıç": "2026-06-01",
+       "Bitiş": "2026-01-01"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Tarih sırası” kuralı: Bitiş tarihi başlangıçtan önce olamaz.",
+       "path": "attrs.Bitiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı günde başlayıp biten",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Başlangıç": "2026-06-01",
+       "Bitiş": "01.06.2026"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Başlangıç": "2026-06-01",
+         "Bitiş": "2026-06-01"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız bitiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Bitiş": "2026-06-01"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Bitiş": "2026-06-01"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "inceleme açıklamasız: çizim komutu uyarı kuralını söylemez, yazar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Durum": "inceleme"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "inceleme"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan sınırında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "2",
+       "Alan": "1000"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Kat": "2",
+         "Alan": "1000"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan sınırı aşar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "2",
+       "Alan": "1000.01"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Kat ve alan” kuralı: Kat başına en çok 500 m² olur.",
+       "path": "attrs.Alan"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "katsız alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Alan": "5000"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Alan": "5000"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 0 reddedilir: hariç uç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "0"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Kat” alanı 0 ile 60 arasında olmalı (0 hariç); 0 verildi.",
+       "path": "attrs.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 1",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Kat": "1"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 60",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "60"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Kat": "60"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kat 61 reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "61"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Kat” alanı 0 ile 60 arasında olmalı (0 hariç); 61 verildi.",
+       "path": "attrs.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ada/parsel başka kayıtta var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada/Parsel": "101/5"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada/Parsel” alanı katmanda tekil; “101/5” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Ada/Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni ada/parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada/Parsel": "101/7"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ada/Parsel": "101/7"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşluklu ada/parsel aynı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada/Parsel": "101/5 "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ada/Parsel": "101/5 "
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "durum etiketiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Durum": "İyi"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "iyi"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün alanlar geçerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Durum": "inceleme",
+       "Ada/Parsel": "103/2",
+       "Başlangıç": "2026-02-01",
+       "Bitiş": "2026-03-01",
+       "Kat": "5",
+       "Alan": "2400.25",
+       "Açıklama": "Ön inceleme."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Durum": "inceleme",
+         "Ada/Parsel": "103/2",
+         "Başlangıç": "2026-02-01",
+         "Bitiş": "2026-03-01",
+         "Kat": "5",
+         "Alan": "2400.25",
+         "Açıklama": "Ön inceleme."
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık alan virgülle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "1",
+       "Alan": "499,99"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Kat": "1",
+         "Alan": "499.99"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alan sınırı virgüllü değerle aşılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Kat": "1",
+       "Alan": "500,01"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Kat ve alan” kuralı: Kat başına en çok 500 m² olur.",
+       "path": "attrs.Alan"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarih GG.AA.YYYY'den ve sıra bozuk",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Başlangıç": "05.06.2026",
+       "Bitiş": "04.06.2026"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "“Tarih sırası” kuralı: Bitiş tarihi başlangıçtan önce olamaz.",
+       "path": "attrs.Bitiş"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

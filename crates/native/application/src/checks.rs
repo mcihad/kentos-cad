@@ -94,7 +94,150 @@ pub(crate) fn object_attrs(
     new_defaults(doc, layer, &mut out);
     subtype_fit(doc, layer, None, &out, at)?;
     combination_fit(doc, layer, None, &out, at)?;
+    LayerRules::new(doc).fit(layer, None, &out, None, at)?;
+    unique_fit(
+        doc,
+        &[UniqueWrite {
+            slot: None,
+            layer,
+            before: None,
+            after: &out,
+            at: at.to_owned(),
+        }],
+    )?;
     Ok((!out.is_empty()).then_some(out))
+}
+
+/// The layers' record rules (Kayıt kuralları, docs/adr/0438 §1) asked of writes, each layer's
+/// compiled once.
+pub(crate) struct LayerRules<'d> {
+    doc: &'d Document,
+    compiled: std::collections::HashMap<String, kentos_forms::LayerRules>,
+}
+
+impl<'d> LayerRules<'d> {
+    pub(crate) fn new(doc: &'d Document) -> LayerRules<'d> {
+        LayerRules {
+            doc,
+            compiled: std::collections::HashMap::new(),
+        }
+    }
+
+    /// A write of a record on `layer` from `before` (none: a new record) to `after` against the
+    /// layer's rules: a rule it breaks is `rule_broken` at `{at}.{name}` of the rule's field (`at`
+    /// without one); a broken warning rule is the warning `rule_unmet`. `object`: what the rules see of
+    /// the record's geometry (none: its measures read empty, and a rule reading them holds).
+    pub(crate) fn fit(
+        &mut self,
+        layer: &str,
+        before: Option<&BTreeMap<String, String>>,
+        after: &BTreeMap<String, String>,
+        object: Option<&kentos_forms::Object>,
+        at: &str,
+    ) -> Result<Vec<CommandWarning>, Stop> {
+        let Some(node) = self.doc.layers().get(layer).filter(|n| !n.rules.is_empty()) else {
+            return Ok(Vec::new());
+        };
+        let doc = self.doc;
+        let rules = self.compiled.entry(layer.to_owned()).or_insert_with(|| {
+            kentos_forms::LayerRules::new(
+                &node.rules,
+                &node.fields,
+                &crate::forms::variables_all(doc),
+                crate::expression_unit::reading_unit(doc.settings()),
+            )
+            .unwrap_or_default()
+        });
+        let plain = kentos_forms::Object {
+            layer: node.name.clone(),
+            ..kentos_forms::Object::default()
+        };
+        let mut warnings = Vec::new();
+        for broken in rules.broken(&node.fields, before, after, object.unwrap_or(&plain)) {
+            let path = broken
+                .field
+                .map_or_else(|| at.to_owned(), |f| format!("{at}.{}", f.name));
+            if !broken.rule.warning {
+                return Err(Stop::failed(error(
+                    codes::RULE_BROKEN,
+                    format!("“{}” kuralı: {}", broken.rule.name, broken.rule.message),
+                    Some(path),
+                )));
+            }
+            warnings.push(CommandWarning {
+                code: codes::RULE_UNMET.into(),
+                message: format!("“{}” kuralı: {}", broken.rule.name, broken.rule.message),
+                path: Some(path),
+            });
+        }
+        Ok(warnings)
+    }
+}
+
+/// A write a layer's unique fields are asked of (docs/adr/0438 §3).
+pub(crate) struct UniqueWrite<'a> {
+    /// The record written; none: a new one.
+    pub slot: Option<Slot>,
+    pub layer: &'a str,
+    pub before: Option<&'a BTreeMap<String, String>>,
+    pub after: &'a BTreeMap<String, String>,
+    /// Where its values are (`attrs`, `objects[2].attrs`).
+    pub at: String,
+}
+
+/// Writes against their layers' unique fields (docs/adr/0438 §3): a value written anew that another
+/// record of the layer holds after the writes, the written ones among them, is `not_unique` at
+/// `{at}.{name}`. A value a record kept is not asked; empty ones are not unique's.
+pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(), Stop> {
+    let mut layers: Vec<&str> = writes.iter().map(|w| w.layer).collect();
+    layers.dedup();
+    for layer in layers {
+        let Some(node) = doc.layers().get(layer) else {
+            continue;
+        };
+        let mine: Vec<&UniqueWrite<'_>> = writes.iter().filter(|w| w.layer == layer).collect();
+        let written: HashSet<Slot> = mine.iter().filter_map(|w| w.slot).collect();
+        for f in node.fields.iter().filter(|f| f.unique) {
+            let fresh = |w: &UniqueWrite<'_>| -> Option<String> {
+                let v = w.after.get(&f.name).filter(|v| !v.trim().is_empty())?;
+                (w.before.and_then(|b| b.get(&f.name)) != Some(v)).then(|| v.clone())
+            };
+            if !mine.iter().any(|w| fresh(w).is_some()) {
+                continue;
+            }
+            let mut counts: std::collections::HashMap<&str, usize> =
+                std::collections::HashMap::new();
+            for e in doc.by_layer(layer) {
+                if written.contains(&Slot(e.base().id)) {
+                    continue;
+                }
+                if let Some(v) = e.base().attrs.get(&f.name) {
+                    *counts.entry(v.as_str()).or_default() += 1;
+                }
+            }
+            for w in &mine {
+                if let Some(v) = w.after.get(&f.name).filter(|v| !v.trim().is_empty()) {
+                    *counts.entry(v.as_str()).or_default() += 1;
+                }
+            }
+            for w in &mine {
+                if let Some(v) = fresh(w)
+                    && counts.get(v.as_str()).copied().unwrap_or(0) > 1
+                {
+                    return Err(Stop::failed(error(
+                        codes::NOT_UNIQUE,
+                        format!(
+                            "“{}” alanı katmanda tekil; “{}” başka bir kayıtta var. Başka bir değer verin.",
+                            f.label(),
+                            kentos_contracts::display_value(f, &v)
+                        ),
+                        Some(format!("{}.{}", w.at, f.name)),
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2): the subtype field first by its own

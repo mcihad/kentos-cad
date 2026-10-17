@@ -19,6 +19,7 @@
 pub mod compare;
 pub mod field_refs;
 mod generate;
+pub mod layer_rules;
 mod lookup;
 mod object;
 mod preflight;
@@ -27,11 +28,12 @@ pub mod scenario;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};
+pub use layer_rules::LayerRules;
 pub use lookup::{OtherLayer, World, labels_of};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attached, Attrs, Object, schema_in, schema_of};
-pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Prepared};
+pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Moment, Prepared};
 
 use kentos_contracts::{FormIssue, FormSeverity};
 
@@ -107,6 +109,9 @@ pub mod codes {
     pub const COMBINATION: &str = "form_combination";
     /// The form's workflow does not fit the layer's fields (docs/adr/0428 §1).
     pub const WORKFLOW_INVALID: &str = "form_workflow_invalid";
+    /// A record rule of the layer the record breaks (docs/adr/0438 §1): an error, or a warning for a
+    /// warning rule.
+    pub const LAYER_RULE: &str = "form_layer_rule";
     /// A check of a shown, filled field is not true.
     pub const CHECK_FAILED: &str = "form_check_failed";
     /// A write to a field the form shows read-only.

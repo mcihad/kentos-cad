@@ -310,12 +310,27 @@ def check(f, text):
         lo, hi = f.get("min"), f.get("max")
         order = (lambda t: t) if f["kind"] in ("date", "datetime", "time") else number
         x = order(v)
-        if (lo is not None and x < order(lo)) or (hi is not None and x > order(hi)):
-            lo, hi, v = shown(f, lo), shown(f, hi), shown(f, v)
+        # docs/adr/0438 §4: an end left out is outside too.
+        lo_out, hi_out = bool(f.get("minExclusive")), bool(f.get("maxExclusive"))
+        below = lo is not None and (x < order(lo) or (lo_out and x == order(lo)))
+        above = hi is not None and (x > order(hi) or (hi_out and x == order(hi)))
+        if below or above:
+            unit = f.get("unit")
+
+            def say(t):
+                s = shown(f, t)
+                return f"{s} {unit}" if unit and s else s
+            lo, hi, v = say(lo), say(hi), say(v)
             if lo is not None and hi is not None:
-                return err("range", f"“{L}” alanı {lo} ile {hi} arasında olmalı; {v} verildi.")
+                out = {(True, True): " (iki uç da hariç)", (True, False): f" ({lo} hariç)",
+                       (False, True): f" ({hi} hariç)", (False, False): ""}[(lo_out, hi_out)]
+                return err("range", f"“{L}” alanı {lo} ile {hi} arasında olmalı{out}; {v} verildi.")
             if lo is not None:
+                if lo_out:
+                    return err("range", f"“{L}” alanı {lo} değerinden büyük olmalı; {v} verildi.")
                 return err("range", f"“{L}” alanı en az {lo} olmalı; {v} verildi.")
+            if hi_out:
+                return err("range", f"“{L}” alanı {hi} değerinden küçük olmalı; {v} verildi.")
             return err("range", f"“{L}” alanı en çok {hi} olmalı; {v} verildi.")
     return {"value": v}
 
@@ -398,6 +413,34 @@ def field_problem(f):
         return f"“{name}” alanı toplanamaz: bu tam sayı ya da ondalık basamağı verilmiş ondalık sayı alanında olur."
     if f.get("merge") in ("min", "max") and k not in ("integer", "decimal"):
         return f"“{name}” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur."
+    # docs/adr/0438 §3–§5: the range's left-out ends, the unit, unique, a value's description and days.
+    if f.get("minExclusive") and "min" not in f:
+        return f"“{name}” alanının alt ucu en azı olmadan hariç tutulamaz."
+    if f.get("maxExclusive") and "max" not in f:
+        return f"“{name}” alanının üst ucu en çoğu olmadan hariç tutulamaz."
+    if "min" in f and "max" in f and (f.get("minExclusive") or f.get("maxExclusive")):
+        order = (lambda t: t) if k in ("date", "datetime", "time") else number
+        if order(f["min"]) == order(f["max"]):
+            return f"“{name}” alanının aralığı boş: en azı en çoğuna eşitken uçlar hariç tutulamaz."
+    if "unit" in f:
+        u = f["unit"]
+        if k not in ("integer", "decimal"):
+            return f"“{name}” alanında birim yalnız sayı alanlarında olur."
+        if trim(u) == "" or trim(u) != u or len(u) > 16 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in u):
+            return f"“{name}” alanının birimi boş olamaz, en çok 16 karakterdir, boşlukla başlayıp bitmez."
+    if f.get("unique") and k == "boolean":
+        return f"“{name}” evet/hayır alanı; tekil olamaz (iki değeri var)."
+    if f.get("unique") and f.get("multiple"):
+        return f"“{name}” çok değerli; tekil olamaz."
+    for v in f.get("values", []):
+        code = v["code"]
+        if "description" in v and (trim(v["description"]) == "" or len(v["description"]) > 500):
+            return f"“{name}” alanının “{code}” değerinin açıklaması boş olamaz ve en çok 500 karakterdir."
+        for key, word in (("from", "başlangıcı"), ("until", "bitişi")):
+            if key in v and parse_date(v[key]) != v[key]:
+                return f"“{name}” alanının “{code}” değerinin geçerlilik {word} “{v[key]}” bir tarih değil (YYYY-AA-GG)."
+        if "from" in v and "until" in v and v["from"] > v["until"]:
+            return f"“{name}” alanının “{code}” değerinin geçerliliği bitişinden sonra başlıyor."
     # docs/adr/0418: at least one value is offered; the default is not retired.
     if f.get("values") and all(v.get("retired") for v in f["values"]):
         return f"“{name}” alanının bütün değerleri kullanımdan kalkmış; en az biri sunulmalı."
@@ -600,6 +643,36 @@ INFER = [
     ("çok-basamak", [{"V": "0.1234567890123456"}]),
     ("tarih-ve-saat", [{"T": "16.10.2026 14:30", "S": "8:00"}, {"T": "2026-10-17T09:15:00", "S": "17:45:30"}]),
     ("tarih-ile-tarih-saat", [{"T": "2026-10-16"}, {"T": "2026-10-16 10:00"}]),
+]
+
+# docs/adr/0438 §4, §5: ranges with left-out ends and units, unique, values' descriptions and days.
+EXCL = {"name": "Kat", "kind": "integer", "min": "0", "max": "60", "minExclusive": True}
+EXCL_BOTH = {"name": "Oran", "kind": "decimal", "min": "0", "max": "1", "minExclusive": True, "maxExclusive": True}
+AREA_U = {"name": "Taban alanı", "kind": "decimal", "scale": 2, "min": "0", "minExclusive": True, "unit": "m²"}
+UPTO = {"name": "Yaş", "kind": "integer", "max": "18", "maxExclusive": True, "unit": "yıl"}
+UPTO_DAY = {"name": "Bitiş", "kind": "date", "max": "2027-01-01", "maxExclusive": True}
+CHECKS += [(EXCL, "0"), (EXCL, "1"), (EXCL, "60"), (EXCL_BOTH, "0"), (EXCL_BOTH, "0.5"), (EXCL_BOTH, "1"),
+           (AREA_U, "0"), (AREA_U, "0.01"), (UPTO, "18"), (UPTO, "17"), (UPTO_DAY, "2027-01-01"), (UPTO_DAY, "31.12.2026")]
+PROBLEMS += [
+    ("hariç-uçlar", [EXCL, EXCL_BOTH, AREA_U, UPTO, UPTO_DAY]),
+    ("hariç-alt-uç-en-azsız", [{"name": "Kat", "kind": "integer", "max": "5", "minExclusive": True}]),
+    ("hariç-üst-uç-en-çoksuz", [{"name": "Kat", "kind": "integer", "min": "5", "maxExclusive": True}]),
+    ("boş-aralık", [{"name": "Kat", "kind": "integer", "min": "5", "max": "5", "maxExclusive": True}]),
+    ("eşit-uçlar-dahil", [{"name": "Kat", "kind": "integer", "min": "5", "max": "5"}]),
+    ("metinde-birim", [{"name": "Ad", "kind": "text", "unit": "m"}]),
+    ("boş-birim", [{"name": "Alan", "kind": "decimal", "unit": " "}]),
+    ("uzun-birim", [{"name": "Alan", "kind": "decimal", "unit": "metrekare-yüzölçümü"}]),
+    ("tekil", [{"name": "Ada/Parsel", "kind": "text", "unique": True}, {"name": "No", "kind": "integer", "unique": True}]),
+    ("evet-hayır-tekil-olmaz", [{"name": "Ruhsat", "kind": "boolean", "unique": True}]),
+    ("çok-değerli-tekil-olmaz", [{**MANY, "unique": True}]),
+    ("değer-açıklaması-ve-günleri", [{"name": "Durum", "kind": "text", "values": [
+        {"code": "iyi", "label": "İyi", "description": "Kusur yok."},
+        {"code": "yeni", "label": "Yeni sınıf", "from": "2026-01-01"},
+        {"code": "eski", "label": "Eski sınıf", "from": "2020-01-01", "until": "2025-12-31"}]}]),
+    ("boş-açıklama", [{"name": "Durum", "kind": "text", "values": [{"code": "iyi", "label": "İyi", "description": "  "}]}]),
+    ("geçersiz-gün", [{"name": "Durum", "kind": "text", "values": [{"code": "iyi", "label": "İyi", "until": "2026-02-30"}]}]),
+    ("ters-günler", [{"name": "Durum", "kind": "text", "values": [{"code": "iyi", "label": "İyi", "from": "2026-05-01",
+                                                                    "until": "2026-01-01"}]}]),
 ]
 
 DISPLAY = [(BOOL, "true"), (BOOL, "false"), (BOOL, "evet"), (DATE, "2026-10-07"), (DATE, "07.10.2026"), (LIST_T, "T"), (LIST_T, "X"), (LIST_N, "2"), (DEC, "12.50"),

@@ -237,6 +237,7 @@ impl Judge<'_> {
             let node = find(self.tree, &form.layer);
             p.with_subtypes(node.and_then(|n| n.subtypes.as_ref()))
                 .with_contingents(node.map_or(&[][..], |n| n.contingents.as_slice()))
+                .with_rules(node.map_or(&[][..], |n| n.rules.as_slice()))
         })
         .map_err(|issues| first_error(&issues))
     }

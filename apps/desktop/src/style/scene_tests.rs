@@ -61,6 +61,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         card: None,
         compose: None,
         filter: None,
+        rules: Vec::new(),
     }
 }
 

@@ -16,6 +16,7 @@ pub mod designer;
 mod designer_view;
 pub mod domains;
 pub mod entry;
+pub mod layer_rules;
 pub mod location;
 pub mod package;
 pub mod relations;
@@ -30,7 +31,7 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 9] = [
+pub const COMMANDS: [&str; 10] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
@@ -38,6 +39,7 @@ pub const COMMANDS: [&str; 9] = [
     "data.tableStyles",
     "data.subtypes",
     "data.contingents",
+    "data.layerRules",
     "data.domains",
     "data.duplicate",
 ];
@@ -82,6 +84,7 @@ impl App {
             "data.tableStyles" => return self.open_table_styles(),
             "data.subtypes" => return self.open_subtypes(),
             "data.contingents" => return self.open_contingents(),
+            "data.layerRules" => return self.open_layer_rules(),
             "data.domains" => return self.open_domains(),
             "data.duplicate" => return self.duplicate_selected(),
             _ => {}

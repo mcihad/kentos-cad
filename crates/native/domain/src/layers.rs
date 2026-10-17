@@ -666,6 +666,13 @@ impl LayerTree {
         }
     }
 
+    /// A layer's record rules, as an undo or a redo puts them (docs/adr/0438 §1).
+    pub(crate) fn replace_rules(&mut self, id: &str, rules: &[kentos_contracts::LayerRule]) {
+        if let Some(node) = self.node_mut(id) {
+            node.rules = rules.to_vec();
+        }
+    }
+
     /// A layer's value combinations, as an undo or a redo puts them (docs/adr/0423).
     pub(crate) fn replace_contingents(
         &mut self,
@@ -729,6 +736,7 @@ impl LayerTree {
             compose: new.compose.filter(|_| new.kind == LayerNodeType::Layer),
             style: new.style,
             children: Vec::new(),
+            rules: Vec::new(),
         }
     }
 

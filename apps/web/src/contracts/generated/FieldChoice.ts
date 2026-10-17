@@ -9,4 +9,17 @@ export type FieldChoice = { code: string, label: string,
  * Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new
  * choice does not offer it, a form does not write it anew. Written only as `true`.
  */
-retired?: boolean, };
+retired?: boolean, 
+/**
+ * What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.
+ */
+description?: string, 
+/**
+ * The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not
+ * offer it, as a retired one.
+ */
+from?: string, 
+/**
+ * The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.
+ */
+until?: string, };

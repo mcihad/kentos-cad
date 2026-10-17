@@ -283,6 +283,8 @@ impl Document {
             &fields,
             next_node.subtypes.as_ref(),
         );
+        // A record rule's fields follow too (docs/adr/0438 §1); its expression followed the renames.
+        next_node.rules = kentos_contracts::follow_layer_rules(&next_node.rules, &fields);
         if before == fields && changes.is_empty() {
             return Ok(false);
         }
@@ -612,6 +614,39 @@ impl Document {
             });
         }
         self.record(ops, label);
+        Ok(true)
+    }
+
+    /// A layer's record rules (Kayıt kuralları, docs/adr/0438 §1) as one undo step `label`; whether
+    /// they changed. Rules that do not fit the layer's fields are refused (their expressions are the
+    /// command's to compile).
+    pub fn set_layer_rules(
+        &mut self,
+        id: &str,
+        next: Vec<kentos_contracts::LayerRule>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if !next.is_empty() && node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; kayıt kuralları yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some((_, problem)) = kentos_contracts::layer_rules_problem(&node.fields, &next) {
+            return Err(Refusal(format!("Kayıt kuralları: {problem}")));
+        }
+        if node.rules == next {
+            return Ok(false);
+        }
+        let op = Op::LayerRules {
+            layer: id.to_owned(),
+            before: node.rules.clone(),
+            after: next,
+        };
+        self.record(vec![op], label);
         Ok(true)
     }
 
@@ -1182,6 +1217,13 @@ fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::Lay
             layer: layer.clone(),
             before: node.contingents.clone(),
             after: next.contingents.clone(),
+        });
+    }
+    if node.rules != next.rules {
+        ops.push(Op::LayerRules {
+            layer: layer.clone(),
+            before: node.rules.clone(),
+            after: next.rules.clone(),
         });
     }
     if node.table_styles != next.table_styles {

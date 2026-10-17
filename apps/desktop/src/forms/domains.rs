@@ -92,6 +92,10 @@ pub enum Event {
     RemoveCode(usize),
     Min(String),
     Max(String),
+    /// The range's ends left out and a number list's unit (docs/adr/0438 §4).
+    MinExclusive(bool),
+    MaxExclusive(bool),
+    Unit(String),
     /// A dropped code's records moved to another code; none: not moved.
     Recode(String, Option<String>),
     Save,
@@ -149,6 +153,9 @@ impl App {
                     values: Some(vec![FieldChoice::new("", "")]),
                     min: None,
                     max: None,
+                    max_exclusive: false,
+                    min_exclusive: false,
+                    unit: None,
                 });
                 w.chosen = Some(w.domains.len() - 1);
             }
@@ -241,6 +248,21 @@ impl App {
                     d.max = (!t.trim().is_empty()).then(|| canonical_end(d.kind, t));
                 }
             }
+            Event::MinExclusive(on) => {
+                if let Some(d) = chosen {
+                    d.min_exclusive = on && d.min.is_some();
+                }
+            }
+            Event::MaxExclusive(on) => {
+                if let Some(d) = chosen {
+                    d.max_exclusive = on && d.max.is_some();
+                }
+            }
+            Event::Unit(t) => {
+                if let Some(d) = chosen {
+                    d.unit = (!t.trim().is_empty() && d.kind.is_number()).then_some(t);
+                }
+            }
             Event::Recode(from, to) => {
                 if let Some(d) = at.map(|i| w.domains[i].id.clone()) {
                     let map = w.recode.entry(d).or_default();
@@ -296,6 +318,9 @@ impl App {
             values: f.values.clone(),
             min: if coded { None } else { f.min.clone() },
             max: if coded { None } else { f.max.clone() },
+            max_exclusive: !coded && f.max_exclusive,
+            min_exclusive: !coded && f.min_exclusive,
+            unit: f.unit.clone(),
         });
         w.from.push(FromField {
             id,
@@ -338,6 +363,9 @@ impl App {
                         values: d.values.clone(),
                         min: d.min.clone(),
                         max: d.max.clone(),
+                        max_exclusive: d.max_exclusive,
+                        min_exclusive: d.min_exclusive,
+                        unit: d.unit.clone(),
                     }),
                 },
                 Some(old) if old != d => out.push(update_of(d, &w.recode)),
@@ -585,6 +613,9 @@ fn update_of(d: &FieldDomain, recode: &BTreeMap<String, BTreeMap<String, String>
         min: d.min.clone(),
         max: d.max.clone(),
         recode: recode.get(&d.id).cloned().unwrap_or_default(),
+        max_exclusive: d.max_exclusive,
+        min_exclusive: d.min_exclusive,
+        unit: d.unit.clone(),
     }
 }
 
@@ -761,7 +792,39 @@ fn editor<'a>(
                 ]
                 .spacing(16),
             );
+            // The ends left out (docs/adr/0438 §4).
+            col = col.push(
+                row![
+                    words::check(
+                        d.min_exclusive,
+                        "En az hariç",
+                        d.min
+                            .is_some()
+                            .then(|| msg(Event::MinExclusive(!d.min_exclusive)))
+                    ),
+                    words::check(
+                        d.max_exclusive,
+                        "En çok hariç",
+                        d.max
+                            .is_some()
+                            .then(|| msg(Event::MaxExclusive(!d.max_exclusive)))
+                    ),
+                ]
+                .spacing(16),
+            );
         }
+    }
+    // A number list's unit, shown after its values (docs/adr/0438 §4).
+    if d.kind.is_number() {
+        let unit = text_input("m², kg …", d.unit.as_deref().unwrap_or(""))
+            .on_input(|t| msg(Event::Unit(t)))
+            .padding([5, 8])
+            .style(style::field::input);
+        col = col.push(words::field(
+            "Birim",
+            container(focus_ring(unit)).width(150),
+            None,
+        ));
     }
     let uses_words = if uses.is_empty() {
         "Bağlı alan yok. Alanlar penceresinde bir alanın Değer listesi'nden bu listeyi seçin."

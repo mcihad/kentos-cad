@@ -150,6 +150,7 @@ fn opened(n: usize) -> Opened {
         card: None,
         compose: None,
         filter: None,
+        rules: Vec::new(),
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

@@ -1420,6 +1420,171 @@
         "error": "range",
         "message": "“Vardiya” alanı 08:00 ile 17:30 arasında olmalı; 17:31 verildi."
       }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer",
+        "min": "0",
+        "max": "60",
+        "minExclusive": true
+      },
+      "text": "0",
+      "want": {
+        "error": "range",
+        "message": "“Kat” alanı 0 ile 60 arasında olmalı (0 hariç); 0 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer",
+        "min": "0",
+        "max": "60",
+        "minExclusive": true
+      },
+      "text": "1",
+      "want": {
+        "value": "1"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat",
+        "kind": "integer",
+        "min": "0",
+        "max": "60",
+        "minExclusive": true
+      },
+      "text": "60",
+      "want": {
+        "value": "60"
+      }
+    },
+    {
+      "field": {
+        "name": "Oran",
+        "kind": "decimal",
+        "min": "0",
+        "max": "1",
+        "minExclusive": true,
+        "maxExclusive": true
+      },
+      "text": "0",
+      "want": {
+        "error": "range",
+        "message": "“Oran” alanı 0 ile 1 arasında olmalı (iki uç da hariç); 0 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Oran",
+        "kind": "decimal",
+        "min": "0",
+        "max": "1",
+        "minExclusive": true,
+        "maxExclusive": true
+      },
+      "text": "0.5",
+      "want": {
+        "value": "0.5"
+      }
+    },
+    {
+      "field": {
+        "name": "Oran",
+        "kind": "decimal",
+        "min": "0",
+        "max": "1",
+        "minExclusive": true,
+        "maxExclusive": true
+      },
+      "text": "1",
+      "want": {
+        "error": "range",
+        "message": "“Oran” alanı 0 ile 1 arasında olmalı (iki uç da hariç); 1 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Taban alanı",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0",
+        "minExclusive": true,
+        "unit": "m²"
+      },
+      "text": "0",
+      "want": {
+        "error": "range",
+        "message": "“Taban alanı” alanı 0 m² değerinden büyük olmalı; 0 m² verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Taban alanı",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0",
+        "minExclusive": true,
+        "unit": "m²"
+      },
+      "text": "0.01",
+      "want": {
+        "value": "0.01"
+      }
+    },
+    {
+      "field": {
+        "name": "Yaş",
+        "kind": "integer",
+        "max": "18",
+        "maxExclusive": true,
+        "unit": "yıl"
+      },
+      "text": "18",
+      "want": {
+        "error": "range",
+        "message": "“Yaş” alanı 18 yıl değerinden küçük olmalı; 18 yıl verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Yaş",
+        "kind": "integer",
+        "max": "18",
+        "maxExclusive": true,
+        "unit": "yıl"
+      },
+      "text": "17",
+      "want": {
+        "value": "17"
+      }
+    },
+    {
+      "field": {
+        "name": "Bitiş",
+        "kind": "date",
+        "max": "2027-01-01",
+        "maxExclusive": true
+      },
+      "text": "2027-01-01",
+      "want": {
+        "error": "range",
+        "message": "“Bitiş” alanı 01.01.2027 değerinden küçük olmalı; 01.01.2027 verildi."
+      }
+    },
+    {
+      "field": {
+        "name": "Bitiş",
+        "kind": "date",
+        "max": "2027-01-01",
+        "maxExclusive": true
+      },
+      "text": "31.12.2026",
+      "want": {
+        "value": "2026-12-31"
+      }
     }
   ],
   "problems": [
@@ -2223,6 +2388,263 @@
         }
       ],
       "want": "“Kullanım” alanının varsayılanı “T” kullanımdan kalkmış bir değer."
+    },
+    {
+      "name": "hariç-uçlar",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "0",
+          "max": "60",
+          "minExclusive": true
+        },
+        {
+          "name": "Oran",
+          "kind": "decimal",
+          "min": "0",
+          "max": "1",
+          "minExclusive": true,
+          "maxExclusive": true
+        },
+        {
+          "name": "Taban alanı",
+          "kind": "decimal",
+          "scale": 2,
+          "min": "0",
+          "minExclusive": true,
+          "unit": "m²"
+        },
+        {
+          "name": "Yaş",
+          "kind": "integer",
+          "max": "18",
+          "maxExclusive": true,
+          "unit": "yıl"
+        },
+        {
+          "name": "Bitiş",
+          "kind": "date",
+          "max": "2027-01-01",
+          "maxExclusive": true
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "hariç-alt-uç-en-azsız",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "max": "5",
+          "minExclusive": true
+        }
+      ],
+      "want": "“Kat” alanının alt ucu en azı olmadan hariç tutulamaz."
+    },
+    {
+      "name": "hariç-üst-uç-en-çoksuz",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "5",
+          "maxExclusive": true
+        }
+      ],
+      "want": "“Kat” alanının üst ucu en çoğu olmadan hariç tutulamaz."
+    },
+    {
+      "name": "boş-aralık",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "5",
+          "max": "5",
+          "maxExclusive": true
+        }
+      ],
+      "want": "“Kat” alanının aralığı boş: en azı en çoğuna eşitken uçlar hariç tutulamaz."
+    },
+    {
+      "name": "eşit-uçlar-dahil",
+      "fields": [
+        {
+          "name": "Kat",
+          "kind": "integer",
+          "min": "5",
+          "max": "5"
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "metinde-birim",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "unit": "m"
+        }
+      ],
+      "want": "“Ad” alanında birim yalnız sayı alanlarında olur."
+    },
+    {
+      "name": "boş-birim",
+      "fields": [
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "unit": " "
+        }
+      ],
+      "want": "“Alan” alanının birimi boş olamaz, en çok 16 karakterdir, boşlukla başlayıp bitmez."
+    },
+    {
+      "name": "uzun-birim",
+      "fields": [
+        {
+          "name": "Alan",
+          "kind": "decimal",
+          "unit": "metrekare-yüzölçümü"
+        }
+      ],
+      "want": "“Alan” alanının birimi boş olamaz, en çok 16 karakterdir, boşlukla başlayıp bitmez."
+    },
+    {
+      "name": "tekil",
+      "fields": [
+        {
+          "name": "Ada/Parsel",
+          "kind": "text",
+          "unique": true
+        },
+        {
+          "name": "No",
+          "kind": "integer",
+          "unique": true
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "evet-hayır-tekil-olmaz",
+      "fields": [
+        {
+          "name": "Ruhsat",
+          "kind": "boolean",
+          "unique": true
+        }
+      ],
+      "want": "“Ruhsat” evet/hayır alanı; tekil olamaz (iki değeri var)."
+    },
+    {
+      "name": "çok-değerli-tekil-olmaz",
+      "fields": [
+        {
+          "name": "Kullanım",
+          "kind": "text",
+          "values": [
+            {
+              "code": "K",
+              "label": "Konut"
+            },
+            {
+              "code": "T",
+              "label": "Ticaret"
+            },
+            {
+              "code": "İ",
+              "label": "İşyeri"
+            }
+          ],
+          "multiple": true,
+          "unique": true
+        }
+      ],
+      "want": "“Kullanım” çok değerli; tekil olamaz."
+    },
+    {
+      "name": "değer-açıklaması-ve-günleri",
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi",
+              "description": "Kusur yok."
+            },
+            {
+              "code": "yeni",
+              "label": "Yeni sınıf",
+              "from": "2026-01-01"
+            },
+            {
+              "code": "eski",
+              "label": "Eski sınıf",
+              "from": "2020-01-01",
+              "until": "2025-12-31"
+            }
+          ]
+        }
+      ],
+      "want": null
+    },
+    {
+      "name": "boş-açıklama",
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi",
+              "description": "  "
+            }
+          ]
+        }
+      ],
+      "want": "“Durum” alanının “iyi” değerinin açıklaması boş olamaz ve en çok 500 karakterdir."
+    },
+    {
+      "name": "geçersiz-gün",
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi",
+              "until": "2026-02-30"
+            }
+          ]
+        }
+      ],
+      "want": "“Durum” alanının “iyi” değerinin geçerlilik bitişi “2026-02-30” bir tarih değil (YYYY-AA-GG)."
+    },
+    {
+      "name": "ters-günler",
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "values": [
+            {
+              "code": "iyi",
+              "label": "İyi",
+              "from": "2026-05-01",
+              "until": "2026-01-01"
+            }
+          ]
+        }
+      ],
+      "want": "“Durum” alanının “iyi” değerinin geçerliliği bitişinden sonra başlıyor."
     }
   ],
   "infer": [

@@ -51,6 +51,7 @@ fn layer(id: &str, style: LayerStyle) -> LayerNode {
         card: None,
         compose: None,
         filter: None,
+        rules: Vec::new(),
     }
 }
 

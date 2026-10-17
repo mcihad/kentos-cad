@@ -68,6 +68,9 @@ impl List {
                 code: code.clone(),
                 label: label.clone(),
                 retired: false,
+                description: None,
+                from: None,
+                until: None,
             })
             .collect()
     }

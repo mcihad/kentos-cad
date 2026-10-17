@@ -1444,6 +1444,44 @@ def subtypes_problem(fields, st):
     return None
 
 
+def _is_date(s):
+    """A real calendar day written `YYYY-AA-GG`."""
+    import datetime
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+        return False
+    try:
+        datetime.date(int(s[:4]), int(s[5:7]), int(s[8:]))
+    except ValueError:
+        return False
+    return True
+
+
+def layer_rules_problem(fields, rules):
+    """The contract's `layer_rules_problem` (docs/adr/0438 §1): at most 64 rules, each its id once, a name, an
+    expression and a message within their lengths, its fields the layer's, each once (the expressions are the forms
+    core's to compile)."""
+    keys = [f.get("id", f["name"]) for f in fields]
+    if len(rules) > 64:
+        return "bir katmanın en çok 64 kayıt kuralı olur"
+    seen = set()
+    for r in rules:
+        for k, most in (("id", 64), ("name", 64)):
+            t = r[k]
+            if not t.strip(JS_SPACE) or t.strip(JS_SPACE) != t or len(t) > most or any(unicodedata.category(c) == "Cc" for c in t):
+                return f"kuralın {k} geçersiz"
+        if r["id"] in seen:
+            return f"“{r['id']}” kuralı iki kez var"
+        seen.add(r["id"])
+        if not r["rule"].strip(JS_SPACE) or len(r["rule"]) > 2000:
+            return f"“{r['name']}” kuralının ifadesi geçersiz"
+        if not r["message"].strip(JS_SPACE) or len(r["message"]) > 500:
+            return f"“{r['name']}” kuralının iletisi geçersiz"
+        named = r.get("fields", [])
+        if any(k not in keys for k in named) or len(set(named)) != len(named):
+            return f"“{r['name']}” kuralının alanları geçersiz"
+    return None
+
+
 def fields_problem(fields):
     """The contract's `layer_fields_problem` (kentos_contracts::fields): a list that is not empty, each field's own
     rules, no name twice (folded)."""
@@ -1491,6 +1529,30 @@ def fields_problem(fields):
                 return f"“{name}” çok değerli; değer listesinde “;” olamaz"
             if all(c.get("retired") for c in vs):
                 return f"“{name}” alanının bütün değerleri kullanımdan kalkmış"
+            # Schema 60 (docs/adr/0438 §5): a value's description and days.
+            for c in vs:
+                if "description" in c and (not c["description"].strip(JS_SPACE) or len(c["description"]) > 500):
+                    return f"“{name}” alanının “{c['code']}” değerinin açıklaması geçersiz"
+                for k in ("from", "until"):
+                    if k in c and not _is_date(c[k]):
+                        return f"“{name}” alanının “{c['code']}” değerinin geçerlilik tarihi geçersiz"
+                if "from" in c and "until" in c and c["from"] > c["until"]:
+                    return f"“{name}” alanının “{c['code']}” değerinin geçerliliği bitişinden sonra başlıyor"
+        # Schema 60 (docs/adr/0438 §3, §4): the range's left-out ends, the unit, unique.
+        if f.get("minExclusive") and "min" not in f:
+            return f"“{name}” alanının alt ucu en azı olmadan hariç tutulamaz"
+        if f.get("maxExclusive") and "max" not in f:
+            return f"“{name}” alanının üst ucu en çoğu olmadan hariç tutulamaz"
+        if (f.get("minExclusive") or f.get("maxExclusive")) and "min" in f and "max" in f and (
+                f["min"] == f["max"] if kind in ("date", "datetime", "time") else _number(f["min"]) == _number(f["max"])):
+            return f"“{name}” alanının aralığı boş"
+        if "unit" in f:
+            u = f["unit"]
+            if kind not in ("integer", "decimal") or not u.strip(JS_SPACE) or u.strip(JS_SPACE) != u or len(u) > 16 \
+                    or any(unicodedata.category(c) == "Cc" for c in u):
+                return f"“{name}” alanının birimi geçersiz"
+        if f.get("unique") and (kind == "boolean" or f.get("multiple")):
+            return f"“{name}” alanı tekil olamaz"
         units = kind == "integer" or (kind == "decimal" and "scale" in f)
         if f.get("split") == "ratio" and not units:
             return f"“{name}” alanı oranla paylaştırılamaz"
@@ -1547,7 +1609,8 @@ def domains_problem(domains):
             return f"“{d['name']}” listesi ya kod listesi ya aralık olmalı"
         if "values" in d and all(c.get("retired") for c in d["values"]):
             return f"“{d['name']}” listesinin bütün kodları kullanımdan kalkmış"
-        probe = {"name": d["name"], "kind": d["kind"], **{k: d[k] for k in ("values", "min", "max") if k in d}}
+        probe = {"name": d["name"], "kind": d["kind"],
+                 **{k: d[k] for k in ("values", "min", "max", "minExclusive", "maxExclusive", "unit") if k in d}}
         problem = fields_problem([probe])
         if problem:
             return problem
@@ -2959,6 +3022,8 @@ class _Schema:
                 **({"subtypes": (self.subtypes_, False)} if self.forms else {}),
                 # Schema 60 (docs/adr/0423 §4): the value groups.
                 **({"contingents": (self.contingents_, False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0438 §1): the record rules.
+                **({"rules": (self.layer_rules_, False)} if self.forms else {}),
                 "type": (self.enum(("group", "layer")), True),
                 "style": (self.layer_style, True),
                 "locked": (self.bool, True),
@@ -2999,6 +3064,12 @@ class _Schema:
             problem = contingents_problem(n.get("fields", []), n.get("subtypes"), n["contingents"])
             if problem:
                 self.fail("bad_value", problem)
+        if "rules" in n:
+            if n["type"] == "group":
+                self.fail("bad_value", "grubun kayıt kuralları olmaz; yalnız katmanın olur")
+            problem = layer_rules_problem(n.get("fields", []), n["rules"])
+            if problem:
+                self.fail("bad_value", problem)
         if "subtypes" in n:
             if n["type"] == "group":
                 self.fail("bad_value", "grubun alt türleri olmaz; yalnız katmanın olur")
@@ -3006,6 +3077,28 @@ class _Schema:
             if problem:
                 self.fail("bad_value", problem)
         return n
+
+    # Schema 60's record rules (docs/adr/0438 §1): rule by rule; `warning` only true, the list not empty.
+
+    def layer_rules_(self, v):
+        def only_true(x):
+            if self.bool(x) is not True:
+                self.fail("bad_value", "warning yalnız true yazılır")
+            return True
+
+        def nonempty_texts(x):
+            out = self.array(self.text)(x)
+            if not out:
+                self.fail("bad_value", "boş alan listesi yazılmaz")
+            return out
+
+        rule = self.fields({"id": (self.text, True), "name": (self.text, True), "rule": (self.text, True),
+                            "message": (self.text, True), "warning": (only_true, False),
+                            "fields": (nonempty_texts, False)})
+        out = self.array(rule)(v)
+        if not out:
+            self.fail("bad_value", "boş liste yazılmaz; kural yoksa alan hiç yazılmaz")
+        return out
 
     # Schema 60's value groups (docs/adr/0423 §1): field by field; `restrictive` only true, the list not empty.
 
@@ -3509,7 +3602,9 @@ class _Schema:
                 "length": (self.uint(32), False),
                 # Schema 60 (docs/adr/0418): a retired value.
                 "values": (self.array(self.fields({"code": (self.text, True), "label": (self.text, True),
-                                                   **({"retired": (self.bool, False)} if self.forms else {})})), False),
+                                                   **({"retired": (self.bool, False), "description": (self.text, False),
+                                                       "from": (self.text, False), "until": (self.text, False)}
+                                                      if self.forms else {})})), False),
                 "default": (self.text, False),
                 # Schema 60 (docs/adr/0408 §1): a listed text field holding several codes.
                 **({"multiple": (self.bool, False)} if self.forms else {}),
@@ -3518,12 +3613,17 @@ class _Schema:
                     "merge": (self.enum(("first", "clear", "sum", "min", "max")), False)} if self.forms else {}),
                 # Schema 60 (docs/adr/0430): the value list it links.
                 **({"domain": (self.text, False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0438 §3, §4): unique, the left-out ends, the unit.
+                **({"unique": (self.bool, False), "minExclusive": (self.bool, False),
+                    "maxExclusive": (self.bool, False), "unit": (self.text, False)} if self.forms else {}),
                 "required": (self.bool, False),
             }
         )
         all_ = self.array(field)(v)
         if any(f.get("required") is False or f.get("multiple") is False for f in all_):
             self.fail("bad_value", "required ve multiple yalnız true yazılır")
+        if any(f.get(k) is False for f in all_ for k in ("unique", "minExclusive", "maxExclusive")):
+            self.fail("bad_value", "unique, minExclusive ve maxExclusive yalnız true yazılır")
         if any(c.get("retired") is False for f in all_ for c in f.get("values", [])):
             self.fail("bad_value", "retired yalnız true yazılır")
         problem = fields_problem(all_)
@@ -3552,7 +3652,9 @@ class _Schema:
 
         widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider",
                    "color", "checkList", "search", "chips", "tree")
-        check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
+        # docs/adr/0438 §2: when a check is asked (save or submit; as the value changes it is written not at all).
+        check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False),
+                             "on": (self.enum(("save", "submit")), False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True)})
         lookup = self.fields({
@@ -3680,7 +3782,9 @@ class _Schema:
     def domains_(self, v):
         """Schema 60 (docs/adr/0430): the project's value lists, each its id, name, kind and its values or bounds;
         the list checked whole (`domains_problem`)."""
-        choice = self.fields({"code": (self.text, True), "label": (self.text, True), "retired": (self.bool, False)})
+        choice = self.fields({"code": (self.text, True), "label": (self.text, True), "retired": (self.bool, False),
+                              "description": (self.text, False), "from": (self.text, False),
+                              "until": (self.text, False)})
         domain = self.fields({
             "id": (self.text, True),
             "name": (self.text, True),
@@ -3689,6 +3793,9 @@ class _Schema:
             "values": (self.array(choice), False),
             "min": (self.text, False),
             "max": (self.text, False),
+            "minExclusive": (self.bool, False),
+            "maxExclusive": (self.bool, False),
+            "unit": (self.text, False),
         })
         lst = self.array(domain)(v)
         if not lst:

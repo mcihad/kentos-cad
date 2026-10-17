@@ -196,6 +196,8 @@ const ENTRIES: &[Entry] = &[
             ATTRS,
             // A value group's combination (docs/adr/0423 §2).
             &["invalid_combination"],
+            // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
+            &["rule_broken", "not_unique"],
         ],
         warnings: &["layer_hidden", "layer_locked"],
         targets: none,
@@ -266,6 +268,16 @@ const ENTRIES: &[Entry] = &[
         refusals: &[OBJECTS, REVISION, &["relation_restricted"]],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["*"], &[], None, None)],
+    },
+    Entry {
+        id: "cad.layers.rules",
+        refusals: &[
+            REVISION,
+            &["layer_not_found", "not_a_layer", "service_layer"],
+            &["invalid_rules"],
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.layers.contingents",
@@ -662,10 +674,13 @@ const ENTRIES: &[Entry] = &[
                 "constant_attribute",
                 "form_rules",
                 "invalid_combination",
+                // docs/adr/0438 §1, §3: the layer's record rules and unique fields.
+                "rule_broken",
+                "not_unique",
             ],
             REVISION,
         ],
-        warnings: &["layer_hidden", "subtype_misfit", "combination_unmet"],
+        warnings: &["layer_hidden", "subtype_misfit", "combination_unmet", "rule_unmet"],
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
@@ -1688,9 +1703,12 @@ const ENTRIES: &[Entry] = &[
                 "form_layer_mismatch",
                 "layer_locked",
                 "form_invalid",
+                // docs/adr/0438 §6, §7: the screen's release and record.
+                "form_release_changed",
+                "record_changed",
             ],
         ],
-        warnings: &["form_check_warning", "form_required"],
+        warnings: &["form_check_warning", "form_required", "form_layer_rule"],
         targets: none,
     },
     Entry {

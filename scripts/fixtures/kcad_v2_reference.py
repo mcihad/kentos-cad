@@ -795,7 +795,10 @@ def layer_field(f):
     """A layer's field (schema 26, docs/adr/0199 §1): its name and kind, then what it has; `required` only when true."""
     assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
     # Schema 60 (docs/adr/0418): a retired value.
-    choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True), "retired": (boolean, False)}, "değer"))
+    # Schema 60 (docs/adr/0438 §5): a value's description and days.
+    choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True), "retired": (boolean, False),
+                                       "description": (text, False), "from": (text, False), "until": (text, False)},
+                                   "değer"))
     table = {
         # Schema 60 (docs/adr/0401 §2): the field's stable id, when it has one.
         "id": (text, False),
@@ -816,7 +819,14 @@ def layer_field(f):
         "merge": (enum(("first", "clear", "sum", "min", "max")), False),
         # Schema 60 (docs/adr/0430): the value list it links.
         "domain": (text, False),
+        # Schema 60 (docs/adr/0438 §3, §4): unique, the range's left-out ends and the unit; flags only when true.
+        "unique": (boolean, False),
+        "minExclusive": (boolean, False),
+        "maxExclusive": (boolean, False),
+        "unit": (text, False),
     }
+    for flag in ("unique", "minExclusive", "maxExclusive"):
+        assert f.get(flag, True) is True, f"alan {f.get('name')}: {flag} yalnız true yazılır"
     return cmap(fields(f, table, f"alan {f.get('name')}"))
 
 
@@ -1175,6 +1185,8 @@ def layer_entries(n):
                 "subtypes": (opaque, False),
                 # Schema 60 (docs/adr/0423 §4): the value groups, as their JSON.
                 "contingents": (opaque, False),
+                # Schema 60 (docs/adr/0438 §1): the record rules, as their JSON.
+                "rules": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
                 "locked": (boolean, True),
@@ -1985,12 +1997,15 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
         return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
                        or any(c.get("retired") for c in f.get("values", [])) or "split" in f or "merge" in f
                        or "domain" in f
+                       or any(k in f for k in ("unique", "minExclusive", "maxExclusive", "unit"))
+                       or any(k in c for c in f.get("values", []) for k in ("description", "from", "until"))
                        for f in n.get("fields", []))
                    or keyed(n.get("children", [])) for n in nodes)
 
     # A record without a geometry is schema 60's too (docs/adr/0410 §2).
     def styled(nodes):
-        return any(n.get("tableStyles") or n.get("subtypes") or n.get("contingents") or styled(n.get("children", []))
+        return any(n.get("tableStyles") or n.get("subtypes") or n.get("contingents") or n.get("rules")
+                   or styled(n.get("children", []))
                    for n in nodes)
 
     if (settings or {}).get("forms") or (settings or {}).get("relations") or (settings or {}).get("domains") or keyed(layers) or styled(layers) or any(
@@ -3820,6 +3835,38 @@ def build():
     out["broken/domains-coded-and-ranged.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(min="1"))
     out["broken/domains-id-twice.kcad"] = domains_broken(lambda d: d["settings"]["domains"][1].update(id="durum"))
     out["broken/domains-unknown-key.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(color="#FF0000"))
+    # A layer's record rules and its fields' unique, left-out ends, unit and values' descriptions and days are schema
+    # 60's (docs/adr/0438): in schema 59 unknown; an empty rule list, a rule on a field the layer lacks, a rule twice,
+    # `unique: false` and a day that is no date refused.
+    out["layer-rules.kcad"] = container(document(load("layer-rules.json")))
+
+    def rules_broken(change):
+        d = copy.deepcopy(load("layer-rules.json"))
+        change(d)
+        return container(document(d))
+
+    plain_rules = copy.deepcopy(load("layer-rules.json"))
+    plain_rules["layers"][0]["fields"] = [{k: v for k, v in f.items()
+                                           if k not in ("unique", "minExclusive", "maxExclusive", "unit")}
+                                          for f in plain_rules["layers"][0]["fields"]]
+    for f in plain_rules["layers"][0]["fields"]:
+        for c in f.get("values", []):
+            for k in ("description", "from", "until"):
+                c.pop(k, None)
+    rules_payload = document(plain_rules)
+    assert rules_payload.count(b"\x67version\x18\x3c") == 1, "the rules alone are schema 60"
+    out["broken/layer-rules-in-schema-59.kcad"] = container(
+        rules_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    out["broken/layer-rules-empty.kcad"] = rules_broken(lambda d: d["layers"][0].update(rules=[]))
+    out["broken/layer-rules-unknown-field.kcad"] = rules_broken(
+        lambda d: d["layers"][0]["rules"][0].update(fields=["Yok"]))
+    out["broken/layer-rules-id-twice.kcad"] = rules_broken(
+        lambda d: d["layers"][0]["rules"][1].update(id=d["layers"][0]["rules"][0]["id"]))
+    out["broken/layer-rules-unknown-key.kcad"] = rules_broken(
+        lambda d: d["layers"][0]["rules"][0].update(severity="hard"))
+    out["broken/field-unit-on-text.kcad"] = rules_broken(lambda d: d["layers"][0]["fields"][0].update(unit="m"))
+    out["broken/field-value-day.kcad"] = rules_broken(
+        lambda d: d["layers"][0]["fields"][0]["values"][0].update(until="2026-02-30"))
     out["block-cards.kcad"] = container(document(load("block-cards.json")))
     payload = document(load("block-cards.json"))
     assert payload.count(b"\x67version\x18\x3a") == 1

@@ -20,6 +20,21 @@
         }
       ]
     },
+    "CheckMoment": {
+      "description": "When a check is asked (docs/adr/0438 §2).",
+      "oneOf": [
+        {
+          "const": "save",
+          "description": "When the record is saved: not while the value is typed.",
+          "type": "string"
+        },
+        {
+          "const": "submit",
+          "description": "When the record goes forward in the form's workflow (a step); a form without a workflow asks it\nwhen the record is saved.",
+          "type": "string"
+        }
+      ]
+    },
     "FormBody": {
       "additionalProperties": false,
       "description": "A form's content: its items and the draft's revision (each kept change adds one).",
@@ -76,6 +91,17 @@
       "properties": {
         "message": {
           "type": "string"
+        },
+        "on": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CheckMoment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "When it is asked (docs/adr/0438 §2); none: as the value changes. A check asked later is still\nasked of every save that reaches it: the moment only says when the form shows it."
         },
         "rule": {
           "type": "string"

@@ -215,7 +215,8 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
     let (after, worked) = prepared.complete(&after, &object, false);
     if step.valid {
         let mut issues = worked;
-        issues.extend(prepared.validate(&after, &object));
+        // A step that asks the record valid asks the checks kept for it too (docs/adr/0438 §2).
+        issues.extend(prepared.validate_at(&after, &object, kentos_forms::Moment::Submit));
         if issues.iter().any(|i| i.severity == FormSeverity::Error) {
             return Err(invalid(input, &issues));
         }

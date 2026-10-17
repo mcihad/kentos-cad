@@ -1240,6 +1240,22 @@
    "tests": 0
   },
   {
+   "id": "data.layerRules",
+   "kind": "command",
+   "title": "Kayıt kuralları",
+   "level": "semantic",
+   "via": [
+    "cad.layers.rules"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.rules",
+   "mcp": "cad.layers.rules",
+   "note": "Kurallar cad.layers.rules ile tek adımda yazılır; katmanın her yazması onları sorar, form alanlarında gösterir (ADR 0438).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.relations",
    "kind": "command",
    "title": "İlişkiler…",

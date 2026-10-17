@@ -400,6 +400,24 @@ fn node_sites(node: &mut LayerNode, f: &mut Visit<'_>) {
             );
         }
     }
+    // The record rules read the fields by name and are shown on them by key (docs/adr/0438 §1).
+    for (i, r) in node.rules.iter_mut().enumerate() {
+        let place = format!("{w}{SEP}Kayıt kuralları{SEP}“{}”", r.name);
+        put(
+            FieldUseHow::Expression,
+            format!("{at}/rules/{i}/rule"),
+            place.clone(),
+            &mut r.rule,
+        );
+        for (j, k) in r.fields.iter_mut().enumerate() {
+            put(
+                FieldUseHow::Key,
+                format!("{at}/rules/{i}/fields/{j}"),
+                place.clone(),
+                k,
+            );
+        }
+    }
     for (i, s) in node.table_styles.iter_mut().enumerate() {
         let rule = format!("{w}{SEP}Koşullu biçim, {}. kural", i + 1);
         if let Some(field) = s.field.as_mut() {

@@ -176,11 +176,14 @@ def check_value(f, text):
         return None, "choice"
     if f["kind"] in ("integer", "decimal"):
         x = Fraction(value)
-        if ("min" in f and x < Fraction(f["min"])) or ("max" in f and x > Fraction(f["max"])):
+        # docs/adr/0438 §4: an end left out is outside too.
+        if ("min" in f and (x < Fraction(f["min"]) or (f.get("minExclusive") and x == Fraction(f["min"])))) or (
+                "max" in f and (x > Fraction(f["max"]) or (f.get("maxExclusive") and x == Fraction(f["max"])))):
             return None, "range"
     # docs/adr/0436: a date, a date and time or a time of day by its text, which sorts as written.
     if f["kind"] in ("date", "datetime", "time"):
-        if ("min" in f and value < f["min"]) or ("max" in f and value > f["max"]):
+        if ("min" in f and (value < f["min"] or (f.get("minExclusive") and value == f["min"]))) or (
+                "max" in f and (value > f["max"] or (f.get("maxExclusive") and value == f["max"]))):
             return None, "range"
     return value, None
 
@@ -588,11 +591,16 @@ class Form:
 
     ROUNDS = 3
 
-    def __init__(self, body, fields, variables=(), world=None):
+    def __init__(self, body, fields, variables=(), world=None, rules=()):
         world = world or {}
         assert not errors(preflight(body, fields, variables, world)), "a form with errors is not prepared"
         self.fields = fields
         self.variables = {v["name"]: v["value"] for v in variables}
+        # docs/adr/0438 §1: the layer's record rules, shown on their fields; §5: the day a value's validity is
+        # judged on, the rules' @tarih.
+        self.rules = list(rules)
+        today = self.variables.get("tarih")
+        self.today = str(today)[:10] if today not in (None, "") else None
         self.clear_hidden = bool(body.get("clearHidden"))
         # docs/adr/0432: a record in a draft state of the workflow keeps the form's own requirements as warnings.
         self.workflow = body.get("workflow")
@@ -717,7 +725,7 @@ class Form:
         held = ([p.strip() for p in value.split(";")] if f.get("multiple") else [value]) if value is not None else []
         # A retired value is offered only to the record that holds it (docs/adr/0418).
         return [c["code"] for c in f.get("values", [])
-                if (not c.get("retired") or c["code"] in held)
+                if (not withdrawn(c, self.today) or c["code"] in held)
                 and holds(x["choiceFilter"], self.fields, attrs,
                           self.ctx(obj, {CHOICE_CODE: c["code"], CHOICE_LABEL: c["label"]}))]
 
@@ -813,7 +821,16 @@ class Form:
         state_field = next(f for f in self.fields if key_of(f) == wf["field"])
         return (attrs.get(state_field["name"], "").strip(JS_SPACE) or wf["initial"]) in wf["drafts"]
 
-    def validate(self, attrs, obj=None):
+    def asked(self, on, moment):
+        """docs/adr/0438 §2: a check without a moment always; one kept for saving on saving and on a step; one kept
+        for the workflow's step on a step, and on saving when the form has no workflow."""
+        if on is None or moment == "submit":
+            return True
+        if moment == "change":
+            return False
+        return on == "save" or self.workflow is None
+
+    def validate(self, attrs, obj=None, moment="save"):
         issues = []
         draft = self.in_draft(attrs)
         for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
@@ -849,9 +866,14 @@ class Form:
                 issues.append(issue("form_choice_filtered", True, x["id"], key_of(f), "choiceFilter"))
                 continue
             for i, c in enumerate(x.get("checks", [])):
-                if not holds(c["rule"], self.fields, attrs, self.ctx(obj)):
+                if self.asked(c.get("on"), moment) and not holds(c["rule"], self.fields, attrs, self.ctx(obj)):
                     code = "form_check_warning" if c.get("warning") else "form_check_failed"
                     issues.append(issue(code, not c.get("warning"), x["id"], key_of(f), f"checks/{i}"))
+        # docs/adr/0438 §1: a rule of the layer the record breaks, on its field's item.
+        for r, f in rules_broken(self.rules, self.fields, None, attrs, self.ctx(obj)):
+            item = None if f is None else self.item_of(key_of(f))
+            issues.append(issue("form_layer_rule", not r.get("warning"), item, None if f is None else key_of(f),
+                                f"rules/{r['id']}"))
         return issues
 
     def with_defaults(self, attrs, obj=None):
@@ -860,9 +882,9 @@ class Form:
     def unique_issues(self, attrs, obj, others):
         out = []
         for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
-            if x["type"] != "field" or not x.get("unique") or not state["shown"]:
+            f = self.layer(x) if x["type"] == "field" else None
+            if x["type"] != "field" or not (x.get("unique") or f.get("unique")) or not state["shown"]:
                 continue
-            f = self.layer(x)
             v = attrs.get(f["name"])
             if v is None or not v.strip(JS_SPACE):
                 continue
@@ -946,7 +968,7 @@ class Form:
         issues = []
         for key in changed:
             f = next(x for x in self.fields if key_of(x) == key)
-            gone = {c["code"] for c in f.get("values", []) if c.get("retired")}
+            gone = {c["code"] for c in f.get("values", []) if withdrawn(c, self.today)}
 
             def parts(v):
                 if v is None:
@@ -956,6 +978,38 @@ class Form:
             if any(p in gone and p not in held for p in parts(after.get(f["name"]))):
                 issues.append(issue("form_value_retired", True, self.item_of(key), key))
         return issues
+
+
+def withdrawn(c, today):
+    """docs/adr/0418, 0438 §5: a listed value a new choice on `today` does not offer: retired, or outside its days."""
+    if c.get("retired"):
+        return True
+    if today is None:
+        return False
+    return ("from" in c and today < c["from"]) or ("until" in c and today > c["until"])
+
+
+def rule_breaks(src, fields, attrs, ctx):
+    """docs/adr/0438 §1: a rule breaks when its answer is a false one; an empty answer holds."""
+    v = value_of(src, fields, attrs, ctx)
+    return not el.is_empty(v) and not el.truthy(v)
+
+
+def rules_broken(rules, fields, before, after, ctx):
+    """The rules a write breaks among those it asks (a new record: all; else a rule reading a changed field), each with
+    the field it is shown on: its first named field, else the first field it reads."""
+    out = []
+    for r in rules:
+        reads = fields_read(parse(r["rule"]))
+        if before is not None and not any(before.get(n) != after.get(n) for n in reads):
+            continue
+        if not rule_breaks(r["rule"], fields, after, ctx):
+            continue
+        shown = next((f for k in r.get("fields", [])[:1] for f in fields if key_of(f) == k), None)
+        if shown is None:
+            shown = next((f for n in reads for f in fields if f["name"] == n), None)
+        out.append((r, shown))
+    return out
 
 
 def text_or_none(v):

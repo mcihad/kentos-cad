@@ -63,6 +63,8 @@ use crate::traces::Control;
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Formla düzenle";
 const SAVE: &str = "Kaydet";
+const RELOAD: &str = "Yeniden yükle";
+const OVERWRITE: &str = "Üzerine yaz";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
 const BACK: &str = "Geri";
@@ -139,6 +141,11 @@ pub struct Entry {
     /// The overridable calculations (docs/adr/0417) that follow their inputs in this window: empty
     /// or holding their calculation's value when it opened, and not typed into since.
     follows: BTreeSet<String>,
+    /// Kaydet refused because the record or the form changed since the window opened (docs/adr/0438
+    /// §6, §7): what changed; the bar offers Yeniden yükle and Üzerine yaz.
+    conflict: Option<String>,
+    /// The next Kaydet writes over the record as it is now (Üzerine yaz).
+    overwrite: bool,
 }
 
 /// A record of the many-record mode.
@@ -182,6 +189,10 @@ impl fmt::Debug for Entry {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// The record and the form as they are now, what was typed kept (docs/adr/0438 §7).
+    Reload,
+    /// Kaydet over the record as it is now.
+    Overwrite,
     Value(String, String),
     /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
     Query(String, String),
@@ -299,11 +310,18 @@ impl Entry {
             return;
         }
         let prepared = &self.screen.prepared;
-        let (after, mut issues) = prepared.assess(
+        // The checks kept for saving are asked once Kaydet was pressed (docs/adr/0438 §2).
+        let moment = if self.tried {
+            kentos_forms::Moment::Save
+        } else {
+            kentos_forms::Moment::Change
+        };
+        let (after, mut issues) = prepared.assess_at(
             &self.before,
             &self.written(),
             &self.screen.object,
             self.new_record,
+            moment,
         );
         self.items = prepared.described(&after, &self.screen.object);
         let asked: Vec<Option<String>> = prepared
@@ -463,6 +481,11 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn tab_for_tests(&self) -> usize {
         self.tab
+    }
+
+    #[cfg(test)]
+    pub(crate) fn conflict_for_tests(&self) -> bool {
+        self.conflict.is_some()
     }
 
     /// The tabs shown, in order: a step form's steps.
@@ -718,6 +741,8 @@ impl App {
             notes,
             tab: 0,
             tried: false,
+            conflict: None,
+            overwrite: false,
             touched: BTreeSet::new(),
             after: Attrs::new(),
             items: Vec::new(),
@@ -886,7 +911,7 @@ impl App {
     /// An event of the designer's preview: typing, tabs and groups; nothing is written.
     pub(crate) fn form_preview_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Save | Event::Cancel | Event::FirstIssue => Task::none(),
+            Event::Save | Event::Cancel | Event::FirstIssue | Event::Reload | Event::Overwrite => Task::none(),
             event => self.entry_event(true, event),
         }
     }
@@ -1283,6 +1308,25 @@ impl App {
                 self.dialog = None;
             }
             Event::Save => return self.save_entry(),
+            Event::Reload => {
+                let task = self.refresh_entry();
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.before = e.screen.attrs.clone();
+                    e.conflict = None;
+                }
+                if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+                    e.recompute(&doc.model);
+                }
+                self.say(Level::Info, "Kayıt yeniden yüklendi; yazdıklarınız duruyor.");
+                return task;
+            }
+            Event::Overwrite => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.overwrite = true;
+                    e.conflict = None;
+                }
+                return self.save_entry();
+            }
             Event::Transition(label) => return self.take_step(label),
         }
         Task::none()
@@ -1395,6 +1439,14 @@ impl App {
 
     /// Kaydet: the record through the form; the window closes when it went in.
     fn save_entry(&mut self) -> Task<Message> {
+        // The checks kept for saving are asked now (docs/adr/0438 §2).
+        if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref())
+            && !e.tried
+            && e.members.is_empty()
+        {
+            e.tried = true;
+            e.recompute(&doc.model);
+        }
         let Some(e) = self.form_entry.as_ref() else {
             return Task::none();
         };
@@ -1431,7 +1483,15 @@ impl App {
             defaults: e.new_record,
             moment: e.moment.clone(),
             user: e.user.clone(),
-            expected_revision: Some(e.revision.clone()),
+            // The record and the release the window opened with (docs/adr/0438 §6, §7): another write
+            // to this record, or a new release, is said instead of written over; Üzerine yaz drops them.
+            expected_revision: None,
+            opened: (!e.overwrite).then(|| e.before.clone()),
+            release: if e.draft || e.overwrite {
+                None
+            } else {
+                e.screen.version
+            },
         };
         let name = e.name.clone();
         let form = e.form.clone();
@@ -1455,6 +1515,21 @@ impl App {
             return Task::none();
         };
         let result = forms_submit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        // Changed since the window opened: the bar says what, the values typed stay.
+        if let kentos_contracts::CommandResult::Conflict { error } = &result
+            && matches!(
+                error.code.as_str(),
+                kentos_contracts::codes::RECORD_CHANGED | kentos_contracts::codes::FORM_RELEASE_CHANGED
+            )
+        {
+            let words = error.message.clone();
+            if let Some(e) = self.form_entry.as_mut() {
+                e.conflict = Some(words.clone());
+                e.overwrite = false;
+            }
+            self.say(Level::Warn, words);
+            return Task::none();
+        }
         match self.answered(result) {
             Some(done) => {
                 self.form_entry = None;
@@ -1689,6 +1764,16 @@ impl App {
             (0, 0)
         };
         let mut footer = Row::new().spacing(8).align_y(Center);
+        // Changed since the window opened (docs/adr/0438 §6, §7): reload keeping what was typed, or
+        // write over it.
+        if e.conflict.is_some() {
+            return footer
+                .push(words::text_line(Kind::Warn, "Kayıt ya da form siz düzenlerken değişti."))
+                .push(space::horizontal().width(Fill))
+                .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
+                .push(words::secondary(RELOAD, Some(e.msg(Event::Reload))))
+                .push(words::primary(OVERWRITE, (!locked).then(|| e.msg(Event::Overwrite))));
+        }
         if errors > 0 {
             footer = footer
                 .push(words::text_line(Kind::Error, format!("{errors} sorun")))
@@ -2031,6 +2116,22 @@ impl App {
                     let read_only = locked || f.mirror || state.is_some_and(|s| s.read_only);
                     let words = f.label.clone().unwrap_or_else(|| field.label().to_owned());
                     let control = entry_control(e, f, field, read_only);
+                    // A number's unit after it (docs/adr/0438 §4).
+                    let control: Element<'a, Message> = match &field.unit {
+                        Some(unit) => Row::new()
+                            .spacing(6)
+                            .align_y(Center)
+                            .push(container(control).width(Fill))
+                            .push(label::caption(unit.clone()).style(muted))
+                            .into(),
+                        None => control,
+                    };
+                    // What the listed value held means, said under it (docs/adr/0438 §5).
+                    let meaning = e
+                        .after
+                        .get(&field.name)
+                        .and_then(|v| field.values.as_ref()?.iter().find(|c| c.code == *v))
+                        .and_then(|c| c.description.clone());
                     // An overridable calculation typed over: ↺ gives it back to its calculation.
                     let control: Element<'a, Message> = if f.overridable
                         && f.calculate.is_some()
@@ -2067,6 +2168,8 @@ impl App {
                         None => {
                             if let Some(help) = &f.help {
                                 form = form.help(help.clone());
+                            } else if let Some(meaning) = meaning {
+                                form = form.help(meaning);
                             } else if let Some(calc) = &f.calculate {
                                 form = form.help(if f.overridable {
                                     format!("Boşken hesaplanır: {calc}; üzerine yazılabilir")
@@ -2452,8 +2555,12 @@ fn entry_control<'a>(
             })
             .unwrap_or_default()
     });
-    // A retired value only for the record holding it (docs/adr/0418).
-    let listed = field.offered_values(e.after.get(&field.name).map_or("", String::as_str));
+    // A retired value, or one outside its days (docs/adr/0438 §5), only for the record holding it
+    // (docs/adr/0418).
+    let listed = field.offered_values_on(
+        e.after.get(&field.name).map_or("", String::as_str),
+        e.moment.as_deref(),
+    );
     let choices: Vec<(String, String)> = match &field.values {
         _ if looked.is_some() => looked.clone().unwrap_or_default(),
         Some(list) if !list.is_empty() => listed

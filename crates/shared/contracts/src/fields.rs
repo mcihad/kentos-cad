@@ -25,6 +25,10 @@ pub const MAX_NAME: usize = 64;
 pub const MAX_LENGTH: u32 = 10_000;
 /// A decimal field's most fraction digits.
 pub const MAX_SCALE: u32 = 15;
+/// A unit's most characters (docs/adr/0438 §4).
+pub const MAX_UNIT: usize = 16;
+/// A listed value's description's most characters (docs/adr/0438 §5).
+pub const MAX_DESCRIPTION: usize = 500;
 
 /// What a field holds (docs/adr/0199 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -116,6 +120,19 @@ pub struct FieldChoice {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub retired: bool,
+    /// What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    /// The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not
+    /// offer it, as a retired one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub from: Option<String>,
+    /// The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub until: Option<String>,
 }
 
 impl FieldChoice {
@@ -125,29 +142,61 @@ impl FieldChoice {
             code: code.into(),
             label: label.into(),
             retired: false,
+            description: None,
+            from: None,
+            until: None,
         }
+    }
+
+    /// Whether the value holds on `today` (`YYYY-AA-GG`, docs/adr/0438 §5): its validity's first and
+    /// last days included; none: every day.
+    pub fn holds_on(&self, today: Option<&str>) -> bool {
+        let Some(day) = today.map(|t| t.get(..10).unwrap_or(t)) else {
+            return true;
+        };
+        self.from.as_deref().is_none_or(|f| f <= day)
+            && self.until.as_deref().is_none_or(|u| day <= u)
+    }
+
+    /// Whether a new choice on `today` does not offer it: retired, or outside its validity.
+    pub fn withdrawn_on(&self, today: Option<&str>) -> bool {
+        self.retired || !self.holds_on(today)
     }
 }
 
 impl LayerField {
     /// Whether `code` is a retired value of the field's list (docs/adr/0418).
     pub fn is_retired(&self, code: &str) -> bool {
+        self.is_withdrawn_on(code, None)
+    }
+
+    /// Whether `code` is a value a new choice on `today` does not offer: retired, or outside its
+    /// validity (docs/adr/0418, 0438 §5).
+    pub fn is_withdrawn_on(&self, code: &str, today: Option<&str>) -> bool {
         self.values
             .as_ref()
-            .is_some_and(|v| v.iter().any(|c| c.retired && c.code == code))
+            .is_some_and(|v| v.iter().any(|c| c.code == code && c.withdrawn_on(today)))
     }
 
     /// The list's values a choice offers to a record holding `value` (docs/adr/0418): every value
     /// that is not retired, and a retired one the record holds, its label saying so.
     pub fn offered_values(&self, value: &str) -> Vec<FieldChoice> {
-        let held = self.retired_in(value);
+        self.offered_values_on(value, None)
+    }
+
+    /// [`LayerField::offered_values`] on `today` (docs/adr/0438 §5): a value outside its validity is
+    /// offered only to a record holding it, its label saying so.
+    pub fn offered_values_on(&self, value: &str, today: Option<&str>) -> Vec<FieldChoice> {
+        let held = self.retired_in_on(value, today);
         self.values
             .iter()
             .flatten()
-            .filter(|c| !c.retired || held.contains(&c.code))
+            .filter(|c| !c.withdrawn_on(today) || held.contains(&c.code))
             .map(|c| FieldChoice {
                 label: if c.retired {
                     format!("{} (kullanımdan kalktı)", c.label)
+                } else if !c.holds_on(today) {
+                    format!("{} (geçerli değil)", c.label)
                 } else {
                     c.label.clone()
                 },
@@ -158,10 +207,15 @@ impl LayerField {
 
     /// The codes of a value (each of a multiple field's) that are retired.
     pub fn retired_in(&self, value: &str) -> Vec<String> {
+        self.retired_in_on(value, None)
+    }
+
+    /// The codes of a value that a new choice on `today` does not offer (docs/adr/0438 §5).
+    pub fn retired_in_on(&self, value: &str, today: Option<&str>) -> Vec<String> {
         if !self
             .values
             .as_ref()
-            .is_some_and(|v| v.iter().any(|c| c.retired))
+            .is_some_and(|v| v.iter().any(|c| c.withdrawn_on(today)))
         {
             return Vec::new();
         }
@@ -172,9 +226,19 @@ impl LayerField {
         };
         parts
             .into_iter()
-            .filter(|p| self.is_retired(p))
+            .filter(|p| self.is_withdrawn_on(p, today))
             .map(str::to_owned)
             .collect()
+    }
+
+    /// A value as shown with the field's unit (docs/adr/0438 §4): `12,5 m²`; a value without a unit as
+    /// [`display_value`] shows it.
+    pub fn shown_with_unit(&self, value: &str) -> String {
+        let shown = display_value(self, value);
+        match &self.unit {
+            Some(u) if !shown.is_empty() => format!("{shown} {u}"),
+            _ => shown,
+        }
     }
 }
 
@@ -182,6 +246,7 @@ impl LayerField {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LayerField {
     /// The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a
@@ -246,6 +311,24 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub domain: Option<String>,
+    /// No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every
+    /// write is refused `not_unique` that would; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unique: bool,
+    /// `min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub min_exclusive: bool,
+    /// `max` is not itself in the range; only with `max`; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub max_exclusive: bool,
+    /// The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value
+    /// stays the number.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
 }
 
 /// A field's value in the pieces of a split object (docs/adr/0419).
@@ -345,6 +428,10 @@ impl LayerField {
             split: None,
             merge: None,
             domain: None,
+            unique: false,
+            min_exclusive: false,
+            max_exclusive: false,
+            unit: None,
         }
     }
 
@@ -813,27 +900,55 @@ pub fn check_value(field: &LayerField, text: &str) -> Result<String, Refusal> {
         ));
     }
     if field.kind.is_number() || field.kind.is_temporal() {
-        let below = field
-            .min
-            .as_deref()
-            .is_some_and(|lo| range_order(field.kind, &value, lo) == Some(Ordering::Less));
-        let above = field
-            .max
-            .as_deref()
-            .is_some_and(|hi| range_order(field.kind, &value, hi) == Some(Ordering::Greater));
+        // An excluded end is outside too (docs/adr/0438 §4).
+        let below =
+            field
+                .min
+                .as_deref()
+                .is_some_and(|lo| match range_order(field.kind, &value, lo) {
+                    Some(Ordering::Less) => true,
+                    Some(Ordering::Equal) => field.min_exclusive,
+                    _ => false,
+                });
+        let above =
+            field
+                .max
+                .as_deref()
+                .is_some_and(|hi| match range_order(field.kind, &value, hi) {
+                    Some(Ordering::Greater) => true,
+                    Some(Ordering::Equal) => field.max_exclusive,
+                    _ => false,
+                });
         if below || above {
-            // A date said as the interface shows it (07.10.2026; docs/adr/0436), a number as it is.
-            let shown = |v: &str| display_value(field, v);
+            // A date said as the interface shows it (07.10.2026; docs/adr/0436), a number as it is,
+            // with its unit (docs/adr/0438 §4).
+            let shown = |v: &str| field.shown_with_unit(v);
             let value = shown(&value);
             let message = match (&field.min, &field.max) {
-                (Some(lo), Some(hi)) => format!(
-                    "“{label}” alanı {} ile {} arasında olmalı; {value} verildi.",
-                    shown(lo),
-                    shown(hi)
+                (Some(lo), Some(hi)) => {
+                    let left_out = match (field.min_exclusive, field.max_exclusive) {
+                        (true, true) => " (iki uç da hariç)".to_owned(),
+                        (true, false) => format!(" ({} hariç)", shown(lo)),
+                        (false, true) => format!(" ({} hariç)", shown(hi)),
+                        (false, false) => String::new(),
+                    };
+                    format!(
+                        "“{label}” alanı {} ile {} arasında olmalı{left_out}; {value} verildi.",
+                        shown(lo),
+                        shown(hi)
+                    )
+                }
+                (Some(lo), None) if field.min_exclusive => format!(
+                    "“{label}” alanı {} değerinden büyük olmalı; {value} verildi.",
+                    shown(lo)
                 ),
                 (Some(lo), None) => format!(
                     "“{label}” alanı en az {} olmalı; {value} verildi.",
                     shown(lo)
+                ),
+                (_, hi) if field.max_exclusive => format!(
+                    "“{label}” alanı {} değerinden küçük olmalı; {value} verildi.",
+                    shown(hi.as_deref().unwrap_or_default())
                 ),
                 (_, hi) => format!(
                     "“{label}” alanı en çok {} olmalı; {value} verildi.",
@@ -1030,6 +1145,74 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
         return Some(format!(
             "“{name}” alanında en küçüğü ve en büyüğü yalnız sayı alanlarında olur."
         ));
+    }
+    if field.min_exclusive && field.min.is_none() {
+        return Some(format!(
+            "“{name}” alanının alt ucu en azı olmadan hariç tutulamaz."
+        ));
+    }
+    if field.max_exclusive && field.max.is_none() {
+        return Some(format!(
+            "“{name}” alanının üst ucu en çoğu olmadan hariç tutulamaz."
+        ));
+    }
+    if let (Some(lo), Some(hi)) = (&field.min, &field.max)
+        && (field.min_exclusive || field.max_exclusive)
+        && range_order(kind, lo, hi) == Some(Ordering::Equal)
+    {
+        return Some(format!(
+            "“{name}” alanının aralığı boş: en azı en çoğuna eşitken uçlar hariç tutulamaz."
+        ));
+    }
+    if let Some(unit) = &field.unit {
+        if !kind.is_number() {
+            return Some(format!(
+                "“{name}” alanında birim yalnız sayı alanlarında olur."
+            ));
+        }
+        if js_trim(unit).is_empty()
+            || js_trim(unit) != unit
+            || unit.chars().count() > MAX_UNIT
+            || unit.chars().any(char::is_control)
+        {
+            return Some(format!(
+                "“{name}” alanının birimi boş olamaz, en çok {MAX_UNIT} karakterdir, boşlukla başlayıp bitmez."
+            ));
+        }
+    }
+    if field.unique && kind == LayerFieldKind::Boolean {
+        return Some(format!(
+            "“{name}” evet/hayır alanı; tekil olamaz (iki değeri var)."
+        ));
+    }
+    if field.unique && field.multiple {
+        return Some(format!("“{name}” çok değerli; tekil olamaz."));
+    }
+    for v in field.values.iter().flatten() {
+        let code = &v.code;
+        if let Some(d) = &v.description
+            && (js_trim(d).is_empty() || d.chars().count() > MAX_DESCRIPTION)
+        {
+            return Some(format!(
+                "“{name}” alanının “{code}” değerinin açıklaması boş olamaz ve en çok {MAX_DESCRIPTION} karakterdir."
+            ));
+        }
+        for (end, word) in [(&v.from, "başlangıcı"), (&v.until, "bitişi")] {
+            if let Some(day) = end
+                && date(day).as_deref() != Some(day.as_str())
+            {
+                return Some(format!(
+                    "“{name}” alanının “{code}” değerinin geçerlilik {word} “{day}” bir tarih değil (YYYY-AA-GG)."
+                ));
+            }
+        }
+        if let (Some(f), Some(u)) = (&v.from, &v.until)
+            && f > u
+        {
+            return Some(format!(
+                "“{name}” alanının “{code}” değerinin geçerliliği bitişinden sonra başlıyor."
+            ));
+        }
     }
     if field
         .values

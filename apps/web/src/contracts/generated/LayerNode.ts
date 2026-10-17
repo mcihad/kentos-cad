@@ -7,6 +7,7 @@ import type { LayerCompose } from "./LayerCompose";
 import type { LayerField } from "./LayerField";
 import type { LayerFilter } from "./LayerFilter";
 import type { LayerNodeType } from "./LayerNodeType";
+import type { LayerRule } from "./LayerRule";
 import type { LayerSnap } from "./LayerSnap";
 import type { LayerStyle } from "./LayerStyle";
 import type { LayerSubtypes } from "./LayerSubtypes";
@@ -104,4 +105,9 @@ subtypes?: LayerSubtypes,
  * Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
  * layer holding objects has them.
  */
-contingents?: Array<FieldGroup>, };
+contingents?: Array<FieldGroup>, 
+/**
+ * Kayıt kuralları (docs/adr/0438 §1): the constraints every write of the layer's records keeps.
+ * Only a layer holding objects has them.
+ */
+rules?: Array<LayerRule>, };

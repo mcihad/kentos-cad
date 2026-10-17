@@ -105,7 +105,11 @@ impl Document {
                 let groups = node.map_or(&[][..], |n| n.contingents.as_slice());
                 Prepared::new_with(body, fields, &variables, unit, &self.form_world(body))
                     .ok()
-                    .map(|p| p.with_subtypes(subtypes).with_contingents(groups))
+                    .map(|p| {
+                        p.with_subtypes(subtypes)
+                            .with_contingents(groups)
+                            .with_rules(node.map_or(&[][..], |n| n.rules.as_slice()))
+                    })
                     .map(|p| (f.layer.clone(), p))
             })
             .collect();

@@ -29,8 +29,46 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let form = forms::form(doc.settings(), &input.form, "form")?;
     let (body, version) = forms::body(form, input.draft, "draft")?;
+    // The screen's release against the form's now (docs/adr/0438 §6): a release published since is
+    // not written past.
+    if let Some(opened) = input.release
+        && !input.draft
+        && version != Some(opened)
+    {
+        return Err(Stop::conflict(checks::error(
+            codes::FORM_RELEASE_CHANGED,
+            format!(
+                "“{}” formu {opened}. yayınla açıldı; şimdi {}. yayında. Formu yeniden açıp değerleri yeniden girin.",
+                form.name,
+                version.map_or_else(|| "yayınsız".to_owned(), |v| v.to_string())
+            ),
+            Some("release".to_owned()),
+        )));
+    }
     let prepared = forms::prepared(doc, form, body, &variables, "form")?;
     let (slot, e) = forms::record(doc, form, &input.uid, "uid")?;
+    // The record against what the screen opened (docs/adr/0438 §7): changed since, it is not
+    // written over.
+    if let Some(opened) = &input.opened
+        && *opened != e.base().attrs
+    {
+        let changed: Vec<String> = opened
+            .keys()
+            .chain(e.base().attrs.keys())
+            .filter(|k| opened.get(*k) != e.base().attrs.get(*k))
+            .cloned()
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        return Err(Stop::conflict(checks::error(
+            codes::RECORD_CHANGED,
+            format!(
+                "Kayıt form açıldıktan sonra değişti ({}). Formu yeniden yükleyin ya da değerlerinizi yeniden kaydedin.",
+                changed.join(", ")
+            ),
+            Some("opened".to_owned()),
+        )));
+    }
     if doc.layers().is_locked(&form.layer) {
         return Err(fail(
             codes::LAYER_LOCKED,

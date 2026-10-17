@@ -957,8 +957,22 @@ impl App {
                 }
                 col = col.push(label::strong("Denetimler"));
                 for (i, c) in f.checks.iter().enumerate() {
+                    // When it is asked (docs/adr/0438 §2).
+                    use kentos_contracts::CheckMoment;
+                    let moments = [None, Some(CheckMoment::Save), Some(CheckMoment::Submit)];
+                    let at = moments.iter().position(|m| *m == c.on);
+                    let when = Select::new(
+                        [
+                            Choice::new("Değer değişince"),
+                            Choice::new("Kaydederken"),
+                            Choice::new("İş akışında ilerlerken"),
+                        ],
+                        at,
+                        move |k| msg(Event::CheckMoment(i, moments[k])),
+                    );
                     col = col
                         .push(rule_row("Kural", Rule::Check(id.clone(), i), &c.rule))
+                        .push(words::field("Ne zaman", when, None))
                         .push(
                             row![
                                 container(input(

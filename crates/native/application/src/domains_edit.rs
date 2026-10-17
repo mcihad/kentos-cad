@@ -212,6 +212,9 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
             values,
             min,
             max,
+            min_exclusive,
+            max_exclusive,
+            unit,
         } => {
             taken(id)?;
             let d = FieldDomain {
@@ -222,6 +225,9 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
                 values: values.clone(),
                 min: min.clone(),
                 max: max.clone(),
+                min_exclusive: *min_exclusive,
+                max_exclusive: *max_exclusive,
+                unit: unit.clone(),
             };
             let mut next = now.clone();
             let id = d.id.clone();
@@ -263,6 +269,9 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
                 } else {
                     f.max.clone()
                 },
+                min_exclusive: f.values.is_none() && f.min_exclusive,
+                max_exclusive: f.values.is_none() && f.max_exclusive,
+                unit: f.unit.clone(),
             };
             let mut next = now.clone();
             next.push(d.clone());
@@ -287,6 +296,9 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
             values,
             min,
             max,
+            min_exclusive,
+            max_exclusive,
+            unit,
             recode,
         } => {
             let Some(old) = find(id) else {
@@ -300,6 +312,9 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
                 values: values.clone(),
                 min: min.clone(),
                 max: max.clone(),
+                min_exclusive: *min_exclusive,
+                max_exclusive: *max_exclusive,
+                unit: unit.clone(),
             };
             let next: Vec<FieldDomain> = now
                 .iter()

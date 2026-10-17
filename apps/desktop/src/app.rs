@@ -220,6 +220,8 @@ pub enum Dialog {
     Subtypes,
     /// Değer bileşimleri (forms/contingents.rs, docs/adr/0423); the window is `App::contingents`.
     Contingents,
+    /// Kayıt kuralları (forms/layer_rules.rs, docs/adr/0438); the window is `App::layer_rules`.
+    LayerRules,
     /// Değer listeleri (forms/domains.rs, docs/adr/0430); the window is `App::domains`.
     Domains,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
@@ -469,6 +471,7 @@ pub enum Message {
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
     Contingents(crate::forms::contingents::Event),
+    LayerRules(crate::forms::layer_rules::Event),
     Domains(crate::forms::domains::Event),
     /// An event of Kayıtları denetle (forms/audit.rs, docs/adr/0406).
     FormAudit(crate::forms::audit::Event),
@@ -910,6 +913,8 @@ pub struct App {
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
     pub(crate) contingents: Option<crate::forms::contingents::Window>,
+    /// Kayıt kuralları (docs/adr/0438).
+    pub(crate) layer_rules: Option<crate::forms::layer_rules::Window>,
     pub(crate) domains: Option<crate::forms::domains::Window>,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406).
     pub(crate) form_audit: Option<crate::forms::audit::Window>,
@@ -1218,6 +1223,7 @@ impl App {
             table_styles: None,
             subtypes: None,
             contingents: None,
+            layer_rules: None,
             domains: None,
             form_audit: None,
             form_memory: Default::default(),
@@ -1753,6 +1759,7 @@ impl App {
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
             Message::Contingents(event) => return self.contingents_event(event),
+            Message::LayerRules(event) => return self.layer_rules_event(event),
             Message::Domains(event) => return self.domains_event(event),
             Message::FormAudit(event) => return self.form_audit_event(event),
             Message::FormEntry(event) => return self.form_entry_event(event),
