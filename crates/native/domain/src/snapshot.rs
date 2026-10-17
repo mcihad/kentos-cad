@@ -105,6 +105,7 @@ impl Document {
             sheets,
             requests,
             arrays,
+            constraints,
             ..
         } = snapshot;
         let mut doc = Self::build(Parts {
@@ -133,6 +134,12 @@ impl Document {
                 return Err(why);
             }
             doc.arrays = arrays.into_iter().map(Arc::new).collect();
+        }
+        if !constraints.is_empty() {
+            if let Some(why) = doc.constraints_refused(&constraints) {
+                return Err(why);
+            }
+            doc.constraints = Arc::new(constraints);
         }
         Ok(doc)
     }
@@ -176,6 +183,7 @@ impl Document {
             migrated_from: parts.migrated_from,
             sheets: parts.sheets.map(Arc::new),
             arrays: Vec::new(),
+            constraints: Default::default(),
             layers: LayerTree::new(layers, &active_layer),
             store,
             next_slot: u64::from(largest) + 1,
@@ -218,6 +226,7 @@ impl Document {
             .map(|stored| ((*stored.entity).clone(), EntityId(stored.uid.into_bytes())))
             .unzip();
         DocumentSnapshotV2 {
+            constraints: (*self.constraints).clone(),
             format: DOCUMENT_FORMAT.to_owned(),
             version: DOCUMENT_VERSION_2,
             name: self.name.clone(),
@@ -251,6 +260,7 @@ impl Document {
             .map(|stored| ((*stored.entity).clone(), EntityId(stored.uid.into_bytes())))
             .unzip();
         DocumentSnapshotV2 {
+            constraints: Default::default(),
             format: DOCUMENT_FORMAT.to_owned(),
             version: DOCUMENT_VERSION_2,
             name: self.name.clone(),

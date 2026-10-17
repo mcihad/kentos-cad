@@ -216,6 +216,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::FieldDomain>,
         after: Vec<kentos_contracts::FieldDomain>,
     },
+    /// The constraints and the parameter table (docs/adr/0334), before and after; written in the step with the
+    /// objects a solve moved, so undo gives both back.
+    Constraints {
+        before: Arc<kentos_contracts::ConstraintSet>,
+        after: Arc<kentos_contracts::ConstraintSet>,
+    },
 }
 
 /// A tree node as a step keeps it (children, flags, style), and where it
@@ -385,6 +391,10 @@ impl Op {
                 after: *before,
             },
             Op::Domains { before, after } => Op::Domains {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::Constraints { before, after } => Op::Constraints {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -731,6 +741,9 @@ impl Document {
         // settled (docs/adr/0402 §4).
         let forms = self.follow_forms(ops);
         ops.extend(forms);
+        // After everything: the constraints of the objects the step deleted go with them (docs/adr/0334 §1).
+        let constraints = self.follow_constraints(ops);
+        ops.extend(constraints);
     }
 
     /// A finished, followed step onto the undo history as a new edit; its
@@ -823,7 +836,8 @@ impl Document {
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
                 | Op::Units { .. }
-                | Op::Domains { .. } => false,
+                | Op::Domains { .. }
+                | Op::Constraints { .. } => false,
             })
         };
         self.history.undo.retain(|step| !touches(step));
@@ -1025,6 +1039,10 @@ impl Document {
             }
             Op::Domains { after, .. } => {
                 self.settings.domains = after.clone();
+                return;
+            }
+            Op::Constraints { after, .. } => {
+                self.constraints = after.clone();
                 return;
             }
         };

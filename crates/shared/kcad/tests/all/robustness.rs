@@ -479,6 +479,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
     }
     let uids = entities.iter().map(|_| EntityId(rng.uid())).collect();
     DocumentSnapshotV2 {
+        constraints: Default::default(),
         format: "kentos.document".to_owned(),
         version: 2,
         name: rng.text(),

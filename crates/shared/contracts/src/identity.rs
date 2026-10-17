@@ -169,10 +169,17 @@ pub struct BlockId(pub [u8; 16]);
 #[cfg_attr(feature = "ts", ts(export, type = "string"))]
 pub struct ArrayId(pub [u8; 16]);
 
+/// A constraint's persistent id (docs/adr/0334): given when the constraint is made (UUIDv7), kept while it holds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct ConstraintId(pub [u8; 16]);
+
 uuid_impls!(EntityId);
 uuid_impls!(ProjectId);
 uuid_impls!(BlockId);
 uuid_impls!(ArrayId);
+uuid_impls!(ConstraintId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
 pub fn uuid_from_text(text: &str) -> Option<[u8; 16]> {
@@ -413,6 +420,7 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         ..
     } = snapshot;
     Ok(DocumentSnapshotV2 {
+        constraints: Default::default(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name,

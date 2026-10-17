@@ -256,6 +256,17 @@ DIMENSION_OVERRIDES = ("arrow", "arrowSize", "extOffset", "extBeyond", "textGap"
                        "options", "height")
 # Schema 72: schema 71, the settings' `forms` (the project's forms) and a layer field's stable `id` (docs/adr/0401).
 SCHEMA_WITH_FORMS = 72
+# Schema 73: schema 72 and the document's `constraints` (the geometric and dimensional constraints and the parameter
+# table, docs/adr/0334).
+SCHEMA_WITH_CONSTRAINTS = 73
+# The most constraints and parameters a drawing keeps, the longest expression and parameter name (docs/adr/0334 §1, §3).
+CONSTRAINTS_MAX = 10_000
+PARAMETERS_MAX = 10_000
+EXPRESSION_MAX = 1_000
+PARAMETER_NAME_MAX = 64
+PARAMETER_FUNCTIONS = {"sin": 1, "cos": 1, "tan": 1, "asin": 1, "acos": 1, "atan": 1, "sqrt": 1, "abs": 1, "round": 1,
+                       "floor": 1, "ceil": 1, "min": 2, "max": 2}
+LITERAL_UNITS = ("mm", "cm", "km", "m", "ft", "in", "deg", "grad", "rad")
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -438,7 +449,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2001,6 +2012,123 @@ def choices_problem(choices):
     return None
 
 
+
+def parameter_name_ok(name):
+    """A parameter's name (docs/adr/0334 §3): a letter or `_` first, then letters, digits and `_`, at most 64
+    characters, not a function's name nor `pi`."""
+    return (
+        bool(name)
+        and (name[0].isalpha() or name[0] == "_")
+        and all(c.isalnum() or c == "_" for c in name)
+        and len(name) <= PARAMETER_NAME_MAX
+        and name != "pi"
+        and name not in PARAMETER_FUNCTIONS
+    )
+
+
+def expression_names(text):
+    """The parameter names an expression reads (docs/adr/0334 §3), parsed by its grammar; ValueError when it is not
+    one: numbers (with a unit right after), names, + - * / ^, parentheses, the functions with their argument counts."""
+    if len(text) > EXPRESSION_MAX:
+        raise ValueError("ifade çok uzun")
+    at, names = 0, set()
+
+    def space():
+        nonlocal at
+        while at < len(text) and text[at].isspace():
+            at += 1
+
+    def peek():
+        space()
+        return text[at] if at < len(text) else None
+
+    def summ(depth):
+        nonlocal at
+        product(depth)
+        while peek() in ("+", "-"):
+            at += 1
+            product(depth)
+
+    def product(depth):
+        nonlocal at
+        power(depth)
+        while peek() in ("*", "/"):
+            at += 1
+            power(depth)
+
+    def power(depth):
+        nonlocal at
+        if depth > 64:
+            raise ValueError("ifade çok derin")
+        if peek() in ("+", "-"):
+            at += 1
+            return power(depth + 1)
+        atom(depth + 1)
+        if peek() == "^":
+            at += 1
+            power(depth + 1)
+
+    def atom(depth):
+        nonlocal at
+        c = peek()
+        if c is None:
+            raise ValueError("ifade yarım kaldı")
+        if c == "(":
+            at += 1
+            summ(depth + 1)
+            if peek() != ")":
+                raise ValueError("“)” bekleniyordu")
+            at += 1
+            return
+        m = re.match(r"(\d+\.?\d*|\.\d+)", text[at:])
+        if m:
+            at += m.end()
+            e = re.match(r"[eE][+-]?\d+", text[at:])
+            if e:
+                at += e.end()
+            u = re.match(r"\w+", text[at:])
+            if u:
+                if u.group(0) not in LITERAL_UNITS:
+                    raise ValueError(f"“{u.group(0)}” bilinen bir birim değil")
+                at += u.end()
+            return
+        m = re.match(r"[^\W\d]\w*", text[at:])
+        if not m:
+            raise ValueError(f"“{c}” beklenmiyordu")
+        word = m.group(0)
+        at += m.end()
+        if peek() == "(":
+            if word not in PARAMETER_FUNCTIONS:
+                raise ValueError(f"“{word}” bilinen bir işlev değil")
+            at += 1
+            count = 0
+            if peek() != ")":
+                while True:
+                    summ(depth + 1)
+                    count += 1
+                    if peek() in (",", ";"):
+                        at += 1
+                        continue
+                    break
+            if peek() != ")":
+                raise ValueError("“)” bekleniyordu")
+            at += 1
+            if count != PARAMETER_FUNCTIONS[word]:
+                raise ValueError(f"“{word}” {PARAMETER_FUNCTIONS[word]} değer alır")
+            return
+        if word in PARAMETER_FUNCTIONS:
+            raise ValueError(f"“{word}” bir işlevdir")
+        if word != "pi":
+            names.add(word)
+
+    if peek() is None:
+        raise ValueError("ifade boş")
+    summ(0)
+    if peek() is not None:
+        raise ValueError(f"“{peek()}” beklenmiyordu")
+    return names
+
+
 class KcadError(Exception):
     """A file the reader refuses: `code` is from the specification's table (§9)."""
 
@@ -2444,6 +2572,7 @@ class _Schema:
         self.hatch_gaps = version >= SCHEMA_WITH_HATCH_GAPS
         self.hatch_extras = version >= SCHEMA_WITH_HATCH_EXTRAS
         self.forms = version >= SCHEMA_WITH_FORMS
+        self.constraints = version >= SCHEMA_WITH_CONSTRAINTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -2487,11 +2616,15 @@ class _Schema:
                 **({"sheets": (self.sheets_, False)} if self.sheets else {}),
                 **({"requests": (self.requests_, False)} if self.requests else {}),
                 **({"arrays": (self.arrays_, False)} if self.arrays else {}),
+                **({"constraints": (self.constraints_, False)} if self.constraints else {}),
             }
         )(v)
         # Schema 53's rules (docs/adr/0300 §1), once the blocks and the objects are known.
         if "arrays" in d:
             self.check_arrays(d["arrays"], [b["id"] for b in d.get("blocks", [])], set(self.uids))
+        # Schema 73's rules (docs/adr/0334 §1), once the objects are known.
+        if "constraints" in d:
+            self.check_constraints(d["constraints"], set(self.uids))
         # Schema 32's links (docs/adr/0208 §2).
         links = service_links_problem(d["layers"], d["settings"].get("connections", []), d["entities"])
         if links:
@@ -2547,6 +2680,8 @@ class _Schema:
             out["sheets"] = d["sheets"]
         if "arrays" in d:
             out["arrays"] = d["arrays"]
+        if "constraints" in d:
+            out["constraints"] = d["constraints"]
         if "requests" in d:
             out["requests"] = d["requests"]
         return out
@@ -2596,6 +2731,212 @@ class _Schema:
         if type(v) is list and not v:
             self.fail("bad_value", "boş dizi listesi yazılmaz")
         return self.array(array)(v)
+
+    # Schema 73's constraints and parameters (docs/adr/0334 §1): read field by field (flags only when true, an axis only
+    # when not aligned, no empty lists), then checked against the rules and the objects.
+
+    def constraints_(self, v):
+        def true(v):
+            if self.bool(v) is not True:
+                self.fail("bad_value", "yalnız doğruyken yazılır")
+            return True
+
+        def uuid(v):
+            self.text(v)
+            if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", v) or v == "00000000-0000-0000-0000-000000000000":
+                self.fail("bad_value", "küçük harfli, tireli, boş olmayan bir UUID olmalı")
+            return v
+
+        index = self.uint(32)
+        places = {
+            "start": {}, "end": {}, "center": {},
+            "node": {"part": (index, True)},
+            "vertex": {"part": (index, True), "ring": (index, True), "index": (index, True)},
+        }
+
+        def place(v):
+            if type(v) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            kind = self.at("kind", self.enum(tuple(places)), v.get("kind"))
+            return self.fields({"kind": (self.text, True), **places[kind]})(v)
+
+        elements = {
+            "point": {"place": (place, True)},
+            "segment": {"part": (index, True), "ring": (index, True), "index": (index, True)},
+            "circle": {},
+        }
+
+        def element(v):
+            if type(v) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            kind = self.at("kind", self.enum(tuple(elements)), v.get("kind"))
+            return self.fields({"kind": (self.text, True), **elements[kind]})(v)
+
+        ref = self.fields({"uid": (uuid, True), "element": (element, True)})
+        pair = {"a": (ref, True), "b": (ref, True)}
+        rules = {
+            "coincident": pair,
+            "horizontal": {"a": (ref, True), "b": (ref, False)},
+            "vertical": {"a": (ref, True), "b": (ref, False)},
+            "parallel": pair,
+            "perpendicular": pair,
+            "tangent": {**pair, "inside": (true, False), "left": (true, False)},
+            "concentric": pair,
+            "collinear": pair,
+            "equal": pair,
+            "symmetric": {**pair, "axis": (ref, True)},
+            "fix": {"a": (ref, True)},
+            "distance": {**pair, "axis": (self.enum(("horizontal", "vertical")), False), "left": (true, False), "parameter": (self.text, True)},
+            "angle": {**pair, "reverseA": (true, False), "reverseB": (true, False), "parameter": (self.text, True)},
+            "radius": {"a": (ref, True), "parameter": (self.text, True)},
+            "diameter": {"a": (ref, True), "parameter": (self.text, True)},
+        }
+
+        def rule(v):
+            if type(v) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            kind = self.at("kind", self.enum(tuple(rules)), v.get("kind"))
+            return self.fields({"kind": (self.text, True), **rules[kind]})(v)
+
+        def bound(v):
+            self.float(v)
+            if not math.isfinite(v):
+                self.fail("bad_value", "sınır sonlu bir sayı olmalı")
+            return v
+
+        def nonempty(v):
+            self.text(v)
+            if not v:
+                self.fail("bad_value", "boş metin yazılmaz; yoksa alan hiç yazılmaz")
+            return v
+
+        def nonempty_list(item):
+            def check(v):
+                if type(v) is list and not v:
+                    self.fail("bad_value", "boş liste yazılmaz; yoksa alan hiç yazılmaz")
+                return self.array(item)(v)
+            return check
+
+        constraint = self.fields({"id": (uuid, True), "rule": (rule, True), "reference": (true, False)})
+        parameter = self.fields({
+            "name": (self.text, True),
+            "kind": (self.enum(("length", "angle", "number")), True),
+            "expression": (nonempty, False),
+            "min": (bound, False),
+            "max": (bound, False),
+            "description": (nonempty, False),
+        })
+        out = self.fields({"parameters": (nonempty_list(parameter), False), "constraints": (nonempty_list(constraint), False)})(v)
+        if not out:
+            self.fail("bad_value", "boş kısıt kümesi yazılmaz; kısıt yoksa alan hiç yazılmaz")
+        return out
+
+    def check_constraints(self, cs, uids):
+        """The contract's rules (`constraints_problem`, docs/adr/0334 §1) as the ADR says them, and every object an
+        object of the drawing."""
+        params = cs.get("parameters", [])
+        cons = cs.get("constraints", [])
+        self.path.append("constraints")
+        if len(cons) > CONSTRAINTS_MAX or len(params) > PARAMETERS_MAX:
+            self.fail("bad_value", "çok fazla kısıt ya da parametre")
+        names = {}
+        for i, p in enumerate(params):
+            self.path.extend(["parameters", str(i)])
+            if not parameter_name_ok(p["name"]):
+                self.fail("bad_value", f"“{p['name']}” bir parametre adı değil")
+            if p["name"] in names:
+                self.fail("bad_value", "ad iki kez verilmiş")
+            names[p["name"]] = i
+            if "min" in p and "max" in p and p["min"] > p["max"]:
+                self.fail("bad_value", "en az değer en çok değerden büyük")
+            del self.path[-2:]
+        shape = lambda r: r["element"]["kind"]  # noqa: E731
+        owner, ids = {}, set()
+        for i, c in enumerate(cons):
+            self.path.extend(["constraints", str(i)])
+            r = c["rule"]
+            if c["id"] in ids:
+                self.fail("bad_value", "kısıtın kimliği iki kez verilmiş")
+            ids.add(c["id"])
+            refs = [r[k] for k in ("a", "b", "axis") if k in r and type(r[k]) is dict]
+            for e in refs:
+                if e["element"]["kind"] == "point" and e["element"]["place"]["kind"] not in ("start", "end", "center", "node", "vertex"):
+                    self.fail("bad_value", "nokta öğesi bir uç, köşe, merkez ya da düğümdür")
+                if e["uid"] not in uids:
+                    self.fail("bad_value", "kısıtın nesnesi çizimde yok")
+            for k, e in enumerate(refs):
+                if e in refs[k + 1:]:
+                    self.fail("bad_value", "aynı öğe iki kez anılmış")
+            kinds = [shape(e) for e in refs]
+            kind = r["kind"]
+            fits = {
+                "coincident": kinds[0] == "point",
+                "horizontal": kinds == ["segment"] or kinds == ["point", "point"],
+                "vertical": kinds == ["segment"] or kinds == ["point", "point"],
+                "parallel": kinds == ["segment", "segment"],
+                "perpendicular": kinds == ["segment", "segment"],
+                "collinear": kinds == ["segment", "segment"],
+                "tangent": (kinds == ["segment", "circle"] and "inside" not in r) or (kinds == ["circle", "circle"] and "left" not in r),
+                "concentric": kinds == ["circle", "circle"],
+                "equal": kinds in (["segment", "segment"], ["circle", "circle"]),
+                "symmetric": kinds == ["point", "point", "segment"],
+                "fix": True,
+                "distance": (kinds == ["point", "point"] and "left" not in r) or (kinds == ["point", "segment"] and "axis" not in r),
+                "angle": kinds == ["segment", "segment"],
+                "radius": kinds == ["circle"],
+                "diameter": kinds == ["circle"],
+            }[kind]
+            if not fits:
+                self.fail("bad_value", f"{kind} kısıtı bu öğeleri almaz")
+            reference = c.get("reference", False)
+            if "parameter" not in r:
+                if reference:
+                    self.fail("bad_value", "yalnız ölçü kısıtı başvuru olur")
+            else:
+                name = r["parameter"]
+                if name not in names:
+                    self.fail("bad_value", f"“{name}” diye bir parametre yok")
+                if name in owner:
+                    self.fail("bad_value", "parametre iki kısıtın")
+                owner[name] = i
+                p = params[names[name]]
+                if p["kind"] != ("angle" if kind == "angle" else "length"):
+                    self.fail("bad_value", "parametrenin türü kısıta uymuyor")
+                if reference != ("expression" not in p):
+                    self.fail("bad_value", "başvuru kısıtının parametresi ölçülür; sürücününkinin ifadesi olur")
+            del self.path[-2:]
+        reads = {}
+        for i, p in enumerate(params):
+            self.path.extend(["parameters", str(i)])
+            if "expression" not in p:
+                if p["name"] not in owner:
+                    self.fail("bad_value", "kullanıcı parametresinin bir ifadesi olur")
+                reads[p["name"]] = set()
+            else:
+                try:
+                    used = expression_names(p["expression"])
+                except ValueError as e:
+                    self.fail("bad_value", f"ifade okunamadı: {e}")
+                missing = sorted(used - set(names))
+                if missing:
+                    self.fail("bad_value", f"“{missing[0]}” diye bir parametre yok")
+                reads[p["name"]] = used
+            del self.path[-2:]
+        # Names reading each other round: a depth-first search for a circle.
+        state = {}
+
+        def visit(n):
+            state[n] = 1
+            for m in reads[n]:
+                if state.get(m) == 1 or (m not in state and visit(m)):
+                    return True
+            state[n] = 2
+            return False
+
+        for n in sorted(reads):
+            if n not in state and visit(n):
+                self.fail("bad_value", "parametreler birbirini okuyor")
+        self.path.pop()
 
     def check_arrays(self, arrays, blocks, uids):
         """The contract's rules (`arrays_problem`), and every item's insert an object of the drawing."""

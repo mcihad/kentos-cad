@@ -916,6 +916,11 @@ pub struct DocumentSnapshotV2 {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
+    /// has none.
+    #[serde(default, skip_serializing_if = "crate::constraints::ConstraintSet::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<crate::constraints::ConstraintSet>"))]
+    pub constraints: crate::constraints::ConstraintSet,
     /// The requests the drawing executed (docs/adr/0253 §6), oldest first,
     /// the last `REQUEST_LEDGER`; none when it executed none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

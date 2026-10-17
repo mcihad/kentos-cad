@@ -483,11 +483,15 @@ pub const SCHEMA_WITH_HATCH_EXTRAS: u32 = 71;
 /// whole and checked by `forms_problem`) and a layer field's stable `id`, written only when the drawing
 /// has one; older readers refuse the file instead of losing a form or a binding.
 pub const SCHEMA_WITH_FORMS: u32 = 72;
+/// Schema 73 (docs/adr/0334): the document's `constraints` (the geometric and dimensional constraints and the
+/// parameter table, a contract value read whole and checked by `constraints_problem`), written only when the drawing
+/// has one; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_CONSTRAINTS: u32 = 73;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 71] = [
+pub const SCHEMAS: [u32; 72] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -559,6 +563,7 @@ pub const SCHEMAS: [u32; 71] = [
     SCHEMA_WITH_HATCH_GAPS,
     SCHEMA_WITH_HATCH_EXTRAS,
     SCHEMA_WITH_FORMS,
+    SCHEMA_WITH_CONSTRAINTS,
 ];
 
 /// The file a drawing is saved as.

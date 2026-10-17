@@ -156,6 +156,7 @@ fn opened(n: usize) -> Opened {
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {
+        constraints: Default::default(),
         format: "kentos.document".into(),
         version: 2,
         name: format!("olcum-{n}"),

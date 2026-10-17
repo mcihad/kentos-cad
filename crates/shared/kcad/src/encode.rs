@@ -278,10 +278,11 @@ impl<'d> Encoder<'d> {
             + usize::from(doc.project_id.is_some())
             + usize::from(doc.migrated_from.is_some())
             + usize::from(doc.sheets.is_some())
-            + usize::from(!doc.requests.is_empty());
+            + usize::from(!doc.requests.is_empty())
+            + usize::from(!doc.constraints.is_empty());
         self.open(7 + optional, true)?;
         // name (4), arrays blocks layers origin sheets styles (6), entities homeView requests settings (8),
-        // projectId (9), activeLayer (11), migratedFrom (12).
+        // projectId (9), activeLayer constraints (11), migratedFrom (12).
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&doc.name))?;
         if !doc.arrays.is_empty() {
@@ -337,6 +338,19 @@ impl<'d> Encoder<'d> {
         }
         self.key("activeLayer");
         self.at(Seg::Name("activeLayer"), |e| e.text(&doc.active_layer))?;
+        // Schema 73 (docs/adr/0334): the constraints, written whole and checked against the objects.
+        if !doc.constraints.is_empty() {
+            self.key("constraints");
+            self.at(Seg::Name("constraints"), |e| {
+                let uids: std::collections::HashSet<kentos_contracts::EntityId> = doc.uids.iter().copied().collect();
+                if let Some((at, problem)) = kentos_contracts::constraints_problem(&doc.constraints, Some(&uids)) {
+                    return Err(e.fail(Code::BadValue, &format!("{at}: {problem}")));
+                }
+                let value = serde_json::to_value(&doc.constraints)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if let Some(source) = &doc.migrated_from {
             self.key("migratedFrom");
             self.at(Seg::Name("migratedFrom"), |e| e.source(source))?;
@@ -1666,6 +1680,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || !n.rules.is_empty()
                 || keyed(&n.children)
         })
+    }
+    // Schema 73 (docs/adr/0334): constraints or parameters.
+    if !doc.constraints.is_empty() {
+        return crate::SCHEMA_WITH_CONSTRAINTS;
     }
     if !doc.settings.forms.is_empty()
         || keyed(&doc.layers)

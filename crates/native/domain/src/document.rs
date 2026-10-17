@@ -48,6 +48,8 @@ pub struct Document {
     pub(crate) sheets: Option<Arc<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300, arrays.rs), each shared as the blocks are.
     pub(crate) arrays: Vec<Arc<kentos_contracts::AssocArray>>,
+    /// The constraints and the parameter table (docs/adr/0334, constraints.rs), one shared value an edit replaces.
+    pub(crate) constraints: Arc<kentos_contracts::ConstraintSet>,
     pub(crate) layers: LayerTree,
     pub(crate) store: Store,
     /// The next slot to give out; u64 so the last `u32` can be given without overflow.
@@ -244,6 +246,7 @@ impl Document {
             styles: self.styles.clone(),
             blocks: self.blocks.clone(),
             arrays: self.arrays.clone(),
+            constraints: self.constraints.clone(),
             project_id: self.project_id,
             migrated_from: self.migrated_from.clone(),
             sheets: self.sheets.clone(),

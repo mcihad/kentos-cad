@@ -262,6 +262,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     let mut sheets_ = None;
     let mut requests_ = None;
     let mut arrays_ = None;
+    let mut constraints_ = None;
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
@@ -292,6 +293,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "settings" => settings_ = Some(settings(r, has)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
+            "constraints" if has.constraints => constraints_ = Some(constraints(r)?),
             "migratedFrom" => migrated_from = Some(source(r)?),
             _ => return Err(unknown(r)),
         }
@@ -316,7 +318,21 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         let ids: Vec<_> = blocks.iter().map(|b| b.id).collect();
         arrays::check(r, &arrays, &ids, &uids)?;
     }
+    let constraints = match constraints_ {
+        Some((at, set)) => {
+            let known: std::collections::HashSet<kentos_contracts::EntityId> =
+                uids.iter().copied().collect();
+            if let Some((place, problem)) =
+                kentos_contracts::constraints_problem(&set, Some(&known))
+            {
+                return Err(r.fail_at(Code::BadValue, at, &format!("{place}: {problem}")));
+            }
+            set
+        }
+        None => Default::default(),
+    };
     Ok(DocumentSnapshotV2 {
+        constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name,
@@ -335,6 +351,41 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
         requests: requests_.unwrap_or_default(),
         arrays,
     })
+}
+
+/// Schema 73's constraints (docs/adr/0334): the contract value read whole, exactly as the writer writes it (no
+/// field at its default, not empty), and its rules that need no objects; the objects' ids are checked once known.
+fn constraints(r: &mut Reader<'_>) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let set: kentos_contracts::ConstraintSet =
+        serde_json::from_value(value.clone()).map_err(|e| {
+            let words = e.to_string();
+            let code = if words.contains("unknown field") || words.contains("unknown variant") {
+                Code::UnknownField
+            } else {
+                Code::BadValue
+            };
+            r.fail_at(code, at, &format!("kısıtlar okunamadı: {words}"))
+        })?;
+    if serde_json::to_value(&set).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "kısıtlar yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+        ));
+    }
+    if set.is_empty() {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "boş kısıt kümesi yazılmaz; kısıt yoksa alan hiç yazılmaz",
+        ));
+    }
+    if let Some((place, problem)) = kentos_contracts::constraints_problem(&set, None) {
+        return Err(r.fail_at(Code::BadValue, at, &format!("{place}: {problem}")));
+    }
+    Ok((at, set))
 }
 
 /// Schema 34's tree rules (docs/adr/0210 §2), as `scenarios_problem` says

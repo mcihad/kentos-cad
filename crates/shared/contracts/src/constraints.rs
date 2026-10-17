@@ -1,0 +1,736 @@
+//! Geometric and dimensional constraints (docs/adr/0334; AutoCAD's GEOMCONSTRAINT, DIMCONSTRAINT and PARAMETERS):
+//! relations between the parts of a drawing's objects (a point on a point, a segment level, two segments parallel,
+//! a circle on a segment …) and dimensions that drive them (a distance, an angle, a radius) from a table of named
+//! parameters. They name the objects by their persistent ids and the parts by their places, as an associative
+//! dimension does (`SubPlace`); the geometry core solves them (`ops::constraints`), the document keeps them
+//! (`DocumentSnapshotV2.constraints`, `.kcad` schema 73) and every step that changes them is one undo step.
+//!
+//! These are a drawing's constraints, not the sheet layout's (`kentos-sheet`) nor the settings' bounds.
+
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use ts_rs::TS;
+
+use crate::constraint_expr::{
+    param_expr_names, param_order, parameter_name_valid, parse_param_expr,
+};
+use crate::identity::{ConstraintId, EntityId};
+use crate::subref::{SUBREF_INDEX_LIMIT, SubPlace};
+
+/// The most constraints a drawing keeps.
+pub const CONSTRAINTS_MAX: usize = 10_000;
+
+/// The most parameters a drawing keeps.
+pub const PARAMETERS_MAX: usize = 10_000;
+
+/// A part of an object a constraint names.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CadElement {
+    /// A point: a line's or an arc's start or end, a circle's or an arc's centre, a point object's node, a path's
+    /// vertex. Not a place along a curve nor an edge's middle.
+    Point { place: SubPlace },
+    /// A straight segment: a line (all zero) or a path's straight edge from vertex `index` to the next (part 0 the
+    /// object's own path, ring 0 its outer ring).
+    Segment {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+    },
+    /// A circle, or an arc's circle.
+    Circle,
+}
+
+/// A part of an object by the object's persistent id.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ElementRef {
+    pub uid: EntityId,
+    pub element: CadElement,
+}
+
+/// Which way a distance is measured: along the line between its points, or across or along the drawing's axes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DistanceAxis {
+    #[default]
+    Aligned,
+    /// Along east: `b`'s east minus `a`'s.
+    Horizontal,
+    /// Along north: `b`'s north minus `a`'s.
+    Vertical,
+}
+
+fn aligned(axis: &DistanceAxis) -> bool {
+    *axis == DistanceAxis::Aligned
+}
+
+/// What a constraint holds. The geometric kinds come first in the order AutoCAD's toolbar has them; the
+/// dimensional ones name the parameter that gives (or, for a reference constraint, takes) their value.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ConstraintRule {
+    /// A point on a point, or on a segment's line or a circle.
+    Coincident {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    /// A segment level, or two points level.
+    Horizontal {
+        a: ElementRef,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        b: Option<ElementRef>,
+    },
+    /// A segment upright, or two points one above the other.
+    Vertical {
+        a: ElementRef,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        b: Option<ElementRef>,
+    },
+    Parallel {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    Perpendicular {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    /// A segment's line or a circle touching a circle. With a segment, `left`: the circle's centre is on the left of
+    /// the segment's direction; with two circles, `inside`: one inside the other. Set when the constraint is made,
+    /// from the drawing: the solution keeps that side.
+    Tangent {
+        a: ElementRef,
+        b: ElementRef,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        inside: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        left: bool,
+    },
+    Concentric {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    /// Two segments on one line.
+    Collinear {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    /// Two segments of one length, or two circles of one radius.
+    Equal {
+        a: ElementRef,
+        b: ElementRef,
+    },
+    /// Two points mirror each other over a segment's line.
+    Symmetric {
+        a: ElementRef,
+        b: ElementRef,
+        axis: ElementRef,
+    },
+    /// A point, a segment's ends or a circle's centre and radius stay where they are.
+    Fix {
+        a: ElementRef,
+    },
+    /// The distance from a point to a point, or (aligned only) to a segment's line; with a segment, `left`: the
+    /// point is on the left of the segment's direction (set when made). Horizontal and vertical distances are
+    /// signed: `b` minus `a`.
+    Distance {
+        a: ElementRef,
+        b: ElementRef,
+        #[serde(default, skip_serializing_if = "aligned")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<DistanceAxis>", optional))]
+        axis: DistanceAxis,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        left: bool,
+        parameter: String,
+    },
+    /// The angle from segment `a`'s direction to `b`'s, counter-clockwise; `reverseA`, `reverseB`: a segment taken
+    /// from its end to its start (chosen when made, so the angle measured is the one the user picked).
+    Angle {
+        a: ElementRef,
+        b: ElementRef,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        reverse_a: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        reverse_b: bool,
+        parameter: String,
+    },
+    Radius {
+        a: ElementRef,
+        parameter: String,
+    },
+    Diameter {
+        a: ElementRef,
+        parameter: String,
+    },
+}
+
+impl ConstraintRule {
+    /// The rule's stable name (its `kind`).
+    pub fn name(&self) -> &'static str {
+        match self {
+            ConstraintRule::Coincident { .. } => "coincident",
+            ConstraintRule::Horizontal { .. } => "horizontal",
+            ConstraintRule::Vertical { .. } => "vertical",
+            ConstraintRule::Parallel { .. } => "parallel",
+            ConstraintRule::Perpendicular { .. } => "perpendicular",
+            ConstraintRule::Tangent { .. } => "tangent",
+            ConstraintRule::Concentric { .. } => "concentric",
+            ConstraintRule::Collinear { .. } => "collinear",
+            ConstraintRule::Equal { .. } => "equal",
+            ConstraintRule::Symmetric { .. } => "symmetric",
+            ConstraintRule::Fix { .. } => "fix",
+            ConstraintRule::Distance { .. } => "distance",
+            ConstraintRule::Angle { .. } => "angle",
+            ConstraintRule::Radius { .. } => "radius",
+            ConstraintRule::Diameter { .. } => "diameter",
+        }
+    }
+
+    /// The parameter a dimensional rule reads or writes; none for a geometric one.
+    pub fn parameter(&self) -> Option<&str> {
+        match self {
+            ConstraintRule::Distance { parameter, .. }
+            | ConstraintRule::Angle { parameter, .. }
+            | ConstraintRule::Radius { parameter, .. }
+            | ConstraintRule::Diameter { parameter, .. } => Some(parameter),
+            _ => None,
+        }
+    }
+
+    /// The parts the rule names, in order.
+    pub fn elements(&self) -> Vec<&ElementRef> {
+        match self {
+            ConstraintRule::Horizontal { a, b } | ConstraintRule::Vertical { a, b } => {
+                std::iter::once(a).chain(b.as_ref()).collect()
+            }
+            ConstraintRule::Fix { a }
+            | ConstraintRule::Radius { a, .. }
+            | ConstraintRule::Diameter { a, .. } => {
+                vec![a]
+            }
+            ConstraintRule::Symmetric { a, b, axis } => vec![a, b, axis],
+            ConstraintRule::Coincident { a, b }
+            | ConstraintRule::Parallel { a, b }
+            | ConstraintRule::Perpendicular { a, b }
+            | ConstraintRule::Tangent { a, b, .. }
+            | ConstraintRule::Concentric { a, b }
+            | ConstraintRule::Collinear { a, b }
+            | ConstraintRule::Equal { a, b }
+            | ConstraintRule::Distance { a, b, .. }
+            | ConstraintRule::Angle { a, b, .. } => vec![a, b],
+        }
+    }
+}
+
+/// One constraint.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct Constraint {
+    pub id: ConstraintId,
+    pub rule: ConstraintRule,
+    /// A dimensional constraint that only measures (AutoCAD's reference constraint): it never moves anything and its
+    /// parameter, read-only, takes the measured value.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reference: bool,
+}
+
+/// What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ParameterKind {
+    Length,
+    Angle,
+    Number,
+}
+
+/// A named parameter: a dimensional constraint's own, or the user's (AutoCAD's user parameter).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CadParameter {
+    pub name: String,
+    pub kind: ParameterKind,
+    /// Its value as written ([`crate::constraint_expr`]); empty for a reference constraint's parameter, whose value
+    /// is measured.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
+    pub expression: String,
+    /// The least and the most its value may be, in its own unit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "parameter")))]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "parameter")))]
+    pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
+    pub description: String,
+}
+
+/// A drawing's constraints and parameters.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ConstraintSet {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CadParameter>>", optional))]
+    pub parameters: Vec<CadParameter>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Constraint>>", optional))]
+    pub constraints: Vec<Constraint>,
+}
+
+impl ConstraintSet {
+    pub fn is_empty(&self) -> bool {
+        self.parameters.is_empty() && self.constraints.is_empty()
+    }
+
+    pub fn parameter(&self, name: &str) -> Option<&CadParameter> {
+        self.parameters.iter().find(|p| p.name == name)
+    }
+
+    pub fn constraint(&self, id: ConstraintId) -> Option<&Constraint> {
+        self.constraints.iter().find(|c| c.id == id)
+    }
+}
+
+/// How a solve ended (docs/adr/0334 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SolveStatus {
+    /// Every constraint holds and nothing can move without breaking one.
+    Fully,
+    /// Every constraint holds; `dof` freedoms are left.
+    Under,
+    /// Every constraint holds, but some repeat what others already say (`redundant`).
+    Over,
+    /// The constraints ask for what cannot be (`conflicting`): nothing is written.
+    Inconsistent,
+    /// A constraint lost its meaning on the way (a segment of no length, a circle of no radius: `singular`).
+    Singular,
+    /// The solver did not reach a solution in its steps.
+    NonConvergent,
+}
+
+/// What a solve found, by the constraints' and the objects' ids.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ConstraintDiagnosis {
+    pub status: SolveStatus,
+    /// The freedoms left: unknowns less the independent equations.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub dof: u32,
+    /// Constraints that repeat what the ones before them already say.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
+    pub redundant: Vec<ConstraintId>,
+    /// Constraints that cannot hold together with the ones before them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
+    pub conflicting: Vec<ConstraintId>,
+    /// Constraints that lost their meaning (a segment of no length …).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
+    pub singular: Vec<ConstraintId>,
+    /// Constraints whose objects or parts are gone, or are not what the rule takes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConstraintId>>", optional))]
+    pub broken: Vec<ConstraintId>,
+    /// Objects that can still move.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
+    pub free: Vec<EntityId>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub iterations: u32,
+}
+
+/// What kind of part an element is, for a rule's checks.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Shape {
+    Point,
+    Segment,
+    Circle,
+}
+
+fn shape(e: &ElementRef) -> Shape {
+    match e.element {
+        CadElement::Point { .. } => Shape::Point,
+        CadElement::Segment { .. } => Shape::Segment,
+        CadElement::Circle => Shape::Circle,
+    }
+}
+
+fn element_problem(e: &ElementRef) -> Option<String> {
+    if e.uid.is_nil() {
+        return Some("nesne kimliği boş".into());
+    }
+    let index = |n: u32| n > SUBREF_INDEX_LIMIT;
+    match e.element {
+        CadElement::Point { place } => match place {
+            SubPlace::Mid { .. } | SubPlace::Along { .. } => {
+                Some("nokta öğesi bir uç, köşe, merkez ya da düğümdür; kenar ortası ya da eğri üstündeki yer değil".into())
+            }
+            SubPlace::Node { part } if index(part) => Some("düğümün sırası sınırı aşıyor".into()),
+            SubPlace::Vertex { part, ring, index: i } if index(part) || index(ring) || index(i) => {
+                Some("köşenin sırası sınırı aşıyor".into())
+            }
+            _ => None,
+        },
+        CadElement::Segment { part, ring, index: i } if index(part) || index(ring) || index(i) => {
+            Some("kenarın sırası sınırı aşıyor".into())
+        }
+        _ => None,
+    }
+}
+
+/// Why `rule`'s parts do not fit it (docs/adr/0334 §2).
+fn rule_problem(rule: &ConstraintRule) -> Option<String> {
+    use Shape::{Circle, Point, Segment};
+    let elements = rule.elements();
+    for e in &elements {
+        if let Some(p) = element_problem(e) {
+            return Some(p);
+        }
+    }
+    for (i, a) in elements.iter().enumerate() {
+        if elements[i + 1..].iter().any(|b| b == a) {
+            return Some("aynı öğe iki kez anılmış".into());
+        }
+    }
+    let kinds: Vec<Shape> = elements.iter().map(|e| shape(e)).collect();
+    let fits = match rule {
+        ConstraintRule::Coincident { .. } => kinds[0] == Point,
+        ConstraintRule::Horizontal { b, .. } | ConstraintRule::Vertical { b, .. } => match b {
+            None => kinds[0] == Segment,
+            Some(_) => kinds == [Point, Point],
+        },
+        ConstraintRule::Parallel { .. }
+        | ConstraintRule::Perpendicular { .. }
+        | ConstraintRule::Collinear { .. } => kinds == [Segment, Segment],
+        ConstraintRule::Tangent { inside, left, .. } => match kinds[0] {
+            Segment => kinds[1] == Circle && !inside,
+            Circle => kinds[1] == Circle && !left,
+            Point => false,
+        },
+        ConstraintRule::Concentric { .. } => kinds == [Circle, Circle],
+        ConstraintRule::Equal { .. } => kinds == [Segment, Segment] || kinds == [Circle, Circle],
+        ConstraintRule::Symmetric { .. } => kinds == [Point, Point, Segment],
+        ConstraintRule::Fix { .. } => true,
+        ConstraintRule::Distance { axis, left, .. } => match kinds[1] {
+            Point => kinds[0] == Point && !left,
+            Segment => kinds[0] == Point && *axis == DistanceAxis::Aligned,
+            Circle => false,
+        },
+        ConstraintRule::Angle { .. } => kinds == [Segment, Segment],
+        ConstraintRule::Radius { .. } | ConstraintRule::Diameter { .. } => kinds[0] == Circle,
+    };
+    (!fits).then(|| format!("{} kısıtı bu öğeleri almaz", rule_label(rule)))
+}
+
+/// The rule's Turkish name.
+pub fn rule_label(rule: &ConstraintRule) -> &'static str {
+    match rule {
+        ConstraintRule::Coincident { .. } => "Çakışık",
+        ConstraintRule::Horizontal { .. } => "Yatay",
+        ConstraintRule::Vertical { .. } => "Düşey",
+        ConstraintRule::Parallel { .. } => "Paralel",
+        ConstraintRule::Perpendicular { .. } => "Dik",
+        ConstraintRule::Tangent { .. } => "Teğet",
+        ConstraintRule::Concentric { .. } => "Eş merkezli",
+        ConstraintRule::Collinear { .. } => "Doğrudaş",
+        ConstraintRule::Equal { .. } => "Eşit",
+        ConstraintRule::Symmetric { .. } => "Simetrik",
+        ConstraintRule::Fix { .. } => "Sabit",
+        ConstraintRule::Distance { .. } => "Uzaklık",
+        ConstraintRule::Angle { .. } => "Açı",
+        ConstraintRule::Radius { .. } => "Yarıçap",
+        ConstraintRule::Diameter { .. } => "Çap",
+    }
+}
+
+/// Why `set` cannot be kept, and where (docs/adr/0334 §1): more than [`CONSTRAINTS_MAX`] constraints or
+/// [`PARAMETERS_MAX`] parameters; an id given twice; a rule's parts that do not fit it, or an object not among `uids`
+/// (when given); a reference geometric rule; a dimensional rule's parameter missing, of the wrong kind or shared; a
+/// parameter's name not valid or given twice, its expression not parsed, empty where it must be written or written
+/// where it is measured, a name it reads missing, names reading each other round, or bounds not finite or crossed.
+/// The place is `constraints/<i>` or `parameters/<i>`.
+pub fn constraints_problem(
+    set: &ConstraintSet,
+    uids: Option<&HashSet<EntityId>>,
+) -> Option<(String, String)> {
+    if set.constraints.len() > CONSTRAINTS_MAX {
+        return Some((
+            "constraints".into(),
+            format!("en çok {CONSTRAINTS_MAX} kısıt tutulur"),
+        ));
+    }
+    if set.parameters.len() > PARAMETERS_MAX {
+        return Some((
+            "parameters".into(),
+            format!("en çok {PARAMETERS_MAX} parametre tutulur"),
+        ));
+    }
+    let mut names: BTreeMap<&str, usize> = BTreeMap::new();
+    for (i, p) in set.parameters.iter().enumerate() {
+        let at = format!("parameters/{i}");
+        if !parameter_name_valid(&p.name) {
+            return Some((
+                at,
+                format!(
+                    "“{}” bir parametre adı değil (harfle başlar; harf, rakam ve _)",
+                    p.name
+                ),
+            ));
+        }
+        if names.insert(&p.name, i).is_some() {
+            return Some((at, format!("“{}” adı iki kez verilmiş", p.name)));
+        }
+        if p.min.is_some_and(|v| !v.is_finite()) || p.max.is_some_and(|v| !v.is_finite()) {
+            return Some((at, "sınırlar sonlu sayılardır".into()));
+        }
+        if let (Some(lo), Some(hi)) = (p.min, p.max)
+            && lo > hi
+        {
+            return Some((at, "en az değer en çok değerden büyük".into()));
+        }
+        if p.description.chars().count() > 1_000 {
+            return Some((at, "açıklama 1000 karakterden uzun".into()));
+        }
+    }
+    let mut ids = HashSet::new();
+    let mut owner: BTreeMap<&str, usize> = BTreeMap::new();
+    for (i, c) in set.constraints.iter().enumerate() {
+        let at = format!("constraints/{i}");
+        if c.id.is_nil() || !ids.insert(c.id) {
+            return Some((at, "kısıtın kimliği boş ya da iki kez verilmiş".into()));
+        }
+        if let Some(p) = rule_problem(&c.rule) {
+            return Some((at, p));
+        }
+        if let Some(uids) = uids
+            && let Some(e) = c
+                .rule
+                .elements()
+                .into_iter()
+                .find(|e| !uids.contains(&e.uid))
+        {
+            return Some((at, format!("{} kimlikli nesne çizimde yok", e.uid)));
+        }
+        match c.rule.parameter() {
+            None if c.reference => return Some((at, "yalnız ölçü kısıtı başvuru olur".into())),
+            None => {}
+            Some(name) => {
+                let Some(&k) = names.get(name) else {
+                    return Some((at, format!("“{name}” diye bir parametre yok")));
+                };
+                if owner.insert(name, i).is_some() {
+                    return Some((at, format!("“{name}” parametresi iki kısıtın")));
+                }
+                let want = match c.rule {
+                    ConstraintRule::Angle { .. } => ParameterKind::Angle,
+                    _ => ParameterKind::Length,
+                };
+                let p = &set.parameters[k];
+                if p.kind != want {
+                    return Some((
+                        at,
+                        format!("“{name}” parametresinin türü bu kısıta uymuyor"),
+                    ));
+                }
+                if c.reference != p.expression.is_empty() {
+                    let words = if c.reference {
+                        "başvuru kısıtının parametresi ölçülür; ifadesi yazılmaz"
+                    } else {
+                        "sürücü kısıtın parametresinin bir ifadesi olur"
+                    };
+                    return Some((format!("parameters/{k}"), words.into()));
+                }
+            }
+        }
+    }
+    // Expressions: parsed, reading known names, not round.
+    let mut reads: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for (i, p) in set.parameters.iter().enumerate() {
+        let at = format!("parameters/{i}");
+        if p.expression.is_empty() {
+            if !owner.contains_key(p.name.as_str()) {
+                return Some((at, "kullanıcı parametresinin bir ifadesi olur".into()));
+            }
+            reads.insert(p.name.clone(), BTreeSet::new());
+            continue;
+        }
+        let expr = match parse_param_expr(&p.expression) {
+            Ok(e) => e,
+            Err(words) => return Some((at, format!("“{}” okunamadı: {words}", p.name))),
+        };
+        let used = param_expr_names(&expr);
+        if let Some(missing) = used.iter().find(|n| !names.contains_key(n.as_str())) {
+            return Some((at, format!("“{missing}” diye bir parametre yok")));
+        }
+        reads.insert(p.name.clone(), used);
+    }
+    if let Err(circle) = param_order(&reads) {
+        let first = circle
+            .first()
+            .and_then(|n| names.get(n.as_str()))
+            .copied()
+            .unwrap_or(0);
+        return Some((
+            format!("parameters/{first}"),
+            format!("parametreler birbirini okuyor: {}", circle.join(", ")),
+        ));
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn uid(n: u8) -> EntityId {
+        EntityId([n; 16])
+    }
+
+    fn point(n: u8, place: SubPlace) -> ElementRef {
+        ElementRef {
+            uid: uid(n),
+            element: CadElement::Point { place },
+        }
+    }
+
+    fn segment(n: u8) -> ElementRef {
+        ElementRef {
+            uid: uid(n),
+            element: CadElement::Segment {
+                part: 0,
+                ring: 0,
+                index: 0,
+            },
+        }
+    }
+
+    fn rect() -> ConstraintSet {
+        ConstraintSet {
+            parameters: vec![
+                CadParameter {
+                    name: "d1".into(),
+                    kind: ParameterKind::Length,
+                    expression: "genişlik * 2".into(),
+                    min: None,
+                    max: None,
+                    description: String::new(),
+                },
+                CadParameter {
+                    name: "genişlik".into(),
+                    kind: ParameterKind::Length,
+                    expression: "3".into(),
+                    min: Some(0.0),
+                    max: None,
+                    description: String::new(),
+                },
+            ],
+            constraints: vec![
+                Constraint {
+                    id: ConstraintId([1; 16]),
+                    rule: ConstraintRule::Parallel {
+                        a: segment(1),
+                        b: segment(2),
+                    },
+                    reference: false,
+                },
+                Constraint {
+                    id: ConstraintId([2; 16]),
+                    rule: ConstraintRule::Distance {
+                        a: point(1, SubPlace::Start),
+                        b: point(1, SubPlace::End),
+                        axis: DistanceAxis::Aligned,
+                        left: false,
+                        parameter: "d1".into(),
+                    },
+                    reference: false,
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn a_good_set_passes_and_reads_back() {
+        let set = rect();
+        assert_eq!(constraints_problem(&set, None), None);
+        let text = serde_json::to_string(&set).unwrap();
+        assert_eq!(serde_json::from_str::<ConstraintSet>(&text).unwrap(), set);
+        assert!(text.contains("\"kind\":\"parallel\""), "{text}");
+    }
+
+    #[test]
+    fn broken_sets_say_where() {
+        let mut set = rect();
+        set.constraints[0].rule = ConstraintRule::Parallel {
+            a: segment(1),
+            b: point(2, SubPlace::Start),
+        };
+        assert_eq!(constraints_problem(&set, None).unwrap().0, "constraints/0");
+        let mut set = rect();
+        set.parameters[1].expression = "d1".into();
+        assert!(
+            constraints_problem(&set, None)
+                .unwrap()
+                .1
+                .contains("birbirini okuyor")
+        );
+        let mut set = rect();
+        set.constraints[1].reference = true;
+        assert_eq!(constraints_problem(&set, None).unwrap().0, "parameters/0");
+        let set = rect();
+        let some: HashSet<EntityId> = [uid(1)].into_iter().collect();
+        assert!(
+            constraints_problem(&set, Some(&some))
+                .unwrap()
+                .1
+                .contains("çizimde yok")
+        );
+    }
+}

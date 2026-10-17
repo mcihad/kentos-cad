@@ -222,6 +222,7 @@ pub async fn read(
     let block_ids: Vec<_> = blocks.iter().map(|b| b.id).collect();
     let arrays = kentos_contracts::arrays_kept(&arrays, &block_ids, &uids);
     let doc = DocumentSnapshotV2 {
+        constraints: Default::default(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name: name.clone(),

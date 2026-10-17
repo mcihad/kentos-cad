@@ -198,6 +198,7 @@ impl ProjectSync {
         let known_blocks = self.known_block_list();
         BaseSnapshot {
             snapshot: DocumentSnapshotV2 {
+                constraints: Default::default(),
                 format: DOCUMENT_FORMAT.to_owned(),
                 version: DOCUMENT_VERSION_2,
                 name: self.meta_base.name.clone(),

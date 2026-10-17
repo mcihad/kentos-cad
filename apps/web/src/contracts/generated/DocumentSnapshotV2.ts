@@ -2,6 +2,7 @@
 import type { AssocArray } from "./AssocArray";
 import type { BlockDefinition } from "./BlockDefinition";
 import type { Bounds } from "./Bounds";
+import type { ConstraintSet } from "./ConstraintSet";
 import type { Entity } from "./Entity";
 import type { EntityId } from "./EntityId";
 import type { LayerNode } from "./LayerNode";
@@ -57,6 +58,11 @@ sheets?: ProjectSheets,
  * The associative arrays (docs/adr/0300), in the order they were made; none when the drawing has none.
  */
 arrays?: Array<AssocArray>, 
+/**
+ * The geometric and dimensional constraints and the parameter table (docs/adr/0334); none when the drawing
+ * has none.
+ */
+constraints?: ConstraintSet, 
 /**
  * The requests the drawing executed (docs/adr/0253 §6), oldest first,
  * the last `REQUEST_LEDGER`; none when it executed none.

@@ -9,6 +9,7 @@ pub mod centerline;
 pub mod charts;
 pub mod cogo;
 pub mod compare;
+pub mod constraints;
 pub mod continuation;
 pub mod contour_elevations;
 pub mod convert;

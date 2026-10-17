@@ -350,6 +350,10 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-PARAM-01`, `05`, `06` kısıt modeli ve çözücü (ADR 0334, 17 Ekim): web'de gerekenler: `.kcad` şema 73'ün
+  `constraints`'i (`io/kcad.ts` opak değer olarak okur ve yazar, kuralları `constraints_problem`'in WASM'ı), belgenin kısıt
+  adımı (`Op::Constraints`'in karşılığı) ve çözücünün WASM bağlayıcısı (`ops::constraints::solve`); TS türleri üretildi
+  (`ConstraintSet` …).
 - [ ] `CAD-HATCH-12`, `13` taramanın PDF'te degradesi ve DXF'te ilişkili gidiş-dönüşü (ADR 0333, 17 Ekim): web'de gerekenler:
   paftanın web PDF'inde degradenin bantları (`gradient.rs`'in kuralı); web'in DXF içe aktarmasında yer tutucuların kimliklerle
   değiştirilmesi (`io/apply.ts`, `tie_placeholders`'ın karşılığı) ve dışa aktarmanın `uids`'i; belgenin tarama izleyicisinde

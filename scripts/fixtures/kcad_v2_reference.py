@@ -1954,6 +1954,8 @@ def document(d):
             "projectId": (lambda u: blob(uid_bytes(u)), False),
             "sheets": (sheets, False),
             "arrays": (assoc_arrays, False),
+            # Schema 73 (docs/adr/0334): the constraints and the parameter table, as their JSON.
+            "constraints": (opaque, False),
             "requests": (requests, False),
             "migratedFrom": (
                 lambda m: cmap(fields(m, {"format": (text, True), "version": (uint, True), "sourceSha256": (lambda h: blob(bytes.fromhex(h)), True)}, "migratedFrom")),
@@ -1963,10 +1965,11 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d)))
+    assert d.get("constraints", {None: None}), "boş kısıt kümesi yazılmaz"
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"], "sheets" in d, "requests" in d, "arrays" in d, "constraints" in d)))
 
 
-def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False):
+def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False, has_requests=False, has_arrays=False, has_constraints=False):
     """The oldest schema that holds the drawing: 53 with associative arrays (docs/adr/0300), 44 with the project's sheet book (docs/adr/0251), 43 with a dimension's references (docs/adr/0249 §4), 42 with the project's address data (docs/adr/0229 §2), 41 with a layer's composition (docs/adr/0226 §3, §4), 40 with an object's
     attachments or a layer's actions or card (docs/adr/0225), 39 with vertex measures (docs/adr/0224), 38 with a raster's
     dataset or its look's edges (docs/adr/0243 §6), 37 with the settings' variables (docs/adr/0214 §2.3), 36 with the
@@ -1998,6 +2001,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 73 (docs/adr/0334): constraints or parameters.
+    if has_constraints:
+        return 73
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
@@ -2485,7 +2491,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-73.kcad"] = container(root(cmap(parts), version=uint(73)))
+    files["schema-version-74.kcad"] = container(root(cmap(parts), version=uint(74)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3969,6 +3975,27 @@ def build():
     out["broken/parameters-unknown.kcad"] = dynamic_broken(lambda d: d["entities"][1]["parameters"].update({"Renk": 1.0}))
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
+    out["constraints.kcad"] = container(document(load("constraints.json")))
+    # The constraints are schema 73's (docs/adr/0334 §1): in schema 72 an unknown field; an empty set, a rule whose parts
+    # do not fit it, an object the drawing does not hold, parameters reading each other round, a reference constraint
+    # with an expression, an unknown field refused.
+    payload = document(load("constraints.json"))
+    assert payload.count(b"\x67version\x18\x49") == 1
+    out["broken/constraints-in-schema-72.kcad"] = container(payload.replace(b"\x67version\x18\x49", b"\x67version\x18\x48"))
+
+    def constraints_broken(change):
+        d = copy.deepcopy(load("constraints.json"))
+        change(d)
+        return container(document(d))
+
+    rule = lambda d, i: d["constraints"]["constraints"][i]["rule"]  # noqa: E731
+    param = lambda d, name: next(p for p in d["constraints"]["parameters"] if p["name"] == name)  # noqa: E731
+    out["broken/constraints-empty.kcad"] = constraints_broken(lambda d: d.update(constraints={"parameters": [], "constraints": []}))
+    out["broken/constraints-unfit.kcad"] = constraints_broken(lambda d: rule(d, 4).update(kind="concentric", b=rule(d, 4)["a"]))
+    out["broken/constraints-object-missing.kcad"] = constraints_broken(lambda d: rule(d, 0)["a"].update(uid="0192f5a6-1000-7000-8000-0000000001ff"))
+    out["broken/constraints-round.kcad"] = constraints_broken(lambda d: param(d, "genislik").update(expression="d1 + 1"))
+    out["broken/constraints-reference-written.kcad"] = constraints_broken(lambda d: param(d, "d3").update(expression="7"))
+    out["broken/constraints-unknown-field.kcad"] = constraints_broken(lambda d: d["constraints"]["constraints"][0].update(weight=1.0))
     out["forms.kcad"] = container(document(load("forms.json")))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))

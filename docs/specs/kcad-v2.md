@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `72`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-73.kcad`) |
+| `version` | tam sayı | `2`'den `73`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-74.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -333,6 +333,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 72**, şema 71'in kendisi ve formlardır (ADR 0401): ayarların `forms`'u (§6.4.13) ve katman alanının kararlı `id`'si (§6.5). Yazıcı `72`'yi **yalnız projede form varken ya da bir alanın kimliği varken** yazar. Başka her çizim şema 2–71'dir ve eskisiyle bayt bayt aynıdır. Şema 2–71 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/forms-in-schema-71.kcad`, `broken/field-id-in-schema-71.kcad`): eski okuyucu formu ya da formun alana bağını sessizce düşürmez, dosyayı açmaz. Şema 72 şema 71'i kapsar. Örnek dosya `forms.kcad`.
 
+**Şema 73**, şema 72'nin kendisi ve çizimin geometrik ve ölçüsel kısıtlarıdır (ADR 0334): belgenin `constraints`'i (§6.15). Yazıcı `73`'ü **yalnız çizimde kısıt ya da parametre varken** yazar. Başka her çizim şema 2–72'dir ve eskisiyle bayt bayt aynıdır. Şema 2–72 yükünde `constraints` bilinmeyen alandır (`unknown_field`, `broken/constraints-in-schema-72.kcad`). Örnek dosya `constraints.kcad`.
+
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 
 Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: formu ya da kimlikli alanı olan çizim 72, projenin tarama deseni, başlangıçlı ya da ölçekli taraması olan çizim 71, düzenli ya da kesirli yazısı olan çizim 65, ölçekli açıklaması olan çizim 64, stilden ayrılan alanı olan çizim 63, çizgi tipi, çizgi tipi ölçeği ya da desen anan katmanı, durumu ya da nesnesi olan çizim 56, dondurulmuş düğümü ya da dondurmayı saklayan katman durumu olan çizim 55, maskeli alanı olan çizim 54, ilişkili dizisi olan çizim 53, adlı görünümü olan proje 52, bir ölçüsünün başvurusu eğri üzerinde ya da blok içinde olan çizim 51, inç ya da ayak birimli ya da uzunluk biçimli çizim 50, geçerli UCS'i dünya olmayan ya da adlı UCS'i olan çizim 49, bir nesnesinin kendi görünüşü (çizgi tipi, ölçeği, saydamlık, çizim sırası, katmana göre parçalar) ya da yazdırılmayan katmanı olan çizim 48, NURBS eğrisi olan çizim 47, kapalı ya da genişlikli çoklu çizgisi olan çizim 46, istek yürütmüş çizim 45, pafta kitabı olan proje 44, başvurulu ölçüsü olan çizim 43, adres verisi olan proje 42, katman çizimi olan çizim 41, eki, eylemi ya da bilgi kartı olan çizim 40, köşe ölçüsü olan çizim 39, veri setli ya da ağ çizgili rasteri olan çizim 38, değişkeni olan proje 37, etiket motorunun bir alanı (etiket stilinin motor anahtarı, katmanın etiketlemesi ya da bir nesnenin etiket iğnesi) olan çizim 36, süzgeçli katmanı olan çizim 35, zaman ayarı, senaryosu ya da senaryo katmanı olan çizim 34, ağı olan proje 33, servis katmanı, servisten alınan katmanı ya da bağlantısı olan çizim 32, nokta bulutu ya da adresten okunan rasteri olan çizim 31, yazı yüksekliği, ölçü çizgisi, kılavuz ok boyu ya da yeni kılavuz oku olan çizim 30, rasteri olan çizim 29, ölçme ayarlarında önsel doğruluk olan çizim 28, topoloji ayarı olan çizim 27, alanı olan katmanı olan çizim 26, eğri boyunca yazısı olan çizim 25, resmi olan çizim 24, deseni çizgi aileli ya da degrade olan ya da nesnelere bağlı taraması olan çizim 23, tablosu olan çizim 22, projede yazı ya da ölçü stili olan ya da bir yazısının yüzü ya da bir ölçüsünün görünüşü olan çizim 21, kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
@@ -356,6 +358,7 @@ Tablolar anahtarları **dosyadaki sırasıyla** verir (§5.2). “Zorunlu” sü
 | `settings` | harita (§6.4) | evet | proje ayarları |
 | `projectId` | kimlik | | projenin kalıcı kimliği (§6.8) |
 | `activeLayer` | metin | evet | etkin katmanın kimliği |
+| `constraints` | harita (§6.15) | | yalnız şema 73: kısıtlar ve parametreler; boş küme yazılmaz (`bad_value`) |
 | `migratedFrom` | harita (§6.8) | | v1 dosyasından göçün kaynağı |
 
 Bilinmeyen bir anahtar `unknown_field`, eksik zorunlu anahtar `missing_field`'dır. Bu kural şemanın **bütün** haritaları için geçerlidir (opak kısımlar hariç, §6.7).
@@ -1206,7 +1209,38 @@ Yerleşim harita, `kind`'ı ve yalnız kendi alanlarıyla (başkasının alanı 
 - Sözleşmenin JSON'unda (`DocumentSnapshotV2.arrays`, `AssocArray`) kimlikler küçük harfli, tireli UUID metnidir; yolun kimliği de.
 - Öğeler sıradan yerleştirmelerdir (§6.6); dizi onların üstünde bir kayıttır. Yerlerin hesabı Dizi komutununkidir (`array_transforms`, ADR 0047).
 
-## 7. v1'den göç
+### 6.15 Kısıtlar
+
+Şema 73 (ADR 0334). `constraints` sözleşmenin `ConstraintSet`'inin JSON'udur ve opak değer olarak yazılır (§6.7): okuyucu
+onu bütün okur, sözleşmenin türüyle çözer ve yeniden JSON'a çevirdiğinde aynı değeri bulmalıdır; varsayılan değerinde bir
+alan yazılmışsa (`reference: false`, boş açıklama, `aligned` eksen) `bad_value`'dur (`broken/constraints-round.kcad`).
+Bilinmeyen alan ya da kural `unknown_field`'dır (`broken/constraints-unknown-field.kcad`). Boş küme yazılmaz
+(`broken/constraints-empty.kcad`).
+
+| Anahtar | Tür | Anlamı |
+|---|---|---|
+| `parameters` | dizi: parametre | adlı sayılar; yoksa yazılmaz |
+| `constraints` | dizi: kısıt | kısıtlar, eklendikleri sırayla; yoksa yazılmaz. Sıra anlamlıdır: çözücü fazla ve çelişen kısıtı sonra gelende bulur |
+
+Kısıt: `id` (UUID metni, boş değil, bir kez), `rule` (aşağıda) ve yalnız ölçen ölçüsel kısıtta `reference: true`. Kural
+`kind`'ıyla: `coincident`, `horizontal`, `vertical`, `parallel`, `perpendicular`, `tangent` (`inside`, `left`),
+`concentric`, `collinear`, `equal`, `symmetric` (`axis`), `fix`, `distance` (`axis`: `horizontal` ya da `vertical`,
+`left`, `parameter`), `angle` (`reverseA`, `reverseB`, `parameter`), `radius`, `diameter` (`parameter`). Kuralın
+parçaları `a`, `b` ve `axis`: `{ "uid": nesnenin kalıcı kimliği, "element": … }`; parça `{ "kind": "point", "place":
+yer }` (yer ilişkili ölçününki gibi, §6.6: `start`, `end`, `center`, `node`, `vertex`), `{ "kind": "segment", "part",
+"ring", "index" }` (çizgi ya da yolun düz kenarı) ya da `{ "kind": "circle" }`. Kuralın parçaları ona uymalıdır
+(`broken/constraints-unfit.kcad`: paralelin bir parçası nokta); nesne çizimde olmalıdır (`broken/constraints-object-missing.kcad`).
+
+Parametre: `name` (harfle başlar; harf, rakam ve `_`; en çok 64 harf; bir kez; işlev ve sabit adı olamaz), `kind`
+(`length`, `angle`, `number`), `expression` (metin), isteğe bağlı `min`, `max` (sonlu, `min ≤ max`) ve `description` (en çok
+1000 harf). Ölçüsel kısıt bir parametreyi adıyla anar; bir parametreyi tek kısıt anar ve türü kurala uyar (açı `angle`,
+öbürleri `length`). Sürücü kısıtın parametresinin ifadesi yazılır; başvuru kısıtınınki boştur, değeri ölçülür
+(`broken/constraints-reference-written.kcad`). Kısıtsız parametrenin ifadesi yazılır. İfade sayılar (birimli: `m`, `cm`,
+`mm`, `km`, `ft`, `in`, `deg`, `grad`, `rad`), adlar, `+ - * / ^`, parantez, `sin cos tan asin acos atan sqrt abs round
+floor ceil min max` ve `pi`'dir (`kentos_contracts::constraint_expr`); okuduğu her ad bir parametredir ve parametreler
+birbirini döngüyle okumaz.
+
+
 
 - v1 dosyası (JSON, `kentos.document` sürüm 1) açılınca nesnelerin kalıcı kimlikleri içerikten türetilir (ADR 0014): aynı dosya her platformda aynı kimlikleri verir.
 - Çizim v2 olarak kaydedilince kimlikler `uid` olarak, projenin türetilen kimliği `projectId` olarak, kaynak `migratedFrom` olarak yazılır. Web ve masaüstü aynı v1 dosyasını **aynı v2 baytlarına** çevirir (`fixtures/kcad/v2/migrated.kcad`).

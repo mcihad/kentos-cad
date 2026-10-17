@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod arrays;
+mod constraints;
 mod dimension_ties;
 mod exchange;
 mod external;

@@ -167,6 +167,8 @@ pub struct StepReport {
     pub blocks: IdChanges<BlockId>,
     /// The associative arrays it added, changed or removed (docs/adr/0300).
     pub arrays: IdChanges<kentos_contracts::ArrayId>,
+    /// Whether it changed the constraints or the parameter table (docs/adr/0334).
+    pub constraints: bool,
     /// The block definitions it added, changed or removed: their first
     /// state before the step and their last after.
     pub block_states: Vec<BlockChange>,
@@ -528,6 +530,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
             Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
             Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
+            Op::Constraints { .. } => report.constraints = true,
             // The unit and the value lists are settings (docs/adr/0256 §1, 0430).
             Op::Units { .. } | Op::Domains { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {

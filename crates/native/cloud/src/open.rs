@@ -104,6 +104,7 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
     let blocks: Vec<_> = info.blocks.iter().map(|r| r.block.id).collect();
     let arrays = kentos_contracts::arrays_kept(&info.arrays, &blocks, &uids);
     DocumentSnapshotV2 {
+        constraints: Default::default(),
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name: info.name.clone(),

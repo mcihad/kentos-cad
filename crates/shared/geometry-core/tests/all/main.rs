@@ -8,6 +8,7 @@ mod block_dynamic;
 mod block_scales;
 mod centerline;
 mod charts;
+mod constraints;
 mod crs;
 mod crs_custom;
 mod crs_ground;

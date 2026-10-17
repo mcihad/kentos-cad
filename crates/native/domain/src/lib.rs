@@ -27,6 +27,7 @@
 
 mod annotative;
 pub mod arrays;
+pub mod constraints;
 pub mod audit;
 mod blocks;
 mod calls;
