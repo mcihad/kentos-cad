@@ -2,6 +2,7 @@
 import type { AssocArray } from "./AssocArray";
 import type { BlockRecord } from "./BlockRecord";
 import type { Bounds } from "./Bounds";
+import type { ConstraintSet } from "./ConstraintSet";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectAccessView } from "./ProjectAccessView";
 import type { ProjectSettings } from "./ProjectSettings";
@@ -32,7 +33,12 @@ sheets?: ProjectSheets,
 /**
  * A database project's associative arrays (docs/adr/0300); an older server's answer without them has none.
  */
-arrays?: Array<AssocArray>, metaVersion: string, dataRevision: string, featureCount: string, 
+arrays?: Array<AssocArray>, 
+/**
+ * A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
+ * none.
+ */
+constraints?: ConstraintSet, metaVersion: string, dataRevision: string, featureCount: string, 
 /**
  * Event cursor at the moment this was read: subscribe after it to miss nothing.
  */
