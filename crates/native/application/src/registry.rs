@@ -19,8 +19,11 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, DomainsEdit, ImportBlock};
-use crate::{block_params, blocks_query, blocks_replace, domains_edit, file_import_block};
+use kentos_contracts::{BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, DomainsEdit, FormsExport, FormsImport, ImportBlock};
+use crate::{
+    block_params, blocks_query, blocks_replace, domains_edit, file_import_block, forms_export,
+    forms_import,
+};
 use serde_json::Value;
 
 use crate::standards::{apply as standards_apply, check as standards_check};
@@ -127,6 +130,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_FORMS_COMPARE => $then!(forms_compare, FormsCompare),
             kentos_contracts::CAD_FORMS_TRANSITION => $then!(forms_transition, FormsTransition),
             kentos_contracts::CAD_DOMAINS_EDIT => $then!(domains_edit, DomainsEdit),
+            kentos_contracts::CAD_FORMS_EXPORT => $then!(forms_export, FormsExport),
+            kentos_contracts::CAD_FORMS_IMPORT => $then!(forms_import, FormsImport),
             kentos_contracts::CAD_FORMS_RECOMPUTE => $then!(forms_recompute, FormsRecompute),
             kentos_contracts::CAD_RECORDS_CREATE => $then!(records, RecordsCreate),
             kentos_contracts::CAD_RECORDS_DUPLICATE => $then!(records_duplicate, RecordsDuplicate),

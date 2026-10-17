@@ -58,6 +58,8 @@ pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const RECOMPUTE: &str = "Hesapları yenile";
+pub(super) const EXPORT: &str = "Dışa aktar…";
+pub(super) const IMPORT: &str = "İçe aktar…";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
 pub(super) const CHANGES: &str = "Değişiklikler";
@@ -243,6 +245,11 @@ pub enum Event {
     StepReason(usize, Option<String>),
     /// Hesapları yenile on the chosen form (docs/adr/0421).
     Recompute,
+    /// Dışa aktar… and İçe aktar… (docs/adr/0435): the form as a package file.
+    Export,
+    Exported(Option<std::path::PathBuf>),
+    Import,
+    Imported(Option<(String, String)>),
     /// Kayıtları denetle on the chosen form (docs/adr/0406 §1).
     Audit,
     RemoveItem,
@@ -672,6 +679,16 @@ impl App {
         match event {
             Event::Undo => return self.forms_history(true),
             Event::Redo => return self.forms_history(false),
+            Event::Export => return self.export_form(),
+            Event::Exported(path) => {
+                self.form_exported(path);
+                return Task::none();
+            }
+            Event::Import => return self.import_form(),
+            Event::Imported(read) => {
+                self.form_imported(read);
+                return Task::none();
+            }
             _ => {}
         }
         let typing = match &event {
@@ -1124,7 +1141,12 @@ impl App {
                     w.folded.insert(id);
                 }
             }
-            Event::Undo | Event::Redo => {}
+            Event::Undo
+            | Event::Redo
+            | Event::Export
+            | Event::Exported(_)
+            | Event::Import
+            | Event::Imported(_) => {}
             Event::Audit => {
                 let form = w.chosen.clone();
                 if w.dirty {

@@ -1,0 +1,2662 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.export",
+ "commandVersion": 1,
+ "title": "Formu dışa aktar",
+ "note": "ADR 0435: formun paketi. Written by scripts/fixtures/forms_package_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Form paketi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "forms": [
+    {
+     "id": "denetim",
+     "name": "Bina denetimi",
+     "layer": "bina",
+     "draft": {
+      "revision": 3,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "visibleWhen": "Durum = 'inceleme'"
+       },
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme"
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Kat: {Kat}"
+       },
+       {
+        "type": "field",
+        "id": "not",
+        "field": "Not",
+        "requiredWhen": "Kat > 5"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "1fe9637f147680fecb4fb511b714f460",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         }
+        ]
+       }
+      },
+      {
+       "version": 2,
+       "digest": "db7c003c315ab847b66ae47ba6deafe0",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "taslak",
+     "name": "Taslak form",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "visibleWhen": "Kat > 2"
+       }
+      ]
+     }
+    },
+    {
+     "id": "okur",
+     "name": "Okuyan form",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "visibleWhen": "Kat > 2"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "a5f85fd72265e9fd30a1598e0e57051c",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "akis",
+     "name": "Onay akışı",
+     "layer": "bina",
+     "draft": {
+      "revision": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "inceleme",
+       "steps": [
+        {
+         "label": "Onayla",
+         "from": [
+          "inceleme"
+         ],
+         "to": "iyi",
+         "valid": true
+        },
+        {
+         "label": "Geri al",
+         "from": [
+          "iyi"
+         ],
+         "to": "inceleme",
+         "reason": "Gerekçe"
+        }
+       ]
+      }
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "9a105e4c64536b0ef8605255803ef043",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    },
+    {
+     "id": "notlu",
+     "name": "Notlu form",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "note",
+        "id": "yalniz",
+        "text": "Bu formda alan yok."
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "3db63d6a9b0fcae4e4faeb8b4520a271",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "note",
+          "id": "yalniz",
+          "text": "Bu formda alan yok."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "domains": [
+    {
+     "id": "malzeme",
+     "name": "Yapı malzemesi",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ah",
+       "label": "Ahşap"
+      },
+      {
+       "code": "bt",
+       "label": "Betonarme"
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi"
+       },
+       {
+        "code": "inceleme",
+        "label": "Ek inceleme gerekli"
+       }
+      ]
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1"
+     },
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       }
+      ],
+      "domain": "malzeme"
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Gerekçe",
+      "kind": "text"
+     },
+     {
+      "name": "Renk",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durumu",
+      "kind": "text",
+      "values": [
+       {
+        "code": "iyi",
+        "label": "İyi"
+       },
+       {
+        "code": "inceleme",
+        "label": "Ek inceleme gerekli"
+       }
+      ]
+     },
+     {
+      "name": "KatSayisi",
+      "kind": "integer"
+     },
+     {
+      "name": "Malzemesi",
+      "kind": "text"
+     },
+     {
+      "name": "Açıklama",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "bos",
+    "name": "Boş katman",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kat",
+    "name": "Kat katmanı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Durum",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "İç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "son yayın: bağladığı ve okuduğu alanlar katmanın sırasıyla, değer listesiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Bina denetimi",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        },
+        {
+         "name": "Malzeme",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ],
+         "domain": "malzeme"
+        },
+        {
+         "name": "Not",
+         "kind": "text"
+        }
+       ],
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taslak istenince taslağın gövdesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Bina denetimi",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        },
+        {
+         "name": "Malzeme",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ],
+         "domain": "malzeme"
+        },
+        {
+         "name": "Not",
+         "kind": "text"
+        }
+       ],
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eski yayın değil son yayın",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Form paketi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "denetim",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "1fe9637f147680fecb4fb511b714f460",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum"
+           }
+          ]
+         }
+        },
+        {
+         "version": 2,
+         "digest": "db7c003c315ab847b66ae47ba6deafe0",
+         "body": {
+          "revision": 3,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi",
+            "visibleWhen": "Durum = 'inceleme'"
+           },
+           {
+            "type": "field",
+            "id": "malzeme",
+            "field": "Malzeme"
+           },
+           {
+            "type": "note",
+            "id": "bilgi",
+            "text": "Kat: {Kat}"
+           },
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not",
+            "requiredWhen": "Kat > 5"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "id": "taslak",
+       "name": "Taslak form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       }
+      },
+      {
+       "id": "okur",
+       "name": "Okuyan form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "a5f85fd72265e9fd30a1598e0e57051c",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "visibleWhen": "Kat > 2"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "id": "akis",
+       "name": "Onay akışı",
+       "layer": "bina",
+       "draft": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "9a105e4c64536b0ef8605255803ef043",
+         "body": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum"
+           },
+           {
+            "type": "field",
+            "id": "gerekce",
+            "field": "Gerekçe"
+           }
+          ],
+          "workflow": {
+           "field": "Durum",
+           "initial": "inceleme",
+           "steps": [
+            {
+             "label": "Onayla",
+             "from": [
+              "inceleme"
+             ],
+             "to": "iyi",
+             "valid": true
+            },
+            {
+             "label": "Geri al",
+             "from": [
+              "iyi"
+             ],
+             "to": "inceleme",
+             "reason": "Gerekçe"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      {
+       "id": "notlu",
+       "name": "Notlu form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "note",
+          "id": "yalniz",
+          "text": "Bu formda alan yok."
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "3db63d6a9b0fcae4e4faeb8b4520a271",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "note",
+            "id": "yalniz",
+            "text": "Bu formda alan yok."
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ],
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ]
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1"
+       },
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       },
+       {
+        "name": "Gerekçe",
+        "kind": "text"
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durumu",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ]
+       },
+       {
+        "name": "KatSayisi",
+        "kind": "integer"
+       },
+       {
+        "name": "Malzemesi",
+        "kind": "text"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "bos",
+      "name": "Boş katman",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kat",
+      "name": "Kat katmanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Bina denetimi",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        },
+        {
+         "name": "Malzeme",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ],
+         "domain": "malzeme"
+        },
+        {
+         "name": "Not",
+         "kind": "text"
+        }
+       ],
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kuralında okunan bağlanmamış alan da pakette",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "okur"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Okuyan form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iş akışının durum ve gerekçe alanları pakette",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "akis"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Onay akışı",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "name": "Gerekçe",
+         "kind": "text"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iş akışlı formun taslağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "akis",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Onay akışı",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "name": "Gerekçe",
+         "kind": "text"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı olmayan form: boş alan listesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Notlu form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "note",
+          "id": "yalniz",
+          "text": "Bu formda alan yok."
+         }
+        ]
+       },
+       "fields": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış formun taslağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Taslak form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınlanmamış form taslaksız reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Taslak form” formu hiç yayınlanmadı; taslağı draft ile dışa aktarın ya da önce yayınlayın.",
+       "path": "draft"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form taslakla da",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok",
+      "draft": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer listesi olmayan projede liste taşınmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Form paketi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "forms": [
+      {
+       "id": "denetim",
+       "name": "Bina denetimi",
+       "layer": "bina",
+       "draft": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "1fe9637f147680fecb4fb511b714f460",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum"
+           }
+          ]
+         }
+        },
+        {
+         "version": 2,
+         "digest": "db7c003c315ab847b66ae47ba6deafe0",
+         "body": {
+          "revision": 3,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "required": true
+           },
+           {
+            "type": "field",
+            "id": "kat",
+            "field": "kat-sayisi",
+            "visibleWhen": "Durum = 'inceleme'"
+           },
+           {
+            "type": "field",
+            "id": "malzeme",
+            "field": "Malzeme"
+           },
+           {
+            "type": "note",
+            "id": "bilgi",
+            "text": "Kat: {Kat}"
+           },
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not",
+            "requiredWhen": "Kat > 5"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "id": "taslak",
+       "name": "Taslak form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       }
+      },
+      {
+       "id": "okur",
+       "name": "Okuyan form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "a5f85fd72265e9fd30a1598e0e57051c",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum",
+            "visibleWhen": "Kat > 2"
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "id": "akis",
+       "name": "Onay akışı",
+       "layer": "bina",
+       "draft": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "9a105e4c64536b0ef8605255803ef043",
+         "body": {
+          "revision": 2,
+          "items": [
+           {
+            "type": "field",
+            "id": "durum",
+            "field": "Durum"
+           },
+           {
+            "type": "field",
+            "id": "gerekce",
+            "field": "Gerekçe"
+           }
+          ],
+          "workflow": {
+           "field": "Durum",
+           "initial": "inceleme",
+           "steps": [
+            {
+             "label": "Onayla",
+             "from": [
+              "inceleme"
+             ],
+             "to": "iyi",
+             "valid": true
+            },
+            {
+             "label": "Geri al",
+             "from": [
+              "iyi"
+             ],
+             "to": "inceleme",
+             "reason": "Gerekçe"
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      {
+       "id": "notlu",
+       "name": "Notlu form",
+       "layer": "bina",
+       "draft": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "note",
+          "id": "yalniz",
+          "text": "Bu formda alan yok."
+         }
+        ]
+       },
+       "releases": [
+        {
+         "version": 1,
+         "digest": "3db63d6a9b0fcae4e4faeb8b4520a271",
+         "body": {
+          "revision": 1,
+          "items": [
+           {
+            "type": "note",
+            "id": "yalniz",
+            "text": "Bu formda alan yok."
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ],
+     "domains": []
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ]
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1"
+       },
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         }
+        ]
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       },
+       {
+        "name": "Gerekçe",
+        "kind": "text"
+       },
+       {
+        "name": "Renk",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durumu",
+        "kind": "text",
+        "values": [
+         {
+          "code": "iyi",
+          "label": "İyi"
+         },
+         {
+          "code": "inceleme",
+          "label": "Ek inceleme gerekli"
+         }
+        ]
+       },
+       {
+        "name": "KatSayisi",
+        "kind": "integer"
+       },
+       {
+        "name": "Malzemesi",
+        "kind": "text"
+       },
+       {
+        "name": "Açıklama",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "bos",
+      "name": "Boş katman",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kat",
+      "name": "Kat katmanı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Durum",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Bina denetimi",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        },
+        {
+         "name": "Malzeme",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        },
+        {
+         "name": "Not",
+         "kind": "text"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı paketi verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Bina denetimi",
+       "body": {
+        "revision": 3,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi",
+          "visibleWhen": "Durum = 'inceleme'"
+         },
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "note",
+          "id": "bilgi",
+          "text": "Kat: {Kat}"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not",
+          "requiredWhen": "Kat > 5"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        },
+        {
+         "name": "Malzeme",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ],
+         "domain": "malzeme"
+        },
+        {
+         "name": "Not",
+         "kind": "text"
+        }
+       ],
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan taslakla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "okur",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Okuyan form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama yayınsız formu reddeder",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "taslak"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Taslak form” formu hiç yayınlanmadı; taslağı draft ile dışa aktarın ya da önce yayınlayın.",
+       "path": "draft"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlu formun taslağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Notlu form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "note",
+          "id": "yalniz",
+          "text": "Bu formda alan yok."
+         }
+        ]
+       },
+       "fields": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okuyan formun planı reddi yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "okur"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Okuyan form",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum",
+          "visibleWhen": "Kat > 2"
+         }
+        ]
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "id": "kat-sayisi",
+         "name": "Kat",
+         "kind": "integer",
+         "min": "1"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "akışın planı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "akis"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.form-package",
+       "version": 1,
+       "name": "Onay akışı",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "inceleme",
+         "steps": [
+          {
+           "label": "Onayla",
+           "from": [
+            "inceleme"
+           ],
+           "to": "iyi",
+           "valid": true
+          },
+          {
+           "label": "Geri al",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme",
+           "reason": "Gerekçe"
+          }
+         ]
+        }
+       },
+       "fields": [
+        {
+         "name": "Durum",
+         "kind": "text",
+         "values": [
+          {
+           "code": "iyi",
+           "label": "İyi"
+          },
+          {
+           "code": "inceleme",
+           "label": "Ek inceleme gerekli"
+          }
+         ]
+        },
+        {
+         "name": "Gerekçe",
+         "kind": "text"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan formun planı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

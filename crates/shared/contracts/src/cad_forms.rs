@@ -736,3 +736,126 @@ pub struct FormsTransitioned {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// Exports a form as a package (docs/adr/0435).
+pub const CAD_FORMS_EXPORT: &str = "cad.forms.export";
+pub const CAD_FORMS_EXPORT_VERSION: u32 = 1;
+/// Imports a form package onto a layer (docs/adr/0435).
+pub const CAD_FORMS_IMPORT: &str = "cad.forms.import";
+pub const CAD_FORMS_IMPORT_VERSION: u32 = 1;
+
+/// A form package's format and version.
+pub const FORM_PACKAGE_FORMAT: &str = "kentos.form-package";
+pub const FORM_PACKAGE_VERSION: u32 = 1;
+
+/// A form package (docs/adr/0435): a form's body with the fields it reads and the value lists those
+/// fields link, to take to another layer or project. No records, no connections, no rights.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormPackage {
+    /// `kentos.form-package`.
+    pub format: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
+    /// The form's name.
+    pub name: String,
+    pub body: FormBody,
+    /// The fields the body binds or reads, as their layer defines them, in its order.
+    pub fields: Vec<crate::LayerField>,
+    /// The project's value lists those fields link (docs/adr/0430).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::FieldDomain>>", optional))]
+    pub domains: Vec<crate::FieldDomain>,
+}
+
+/// Input of `cad.forms.export` v1: the form's latest release (or its draft) as a package; writes
+/// nothing. Refusals: `unknown_form`, `form_unpublished`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsExport {
+    pub form: String,
+    /// The draft instead of the latest release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+}
+
+/// A package field bound to a project's field.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldBinding {
+    /// The package field's key.
+    pub from: String,
+    /// The layer field's key.
+    pub to: String,
+}
+
+/// Input of `cad.forms.import` v1: a package made a new form (its draft) of `layer`; its fields bound to
+/// the layer's (`map`, else the same key, else the same name), the missing ones added when `addFields`.
+///
+/// Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`);
+/// `invalid_package`; `layer_not_found`, `not_a_layer`; `invalid_form_id`, `invalid_form_name`,
+/// `form_exists`, `too_many_forms`; `invalid_map`, `field_not_found`, `field_kind_mismatch`,
+/// `form_fields_missing`. Warnings: `domain_kept`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsImport {
+    pub package: FormPackage,
+    /// The layer's id.
+    pub layer: String,
+    /// The new form's id; none: one made of its name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub id: Option<String>,
+    /// The new form's name; none: the package's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// A package field's key → the layer field's key it binds to.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub map: BTreeMap<String, String>,
+    /// A package field the layer lacks is added to it (with its value list); else refused.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub add_fields: bool,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output (and plan) of `cad.forms.import` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsImported {
+    /// The new form's id.
+    pub id: String,
+    /// Each package field and the layer field it binds to, in the package's order.
+    pub bound: Vec<FieldBinding>,
+    /// The fields added to the layer, by their keys.
+    pub added: Vec<String>,
+    /// The value lists added to the project, by their ids.
+    pub domains: Vec<String>,
+    /// The new draft's preflight errors (it is a draft; publishing needs none).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub errors: u32,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

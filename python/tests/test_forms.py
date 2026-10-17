@@ -410,6 +410,25 @@ class FormsTests(unittest.TestCase):
         self.assertEqual((moved.recoded, len(moved.fields)), (1, 2), "both linked fields follow")
         self.assertEqual(doc.entity(uid).entity.attrs["Durum"], "kotu")
 
+    def test_a_form_goes_to_another_layer_as_a_package(self) -> None:
+        """docs/adr/0435: exported with its fields, imported onto a layer with other names through a map."""
+        doc, layer = drawing()
+        body = cad.FormBody(revision=1, items=[
+            cad.FieldFormItem(id="durum", field="Durum"),
+            cad.FieldFormItem(id="kat", field="Kat", visible_when="Durum = 'inceleme'")])
+        cad.forms.edit(doc, edit=cad.CreateFormsOp(name="Denetim", layer=layer, id="denetim", body=body))
+        package = cad.forms.export(doc, form="denetim", draft=True)
+        self.assertEqual([f.name for f in package.fields], ["Durum", "Kat"])
+        cad.layers.edit(doc, operation="add", name="Yapı")
+        other = next(n.id for n in doc.layers() if n.name == "Yapı")
+        cad.layers.edit(doc, operation="fields", layer=other, fields=[
+            cad.LayerField(name="Hal", kind="text", values=[cad.FieldChoice(code="iyi", label="İyi"),
+                                                            cad.FieldChoice(code="inceleme", label="İnceleme")]),
+            cad.LayerField(name="KatSayisi", kind="integer")])
+        done = cad.forms.import_(doc, package=package, layer=other, map={"Durum": "Hal", "Kat": "KatSayisi"})
+        form = next(f for f in doc.settings.forms if f.id == done.id)
+        self.assertEqual(form.draft.items[1].visible_when, "Hal = 'inceleme'")
+
     def test_a_record_moves_through_its_workflow(self) -> None:
         """docs/adr/0428: drafted, sent, approved (locked), returned with a reason."""
         doc, layer = drawing()

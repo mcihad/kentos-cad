@@ -1051,6 +1051,21 @@ fn located_parcel(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// The inspection form taken as a package onto the parcels' layer (docs/adr/0435): its fields added there,
+/// the new form chosen in Formlar.
+fn imported_form(app: &mut App) {
+    workflow_buildings(app);
+    run(app, "data.forms");
+    let text = app.form_package_text().expect("a package");
+    if let Some(doc) = app.document.as_mut() {
+        doc.model.set_active_layer("parsel");
+    }
+    if let Some(w) = app.forms_window.as_mut() {
+        w.chosen = None;
+    }
+    app.form_imported(Some(("bina-denetimi.kform".into(), text)));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1860,6 +1875,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-gecmis", workflow_log),
         ("form-taslak", workflow_draft),
         ("form-konum", located_parcel),
+        ("form-paket", imported_form),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),
@@ -2211,6 +2227,29 @@ mod tests {
                 .get("Durum")
                 .map(String::as_str),
             Some("taslak")
+        );
+    }
+
+    #[test]
+    fn a_form_package_goes_to_another_layer_with_its_fields() {
+        let mut app = crate::files_testing::app_with_drawing();
+        imported_form(&mut app);
+        let doc = &app.document.as_ref().unwrap().model;
+        let forms = &doc.settings().forms;
+        assert_eq!(forms.len(), 2, "the inspection form and its copy");
+        let copy = &forms[1];
+        assert_eq!(copy.layer, "parsel");
+        let fields = &doc.layers().get("parsel").unwrap().fields;
+        for name in ["Kod", "Durum", "Kat", "Gerekçe", "Geçmiş"] {
+            assert!(fields.iter().any(|f| f.name == name), "{name} added");
+        }
+        assert_eq!(
+            copy.draft.workflow.as_ref().map(|w| w.field.as_str()),
+            Some("Durum")
+        );
+        assert_eq!(
+            app.forms_window.as_ref().and_then(|w| w.chosen.clone()),
+            Some(copy.id.clone())
         );
     }
 

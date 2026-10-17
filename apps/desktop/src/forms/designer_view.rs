@@ -16,9 +16,9 @@ use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
     ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL,
-    CHANGES, CREATE, DOWN, ENFORCE, Event, FLOW, NAME, NEW_FORM, PREVIEW, PROPERTIES, PUBLISH,
-    RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound,
-    find, msg,
+    CHANGES, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, NAME, NEW_FORM, PREVIEW,
+    PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO,
+    UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -1134,6 +1134,8 @@ impl App {
             words::ghost(REMOVE_FORM, editable.then(|| msg(Event::RemoveForm))),
             words::ghost(AUDIT, Some(msg(Event::Audit))),
             words::ghost(RECOMPUTE, editable.then(|| msg(Event::Recompute))),
+            words::ghost(EXPORT, editable.then(|| msg(Event::Export))),
+            words::ghost(IMPORT, Some(msg(Event::Import))),
             space::horizontal().width(Fill),
             words::secondary(CANCEL, Some(msg(Event::Cancel))),
             words::secondary(

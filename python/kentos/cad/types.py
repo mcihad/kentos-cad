@@ -10733,6 +10733,30 @@ class FeatureFeed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldBinding(_Model):
+    """A package field bound to a project's field.
+    Attributes:
+        from_: The package field's key.
+        to: The layer field's key.
+    """
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldBinding:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldChoice(_Model):
     """One value of a field's value list: the code written to the attribute
     and the label shown for it.
@@ -11240,6 +11264,47 @@ class FormLookup(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormPackage(_Model):
+    """A form package (docs/adr/0435): a form's body with the fields it reads and the value lists those
+    fields link, to take to another layer or project. No records, no connections, no rights.
+    Attributes:
+        format: `kentos.form-package`.
+        version: Unit: version.
+        name: The form's name.
+        fields: The fields the body binds or reads, as their layer defines them, in its order.
+        domains: The project's value lists those fields link (docs/adr/0430).
+    """
+    format: str
+    version: int
+    name: str
+    body: FormBody
+    fields: list[LayerField]
+    domains: list[FieldDomain] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["name"] = self.name
+        out["body"] = self.body.to_json()
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.domains is not UNSET:
+            out["domains"] = [e0.to_json() for e0 in self.domains]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormPackage:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            name=data["name"],
+            body=FormBody.from_json(data["body"]),
+            fields=[LayerField.from_json(e0) for e0 in data["fields"]],
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormRelease(_Model):
     """A frozen copy of a form's body: what data entry and the write profile use.
     Attributes:
@@ -11677,6 +11742,31 @@ class FormsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormsExport(_Model):
+    """Input of `cad.forms.export` v1: the form's latest release (or its draft) as a package; writes
+    nothing. Refusals: `unknown_form`, `form_unpublished`.
+    Attributes:
+        draft: The draft instead of the latest release.
+    """
+    form: str
+    draft: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsExport:
+        return cls(
+            form=data["form"],
+            draft=data.get("draft", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormsFill(_Model):
     """Input of `cad.forms.fill` v1 (docs/adr/0403 §5).
 
@@ -11756,6 +11846,99 @@ class FormsFilled(_Model):
             changed=list(data["changed"]),
             revision=data["revision"],
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsImport(_Model):
+    """Input of `cad.forms.import` v1: a package made a new form (its draft) of `layer`; its fields bound to
+    the layer's (`map`, else the same key, else the same name), the missing ones added when `addFields`.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`);
+    `invalid_package`; `layer_not_found`, `not_a_layer`; `invalid_form_id`, `invalid_form_name`,
+    `form_exists`, `too_many_forms`; `invalid_map`, `field_not_found`, `field_kind_mismatch`,
+    `form_fields_missing`. Warnings: `domain_kept`.
+    Attributes:
+        layer: The layer's id.
+        add_fields: A package field the layer lacks is added to it (with its value list); else refused.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        id: The new form's id; none: one made of its name.
+        map: A package field's key → the layer field's key it binds to.
+        name: The new form's name; none: the package's.
+    """
+    package: FormPackage
+    layer: str
+    add_fields: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    map: dict[str, str] | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["package"] = self.package.to_json()
+        out["layer"] = self.layer
+        if self.add_fields is not UNSET:
+            out["addFields"] = self.add_fields
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.map is not UNSET:
+            out["map"] = dict(self.map)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsImport:
+        return cls(
+            package=FormPackage.from_json(data["package"]),
+            layer=data["layer"],
+            add_fields=data.get("addFields", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            id=data.get("id", UNSET),
+            map=dict(data["map"]) if "map" in data else UNSET,
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsImported(_Model):
+    """Output (and plan) of `cad.forms.import` v1.
+    Attributes:
+        id: The new form's id.
+        bound: Each package field and the layer field it binds to, in the package's order.
+        added: The fields added to the layer, by their keys.
+        domains: The value lists added to the project, by their ids.
+        errors: The new draft's preflight errors (it is a draft; publishing needs none). Unit: count.
+    """
+    id: str
+    bound: list[FieldBinding]
+    added: list[str]
+    domains: list[str]
+    errors: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["bound"] = [e0.to_json() for e0 in self.bound]
+        out["added"] = list(self.added)
+        out["domains"] = list(self.domains)
+        out["errors"] = self.errors
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsImported:
+        return cls(
+            id=data["id"],
+            bound=[FieldBinding.from_json(e0) for e0 in data["bound"]],
+            added=list(data["added"]),
+            domains=list(data["domains"]),
+            errors=data["errors"],
+            revision=data["revision"],
         )
 
 
@@ -30513,6 +30696,7 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",
+    "FieldBinding",
     "FieldChoice",
     "FieldDomain",
     "FieldFormItem",
@@ -30542,6 +30726,7 @@ __all__ = [
     "FormItem",
     "FormItemState",
     "FormLookup",
+    "FormPackage",
     "FormRelease",
     "FormSeverity",
     "FormSeverityName",
@@ -30558,8 +30743,11 @@ __all__ = [
     "FormsCompared",
     "FormsEdit",
     "FormsEdited",
+    "FormsExport",
     "FormsFill",
     "FormsFilled",
+    "FormsImport",
+    "FormsImported",
     "FormsOp",
     "FormsRecompute",
     "FormsRecomputed",

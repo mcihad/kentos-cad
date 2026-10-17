@@ -4284,6 +4284,57 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A form package out and in (docs/adr/0435), held together by fixtures/commands/v1/cad.forms.export.json and
+        // cad.forms.import.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_EXPORT.into(),
+            version: crate::CAD_FORMS_EXPORT_VERSION,
+            title: "Formu dışa aktar".into(),
+            summary: "Formu paket olarak verir, hiçbir şey yazmaz: son yayının (draft ile taslağın) gövdesi, formun bağladığı ya da \
+                      kurallarında okuduğu alanlar katmandaki tanımlarıyla ve bu alanların bağlı olduğu değer listeleri. Kayıt, bağlantı \
+                      ya da yetki taşımaz; cad.forms.import başka bir katmana ya da projeye alır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsExport>(),
+            output: schema::<crate::FormPackage>(),
+            plan: Some(schema::<crate::FormPackage>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina denetimi formunu paket olarak al".into(),
+                input: json!({ "form": "bina-denetimi" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_FORMS_IMPORT.into(),
+            version: crate::CAD_FORMS_IMPORT_VERSION,
+            title: "Formu içe aktar".into(),
+            summary: "Bir form paketini katmanın yeni formu (taslağı) yapar: paketin alanları katmanın alanlarına bağlanır (map, yoksa \
+                      aynı anahtar, yoksa aynı ad; tür aynı olmalı), formun kuralları ve iş akışı yeni adlarla yazılır; katmanda olmayan \
+                      alanlar addFields ile değer listeleriyle eklenir, yoksa reddedilir. Alanlar ve listeler tek geri alma adımı “Formu \
+                      içe aktar”; form projenin ayarıdır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsImport>(),
+            output: schema::<crate::FormsImported>(),
+            plan: Some(schema::<crate::FormsImported>()),
+            capabilities: None,
+            examples: vec![],
+        },
         // A record's workflow step (docs/adr/0428), held together by fixtures/commands/v1/cad.forms.transition.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_TRANSITION.into(),
@@ -5554,6 +5605,12 @@ mod tests {
                     crate::CAD_DOMAINS_EDIT => {
                         serde_json::from_value::<crate::DomainsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_EXPORT => {
+                        serde_json::from_value::<crate::FormsExport>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FORMS_IMPORT => {
+                        serde_json::from_value::<crate::FormsImport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_TRANSITION => {
                         serde_json::from_value::<crate::FormsTransition>(e.input.clone()).map(|_| ())
                     }
@@ -5895,6 +5952,14 @@ mod tests {
                         }
                         crate::CAD_DOMAINS_EDIT => {
                             serde_json::from_value::<crate::DomainsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_EXPORT => {
+                            serde_json::from_value::<crate::FormPackage>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_IMPORT => {
+                            serde_json::from_value::<crate::FormsImported>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_TRANSITION => {

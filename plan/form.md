@@ -292,14 +292,14 @@ Yeni kaydın identity UUID'si host tarafından oluşturulur; kullanıcı input'u
 
 ### 4.6 Standart uygulama işleri
 
-- [ ] **FORM-STD-01:** FormBundle/FormDefinition ve ilgili bütün resource şemaları için sürümlü sözleşme ve JSON Schema oluştur. — *17 Ekim, kısmen: formun sürümlü sözleşmesi ve JSON Schema'sı (`kentos.form` v1, ADR 0434); alanlar, değer listeleri ve ilişkilerle paket açık.*
+- [ ] **FORM-STD-01:** FormBundle/FormDefinition ve ilgili bütün resource şemaları için sürümlü sözleşme ve JSON Schema oluştur. — *17 Ekim, kısmen: formun sürümlü sözleşmesi ve JSON Schema'sı (`kentos.form` v1, ADR 0434); alanlar ve değer listeleriyle paket `kentos.form-package` v1 (ADR 0435); ilişkiler açık.*
 - [x] **FORM-STD-02:** Format/version/digest, unknown-property/version, compatibility ve migration kurallarını yaz. — *17 Ekim: biçim ve sürüm, yayının özeti, bilinmeyen alanın reddi, uyumluluk ve göç kuralları `docs/specs/forms-v1.md`'de (ADR 0434).*
 - [x] **FORM-STD-03:** JSON'u önce validate/compile et; bozuk field/domain/relation/action binding'leri UI açılmadan raporla. — *Yapıldı (16 Ekim; ADR 0401 §4, ön denetim).*
 - [ ] **FORM-STD-04:** Shared compiled form model ve expression profile; native/WASM/server ortak fixture'larla aynı sonuç versin.
 - [x] **FORM-STD-05:** Stable node/field/rule IDs, deterministic ordering ve dependency graph korunmalı; rename/move binding'i bozmasın. — *Yapıldı (16 Ekim; ADR 0401 §2, ADR 0402 §2 (hesapların bağımlılık grafı)).*
 - [x] **FORM-STD-06:** Field değer codec'ini existing canonical attrs ile kontrollü adapter/migration üzerinden eşle. — *Yapıldı (16 Ekim; ADR 0401 §5).*
-- [ ] **FORM-STD-07:** Form template ve deployed form ayrı olsun; template'deki mantıksal kaynaklar deployment'ta gerçek dataset/source IDs'ye bağlansın.
-- [ ] **FORM-STD-08:** Template dağıtımı kaynak veri, secret veya tenant grant taşımasın; source remapping ve permission yeniden değerlendirilsin.
+- [x] **FORM-STD-07:** Form template ve deployed form ayrı olsun; template'deki mantıksal kaynaklar deployment'ta gerçek dataset/source IDs'ye bağlansın. — *17 Ekim: paket mantıksal alanlarla taşınır, içe alınırken katmanın gerçek alanlarına bağlanır (eşleme, anahtar, ad; ADR 0435).*
+- [ ] **FORM-STD-08:** Template dağıtımı kaynak veri, secret veya tenant grant taşımasın; source remapping ve permission yeniden değerlendirilsin. — *17 Ekim, kısmen: paket kayıt, bağlantı ve yetki taşımaz (ADR 0435); kurumun yetkilerinin yeniden değerlendirilmesi bulutta açık.*
 - [ ] **FORM-STD-09:** Renderer semantic conformance suite kur; aynı bundle ve draft için values/validation/available actions eşdeğer olsun.
 - [ ] **FORM-STD-10:** Responsive/a11y/localization profili ve unsupported-required-capability politikası standardın parçası olsun.
 - [ ] **FORM-STD-11:** Portable form Python/uv/plugin kurulumu gerektirmeden web/mobile'da veri girişi yapabilsin.
@@ -451,7 +451,7 @@ QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/r
 - [ ] **FORM-DESIGN-17:** Tasarım undo/redo, draft autosave, source diff, version compare ve review comments desteklesin. — *17 Ekim, kısmen: geri alma ve yineleme (ADR 0403), sürüm karşılaştırması (ADR 0427: `cad.forms.compare`, Değişiklikler); kendiliğinden kayıt ve yorumlar açık.*
 - [x] **FORM-DESIGN-18:** Schema/domain değişikliği form kullanımını etkilediğinde impact view ve migration önerisi sun. — *Yapıldı (16 Ekim; ADR 0414: Alanlar penceresinde alanın kullanıldığı yerler, yeniden adlandırmada kuralların izlenmesi, silmede uyarı).*
 - [ ] **FORM-DESIGN-19:** Pure form ile extension/Python-dependent form ayrımı tasarımcıda görülsün; mandatory mobile executor eksikliği yayın engeli olsun.
-- [ ] **FORM-DESIGN-20:** Form şablonu import/export veya `.kek` içinden alındığında source refs ve ACL yeniden bağlansın; başka tenant'ın grant'i kopyalanmasın.
+- [ ] **FORM-DESIGN-20:** Form şablonu import/export veya `.kek` içinden alındığında source refs ve ACL yeniden bağlansın; başka tenant'ın grant'i kopyalanmasın. — *17 Ekim, kısmen: form `.kform` paketiyle dışa ve içe aktarılır, alanlar yeniden bağlanır (ADR 0435); `.kek` ve kurumun yetkileri açık.*
 - [ ] **FORM-DESIGN-21:** Eklenen action yalnız kayıtlı descriptor'dan seçilsin; raw SQL/URL/script normal field property'ye yazılamasın.
 - [ ] **FORM-DESIGN-22:** Tasarım çıktısı portable JSON olsun; bütün formu platforma özel Python/TS UI kodu olarak saklama.
 - [ ] **FORM-DESIGN-23:** AI tasarım önerisi düzenlenebilir draft/diff olsun; doğrudan published formu değiştirmesin.

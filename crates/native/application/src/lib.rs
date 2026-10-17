@@ -179,6 +179,8 @@ pub mod forms_recompute;
 pub mod forms_test;
 pub mod forms_transition;
 pub mod domains_edit;
+pub mod forms_export;
+pub mod forms_import;
 pub mod forms_validate;
 pub mod relations_edit;
 pub mod widths;
@@ -263,6 +265,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_DOMAINS_EDIT,
         kentos_contracts::CAD_DOMAINS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_EXPORT,
+        kentos_contracts::CAD_FORMS_EXPORT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FORMS_IMPORT,
+        kentos_contracts::CAD_FORMS_IMPORT_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_RECOMPUTE,

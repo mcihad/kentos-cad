@@ -1738,6 +1738,32 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.export",
+        refusals: &[&["unknown_form", "form_unpublished"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.forms.import",
+        refusals: &[&[
+            "invalid_revision",
+            "revision_conflict",
+            "invalid_package",
+            "layer_not_found",
+            "not_a_layer",
+            "invalid_form_id",
+            "invalid_form_name",
+            "form_exists",
+            "too_many_forms",
+            "invalid_map",
+            "field_not_found",
+            "field_kind_mismatch",
+            "form_fields_missing",
+        ]],
+        warnings: &["domain_kept"],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.transition",
         refusals: &[&[
             "invalid_uid",

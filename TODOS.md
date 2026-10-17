@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AR` form paketi (ADR 0435, 17 Ekim): web'de gerekenler: `cad.forms.export` ve `cad.forms.import`'un TS işleyicileri
+  (`fixtures/commands/v1/cad.forms.{export,import}.json`), `.kform` dosyası, tasarımcıda Dışa aktar ve İçe aktar.
 - [ ] `FORM-AP` formda konum (ADR 0433, 17 Ekim): web'de gerekenler: `location` öğesi (TS türleri üretildi), formda kaydın şekli,
   merkezi ve ölçüleri, tasarımcıda Konum.
 - [ ] `FORM-AO` taslak durumlar (ADR 0432, 17 Ekim): web'de gerekenler: iş akışının `drafts`'ı (TS türleri üretildi), form çekirdeğinin web
@@ -1520,6 +1522,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AR` Form paketi: form alanları ve değer listeleriyle `.kform` dosyasına (`cad.forms.export`), başka katmana ya da projeye
+  (`cad.forms.import`: eşleme, anahtar ve ad, eksik alanlar listeleriyle; ifadeler yeniden yazılır). —
+  **17 Ekim, [ADR 0435](docs/adr/0435-form-packages.md).**
 - [x] `FORM-AQ` Formun şeması ve biçim kuralları: `kentos.form` v1'in JSON Schema'sı sözleşmeden (`catalog/v1/forms/form-v1.schema.json`),
   `docs/specs/forms-v1.md`, bağımsız `jsonschema` denetimi. — **17 Ekim, [ADR 0434](docs/adr/0434-form-schema.md).**
 - [x] `FORM-AP` Formda konum: kaydın şekli küçük haritada, merkezinin koordinatları, alanı ve çevresi ya da uzunluğu. —

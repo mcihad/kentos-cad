@@ -292,6 +292,16 @@ codes! {
     INVALID_USER = "invalid_user", Failed, false, "Kullanıcının adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// A soft check of the form that is not true: the record is written all the same.
     FORM_CHECK_WARNING = "form_check_warning", Warning, false, "Formun uyarı denetimlerinden biri doğru değil; kayıt yine yazıldı.";
+    /// A form package that does not hold (docs/adr/0435).
+    INVALID_PACKAGE = "invalid_package", Failed, false, "Form paketi okunamıyor ya da kurallarına uymuyor.";
+    /// A package's binding that names a field the package lacks (docs/adr/0435).
+    INVALID_MAP = "invalid_map", Failed, false, "Eşleme paketin olmayan bir alanını anıyor.";
+    /// A package field bound to a field of another kind (docs/adr/0435).
+    FIELD_KIND_MISMATCH = "field_kind_mismatch", Failed, false, "Paketin alanı başka türde bir alana bağlanıyor.";
+    /// Package fields the layer lacks, not to be added (docs/adr/0435).
+    FORM_FIELDS_MISSING = "form_fields_missing", Failed, false, "Paketin alanlarından bazıları katmanda yok.";
+    /// A package's value list kept as the project has it (docs/adr/0435).
+    DOMAIN_KEPT = "domain_kept", Warning, false, "Projede aynı kimlikli değer listesi vardı; projeninki kullanıldı.";
     /// A draft's field the form requires left empty (docs/adr/0432): the record is written.
     FORM_REQUIRED = "form_required", Warning, false, "Taslak kaydın formca zorunlu bir alanı boş; kayıt yine yazıldı.";
 

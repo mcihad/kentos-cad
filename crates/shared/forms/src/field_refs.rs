@@ -626,6 +626,163 @@ pub fn rename_settings(settings: &mut ProjectSettings, layer: &str, from: &str, 
     n
 }
 
+/// A field moved from one layer's definition to another's (docs/adr/0435): its key and name in a
+/// form package, and the key and name of the field it binds to in the project.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Rebind {
+    pub from_key: String,
+    pub from_name: String,
+    pub to_key: String,
+    pub to_name: String,
+}
+
+/// `body` with its fields rebound, all at once (docs/adr/0435): the items' keys, the names in its
+/// expressions and templates, the workflow's fields and the scenarios' values. Returns how many places
+/// changed.
+pub fn rebind_body(body: &mut kentos_contracts::FormBody, pairs: &[Rebind]) -> usize {
+    let mut n = 0;
+    let mut out = body.clone();
+    // Expressions are renamed through stand-ins first, so that two fields may trade names.
+    let stand_in = |i: usize| format!("kentos_paket_{i}");
+    // Only the form's own layer's places: a list from another layer names that layer's fields.
+    let mut first = |s: &Site<'_>, v: &mut String| match s.how {
+        _ if s.layer != "paket" => {}
+        FieldUseHow::Key => {
+            if let Some(p) = pairs.iter().find(|p| p.from_key == *v) {
+                if p.to_key != *v {
+                    n += 1;
+                }
+                v.clone_from(&p.to_key);
+            }
+        }
+        FieldUseHow::Name => {
+            if let Some(p) = pairs.iter().find(|p| p.from_name == *v) {
+                if p.to_name != *v {
+                    n += 1;
+                }
+                v.clone_from(&p.to_name);
+            }
+        }
+        FieldUseHow::Expression | FieldUseHow::Template => {
+            for (i, p) in pairs.iter().enumerate() {
+                if let Some(next) = renamed(s.how, v, &p.from_name, &stand_in(i)) {
+                    *v = next;
+                }
+            }
+        }
+    };
+    items(
+        &mut out.items,
+        "paket",
+        &[],
+        "items",
+        "Paket",
+        false,
+        &mut first,
+    );
+    let mut second = |s: &Site<'_>, v: &mut String| {
+        if s.layer == "paket" && matches!(s.how, FieldUseHow::Expression | FieldUseHow::Template) {
+            for (i, p) in pairs.iter().enumerate() {
+                if let Some(next) = renamed(s.how, v, &stand_in(i), &p.to_name) {
+                    if p.to_name != p.from_name {
+                        n += 1;
+                    }
+                    *v = next;
+                }
+            }
+        }
+    };
+    items(
+        &mut out.items,
+        "paket",
+        &[],
+        "items",
+        "Paket",
+        false,
+        &mut second,
+    );
+    let key = |k: &mut String| {
+        if let Some(p) = pairs.iter().find(|p| p.from_key == *k) {
+            k.clone_from(&p.to_key);
+        }
+    };
+    if let Some(w) = out.workflow.as_mut() {
+        key(&mut w.field);
+        if let Some(l) = w.log.as_mut() {
+            key(l);
+        }
+        for step in &mut w.steps {
+            if let Some(r) = step.reason.as_mut() {
+                key(r);
+            }
+        }
+    }
+    for t in &mut out.tests {
+        t.values = std::mem::take(&mut t.values)
+            .into_iter()
+            .map(|(mut k, v)| {
+                key(&mut k);
+                (k, v)
+            })
+            .collect();
+        t.expect.attrs = std::mem::take(&mut t.expect.attrs)
+            .into_iter()
+            .map(|(k, v)| {
+                let k = pairs
+                    .iter()
+                    .find(|p| p.from_name == k)
+                    .map_or(k, |p| p.to_name.clone());
+                (k, v)
+            })
+            .collect();
+    }
+    *body = out;
+    n
+}
+
+/// The keys of `fields` that `body` binds or reads (docs/adr/0435): its items' fields, the names in its
+/// expressions and templates, its workflow's fields; in `fields`' order.
+pub fn read_by(body: &kentos_contracts::FormBody, fields: &[LayerField]) -> Vec<String> {
+    let mut keys: Vec<String> = Vec::new();
+    let mut names: Vec<String> = Vec::new();
+    let mut body = body.clone();
+    let mut visit = |s: &Site<'_>, v: &mut String| {
+        if s.layer != "paket" {
+            return;
+        }
+        match s.how {
+            FieldUseHow::Key => keys.push(v.clone()),
+            FieldUseHow::Name => names.push(v.clone()),
+            FieldUseHow::Expression | FieldUseHow::Template => {
+                for f in fields {
+                    if renamed(s.how, v, &f.name, "kentos_okunan").is_some() {
+                        names.push(f.name.clone());
+                    }
+                }
+            }
+        }
+    };
+    items(
+        &mut body.items,
+        "paket",
+        &[],
+        "items",
+        "Paket",
+        false,
+        &mut visit,
+    );
+    if let Some(w) = &body.workflow {
+        keys.push(w.field.clone());
+        keys.extend(w.log.clone());
+        keys.extend(w.steps.iter().filter_map(|s| s.reason.clone()));
+    }
+    fields
+        .iter()
+        .filter(|f| keys.iter().any(|k| k == f.key()) || names.contains(&f.name))
+        .map(|f| f.key().to_owned())
+        .collect()
+}
+
 /// A layer with its field `from` named `to` in its own places (§2). Returns how many changed.
 pub fn rename_node(node: &mut LayerNode, from: &str, to: &str) -> usize {
     let mut n = 0;
