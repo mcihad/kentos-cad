@@ -947,6 +947,7 @@ class FormWidget(_StrEnum):
     - ``checkList``: A check box for each listed value (docs/adr/0408 §2): multiple fields, and only they.
     - ``search``: A list searched by typing (docs/adr/0431): single-valued fields with a long value list.
     - ``chips``: The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.
+    - ``tree``: A tree of the list (docs/adr/0437): its labels' “Üst / Alt” parts as branches; single-valued
     """
     TEXT = "text"
     TEXT_AREA = "textArea"
@@ -962,9 +963,10 @@ class FormWidget(_StrEnum):
     CHECK_LIST = "checkList"
     SEARCH = "search"
     CHIPS = "chips"
+    TREE = "tree"
 
 
-FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color", "checkList", "search", "chips"]
+FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider", "color", "checkList", "search", "chips", "tree"]
 """The names of :class:`FormWidget`, for a plain string."""
 
 
@@ -11028,6 +11030,8 @@ class FormBody(_Model):
         revision: Raised by one with every saved change to the draft: an update names the revision it was made on. Unit: version.
         clear_hidden: A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
             as `true`. Without it a hidden field keeps its value.
+        steps: Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with
+            an error is not left forward. Only a form of tabs; written only as `true`.
         tests: The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
             them, run again whenever the form changes.
         workflow: The records' workflow (docs/adr/0428): their state, the steps between states, the states that
@@ -11036,6 +11040,7 @@ class FormBody(_Model):
     revision: int
     items: list[FormItem]
     clear_hidden: bool | Unset = UNSET
+    steps: bool | Unset = UNSET
     tests: list[FormTest] | Unset = UNSET
     workflow: FormWorkflow | None | Unset = UNSET
 
@@ -11045,6 +11050,8 @@ class FormBody(_Model):
         out["items"] = [e0.to_json() for e0 in self.items]
         if self.clear_hidden is not UNSET:
             out["clearHidden"] = self.clear_hidden
+        if self.steps is not UNSET:
+            out["steps"] = self.steps
         if self.tests is not UNSET:
             out["tests"] = [e0.to_json() for e0 in self.tests]
         if self.workflow is not UNSET:
@@ -11057,6 +11064,7 @@ class FormBody(_Model):
             revision=data["revision"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
             clear_hidden=data.get("clearHidden", UNSET),
+            steps=data.get("steps", UNSET),
             tests=[FormTest.from_json(e0) for e0 in data["tests"]] if "tests" in data else UNSET,
             workflow=UNSET if "workflow" not in data else None if data["workflow"] is None else FormWorkflow.from_json(data["workflow"]),
         )
@@ -27868,6 +27876,9 @@ class FieldFormItem(FormItem):
         label: The label; none: the field's alias or name.
         lookup: The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
             `choiceFilter`.
+        mirror: A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the
+            field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
+            only as `true`.
         overridable: The calculation may be overridden (docs/adr/0417): it fills the field while the field is
             empty, the field stays open to typing, and emptying it calculates it again. Only with
             `calculate`; written only as `true`.
@@ -27896,6 +27907,7 @@ class FieldFormItem(FormItem):
     help: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     lookup: FormLookup | None | Unset = UNSET
+    mirror: bool | Unset = UNSET
     overridable: bool | Unset = UNSET
     placeholder: str | None | Unset = UNSET
     read_only: bool | Unset = UNSET
@@ -27928,6 +27940,8 @@ class FieldFormItem(FormItem):
             out["label"] = self.label
         if self.lookup is not UNSET:
             out["lookup"] = None if self.lookup is None else self.lookup.to_json()
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
         if self.overridable is not UNSET:
             out["overridable"] = self.overridable
         if self.placeholder is not UNSET:
@@ -27965,6 +27979,7 @@ class FieldFormItem(FormItem):
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
             lookup=UNSET if "lookup" not in data else None if data["lookup"] is None else FormLookup.from_json(data["lookup"]),
+            mirror=data.get("mirror", UNSET),
             overridable=data.get("overridable", UNSET),
             placeholder=data.get("placeholder", UNSET),
             read_only=data.get("readOnly", UNSET),

@@ -65,6 +65,8 @@ pub const TITLE: &str = "Formla düzenle";
 const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
+const BACK: &str = "Geri";
+const NEXT: &str = "İleri";
 /// The scrolled items' room: clear of the scrollbar on the right.
 const SCROLLED: iced::Padding = iced::Padding {
     top: 4.0,
@@ -456,6 +458,36 @@ impl Entry {
         self.errors()
             .find(mine)
             .or_else(|| self.issues.iter().find(mine))
+    }
+
+    #[cfg(test)]
+    pub(crate) fn tab_for_tests(&self) -> usize {
+        self.tab
+    }
+
+    /// The tabs shown, in order: a step form's steps.
+    fn shown_tabs(&self) -> Vec<&FormItem> {
+        self.body
+            .items
+            .iter()
+            .filter(|t| matches!(t, FormItem::Tab { .. }) && self.state(t.id()).is_some_and(|s| s.shown))
+            .collect()
+    }
+
+    /// Going to step `to` of a step form (docs/adr/0437): the first step before it with an error, which
+    /// holds the record there; none when the way is open (or the form is not one of steps).
+    fn blocking_step(&self, to: usize) -> Option<usize> {
+        if !self.body.steps || to <= self.tab {
+            return None;
+        }
+        let tabs = self.shown_tabs();
+        (self.tab..to.min(tabs.len())).find(|&k| {
+            self.errors().any(|i| {
+                i.item
+                    .as_deref()
+                    .is_some_and(|id| kentos_forms_find(tabs[k].items(), id))
+            })
+        })
     }
 
     /// The tab holding the first issue's item.
@@ -1153,7 +1185,20 @@ impl App {
                     }
                 }
             }
-            Event::Tab(i) => e.tab = i,
+            Event::Tab(i) => {
+                // Adım adım (docs/adr/0437): a step with an error is not left forward.
+                match e.blocking_step(i) {
+                    Some(stuck) => {
+                        e.tried = true;
+                        e.tab = stuck;
+                        self.say(
+                            Level::Warn,
+                            "Bu adımda sorun var; düzeltmeden sonraki adıma geçilmez.",
+                        );
+                    }
+                    None => e.tab = i,
+                }
+            }
             Event::OpenRelated(uid) => return self.open_related(&uid),
             Event::Link(item, uid) => return self.link_related(&item, &uid, true),
             Event::Unlink(item, uid) => return self.link_related(&item, &uid, false),
@@ -1655,6 +1700,16 @@ impl App {
         footer = footer
             .push(space::horizontal().width(Fill))
             .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))));
+        // Adım adım (docs/adr/0437): Geri and İleri; Kaydet and the workflow's steps on the last step.
+        if e.body.steps {
+            let last = e.shown_tabs().len().saturating_sub(1);
+            if e.tab > 0 {
+                footer = footer.push(words::secondary(BACK, Some(e.msg(Event::Tab(e.tab - 1)))));
+            }
+            if e.tab < last {
+                return footer.push(words::primary(NEXT, Some(e.msg(Event::Tab(e.tab + 1)))));
+            }
+        }
         // The workflow's steps from the record's state (docs/adr/0428), before Kaydet.
         let live = !e.preview && !e.uid.is_empty() && e.members.is_empty();
         let by_state = e.screen.prepared.locked_by_state(&e.after);
@@ -1731,6 +1786,22 @@ impl App {
                 Tab::new(label).badge(count).closable(false)
             })
             .collect();
+        // A step form's tabs are numbered (docs/adr/0437).
+        let tabs: Vec<Tab<'_>> = if e.body.steps {
+            tabs.into_iter()
+                .zip(shown.iter())
+                .enumerate()
+                .map(|(k, (_, t))| {
+                    let label = match t {
+                        FormItem::Tab { label, .. } => label.clone(),
+                        _ => String::new(),
+                    };
+                    Tab::new(format!("{}. {label}", k + 1)).closable(false)
+                })
+                .collect()
+        } else {
+            tabs
+        };
         body = body.push(Tabs::new(tabs, e.tab, |i| e.msg(Event::Tab(i))));
         if let Some(tab) = shown.get(e.tab.min(shown.len().saturating_sub(1))) {
             body = body.push(scrolled(self.entry_block(e, tab.items(), locked)));
@@ -1956,7 +2027,8 @@ impl App {
                         continue;
                     };
                     let state = e.state(&f.id);
-                    let read_only = locked || state.is_some_and(|s| s.read_only);
+                    // A mirror is shown, never written (docs/adr/0437).
+                    let read_only = locked || f.mirror || state.is_some_and(|s| s.read_only);
                     let words = f.label.clone().unwrap_or_else(|| field.label().to_owned());
                     let control = entry_control(e, f, field, read_only);
                     // An overridable calculation typed over: ↺ gives it back to its calculation.
@@ -1987,7 +2059,7 @@ impl App {
                     if state.is_some_and(|s| s.required) {
                         form = form.required();
                     }
-                    match e.issue_of(field.key()) {
+                    match e.issue_of(field.key()).filter(|_| !f.mirror) {
                         Some(issue) if issue.severity == FormSeverity::Error => {
                             form = form.error(Some(issue.message.clone()));
                         }
@@ -2541,6 +2613,43 @@ fn entry_control<'a>(
                 }
             }
             col.into()
+        }
+        // The list as a tree (docs/adr/0437): what a label holds before its last “ / ” is its branch.
+        FormWidget::Tree if !read_only => {
+            let mut col = Column::new().spacing(2);
+            let mut last: Option<String> = None;
+            for (c, words) in &choices {
+                let (branch, leaf) = match words.rsplit_once(" / ") {
+                    Some((b, l)) => (Some(b.to_owned()), l.to_owned()),
+                    None => (None, words.clone()),
+                };
+                if branch != last {
+                    if let Some(b) = &branch {
+                        col = col.push(
+                            container(label::caption(b.clone()).style(muted))
+                                .padding(iced::Padding {
+                                    top: 4.0,
+                                    ..iced::Padding::ZERO
+                                }),
+                        );
+                    }
+                    last = branch.clone();
+                }
+                let indent = if branch.is_some() { 14.0 } else { 0.0 };
+                col = col.push(row![
+                    space::horizontal().width(indent),
+                    button(label::body(leaf))
+                        .padding([3, 8])
+                        .width(Fill)
+                        .style(style::button::row(*c == code))
+                        .on_press(set(c.clone())),
+                ]);
+            }
+            container(col)
+                .padding(4)
+                .width(Fill)
+                .style(style::container::field_box)
+                .into()
         }
         // A long list searched by typing (docs/adr/0431): the labels holding what is typed.
         FormWidget::Search if !read_only => {

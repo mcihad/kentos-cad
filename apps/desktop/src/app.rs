@@ -898,6 +898,11 @@ pub struct App {
     pub(crate) views_window: Option<crate::views::Window>,
     /// Formlar's window (forms/designer.rs, docs/adr/0401).
     pub(crate) forms_window: Option<crate::forms::designer::Window>,
+    /// The designer's copied item with its layer's fields (docs/adr/0437): pasted into this or another form.
+    pub(crate) form_clipboard: Option<(
+        kentos_contracts::FormItem,
+        Vec<kentos_contracts::LayerField>,
+    )>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
     /// İlişkiler (forms/relations.rs, docs/adr/0405).
@@ -1207,6 +1212,7 @@ impl App {
             layer_states_window: None,
             views_window: None,
             forms_window: None,
+            form_clipboard: None,
             form_entry: None,
             relations_window: None,
             table_styles: None,

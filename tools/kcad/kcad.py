@@ -1638,6 +1638,9 @@ def body_problem(body):
     tops = [i for i in body["items"] if i["type"] == "tab"]
     if tops and len(tops) != len(body["items"]):
         return "formun üstünde sekmelerle başka öğeler var"
+    # docs/adr/0437: a form of steps is one of two or more tabs.
+    if body.get("steps") and len(tops) < 2:
+        return "adım adım form en az iki sekmeden olur"
     seen = set()
     for depth, i in walked:
         iid = i["id"]
@@ -3548,7 +3551,7 @@ class _Schema:
             return check
 
         widgets = ("text", "textArea", "number", "date", "check", "switch", "list", "radio", "segmented", "slider",
-                   "color", "checkList", "search", "chips")
+                   "color", "checkList", "search", "chips", "tree")
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True)})
@@ -3597,6 +3600,8 @@ class _Schema:
                     "suggest": (true_, False),
                     "lookup": (lookup, False),
                     "checks": (nonempty(self.array(check)), False),
+                    # docs/adr/0437: the field shown again, read-only.
+                    "mirror": (true_, False),
                 },
                 "note": {"id": (self.text, True), "text": (self.text, True)},
                 "related": {
@@ -3651,6 +3656,7 @@ class _Schema:
                                 # docs/adr/0432: the states a record may be kept incomplete in.
                                 "drafts": (nonempty(self.array(self.text)), False)})
         body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
+                            "steps": (true_, False),
                             "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False)})
         release = self.fields(
             {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}

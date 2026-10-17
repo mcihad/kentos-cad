@@ -19,7 +19,7 @@ fn flat(items: &[FormItem], parent: Option<&str>, out: &mut Vec<(String, Option<
 }
 
 /// The properties' names in the words (the form's JSON names stay in `properties`).
-const WORDS: [(&str, &str); 28] = [
+const WORDS: [(&str, &str); 29] = [
     ("label", "ad"),
     ("field", "alan"),
     ("help", "yardım"),
@@ -37,6 +37,7 @@ const WORDS: [(&str, &str); 28] = [
     ("unique", "tekil"),
     ("reuseLast", "son değer"),
     ("overridable", "değiştirilebilir"),
+    ("mirror", "yansıma"),
     ("suggest", "öneriler"),
     ("lookup", "başka katmandan liste"),
     ("checks", "denetimler"),
@@ -157,6 +158,19 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             },
         });
     }
+    // docs/adr/0437: the tabs taken as steps.
+    if old.steps != new.steps {
+        out.push(FormChange {
+            item: None,
+            kind: FormChangeKind::Changed,
+            properties: vec!["steps".into()],
+            words: if new.steps {
+                "Form adım adım doldurulur.".into()
+            } else {
+                "Form artık adım adım değil.".into()
+            },
+        });
+    }
     if old.tests != new.tests {
         out.push(FormChange {
             item: None,
@@ -186,6 +200,7 @@ mod tests {
             clear_hidden: false,
             tests: Vec::new(),
             workflow: None,
+            steps: false,
         };
         let mut changed = FormField::new("b", "B");
         changed.required = true;
@@ -195,6 +210,7 @@ mod tests {
             clear_hidden: true,
             tests: Vec::new(),
             workflow: None,
+            steps: false,
         };
         let words: Vec<String> = compare(&old, &new).into_iter().map(|c| c.words).collect();
         assert_eq!(

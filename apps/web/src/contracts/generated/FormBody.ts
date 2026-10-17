@@ -25,4 +25,9 @@ tests?: Array<FormTest>,
  * The records' workflow (docs/adr/0428): their state, the steps between states, the states that
  * lock a record.
  */
-workflow?: FormWorkflow, };
+workflow?: FormWorkflow, 
+/**
+ * Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with
+ * an error is not left forward. Only a form of tabs; written only as `true`.
+ */
+steps?: boolean, };

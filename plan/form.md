@@ -433,28 +433,28 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 QGIS'in tab/group/relation/widget yaklaşımı ve ArcGIS Field Maps'in visible/required/editable/calculated expression yaklaşımı başlangıç kıyasıdır. KentOS'ta gelişmişlik; daha çok kontrolün yanında **taşınabilirlik, merkezi sürüm/yayın, yetki, offline, ilişki, workflow ve test** ile ölçülmelidir. [QGIS tasarımcı](https://docs.qgis.org/3.44/en/docs/user_manual/working_with_vector/vector_properties.html#the-drag-and-drop-designer), [Field Maps form](https://doc.arcgis.com/en/field-maps/latest/prepare-maps/configure-the-form.htm)
 
 - [ ] **FORM-DESIGN-01:** Tasarımcı; dataset/field/domain/relation paleti, component paleti, layout tree/canvas ve property/rule inspector içersin.
-- [ ] **FORM-DESIGN-02:** Drag/drop ve keyboard reorder; tabs, groups, accordion, grid/columns, splitter, stepper ve reusable section desteklesin.
-- [ ] **FORM-DESIGN-03:** Field ID üzerinden binding; alias/help/placeholder/widget/format/domain seçimiyle type-safe yapılsın.
-- [ ] **FORM-DESIGN-04:** Aynı field birden çok yerde gösterilebilir; tek draft value owner'ı olsun, mirror display ile bağımsız edit kutuları birbirini ezmesin.
+- [ ] **FORM-DESIGN-02:** Drag/drop ve keyboard reorder; tabs, groups, accordion, grid/columns, splitter, stepper ve reusable section desteklesin. — *17 Ekim, kısmen: ağaçta sürükleme ve Alt+↑/↓, sekme, grup, kapalı grup (akordeon), sütunlar, adım adım ve öğeyi kopyala ve yapıştır (ADR 0403, 0437); bölücü açık.*
+- [x] **FORM-DESIGN-03:** Field ID üzerinden binding; alias/help/placeholder/widget/format/domain seçimiyle type-safe yapılsın. — *17 Ekim: alan kararlı anahtarla bağlanır, giriş biçimi alanın türüne göre süzülür, değer listesi bağı türüyle denetlenir (ADR 0401, 0430, 0437).*
+- [x] **FORM-DESIGN-04:** Aynı field birden çok yerde gösterilebilir; tek draft value owner'ı olsun, mirror display ile bağımsız edit kutuları birbirini ezmesin. — *17 Ekim: yansıma alanı salt okunur gösterir, değeri tek öğe yazar (ADR 0437).*
 - [ ] **FORM-DESIGN-05:** Master–detail, relation reference, embedded child form, lookup panel ve record grid eklenebilsin.
 - [ ] **FORM-DESIGN-06:** Hesaplı summary, related aggregate, chart, image/attachment, map location ve inline validation bileşenleri olsun. — *17 Ekim, kısmen: hesaplı not, ilişkili kayıtların tablosu ve toplamları, ekler, harita konumu ve satır içi doğrulama (ADR 0402, 0407, 0425, 0433); grafik açık.*
-- [ ] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin. — *17 Ekim, kısmen: açılır liste, seçenek düğmeleri, parçalı seçim, çoklu seçim, aranır liste ve etiketler (ADR 0401, 0408, 0431); ağaç açık.*
+- [x] **FORM-DESIGN-07:** Choice widget; dropdown/radio/chips/autocomplete/tree seçeneği domain kodunu değiştirmeden sunulabilsin. — *17 Ekim: açılır liste, seçenek düğmeleri, parçalı seçim, çoklu seçim, aranır liste, etiketler ve ağaç; kodlar listenin (ADR 0401, 0408, 0431, 0437).*
 - [x] **FORM-DESIGN-08:** Rule builder; görsel koşul düzenleyici ve expression editörü aynı AST/programı değiştirsin. — *Yapıldı (16 Ekim; ADR 0401 §10: İfade oluşturucunun Metin ve Akış'ı).*
 - [x] **FORM-DESIGN-09:** Required/visible/editable/calculate/default/choice filter bağları dependency graph'ta görülebilsin. — *Yapıldı (16 Ekim; ADR 0414 §5: tasarımcıda Bağlar; döngü ön denetimde `form_calc_cycle`).*
-- [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun.
+- [ ] **FORM-DESIGN-10:** Rules/sections için reuse/template desteği olsun; nested component version ve binding parametreleri açık olsun. — *17 Ekim, kısmen: öğe ve bölüm formlar arasında kopyalanır, alanlar adla yeniden bağlanır (ADR 0437); form paketi (ADR 0435); sürümlü bölüm kitaplığı açık.*
 - [x] **FORM-DESIGN-11:** Conditional section/tab, subtype bazlı view, record status bazlı read-only ve task mode tasarlanabilsin. — *Yapıldı (17 Ekim; ADR 0426: koşullu sekme ve alt türe göre görünüm; kayıt durumuna göre salt okunur ve görev kipi iş akışıyla açık).*
-- [ ] **FORM-DESIGN-12:** Layout pixel çizimi yerine responsive constraints/layout hints taşısın; desktop/web/mobile preview aynı kaynak tanımı kullansın.
+- [x] **FORM-DESIGN-12:** Layout pixel çizimi yerine responsive constraints/layout hints taşısın; desktop/web/mobile preview aynı kaynak tanımı kullansın. — *17 Ekim: form piksel değil sekme, grup ve sütun yapısı taşır; önizleme ve formla düzenle aynı gövdeden (ADR 0401, 0437).*
 - [x] **FORM-DESIGN-13:** Tasarımcı mock/test record ve seçilmiş gerçek yetkili record ile preview sunsun; test verisi production kaydına yazılmasın. — *Yapıldı (16 Ekim; ADR 0403 §3: seçili gerçek kayıtta ya da yeni kayıtta önizleme, hiçbir şey yazılmaz).*
 - [ ] **FORM-DESIGN-14:** Role/task preview sunucunun effective grant modelini simüle etsin; designer rolü gerçek saha kullanıcısına impersonation yetkisi vermesin.
-- [ ] **FORM-DESIGN-15:** Validation preflight; missing field/domain/action, unsupported mobile widget, rule cycle, required-hidden conflict ve source izin ihtiyaçlarını listelesin.
+- [ ] **FORM-DESIGN-15:** Validation preflight; missing field/domain/action, unsupported mobile widget, rule cycle, required-hidden conflict ve source izin ihtiyaçlarını listelesin. — *17 Ekim, kısmen: ön denetim olmayan alan, döngülü hesap, gizli ya da kilitli zorunlu alan, yansıma ve iş akışı sorunlarını listeler (ADR 0401, 0428, 0437); mobil giriş biçimi ve kaynak izni açık.*
 - [ ] **FORM-DESIGN-16:** Theme tokens, accessibility labels, error location, tab/focus order ve localization editörü olsun.
 - [ ] **FORM-DESIGN-17:** Tasarım undo/redo, draft autosave, source diff, version compare ve review comments desteklesin. — *17 Ekim, kısmen: geri alma ve yineleme (ADR 0403), sürüm karşılaştırması (ADR 0427: `cad.forms.compare`, Değişiklikler); kendiliğinden kayıt ve yorumlar açık.*
 - [x] **FORM-DESIGN-18:** Schema/domain değişikliği form kullanımını etkilediğinde impact view ve migration önerisi sun. — *Yapıldı (16 Ekim; ADR 0414: Alanlar penceresinde alanın kullanıldığı yerler, yeniden adlandırmada kuralların izlenmesi, silmede uyarı).*
 - [ ] **FORM-DESIGN-19:** Pure form ile extension/Python-dependent form ayrımı tasarımcıda görülsün; mandatory mobile executor eksikliği yayın engeli olsun.
 - [ ] **FORM-DESIGN-20:** Form şablonu import/export veya `.kek` içinden alındığında source refs ve ACL yeniden bağlansın; başka tenant'ın grant'i kopyalanmasın. — *17 Ekim, kısmen: form `.kform` paketiyle dışa ve içe aktarılır, alanlar yeniden bağlanır (ADR 0435); `.kek` ve kurumun yetkileri açık.*
 - [ ] **FORM-DESIGN-21:** Eklenen action yalnız kayıtlı descriptor'dan seçilsin; raw SQL/URL/script normal field property'ye yazılamasın.
-- [ ] **FORM-DESIGN-22:** Tasarım çıktısı portable JSON olsun; bütün formu platforma özel Python/TS UI kodu olarak saklama.
-- [ ] **FORM-DESIGN-23:** AI tasarım önerisi düzenlenebilir draft/diff olsun; doğrudan published formu değiştirmesin.
+- [x] **FORM-DESIGN-22:** Tasarım çıktısı portable JSON olsun; bütün formu platforma özel Python/TS UI kodu olarak saklama. — *17 Ekim: tasarım taşınabilir JSON, şeması `kentos.form` v1 (ADR 0434, 0437).*
+- [x] **FORM-DESIGN-23:** AI tasarım önerisi düzenlenebilir draft/diff olsun; doğrudan published formu değiştirmesin. — *17 Ekim: ajan yalnız taslağı yazar (`cad.forms.edit`), yayın ayrı ve açık bir adımdır, fark `cad.forms.compare` (ADR 0427, 0437).*
 - [x] **FORM-DESIGN-24:** Kullanıcı kendi form test senaryolarını kaydedebilsin; replay values/validation/action görünürlüğünü otomatik karşılaştırsın. — *Yapıldı (16 Ekim; ADR 0420: senaryolar, `cad.forms.test`, tasarımcıda Senaryolar).*
 
 **Kabul:** Tasarımcı aynı formda sekme, master–detail, domain, cascading lookup ve calculated summary kurar; üç platform preview'da bütün field/rule kimlikleri aynıdır. Published form ayrı draft açılmadan değişmez.
@@ -642,7 +642,7 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 
 ### 15.1 Doğrulama işleri
 
-- [ ] **FORM-QA-01:** JSON Schema/codegen/version/profile, duplicate ID, broken source ref ve unsupported required capability testleri kur.
+- [ ] **FORM-QA-01:** JSON Schema/codegen/version/profile, duplicate ID, broken source ref ve unsupported required capability testleri kur. — *17 Ekim, kısmen: şema ve sürüm (ADR 0434), yinelenen kimlik ve kırık başvuru ön denetim durumlarında; desteklenmeyen yetenek açık.*
 - [x] **FORM-QA-02:** Mevcut beş field türünün adapter testleri; legacy/unknown attrs, rename/drop, absent/empty/null ve exact integer/decimal kaybını bağımsız beklentilerle doğrula. — *Yapıldı (16 Ekim; `fixtures/forms/v1`, `fixtures/document-ops/v1`).*
 - [ ] **FORM-QA-03:** İlk core tanımı desktop/web/server'da aynı values/rules/validation fixtures ile çalışsın; mobile adapter hazır olduğunda aynı fixture korpusuna katılsın.
 - [ ] **FORM-QA-04:** Gerçek input testleri tab/focus/dirty draft preservation, save/cancel, validation navigation, responsive ve a11y akışlarını kapsasın.

@@ -59,6 +59,8 @@ pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
 pub(super) const RECOMPUTE: &str = "Hesapları yenile";
 pub(super) const EXPORT: &str = "Dışa aktar…";
+pub(super) const COPY_ITEM: &str = "Öğeyi kopyala";
+pub(super) const PASTE_ITEM: &str = "Yapıştır";
 pub(super) const IMPORT: &str = "İçe aktar…";
 pub(super) const UNDO: &str = "Geri al";
 pub(super) const PREVIEW: &str = "Önizleme";
@@ -194,6 +196,11 @@ pub enum Event {
     Accept(kentos_contracts::AttachmentAccept),
     /// A text field offers the layer's values (docs/adr/0407 §3).
     Suggest(bool),
+    /// Yansıma (docs/adr/0437): the chosen field item shown again, read-only, right after it.
+    AddMirror,
+    /// Kopyala and Yapıştır (docs/adr/0437): the chosen item with what it holds, into this or another form.
+    CopyItem,
+    PasteItem,
     /// A field's list from another layer: its layer, none for the field's own list.
     LookupLayer(Option<String>),
     /// The list's key (`$uid`: the object's persistent id) and its label's field.
@@ -269,6 +276,8 @@ pub enum Event {
     Collapsed(bool),
     /// The fields a record hides are emptied (the form's setting).
     ClearHidden(bool),
+    /// Adım adım (docs/adr/0437).
+    Steps(bool),
     Columns(u8),
     RuleText(Rule, String),
     Builder(Rule),
@@ -383,6 +392,65 @@ fn place(body: &mut FormBody, chosen: Option<&str>, item: FormItem) {
         Some(tab @ FormItem::Tab { .. }) => tab.items_mut().expect("a tab holds items").push(item),
         _ => body.items.push(item),
     }
+}
+
+/// A copied item as `body` takes it (docs/adr/0437): every id made fresh in `body`, its fields bound to
+/// `to`'s by key, else by name; a tab only into a form of tabs, another item only into one.
+fn pasted(
+    body: &FormBody,
+    item: FormItem,
+    from: &[kentos_contracts::LayerField],
+    to: &[kentos_contracts::LayerField],
+) -> Result<FormItem, String> {
+    let tabbed = has_tabs(body);
+    if matches!(item, FormItem::Tab { .. }) && !tabbed && !body.items.is_empty() {
+        return Err("Sekme yalnız sekmeli bir forma yapıştırılır; önce bir sekme ekleyin.".into());
+    }
+    let mut taken = ids(&body.items);
+    fn fresh(item: &mut FormItem, taken: &mut Vec<String>) {
+        let id = kentos_forms::item_id_of(item.id(), taken);
+        taken.push(id.clone());
+        match item {
+            FormItem::Tab { id: own, items, .. } | FormItem::Group { id: own, items, .. } => {
+                *own = id;
+                for i in items {
+                    fresh(i, taken);
+                }
+            }
+            FormItem::Field(f) => f.id = id,
+            FormItem::Note { id: own, .. }
+            | FormItem::Related { id: own, .. }
+            | FormItem::Attachments { id: own, .. }
+            | FormItem::Location { id: own, .. } => *own = id,
+        }
+    }
+    let mut item = item;
+    fresh(&mut item, &mut taken);
+    let pairs: Vec<kentos_forms::field_refs::Rebind> = from
+        .iter()
+        .filter_map(|f| {
+            let t = to
+                .iter()
+                .find(|t| t.key() == f.key())
+                .or_else(|| to.iter().find(|t| t.name == f.name))?;
+            Some(kentos_forms::field_refs::Rebind {
+                from_key: f.key().to_owned(),
+                from_name: f.name.clone(),
+                to_key: t.key().to_owned(),
+                to_name: t.name.clone(),
+            })
+        })
+        .collect();
+    let mut holder = FormBody {
+        revision: 1,
+        items: vec![item],
+        clear_hidden: false,
+        tests: Vec::new(),
+        workflow: None,
+        steps: false,
+    };
+    kentos_forms::field_refs::rebind_body(&mut holder, &pairs);
+    Ok(holder.items.remove(0))
 }
 
 /// A new tab: the first one gathers what the top had (“Genel”).
@@ -955,6 +1023,59 @@ impl App {
                     });
                 }
             }
+            Event::CopyItem => {
+                if let Some(item) = chosen_item
+                    .as_deref()
+                    .and_then(|id| w.body.as_ref().and_then(|b| find(&b.items, id)))
+                {
+                    self.form_clipboard = Some((item.clone(), fields.clone()));
+                    self.say(
+                        Level::Info,
+                        "Öğe kopyalandı; bu ya da başka bir formda Yapıştır'a basın.",
+                    );
+                }
+            }
+            Event::PasteItem => {
+                if let Some((item, from)) = self.form_clipboard.clone()
+                    && let Some(body) = w.body.as_ref()
+                {
+                    match pasted(body, item, &from, &fields) {
+                        Ok(item) => {
+                            let id = item.id().to_owned();
+                            let tab = matches!(item, FormItem::Tab { .. });
+                            edited(&mut w, &|b| {
+                                if tab {
+                                    b.items.push(item.clone());
+                                } else {
+                                    place(b, chosen_item.as_deref(), item.clone());
+                                }
+                            });
+                            w.item = Some(id);
+                        }
+                        Err(why) => self.warn(why),
+                    }
+                }
+            }
+            Event::AddMirror => {
+                if let Some(id) = chosen_item.clone() {
+                    let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
+                    let source = w.body.as_ref().and_then(|b| match find(&b.items, &id) {
+                        Some(FormItem::Field(f)) if !f.mirror => Some(f.clone()),
+                        _ => None,
+                    });
+                    if let Some(f) = source {
+                        let mirror_id =
+                            kentos_forms::item_id_of(&format!("{}-yansima", f.id), &taken);
+                        let mut m =
+                            kentos_contracts::FormField::new(mirror_id.clone(), f.field.clone());
+                        m.label = f.label.clone();
+                        m.mirror = true;
+                        let item = FormItem::Field(m);
+                        edited(&mut w, &|b| place(b, Some(id.as_str()), item.clone()));
+                        w.item = Some(mirror_id);
+                    }
+                }
+            }
             Event::Suggest(on) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1441,6 +1562,9 @@ impl App {
             Event::ClearHidden(on) => {
                 edited(&mut w, &|b| b.clear_hidden = on);
             }
+            Event::Steps(on) => {
+                edited(&mut w, &|b| b.steps = on);
+            }
             Event::Columns(n) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1610,6 +1734,13 @@ impl App {
             Some("Ctrl+Z") => Some(self.forms_event(Event::Undo)),
             Some("Ctrl+Y" | "Ctrl+Shift+Z") => Some(self.forms_event(Event::Redo)),
             Some("Ctrl+S") => Some(self.forms_event(Event::Save)),
+            // The chosen item moved with the keyboard (docs/adr/0437), as Yukarı and Aşağı move it.
+            Some("Alt+Up") if self.forms_window.as_ref().is_some_and(|w| w.item.is_some()) => {
+                Some(self.forms_event(Event::Move(-1)))
+            }
+            Some("Alt+Down") if self.forms_window.as_ref().is_some_and(|w| w.item.is_some()) => {
+                Some(self.forms_event(Event::Move(1)))
+            }
             _ => None,
         }
     }

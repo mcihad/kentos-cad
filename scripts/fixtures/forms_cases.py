@@ -313,9 +313,9 @@ def text_for(v, f):
 # ── The form ────────────────────────────────────────────────────────────
 
 FITS = {
-    "text": {"text", "textArea", "list", "radio", "segmented", "color", "checkList", "search", "chips"},
-    "integer": {"number", "list", "radio", "segmented", "slider", "search"},
-    "decimal": {"number", "list", "radio", "segmented", "slider", "search"},
+    "text": {"text", "textArea", "list", "radio", "segmented", "color", "checkList", "search", "chips", "tree"},
+    "integer": {"number", "list", "radio", "segmented", "slider", "search", "tree"},
+    "decimal": {"number", "list", "radio", "segmented", "slider", "search", "tree"},
     "date": {"date"},
     "boolean": {"check", "switch", "radio", "segmented"},
 }
@@ -393,7 +393,7 @@ def preflight(body, fields, variables=(), world=None):
     problem = kc.body_problem(body)
     if problem:
         return [issue("form_body_invalid", True)]
-    issues, bound, calcs = [], [], []
+    issues, bound, calcs, mirrors = [], [], [], []
     have = known(variables)
 
     def rule(item, key, itself, at, src, extra=()):
@@ -411,8 +411,21 @@ def preflight(body, fields, variables=(), world=None):
                 issues.append(issue("form_rule_unknown_variable", False, item, key, at))
         return tree
 
+    WRITES = ("readOnly", "required", "requiredWhen", "readOnlyWhen", "default", "defaultExpr", "calculate", "choiceFilter",
+              "unique", "reuseLast", "overridable", "suggest", "lookup", "checks")
+
     def field(f, hideable):
         key = f["field"]
+        # docs/adr/0437: a mirror shows a field the form writes elsewhere; only its label, help, widget and rule.
+        if f.get("mirror"):
+            mirrors.append((f["id"], key))
+            if not any(key_of(x) == key for x in fields):
+                issues.append(issue("form_field_unknown", True, f["id"], key))
+            if any(f.get(k) for k in WRITES):
+                issues.append(issue("form_mirror_rules", True, f["id"], key))
+            if "visibleWhen" in f:
+                rule(f["id"], key, None, "visibleWhen", f["visibleWhen"])
+            return
         if any(b[0] == key for b in bound):
             issues.append(issue("form_field_twice", True, f["id"], key))
         always = not hideable and "visibleWhen" not in f and (
@@ -432,7 +445,7 @@ def preflight(body, fields, variables=(), world=None):
             issues.append(issue("form_widget_unfit", True, f["id"], key))
         elif w == "slider" and ("min" not in layer or "max" not in layer):
             issues.append(issue("form_widget_needs_range", True, f["id"], key))
-        elif w in ("list", "radio", "segmented", "checkList", "search", "chips") and not layer.get("values") \
+        elif w in ("list", "radio", "segmented", "checkList", "search", "chips", "tree") and not layer.get("values") \
                 and layer["kind"] != "boolean" \
                 and "lookup" not in f:
             issues.append(issue("form_widget_needs_values", True, f["id"], key))
@@ -535,6 +548,9 @@ def preflight(body, fields, variables=(), world=None):
                 note(x)
 
     items(body["items"], False)
+    for item, key in mirrors:
+        if not any(b[0] == key for b in bound):
+            issues.append(issue("form_mirror_alone", True, item, key))
     # Calculated fields reading each other in a circle: the first of the circle in the form's order.
     done = [False] * len(calcs)
     while True:
@@ -665,7 +681,7 @@ class Form:
         return next(f for f in self.fields if key_of(f) == x["field"])
 
     def bound(self):
-        return [(x, p) for x, p in self.nodes if x["type"] == "field"]
+        return [(x, p) for x, p in self.nodes if x["type"] == "field" and not x.get("mirror")]
 
     def calculated(self, key):
         """Calculated and locked: an overridable calculation (docs/adr/0417) leaves the field open."""
@@ -679,7 +695,7 @@ class Form:
             here = (parent is None or shown[parent]) and (rule is None or holds(rule, self.fields, attrs, self.ctx(obj)))
             shown.append(here)
             state = {"id": x["id"], "shown": here}
-            if x["type"] == "field":
+            if x["type"] == "field" and not x.get("mirror"):
                 f = self.layer(x)
                 if here and (x.get("required") or f.get("required")
                              or ("requiredWhen" in x and holds(x["requiredWhen"], self.fields, attrs, self.ctx(obj)))):
@@ -708,7 +724,7 @@ class Form:
     def described(self, attrs, obj=None):
         states = self.states(attrs, obj)
         for (x, _), state in zip(self.nodes, states):
-            if x["type"] == "field":
+            if x["type"] == "field" and not x.get("mirror"):
                 c = self.choices(x, attrs, obj)
                 if c is not None:
                     state["choices"] = c
@@ -782,7 +798,7 @@ class Form:
                     out.pop(f["name"], None)
             if self.clear_hidden:
                 for (x, _), state in zip(self.nodes, self.states(out, obj)):
-                    if x["type"] == "field" and not state["shown"]:
+                    if x["type"] == "field" and not x.get("mirror") and not state["shown"]:
                         out.pop(self.layer(x)["name"], None)
             if out == start or not self.clear_hidden:
                 return out, issues + round_issues
@@ -807,7 +823,7 @@ class Form:
                     issues.append(issue("form_attachments_few", True, x["id"], None, "min"))
                 elif n is not None and "max" in x and n > x["max"]:
                     issues.append(issue("form_attachments_many", True, x["id"], None, "max"))
-            if x["type"] != "field" or not state["shown"]:
+            if x["type"] != "field" or x.get("mirror") or not state["shown"]:
                 continue
             f = self.layer(x)
             value = attrs.get(f["name"], "").strip(JS_SPACE)
@@ -2775,6 +2791,17 @@ def multi_core():
     case("çipler yalnız çok değerli alanda", multi_with(lambda b: item(b, "durum").update(widget="chips")))
     case("aranır liste değer listesi ister", multi_with(lambda b: item(b, "ad").update(widget="search")))
     case("aranır liste çok değerli alanı düzenleyemez", multi_with(lambda b: item(b, "bakim").update(widget="search")))
+    # docs/adr/0437: a tree of the list's labels.
+    case("tek değerli alan ağaçla", multi_with(lambda b: item(b, "durum").update(widget="tree")))
+    case("ağaç çok değerli alanı düzenleyemez", multi_with(lambda b: item(b, "bakim").update(widget="tree")))
+    case("ağaç değer listesi ister", multi_with(lambda b: item(b, "ad").update(widget="tree")))
+    # docs/adr/0437: a mirror shows the field again, read-only; its own item writes it.
+    mirror = {"type": "field", "id": "durum-ozet", "field": "Durum", "mirror": True, "label": "Durum (özet)",
+              "visibleWhen": "Ad <> ''"}
+    case("yansıma: aynı alan ikinci kez, salt okunur; sorun yok", multi_with(lambda b: b["items"].append(dict(mirror))))
+    case("yansımanın alanı formda yok", multi_with(lambda b: (b["items"].append(dict(mirror)), b["items"].pop(1))))
+    case("yansımada yazan kural olmaz", multi_with(lambda b: b["items"].append({**mirror, "required": True})))
+    case("yansımasız ikinci öğe yine iki kez sayılır", multi_with(lambda b: b["items"].append({**mirror, "mirror": False})))
 
     def record(name, attrs, body=MULTI_BODY):
         form = Form(body, MULTI_FIELDS)
@@ -2786,6 +2813,9 @@ def multi_core():
     record("kuru ağaçta kesim de sunulur", {"Ad": "Çınar", "Durum": "kuru", "Bakım": "kesim"})
     record("listede olmayan kod geçersiz", {"Ad": "Çınar", "Bakım": "budama; gübre"})
     record("eski sırasız değer geçerli sayılır", {"Ad": "Çınar", "Bakım": "sulama;budama"})
+    mirrored = multi_with(lambda b: b["items"].append(dict(mirror)))
+    record("yansıma görünür ama zorunlu ya da yazılır değildir", {"Ad": "Çınar", "Durum": "kuru"}, mirrored)
+    record("yansımanın koşulu onu gizler", {"Durum": "kuru"}, mirrored)
 
     def write(name, before, values, body=MULTI_BODY):
         after, issues = Form(body, MULTI_FIELDS).assess(before, values)

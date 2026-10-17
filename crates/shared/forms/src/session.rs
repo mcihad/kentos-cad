@@ -1200,6 +1200,8 @@ fn walk(list: &[FormItem], parent: Option<usize>, out: &mut Vec<Node>, ctx: &Ctx
                 related = related_of(layer, field, ctx.world);
                 (compile(visible_when), None, None)
             }
+            // A mirror is shown, not bound: the field's own item writes it (docs/adr/0437).
+            FormItem::Field(f) if f.mirror => (compile(&f.visible_when), None, None),
             FormItem::Field(f) => {
                 let index = ctx
                     .fields

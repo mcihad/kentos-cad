@@ -1110,6 +1110,78 @@ fn dated_parcel(app: &mut App) {
     )));
 }
 
+/// A survey form of three steps (docs/adr/0437): Kimlik with the use as a tree, Yapı, and Özet showing the
+/// name and the use again as mirrors.
+fn stepped_survey(app: &mut App) {
+    let mut o = Objects::new();
+    let id = o.path(
+        "yapi",
+        &[[0.0, 0.0], [16.0, 0.0], [16.0, 12.0], [0.0, 12.0]],
+        true,
+    );
+    o.data(
+        id,
+        &[("Ad", "Gül Apartmanı"), ("Kullanım", "apt")],
+        Some("Gül Apartmanı"),
+    );
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut yapi = crate::tools_scenes::layer("yapi", "Yapı", "#8E4EC6", 0.35);
+        yapi["fields"] = json!([{ "name": "Ad", "kind": "text" },
+                                { "name": "Kullanım", "kind": "text", "values": [
+                                    { "code": "mus", "label": "Konut / Müstakil" }, { "code": "apt", "label": "Konut / Apartman" },
+                                    { "code": "vil", "label": "Konut / Villa" }, { "code": "duk", "label": "Ticaret / Dükkân" },
+                                    { "code": "ofi", "label": "Ticaret / Ofis" }, { "code": "dep", "label": "Sanayi / Depo" },
+                                    { "code": "ata", "label": "Sanayi / Atölye" }] },
+                                { "name": "Kat", "kind": "integer", "min": "1" },
+                                { "name": "Not", "kind": "text" }]);
+        layers.push(yapi);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("yapi");
+    });
+    let body = json!({ "revision": 1, "steps": true, "items": [
+        { "type": "tab", "id": "kimlik", "label": "Kimlik", "items": [
+            { "type": "field", "id": "ad", "field": "Ad", "required": true },
+            { "type": "field", "id": "kullanim", "field": "Kullanım", "widget": "tree" }] },
+        { "type": "tab", "id": "yapi", "label": "Yapı", "items": [
+            { "type": "field", "id": "kat", "field": "Kat", "required": true }] },
+        { "type": "tab", "id": "ozet", "label": "Özet", "items": [
+            { "type": "field", "id": "ad-ozet", "field": "Ad", "mirror": true, "label": "Yapının adı" },
+            { "type": "field", "id": "kullanim-ozet", "field": "Kullanım", "mirror": true },
+            { "type": "field", "id": "not", "field": "Not", "widget": "textArea" }] }
+    ] });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "yapi", "name": "Yapı tespiti", "layer": "yapi", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    app.features.layer = Some("yapi".into());
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+}
+
+/// Its last step: the mirrors, Geri and Kaydet.
+fn stepped_summary(app: &mut App) {
+    stepped_survey(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Value(
+        "Kat".into(),
+        "6".into(),
+    )));
+    let _ = app.update(Message::FormEntry(entry::Event::Tab(1)));
+    let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
+}
+
+/// The step form in Formlar: Adım adım on, the mirror marked in the items, Kopyala and Yapıştır.
+fn stepped_designer(app: &mut App) {
+    stepped_survey(app);
+    app.form_entry = None;
+    app.dialog = None;
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("ad-ozet".into()));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1921,6 +1993,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-konum", located_parcel),
         ("form-paket", imported_form),
         ("form-tarih-araligi", dated_parcel),
+        ("form-adim-adim", stepped_survey),
+        ("form-adim-ozet", stepped_summary),
+        ("form-adim-tasarim", stepped_designer),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),
@@ -2296,6 +2371,62 @@ mod tests {
             app.forms_window.as_ref().and_then(|w| w.chosen.clone()),
             Some(copy.id.clone())
         );
+    }
+
+    #[test]
+    fn a_step_form_keeps_a_step_with_an_error_and_its_mirror_writes_nothing() {
+        let mut app = crate::files_testing::app_with_drawing();
+        stepped_survey(&mut app);
+        // Kat is required on step 2: İleri from step 2 is refused while it is empty.
+        let _ = app.update(Message::FormEntry(entry::Event::Tab(1)));
+        let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
+        assert_eq!(
+            app.form_entry.as_ref().map(|e| e.tab_for_tests()),
+            Some(1),
+            "held on Yapı"
+        );
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Kat".into(),
+            "6".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Tab(2)));
+        assert_eq!(app.form_entry.as_ref().map(|e| e.tab_for_tests()), Some(2));
+        // The tree picks a code; the mirror shows it, nothing more.
+        let _ = app.update(Message::FormEntry(entry::Event::Value(
+            "Kullanım".into(),
+            "ofi".into(),
+        )));
+        let _ = app.update(Message::FormEntry(entry::Event::Save));
+        let doc = &app.document.as_ref().unwrap().model;
+        let attrs = &doc.get(Slot(1)).unwrap().base().attrs;
+        assert_eq!(attrs.get("Kullanım").map(String::as_str), Some("ofi"));
+        assert_eq!(attrs.get("Kat").map(String::as_str), Some("6"));
+    }
+
+    #[test]
+    fn a_copied_group_is_pasted_with_fresh_ids_and_its_fields_rebound() {
+        let mut app = crate::files_testing::app_with_drawing();
+        stepped_designer(&mut app);
+        designer(&mut app, designer::Event::SelectItem("yapi".into()));
+        designer(&mut app, designer::Event::CopyItem);
+        designer(&mut app, designer::Event::PasteItem);
+        let w = app.forms_window.as_ref().unwrap();
+        let body = w.body.as_ref().unwrap();
+        assert_eq!(body.items.len(), 4, "the tab pasted as a fourth step");
+        let pasted = &body.items[3];
+        assert_ne!(pasted.id(), "yapi");
+        assert!(
+            pasted.items().iter().all(|i| i.id() != "kat"),
+            "its items' ids are fresh"
+        );
+        // Alt+↑ moves it back up one.
+        designer(&mut app, designer::Event::Move(-1));
+        let body = app.forms_window.as_ref().unwrap().body.as_ref().unwrap();
+        assert_eq!(body.items[2].id(), pasted_id(&app));
+    }
+
+    fn pasted_id(app: &App) -> String {
+        app.forms_window.as_ref().unwrap().item.clone().unwrap()
     }
 
     #[test]

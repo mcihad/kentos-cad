@@ -44,6 +44,10 @@ pub mod codes {
     pub const FIELD_UNKNOWN: &str = "form_field_unknown";
     /// Two field items name one field.
     pub const FIELD_TWICE: &str = "form_field_twice";
+    /// A mirror whose field has no item of its own (docs/adr/0437).
+    pub const MIRROR_ALONE: &str = "form_mirror_alone";
+    /// A mirror with a rule that writes, requires or checks (docs/adr/0437).
+    pub const MIRROR_RULES: &str = "form_mirror_rules";
     /// The widget does not take the field's kind.
     pub const WIDGET_UNFIT: &str = "form_widget_unfit";
     /// A list, radio or segmented widget on a field without a value list.

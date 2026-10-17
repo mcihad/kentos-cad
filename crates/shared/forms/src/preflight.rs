@@ -46,9 +46,23 @@ pub fn preflight_in(
         schema,
         issues: Vec::new(),
         bound: Vec::new(),
+        mirrors: Vec::new(),
         calcs: Vec::new(),
     };
     p.items(&body.items, false);
+    // A mirror shows a field the form writes elsewhere (docs/adr/0437).
+    for (item, key) in std::mem::take(&mut p.mirrors) {
+        if !p.bound.iter().any(|b| b.key == key) {
+            p.issues.push(issue(
+                codes::MIRROR_ALONE,
+                FormSeverity::Error,
+                Some(&item),
+                Some(&key),
+                None,
+                format!("“{key}” alanının yansıması var ama alanın kendi öğesi formda yok; alanı ekleyin."),
+            ));
+        }
+    }
     p.calc_cycle();
     // The workflow over the layer's fields (docs/adr/0428 §1).
     if let Some(problem) = body
@@ -120,11 +134,12 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
                 | W::CheckList
                 | W::Search
                 | W::Chips
+                | W::Tree
         ),
         LayerFieldKind::Integer | LayerFieldKind::Decimal => {
             matches!(
                 widget,
-                W::Number | W::List | W::Radio | W::Segmented | W::Slider | W::Search
+                W::Number | W::List | W::Radio | W::Segmented | W::Slider | W::Search | W::Tree
             )
         }
         LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => {
@@ -151,7 +166,7 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
     }
     let needs_list = matches!(
         widget,
-        W::List | W::Radio | W::Segmented | W::CheckList | W::Search | W::Chips
+        W::List | W::Radio | W::Segmented | W::CheckList | W::Search | W::Chips | W::Tree
     );
     if needs_list && !listed && field.kind != LayerFieldKind::Boolean {
         return Err(codes::WIDGET_NEEDS_VALUES);
@@ -175,6 +190,8 @@ struct Preflight<'a> {
     still: kentos_expression::Schema,
     issues: Vec<FormIssue>,
     bound: Vec<Bound>,
+    /// The mirrors (docs/adr/0437): their item and their field's key.
+    mirrors: Vec<(String, String)>,
     /// Each calculated field: its item, its key, its layer field's name and the names it reads.
     calcs: Vec<(String, String, String, Vec<String>)>,
 }
@@ -246,6 +263,30 @@ impl Preflight<'_> {
                 message,
             )
         };
+        if f.mirror {
+            self.mirrors.push((f.id.clone(), f.field.clone()));
+            if !self.fields.iter().any(|l| l.key() == f.field) {
+                self.issues.push(at(
+                    codes::FIELD_UNKNOWN,
+                    None,
+                    format!("Katmanda “{}” alanı yok.", f.field),
+                ));
+            }
+            if f.writes_rules() {
+                self.issues.push(at(
+                    codes::MIRROR_RULES,
+                    None,
+                    format!(
+                        "“{}” bir yansıma: yalnız başlığı, yardımı, görünüşü ve görünme koşulu olur; kuralları alanın kendi öğesine yazın.",
+                        f.field
+                    ),
+                ));
+            }
+            if let Some(rule) = &f.visible_when {
+                self.rule(&f.id, Some(&f.field), None, "visibleWhen", rule);
+            }
+            return;
+        }
         let layer = self.fields.iter().find(|l| l.key() == f.field);
         if self.bound.iter().any(|b| b.key == f.field) {
             self.issues.push(at(

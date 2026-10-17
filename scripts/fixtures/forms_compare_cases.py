@@ -61,7 +61,7 @@ FORMS = [
 # ---- The rule, written from the ADR ----
 
 # The properties' Turkish names in the words (docs/adr/0427).
-WORDS = {"label": "ad", "field": "alan", "help": "yardım", "placeholder": "yer tutucu", "widget": "giriş biçimi", "readOnly": "salt okunur", "required": "zorunlu", "visibleWhen": "görünme koşulu", "requiredWhen": "zorunluluk koşulu", "readOnlyWhen": "salt okunurluk koşulu", "default": "varsayılan", "defaultExpr": "varsayılan ifadesi", "calculate": "hesap", "choiceFilter": "seçenek süzgeci", "unique": "tekil", "reuseLast": "son değer", "overridable": "değiştirilebilir", "suggest": "öneriler", "lookup": "başka katmandan liste", "checks": "denetimler", "columns": "sütunlar", "collapsed": "kapalı açılır", "text": "metin", "layer": "katman", "view": "görünüm", "accept": "kabul edilen", "min": "en az", "max": "en çok"}
+WORDS = {"label": "ad", "field": "alan", "help": "yardım", "placeholder": "yer tutucu", "widget": "giriş biçimi", "readOnly": "salt okunur", "required": "zorunlu", "visibleWhen": "görünme koşulu", "requiredWhen": "zorunluluk koşulu", "readOnlyWhen": "salt okunurluk koşulu", "default": "varsayılan", "defaultExpr": "varsayılan ifadesi", "calculate": "hesap", "choiceFilter": "seçenek süzgeci", "unique": "tekil", "reuseLast": "son değer", "overridable": "değiştirilebilir", "mirror": "yansıma", "suggest": "öneriler", "lookup": "başka katmandan liste", "checks": "denetimler", "columns": "sütunlar", "collapsed": "kapalı açılır", "text": "metin", "layer": "katman", "view": "görünüm", "accept": "kabul edilen", "min": "en az", "max": "en çok"}
 
 def flat(items, parent=None, out=None):
     out = [] if out is None else out
@@ -108,6 +108,9 @@ def compare(old, new):
     if bool(old.get("clearHidden")) != bool(new.get("clearHidden")):
         out.append({"kind": "changed", "properties": ["clearHidden"],
                     "words": "Gizlenenler silinir." if new.get("clearHidden") else "Gizlenenler artık silinmez."})
+    if bool(old.get("steps")) != bool(new.get("steps")):
+        out.append({"kind": "changed", "properties": ["steps"],
+                    "words": "Form adım adım doldurulur." if new.get("steps") else "Form artık adım adım değil."})
     if old.get("tests", []) != new.get("tests", []):
         out.append({"kind": "changed", "properties": ["tests"],
                     "words": f"Senaryolar değişti: {len(new.get('tests', []))} senaryo, önce {len(old.get('tests', []))}."})

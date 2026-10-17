@@ -88,6 +88,11 @@ pub struct FormBody {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub workflow: Option<FormWorkflow>,
+    /// Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with
+    /// an error is not left forward. Only a form of tabs; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub steps: bool,
 }
 
 /// A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step
@@ -645,6 +650,12 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormCheck>>", optional))]
     pub checks: Vec<FormCheck>,
+    /// A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the
+    /// field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
+    /// only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mirror: bool,
 }
 
 impl FormField {
@@ -672,7 +683,27 @@ impl FormField {
             suggest: false,
             lookup: None,
             checks: Vec::new(),
+            mirror: false,
         }
+    }
+
+    /// Whether it has a rule a mirror may not (docs/adr/0437): anything that writes, requires or
+    /// checks the value.
+    pub fn writes_rules(&self) -> bool {
+        self.read_only
+            || self.required
+            || self.required_when.is_some()
+            || self.read_only_when.is_some()
+            || self.default.is_some()
+            || self.default_expr.is_some()
+            || self.calculate.is_some()
+            || self.choice_filter.is_some()
+            || self.unique
+            || self.reuse_last
+            || self.overridable
+            || self.suggest
+            || self.lookup.is_some()
+            || !self.checks.is_empty()
     }
 }
 
@@ -727,10 +758,13 @@ pub enum FormWidget {
     Search,
     /// The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.
     Chips,
+    /// A tree of the list (docs/adr/0437): its labels' “Üst / Alt” parts as branches; single-valued
+    /// fields with a value list. The codes are the list's.
+    Tree,
 }
 
 impl FormWidget {
-    pub const ALL: [FormWidget; 14] = [
+    pub const ALL: [FormWidget; 15] = [
         FormWidget::Text,
         FormWidget::TextArea,
         FormWidget::Number,
@@ -745,6 +779,7 @@ impl FormWidget {
         FormWidget::CheckList,
         FormWidget::Search,
         FormWidget::Chips,
+        FormWidget::Tree,
     ];
 
     /// Its name in the interface.
@@ -764,6 +799,7 @@ impl FormWidget {
             FormWidget::CheckList => "Çoklu seçim",
             FormWidget::Search => "Aranır liste",
             FormWidget::Chips => "Etiketler",
+            FormWidget::Tree => "Ağaç",
         }
     }
 }
@@ -980,6 +1016,9 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
         return Some(
             "Formun üstünde sekme varsa üstte yalnız sekmeler olur; öbür öğeler bir sekmenin içine girer.".into(),
         );
+    }
+    if body.steps && tabs_at_top < 2 {
+        return Some("Adım adım form en az iki sekmeden olur; her sekme bir adımdır.".into());
     }
     let mut seen = std::collections::HashSet::new();
     for (depth, item) in &all {

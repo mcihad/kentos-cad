@@ -41,6 +41,10 @@
           "type": "integer",
           "x-unit": "version"
         },
+        "steps": {
+          "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
+          "type": "boolean"
+        },
         "tests": {
           "description": "The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of\nthem, run again whenever the form changes.",
           "items": {
@@ -247,6 +251,10 @@
                 }
               ],
               "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
+            },
+            "mirror": {
+              "description": "A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the\nfield's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written\nonly as `true`.",
+              "type": "boolean"
             },
             "overridable": {
               "description": "The calculation may be overridden (docs/adr/0417): it fills the field while the field is\nempty, the field stays open to typing, and emptying it calculates it again. Only with\n`calculate`; written only as `true`.",
@@ -691,6 +699,11 @@
         {
           "const": "chips",
           "description": "The codes held as chips, one added from a list (docs/adr/0431): multiple fields with a value list.",
+          "type": "string"
+        },
+        {
+          "const": "tree",
+          "description": "A tree of the list (docs/adr/0437): its labels' “Üst / Alt” parts as branches; single-valued\nfields with a value list. The codes are the list's.",
           "type": "string"
         }
       ]

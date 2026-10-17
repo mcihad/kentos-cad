@@ -16,9 +16,9 @@ use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
     ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL,
-    CHANGES, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, NAME, NEW_FORM, PREVIEW,
-    PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule, SAVE, TITLE, Text, UNDO,
-    UP, Window, bound, find, msg,
+    CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, NAME, NEW_FORM,
+    PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule,
+    SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -80,6 +80,11 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
                 || f.lookup.is_some()
                 || !f.checks.is_empty();
             let mut words = name;
+            if f.mirror {
+                // A mirror shows the field again, read-only (docs/adr/0437).
+                words.push_str(" · yansıma");
+                return (Icon::Link, words, ruled);
+            }
             if f.required || layer.is_some_and(|l| l.required) {
                 words.push_str(" *");
             }
@@ -364,14 +369,6 @@ impl App {
                 crate::icons::from_web(Some("pin")),
                 Some(Event::AddLocation)
             ),
-            space::horizontal().width(8),
-            icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
-            icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
-            icon_tool(
-                REMOVE_ITEM,
-                Icon::Eraser,
-                has_item.then_some(Event::RemoveItem)
-            ),
             space::horizontal().width(Fill),
             icon_tool(
                 UNDO,
@@ -386,6 +383,25 @@ impl App {
         ]
         .spacing(4)
         .align_y(Center);
+        // The chosen item's tools on a line of their own: the add tools fill the first (docs/adr/0437).
+        let item_tools = row![
+            icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
+            icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
+            icon_tool(
+                REMOVE_ITEM,
+                Icon::Eraser,
+                has_item.then_some(Event::RemoveItem)
+            ),
+            icon_tool(COPY_ITEM, Icon::Copy, has_item.then_some(Event::CopyItem)),
+            icon_tool(
+                PASTE_ITEM,
+                crate::icons::from_web(Some("paste")),
+                self.form_clipboard.is_some().then_some(Event::PasteItem)
+            ),
+        ]
+        .spacing(4)
+        .align_y(Center);
+        let toolbar = column![toolbar, item_tools].spacing(4);
 
         // The items as a tree: dragged before, after or into a tab or group (docs/adr/0403 §2).
         fn node<'a>(
@@ -803,7 +819,36 @@ impl App {
                         ),
                         None,
                     ))
-                    .push(words::field("Öğe türü", widget, None))
+                    .push(words::field("Öğe türü", widget, None));
+                // A mirror has only its label, help, widget and visibility (docs/adr/0437).
+                if f.mirror {
+                    return col
+                        .push(label::caption(
+                            "Yansıma: alanın değeri burada salt okunur görünür; alanın kendi öğesi yazar.",
+                        ).style(muted))
+                        .push(words::field(
+                            "Yardım",
+                            input("Alanın altında", f.help.as_deref().unwrap_or(""), Text::Help),
+                            None,
+                        ))
+                        .push(rule_row(
+                            "Görünürlük",
+                            Rule::Visible(id.clone()),
+                            f.visible_when.as_deref().unwrap_or(""),
+                        ))
+                        .padding(iced::Padding {
+                            top: 0.0,
+                            right: 16.0,
+                            bottom: 0.0,
+                            left: 4.0,
+                        })
+                        .into();
+                }
+                col = col
+                    .push(words::secondary(
+                        "Yansımasını ekle",
+                        Some(msg(Event::AddMirror)),
+                    ))
                     .push(self.lookup_rows(&id, f, error_of("lookup")))
                     .push(
                         row![
@@ -1120,11 +1165,32 @@ impl App {
             "Gizlenenleri sil",
             editable.then(|| msg(Event::ClearHidden(!clear))),
         );
+        // Adım adım (docs/adr/0437): a form of two or more tabs.
+        let stepped = w.body.as_ref().is_some_and(|b| b.steps);
+        let tabbed = w.body.as_ref().is_some_and(|b| {
+            b.items
+                .iter()
+                .filter(|i| matches!(i, FormItem::Tab { .. }))
+                .count()
+                >= 2
+        });
+        let steps = kentos_ui::widget::tip(
+            words::check(
+                stepped,
+                "Adım adım",
+                (editable && (tabbed || stepped)).then(|| msg(Event::Steps(!stepped))),
+            ),
+            kentos_ui::widget::Tip::new("Adım adım").body(
+                "Sekmeler sırayla doldurulan adımlar olur; sorunlu adımdan ileri geçilmez, Kaydet son adımdadır.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        );
         let top = row![
             label::body(NAME),
             focus_ring(name),
             label::caption(status).style(muted),
             space::horizontal().width(Fill),
+            steps,
             clear_hidden,
             enforce,
         ]

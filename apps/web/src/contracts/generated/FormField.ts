@@ -100,4 +100,10 @@ lookup?: FormLookup,
 /**
  * What the record must satisfy, in order.
  */
-checks?: Array<FormCheck>, };
+checks?: Array<FormCheck>, 
+/**
+ * A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the
+ * field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
+ * only as `true`.
+ */
+mirror?: boolean, };
