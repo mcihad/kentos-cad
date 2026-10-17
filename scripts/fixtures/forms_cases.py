@@ -647,6 +647,15 @@ def preflight(body, fields, variables=(), world=None):
     stuck = next((k for k in range(len(calcs)) if not done[k]), None)
     if stuck is not None:
         issues.append(issue("form_calc_cycle", True, calcs[stuck][0], calcs[stuck][1], "calculate"))
+    # docs/adr/0442 §5: a step action's step, the workflow's.
+    steps = [s["label"] for s in body.get("workflow", {}).get("steps", [])]
+
+    def actions(xs):
+        for x in xs:
+            if x["type"] == "action" and x.get("kind") == "step" and x.get("step") not in steps:
+                issues.append(issue("form_action_step", True, x["id"], None, "step"))
+            actions(x.get("items", []))
+    actions(body["items"])
     if not bound:
         issues.append(issue("form_empty", False))
     for f in fields:
@@ -2200,8 +2209,11 @@ def requirements(body):
                     attachments = True
                 elif kind == "location":
                     geometry = True
-                elif kind == "action" and x["tool"] not in tools:
-                    tools.append(x["tool"])
+                elif kind == "action":
+                    # docs/adr/0442 §5: a tool its id; showing the record its geometry.
+                    if "tool" in x and x["tool"] not in tools:
+                        tools.append(x["tool"])
+                    geometry = geometry or x.get("kind") == "show"
             walk(x.get("items", []))
 
     walk(body["items"])
@@ -2251,11 +2263,54 @@ def utf8_sorted(d):
     return sorted(d.items(), key=lambda kv: kv[0].encode("utf-8"))
 
 
+def record_errors(body, fields, entities, layer="bina", objects=None):
+    """Each record's errors by `body`, completed as kept then validated (Kayıtları denetle's judgement, unique
+    values aside; docs/adr/0442 §2)."""
+    f = Form(body, fields)
+    out = []
+    for e in entities:
+        if e["layerId"] != layer:
+            continue
+        obj = (objects or OBJECT_OF).get(e["id"], {})
+        after, issues = f.complete(e["attrs"], obj, False)
+        said = [i.get("field") for i in issues]
+        issues = issues + [i for i in f.validate(after, obj) if i.get("field") not in said]
+        out.append(errors(issues))
+    return out
+
+
+def breaking_of(old, new, fields, entities, layer="bina", objects=None):
+    """The records `new` breaks that `old` held: how many, and how many by each field (keys in bytes' order)."""
+    before = record_errors(old, fields, entities, layer, objects)
+    after = record_errors(new, fields, entities, layer, objects)
+    records, by_field = 0, {}
+    for was, now in zip(before, after):
+        if not was and now:
+            records += 1
+            for k in sorted({i["field"] for i in now if i.get("field")}, key=lambda s: s.encode()):
+                by_field[k] = by_field.get(k, 0) + 1
+    if not records:
+        return None
+    return {"records": records, "fields": [{"field": k, "records": n}
+                                           for k, n in sorted(by_field.items(), key=lambda kv: kv[0].encode())]}
+
+
+def breaking_warning(name, b):
+    parts = ", ".join(f"{f['field']} {f['records']}" for f in b["fields"])
+    return {"code": "form_breaking", "path": "edit.id",
+            "message": f"“{name}” formunun yeni yayınına {b['records']} kayıt uymuyor (önceki yayına uyuyordu): {parts}. "
+                       "Yayından önce kayıtları düzeltin ya da formu gözden geçirin."}
+
+
 class Project:
     """The forms the edit cases go through, by the ADR's rule."""
 
-    def __init__(self, forms=None):
+    def __init__(self, forms=None, fields_of=None, entities=None, objects=None):
         self.forms = copy.deepcopy(forms or [])
+        # The records a publish judges (docs/adr/0442 §2).
+        self.fields_of = fields_of or FIELDS_OF
+        self.entities = entities or ENTITIES
+        self.objects = objects
 
     def ids(self):
         return [f["id"] for f in self.forms]
@@ -2265,7 +2320,7 @@ class Project:
 
     def step(self, op, **more):
         old = copy.deepcopy(self.forms)
-        warnings, kept = [], None
+        warnings, kept, more_out = [], None, {}
         k = op["kind"]
         if k == "create":
             name = op["name"].strip()
@@ -2294,6 +2349,13 @@ class Project:
         elif k == "publish":
             f = self.find(op["id"])
             rel = f.setdefault("releases", [])
+            broken = None
+            if rel and rel[-1]["body"] != f["draft"]:
+                broken = breaking_of(rel[-1]["body"], f["draft"], self.fields_of[f["layer"]], self.entities, f["layer"],
+                                     self.objects)
+                if broken:
+                    warnings.append(breaking_warning(f["name"], broken))
+                    more_out["breaking"] = broken
             if not rel or rel[-1]["body"] != f["draft"]:
                 note = op.get("note")
                 rel.append(release_of(f["draft"], rel[-1]["version"] + 1 if rel else 1, note if note and note.strip() else None))
@@ -2332,9 +2394,10 @@ class Project:
             kept = f
         changed = self.forms != old
         output = {"forms": [summary(f) for f in self.forms], "changed": changed, "revision": "$current",
-                  "issues": shown_issues(preflight(kept["draft"], FIELDS_OF[kept["layer"]])) if kept else []}
+                  "issues": shown_issues(preflight(kept["draft"], self.fields_of[kept["layer"]])) if kept else []}
         if kept is not None:
             output["form"] = form_json(kept)
+        output.update(more_out)
         step = {"op": "execute", "input": {"edit": op, **more},
                 "result": {"status": "completed", "output": output, "warnings": warnings}}
         expect = {"ids": IDS, "settings": {"forms": [form_json(f) for f in self.forms] or None}, "canUndo": False, "canRedo": False}
@@ -2413,6 +2476,15 @@ def edit_cases():
         # docs/adr/0441 §6: an action names a registered tool by its id; an address is none.
         p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
                                                               "tool": "https://ornek.org/x"}]}),
+                  failed("invalid_form", ANY, "edit.body")),
+        # docs/adr/0442 §5: each kind its own target.
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git", "kind": "show",
+                                                              "tool": "attributes.calculate"}]}),
+                  failed("invalid_form", ANY, "edit.body")),
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git", "kind": "step"}]}),
+                  failed("invalid_form", ANY, "edit.body")),
+        p.refused(create("A", body={"revision": 1, "items": [{"type": "action", "id": "git", "label": "Git",
+                                                              "kind": "recompute", "runs": "here"}]}),
                   failed("invalid_form", ANY, "edit.body")),
         p.refused({"kind": "publish", "id": "denetim", "note": "a\u0007"}, failed("invalid_form", NOTE_TEXT, "edit.note")),
     ]})
@@ -2602,6 +2674,19 @@ def validate_cases():
     acting = {**copy.deepcopy(FORM), "draft": acted}
     cases.append({"name": "bölücü ve eylem öğe olarak; formun gerektirdikleri: kullanıcı, şekil, araç", "setup": setup([acting]),
                   "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(acting, acted, None, FIRST))]})
+    # docs/adr/0442 §5: the actions' kinds: a step the form has not is an error; showing needs the geometry.
+    kinds = body_with(lambda b: b["items"][0]["items"].extend([
+        {"type": "action", "id": "goster", "label": "Çizimde göster", "kind": "show"},
+        {"type": "action", "id": "yenile", "label": "Hesapları yenile", "kind": "recompute"},
+        {"type": "action", "id": "gonder", "label": "Gönder", "kind": "step", "step": "Gönder"}]))
+    kinded = {**copy.deepcopy(FORM), "draft": kinds}
+    cases.append({"name": "eylem türleri: iş akışında olmayan adım hata, göster kaydın şeklini ister", "setup": setup([kinded]),
+                  "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(kinded, kinds, None, FIRST))]})
+    shown = body_with(lambda b: b["items"][0]["items"].append(
+        {"type": "action", "id": "goster", "label": "Çizimde göster", "kind": "show"}))
+    showing = {**copy.deepcopy(FORM), "draft": shown}
+    cases.append({"name": "göster eylemi kaydı sorar ve şekli gerektirir", "setup": setup([showing]),
+                  "steps": [run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(showing, shown, None, FIRST))]})
     broken = {**copy.deepcopy(FORM), "draft": BROKEN}
     cases.append({"name": "ön denetimde hata olan form reddedilmez: kaydı sorulmaz", "setup": setup([broken]), "steps": [
         run({"form": "denetim", "draft": True, "uid": "$uidOf:1"}, answer(broken, BROKEN, None, FIRST))]})

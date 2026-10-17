@@ -106,12 +106,18 @@ fn unknown(id: &str) -> Stop {
     )
 }
 
-/// The settings afterwards, the form kept and the warnings.
-type Next = (ProjectSettings, Option<ProjectForm>, Vec<CommandWarning>);
+/// The settings afterwards, the form kept, the warnings and the records a publish breaks.
+type Next = (
+    ProjectSettings,
+    Option<ProjectForm>,
+    Vec<CommandWarning>,
+    Option<kentos_contracts::FormBreaking>,
+);
 
 fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
     let mut s = doc.settings().clone();
     let mut warnings = Vec::new();
+    let mut broken = None;
     let at = |s: &ProjectSettings, id: &str| s.forms.iter().position(|f| f.id == id);
     let at_of = at;
     let kept = match &input.edit {
@@ -234,6 +240,52 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     "edit.id",
                 ));
             }
+            // The draft's scenarios must pass (docs/adr/0442 §1); a draft as last published is not run.
+            if s.forms[i]
+                .releases
+                .last()
+                .is_none_or(|r| r.body != s.forms[i].draft)
+                && !s.forms[i].draft.tests.is_empty()
+            {
+                let form = &s.forms[i];
+                let prepared = crate::forms_test::prepared_for(doc, form, &form.draft)
+                    .map_err(|why| fail(codes::FORM_PREFLIGHT, why, "edit.id"))?;
+                for test in &form.draft.tests {
+                    let differences = kentos_forms::scenario::run(&prepared, test);
+                    if let Some(first) = differences.first() {
+                        return Err(fail(
+                            codes::FORM_TESTS_FAILED,
+                            format!(
+                                "“{}” formu yayınlanamıyor: “{}” senaryosu tutmuyor ({first}). Senaryoyu ya da formu düzeltin.",
+                                form.name, test.name
+                            ),
+                            "edit.id",
+                        ));
+                    }
+                }
+            }
+            // The records the earlier release held and this one does not (docs/adr/0442 §2).
+            if let Some(last) = s.forms[i].releases.last()
+                && last.body != s.forms[i].draft
+            {
+                broken = forms::breaking(doc, &s.forms[i], &last.body, &s.forms[i].draft);
+                if let Some(b) = &broken {
+                    warnings.push(CommandWarning {
+                        code: codes::FORM_BREAKING.into(),
+                        path: Some("edit.id".into()),
+                        message: format!(
+                            "“{}” formunun yeni yayınına {} kayıt uymuyor (önceki yayına uyuyordu): {}. Yayından önce kayıtları düzeltin ya da formu gözden geçirin.",
+                            s.forms[i].name,
+                            b.records,
+                            b.fields
+                                .iter()
+                                .map(|f| format!("{} {}", f.field, f.records))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    });
+                }
+            }
             let form = &mut s.forms[i];
             // The draft as it was last published: nothing to publish.
             if form.releases.last().is_none_or(|r| r.body != form.draft) {
@@ -331,7 +383,7 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
             Some(form.clone())
         }
     };
-    Ok((s, kept, warnings))
+    Ok((s, kept, warnings, broken))
 }
 
 fn check(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
@@ -346,6 +398,7 @@ fn answer(
     form: Option<ProjectForm>,
     changed: bool,
     revision: String,
+    breaking: Option<kentos_contracts::FormBreaking>,
 ) -> FormsEdited {
     let issues: Vec<FormIssue> = form.as_ref().map_or_else(Vec::new, |f| {
         forms::preflight_of(doc, &f.draft, &f.layer, &forms::variables(doc))
@@ -356,6 +409,7 @@ fn answer(
         issues,
         changed,
         revision,
+        breaking,
     }
 }
 
@@ -373,10 +427,17 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &FormsEdit) -> CommandResult<(
 /// What execute would do; nothing is written.
 pub fn plan(cx: &ExecutionContext<'_>, input: &FormsEdit) -> CommandResult<FormsEdited> {
     match check(cx.doc, input) {
-        Ok((next, form, warnings)) => {
+        Ok((next, form, warnings, breaking)) => {
             let changed = next != *cx.doc.settings();
             CommandResult::Completed {
-                output: answer(cx.doc, &next, form, changed, cx.doc.revision().to_string()),
+                output: answer(
+                    cx.doc,
+                    &next,
+                    form,
+                    changed,
+                    cx.doc.revision().to_string(),
+                    breaking,
+                ),
                 warnings,
             }
         }
@@ -396,7 +457,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsEdit) -> CommandResult
 }
 
 fn write_execute(cx: &mut ExecutionContext<'_>, input: FormsEdit) -> CommandResult<FormsEdited> {
-    let (next, form, warnings) = match check(cx.doc, &input) {
+    let (next, form, warnings, breaking) = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),
     };
@@ -412,6 +473,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: FormsEdit) -> CommandResu
             form,
             changed,
             cx.doc.revision().to_string(),
+            breaking,
         ),
         warnings,
     }

@@ -24,6 +24,7 @@ FIELDS = [
     {"name": "Açıklama", "kind": "text"},
     {"name": "Gerekçe", "kind": "text", "length": 200},
     {"name": "Geçmiş", "kind": "text", "length": 120},
+    {"name": "Notlar", "kind": "text", "length": 160},
 ]
 WORKFLOW = {"field": "Durum", "initial": "taslak", "locked": ["onaylandi"], "steps": [
     {"label": "Gönder", "from": ["taslak", "iade"], "to": "gonderildi", "valid": True},
@@ -43,6 +44,9 @@ BODY = {"revision": 1, "items": ITEMS, "workflow": WORKFLOW}
 # docs/adr/0429: the same workflow logging its steps.
 LOGGED_FLOW = {**WORKFLOW, "log": "Geçmiş"}
 LOGGED = {"revision": 1, "items": ITEMS + [{"type": "field", "id": "gecmis", "field": "Geçmiş"}], "workflow": LOGGED_FLOW}
+# docs/adr/0442 §4: the steps' notes on the record's fields, with the log.
+NOTED_FLOW = {**LOGGED_FLOW, "notes": "Notlar"}
+NOTED = {"revision": 1, "items": ITEMS + [{"type": "field", "id": "gecmis", "field": "Geçmiş"}], "workflow": NOTED_FLOW}
 PLAIN = {"revision": 1, "items": ITEMS}
 TWIN_BODY = {"revision": 1, "items": ITEMS}  # the twin is told of the workflow below, not by the body
 
@@ -57,6 +61,7 @@ FORMS = [
     {"id": "taslak", "name": "Taslak akış", "layer": "bina", "draft": copy.deepcopy(BODY)},
     {"id": "kilitli", "name": "Kilitli katman", "layer": "kilit", "draft": copy.deepcopy(BODY), "releases": release(BODY)},
     {"id": "kayitli", "name": "Kayıtlı akış", "layer": "bina", "draft": copy.deepcopy(LOGGED), "releases": release(LOGGED)},
+    {"id": "notlu", "name": "Notlu akış", "layer": "bina", "draft": copy.deepcopy(NOTED), "releases": release(NOTED)},
     {"id": "bozuk", "name": "Bozuk akış", "layer": "bina",
      "draft": {**copy.deepcopy(BODY), "workflow": {**copy.deepcopy(WORKFLOW), "field": "Yok"}}},
 ]
@@ -110,11 +115,27 @@ class Refused(Exception):
         self.error = {"code": code, "message": message, "path": path}
 
 
-def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=None):
+BOUND = [x["field"] for x in ITEMS]
+
+
+def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=None, noted=False, notes=None, name=""):
     """The record afterwards, by the rule; or Refused."""
+    notes = notes or {}
     before = dict(attrs if attrs is not None else ATTRS[slot])
     if logged and "Geçmiş" in values:
         raise Refused("form_invalid", "“Geçmiş” alanını iş akışının adımları yazar; değerlerden çıkarın.", "values.Geçmiş")
+    # docs/adr/0442 §4: the notes, by the form's own fields.
+    if noted and "Notlar" in values:
+        raise Refused("form_invalid", "“Notlar” alanını iş akışının adımları yazar; notları `notes` ile verin.",
+                      "values.Notlar")
+    if notes and not noted:
+        raise Refused("form_invalid", f"“{name}” formunun iş akışında not alanı yok; alanlara not yazılamaz.", "notes")
+    for k, v in sorted(notes.items(), key=lambda kv: kv[0].encode()):
+        if k not in BOUND and k not in (["Geçmiş"] if logged else []):
+            raise Refused("form_invalid", f"“{k}” formun bir alanı değil; not yalnız formdaki alanlara yazılır.", f"notes.{k}")
+        if not v.strip() or len(v) > 1000:
+            raise Refused("form_invalid", "Not boş olamaz, en çok 1000 karakterdir ve denetim karakteri içermez.",
+                          f"notes.{k}")
     step = next((s for s in WORKFLOW["steps"] if s["label"] == step_label), None)
     if step is None:
         raise Refused("unknown_step", f"“Bina denetimi” formunun iş akışında “{step_label}” adımı yok.", "step")
@@ -153,13 +174,15 @@ def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=N
     if reason and not (after.get(reason) or "").strip():
         raise Refused("reason_required", f"“{step_label}” adımının gerekçesi (“{reason}”) yazılmalı.", f"values.{reason}")
     # docs/adr/0440 §4: the snapshot the step was taken on: the record, its state and log aside.
-    snap = fc.snapshot(after, ("Durum", "Geçmiş") if logged else ("Durum",))
+    snap = fc.snapshot(after, ("Durum", "Geçmiş", "Notlar") if noted else ("Durum", "Geçmiş") if logged else ("Durum",))
     if logged:
         # docs/adr/0429: the moment, the person, the step and its states, the reason; the oldest lines go.
         line = " · ".join([*([moment] if moment else []), *([user] if user else []),
                            f"{step_label} ({words(state)} → {words(step['to'])})"])
         if reason and (after.get(reason) or "").strip():
             line += f": {after[reason].strip()}"
+        if notes:
+            line += f" · {len(notes)} alan notu"
         line += f" · #{snap}"
         lines = (after.get("Geçmiş") or "").splitlines() if after.get("Geçmiş") else []
         lines.append(line)
@@ -168,11 +191,21 @@ def take(slot, step_label, values, attrs=None, logged=False, moment=None, user=N
         if len(lines[-1]) > 120:
             lines[-1] = lines[-1][:120]
         after["Geçmiş"] = "\n".join(lines)
+    if noted:
+        if notes:
+            text = json.dumps({k: v.strip() for k, v in notes.items()}, ensure_ascii=False, separators=(",", ":"),
+                              sort_keys=True)
+            if len(text) > 160:
+                raise Refused("form_invalid", f"Notlar “Notlar” alanına sığmıyor ({len(text)} karakter); notları kısaltın "
+                                              "ya da alanın uzunluğunu artırın.", "notes")
+            after["Notlar"] = text
+        else:
+            after.pop("Notlar", None)
     return state, step["to"], after, snap
 
 
 def step(slot, label, values=None, now=None, op="execute", undo=False, form="denetim", draft=False, moment=None,
-         user=None):
+         user=None, notes=None):
     values = values or {}
     now = dict(now or ATTRS)
     inp = {"form": form, "uid": f"$uidOf:{slot}", "step": label}
@@ -182,10 +215,14 @@ def step(slot, label, values=None, now=None, op="execute", undo=False, form="den
         inp["values"] = values
     if moment:
         inp["moment"] = moment
+    if notes:
+        inp["notes"] = notes
     if user:
         inp["user"] = user
+    names = {f["id"]: f["name"] for f in FORMS}
     try:
-        frm, to, after, snap = take(slot, label, values, now[slot], logged=form == "kayitli", moment=moment, user=user)
+        frm, to, after, snap = take(slot, label, values, now[slot], logged=form in ("kayitli", "notlu"), moment=moment,
+                                    user=user, noted=form == "notlu", notes=notes, name=names.get(form, ""))
     except Refused as r:
         expect = {"ids": IDS, "fields": {str(slot): {"attrs": now[slot]}}, "canUndo": undo, "canRedo": False,
                   "revision": "same"}
@@ -257,6 +294,20 @@ def cases():
     b, now = step(3, "Gönder", now=now, undo=True, form="kayitli", moment="2026-10-17T11:00:00", user="Mehmet Kaya")
     c, _ = step(3, "Onayla", now=now, undo=True, form="kayitli", moment="2026-10-18T08:15:00", user="Zeynep Arslan")
     out.append({"name": "geçmiş: alan dolunca en eski satırlar gider", "steps": [a, b, c]})
+    # docs/adr/0442 §4: the reviewer's notes on the record's fields.
+    a, now = step(3, "Geri gönder", {"Gerekçe": "Ölçüler eksik."}, form="notlu", user="Ayşe Yılmaz",
+                  notes={"Kat": "Çatı katı sayılmamış.", "Yükseklik": "  Yeniden ölçün.  "})
+    b, _ = step(3, "Gönder", now=now, undo=True, form="notlu", user="Mehmet Kaya")
+    out.append({"name": "notlar: geri gönderen alanlara not yazar, sonraki adım siler", "steps": [a, b]})
+    one("notlar: formda olmayan alana not yazılmaz", 3, "Geri gönder", {"Gerekçe": "x"}, form="notlu",
+        notes={"Yok": "x"})
+    one("notlar: boş not", 3, "Geri gönder", {"Gerekçe": "x"}, form="notlu", notes={"Kat": "   "})
+    one("notlar: not alanı olmayan iş akışı", 3, "Geri gönder", {"Gerekçe": "x"}, notes={"Kat": "x"})
+    one("notlar: not alanı değerlerle yazılmaz", 3, "Geri gönder", {"Gerekçe": "x", "Notlar": "{}"}, form="notlu")
+    one("notlar: alana sığmayan notlar", 3, "Geri gönder", {"Gerekçe": "x"}, form="notlu",
+        notes={"Kat": "k" * 90, "Açıklama": "a" * 60})
+    one("notlar: plan da notları gösterir", 3, "Geri gönder", {"Gerekçe": "Eksik."}, form="notlu",
+        notes={"Açıklama": "Cephe yazılmamış."}, op="plan")
     out.append(refused("iş akışı olmayan form", {"form": "basit", "uid": "$uidOf:1", "step": "Gönder"}, "no_workflow",
                        "“Basit” formunun iş akışı yok; tasarımcının İş akışı penceresinden tanımlayın.", "step"))
     out.append(refused("olmayan form", {"form": "yok", "uid": "$uidOf:1", "step": "Gönder"}, "unknown_form",

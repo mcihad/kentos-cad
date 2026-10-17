@@ -1,0 +1,2632 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.attachments.inspect",
+ "commandVersion": 1,
+ "title": "Ekleri incele",
+ "note": "ADR 0442 §7: eklerin baytlarından türü, boyu, özeti ve EXIF'i. Written by scripts/fixtures/attachments_inspect_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ekler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500020,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400000
+     },
+     {
+      "x": 500030,
+      "y": 4400010
+     },
+     {
+      "x": 500020,
+      "y": 4400010
+     }
+    ],
+    "attachments": [
+     {
+      "name": "Konum fotoğrafı",
+      "file": "../../exif/v1/konum.jpg"
+     },
+     {
+      "name": "GPS'siz",
+      "file": "../../exif/v1/gpssiz.jpg"
+     },
+     {
+      "name": "EXIF'siz",
+      "file": "../../exif/v1/exifsiz.jpg"
+     },
+     {
+      "name": "TIFF",
+      "file": "../../exif/v1/yalniz-tiff.tif"
+     },
+     {
+      "name": "Metin",
+      "file": "../../exif/v1/metin.txt"
+     },
+     {
+      "name": "Kayıp",
+      "file": "yok.jpg"
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500040,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400010
+     },
+     {
+      "x": 500040,
+      "y": 4400010
+     }
+    ],
+    "attachments": [
+     {
+      "name": "Rapor",
+      "file": "rapor.docx",
+      "note": "Denetim raporu"
+     },
+     {
+      "name": "Plan",
+      "file": "plan.pdf"
+     },
+     {
+      "name": "Kroki",
+      "file": "kroki.gif"
+     },
+     {
+      "name": "Ölçüler",
+      "file": "olcu.csv"
+     },
+     {
+      "name": "Bilinmeyen",
+      "file": "not.xyz"
+     },
+     {
+      "name": "Sahte JPEG",
+      "file": "sahte.jpg"
+     },
+     {
+      "name": "Klasör",
+      "file": "."
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500060,
+      "y": 4400000
+     },
+     {
+      "x": 500070,
+      "y": 4400000
+     },
+     {
+      "x": 500070,
+      "y": 4400010
+     },
+     {
+      "x": 500060,
+      "y": 4400010
+     }
+    ],
+    "attachments": [
+     {
+      "name": "Rapor",
+      "url": "https://ornek.org/belgeler/rapor.pdf"
+     },
+     {
+      "name": "Sayfa",
+      "url": "https://ornek.org/kayit"
+     },
+     {
+      "name": "Foto",
+      "url": "https://ornek.org/foto.JPG?boy=800#ust"
+     },
+     {
+      "name": "Arşiv",
+      "url": "https://ornek.org/paket.zip"
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500080,
+      "y": 4400000
+     },
+     {
+      "x": 500090,
+      "y": 4400000
+     },
+     {
+      "x": 500090,
+      "y": 4400010
+     },
+     {
+      "x": 500080,
+      "y": 4400010
+     }
+    ],
+    "attachments": [
+     {
+      "name": "Cephe",
+      "asset": "resim-88fcea211e952d65"
+     },
+     {
+      "name": "Konum",
+      "asset": "resim-53c8683ef8148ddc"
+     },
+     {
+      "name": "Silinmiş",
+      "asset": "resim-0000000000000000"
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500100,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400010
+     },
+     {
+      "x": 500100,
+      "y": 4400010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "resim-88fcea211e952d65",
+     "name": "cephe",
+     "path": [
+      "Ekler"
+     ],
+     "format": "png",
+     "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAAAAACRn/EaAAAADklEQVR42mNoAAIGOAEALQ8GAbBqrSgAAAAASUVORK5CYII=",
+     "width": 4,
+     "height": 3
+    },
+    {
+     "kind": "asset",
+     "id": "resim-53c8683ef8148ddc",
+     "name": "konum",
+     "path": [
+      "Ekler"
+     ],
+     "format": "jpeg",
+     "data": "data:image/jpeg;base64,/9j/4QGaRXhpZgAASUkqAAgAAAAFAA8BAgAGAAAASgAAABABAgANAAAAUAAAABIBAwABAAAAAQAAAGmHBAABAAAAXgAAACWIBAABAAAApAAAAAAAAABDYW5vbgBDYW5vbiBFT1MgUjUAAAMAAJABAAQAAAAwMjMyA5ACABQAAACIAAAAEZACAAcAAACcAAAAAAAAADIwMjQ6MDU6MTcgMTA6MzI6MDUAKzAzOjAwAAALAAAAAQAEAAAAAgMAAAEAAgACAAAATgAAAAIABQADAAAALgEAAAMAAgACAAAARQAAAAQABQADAAAARgEAAAUAAQABAAAAAAAAAAYABQABAAAAXgEAAAcABQADAAAAZgEAABAAAgACAAAAVAAAABEABQABAAAAfgEAAB0AAgALAAAAhgEAAAAAAAAnAAAAAQAAADcAAAABAAAAeAwAAGQAAAAgAAAAAQAAADMAAAABAAAA5xYAAGQAAABVBwAAAgAAAAcAAAABAAAAIAAAAAEAAAAFAAAAAQAAAB0CAAAEAAAAMjAyNDowNToxNwAA/+AAEEpGSUYAAQEAAAEAAQAA/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgABgAIAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A06KKK/nI/fT/2Q==",
+     "width": 8,
+     "height": 8
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "fotoğraflar diskten: tür, boy, özet, EXIF'in anı ve konumu; bulunamayan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:1",
+         "attachments": [
+          {
+           "name": "Konum fotoğrafı",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "GPS'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 805,
+           "sha256": "e6404b4f763abef4faadfbe572e57b9e5ecf18e60ee1d5f4013e9810dc5751ed",
+           "taken": "2022-07-01T12:00:00"
+          },
+          {
+           "name": "EXIF'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 633,
+           "sha256": "63ed134c3da48ec5b3b4efad12b04ca29b656d1359fb5e2113d70b22206918a2"
+          },
+          {
+           "name": "TIFF",
+           "source": "file",
+           "mime": "image/tiff",
+           "size": 190,
+           "sha256": "145b01f3a3f9340def83facd5e5ab65024359aae8e7e73ae3dce2a6c95b6cbcd",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Metin",
+           "source": "file",
+           "mime": "text/plain",
+           "size": 25,
+           "sha256": "37e4a22e6b3bd7de3df3b8d77b00b6eb58e791490834568ff8a785f80dc6650d"
+          },
+          {
+           "name": "Kayıp",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "belgeler: ZIP uzantısıyla, PDF ve GIF baytlarından, CSV uzantısından, bilinmeyen, sahte uzantı, klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:2",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "file",
+           "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+           "size": 145,
+           "sha256": "a3028b6ef2b1c53b43253cd0f7f4f4e1a789113e4e4fba6fe818ae949aab8298"
+          },
+          {
+           "name": "Plan",
+           "source": "file",
+           "mime": "application/pdf",
+           "size": 86,
+           "sha256": "45ea47bca779227a348efc19cfb3cbb3718792e1dc9ff0f143fa63f6087e8e04"
+          },
+          {
+           "name": "Kroki",
+           "source": "file",
+           "mime": "image/gif",
+           "size": 43,
+           "sha256": "693d949d8c3fdc7fd4ace7c340b5f177a9f0c5be7bafee8bc93a7d88b7523d75"
+          },
+          {
+           "name": "Ölçüler",
+           "source": "file",
+           "mime": "text/csv",
+           "size": 36,
+           "sha256": "cfe445396a2813c719150d7921d0031ba1ab3afea2262b58ba7d0d6055fe8cd2"
+          },
+          {
+           "name": "Bilinmeyen",
+           "source": "file",
+           "mime": "application/octet-stream",
+           "size": 21,
+           "sha256": "f84ac14399fd37a578338eeb3716af3329e3b2e22a2bb3c48a8b8185cb66e83c"
+          },
+          {
+           "name": "Sahte JPEG",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 19,
+           "sha256": "4cc717bb72cefbd75a354955f16776f04fc83e80f73131d4f38103b28bb2e68b"
+          },
+          {
+           "name": "Klasör",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "adresler yalnız adıyla: uzantı, sorgu ve parça, büyük harf, uzantısız",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kitaplığın fotoğrafları: PNG, EXIF'li JPEG, kitaplıkta olmayan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:4",
+         "attachments": [
+          {
+           "name": "Cephe",
+           "source": "asset",
+           "mime": "image/png",
+           "size": 71,
+           "sha256": "88fcea211e952d654e3e7704f0ff913539503a9bdf5e25bc9d9cb4b9d1d945f9"
+          },
+          {
+           "name": "Konum",
+           "source": "asset",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Silinmiş",
+           "source": "asset",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eki olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:5",
+         "attachments": []
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "verilen sırayla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:4",
+         "attachments": [
+          {
+           "name": "Cephe",
+           "source": "asset",
+           "mime": "image/png",
+           "size": 71,
+           "sha256": "88fcea211e952d654e3e7704f0ff913539503a9bdf5e25bc9d9cb4b9d1d945f9"
+          },
+          {
+           "name": "Konum",
+           "source": "asset",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Silinmiş",
+           "source": "asset",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:1",
+         "attachments": [
+          {
+           "name": "Konum fotoğrafı",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "GPS'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 805,
+           "sha256": "e6404b4f763abef4faadfbe572e57b9e5ecf18e60ee1d5f4013e9810dc5751ed",
+           "taken": "2022-07-01T12:00:00"
+          },
+          {
+           "name": "EXIF'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 633,
+           "sha256": "63ed134c3da48ec5b3b4efad12b04ca29b656d1359fb5e2113d70b22206918a2"
+          },
+          {
+           "name": "TIFF",
+           "source": "file",
+           "mime": "image/tiff",
+           "size": 190,
+           "sha256": "145b01f3a3f9340def83facd5e5ab65024359aae8e7e73ae3dce2a6c95b6cbcd",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Metin",
+           "source": "file",
+           "mime": "text/plain",
+           "size": 25,
+           "sha256": "37e4a22e6b3bd7de3df3b8d77b00b6eb58e791490834568ff8a785f80dc6650d"
+          },
+          {
+           "name": "Kayıp",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı nesne iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:3"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "klasör verilmeyince göreli dosyalar okunmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:1",
+         "attachments": [
+          {
+           "name": "Konum fotoğrafı",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "GPS'siz",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "EXIF'siz",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "TIFF",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Metin",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Kayıp",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "klasörsüz belgeler de okunmaz; adresler ve kitaplık yine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:2",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Plan",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Kroki",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Ölçüler",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Bilinmeyen",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Sahte JPEG",
+           "source": "file",
+           "missing": true
+          },
+          {
+           "name": "Klasör",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:4",
+         "attachments": [
+          {
+           "name": "Cephe",
+           "source": "asset",
+           "mime": "image/png",
+           "size": 71,
+           "sha256": "88fcea211e952d654e3e7704f0ff913539503a9bdf5e25bc9d9cb4b9d1d945f9"
+          },
+          {
+           "name": "Konum",
+           "source": "asset",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Silinmiş",
+           "source": "asset",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:4"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:1",
+         "attachments": [
+          {
+           "name": "Konum fotoğrafı",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "GPS'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 805,
+           "sha256": "e6404b4f763abef4faadfbe572e57b9e5ecf18e60ee1d5f4013e9810dc5751ed",
+           "taken": "2022-07-01T12:00:00"
+          },
+          {
+           "name": "EXIF'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 633,
+           "sha256": "63ed134c3da48ec5b3b4efad12b04ca29b656d1359fb5e2113d70b22206918a2"
+          },
+          {
+           "name": "TIFF",
+           "source": "file",
+           "mime": "image/tiff",
+           "size": 190,
+           "sha256": "145b01f3a3f9340def83facd5e5ab65024359aae8e7e73ae3dce2a6c95b6cbcd",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Metin",
+           "source": "file",
+           "mime": "text/plain",
+           "size": 25,
+           "sha256": "37e4a22e6b3bd7de3df3b8d77b00b6eb58e791490834568ff8a785f80dc6650d"
+          },
+          {
+           "name": "Kayıp",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:4",
+         "attachments": [
+          {
+           "name": "Cephe",
+           "source": "asset",
+           "mime": "image/png",
+           "size": 71,
+           "sha256": "88fcea211e952d654e3e7704f0ff913539503a9bdf5e25bc9d9cb4b9d1d945f9"
+          },
+          {
+           "name": "Konum",
+           "source": "asset",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Silinmiş",
+           "source": "asset",
+           "missing": true
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün nesneler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:5"
+      ],
+      "folder": "$fixture:attachments/v1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": [
+        {
+         "uid": "$uidOf:1",
+         "attachments": [
+          {
+           "name": "Konum fotoğrafı",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "GPS'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 805,
+           "sha256": "e6404b4f763abef4faadfbe572e57b9e5ecf18e60ee1d5f4013e9810dc5751ed",
+           "taken": "2022-07-01T12:00:00"
+          },
+          {
+           "name": "EXIF'siz",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 633,
+           "sha256": "63ed134c3da48ec5b3b4efad12b04ca29b656d1359fb5e2113d70b22206918a2"
+          },
+          {
+           "name": "TIFF",
+           "source": "file",
+           "mime": "image/tiff",
+           "size": 190,
+           "sha256": "145b01f3a3f9340def83facd5e5ab65024359aae8e7e73ae3dce2a6c95b6cbcd",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Metin",
+           "source": "file",
+           "mime": "text/plain",
+           "size": 25,
+           "sha256": "37e4a22e6b3bd7de3df3b8d77b00b6eb58e791490834568ff8a785f80dc6650d"
+          },
+          {
+           "name": "Kayıp",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:2",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "file",
+           "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+           "size": 145,
+           "sha256": "a3028b6ef2b1c53b43253cd0f7f4f4e1a789113e4e4fba6fe818ae949aab8298"
+          },
+          {
+           "name": "Plan",
+           "source": "file",
+           "mime": "application/pdf",
+           "size": 86,
+           "sha256": "45ea47bca779227a348efc19cfb3cbb3718792e1dc9ff0f143fa63f6087e8e04"
+          },
+          {
+           "name": "Kroki",
+           "source": "file",
+           "mime": "image/gif",
+           "size": 43,
+           "sha256": "693d949d8c3fdc7fd4ace7c340b5f177a9f0c5be7bafee8bc93a7d88b7523d75"
+          },
+          {
+           "name": "Ölçüler",
+           "source": "file",
+           "mime": "text/csv",
+           "size": 36,
+           "sha256": "cfe445396a2813c719150d7921d0031ba1ab3afea2262b58ba7d0d6055fe8cd2"
+          },
+          {
+           "name": "Bilinmeyen",
+           "source": "file",
+           "mime": "application/octet-stream",
+           "size": 21,
+           "sha256": "f84ac14399fd37a578338eeb3716af3329e3b2e22a2bb3c48a8b8185cb66e83c"
+          },
+          {
+           "name": "Sahte JPEG",
+           "source": "file",
+           "mime": "image/jpeg",
+           "size": 19,
+           "sha256": "4cc717bb72cefbd75a354955f16776f04fc83e80f73131d4f38103b28bb2e68b"
+          },
+          {
+           "name": "Klasör",
+           "source": "file",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "attachments": [
+          {
+           "name": "Rapor",
+           "source": "url",
+           "mime": "application/pdf"
+          },
+          {
+           "name": "Sayfa",
+           "source": "url"
+          },
+          {
+           "name": "Foto",
+           "source": "url",
+           "mime": "image/jpeg"
+          },
+          {
+           "name": "Arşiv",
+           "source": "url",
+           "mime": "application/zip"
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:4",
+         "attachments": [
+          {
+           "name": "Cephe",
+           "source": "asset",
+           "mime": "image/png",
+           "size": 71,
+           "sha256": "88fcea211e952d654e3e7704f0ff913539503a9bdf5e25bc9d9cb4b9d1d945f9"
+          },
+          {
+           "name": "Konum",
+           "source": "asset",
+           "mime": "image/jpeg",
+           "size": 1045,
+           "sha256": "53c8683ef8148ddcc98886cb8a89ddc92e99c84ce86232c5298808b6acedd9f6",
+           "taken": "2024-05-17T10:32:05+03:00",
+           "latitude": 39.925533333333334,
+           "longitude": 32.86628611111111
+          },
+          {
+           "name": "Silinmiş",
+           "source": "asset",
+           "missing": true
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:5",
+         "attachments": []
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nesne verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir çağrıda 1 ile 1000 arasında nesne incelenir; 0 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "1 000'den çok nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir çağrıda 1 ile 1000 arasında nesne incelenir; 1001 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "B-1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“B-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uids/0"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci kimlik geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "B-2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“B-2” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uids/1"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff” kimlikli nesne çizimde yok; silinmiş olabilir. Çizimdeki bir nesnenin kimliğini verin.",
+       "path": "uids/0"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "göreli klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "folder": "ekler"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_folder",
+       "message": "“ekler” mutlak bir yol değil; çizimin klasörünü tam yoluyla verin.",
+       "path": "folder"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "önce sayı denetlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [],
+      "folder": "ekler"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir çağrıda 1 ile 1000 arasında nesne incelenir; 0 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik klasörden önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "B-1"
+      ],
+      "folder": "ekler"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“B-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "uids/0"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

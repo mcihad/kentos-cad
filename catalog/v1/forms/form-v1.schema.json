@@ -1,5 +1,51 @@
 {
   "$defs": {
+    "ActionKind": {
+      "description": "What a form action does (docs/adr/0442 §5).",
+      "oneOf": [
+        {
+          "const": "tool",
+          "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+          "type": "string"
+        },
+        {
+          "const": "recompute",
+          "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+          "type": "string"
+        },
+        {
+          "const": "step",
+          "description": "A workflow step on the record (`cad.forms.transition`).",
+          "type": "string"
+        },
+        {
+          "const": "show",
+          "description": "The record shown on the drawing; writes nothing.",
+          "type": "string"
+        }
+      ]
+    },
+    "ActionRuns": {
+      "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+      "oneOf": [
+        {
+          "enum": [
+            "auto"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "here",
+          "description": "On this computer, in the window's thread.",
+          "type": "string"
+        },
+        {
+          "const": "background",
+          "description": "In the background, with its panel and Durdur.",
+          "type": "string"
+        }
+      ]
+    },
     "AttachmentAccept": {
       "description": "What an attachments item counts and adds.",
       "oneOf": [
@@ -595,18 +641,36 @@
           "type": "object"
         },
         {
-          "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+          "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
           "properties": {
             "id": {
               "type": "string"
             },
+            "kind": {
+              "$ref": "#/$defs/ActionKind",
+              "description": "What it does; written unless `tool`."
+            },
             "label": {
               "type": "string"
             },
+            "runs": {
+              "$ref": "#/$defs/ActionRuns",
+              "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+            },
+            "step": {
+              "description": "A `step` action's workflow step, by its label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "tool": {
-              "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+              "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
               "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "type": {
               "const": "action",
@@ -622,8 +686,7 @@
           "required": [
             "type",
             "id",
-            "label",
-            "tool"
+            "label"
           ],
           "type": "object"
         }
@@ -936,6 +999,13 @@
         },
         "log": {
           "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
           "type": [
             "string",
             "null"

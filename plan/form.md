@@ -303,7 +303,7 @@ Yeni kaydın identity UUID'si host tarafından oluşturulur; kullanıcı input'u
 - [ ] **FORM-STD-09:** Renderer semantic conformance suite kur; aynı bundle ve draft için values/validation/available actions eşdeğer olsun.
 - [ ] **FORM-STD-10:** Responsive/a11y/localization profili ve unsupported-required-capability politikası standardın parçası olsun. — *17 Ekim, kısmen: biçimin profili `docs/specs/forms-v1.md` §5'te: formun ortamdan istedikleri, eksiğinde salt okunur açma, erişilebilir etiket ve odak sırası; çok dilli etiketler ve dar ekran yerleşimi sonraki biçim sürümüyle (ADR 0441 §4).*
 - [ ] **FORM-STD-11:** Portable form Python/uv/plugin kurulumu gerektirmeden web/mobile'da veri girişi yapabilsin.
-- [ ] **FORM-STD-12:** Custom Python hook/Processing action bağımlılığı form capabilities'e yazılsın; yerel/server/offline yürütme yolu açık seçilsin.
+- [x] **FORM-STD-12:** Custom Python hook/Processing action bağımlılığı form capabilities'e yazılsın; yerel/server/offline yürütme yolu açık seçilsin. — *17 Ekim: eylemin işlem aracı formun gerektirdiklerinde (`tool:<kimlik>`), çalıştığı yer eylemin `runs`'ında (Otomatik, Bu bilgisayarda, Arka planda; ADR 0441 §4, 0442 §6); sunucu yürütücüsü bulutla.*
 
 **Kabul:** Tek FormBundle değiştirilmeden masaüstü/web/mobil renderer'a verilir; aynı domain kodu, koşullu zorunluluk ve child relation sonucu oluşur. Sunum farkları veri anlamını değiştirmez.
 
@@ -525,20 +525,20 @@ Eklenti release onayı ile form tasarımı yayını farklı kaynak lifecycle'lar
 
 - [ ] **FORM-PUB-01:** Form ID, release revision/digest, owner, tenant/project scope, locale ve compatible schema refs saklansın.
 - [ ] **FORM-PUB-02:** Tasarımcı kendi taslağını düzenlesin; shared editing varsa draft revision conflict ile korunmalı.
-- [ ] **FORM-PUB-03:** Publish öncesi form compiler, source binding, permission/capability preflight ve kayıtlı form testleri çalışsın.
+- [ ] **FORM-PUB-03:** Publish öncesi form compiler, source binding, permission/capability preflight ve kayıtlı form testleri çalışsın. — *17 Ekim, kısmen: yayından önce ön denetim (alanlar, kurallar, iş akışı, eylemin adımı) ve formun kayıtlı senaryoları (düşen ilki yayını durdurur, `form_tests_failed`), formun gerektirdikleri (ADR 0441 §4, 0442 §1); kaynak izni ve rol denetimi bulutla.*
 - [ ] **FORM-PUB-04:** Merkezden yayınlayacak yetkili rol ve gerekirse reviewer policy tanımlansın; data collector publish yetkisi almasın.
 - [ ] **FORM-PUB-05:** Release onayı form definition + schema/domain/relation/action/source version digests'ine bağlansın; breaking kaynak değişimi yeniden değerlendirme gerektirsin.
 - [ ] **FORM-PUB-06:** Deployment; published version, hedef dataset mapping, effective validation/write policy, audience ve task paketini bağlasın.
 - [ ] **FORM-PUB-07:** Personal/local form ile kurum formu ayrı listelensin; local designer kişisel kopyasını değiştirse bile kurum yayını değişmesin.
-- [ ] **FORM-PUB-08:** “Edit published” yeni version draft açsın; sahadaki aktif formu anlık bozmasın.
+- [x] **FORM-PUB-08:** “Edit published” yeni version draft açsın; sahadaki aktif formu anlık bozmasın. — *17 Ekim: tasarımcı taslağı düzenler, yayınlar değişmez; Formla düzenle son yayınla çalışır, yeni yayın Yayınla'yla çıkar (ADR 0401, 0442 §2).*
 - [ ] **FORM-PUB-09:** Rollout; pilot/ekip/genel audience, başlangıç zamanı, previous/current ve rollback referanslarıyla çalışsın.
-- [ ] **FORM-PUB-10:** Aktif session form version'a bağlı kalsın; yeni versiyon geldiğinde draft/value migration veya kullanıcıya seçim sunulsun.
+- [x] **FORM-PUB-10:** Aktif session form version'a bağlı kalsın; yeni versiyon geldiğinde draft/value migration veya kullanıcıya seçim sunulsun. — *17 Ekim: açık form açıldığı yayına bağlı; yeniden yayınlanınca Kaydet çakışır, Yeni sürümle aç yazılanları taşır, yeni sürümde olmayan alanlara yazılanları adlarıyla söyleyip bırakır (ADR 0438 §7, 0442 §2).*
 - [ ] **FORM-PUB-11:** Kabul edilen eski form/schema sürümleri ve grace/offline window açık olsun; eski client yeni zorunlu field/rule'ı atlayarak commit yapamasın.
-- [ ] **FORM-PUB-12:** Breaking domain/code/field/relation değişikliği data migration planı ve server validation profile güncellemesiyle birlikte yayınlansın.
+- [ ] **FORM-PUB-12:** Breaking domain/code/field/relation değişikliği data migration planı ve server validation profile güncellemesiyle birlikte yayınlansın. — *17 Ekim, kısmen: yayın önceki yayına uyup yenisine uymayan kayıtları alanlarıyla sayar (`breaking`, `form_breaking`), tasarımcı yayından önce sorar; uygulanan form katmanın yazma profilidir, son yayınla kendiliğinden güncellenir; Değerleri biçime çevir göçü (ADR 0439 §8, 0442 §2); sunucunun doğrulama profili bulutla.*
 - [ ] **FORM-PUB-13:** Withdraw/revoke yeni session/submit politikasını uygulasın; eski saha taslağı silinmeden pending/conflict olarak tutulabilsin.
 - [ ] **FORM-PUB-14:** Form template export/import ve project duplicate; resource kimliklerini remap etsin, user grants/credentials'i kopyalamasın.
 - [ ] **FORM-PUB-15:** `.kcad` local/portable form resources taşırken cloud authority claims server'dan doğrulansın; dosya içi claim ile yeni grant yaratılmasın.
-- [ ] **FORM-PUB-16:** Version diff; layout, binding, domain/rule, role/task ve action dependency etkilerini anlaşılır göstersin.
+- [ ] **FORM-PUB-16:** Version diff; layout, binding, domain/rule, role/task ve action dependency etkilerini anlaşılır göstersin. — *17 Ekim, kısmen: sürüm farkı her değişikliğin alanlarını (yerleşim, bağ, kural, eylem, iş akışı, senaryo) ve gerektirdiklerin farkını gösterir (ADR 0427, 0442 §3); rol ve görev etkileri bulutla.*
 - [ ] **FORM-PUB-17:** Kullanıcı bir formu “gör/doldur/read-only” modunda açarken effective capability ve permission kaynaklarını görebilsin.
 - [ ] **FORM-PUB-18:** Form/deployment/schema server endpoint'leri Python/MCP/AI çağrılarında aynı lifecycle ve yetkiyi kullansın.
 
@@ -590,15 +590,15 @@ Bir masaüstü Python paketinin web/mobile'da çalıştığı yalnız manifest i
 - [ ] **FORM-WORK-02:** Her transition actor/task/record izinleri, required fields ve domain/relation validation ile denetlensin. — *17 Ekim, kısmen: adım kaydın durumundan, geçerlilik ve gerekçeyle denetlenir (ADR 0428); aktör ve görev yetkileri bulutta açık.*
 - [ ] **FORM-WORK-03:** Saha personeli submitted kaydı kendisi approved yapamasın; reviewer kararı audit/history ve beklenen record revision taşısın. — *17 Ekim, kısmen: adımlar kaydın geçmiş alanına an, kişi, adım ve gerekçeyle yazılır (ADR 0429); kendi kaydını onaylamanın yasağı rollerle bulutta açık.*
 - [x] **FORM-WORK-04:** Onaylanan kayıt read-only veya correction workflow'da düzenlenebilir olsun; user seçimi sunucu politikasını değiştiremesin. — *17 Ekim: onaylı kayıt kilitli durumda salt okunur, düzeltme adımıyla açılır (ADR 0428).*
-- [ ] **FORM-WORK-05:** Return/reject; field/path bazlı geri bildirim ve düzeltilebilir taslak üretsin; eski submission snapshot'ı kaybolmasın. — *17 Ekim, kısmen: geri gönderme gerekçe alanıyla (ADR 0428); alan bazlı geri bildirim ve eski anlık görüntü açık.*
+- [x] **FORM-WORK-05:** Return/reject; field/path bazlı geri bildirim ve düzeltilebilir taslak üretsin; eski submission snapshot'ı kaybolmasın. — *17 Ekim: geri gönderme gerekçesiyle ve alan alan notlarla (iş akışının `notes`'u, Alanlara not, İnceleyenin notu alanın altında), geri gönderilen kayıt taslak durumda düzeltilir, eski anlık görüntü geçmiş satırında kalır (ADR 0428, 0432, 0440 §4, 0442 §4).*
 - [x] **FORM-WORK-06:** Parent/child/attachment ve calculated fields aynı submission revision'a bağlansın; reviewer hangi snapshot'ı onayladığını bilsin. — *17 Ekim: kaydın anlık görüntüsü (öznitelikler, ekler ve alt kayıtlar) adımın geçmiş satırında ve cevabında; Formla düzenle onaylanan hâlin değişip değişmediğini söyler; gönderim yazdığı anlık görüntüyü verir (ADR 0440 §4).*
-- [ ] **FORM-WORK-07:** Fotoğraf/dosya/audio gibi ekler MIME/size/hash, owner, record relation, capture timestamp ve erişim policy taşısın.
+- [ ] **FORM-WORK-07:** Fotoğraf/dosya/audio gibi ekler MIME/size/hash, owner, record relation, capture timestamp ve erişim policy taşısın. — *17 Ekim, kısmen: eklerin türü, boyu, SHA-256'sı, çekim anı ve konumu baytlarından okunur (`cad.attachments.inspect`, formda Bilgi; ADR 0442 §7); sahibi ve erişim politikası bulutla.*
 - [ ] **FORM-WORK-08:** Attachment upload staging/resumable/check/finalize ve orphan cleanup akışı olsun; kayıt commit edilmeden uzun upload DB transaction tutmasın.
 - [ ] **FORM-WORK-09:** Unsaved parent ve offline child ekleri local UUID/job IDs ile bağlansın; retry duplicate attachment veya child oluşturmasın.
 - [ ] **FORM-WORK-10:** Geçersiz medya/eksik upload/permission failure sonucu submission incomplete olarak kalsın; kullanıcıya başarılı final kayıt denmesin.
-- [ ] **FORM-WORK-11:** Form action; calculate/lookup/processing/report/submit/assign gibi açık descriptor tipi taşısın, side-effect ve required grant belirlensin.
+- [x] **FORM-WORK-11:** Form action; calculate/lookup/processing/report/submit/assign gibi açık descriptor tipi taşısın, side-effect ve required grant belirlensin. — *17 Ekim: eylemin açık türü (işlem aracı, hesapları yenile, iş akışı adımı, çizimde göster), yazan türler salt okunur kayıtta kapalı, yazma komutun kendi kuralıyla (ADR 0441 §6, 0442 §5); rollerin izni bulutla.*
 - [ ] **FORM-WORK-12:** Python-dependent action release/env/runtime capability ile pinlensin; mobile/web kullanımı server executor'a açık ve izinli bağlansın.
-- [ ] **FORM-WORK-13:** Action output field mapping authoritative write policy ile doğrulansın; hesap onaylı kaydı veya forbidden field'ı sessiz değiştirmesin.
+- [x] **FORM-WORK-13:** Action output field mapping authoritative write policy ile doğrulansın; hesap onaylı kaydı veya forbidden field'ı sessiz değiştirmesin. — *17 Ekim: eylem formun kurallarını atlatamaz: araç kendi işlemi ve katmanın yazma profiliyle, hesap Kaydet'in gönderimiyle, adım cad.forms.transition'la yazar; onaylı ya da kilitli kayıtta yazan eylem kapalıdır (ADR 0442 §5).*
 - [ ] **FORM-WORK-14:** Görev listesi, assigned record queue, progress ve review feedback aynı task/deployment modelinden gelsin.
 - [ ] **FORM-WORK-15:** Workflow event, audit ve kullanıcı bildirimleri veri yetkisine göre filtrelensin; private kaydı yanlış audience'a duyurmasın.
 

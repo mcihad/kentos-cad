@@ -393,10 +393,12 @@ impl Prepared {
                 let read_only = b.item.read_only
                     || (locked && !reasons.contains(&self.fields[b.index].key()))
                     || state_field == Some(b.index)
-                    || self
-                        .workflow()
-                        .and_then(|w| w.log.as_deref())
-                        .is_some_and(|k| k == self.fields[b.index].key())
+                    || self.workflow().is_some_and(|w| {
+                        [w.log.as_deref(), w.notes.as_deref()]
+                            .into_iter()
+                            .flatten()
+                            .any(|k| k == self.fields[b.index].key())
+                    })
                     || (b.calculate.is_some() && !b.item.overridable)
                     || b.read_only_when
                         .as_ref()

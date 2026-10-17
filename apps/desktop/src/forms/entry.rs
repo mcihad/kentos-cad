@@ -65,6 +65,10 @@ pub const TITLE: &str = "Formla düzenle";
 const SAVE: &str = "Kaydet";
 const RELOAD: &str = "Yeniden yükle";
 const OVERWRITE: &str = "Üzerine yaz";
+/// A new release's form opened with what was typed (docs/adr/0442 §2).
+const NEW_RELEASE: &str = "Yeni sürümle aç";
+/// Each field takes a note for the next workflow step (docs/adr/0442 §4).
+const FIELD_NOTES: &str = "Alanlara not";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
 const BACK: &str = "Geri";
@@ -164,6 +168,14 @@ pub struct Entry {
     conflict: Option<String>,
     /// The next Kaydet writes over the record as it is now (Üzerine yaz).
     overwrite: bool,
+    /// The conflict is a new release of the form (docs/adr/0442 §2): Yeni sürümle aç instead of
+    /// Üzerine yaz.
+    release_changed: bool,
+    /// Alanlara not (docs/adr/0442 §4): each field takes a note, sent with the next workflow step.
+    reviewing: bool,
+    field_notes: BTreeMap<String, String>,
+    /// Bilgi: the record's attachments as `cad.attachments.inspect` read them (docs/adr/0442 §7).
+    facts: Option<Vec<kentos_contracts::AttachmentFacts>>,
 }
 
 /// A record of the many-record mode.
@@ -214,8 +226,13 @@ pub enum Event {
     Value(String, String),
     /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
     Query(String, String),
-    /// An action's tool opened on the record (docs/adr/0441 §6).
+    /// An action pressed, by its item (docs/adr/0441 §6, 0442 §5).
     RunAction(String),
+    /// Alanlara not on or off, and a field's note typed (docs/adr/0442 §4).
+    Reviewing(bool),
+    FieldNote(String, String),
+    /// Bilgi on the attachments: what each is, read from its bytes (docs/adr/0442 §7); again off.
+    InspectAttachments,
     /// A related item's page (docs/adr/0440 §6): its id and the page, from 0.
     RelatedPage(String, usize),
     /// A searched list's turn came (docs/adr/0439 §6): the field's key and the search's number.
@@ -829,6 +846,10 @@ impl App {
             tried: false,
             conflict: None,
             overwrite: false,
+            release_changed: false,
+            reviewing: false,
+            field_notes: BTreeMap::new(),
+            facts: None,
             touched: BTreeSet::new(),
             after: Attrs::new(),
             items: Vec::new(),
@@ -1410,14 +1431,124 @@ impl App {
                 }
             }
             Event::OpenRelated(uid) => return self.open_related(&uid),
-            Event::RunAction(tool) => {
-                // The record selected, the tool's window opened with it (a registered tool only).
+            Event::RunAction(item) => {
+                use kentos_contracts::ActionKind as K;
+                let Some(FormItem::Action {
+                    kind,
+                    tool,
+                    step,
+                    runs,
+                    ..
+                }) = crate::forms::designer::find(&e.body.items, &item).cloned()
+                else {
+                    return Task::none();
+                };
                 let slot = record_slot(&doc.model, &e.uid);
-                if let Some(slot) = slot {
-                    self.selection.set([slot]);
+                match kind {
+                    // The record chosen, the tool's window opened with it (a registered tool only),
+                    // where it runs as the action says (docs/adr/0442 §6).
+                    K::Tool => {
+                        let Some(tool) = tool.filter(|t| self.processing.registry.get(t).is_some())
+                        else {
+                            return Task::none();
+                        };
+                        if let Some(slot) = slot {
+                            self.selection.set([slot]);
+                        }
+                        self.open_processing(&tool, None);
+                        let place = match runs {
+                            kentos_contracts::ActionRuns::Auto => None,
+                            kentos_contracts::ActionRuns::Here => Some("client"),
+                            kentos_contracts::ActionRuns::Background => Some("worker"),
+                        };
+                        if let Some(place) = place {
+                            let _ = self.update(Message::Processing(
+                                crate::processing::Event::Target(place.into()),
+                            ));
+                        }
+                    }
+                    // The calculations again in this window; Kaydet writes them (docs/adr/0442 §5).
+                    K::Recompute => {
+                        if let (Some(e), Some(doc)) =
+                            (self.form_entry.as_mut(), self.document.as_ref())
+                        {
+                            e.follows = e
+                                .body
+                                .walk()
+                                .into_iter()
+                                .filter_map(|(_, i)| match i {
+                                    FormItem::Field(f) if f.calculate.is_some() => Some(f.field.clone()),
+                                    _ => None,
+                                })
+                                .collect();
+                            for k in e.follows.clone() {
+                                e.values.remove(&k);
+                            }
+                            e.recompute(&doc.model);
+                        }
+                        self.say(Level::Info, "Hesaplar kayıtta yeniden çalıştı; yazmak için Kaydet’e basın.");
+                    }
+                    K::Step => {
+                        if let Some(step) = step {
+                            return self.take_step(step);
+                        }
+                    }
+                    K::Show => {
+                        if let Some(slot) = slot {
+                            self.selection.set([slot]);
+                            return self.update(Message::Run("view.zoomSelection"));
+                        }
+                    }
                 }
-                if self.processing.registry.get(&tool).is_some() {
-                    self.open_processing(&tool, None);
+                return Task::none();
+            }
+            Event::InspectAttachments => {
+                if e.facts.is_some() {
+                    if let Some(e) = self.form_entry.as_mut() {
+                        e.facts = None;
+                    }
+                    return Task::none();
+                }
+                let folder = doc
+                    .path
+                    .as_ref()
+                    .and_then(|p| p.parent())
+                    .map(|p| p.display().to_string());
+                let input = kentos_contracts::AttachmentsInspect {
+                    uids: vec![e.uid.clone()],
+                    folder,
+                };
+                // Writes nothing: run on the drawing itself, no copy.
+                let Some(d) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                let result = kentos_native_application::attachments_inspect::execute(
+                    &mut kentos_native_application::ExecutionContext::new(&mut d.model),
+                    input,
+                );
+                if let kentos_contracts::CommandResult::Completed { output, .. } = result
+                    && let Some(e) = self.form_entry.as_mut()
+                {
+                    e.facts = output.objects.into_iter().next().map(|o| o.attachments);
+                }
+                return Task::none();
+            }
+            Event::Reviewing(on) => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.reviewing = on;
+                    if !on {
+                        e.field_notes.clear();
+                    }
+                }
+                return Task::none();
+            }
+            Event::FieldNote(key, text) => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    if text.is_empty() {
+                        e.field_notes.remove(&key);
+                    } else {
+                        e.field_notes.insert(key, text);
+                    }
                 }
                 return Task::none();
             }
@@ -1504,6 +1635,45 @@ impl App {
             }
             Event::Save => return self.save_entry(),
             Event::Reload => {
+                // A new release: the record's form is its body now; values of fields it no longer
+                // has are dropped and said (docs/adr/0442 §2).
+                let dropped = self.form_entry.as_mut().map_or_else(Vec::new, |e| {
+                    if !e.release_changed {
+                        return Vec::new();
+                    }
+                    e.release_changed = false;
+                    let Some(body) = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| d.model.settings().forms.iter().find(|f| f.id == e.form).cloned())
+                        .and_then(|f| if e.draft { Some(f.draft) } else { f.releases.last().map(|r| r.body.clone()) })
+                    else {
+                        return Vec::new();
+                    };
+                    let bound: Vec<String> = body
+                        .walk()
+                        .into_iter()
+                        .filter_map(|(_, i)| match i {
+                            FormItem::Field(f) => Some(f.field.clone()),
+                            _ => None,
+                        })
+                        .collect();
+                    let gone: Vec<String> = e.values.keys().filter(|k| !bound.contains(k)).cloned().collect();
+                    for k in &gone {
+                        e.values.remove(k);
+                    }
+                    e.body = body;
+                    gone
+                });
+                if !dropped.is_empty() {
+                    self.say(
+                        Level::Warn,
+                        format!(
+                            "Yeni sürümde olmayan alanlara yazdıklarınız bırakıldı: {}.",
+                            dropped.join(", ")
+                        ),
+                    );
+                }
                 let task = self.refresh_entry();
                 if let Some(e) = self.form_entry.as_mut() {
                     e.before = e.screen.attrs.clone();
@@ -1554,6 +1724,12 @@ impl App {
             uid: e.uid.clone(),
             step: label.clone(),
             values,
+            notes: e
+                .field_notes
+                .iter()
+                .filter(|(_, v)| !v.trim().is_empty())
+                .map(|(k, v)| (k.clone(), v.trim().to_owned()))
+                .collect(),
             moment: e.moment.clone(),
             user: e.user.clone(),
             expected_revision: Some(e.revision.clone()),
@@ -1719,9 +1895,11 @@ impl App {
             )
         {
             let words = error.message.clone();
+            let release = error.code == kentos_contracts::codes::FORM_RELEASE_CHANGED;
             if let Some(e) = self.form_entry.as_mut() {
                 e.conflict = Some(words.clone());
                 e.overwrite = false;
+                e.release_changed = release;
             }
             self.say(Level::Warn, words);
             return Task::none();
@@ -1996,6 +2174,17 @@ impl App {
         let mut footer = Row::new().spacing(8).align_y(Center);
         // Changed since the window opened (docs/adr/0438 §6, §7): reload keeping what was typed, or
         // write over it.
+        // A new release (docs/adr/0442 §2): the record opened again by it, the values typed carried.
+        if e.conflict.is_some() && e.release_changed {
+            return footer
+                .push(words::text_line(
+                    Kind::Warn,
+                    "Form siz düzenlerken yeniden yayınlandı; kayıt yeni sürümün kurallarıyla yazılır.",
+                ))
+                .push(space::horizontal().width(Fill))
+                .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
+                .push(words::primary(NEW_RELEASE, Some(e.msg(Event::Reload))));
+        }
         if e.conflict.is_some() {
             return footer
                 .push(words::text_line(Kind::Warn, "Kayıt ya da form siz düzenlerken değişti."))
@@ -2027,6 +2216,21 @@ impl App {
         }
         // The workflow's steps from the record's state (docs/adr/0428), before Kaydet.
         let live = !e.preview && !e.uid.is_empty() && e.members.is_empty();
+        if live
+            && !locked
+            && e.screen
+                .prepared
+                .workflow()
+                .is_some_and(|w| w.notes.is_some())
+        {
+            footer = footer.push(
+                iced::widget::toggler(e.reviewing)
+                    .label(FIELD_NOTES)
+                    .size(16.0)
+                    .text_size(typography::body())
+                    .on_toggle(|on| e.msg(Event::Reviewing(on))),
+            );
+        }
         let by_state = e.screen.prepared.locked_by_state(&e.after);
         if let (Some(w), Some(state), true) =
             (e.screen.prepared.workflow(), e.screen.prepared.state_of(&e.before), live)
@@ -2310,26 +2514,47 @@ impl App {
                         None => line().into(),
                     });
                 }
-                // An action (docs/adr/0441 §6): a registered processing tool on the record.
-                FormItem::Action { label: title, tool, .. } => {
+                // An action (docs/adr/0441 §6, 0442 §5): its kind's work on the record; a read-only
+                // record turns off the kinds that write (docs/adr/0442 §5).
+                FormItem::Action {
+                    id,
+                    label: title,
+                    kind,
+                    tool,
+                    ..
+                } => {
                     out = flush(&mut run, out);
-                    let known = self.processing.registry.get(tool).is_some();
-                    let can = known && !e.preview && e.members.is_empty();
+                    let known = tool
+                        .as_ref()
+                        .is_none_or(|t| self.processing.registry.get(t).is_some());
+                    let read_only = self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
+                    let can = known
+                        && !e.preview
+                        && e.members.is_empty()
+                        && !(kind.writes() && read_only);
+                    let glyph = match kind {
+                        kentos_contracts::ActionKind::Tool => Icon::Play,
+                        kentos_contracts::ActionKind::Recompute => Icon::Redo,
+                        kentos_contracts::ActionKind::Step => Icon::ChevronRight,
+                        kentos_contracts::ActionKind::Show => Icon::Target,
+                    };
                     let button = iced::widget::button(
-                        row![icon(Icon::Play).size(12.0), label::body(title.clone())]
+                        row![icon(glyph).size(12.0), label::body(title.clone())]
                             .spacing(6)
                             .align_y(Center),
                     )
                     .padding([4, 10])
                     .style(style::button::secondary)
-                    .on_press_maybe(can.then(|| e.msg(Event::RunAction(tool.clone()))));
-                    out = out.push(if known {
-                        Element::from(button)
-                    } else {
-                        row![button, label::caption(format!("“{tool}” kayıtlı bir araç değil.")).style(muted)]
-                            .spacing(8)
-                            .align_y(Center)
-                            .into()
+                    .on_press_maybe(can.then(|| e.msg(Event::RunAction(id.clone()))));
+                    out = out.push(match tool.as_ref().filter(|_| !known) {
+                        Some(t) => row![
+                            button,
+                            label::caption(format!("“{t}” kayıtlı bir araç değil.")).style(muted)
+                        ]
+                        .spacing(8)
+                        .align_y(Center)
+                        .into(),
+                        None => Element::from(button),
                     });
                 }
                 FormItem::Note { id, text } => {
@@ -2451,6 +2676,25 @@ impl App {
                     } else {
                         control
                     };
+                    // Alanlara not: the field's note for the next step (docs/adr/0442 §4).
+                    let control: Element<'a, Message> = if e.reviewing && !f.mirror {
+                        let key = f.field.clone();
+                        let note = e.field_notes.get(&f.field).map_or("", String::as_str);
+                        Column::new()
+                            .spacing(3)
+                            .push(control)
+                            .push(
+                                iced::widget::text_input("Bu alana not", note)
+                                    .size(typography::caption())
+                                    .padding([3, 6])
+                                    .style(style::field::input)
+                                    .on_input(move |text| e.msg(Event::FieldNote(key.clone(), text))),
+                            )
+                            .into()
+                    } else {
+                        control
+                    };
+                    let said = said_note(e, &f.field);
                     form = form.field(words, control);
                     if state.is_some_and(|s| s.required) {
                         form = form.required();
@@ -2460,6 +2704,10 @@ impl App {
                             form = form.error(Some(issue.message.clone()));
                         }
                         Some(issue) => form = form.warning(Some(issue.message.clone())),
+                        // The last step's note on it, as the reviewer wrote it.
+                        None if said.is_some() => {
+                            form = form.warning(said.map(|n| format!("İnceleyenin notu: {n}")));
+                        }
                         None => {
                             if let Some(help) = &f.help {
                                 form = form.help(help.clone());
@@ -2560,6 +2808,10 @@ impl App {
                 label::strong(words),
                 label::caption(count).style(muted),
                 space::horizontal().width(Fill),
+                words::ghost(
+                    if e.facts.is_some() { "Bilgiyi gizle" } else { "Bilgi" },
+                    (!e.preview && !shown.is_empty()).then(|| e.msg(Event::InspectAttachments))
+                ),
                 words::secondary(
                     if photos { "Fotoğraf ekle" } else { "Ekle" },
                     can.then(|| e.msg(Event::AttachAdd(photos)))
@@ -2597,6 +2849,17 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             );
+            // What it is, as its bytes say (docs/adr/0442 §7).
+            if let Some(f) = e.facts.as_ref().and_then(|all| all.get(v.index)) {
+                col = col.push(
+                    container(label::caption(facts_line(f)).style(muted)).padding(iced::Padding {
+                        top: 0.0,
+                        right: 0.0,
+                        bottom: 0.0,
+                        left: 22.0,
+                    }),
+                );
+            }
         }
         if let Some(issue) = e.issues.iter().find(|i| i.item.as_deref() == Some(id)) {
             col = col.push(words::text_line(Kind::Error, issue.message.clone()));
@@ -2856,6 +3119,48 @@ fn collapsed_groups(items: &[FormItem]) -> BTreeSet<String> {
 }
 
 /// A field's control by its widget; read-only shows the value without an edit.
+/// An attachment's facts on one line: its type, size, moment and place, and its digest's start.
+fn facts_line(f: &kentos_contracts::AttachmentFacts) -> String {
+    if f.missing {
+        return "Bulunamadı: dosya ya da kitaplıktaki fotoğraf yok.".into();
+    }
+    let mut parts: Vec<String> = Vec::new();
+    parts.extend(f.mime.clone());
+    if let Some(n) = f.size {
+        parts.push(if n < 1024 {
+            format!("{n} B")
+        } else if n < 1024 * 1024 {
+            format!("{:.1} KB", n as f64 / 1024.0).replace('.', ",")
+        } else {
+            format!("{:.1} MB", n as f64 / (1024.0 * 1024.0)).replace('.', ",")
+        });
+    }
+    if let Some(at) = &f.taken {
+        parts.push(format!("çekim {}", at.replacen('T', " ", 1)));
+    }
+    if let (Some(lat), Some(lon)) = (f.latitude, f.longitude) {
+        parts.push(format!("{lat:.5}, {lon:.5}"));
+    }
+    if let Some(h) = &f.sha256 {
+        parts.push(format!("SHA-256 {}…", &h[..12.min(h.len())]));
+    }
+    if parts.is_empty() {
+        "Adres; indirilmedi.".into()
+    } else {
+        parts.join(" · ")
+    }
+}
+
+/// The note the record's last workflow step left on a field (docs/adr/0442 §4), from the workflow's
+/// notes field as the record holds it (the window's values aside).
+fn said_note(e: &Entry, key: &str) -> Option<String> {
+    let notes = e.screen.prepared.workflow()?.notes.as_ref()?;
+    let name = &e.fields.iter().find(|f| f.key() == notes)?.name;
+    let text = e.before.get(name)?;
+    let map: BTreeMap<String, String> = serde_json::from_str(text).ok()?;
+    map.get(key).cloned()
+}
+
 fn entry_control<'a>(
     e: &'a Entry,
     item: &'a kentos_contracts::FormField,

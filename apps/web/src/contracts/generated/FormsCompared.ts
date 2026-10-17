@@ -12,4 +12,9 @@ from: number,
 /**
  * The release compared to; none: the draft.
  */
-to?: number, changes: Array<FormChange>, };
+to?: number, changes: Array<FormChange>, 
+/**
+ * What the newer version needs of its host that the older did not, and the other way
+ * (`kentos_forms::requirements`, docs/adr/0442 §3).
+ */
+requiresAdded?: Array<string>, requiresRemoved?: Array<string>, };

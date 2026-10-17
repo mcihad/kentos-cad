@@ -1754,11 +1754,21 @@ def body_problem(body):
         if t in ("location", "divider", "action") and "visibleWhen" in i and not _rule_ok(i["visibleWhen"]):
             return f"“{iid}” öğesinin kuralı geçersiz"
         if t == "action":
-            # docs/adr/0441 §6: a registered processing tool by its id; no address, query or script.
-            parts = i["tool"].split(".")
-            if not _form_name_ok(i["label"]) or len(i["tool"]) > MOST_FORM_NAME or len(parts) < 2 or any(
-                    not p or not p[0].isascii() or not p[0].isalpha() or not all(c.isascii() and c.isalnum() for c in p)
-                    for p in parts):
+            # docs/adr/0441 §6, 0442 §5: a tool by its id, a step by its label, the others no target.
+            kind = i.get("kind", "tool")
+            if not _form_name_ok(i["label"]):
+                return f"“{iid}” eylemi geçersiz"
+            if kind == "tool":
+                tool = i.get("tool")
+                parts = tool.split(".") if tool is not None else []
+                if tool is None or "step" in i or len(tool) > MOST_FORM_NAME or len(parts) < 2 or any(
+                        not p or not p[0].isascii() or not p[0].isalpha()
+                        or not all(c.isascii() and c.isalnum() for c in p) for p in parts):
+                    return f"“{iid}” eylemi geçersiz"
+            elif kind == "step":
+                if "tool" in i or "step" not in i or not _form_name_ok(i["step"]) or "runs" in i:
+                    return f"“{iid}” eylemi geçersiz"
+            elif "tool" in i or "step" in i or "runs" in i:
                 return f"“{iid}” eylemi geçersiz"
         if t == "field":
             if not i["field"].strip() or len(i["field"]) > MOST_FORM_NAME:
@@ -3790,7 +3800,11 @@ class _Schema:
                 "action": {
                     "id": (self.text, True),
                     "label": (self.text, True),
-                    "tool": (self.text, True),
+                    # docs/adr/0442 §5, §6: its kind, its target and where a tool runs.
+                    "kind": (self.enum(("recompute", "step", "show")), False),
+                    "tool": (self.text, False),
+                    "step": (self.text, False),
+                    "runs": (self.enum(("here", "background")), False),
                     "visibleWhen": (self.text, False),
                 },
             }
@@ -3818,7 +3832,9 @@ class _Schema:
                                 # docs/adr/0429: the field each step appends its line to.
                                 "log": (self.text, False),
                                 # docs/adr/0432: the states a record may be kept incomplete in.
-                                "drafts": (nonempty(self.array(self.text)), False)})
+                                "drafts": (nonempty(self.array(self.text)), False),
+                                # docs/adr/0442 §4: the field the steps' notes are written to.
+                                "notes": (self.text, False)})
         body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
                             "steps": (true_, False),
                             "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False)})

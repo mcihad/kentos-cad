@@ -20,7 +20,9 @@ Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.k
 Öğeler (`items`) `type` ile ayrılır: `tab`, `group`, `field`, `note`, `related`, `attachments`, `location`, `divider`, `action`.
 Alan öğesi katmanın alanını anahtarıyla (alanın `id`'si, yoksa adı) anar. Eylem (`action`) kayıtlı bir işlem aracını yalnız
 kimliğiyle anar (`tool`, `attributes.calculate` gibi noktalı parçalar); adres, sorgu ya da betik bir araç kimliği değildir ve
-şema onu reddeder.
+şema onu reddeder. Eylemin türü `kind` (`tool` varsayılan, `recompute`, `step` ile adımın adı `step`, `show`) ve araç eyleminin
+çalıştığı yer `runs` (`auto`, `here`, `background`; ADR 0442 §5, §6). İş akışının `notes`'u adımların alan notlarını tutan metin alanıdır
+(ADR 0442 §4).
 
 ## 2. Özet
 
@@ -51,7 +53,7 @@ ortamdan istedikleri gövdesinden hesaplanır (`kentos_forms::requirements`, `ca
 | `moment` | Kurallardan biri `@tarih` ya da `@simdi` okur |
 | `user` | Kurallardan biri `@kullanici` okur |
 | `layers` | Başka katmandan liste ya da ilişkili kayıtlar öğesi var |
-| `geometry` | Konum öğesi ya da mekânsal süzgeçli liste var |
+| `geometry` | Konum öğesi, mekânsal süzgeçli liste ya da kaydı gösteren eylem var |
 | `attachments` | Ekler öğesi var |
 | `workflow` | Kaydın iş akışı var |
 | `tool:<kimlik>` | Eylem öğesi o işlem aracını açar |

@@ -30,12 +30,16 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
     "AccessSourceName",
     "ActionFormItem",
+    "ActionKind",
+    "ActionKindName",
+    "ActionRuns",
+    "ActionRunsName",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddressLocator",
@@ -101,7 +105,12 @@ __all__ = [
     "Attachment",
     "AttachmentAccept",
     "AttachmentAcceptName",
+    "AttachmentFacts",
+    "AttachmentSource",
+    "AttachmentSourceName",
     "AttachmentsFormItem",
+    "AttachmentsInspect",
+    "AttachmentsInspected",
     "AttributeDefinition",
     "AttributeFilter",
     "AttributeOp",
@@ -386,6 +395,7 @@ __all__ = [
     "FenceSelectRegion",
     "FieldBinding",
     "FieldChoice",
+    "FieldCount",
     "FieldDomain",
     "FieldFormItem",
     "FieldGroup",
@@ -411,6 +421,7 @@ __all__ = [
     "FlipBlockParameter",
     "Forbidden",
     "FormBody",
+    "FormBreaking",
     "FormChange",
     "FormChangeKind",
     "FormChangeKindName",
@@ -497,6 +508,7 @@ __all__ = [
     "InsertEntityGeometry",
     "InsertKnotCurveEdit",
     "InsertParameters",
+    "InspectedObject",
     "InvalidInput",
     "InvertSelectRegion",
     "InvitationChange",
@@ -1074,6 +1086,7 @@ __all__ = [
     "addresses",
     "arc",
     "arrays",
+    "attachments",
     "blocks",
     "catalog",
     "changeset",

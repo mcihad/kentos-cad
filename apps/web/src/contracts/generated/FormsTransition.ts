@@ -33,6 +33,11 @@ step: string,
  */
 values?: { [key in string]: string }, 
 /**
+ * Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes
+ * field, shown under those fields; a step without them empties it.
+ */
+notes?: { [key in string]: string }, 
+/**
  * The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
  */
 moment?: string, 

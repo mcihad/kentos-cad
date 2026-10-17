@@ -568,7 +568,7 @@ pub(crate) fn snapshot_skip<'a>(doc: &'a Document, layer: &str, body: &FormBody)
         return Vec::new();
     };
     let fields = fields(doc, layer);
-    [Some(w.field.as_str()), w.log.as_deref()]
+    [Some(w.field.as_str()), w.log.as_deref(), w.notes.as_deref()]
         .into_iter()
         .flatten()
         .filter_map(|k| {
@@ -604,4 +604,78 @@ pub fn logged_snapshot(log: &str) -> Option<&str> {
     let line = log.lines().rev().find(|l| !l.trim().is_empty())?;
     let (_, tail) = line.rsplit_once(" · #")?;
     (tail.len() == 16 && tail.chars().all(|c| c.is_ascii_hexdigit())).then_some(tail)
+}
+
+/// The layer field keys the body's field items bind (mirrors too), once each, in the form's order.
+pub(crate) fn bound_keys(body: &FormBody) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for (_, item) in body.walk() {
+        if let kentos_contracts::FormItem::Field(f) = item
+            && !out.contains(&f.field)
+        {
+            out.push(f.field.clone());
+        }
+    }
+    out
+}
+
+/// The errors each of the layer's records has by `body` (completed as kept, then validated, as
+/// Kayıtları denetle judges them; unique values aside), by the records' ids; none when the body cannot
+/// be prepared.
+pub(crate) fn record_errors(
+    doc: &Document,
+    form: &ProjectForm,
+    body: &FormBody,
+) -> Option<Vec<(kentos_domain::Uuid, Vec<FormIssue>)>> {
+    let variables = variables_given(doc, None, None).ok()?;
+    let prepared = prepared(doc, form, body, &variables, "form").ok()?;
+    let mut out = Vec::new();
+    for (uid, e) in doc.by_layer_with_uids(&form.layer) {
+        let Some(slot) = doc.slot_of(uid) else {
+            continue;
+        };
+        let object = self::object(doc, slot, e);
+        let (after, mut issues) = prepared.complete(&e.base().attrs, &object, false);
+        let said: Vec<Option<String>> = issues.iter().map(|i| i.field.clone()).collect();
+        issues.extend(
+            prepared
+                .validate(&after, &object)
+                .into_iter()
+                .filter(|i| !said.contains(&i.field)),
+        );
+        issues.retain(|i| i.severity == kentos_contracts::FormSeverity::Error);
+        out.push((uid, issues));
+    }
+    Some(out)
+}
+
+/// The records `new` breaks that `old` held (docs/adr/0442 §2); none when none.
+pub(crate) fn breaking(
+    doc: &Document,
+    form: &ProjectForm,
+    old: &FormBody,
+    new: &FormBody,
+) -> Option<kentos_contracts::FormBreaking> {
+    let before = record_errors(doc, form, old)?;
+    let after = record_errors(doc, form, new)?;
+    let mut records = 0u32;
+    let mut by_field: std::collections::BTreeMap<String, u32> = std::collections::BTreeMap::new();
+    for ((_, was), (_, now)) in before.iter().zip(&after) {
+        if was.is_empty() && !now.is_empty() {
+            records += 1;
+            let mut fields: Vec<&str> = now.iter().filter_map(|i| i.field.as_deref()).collect();
+            fields.sort_unstable();
+            fields.dedup();
+            for f in fields {
+                *by_field.entry(f.to_owned()).or_default() += 1;
+            }
+        }
+    }
+    (records > 0).then(|| kentos_contracts::FormBreaking {
+        records,
+        fields: by_field
+            .into_iter()
+            .map(|(field, records)| kentos_contracts::FieldCount { field, records })
+            .collect(),
+    })
 }

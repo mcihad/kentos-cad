@@ -194,6 +194,11 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AY` yayın ve iş akışı ekleri (ADR 0442, 17 Ekim): web'de gerekenler: `FormsEdited.breaking`, `FormBreaking`, `FieldCount`,
+  `FormChange.areas`, `FormsCompared.requiresAdded`/`requiresRemoved`, `FormWorkflow.notes`, `FormsTransition.notes`, `ActionKind`,
+  `ActionRuns`, `cad.attachments.inspect`'in türleri (TS türleri üretildi); web'in yayın işleyicisinde senaryolar ve kırılma sayımı,
+  Yayınla'nın sorusu, Formla düzenle'de Yeni sürümle aç, Alanlara not ve İnceleyenin notu, eylem türleri, eklerin Bilgi'si,
+  Değişiklikler'de alanlar.
 - [ ] `FORM-AX` tasarımcı ekleri (ADR 0441, 17 Ekim): web'de gerekenler: `FormItem`'ın `divider` ve `action`'ı, `RelatedView.chart`,
   `ProjectForm.comments`, `FormsOp`'un `comment` ve `resolve`'u, `FormsValidated.requires` (TS türleri üretildi); web'in formunda
   bölücü, eylem düğmesi (web'in işlem aracını açar; kayıtlı olmayan araç kapalı) ve ilişkili kayıtların grafiği; tasarımcıda
@@ -1545,6 +1550,10 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AY` Yayın ve iş akışı ekleri: yayından önce senaryolar, kırılan kayıtların sayımı ve sorusu, açık formun yeni sürüme
+  değerleriyle geçmesi, sürüm farkının alanları ve gerektirdiklerin farkı, alanlara not, eylemin türleri ve çalıştığı yer, salt okunur
+  kayıtta yazan eylemin kapanması, eklerin bilgisi (`cad.attachments.inspect`). — **17 Ekim,
+  [ADR 0442](docs/adr/0442-publishing-and-workflow-extras.md).**
 - [x] `FORM-AX` Tasarımcı ekleri: alan, ilişki, liste ve bölüm paletleri, bölücü, ilişkili kayıtların grafiği, cihazdaki sürümlü
   bölüm kitaplığı, gözden geçirenin yorumları ve kendiliğinden saklanan taslak, formun ortamdan istedikleri (saf form), kayıtlı işlem
   aracını açan eylem ve tasarımcının bilinmeyen araç uyarısı, biçimin profili. — **17 Ekim,

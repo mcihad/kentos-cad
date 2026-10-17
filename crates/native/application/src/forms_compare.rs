@@ -48,6 +48,14 @@ fn answer(doc: &Document, input: &FormsCompare) -> Result<FormsCompared, Stop> {
         from,
         to: input.to,
         changes: kentos_forms::compare::compare(old, new),
+        requires_added: kentos_forms::requirements(new)
+            .into_iter()
+            .filter(|r| !kentos_forms::requirements(old).contains(r))
+            .collect(),
+        requires_removed: kentos_forms::requirements(old)
+            .into_iter()
+            .filter(|r| !kentos_forms::requirements(new).contains(r))
+            .collect(),
     })
 }
 

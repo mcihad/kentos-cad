@@ -25,6 +25,52 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AddressLocator": {
             "description": "A project's address data (docs/adr/0229 §2).",
             "properties": {
@@ -4482,18 +4528,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -4509,8 +4573,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -4823,6 +4886,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -13354,6 +13424,52 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AddressLocator": {
             "description": "A project's address data (docs/adr/0229 §2).",
             "properties": {
@@ -15428,18 +15544,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -15455,8 +15589,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -15769,6 +15902,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -19936,6 +20076,52 @@
               {
                 "const": "policy",
                 "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
                 "type": "string"
               }
             ]
@@ -24324,18 +24510,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -24351,8 +24555,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -24665,6 +24868,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -348697,7 +348907,7 @@
       "id": "cad.forms.edit",
       "version": 1,
       "title": "Formlar",
-      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -348712,6 +348922,52 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -349262,18 +349518,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -349289,8 +349563,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -349570,6 +349843,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -349995,7 +350275,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.forms.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,\n`invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,\n`form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status\n`conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:\n`form_release_dropped`.",
+        "description": "Input of `cad.forms.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,\n`invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,\n`form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status\n`conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`, `form_tests_failed`. Warnings:\n`form_release_dropped`, `form_breaking`.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/FormsOp"
@@ -350017,6 +350297,52 @@
       },
       "output": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -350051,6 +350377,25 @@
                 "type": "string"
               }
             ]
+          },
+          "FieldCount": {
+            "description": "A field and how many records.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "field",
+              "records"
+            ],
+            "type": "object"
           },
           "FormBody": {
             "additionalProperties": false,
@@ -350099,6 +350444,28 @@
             "required": [
               "revision",
               "items"
+            ],
+            "type": "object"
+          },
+          "FormBreaking": {
+            "description": "The records a new release breaks (docs/adr/0442 §2): how many, and how many by each field the new\nrelease finds wrong (by the fields' keys, in their bytes' order).",
+            "properties": {
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/FieldCount"
+                },
+                "type": "array"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "fields"
             ],
             "type": "object"
           },
@@ -350655,18 +351022,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -350682,8 +351067,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -351050,6 +351434,13 @@
                   "null"
                 ]
               },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -351305,6 +351696,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.forms.edit` v1, and what plan says it would do.",
         "properties": {
+          "breaking": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FormBreaking"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A publish over an earlier release (docs/adr/0442 §2): the layer's records that held by the\nearlier release and do not by this one; none when none."
+          },
           "changed": {
             "description": "Whether the settings changed.",
             "type": "boolean"
@@ -351351,6 +351753,52 @@
       },
       "plan": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -351385,6 +351833,25 @@
                 "type": "string"
               }
             ]
+          },
+          "FieldCount": {
+            "description": "A field and how many records.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "field",
+              "records"
+            ],
+            "type": "object"
           },
           "FormBody": {
             "additionalProperties": false,
@@ -351433,6 +351900,28 @@
             "required": [
               "revision",
               "items"
+            ],
+            "type": "object"
+          },
+          "FormBreaking": {
+            "description": "The records a new release breaks (docs/adr/0442 §2): how many, and how many by each field the new\nrelease finds wrong (by the fields' keys, in their bytes' order).",
+            "properties": {
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/FieldCount"
+                },
+                "type": "array"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "fields"
             ],
             "type": "object"
           },
@@ -351989,18 +352478,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -352016,8 +352523,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -352384,6 +352890,13 @@
                   "null"
                 ]
               },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "The steps, in their order (the editor's buttons).",
                 "items": {
@@ -352639,6 +353152,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.forms.edit` v1, and what plan says it would do.",
         "properties": {
+          "breaking": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FormBreaking"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A publish over an earlier release (docs/adr/0442 §2): the layer's records that held by the\nearlier release and do not by this one; none when none."
+          },
           "changed": {
             "description": "Whether the settings changed.",
             "type": "boolean"
@@ -352699,10 +353223,12 @@
           "form_preflight",
           "form_unpublished",
           "form_item_unknown",
-          "form_comment_unknown"
+          "form_comment_unknown",
+          "form_tests_failed"
         ],
         "warnings": [
-          "form_release_dropped"
+          "form_release_dropped",
+          "form_breaking"
         ]
       },
       "examples": [
@@ -355608,6 +356134,324 @@
       ]
     },
     {
+      "id": "cad.attachments.inspect",
+      "version": 1,
+      "title": "Ekleri incele",
+      "summary": "Nesnelerin eklerini baytlarından okur, hiçbir şey yazmaz: her ekin ortam türü (PNG, JPEG, GIF, TIFF, PDF ve ZIP baytlarından, ötekiler adının uzantısından), boyu ve SHA-256'sı; fotoğrafın EXIF'inin söylediği çekim anı ve WGS 84 konumu. Gömülü fotoğraf projenin kitaplığından, bağlı dosya diskten (göreli yol folder'dan), adres yalnız adıyla (indirilmez); bulunamayan missing. En çok 1 000 nesne; 256 MB'tan büyük dosyanın yalnız boyu.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.attachments.inspect` v1.\n\nRefusals: `invalid_count` (no object or more than 1 000), `invalid_uid`, `entity_not_found`,\n`invalid_folder` (a folder that is not an absolute path).",
+        "properties": {
+          "folder": {
+            "description": "The drawing's folder, an absolute path: where a relative file path is read from. None: a\nrelative path is not read (`missing`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The objects (lowercase UUID texts with hyphens), in the answer's order.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "AttachmentsInspect",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AttachmentFacts": {
+            "description": "What an attachment is.",
+            "properties": {
+              "latitude": {
+                "description": "Where it was taken, WGS 84 degrees, as its EXIF says.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "longitude": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "mime": {
+                "description": "The media type by the bytes (PNG, JPEG, GIF, TIFF, PDF, ZIP), else by the name's extension, else\n`application/octet-stream`; none for a web address whose name says nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "missing": {
+                "description": "An embedded photo not in the library, or a file not found or not read (a relative path without\na folder too); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "description": "The bytes' SHA-256, lowercase hex.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "size": {
+                "description": "Bytes; none when they were not read.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "source": {
+                "$ref": "#/$defs/AttachmentSource"
+              },
+              "taken": {
+                "description": "When a photo was taken, as its EXIF says (ISO 8601).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "source"
+            ],
+            "type": "object"
+          },
+          "AttachmentSource": {
+            "description": "Where an attachment's bytes are.",
+            "oneOf": [
+              {
+                "const": "asset",
+                "description": "An image of the project's library.",
+                "type": "string"
+              },
+              {
+                "const": "file",
+                "description": "A file on the disk.",
+                "type": "string"
+              },
+              {
+                "const": "url",
+                "description": "A web address.",
+                "type": "string"
+              }
+            ]
+          },
+          "InspectedObject": {
+            "description": "An object's attachments, in their order.",
+            "properties": {
+              "attachments": {
+                "items": {
+                  "$ref": "#/$defs/AttachmentFacts"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "attachments"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.attachments.inspect` v1, and what plan says.",
+        "properties": {
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/InspectedObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "title": "AttachmentsInspected",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AttachmentFacts": {
+            "description": "What an attachment is.",
+            "properties": {
+              "latitude": {
+                "description": "Where it was taken, WGS 84 degrees, as its EXIF says.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "longitude": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "mime": {
+                "description": "The media type by the bytes (PNG, JPEG, GIF, TIFF, PDF, ZIP), else by the name's extension, else\n`application/octet-stream`; none for a web address whose name says nothing.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "missing": {
+                "description": "An embedded photo not in the library, or a file not found or not read (a relative path without\na folder too); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "description": "The bytes' SHA-256, lowercase hex.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "size": {
+                "description": "Bytes; none when they were not read.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "source": {
+                "$ref": "#/$defs/AttachmentSource"
+              },
+              "taken": {
+                "description": "When a photo was taken, as its EXIF says (ISO 8601).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "source"
+            ],
+            "type": "object"
+          },
+          "AttachmentSource": {
+            "description": "Where an attachment's bytes are.",
+            "oneOf": [
+              {
+                "const": "asset",
+                "description": "An image of the project's library.",
+                "type": "string"
+              },
+              {
+                "const": "file",
+                "description": "A file on the disk.",
+                "type": "string"
+              },
+              {
+                "const": "url",
+                "description": "A web address.",
+                "type": "string"
+              }
+            ]
+          },
+          "InspectedObject": {
+            "description": "An object's attachments, in their order.",
+            "properties": {
+              "attachments": {
+                "items": {
+                  "$ref": "#/$defs/AttachmentFacts"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "attachments"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.attachments.inspect` v1, and what plan says.",
+        "properties": {
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/InspectedObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "title": "AttachmentsInspected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_count",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_folder"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir parselin eklerini incele",
+          "input": {
+            "folder": "/home/kullanici/proje",
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.export",
       "version": 1,
       "title": "Formu dışa aktar",
@@ -355645,6 +356489,52 @@
       },
       "output": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -356304,18 +357194,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -356331,8 +357239,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -356612,6 +357519,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -357087,6 +358001,52 @@
       },
       "plan": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -357746,18 +358706,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -357773,8 +358751,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -358054,6 +359031,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -358561,6 +359545,52 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "ActionKind": {
+            "description": "What a form action does (docs/adr/0442 §5).",
+            "oneOf": [
+              {
+                "const": "tool",
+                "description": "Opens a registered processing tool with the record chosen; the tool writes by its own rules.",
+                "type": "string"
+              },
+              {
+                "const": "recompute",
+                "description": "The form's calculations again on the record (`cad.forms.recompute`).",
+                "type": "string"
+              },
+              {
+                "const": "step",
+                "description": "A workflow step on the record (`cad.forms.transition`).",
+                "type": "string"
+              },
+              {
+                "const": "show",
+                "description": "The record shown on the drawing; writes nothing.",
+                "type": "string"
+              }
+            ]
+          },
+          "ActionRuns": {
+            "description": "Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).",
+            "oneOf": [
+              {
+                "enum": [
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "here",
+                "description": "On this computer, in the window's thread.",
+                "type": "string"
+              },
+              {
+                "const": "background",
+                "description": "In the background, with its panel and Durdur.",
+                "type": "string"
+              }
+            ]
+          },
           "AttachmentAccept": {
             "description": "What an attachments item counts and adds.",
             "oneOf": [
@@ -359220,18 +360250,36 @@
                 "type": "object"
               },
               {
-                "description": "An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,\nby the tool's id; no address, query or script.",
+                "description": "An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered\nprocessing tool by its id, the form's calculations again, a workflow step by its label, or the\nrecord shown on the drawing; no address, query or script.",
                 "properties": {
                   "id": {
                     "type": "string"
                   },
+                  "kind": {
+                    "$ref": "#/$defs/ActionKind",
+                    "description": "What it does; written unless `tool`."
+                  },
                   "label": {
                     "type": "string"
                   },
+                  "runs": {
+                    "$ref": "#/$defs/ActionRuns",
+                    "description": "Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`."
+                  },
+                  "step": {
+                    "description": "A `step` action's workflow step, by its label.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "tool": {
-                    "description": "The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.",
+                    "description": "A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted\nparts.",
                     "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)+$",
-                    "type": "string"
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "type": {
                     "const": "action",
@@ -359247,8 +360295,7 @@
                 "required": [
                   "type",
                   "id",
-                  "label",
-                  "tool"
+                  "label"
                 ],
                 "type": "object"
               }
@@ -359573,6 +360620,13 @@
               },
               "log": {
                 "description": "A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,\nthe states and the reason; read-only in the form.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "notes": {
+                "description": "A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the\nlatest step's notes as canonical JSON (`{\"<field key>\":\"<note>\"}`), emptied by a step without;\nread-only in the form, shown under the fields.",
                 "type": [
                   "string",
                   "null"
@@ -360224,7 +361278,7 @@
       "id": "cad.forms.transition",
       "version": 1,
       "title": "İş akışı adımı",
-      "summary": "Kaydı formun iş akışında bir adım ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla yazılır (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. Tek geri alma adımı “Form: <adım>”.",
+      "summary": "Kaydı formun iş akışında bir adım ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla yazılır (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. notes: alanların anahtarlarıyla inceleyenin notları, iş akışının not alanına yazılır (notsuz adım onu boşaltır; not alanı olmayan iş akışında ya da formda olmayan alanda form_invalid). Tek geri alma adımı “Form: <adım>”.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -360264,6 +361318,13 @@
               "string",
               "null"
             ]
+          },
+          "notes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes\nfield, shown under those fields; a step without them empties it.",
+            "type": "object"
           },
           "step": {
             "description": "The step's label.",
@@ -360491,6 +361552,13 @@
           "FormChange": {
             "description": "One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).",
             "properties": {
+              "areas": {
+                "description": "What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,\n`workflow`, `tests`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "item": {
                 "type": [
                   "string",
@@ -360556,6 +361624,19 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "version"
+          },
+          "requiresAdded": {
+            "description": "What the newer version needs of its host that the older did not, and the other way\n(`kentos_forms::requirements`, docs/adr/0442 §3).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "requiresRemoved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "to": {
             "description": "The release compared to; none: the draft.",
@@ -360580,6 +361661,13 @@
           "FormChange": {
             "description": "One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).",
             "properties": {
+              "areas": {
+                "description": "What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,\n`workflow`, `tests`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "item": {
                 "type": [
                   "string",
@@ -360645,6 +361733,19 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "version"
+          },
+          "requiresAdded": {
+            "description": "What the newer version needs of its host that the older did not, and the other way\n(`kentos_forms::requirements`, docs/adr/0442 §3).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "requiresRemoved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "to": {
             "description": "The release compared to; none: the draft.",
@@ -392490,6 +393591,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Form en çok 50 yayın tutar; en eskisi kaldırıldı."
+    },
+    {
+      "code": "invalid_folder",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Klasör mutlak bir yol değil."
+    },
+    {
+      "code": "form_tests_failed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun senaryolarından biri tutmuyor; yayınlanmadı."
+    },
+    {
+      "code": "form_breaking",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Önceki yayına uyan bazı kayıtlar yeni yayına uymuyor."
     },
     {
       "code": "form_item_unknown",

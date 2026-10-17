@@ -10,6 +10,11 @@ export type FormChange = { item?: string, kind: FormChangeKind,
  */
 properties?: Array<string>, 
 /**
+ * What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
+ * `workflow`, `tests`.
+ */
+areas?: Array<string>, 
+/**
  * Turkish, for people.
  */
 words: string, };

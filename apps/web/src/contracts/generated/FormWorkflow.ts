@@ -33,4 +33,10 @@ log?: string,
  * The draft states (docs/adr/0432): a record in one may be kept incomplete, the form's own
  * requirements warn; the layer's and the subtype's still refuse.
  */
-drafts?: Array<string>, };
+drafts?: Array<string>, 
+/**
+ * A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the
+ * latest step's notes as canonical JSON (`{"<field key>":"<note>"}`), emptied by a step without;
+ * read-only in the form, shown under the fields.
+ */
+notes?: string, };

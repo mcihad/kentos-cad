@@ -46,6 +46,16 @@ DRAFT = {"revision": 4, "items": copy.deepcopy(V3["items"]), "tests": [
 DRAFT["items"][0]["items"].append({"type": "note", "id": "bilgi", "text": "Kat {Kat}."})
 
 
+# docs/adr/0442 §3: an action, a location and a workflow added; their areas and what the form needs of its host.
+V5 = {"revision": 5, "items": [*copy.deepcopy(V1["items"]),
+                               {"type": "divider", "id": "cizgi", "label": "İşler"},
+                               {"type": "action", "id": "hesap", "label": "Hesapla", "tool": "attributes.calculate"},
+                               {"type": "location", "id": "yer"}],
+      "workflow": {"field": "Durum", "initial": "iyi", "steps": [{"label": "İncele", "from": ["iyi"], "to": "inceleme"}]}}
+V6 = {"revision": 6, "items": [*copy.deepcopy(V1["items"][:2]), field("not", "Not", label="Açıklama", widget="textArea"),
+                               {"type": "action", "id": "hesap", "label": "Göster", "kind": "show"}]}
+
+
 def release(body, v):
     return {"version": v, "digest": fc.digest(body), "body": body}
 
@@ -55,6 +65,7 @@ FORMS = [
      "releases": [release(V1, 1), release(V2, 2), release(V3, 3)]},
     {"id": "taslak", "name": "Taslak form", "layer": "bina", "draft": V1},
     {"id": "ayni", "name": "Aynı form", "layer": "bina", "draft": V2, "releases": [release(V2, 1)]},
+    {"id": "eylemli", "name": "Eylemli form", "layer": "bina", "draft": V6, "releases": [release(V1, 1), release(V5, 2)]},
 ]
 
 
@@ -62,6 +73,33 @@ FORMS = [
 
 # The properties' Turkish names in the words (docs/adr/0427).
 WORDS = {"label": "ad", "field": "alan", "help": "yardım", "placeholder": "yer tutucu", "widget": "giriş biçimi", "readOnly": "salt okunur", "required": "zorunlu", "visibleWhen": "görünme koşulu", "requiredWhen": "zorunluluk koşulu", "readOnlyWhen": "salt okunurluk koşulu", "default": "varsayılan", "defaultExpr": "varsayılan ifadesi", "calculate": "hesap", "choiceFilter": "seçenek süzgeci", "unique": "tekil", "reuseLast": "son değer", "overridable": "değiştirilebilir", "mirror": "yansıma", "suggest": "öneriler", "lookup": "başka katmandan liste", "checks": "denetimler", "columns": "sütunlar", "collapsed": "kapalı açılır", "text": "metin", "layer": "katman", "view": "görünüm", "accept": "kabul edilen", "min": "en az", "max": "en çok"}
+
+# docs/adr/0442 §3: what a change touches, in this order.
+AREAS = ["layout", "binding", "rule", "action", "workflow", "tests"]
+BINDING = {"field", "lookup", "layer"}
+RULES = {"visibleWhen", "requiredWhen", "readOnlyWhen", "required", "readOnly", "default", "defaultExpr", "calculate",
+         "choiceFilter", "checks", "unique", "reuseLast", "overridable", "min", "max"}
+ACTION = {"kind", "tool", "step", "runs"}
+
+
+def area_of(k):
+    return "binding" if k in BINDING else "rule" if k in RULES else "action" if k in ACTION else "layout"
+
+
+def areas(touched):
+    return [a for a in AREAS if a in touched]
+
+
+def item_areas(own):
+    touched = {"layout"}
+    if own.get("type") in ("field", "related"):
+        touched.add("binding")
+    if own.get("type") == "action":
+        touched.add("action")
+    if any(k in RULES for k in own):
+        touched.add("rule")
+    return areas(touched)
+
 
 def flat(items, parent=None, out=None):
     out = [] if out is None else out
@@ -92,27 +130,32 @@ def compare(old, new):
         name = name_of(own, i)
         was = next((x for x in a if x[0] == i), None)
         if was is None:
-            out.append({"item": i, "kind": "added", "words": f"“{name}” eklendi."})
+            out.append({"item": i, "kind": "added", "areas": item_areas(own), "words": f"“{name}” eklendi."})
             continue
         _, was_parent, was_own = was
         moved = was_parent != parent or (siblings(a, was_parent, both).index(i) != siblings(b, parent, both).index(i))
         if moved:
-            out.append({"item": i, "kind": "moved", "words": f"“{name}” taşındı."})
+            out.append({"item": i, "kind": "moved", "areas": ["layout"], "words": f"“{name}” taşındı."})
         if was_own != own:
             keys = sorted({k for k in [*was_own, *own] if was_own.get(k) != own.get(k)})
             said = ", ".join(WORDS.get(k, k) for k in keys)
-            out.append({"item": i, "kind": "changed", "properties": keys, "words": f"“{name}” değişti: {said}."})
+            out.append({"item": i, "kind": "changed", "properties": keys, "areas": areas({area_of(k) for k in keys}),
+                        "words": f"“{name}” değişti: {said}."})
     for i, _, own in a:
         if i not in [x for x, _, _ in b]:
-            out.append({"item": i, "kind": "removed", "words": f"“{name_of(own, i)}” kaldırıldı."})
+            out.append({"item": i, "kind": "removed", "areas": item_areas(own), "words": f"“{name_of(own, i)}” kaldırıldı."})
     if bool(old.get("clearHidden")) != bool(new.get("clearHidden")):
-        out.append({"kind": "changed", "properties": ["clearHidden"],
+        out.append({"kind": "changed", "properties": ["clearHidden"], "areas": ["rule"],
                     "words": "Gizlenenler silinir." if new.get("clearHidden") else "Gizlenenler artık silinmez."})
     if bool(old.get("steps")) != bool(new.get("steps")):
-        out.append({"kind": "changed", "properties": ["steps"],
+        out.append({"kind": "changed", "properties": ["steps"], "areas": ["layout"],
                     "words": "Form adım adım doldurulur." if new.get("steps") else "Form artık adım adım değil."})
+    if old.get("workflow") != new.get("workflow"):
+        words = ("İş akışı eklendi." if "workflow" not in old else "İş akışı kaldırıldı." if "workflow" not in new
+                 else "İş akışı değişti.")
+        out.append({"kind": "changed", "properties": ["workflow"], "areas": ["workflow"], "words": words})
     if old.get("tests", []) != new.get("tests", []):
-        out.append({"kind": "changed", "properties": ["tests"],
+        out.append({"kind": "changed", "properties": ["tests"], "areas": ["tests"],
                     "words": f"Senaryolar değişti: {len(new.get('tests', []))} senaryo, önce {len(old.get('tests', []))}."})
     return out
 
@@ -133,10 +176,16 @@ BODY = {1: V1, 2: V2, 3: V3}
 
 
 def ok(name, inp, old, new, op="execute"):
-    out = {"from": inp.get("from", 3 if inp["form"] == "bina" else 1)}
+    out = {"from": inp.get("from", {"bina": 3, "eylemli": 2}.get(inp["form"], 1))}
     if "to" in inp:
         out["to"] = inp["to"]
     out["changes"] = compare(old, new)
+    # docs/adr/0442 §3: what the newer needs of its host that the older did not, and the other way.
+    was, now = fc.requirements(old), fc.requirements(new)
+    if [r for r in now if r not in was]:
+        out["requiresAdded"] = [r for r in now if r not in was]
+    if [r for r in was if r not in now]:
+        out["requiresRemoved"] = [r for r in was if r not in now]
     return {"name": name, "steps": [{"op": op, "input": inp, "result": {"status": "completed", "output": out,
                                                                         "warnings": []}, "expect": UNCHANGED}]}
 
@@ -165,6 +214,8 @@ def cases():
         {"name": "doğrulama hiçbir şey yazmaz", "steps": [{"op": "validate", "input": {"form": "bina", "from": 1},
                                                             "result": {"status": "completed", "output": None,
                                                                        "warnings": []}, "expect": UNCHANGED}]},
+        ok("eylem, konum ve iş akışı eklendi: alanları ve gerektirdikleri", {"form": "eylemli", "from": 1, "to": 2}, V1, V5),
+        ok("eylem göstere döndü, konum ve iş akışı kalktı, alanın görünüşü değişti", {"form": "eylemli"}, V5, V6),
         refused("olmayan form", {"form": "yok"}, "unknown_form",
                 "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.", "form"),
         refused("yayınlanmamış form: karşılaştırılacak yayın yok", {"form": "taslak"}, "form_unpublished",

@@ -1677,9 +1677,10 @@ const ENTRIES: &[Entry] = &[
                 "form_unpublished",
                 "form_item_unknown",
                 "form_comment_unknown",
+                "form_tests_failed",
             ],
         ],
-        warnings: &["form_release_dropped"],
+        warnings: &["form_release_dropped", "form_breaking"],
         targets: none,
     },
     Entry {
@@ -1782,6 +1783,12 @@ const ENTRIES: &[Entry] = &[
             "layer_locked",
         ]],
         warnings: &["values_unfit"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.attachments.inspect",
+        refusals: &[&["invalid_count", "invalid_uid", "entity_not_found", "invalid_folder"]],
+        warnings: &[],
         targets: none,
     },
     Entry {

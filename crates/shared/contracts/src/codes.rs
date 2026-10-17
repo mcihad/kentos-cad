@@ -296,6 +296,12 @@ codes! {
     RELATION_MISMATCH = "relation_mismatch", Failed, false, "İlişkinin üst katmanı formun katmanı değil.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
+    /// A publish whose scenarios fail (docs/adr/0442 §1).
+    /// A folder given that is not an absolute path (docs/adr/0442 §7).
+    INVALID_FOLDER = "invalid_folder", Failed, false, "Klasör mutlak bir yol değil.";
+    FORM_TESTS_FAILED = "form_tests_failed", Failed, false, "Formun senaryolarından biri tutmuyor; yayınlanmadı.";
+    /// A release that some records held by the earlier one do not hold (docs/adr/0442 §2).
+    FORM_BREAKING = "form_breaking", Warning, false, "Önceki yayına uyan bazı kayıtlar yeni yayına uymuyor.";
     /// A comment on an item the form's draft has not (docs/adr/0441 §5).
     FORM_ITEM_UNKNOWN = "form_item_unknown", Failed, false, "Formun taslağında bu öğe yok.";
     /// A comment number the form has not.

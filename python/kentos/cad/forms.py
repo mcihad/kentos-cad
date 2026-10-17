@@ -325,15 +325,17 @@ class _FormsEdit(LocalCommand[FormsEdit, FormsEdited, FormsEdited]):
     üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı,
     değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove,
     publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa
-    form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped),
-    enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır,
-    cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden
-    geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown),
-    resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown).
-    Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit,
-    form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma
-    adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup
+    yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50
+    yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının
+    kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te
+    form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da
+    taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer
+    ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın
+    ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
+    form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir;
+    nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.forms.edit"
@@ -363,15 +365,17 @@ class _FormsEdit(LocalCommand[FormsEdit, FormsEdited, FormsEdited]):
         üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı,
         değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove,
         publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa
-        form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped),
-        enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır,
-        cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden
-        geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown),
-        resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown).
-        Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit,
-        form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma
-        adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup
+        yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50
+        yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının
+        kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te
+        form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da
+        taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer
+        ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın
+        ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
+        form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir;
+        nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -1365,8 +1369,10 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
     ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla
     yazılır (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın
     durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt istiyorsa formun hatası
-    olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. Tek geri alma adımı “Form:
-    <adım>”.
+    olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. notes: alanların
+    anahtarlarıyla inceleyenin notları, iş akışının not alanına yazılır (notsuz adım onu
+    boşaltır; not alanı olmayan iş akışında ya da formda olmayan alanda form_invalid).
+    Tek geri alma adımı “Form: <adım>”.
     """
     __slots__ = ()
     id = "cad.forms.transition"
@@ -1388,6 +1394,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        notes: Mapping[str, str] | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         request_id: str | None = None,
@@ -1397,7 +1404,10 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
         atılabilmeli; verilen değerler formun kurallarıyla yazılır (kilitli durumdaki
         kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden
         tamamlanır; adım geçerli kayıt istiyorsa formun hatası olan kayıt, gerekçe istiyorsa
-        boş gerekçe reddedilir. Tek geri alma adımı “Form: <adım>”.
+        boş gerekçe reddedilir. notes: alanların anahtarlarıyla inceleyenin notları, iş
+        akışının not alanına yazılır (notsuz adım onu boşaltır; not alanı olmayan iş
+        akışında ya da formda olmayan alanda form_invalid). Tek geri alma adımı “Form:
+        <adım>”.
 
         Args:
             doc: The drawing it works on.
@@ -1407,6 +1417,8 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
             draft: Through its draft instead of its latest release.
             expected_revision: The document revision the input was prepared against, as decimal text.
             moment: The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+            notes: Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes
+                field, shown under those fields; a step without them empties it.
             user: The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
             values: Values by the layer fields' keys written with the step (the reason among them).
             request_id: Names this write: sent again with the same call it is answered as
@@ -1428,6 +1440,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            notes=_opt(notes, lambda x: dict(x)),
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ), request_id=request_id, expected=expected)
@@ -1443,6 +1456,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        notes: Mapping[str, str] | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> FormsTransitioned:
@@ -1456,6 +1470,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            notes=_opt(notes, lambda x: dict(x)),
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
@@ -1471,6 +1486,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        notes: Mapping[str, str] | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -1484,6 +1500,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            notes=_opt(notes, lambda x: dict(x)),
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ))
@@ -1499,6 +1516,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         moment: str | None | Unset = UNSET,
+        notes: Mapping[str, str] | Unset = UNSET,
         user: str | None | Unset = UNSET,
         values: Mapping[str, str] | Unset = UNSET,
         op: str = "execute",
@@ -1517,6 +1535,7 @@ class _FormsTransition(LocalCommand[FormsTransition, FormsTransitioned, FormsTra
             draft=draft,
             expected_revision=expected_revision,
             moment=moment,
+            notes=_opt(notes, lambda x: dict(x)),
             user=user,
             values=_opt(values, lambda x: dict(x)),
         ), op=op, request_id=request_id, expected=expected)

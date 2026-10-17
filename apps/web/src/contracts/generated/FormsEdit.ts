@@ -7,8 +7,8 @@ import type { FormsOp } from "./FormsOp";
  * Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
  * `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
  * `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
- * `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:
- * `form_release_dropped`.
+ * `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`, `form_tests_failed`. Warnings:
+ * `form_release_dropped`, `form_breaking`.
  */
 export type FormsEdit = { edit: FormsOp, 
 /**

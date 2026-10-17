@@ -53,6 +53,8 @@ pub mod codes {
     /// An action's processing tool the host has not (docs/adr/0441 §6): the host adds it, the core
     /// does not know the host's tools.
     pub const ACTION_UNKNOWN: &str = "form_action_unknown";
+    /// A step action whose step the form's workflow has not (docs/adr/0442 §5).
+    pub const ACTION_STEP_UNKNOWN: &str = "form_action_step";
     /// A mirror with a rule that writes, requires or checks (docs/adr/0437).
     pub const MIRROR_RULES: &str = "form_mirror_rules";
     /// The widget does not take the field's kind.

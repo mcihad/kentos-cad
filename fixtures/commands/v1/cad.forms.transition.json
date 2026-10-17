@@ -691,6 +691,187 @@
      ]
     },
     {
+     "id": "notlu",
+     "name": "Notlu akış",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "yukseklik",
+        "field": "Yükseklik",
+        "calculate": "Kat * 3"
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama"
+       },
+       {
+        "type": "field",
+        "id": "gerekce",
+        "field": "Gerekçe"
+       },
+       {
+        "type": "field",
+        "id": "gecmis",
+        "field": "Geçmiş"
+       }
+      ],
+      "workflow": {
+       "field": "Durum",
+       "initial": "taslak",
+       "locked": [
+        "onaylandi"
+       ],
+       "steps": [
+        {
+         "label": "Gönder",
+         "from": [
+          "taslak",
+          "iade"
+         ],
+         "to": "gonderildi",
+         "valid": true
+        },
+        {
+         "label": "Onayla",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "onaylandi",
+         "valid": true
+        },
+        {
+         "label": "Geri gönder",
+         "from": [
+          "gonderildi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Düzelt",
+         "from": [
+          "onaylandi"
+         ],
+         "to": "iade",
+         "reason": "Gerekçe"
+        },
+        {
+         "label": "Taslağa al",
+         "to": "taslak"
+        }
+       ],
+       "log": "Geçmiş",
+       "notes": "Notlar"
+      }
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "22ddd545e0112e034843cedc599fd07a",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat",
+          "required": true
+         },
+         {
+          "type": "field",
+          "id": "yukseklik",
+          "field": "Yükseklik",
+          "calculate": "Kat * 3"
+         },
+         {
+          "type": "field",
+          "id": "aciklama",
+          "field": "Açıklama"
+         },
+         {
+          "type": "field",
+          "id": "gerekce",
+          "field": "Gerekçe"
+         },
+         {
+          "type": "field",
+          "id": "gecmis",
+          "field": "Geçmiş"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "taslak",
+         "locked": [
+          "onaylandi"
+         ],
+         "steps": [
+          {
+           "label": "Gönder",
+           "from": [
+            "taslak",
+            "iade"
+           ],
+           "to": "gonderildi",
+           "valid": true
+          },
+          {
+           "label": "Onayla",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "onaylandi",
+           "valid": true
+          },
+          {
+           "label": "Geri gönder",
+           "from": [
+            "gonderildi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Düzelt",
+           "from": [
+            "onaylandi"
+           ],
+           "to": "iade",
+           "reason": "Gerekçe"
+          },
+          {
+           "label": "Taslağa al",
+           "to": "taslak"
+          }
+         ],
+         "log": "Geçmiş",
+         "notes": "Notlar"
+        }
+       }
+      }
+     ]
+    },
+    {
      "id": "bozuk",
      "name": "Bozuk akış",
      "layer": "bina",
@@ -840,6 +1021,11 @@
       "name": "Geçmiş",
       "kind": "text",
       "length": 120
+     },
+     {
+      "name": "Notlar",
+      "kind": "text",
+      "length": 160
      }
     ]
    },
@@ -903,6 +1089,11 @@
       "name": "Geçmiş",
       "kind": "text",
       "length": 120
+     },
+     {
+      "name": "Notlar",
+      "kind": "text",
+      "length": 160
      }
     ]
    },
@@ -966,6 +1157,11 @@
       "name": "Geçmiş",
       "kind": "text",
       "length": 120
+     },
+     {
+      "name": "Notlar",
+      "kind": "text",
+      "length": 160
      }
     ]
    }
@@ -2671,6 +2867,443 @@
       "canRedo": false,
       "dirty": true,
       "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: geri gönderen alanlara not yazar, sonraki adım siler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "Ölçüler eksik."
+      },
+      "notes": {
+       "Kat": "Çatı katı sayılmamış.",
+       "Yükseklik": "  Yeniden ölçün.  "
+      },
+      "user": "Ayşe Yılmaz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Ölçüler eksik.",
+        "Geçmiş": "Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): Ölçüler eksik. · 2 alan notu · #19c52a9d2e7165a0",
+        "Notlar": "{\"Kat\":\"Çatı katı sayılmamış.\",\"Yükseklik\":\"Yeniden ölçün.\"}"
+       },
+       "version": 1,
+       "snapshot": "19c52a9d2e7165a0",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "iade",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Ölçüler eksik.",
+         "Geçmiş": "Ayşe Yılmaz · Geri gönder (Gönderildi → İade edildi): Ölçüler eksik. · 2 alan notu · #19c52a9d2e7165a0",
+         "Notlar": "{\"Kat\":\"Çatı katı sayılmamış.\",\"Yükseklik\":\"Yeniden ölçün.\"}"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Gönder",
+      "user": "Mehmet Kaya"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "iade",
+       "to": "gonderildi",
+       "attrs": {
+        "Durum": "gonderildi",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Ölçüler eksik.",
+        "Geçmiş": "Mehmet Kaya · Gönder (İade edildi → Gönderildi) · #19c52a9d2e7165a0"
+       },
+       "version": 1,
+       "snapshot": "19c52a9d2e7165a0",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6",
+         "Gerekçe": "Ölçüler eksik.",
+         "Geçmiş": "Mehmet Kaya · Gönder (İade edildi → Gönderildi) · #19c52a9d2e7165a0"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: formda olmayan alana not yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "x"
+      },
+      "notes": {
+       "Yok": "x"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "“Yok” formun bir alanı değil; not yalnız formdaki alanlara yazılır.",
+       "path": "notes.Yok"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: boş not",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "x"
+      },
+      "notes": {
+       "Kat": "   "
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "Not boş olamaz, en çok 1000 karakterdir ve denetim karakteri içermez.",
+       "path": "notes.Kat"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: not alanı olmayan iş akışı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "denetim",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "x"
+      },
+      "notes": {
+       "Kat": "x"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "“Bina denetimi” formunun iş akışında not alanı yok; alanlara not yazılamaz.",
+       "path": "notes"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: not alanı değerlerle yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "x",
+       "Notlar": "{}"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "“Notlar” alanını iş akışının adımları yazar; notları `notes` ile verin.",
+       "path": "values.Notlar"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: alana sığmayan notlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "x"
+      },
+      "notes": {
+       "Kat": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+       "Açıklama": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_invalid",
+       "message": "Notlar “Notlar” alanına sığmıyor (174 karakter); notları kısaltın ya da alanın uzunluğunu artırın.",
+       "path": "notes"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "notlar: plan da notları gösterir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "notlu",
+      "uid": "$uidOf:3",
+      "step": "Geri gönder",
+      "values": {
+       "Gerekçe": "Eksik."
+      },
+      "notes": {
+       "Açıklama": "Cephe yazılmamış."
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:3",
+       "from": "gonderildi",
+       "to": "iade",
+       "attrs": {
+        "Durum": "iade",
+        "Kat": "2",
+        "Yükseklik": "6",
+        "Gerekçe": "Eksik.",
+        "Geçmiş": "Geri gönder (Gönderildi → İade edildi): Eksik. · 1 alan notu · #8c50d2d9f7aed8c7",
+        "Notlar": "{\"Açıklama\":\"Cephe yazılmamış.\"}"
+       },
+       "version": 1,
+       "snapshot": "8c50d2d9f7aed8c7",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "attrs": {
+         "Durum": "gonderildi",
+         "Kat": "2",
+         "Yükseklik": "6"
+        }
+       }
+      },
+      "canUndo": false,
+      "revision": "same"
      }
     }
    ]

@@ -69,6 +69,7 @@ pub(super) const SAVE_SECTION: &str = "Kitaplığa koy";
 pub(super) const ADD_COMMENT: &str = "Yorum ekle";
 pub(super) const RESTORE_DRAFT: &str = "Geri yükle";
 pub(super) const DROP_KEPT: &str = "Bırak";
+pub(super) const PUBLISH_ANYWAY: &str = "Yine de yayınla";
 pub(super) const ADD_ATTACHMENTS: &str = "Ekler";
 pub(super) const ADD_LOCATION: &str = "Konum";
 pub(super) const AUDIT: &str = "Kayıtları denetle";
@@ -189,6 +190,8 @@ pub struct Window {
     pub(crate) comment_text: String,
     /// The draft kept on this device that differs from the form's (docs/adr/0441 §5): offered back.
     pub(crate) kept: Option<crate::forms::library::KeptDraft>,
+    /// The records Yayınla would break, asked about before it publishes (docs/adr/0442 §2).
+    pub(crate) breaking: Option<kentos_contracts::FormBreaking>,
 }
 
 /// The left column's palettes (docs/adr/0441 §1): the layer's fields, the project's relations and
@@ -239,6 +242,9 @@ pub enum Event {
     CommentText(String),
     AddComment,
     ResolveComment(u32, bool),
+    /// Yayınla over the records it breaks, or not (docs/adr/0442 §2).
+    PublishAnyway,
+    DropPublish,
     /// The draft kept on this device taken back, or let go.
     RestoreDraft,
     DropKept,
@@ -246,6 +252,10 @@ pub enum Event {
     AddDivider,
     AddAction,
     ActionTool(String),
+    /// An action's kind, its workflow step and where its tool runs (docs/adr/0442 §5, §6).
+    ActionKind(kentos_contracts::ActionKind),
+    ActionStep(String),
+    ActionRuns(kentos_contracts::ActionRuns),
     /// A related item made of a project relation: its layer and field.
     RelatedFrom(String),
     /// An attachments item (docs/adr/0407 §1) where the chosen item is.
@@ -745,7 +755,11 @@ impl App {
             kentos_forms::preflight_in(body, fields, &self.expression_variables(), &world);
         // An action's tool this host does not have (docs/adr/0441 §6): the host's check, not the core's.
         for (_, item) in body.walk() {
-            if let FormItem::Action { id, tool, .. } = item
+            if let FormItem::Action {
+                id,
+                tool: Some(tool),
+                ..
+            } = item
                 && self.processing.registry.get(tool).is_none()
             {
                 issues.push(FormIssue {
@@ -952,6 +966,12 @@ impl App {
 
     /// An event of the window, its copy's change kept in the history (docs/adr/0403 §1).
     pub(crate) fn forms_event(&mut self, event: Event) -> Task<Message> {
+        if let Event::DropPublish = event {
+            if let Some(w) = self.forms_window.as_mut() {
+                w.breaking = None;
+            }
+            return Task::none();
+        }
         match event {
             Event::Undo => return self.forms_history(true),
             Event::Redo => return self.forms_history(false),
@@ -1275,6 +1295,7 @@ impl App {
                 }
             }
             Event::Palette(p) => w.palette = p,
+            Event::DropPublish => {}
             Event::OpenDomains => {
                 self.forms_window = Some(w);
                 return self.open_domains();
@@ -1475,7 +1496,10 @@ impl App {
                 let item = FormItem::Action {
                     id: id.clone(),
                     label: "Öznitelik hesapla".into(),
-                    tool: "attributes.calculate".into(),
+                    kind: kentos_contracts::ActionKind::Tool,
+                    tool: Some("attributes.calculate".into()),
+                    step: None,
+                    runs: kentos_contracts::ActionRuns::Auto,
                     visible_when: None,
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1486,7 +1510,58 @@ impl App {
                     edited(&mut w, &|b| {
                         if let Some(FormItem::Action { tool: t, .. }) = find_mut(&mut b.items, &id)
                         {
-                            *t = tool.clone();
+                            *t = Some(tool.clone());
+                        }
+                    });
+                }
+            }
+            // An action's kind: its target follows it (docs/adr/0442 §5).
+            Event::ActionKind(kind) => {
+                if let Some(id) = chosen_item.clone() {
+                    let first_step = w
+                        .body
+                        .as_ref()
+                        .and_then(|b| b.workflow.as_ref())
+                        .and_then(|f| f.steps.first())
+                        .map(|s| s.label.clone());
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Action {
+                            kind: k,
+                            tool,
+                            step,
+                            runs,
+                            ..
+                        }) = find_mut(&mut b.items, &id)
+                        {
+                            *k = kind;
+                            *tool = (kind == kentos_contracts::ActionKind::Tool).then(|| {
+                                tool.clone()
+                                    .unwrap_or_else(|| "attributes.calculate".into())
+                            });
+                            *step = (kind == kentos_contracts::ActionKind::Step)
+                                .then(|| step.clone().or_else(|| first_step.clone()))
+                                .flatten();
+                            if kind != kentos_contracts::ActionKind::Tool {
+                                *runs = kentos_contracts::ActionRuns::Auto;
+                            }
+                        }
+                    });
+                }
+            }
+            Event::ActionStep(label) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Action { step, .. }) = find_mut(&mut b.items, &id) {
+                            *step = Some(label.clone());
+                        }
+                    });
+                }
+            }
+            Event::ActionRuns(where_) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Action { runs, .. }) = find_mut(&mut b.items, &id) {
+                            *runs = where_;
                         }
                     });
                 }
@@ -1860,6 +1935,7 @@ impl App {
                             }],
                             log: None,
                             drafts: Vec::new(),
+                            notes: None,
                         };
                         edited(&mut w, &|b| b.workflow = Some(workflow.clone()));
                     }
@@ -2165,7 +2241,10 @@ impl App {
                 }
                 return Task::none();
             }
-            Event::Publish => {
+            // Yine de yayınla skips the question of the records a release breaks (docs/adr/0442 §2).
+            ev @ (Event::Publish | Event::PublishAnyway) => {
+                let anyway = matches!(ev, Event::PublishAnyway);
+                w.breaking = None;
                 self.forms_window = Some(w);
                 if !self.save_form() {
                     return Task::none();
@@ -2175,6 +2254,34 @@ impl App {
                     .as_ref()
                     .and_then(|w| w.chosen.clone())
                     .unwrap_or_default();
+                // The records the release would break are asked about first (docs/adr/0442 §2); a failing
+                // scenario stops it here, said by its refusal.
+                if !anyway && let Some(doc) = self.document.as_mut() {
+                    let planned = forms_edit::plan(
+                        &ExecutionContext::new(&mut doc.model),
+                        &FormsEdit {
+                            edit: FormsOp::Publish {
+                                id: id.clone(),
+                                note: None,
+                            },
+                            expected_revision: None,
+                        },
+                    );
+                    match planned {
+                        kentos_contracts::CommandResult::Completed { output, .. } => {
+                            if let Some(b) = output.breaking {
+                                if let Some(w) = self.forms_window.as_mut() {
+                                    w.breaking = Some(b);
+                                }
+                                return Task::none();
+                            }
+                        }
+                        other => {
+                            let _ = self.answered(other);
+                            return Task::none();
+                        }
+                    }
+                }
                 if let Some(done) = self.edit_forms(FormsOp::Publish {
                     id: id.clone(),
                     note: None,
@@ -2267,6 +2374,7 @@ impl App {
             Control::Press(ADD_COMMENT) => Some(msg(Event::AddComment)),
             Control::Press(RESTORE_DRAFT) => Some(msg(Event::RestoreDraft)),
             Control::Press(DROP_KEPT) => Some(msg(Event::DropKept)),
+            Control::Press(PUBLISH_ANYWAY) => Some(msg(Event::PublishAnyway)),
             Control::Press(PALETTE_RELATIONS) => Some(msg(Event::Palette(Palette::Relations))),
             Control::Press(PALETTE_SECTIONS) => Some(msg(Event::Palette(Palette::Sections))),
             Control::Fill("Yorum", text) => Some(msg(Event::CommentText(text.to_owned()))),

@@ -1515,6 +1515,164 @@ fn meters_kept(app: &mut App) {
     run(app, "data.forms");
 }
 
+/// The inspection buildings with a notes field the workflow's steps write to (docs/adr/0442 §4).
+fn noted_buildings(app: &mut App) {
+    workflow_buildings(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut fields = doc.model.layers().get("bina").expect("bina").fields.clone();
+    fields.push(kentos_contracts::LayerField::new(
+        "Notlar",
+        kentos_contracts::LayerFieldKind::Text,
+    ));
+    let _ = doc.model.set_layer_fields("bina", fields, &[]);
+    let mut settings = doc.model.settings().clone();
+    let form = settings.forms.first_mut().expect("the form");
+    if let Some(w) = form.draft.workflow.as_mut() {
+        w.notes = Some("Notlar".into());
+    }
+    let body = form.draft.clone();
+    form.releases = vec![kentos_contracts::FormRelease {
+        version: 1,
+        digest: kentos_contracts::body_digest(&body),
+        body,
+        note: None,
+    }];
+    doc.model.set_settings(settings);
+    app.form_memory.clock = Some("2026-10-17T10:00:00".into());
+    app.form_memory.person = Some("Ayşe Yılmaz".into());
+}
+
+/// The sent building under review: Alanlara not on, notes on two fields, the reason typed (docs/adr/0442 §4).
+fn reviewer_notes(app: &mut App) {
+    noted_buildings(app);
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Reviewing(true));
+    entry(
+        app,
+        entry::Event::FieldNote("Kat".into(), "Çatı katı sayılmamış.".into()),
+    );
+    entry(
+        app,
+        entry::Event::FieldNote("Kod".into(), "Tabeladaki kod B-02.".into()),
+    );
+    entry(
+        app,
+        entry::Event::Value("Gerekçe".into(), "Ölçüler eksik.".into()),
+    );
+}
+
+/// Returned with the notes, opened again: each note under its field.
+fn reviewer_notes_shown(app: &mut App) {
+    reviewer_notes(app);
+    entry(app, entry::Event::Transition("Geri gönder".into()));
+    app.selection.set([Slot(2)]);
+    run(app, "data.formEdit");
+}
+
+/// The form published again while a record was being typed into: Yeni sürümle aç (docs/adr/0442 §2).
+fn new_release(app: &mut App) {
+    workflow_buildings(app);
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Kat".into(), "4".into()));
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut body = doc.model.settings().forms[0].draft.clone();
+    body.items.retain(|i| i.id() != "gerekce");
+    let _ = kentos_native_application::forms_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        kentos_contracts::FormsEdit {
+            edit: kentos_contracts::FormsOp::Update {
+                id: "denetim".into(),
+                body,
+            },
+            expected_revision: None,
+        },
+    );
+    let _ = kentos_native_application::forms_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        kentos_contracts::FormsEdit {
+            edit: kentos_contracts::FormsOp::Publish {
+                id: "denetim".into(),
+                note: None,
+            },
+            expected_revision: None,
+        },
+    );
+    entry(app, entry::Event::Save);
+}
+
+/// Yayınla over records the new release breaks: asked first (docs/adr/0442 §2).
+fn breaking_publish(app: &mut App) {
+    workflow_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("gerekce".into()));
+    designer(app, designer::Event::Required(true));
+    designer(app, designer::Event::Publish);
+}
+
+/// An action that takes a workflow step, its step picked (docs/adr/0442 §5).
+fn step_action(app: &mut App) {
+    workflow_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("kat".into()));
+    designer(app, designer::Event::AddAction);
+    designer(
+        app,
+        designer::Event::ActionKind(kentos_contracts::ActionKind::Step),
+    );
+    designer(
+        app,
+        designer::Event::Text(designer::Text::Label, "Gönder".into()),
+    );
+}
+
+/// Değişiklikler with the areas each change touches and what the draft newly needs (docs/adr/0442 §3).
+fn change_areas(app: &mut App) {
+    workflow_buildings(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("kat".into()));
+    designer(app, designer::Event::Required(false));
+    designer(app, designer::Event::AddLocation);
+    designer(app, designer::Event::AddAction);
+    designer(app, designer::Event::Changes);
+}
+
+/// The first building's attachments read by `cad.attachments.inspect`: Bilgi (docs/adr/0442 §7).
+fn attachment_facts(app: &mut App) {
+    let mut items = meters_items();
+    if let Some(xs) = items.as_array_mut() {
+        xs.insert(
+            1,
+            json!({ "type": "attachments", "id": "ekler", "label": "Ekler" }),
+        );
+    }
+    meters_rebodied(app, items);
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    let photo = root.join("exif/v1/konum.jpg").display().to_string();
+    let plan = root.join("attachments/v1/plan.pdf").display().to_string();
+    let doc = app.document.as_mut().expect("a drawing");
+    let uid = doc
+        .model
+        .uid(Slot(1))
+        .map(|u| u.to_string())
+        .unwrap_or_default();
+    let _ = kentos_native_application::set::execute(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        serde_json::from_value(
+            json!({ "uids": [uid], "operation": "attachments", "attachments": [
+            { "name": "Ön cephe", "file": photo },
+            { "name": "Yapı ruhsatı", "file": plan },
+            { "name": "Tapu kaydı", "url": "https://ornek.org/tapu/101-5.pdf" }
+        ] }),
+        )
+        .expect("an input"),
+    );
+    app.selection.set([Slot(1)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::InspectAttachments);
+}
+
 /// The province being searched: “an” typed, typing paused.
 fn searched_list(app: &mut App) {
     chosen_facilities(app);
@@ -2713,6 +2871,13 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-tasarim-bolumler", meters_sections),
         ("form-tasarim-yorumlar", meters_review),
         ("form-tasarim-kalan-taslak", meters_kept),
+        ("form-alan-notlari", reviewer_notes),
+        ("form-alan-notu-gosterilen", reviewer_notes_shown),
+        ("form-yeni-surum", new_release),
+        ("form-yayin-kirilan", breaking_publish),
+        ("form-eylem-adim", step_action),
+        ("form-degisiklik-alanlari", change_areas),
+        ("form-ekler-bilgi", attachment_facts),
         ("form-deger-paketi", sources_domains),
         ("form-degerleri-bicime", sources_migrated),
         ("deger-listeleri", domains_window),
@@ -2730,14 +2895,126 @@ mod tests {
     use crate::app::App;
 
     #[test]
+    fn a_publish_that_breaks_records_asks_first_and_publishes_when_asked_again() {
+        let mut app = crate::files_testing::app_with_drawing();
+        breaking_publish(&mut app);
+        let w = app.forms_window.as_ref().expect("the window");
+        let b = w.breaking.as_ref().expect("asked about the broken records");
+        assert_eq!(
+            b.records, 2,
+            "the sent and the approved building lack a reason"
+        );
+        assert_eq!(
+            app.project_forms()[0].releases.len(),
+            1,
+            "not published yet"
+        );
+        designer(&mut app, designer::Event::PublishAnyway);
+        assert_eq!(app.project_forms()[0].releases.len(), 2);
+    }
+
+    #[test]
+    fn a_reviewer_s_notes_go_with_the_step_and_show_under_the_fields_after() {
+        let mut app = crate::files_testing::app_with_drawing();
+        reviewer_notes_shown(&mut app);
+        let attrs = &app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(Slot(2))
+            .unwrap()
+            .base()
+            .attrs;
+        assert_eq!(attrs.get("Durum").map(String::as_str), Some("iade"));
+        assert_eq!(
+            attrs.get("Notlar").map(String::as_str),
+            Some(r#"{"Kat":"Çatı katı sayılmamış.","Kod":"Tabeladaki kod B-02."}"#)
+        );
+        assert!(
+            attrs
+                .get("Geçmiş")
+                .is_some_and(|l| l.contains("2 alan notu"))
+        );
+    }
+
+    #[test]
+    fn a_new_release_opens_the_record_again_keeping_what_was_typed() {
+        let mut app = crate::files_testing::app_with_drawing();
+        new_release(&mut app);
+        assert!(app.form_entry.is_some(), "the window stays on the conflict");
+        entry(&mut app, entry::Event::Reload);
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none(), "written by the new release");
+        let kat = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(Slot(1))
+            .unwrap()
+            .base()
+            .attrs
+            .get("Kat")
+            .cloned();
+        assert_eq!(kat.as_deref(), Some("4"));
+    }
+
+    #[test]
+    fn a_step_action_takes_its_step_and_a_show_action_selects_the_record() {
+        let mut app = crate::files_testing::app_with_drawing();
+        workflow_buildings(&mut app);
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.model.settings().clone();
+        let form = settings.forms.first_mut().unwrap();
+        let mut body = form.draft.clone();
+        body.items.push(serde_json::from_value(json!(
+            { "type": "action", "id": "gonder", "label": "Gönder", "kind": "step", "step": "Gönder" })).unwrap());
+        body.items.push(
+            serde_json::from_value(json!(
+            { "type": "action", "id": "goster", "label": "Göster", "kind": "show" }))
+            .unwrap(),
+        );
+        form.draft = body.clone();
+        form.releases = vec![kentos_contracts::FormRelease {
+            version: 1,
+            digest: kentos_contracts::body_digest(&body),
+            body,
+            note: None,
+        }];
+        doc.model.set_settings(settings);
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, entry::Event::RunAction("goster".into()));
+        assert_eq!(app.selection.ids(), [Slot(1)]);
+        entry(&mut app, entry::Event::RunAction("gonder".into()));
+        let state = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(Slot(1))
+            .unwrap()
+            .base()
+            .attrs
+            .get("Durum")
+            .cloned();
+        assert_eq!(state.as_deref(), Some("gonderildi"));
+    }
+
+    #[test]
+    fn the_attachments_facts_are_read_by_the_command() {
+        let mut app = crate::files_testing::app_with_drawing();
+        attachment_facts(&mut app);
+        assert!(app.form_entry.is_some());
+    }
+
+    #[test]
     fn a_divider_and_an_action_show_and_the_action_opens_its_tool_on_the_record() {
         let mut app = crate::files_testing::app_with_drawing();
         meters_chart(&mut app);
         assert!(app.form_entry.is_some(), "the form");
-        entry(
-            &mut app,
-            entry::Event::RunAction("attributes.calculate".into()),
-        );
+        entry(&mut app, entry::Event::RunAction("hesapla".into()));
         assert_eq!(
             app.selection.ids(),
             [Slot(1)],

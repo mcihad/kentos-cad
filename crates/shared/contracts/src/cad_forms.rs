@@ -119,8 +119,8 @@ pub enum FormsOp {
 /// Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
 /// `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
 /// `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
-/// `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:
-/// `form_release_dropped`.
+/// `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`, `form_tests_failed`. Warnings:
+/// `form_release_dropped`, `form_breaking`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -178,6 +178,36 @@ pub struct FormsEdited {
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+    /// A publish over an earlier release (docs/adr/0442 §2): the layer's records that held by the
+    /// earlier release and do not by this one; none when none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub breaking: Option<FormBreaking>,
+}
+
+/// The records a new release breaks (docs/adr/0442 §2): how many, and how many by each field the new
+/// release finds wrong (by the fields' keys, in their bytes' order).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormBreaking {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records: u32,
+    pub fields: Vec<FieldCount>,
+}
+
+/// A field and how many records.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldCount {
+    pub field: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records: u32,
 }
 
 /// Input of `cad.forms.validate` v1: a form, and a record to ask it about.
@@ -776,6 +806,11 @@ pub struct FormChange {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub properties: Vec<String>,
+    /// What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
+    /// `workflow`, `tests`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub areas: Vec<String>,
     /// Turkish, for people.
     pub words: String,
 }
@@ -796,6 +831,14 @@ pub struct FormsCompared {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub to: Option<u32>,
     pub changes: Vec<FormChange>,
+    /// What the newer version needs of its host that the older did not, and the other way
+    /// (`kentos_forms::requirements`, docs/adr/0442 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub requires_added: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub requires_removed: Vec<String>,
 }
 
 /// Input of `cad.forms.transition` v1 (İş akışı adımı, docs/adr/0428): a record taken a step of its form's
@@ -828,6 +871,11 @@ pub struct FormsTransition {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
     pub values: BTreeMap<String, String>,
+    /// Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes
+    /// field, shown under those fields; a step without them empties it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, String>>", optional))]
+    pub notes: BTreeMap<String, String>,
     /// The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

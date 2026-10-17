@@ -1748,6 +1748,140 @@
      "op": "execute",
      "input": {
       "edit": {
+       "kind": "create",
+       "name": "A",
+       "layer": "bina",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "action",
+          "id": "git",
+          "label": "Git",
+          "kind": "show",
+          "tool": "attributes.calculate"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_form",
+       "message": "$any",
+       "path": "edit.body"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": null
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "name": "A",
+       "layer": "bina",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "action",
+          "id": "git",
+          "label": "Git",
+          "kind": "step"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_form",
+       "message": "$any",
+       "path": "edit.body"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": null
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "name": "A",
+       "layer": "bina",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "action",
+          "id": "git",
+          "label": "Git",
+          "kind": "recompute",
+          "runs": "here"
+         }
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_form",
+       "message": "$any",
+       "path": "edit.body"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "settings": {
+       "forms": null
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
        "kind": "publish",
        "id": "denetim",
        "note": "a\u0007"

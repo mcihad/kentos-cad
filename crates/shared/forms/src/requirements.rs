@@ -1,6 +1,6 @@
 //! What a form needs of the host that shows it (docs/adr/0441 §4): the moment and the user its rules
-//! read, the other layers, the record's geometry, its attachments, a workflow and the processing tools its
-//! actions open. A host that lacks one opens the form read-only and says which (the profile's rule,
+//! read, the other layers, the record's geometry (a location, a spatial list, an action showing it), its
+//! attachments, a workflow and the processing tools its actions open. A host that lacks one opens the form read-only and says which (the profile's rule,
 //! docs/specs/forms-v1.md §6); the desktop has them all. A form needing none is pure: data alone.
 
 use kentos_contracts::{FormBody, FormItem};
@@ -30,11 +30,18 @@ pub fn requirements(body: &FormBody) -> Vec<String> {
                 texts.extend(visible_when.as_deref());
             }
             FormItem::Action {
-                tool, visible_when, ..
+                kind,
+                tool,
+                visible_when,
+                ..
             } => {
-                if !tools.contains(tool) {
+                // A tool its id; showing the record its geometry (docs/adr/0442 §5).
+                if let Some(tool) = tool
+                    && !tools.contains(tool)
+                {
                     tools.push(tool.clone());
                 }
+                geometry |= *kind == kentos_contracts::ActionKind::Show;
                 texts.extend(visible_when.as_deref());
             }
             FormItem::Field(f) => {

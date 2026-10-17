@@ -125,6 +125,7 @@ pub mod layers_compose;
 pub mod layers_edit;
 pub mod layers_filter;
 pub mod field_policy;
+pub mod attachments_inspect;
 pub mod fields_usage;
 pub mod layers_find;
 pub mod layers_info;
@@ -277,6 +278,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_FIELDS_MIGRATE,
         kentos_contracts::CAD_FIELDS_MIGRATE_VERSION,
+    ),
+    // What each attachment is, read from its bytes ([`attachments_inspect`], docs/adr/0442 §7).
+    (
+        kentos_contracts::CAD_ATTACHMENTS_INSPECT,
+        kentos_contracts::CAD_ATTACHMENTS_INSPECT_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_EXPORT,

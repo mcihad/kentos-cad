@@ -79,6 +79,31 @@ pub fn preflight_in(
             problem,
         ));
     }
+    // An action's step, the workflow's (docs/adr/0442 §5).
+    for (_, item) in body.walk() {
+        if let FormItem::Action {
+            id,
+            kind: kentos_contracts::ActionKind::Step,
+            step: Some(step),
+            ..
+        } = item
+            && !body
+                .workflow
+                .as_ref()
+                .is_some_and(|w| w.steps.iter().any(|s| s.label == *step))
+        {
+            p.issues.push(issue(
+                codes::ACTION_STEP_UNKNOWN,
+                FormSeverity::Error,
+                Some(id),
+                None,
+                Some("step"),
+                format!(
+                    "“{step}” adımı formun iş akışında yok; eylemi var olan bir adıma bağlayın."
+                ),
+            ));
+        }
+    }
     if p.bound.is_empty() {
         p.issues.push(issue(
             codes::EMPTY,

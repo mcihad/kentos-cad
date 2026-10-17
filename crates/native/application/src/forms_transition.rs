@@ -155,6 +155,56 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             &format!("values.{}", l.key()),
         ));
     }
+    // The step's notes on the record's fields (docs/adr/0442 §4): the form's own fields, each a short text.
+    let notes_field = workflow
+        .notes
+        .as_ref()
+        .and_then(|k| fields.iter().find(|f| f.key() == k));
+    if let Some(n) = notes_field
+        && input.values.contains_key(n.key())
+    {
+        return Err(fail(
+            codes::FORM_INVALID,
+            format!(
+                "“{}” alanını iş akışının adımları yazar; notları `notes` ile verin.",
+                n.label()
+            ),
+            &format!("values.{}", n.key()),
+        ));
+    }
+    if !input.notes.is_empty() && notes_field.is_none() {
+        return Err(fail(
+            codes::FORM_INVALID,
+            format!(
+                "“{}” formunun iş akışında not alanı yok; alanlara not yazılamaz.",
+                form.name
+            ),
+            "notes",
+        ));
+    }
+    let bound = forms::bound_keys(body);
+    for (k, note) in &input.notes {
+        if !bound.iter().any(|b| b == k) {
+            return Err(fail(
+                codes::FORM_INVALID,
+                format!("“{k}” formun bir alanı değil; not yalnız formdaki alanlara yazılır."),
+                &format!("notes.{k}"),
+            ));
+        }
+        if note.trim().is_empty()
+            || note.chars().count() > kentos_contracts::MOST_FORM_TEXT
+            || note.chars().any(|c| c.is_control() && c != '\n')
+        {
+            return Err(fail(
+                codes::FORM_INVALID,
+                format!(
+                    "Not boş olamaz, en çok {} karakterdir ve denetim karakteri içermez.",
+                    kentos_contracts::MOST_FORM_TEXT
+                ),
+                &format!("notes.{k}"),
+            ));
+        }
+    }
     let mut after = if prepared.locked_by_state(before) {
         // A locked record takes only the step's reason.
         if let Some(k) = input
@@ -266,6 +316,9 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
         {
             line.push_str(&format!(": {}", text.trim()));
         }
+        if !input.notes.is_empty() {
+            line.push_str(&format!(" · {} alan notu", input.notes.len()));
+        }
         line.push_str(&format!(" · #{snapshot}"));
         let mut lines: Vec<String> = after
             .get(&l.name)
@@ -283,6 +336,33 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             }
         }
         after.insert(l.name.clone(), lines.join("\n"));
+    }
+    // The latest step's notes, canonical JSON; a step without empties them.
+    if let Some(n) = notes_field {
+        if input.notes.is_empty() {
+            after.remove(&n.name);
+        } else {
+            let trimmed: std::collections::BTreeMap<&str, &str> = input
+                .notes
+                .iter()
+                .map(|(k, v)| (k.as_str(), v.trim()))
+                .collect();
+            let text = serde_json::to_string(&trimmed).unwrap_or_default();
+            if n.length
+                .is_some_and(|most| text.chars().count() > most as usize)
+            {
+                return Err(fail(
+                    codes::FORM_INVALID,
+                    format!(
+                        "Notlar “{}” alanına sığmıyor ({} karakter); notları kısaltın ya da alanın uzunluğunu artırın.",
+                        n.label(),
+                        text.chars().count()
+                    ),
+                    "notes",
+                ));
+            }
+            after.insert(n.name.clone(), text);
+        }
     }
     let mut entity = e.clone();
     entity.base_mut().attrs = after;

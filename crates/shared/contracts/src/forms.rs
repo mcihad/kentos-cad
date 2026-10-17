@@ -160,6 +160,12 @@ pub struct FormWorkflow {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub drafts: Vec<String>,
+    /// A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the
+    /// latest step's notes as canonical JSON (`{"<field key>":"<note>"}`), emptied by a step without;
+    /// read-only in the form, shown under the fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub notes: Option<String>,
 }
 
 /// One step of a workflow.
@@ -264,6 +270,27 @@ pub fn workflow_problem(workflow: &FormWorkflow, fields: &[crate::LayerField]) -
             .any(|s| s.reason.as_deref() == Some(k))
         {
             return Some("Geçmiş alanı bir adımın gerekçe alanı olamaz.".into());
+        }
+    }
+    // docs/adr/0442 §4: the notes' field, a free text field of its own.
+    if let Some(k) = &workflow.notes {
+        match fields.iter().find(|x| x.key() == k) {
+            None => return Some(format!("İş akışının not alanı (“{k}”) katmanda yok.")),
+            Some(x) if x.kind != crate::LayerFieldKind::Text || x.values.is_some() => {
+                return Some(format!(
+                    "İş akışının not alanı “{}” serbest metin alanı olmalı.",
+                    x.label()
+                ));
+            }
+            Some(_) => {}
+        }
+        if workflow.log.as_deref() == Some(k)
+            || workflow
+                .steps
+                .iter()
+                .any(|s| s.reason.as_deref() == Some(k))
+        {
+            return Some("Not alanı geçmiş ya da gerekçe alanı olamaz.".into());
         }
     }
     if workflow.steps.is_empty() {
@@ -535,18 +562,87 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
-    /// An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,
-    /// by the tool's id; no address, query or script.
+    /// An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered
+    /// processing tool by its id, the form's calculations again, a workflow step by its label, or the
+    /// record shown on the drawing; no address, query or script.
     Action {
         id: String,
         label: String,
-        /// The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.
+        /// What it does; written unless `tool`.
+        #[serde(default, skip_serializing_if = "ActionKind::is_tool")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<ActionKind>", optional))]
+        kind: ActionKind,
+        /// A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted
+        /// parts.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(regex(pattern = ACTION_TOOL_TEXT)))]
-        tool: String,
+        tool: Option<String>,
+        /// A `step` action's workflow step, by its label.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        step: Option<String>,
+        /// Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`.
+        #[serde(default, skip_serializing_if = "ActionRuns::is_auto")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<ActionRuns>", optional))]
+        runs: ActionRuns,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         visible_when: Option<String>,
     },
+}
+
+/// What a form action does (docs/adr/0442 §5).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ActionKind {
+    /// Opens a registered processing tool with the record chosen; the tool writes by its own rules.
+    #[default]
+    Tool,
+    /// The form's calculations again on the record (`cad.forms.recompute`).
+    Recompute,
+    /// A workflow step on the record (`cad.forms.transition`).
+    Step,
+    /// The record shown on the drawing; writes nothing.
+    Show,
+}
+
+impl ActionKind {
+    pub fn is_tool(&self) -> bool {
+        *self == ActionKind::Tool
+    }
+
+    /// Whether it may write the record (a read-only record turns it off).
+    pub fn writes(&self) -> bool {
+        matches!(
+            self,
+            ActionKind::Tool | ActionKind::Recompute | ActionKind::Step
+        )
+    }
+}
+
+/// Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ActionRuns {
+    #[default]
+    Auto,
+    /// On this computer, in the window's thread.
+    Here,
+    /// In the background, with its panel and Durdur.
+    Background,
+}
+
+impl ActionRuns {
+    pub fn is_auto(&self) -> bool {
+        *self == ActionRuns::Auto
+    }
 }
 
 /// An action's tool id as a pattern (the schema's; [`action_tool_ok`] also bounds its length).
@@ -1453,7 +1549,10 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
             }
             FormItem::Action {
                 label,
+                kind,
                 tool,
+                step,
+                runs,
                 visible_when,
                 ..
             } => {
@@ -1462,9 +1561,25 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                         "“{id}” eyleminin adı boş olamaz ve en çok {MOST_FORM_NAME} karakterdir."
                     ));
                 }
-                if !action_tool_ok(tool) {
+                // Each kind its own target, the others none (docs/adr/0442 §5).
+                match (kind, tool, step) {
+                    (ActionKind::Tool, Some(tool), None) if action_tool_ok(tool) => {}
+                    (ActionKind::Tool, Some(tool), None) => {
+                        return Some(format!(
+                            "“{id}” eylemi kayıtlı bir işlem aracını kimliğiyle anar (attributes.calculate gibi); “{tool}” bir araç kimliği değil. Adres, sorgu ya da betik yazılmaz."
+                        ));
+                    }
+                    (ActionKind::Step, None, Some(step)) if form_name_ok(step) => {}
+                    (ActionKind::Recompute | ActionKind::Show, None, None) => {}
+                    _ => {
+                        return Some(format!(
+                            "“{id}” eyleminin hedefi türüne uymuyor: araç eylemi yalnız aracın kimliğini, adım eylemi yalnız adımın adını alır; ötekiler hedef almaz."
+                        ));
+                    }
+                }
+                if *kind != ActionKind::Tool && !runs.is_auto() {
                     return Some(format!(
-                        "“{id}” eylemi kayıtlı bir işlem aracını kimliğiyle anar (attributes.calculate gibi); “{tool}” bir araç kimliği değil. Adres, sorgu ya da betik yazılmaz."
+                        "“{id}” eyleminin çalışacağı yer yalnız araç eyleminde seçilir."
                     ));
                 }
                 if visible_when.as_deref().is_some_and(|r| !rule_ok(r)) {

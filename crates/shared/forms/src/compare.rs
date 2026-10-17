@@ -51,6 +51,68 @@ const WORDS: [(&str, &str); 29] = [
     ("max", "en çok"),
 ];
 
+/// The areas in their order (docs/adr/0442 §3).
+const AREAS: [&str; 6] = ["layout", "binding", "rule", "action", "workflow", "tests"];
+
+/// The properties that bind data, decide a value's rules, and say an action's target.
+const BINDING: [&str; 3] = ["field", "lookup", "layer"];
+const RULES: [&str; 15] = [
+    "visibleWhen",
+    "requiredWhen",
+    "readOnlyWhen",
+    "required",
+    "readOnly",
+    "default",
+    "defaultExpr",
+    "calculate",
+    "choiceFilter",
+    "checks",
+    "unique",
+    "reuseLast",
+    "overridable",
+    "min",
+    "max",
+];
+const ACTION: [&str; 4] = ["kind", "tool", "step", "runs"];
+
+/// What a property touches: its data binding, its rules, an action's target, else the layout.
+fn area_of(key: &str) -> &'static str {
+    if BINDING.contains(&key) {
+        "binding"
+    } else if RULES.contains(&key) {
+        "rule"
+    } else if ACTION.contains(&key) {
+        "action"
+    } else {
+        "layout"
+    }
+}
+
+/// The areas of `touched`, in their order, once each.
+fn areas(touched: &[&str]) -> Vec<String> {
+    AREAS
+        .iter()
+        .filter(|a| touched.contains(a))
+        .map(|a| (*a).to_owned())
+        .collect()
+}
+
+/// An item added or removed: its layout, and what its kind and properties bind, rule and do.
+fn item_areas(own: &Value) -> Vec<String> {
+    let mut touched = vec!["layout"];
+    match own.get("type").and_then(Value::as_str) {
+        Some("field" | "related") => touched.push("binding"),
+        Some("action") => touched.push("action"),
+        _ => {}
+    }
+    if let Some(map) = own.as_object()
+        && map.keys().any(|k| RULES.contains(&k.as_str()))
+    {
+        touched.push("rule");
+    }
+    areas(&touched)
+}
+
 fn word(key: &str) -> &str {
     WORDS
         .iter()
@@ -98,6 +160,7 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
                 item: Some(id.clone()),
                 kind: FormChangeKind::Added,
                 properties: Vec::new(),
+                areas: item_areas(own),
                 words: format!("“{name}” eklendi."),
             });
             continue;
@@ -112,6 +175,7 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
                 item: Some(id.clone()),
                 kind: FormChangeKind::Moved,
                 properties: Vec::new(),
+                areas: areas(&["layout"]),
                 words: format!("“{name}” taşındı."),
             });
         }
@@ -125,9 +189,11 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
                 }
             }
             keys.sort();
+            let touched: Vec<&str> = keys.iter().map(|k| area_of(k)).collect();
             out.push(FormChange {
                 item: Some(id.clone()),
                 kind: FormChangeKind::Changed,
+                areas: areas(&touched),
                 words: format!(
                     "“{name}” değişti: {}.",
                     keys.iter().map(|k| word(k)).collect::<Vec<_>>().join(", ")
@@ -142,6 +208,7 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
                 item: Some(id.clone()),
                 kind: FormChangeKind::Removed,
                 properties: Vec::new(),
+                areas: item_areas(own),
                 words: format!("“{}” kaldırıldı.", name_of(own, id)),
             });
         }
@@ -151,6 +218,7 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             item: None,
             kind: FormChangeKind::Changed,
             properties: vec!["clearHidden".into()],
+            areas: areas(&["rule"]),
             words: if new.clear_hidden {
                 "Gizlenenler silinir.".into()
             } else {
@@ -164,10 +232,25 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             item: None,
             kind: FormChangeKind::Changed,
             properties: vec!["steps".into()],
+            areas: areas(&["layout"]),
             words: if new.steps {
                 "Form adım adım doldurulur.".into()
             } else {
                 "Form artık adım adım değil.".into()
+            },
+        });
+    }
+    // docs/adr/0442 §3: the records' workflow.
+    if old.workflow != new.workflow {
+        out.push(FormChange {
+            item: None,
+            kind: FormChangeKind::Changed,
+            properties: vec!["workflow".into()],
+            areas: areas(&["workflow"]),
+            words: match (&old.workflow, &new.workflow) {
+                (None, Some(_)) => "İş akışı eklendi.".into(),
+                (Some(_), None) => "İş akışı kaldırıldı.".into(),
+                _ => "İş akışı değişti.".into(),
             },
         });
     }
@@ -176,6 +259,7 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             item: None,
             kind: FormChangeKind::Changed,
             properties: vec!["tests".into()],
+            areas: areas(&["tests"]),
             words: format!(
                 "Senaryolar değişti: {} senaryo, önce {}.",
                 new.tests.len(),

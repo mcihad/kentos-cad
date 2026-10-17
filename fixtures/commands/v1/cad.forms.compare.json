@@ -285,6 +285,117 @@
        }
       }
      ]
+    },
+    {
+     "id": "eylemli",
+     "name": "Eylemli form",
+     "layer": "bina",
+     "draft": {
+      "revision": 6,
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "Kat"
+       },
+       {
+        "type": "field",
+        "id": "not",
+        "field": "Not",
+        "label": "Açıklama",
+        "widget": "textArea"
+       },
+       {
+        "type": "action",
+        "id": "hesap",
+        "label": "Göster",
+        "kind": "show"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "60899e71fa0d7828716c1523dd53e4ee",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not"
+         }
+        ]
+       }
+      },
+      {
+       "version": 2,
+       "digest": "8a20ac425c21d3f1af95ebe8df2bc866",
+       "body": {
+        "revision": 5,
+        "items": [
+         {
+          "type": "field",
+          "id": "durum",
+          "field": "Durum"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "Kat"
+         },
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not"
+         },
+         {
+          "type": "divider",
+          "id": "cizgi",
+          "label": "İşler"
+         },
+         {
+          "type": "action",
+          "id": "hesap",
+          "label": "Hesapla",
+          "tool": "attributes.calculate"
+         },
+         {
+          "type": "location",
+          "id": "yer"
+         }
+        ],
+        "workflow": {
+         "field": "Durum",
+         "initial": "iyi",
+         "steps": [
+          {
+           "label": "İncele",
+           "from": [
+            "iyi"
+           ],
+           "to": "inceleme"
+          }
+         ]
+        }
+       }
+      }
+     ]
     }
    ]
   },
@@ -361,6 +472,9 @@
         {
          "item": "bilgi",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“bilgi” eklendi."
         },
         {
@@ -368,11 +482,17 @@
          "properties": [
           "clearHidden"
          ],
+         "areas": [
+          "rule"
+         ],
          "words": "Gizlenenler artık silinmez."
         },
         {
          "kind": "changed",
          "properties": [
+          "tests"
+         ],
+         "areas": [
           "tests"
          ],
          "words": "Senaryolar değişti: 1 senaryo, önce 0."
@@ -412,21 +532,33 @@
          "properties": [
           "required"
          ],
+         "areas": [
+          "rule"
+         ],
          "words": "“Durum” değişti: zorunlu."
         },
         {
          "item": "ayrinti",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ayrıntı” eklendi."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Not” taşındı."
         },
         {
@@ -434,6 +566,9 @@
          "kind": "changed",
          "properties": [
           "visibleWhen"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "“Not” değişti: görünme koşulu."
         }
@@ -469,11 +604,17 @@
         {
          "item": "genel",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” eklendi."
         },
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” taşındı."
         },
         {
@@ -482,16 +623,25 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” değişti: ad."
         },
         {
          "item": "olcu",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” eklendi."
         },
         {
          "item": "ayrinti",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” taşındı."
         },
         {
@@ -500,22 +650,38 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” değişti: ad."
         },
         {
          "item": "yukseklik",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” eklendi."
         },
         {
          "item": "not",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Not” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
           "clearHidden"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "Gizlenenler silinir."
         }
@@ -551,6 +717,9 @@
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durum” taşındı."
         },
         {
@@ -560,42 +729,70 @@
           "label",
           "required"
          ],
+         "areas": [
+          "layout",
+          "rule"
+         ],
          "words": "“Durum” değişti: ad, zorunlu."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding"
+         ],
          "words": "“Not” eklendi."
         },
         {
          "item": "genel",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” kaldırıldı."
         },
         {
          "item": "olcu",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” kaldırıldı."
         },
         {
          "item": "ayrinti",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” kaldırıldı."
         },
         {
          "item": "yukseklik",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
           "clearHidden"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "Gizlenenler artık silinmez."
         }
@@ -629,11 +826,17 @@
         {
          "item": "genel",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” eklendi."
         },
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” taşındı."
         },
         {
@@ -643,41 +846,69 @@
           "label",
           "required"
          ],
+         "areas": [
+          "layout",
+          "rule"
+         ],
          "words": "“Durumu” değişti: ad, zorunlu."
         },
         {
          "item": "bilgi",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“bilgi” eklendi."
         },
         {
          "item": "olcu",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” eklendi."
         },
         {
          "item": "ayrinti",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” eklendi."
         },
         {
          "item": "yukseklik",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” eklendi."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding"
+         ],
          "words": "“Not” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
+          "tests"
+         ],
+         "areas": [
           "tests"
          ],
          "words": "Senaryolar değişti: 1 senaryo, önce 0."
@@ -767,11 +998,17 @@
         {
          "item": "genel",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” eklendi."
         },
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” taşındı."
         },
         {
@@ -781,37 +1018,62 @@
           "label",
           "required"
          ],
+         "areas": [
+          "layout",
+          "rule"
+         ],
          "words": "“Durumu” değişti: ad, zorunlu."
         },
         {
          "item": "olcu",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” eklendi."
         },
         {
          "item": "ayrinti",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” eklendi."
         },
         {
          "item": "yukseklik",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” eklendi."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding"
+         ],
          "words": "“Not” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
           "clearHidden"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "Gizlenenler silinir."
         }
@@ -845,11 +1107,17 @@
         {
          "item": "genel",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” eklendi."
         },
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” taşındı."
         },
         {
@@ -858,21 +1126,33 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” değişti: ad."
         },
         {
          "item": "bilgi",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“bilgi” eklendi."
         },
         {
          "item": "olcu",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” eklendi."
         },
         {
          "item": "ayrinti",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” taşındı."
         },
         {
@@ -881,21 +1161,37 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” değişti: ad."
         },
         {
          "item": "yukseklik",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” eklendi."
         },
         {
          "item": "not",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Not” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
+          "tests"
+         ],
+         "areas": [
           "tests"
          ],
          "words": "Senaryolar değişti: 1 senaryo, önce 0."
@@ -932,11 +1228,17 @@
         {
          "item": "genel",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” eklendi."
         },
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durumu” taşındı."
         },
         {
@@ -946,37 +1248,62 @@
           "label",
           "required"
          ],
+         "areas": [
+          "layout",
+          "rule"
+         ],
          "words": "“Durumu” değişti: ad, zorunlu."
         },
         {
          "item": "olcu",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” eklendi."
         },
         {
          "item": "ayrinti",
          "kind": "added",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçüler” eklendi."
         },
         {
          "item": "yukseklik",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” eklendi."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding"
+         ],
          "words": "“Not” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
           "clearHidden"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "Gizlenenler silinir."
         }
@@ -1042,16 +1369,25 @@
          "properties": [
           "required"
          ],
+         "areas": [
+          "rule"
+         ],
          "words": "“Durum” değişti: zorunlu."
         },
         {
          "item": "kat",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Kat” taşındı."
         },
         {
          "item": "not",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Not” taşındı."
         },
         {
@@ -1060,11 +1396,17 @@
          "properties": [
           "visibleWhen"
          ],
+         "areas": [
+          "rule"
+         ],
          "words": "“Not” değişti: görünme koşulu."
         },
         {
          "item": "ayrinti",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ayrıntı” kaldırıldı."
         }
        ]
@@ -1099,6 +1441,9 @@
         {
          "item": "durum",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Durum” taşındı."
         },
         {
@@ -1107,11 +1452,17 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Durum” değişti: ad."
         },
         {
          "item": "ayrinti",
          "kind": "moved",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ayrıntı” taşındı."
         },
         {
@@ -1120,32 +1471,54 @@
          "properties": [
           "label"
          ],
+         "areas": [
+          "layout"
+         ],
          "words": "“Ayrıntı” değişti: ad."
         },
         {
          "item": "not",
          "kind": "added",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Not” eklendi."
         },
         {
          "item": "genel",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Genel” kaldırıldı."
         },
         {
          "item": "olcu",
          "kind": "removed",
+         "areas": [
+          "layout"
+         ],
          "words": "“Ölçü” kaldırıldı."
         },
         {
          "item": "yukseklik",
          "kind": "removed",
+         "areas": [
+          "layout",
+          "binding",
+          "rule"
+         ],
          "words": "“Yükseklik” kaldırıldı."
         },
         {
          "kind": "changed",
          "properties": [
           "clearHidden"
+         ],
+         "areas": [
+          "rule"
          ],
          "words": "Gizlenenler artık silinmez."
         }
@@ -1174,6 +1547,157 @@
      "result": {
       "status": "completed",
       "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eylem, konum ve iş akışı eklendi: alanları ve gerektirdikleri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "eylemli",
+      "from": 1,
+      "to": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 1,
+       "to": 2,
+       "changes": [
+        {
+         "item": "cizgi",
+         "kind": "added",
+         "areas": [
+          "layout"
+         ],
+         "words": "“İşler” eklendi."
+        },
+        {
+         "item": "hesap",
+         "kind": "added",
+         "areas": [
+          "layout",
+          "action"
+         ],
+         "words": "“Hesapla” eklendi."
+        },
+        {
+         "item": "yer",
+         "kind": "added",
+         "areas": [
+          "layout"
+         ],
+         "words": "“yer” eklendi."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "workflow"
+         ],
+         "areas": [
+          "workflow"
+         ],
+         "words": "İş akışı eklendi."
+        }
+       ],
+       "requiresAdded": [
+        "geometry",
+        "workflow",
+        "tool:attributes.calculate"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eylem göstere döndü, konum ve iş akışı kalktı, alanın görünüşü değişti",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "eylemli"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "from": 2,
+       "changes": [
+        {
+         "item": "not",
+         "kind": "changed",
+         "properties": [
+          "label",
+          "widget"
+         ],
+         "areas": [
+          "layout"
+         ],
+         "words": "“Açıklama” değişti: ad, giriş biçimi."
+        },
+        {
+         "item": "hesap",
+         "kind": "changed",
+         "properties": [
+          "kind",
+          "label",
+          "tool"
+         ],
+         "areas": [
+          "layout",
+          "action"
+         ],
+         "words": "“Göster” değişti: kind, ad, tool."
+        },
+        {
+         "item": "cizgi",
+         "kind": "removed",
+         "areas": [
+          "layout"
+         ],
+         "words": "“İşler” kaldırıldı."
+        },
+        {
+         "item": "yer",
+         "kind": "removed",
+         "areas": [
+          "layout"
+         ],
+         "words": "“yer” kaldırıldı."
+        },
+        {
+         "kind": "changed",
+         "properties": [
+          "workflow"
+         ],
+         "areas": [
+          "workflow"
+         ],
+         "words": "İş akışı kaldırıldı."
+        }
+       ],
+       "requiresRemoved": [
+        "workflow",
+        "tool:attributes.calculate"
+       ]
+      },
       "warnings": []
      },
      "expect": {

@@ -750,6 +750,9 @@ pub fn rebind_body(body: &mut kentos_contracts::FormBody, pairs: &[Rebind]) -> u
         if let Some(l) = w.log.as_mut() {
             key(l);
         }
+        if let Some(n) = w.notes.as_mut() {
+            key(n);
+        }
         for step in &mut w.steps {
             if let Some(r) = step.reason.as_mut() {
                 key(r);
@@ -813,6 +816,7 @@ pub fn read_by(body: &kentos_contracts::FormBody, fields: &[LayerField]) -> Vec<
     if let Some(w) = &body.workflow {
         keys.push(w.field.clone());
         keys.extend(w.log.clone());
+        keys.extend(w.notes.clone());
         keys.extend(w.steps.iter().filter_map(|s| s.reason.clone()));
     }
     fields

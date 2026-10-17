@@ -88,6 +88,40 @@ AccessSourceName = Literal["owner", "grant", "policy"]
 """The names of :class:`AccessSource`, for a plain string."""
 
 
+class ActionKind(_StrEnum):
+    """What a form action does (docs/adr/0442 §5).
+
+    - ``tool``: Opens a registered processing tool with the record chosen; the tool writes by its own rules.
+    - ``recompute``: The form's calculations again on the record (`cad.forms.recompute`).
+    - ``step``: A workflow step on the record (`cad.forms.transition`).
+    - ``show``: The record shown on the drawing; writes nothing.
+    """
+    TOOL = "tool"
+    RECOMPUTE = "recompute"
+    STEP = "step"
+    SHOW = "show"
+
+
+ActionKindName = Literal["tool", "recompute", "step", "show"]
+"""The names of :class:`ActionKind`, for a plain string."""
+
+
+class ActionRuns(_StrEnum):
+    """Where a `tool` action's tool runs (İşlemler's “Nerede çalışır”, docs/adr/0124).
+
+    - ``auto``
+    - ``here``: On this computer, in the window's thread.
+    - ``background``: In the background, with its panel and Durdur.
+    """
+    AUTO = "auto"
+    HERE = "here"
+    BACKGROUND = "background"
+
+
+ActionRunsName = Literal["auto", "here", "background"]
+"""The names of :class:`ActionRuns`, for a plain string."""
+
+
 class AddressesDefineOperation(_StrEnum):
     """What `cad.addresses.define` does.
 
@@ -199,6 +233,22 @@ class AttachmentAccept(_StrEnum):
 
 AttachmentAcceptName = Literal["any", "photo", "document"]
 """The names of :class:`AttachmentAccept`, for a plain string."""
+
+
+class AttachmentSource(_StrEnum):
+    """Where an attachment's bytes are.
+
+    - ``asset``: An image of the project's library.
+    - ``file``: A file on the disk.
+    - ``url``: A web address.
+    """
+    ASSET = "asset"
+    FILE = "file"
+    URL = "url"
+
+
+AttachmentSourceName = Literal["asset", "file", "url"]
+"""The names of :class:`AttachmentSource`, for a plain string."""
 
 
 class AttributeOp(_StrEnum):
@@ -4206,6 +4256,111 @@ class Attachment(_Model):
             file=data.get("file", UNSET),
             note=data.get("note", UNSET),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttachmentFacts(_Model):
+    """What an attachment is.
+    Attributes:
+        latitude: Where it was taken, WGS 84 degrees, as its EXIF says. Unit: deg.
+        longitude: Unit: deg.
+        mime: The media type by the bytes (PNG, JPEG, GIF, TIFF, PDF, ZIP), else by the name's extension, else
+            `application/octet-stream`; none for a web address whose name says nothing.
+        missing: An embedded photo not in the library, or a file not found or not read (a relative path without
+            a folder too); written only as `true`.
+        sha256: The bytes' SHA-256, lowercase hex.
+        size: Bytes; none when they were not read. Unit: bytes.
+        taken: When a photo was taken, as its EXIF says (ISO 8601).
+    """
+    name: str
+    source: AttachmentSource | AttachmentSourceName
+    latitude: float | None | Unset = UNSET
+    longitude: float | None | Unset = UNSET
+    mime: str | None | Unset = UNSET
+    missing: bool | Unset = UNSET
+    sha256: str | None | Unset = UNSET
+    size: int | None | Unset = UNSET
+    taken: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["source"] = _enum_out(self.source)
+        if self.latitude is not UNSET:
+            out["latitude"] = None if self.latitude is None else float(self.latitude)
+        if self.longitude is not UNSET:
+            out["longitude"] = None if self.longitude is None else float(self.longitude)
+        if self.mime is not UNSET:
+            out["mime"] = self.mime
+        if self.missing is not UNSET:
+            out["missing"] = self.missing
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        if self.size is not UNSET:
+            out["size"] = self.size
+        if self.taken is not UNSET:
+            out["taken"] = self.taken
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachmentFacts:
+        return cls(
+            name=data["name"],
+            source=_enum_in(AttachmentSource, data["source"]),
+            latitude=UNSET if "latitude" not in data else None if data["latitude"] is None else float(data["latitude"]),
+            longitude=UNSET if "longitude" not in data else None if data["longitude"] is None else float(data["longitude"]),
+            mime=data.get("mime", UNSET),
+            missing=data.get("missing", UNSET),
+            sha256=data.get("sha256", UNSET),
+            size=data.get("size", UNSET),
+            taken=data.get("taken", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttachmentsInspect(_Model):
+    """Input of `cad.attachments.inspect` v1.
+
+    Refusals: `invalid_count` (no object or more than 1 000), `invalid_uid`, `entity_not_found`,
+    `invalid_folder` (a folder that is not an absolute path).
+    Attributes:
+        uids: The objects (lowercase UUID texts with hyphens), in the answer's order.
+        folder: The drawing's folder, an absolute path: where a relative file path is read from. None: a
+            relative path is not read (`missing`).
+    """
+    uids: list[str]
+    folder: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachmentsInspect:
+        return cls(
+            uids=list(data["uids"]),
+            folder=data.get("folder", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttachmentsInspected(_Model):
+    """Output of `cad.attachments.inspect` v1, and what plan says."""
+    objects: list[InspectedObject]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = [e0.to_json() for e0 in self.objects]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachmentsInspected:
+        return cls(
+            objects=[InspectedObject.from_json(e0) for e0 in data["objects"]],
         )
 
 
@@ -10970,6 +11125,29 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldCount(_Model):
+    """A field and how many records.
+    Attributes:
+        records: Unit: count.
+    """
+    field: str
+    records: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["records"] = self.records
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldCount:
+        return cls(
+            field=data["field"],
+            records=data["records"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldDomain(_Model):
     """A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.
     Attributes:
@@ -11390,14 +11568,41 @@ class FormBody(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormBreaking(_Model):
+    """The records a new release breaks (docs/adr/0442 §2): how many, and how many by each field the new
+    release finds wrong (by the fields' keys, in their bytes' order).
+    Attributes:
+        records: Unit: count.
+    """
+    records: int
+    fields: list[FieldCount]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["records"] = self.records
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormBreaking:
+        return cls(
+            records=data["records"],
+            fields=[FieldCount.from_json(e0) for e0 in data["fields"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormChange(_Model):
     """One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
     Attributes:
         words: Turkish, for people.
+        areas: What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
+            `workflow`, `tests`.
         properties: The properties that changed, by their names in the form's JSON, in their order.
     """
     kind: FormChangeKind | FormChangeKindName
     words: str
+    areas: list[str] | Unset = UNSET
     item: str | None | Unset = UNSET
     properties: list[str] | Unset = UNSET
 
@@ -11405,6 +11610,8 @@ class FormChange(_Model):
         out: dict[str, Any] = {}
         out["kind"] = _enum_out(self.kind)
         out["words"] = self.words
+        if self.areas is not UNSET:
+            out["areas"] = list(self.areas)
         if self.item is not UNSET:
             out["item"] = self.item
         if self.properties is not UNSET:
@@ -11416,6 +11623,7 @@ class FormChange(_Model):
         return cls(
             kind=_enum_in(FormChangeKind, data["kind"]),
             words=data["words"],
+            areas=list(data["areas"]) if "areas" in data else UNSET,
             item=data.get("item", UNSET),
             properties=list(data["properties"]) if "properties" in data else UNSET,
         )
@@ -11968,6 +12176,9 @@ class FormWorkflow(_Model):
         locked: The states whose records are read-only.
         log: A text field's key each step appends a line to (docs/adr/0429): the moment, the person, the step,
             the states and the reason; read-only in the form.
+        notes: A text field's key each step writes its notes on the record's fields to (docs/adr/0442 §4): the
+            latest step's notes as canonical JSON (`{"<field key>":"<note>"}`), emptied by a step without;
+            read-only in the form, shown under the fields.
     """
     field: str
     initial: str
@@ -11975,6 +12186,7 @@ class FormWorkflow(_Model):
     drafts: list[str] | Unset = UNSET
     locked: list[str] | Unset = UNSET
     log: str | None | Unset = UNSET
+    notes: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -11987,6 +12199,8 @@ class FormWorkflow(_Model):
             out["locked"] = list(self.locked)
         if self.log is not UNSET:
             out["log"] = self.log
+        if self.notes is not UNSET:
+            out["notes"] = self.notes
         return out
 
     @classmethod
@@ -11998,6 +12212,7 @@ class FormWorkflow(_Model):
             drafts=list(data["drafts"]) if "drafts" in data else UNSET,
             locked=list(data["locked"]) if "locked" in data else UNSET,
             log=data.get("log", UNSET),
+            notes=data.get("notes", UNSET),
         )
 
 
@@ -12131,16 +12346,24 @@ class FormsCompared(_Model):
     """Output of `cad.forms.compare` v1.
     Attributes:
         from_: The release compared from. Unit: version.
+        requires_added: What the newer version needs of its host that the older did not, and the other way
+            (`kentos_forms::requirements`, docs/adr/0442 §3).
         to: The release compared to; none: the draft. Unit: version.
     """
     from_: int
     changes: list[FormChange]
+    requires_added: list[str] | Unset = UNSET
+    requires_removed: list[str] | Unset = UNSET
     to: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.requires_added is not UNSET:
+            out["requiresAdded"] = list(self.requires_added)
+        if self.requires_removed is not UNSET:
+            out["requiresRemoved"] = list(self.requires_removed)
         if self.to is not UNSET:
             out["to"] = self.to
         return out
@@ -12150,6 +12373,8 @@ class FormsCompared(_Model):
         return cls(
             from_=data["from"],
             changes=[FormChange.from_json(e0) for e0 in data["changes"]],
+            requires_added=list(data["requiresAdded"]) if "requiresAdded" in data else UNSET,
+            requires_removed=list(data["requiresRemoved"]) if "requiresRemoved" in data else UNSET,
             to=data.get("to", UNSET),
         )
 
@@ -12161,8 +12386,8 @@ class FormsEdit(_Model):
     Refusals (`CommandError.code`), checked in this order: `invalid_form_id`, `invalid_form_name`,
     `invalid_form`; `invalid_revision`, `revision_conflict` (status `conflict`); `unknown_form`,
     `form_exists`, `too_many_forms`, `layer_not_found`, `not_a_layer`, `form_draft_changed` (status
-    `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`. Warnings:
-    `form_release_dropped`.
+    `conflict`), `form_preflight`, `form_unpublished`, `form_item_unknown`, `form_comment_unknown`, `form_tests_failed`. Warnings:
+    `form_release_dropped`, `form_breaking`.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -12192,12 +12417,15 @@ class FormsEdited(_Model):
         issues: The draft's preflight afterwards (none for a remove).
         changed: Whether the settings changed.
         revision: The document's revision afterwards (plan: the one it was made against).
+        breaking: A publish over an earlier release (docs/adr/0442 §2): the layer's records that held by the
+            earlier release and do not by this one; none when none.
         form: The form created, saved, renamed, published or enforced, as kept; none for a remove.
     """
     forms: list[FormSummary]
     issues: list[FormIssue]
     changed: bool
     revision: str
+    breaking: FormBreaking | None | Unset = UNSET
     form: ProjectForm | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12206,6 +12434,8 @@ class FormsEdited(_Model):
         out["issues"] = [e0.to_json() for e0 in self.issues]
         out["changed"] = self.changed
         out["revision"] = self.revision
+        if self.breaking is not UNSET:
+            out["breaking"] = None if self.breaking is None else self.breaking.to_json()
         if self.form is not UNSET:
             out["form"] = None if self.form is None else self.form.to_json()
         return out
@@ -12217,6 +12447,7 @@ class FormsEdited(_Model):
             issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
             changed=data["changed"],
             revision=data["revision"],
+            breaking=UNSET if "breaking" not in data else None if data["breaking"] is None else FormBreaking.from_json(data["breaking"]),
             form=UNSET if "form" not in data else None if data["form"] is None else ProjectForm.from_json(data["form"]),
         )
 
@@ -12723,6 +12954,8 @@ class FormsTransition(_Model):
         draft: Through its draft instead of its latest release.
         expected_revision: The document revision the input was prepared against, as decimal text.
         moment: The moment the rules' `@tarih` and `@simdi` read (as `cad.forms.submit`'s).
+        notes: Notes on the record's fields by their keys (docs/adr/0442 §4): written to the workflow's notes
+            field, shown under those fields; a step without them empties it.
         user: The person the rules' `@kullanici` reads (as `cad.forms.submit`'s).
         values: Values by the layer fields' keys written with the step (the reason among them).
     """
@@ -12732,6 +12965,7 @@ class FormsTransition(_Model):
     draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     moment: str | None | Unset = UNSET
+    notes: dict[str, str] | Unset = UNSET
     user: str | None | Unset = UNSET
     values: dict[str, str] | Unset = UNSET
 
@@ -12746,6 +12980,8 @@ class FormsTransition(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.moment is not UNSET:
             out["moment"] = self.moment
+        if self.notes is not UNSET:
+            out["notes"] = dict(self.notes)
         if self.user is not UNSET:
             out["user"] = self.user
         if self.values is not UNSET:
@@ -12761,6 +12997,7 @@ class FormsTransition(_Model):
             draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             moment=data.get("moment", UNSET),
+            notes=dict(data["notes"]) if "notes" in data else UNSET,
             user=data.get("user", UNSET),
             values=dict(data["values"]) if "values" in data else UNSET,
         )
@@ -13898,6 +14135,26 @@ class InsertParameters(_Model):
             uid=data["uid"],
             block=data["block"],
             values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InspectedObject(_Model):
+    """An object's attachments, in their order."""
+    uid: str
+    attachments: list[AttachmentFacts]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InspectedObject:
+        return cls(
+            uid=data["uid"],
+            attachments=[AttachmentFacts.from_json(e0) for e0 in data["attachments"]],
         )
 
 
@@ -29003,22 +29260,37 @@ class DividerFormItem(FormItem):
 
 @dataclass(kw_only=True, slots=True)
 class ActionFormItem(FormItem):
-    """An action (docs/adr/0441 §6): a button that opens a registered processing tool on the record,
-    by the tool's id; no address, query or script.
+    """An action (docs/adr/0441 §6, 0442 §5): a button of a declared kind on the record: a registered
+    processing tool by its id, the form's calculations again, a workflow step by its label, or the
+    record shown on the drawing; no address, query or script.
     Attributes:
-        tool: The processing tool's id (`attributes.calculate`): letters and digits in dotted parts.
+        kind: What it does; written unless `tool`.
+        runs: Where a `tool` action's tool runs (docs/adr/0442 §6); written unless `auto`.
+        step: A `step` action's workflow step, by its label.
+        tool: A `tool` action's processing tool id (`attributes.calculate`): letters and digits in dotted
+            parts.
     """
     TAG_VALUE: ClassVar[str] = "action"
     id: str
     label: str
-    tool: str
+    kind: ActionKind | ActionKindName | Unset = UNSET
+    runs: ActionRuns | ActionRunsName | Unset = UNSET
+    step: str | None | Unset = UNSET
+    tool: str | None | Unset = UNSET
     visible_when: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"type": "action"}
         out["id"] = self.id
         out["label"] = self.label
-        out["tool"] = self.tool
+        if self.kind is not UNSET:
+            out["kind"] = _enum_out(self.kind)
+        if self.runs is not UNSET:
+            out["runs"] = _enum_out(self.runs)
+        if self.step is not UNSET:
+            out["step"] = self.step
+        if self.tool is not UNSET:
+            out["tool"] = self.tool
         if self.visible_when is not UNSET:
             out["visibleWhen"] = self.visible_when
         return out
@@ -29028,7 +29300,10 @@ class ActionFormItem(FormItem):
         return cls(
             id=data["id"],
             label=data["label"],
-            tool=data["tool"],
+            kind=_enum_in(ActionKind, data["kind"]) if "kind" in data else UNSET,
+            runs=_enum_in(ActionRuns, data["runs"]) if "runs" in data else UNSET,
+            step=data.get("step", UNSET),
+            tool=data.get("tool", UNSET),
             visible_when=data.get("visibleWhen", UNSET),
         )
 
@@ -31345,6 +31620,10 @@ __all__ = [
     "AccessSource",
     "AccessSourceName",
     "ActionFormItem",
+    "ActionKind",
+    "ActionKindName",
+    "ActionRuns",
+    "ActionRunsName",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddressLocator",
@@ -31410,7 +31689,12 @@ __all__ = [
     "Attachment",
     "AttachmentAccept",
     "AttachmentAcceptName",
+    "AttachmentFacts",
+    "AttachmentSource",
+    "AttachmentSourceName",
     "AttachmentsFormItem",
+    "AttachmentsInspect",
+    "AttachmentsInspected",
     "AttributeDefinition",
     "AttributeFilter",
     "AttributeOp",
@@ -31678,6 +31962,7 @@ __all__ = [
     "FenceSelectRegion",
     "FieldBinding",
     "FieldChoice",
+    "FieldCount",
     "FieldDomain",
     "FieldFormItem",
     "FieldGroup",
@@ -31701,6 +31986,7 @@ __all__ = [
     "FlipBlockAction",
     "FlipBlockParameter",
     "FormBody",
+    "FormBreaking",
     "FormChange",
     "FormChangeKind",
     "FormChangeKindName",
@@ -31785,6 +32071,7 @@ __all__ = [
     "InsertEntityGeometry",
     "InsertKnotCurveEdit",
     "InsertParameters",
+    "InspectedObject",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",

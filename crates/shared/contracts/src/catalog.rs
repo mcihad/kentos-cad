@@ -4138,7 +4138,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_FORMS_EDIT_VERSION,
             title: "Formlar".into(),
             summary: "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. \
-                      edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). \
+                      edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). \
                       Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -4369,6 +4369,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // What each attachment is (docs/adr/0442 §7), held together by fixtures/commands/v1/cad.attachments.inspect.json.
+        CommandDescriptor {
+            id: crate::CAD_ATTACHMENTS_INSPECT.into(),
+            version: crate::CAD_ATTACHMENTS_INSPECT_VERSION,
+            title: "Ekleri incele".into(),
+            summary: "Nesnelerin eklerini baytlarından okur, hiçbir şey yazmaz: her ekin ortam türü (PNG, JPEG, GIF, TIFF, PDF ve ZIP baytlarından, \
+                      ötekiler adının uzantısından), boyu ve SHA-256'sı; fotoğrafın EXIF'inin söylediği çekim anı ve WGS 84 konumu. Gömülü fotoğraf \
+                      projenin kitaplığından, bağlı dosya diskten (göreli yol folder'dan), adres yalnız adıyla (indirilmez); bulunamayan missing. \
+                      En çok 1 000 nesne; 256 MB'tan büyük dosyanın yalnız boyu."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AttachmentsInspect>(),
+            output: schema::<crate::AttachmentsInspected>(),
+            plan: Some(schema::<crate::AttachmentsInspected>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir parselin eklerini incele".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "folder": "/home/kullanici/proje" }),
+                output: None,
+            }],
+        },
         // A form package out and in (docs/adr/0435), held together by fixtures/commands/v1/cad.forms.export.json and
         // cad.forms.import.json.
         CommandDescriptor {
@@ -4427,7 +4455,8 @@ pub fn catalog() -> CommandCatalog {
             title: "İş akışı adımı".into(),
             summary: "Kaydı formun iş akışında bir adım ilerletir: adım kaydın durumundan atılabilmeli; verilen değerler formun kurallarıyla yazılır \
                       (kilitli durumdaki kayıtta yalnız adımın gerekçesi), durum alanı adımın durumunu alır, kayıt yeniden tamamlanır; adım geçerli kayıt \
-                      istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. Tek geri alma adımı “Form: <adım>”."
+                      istiyorsa formun hatası olan kayıt, gerekçe istiyorsa boş gerekçe reddedilir. notes: alanların anahtarlarıyla inceleyenin notları, iş akışının not alanına yazılır \
+                      (notsuz adım onu boşaltır; not alanı olmayan iş akışında ya da formda olmayan alanda form_invalid). Tek geri alma adımı “Form: <adım>”."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -5699,6 +5728,9 @@ mod tests {
                     crate::CAD_FIELDS_MIGRATE => {
                         serde_json::from_value::<crate::FieldsMigrate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ATTACHMENTS_INSPECT => {
+                        serde_json::from_value::<crate::AttachmentsInspect>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_EXPORT => {
                         serde_json::from_value::<crate::FormsExport>(e.input.clone()).map(|_| ())
                     }
@@ -6054,6 +6086,10 @@ mod tests {
                         }
                         crate::CAD_FIELDS_MIGRATE => {
                             serde_json::from_value::<crate::FieldsMigrated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ATTACHMENTS_INSPECT => {
+                            serde_json::from_value::<crate::AttachmentsInspected>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_EXPORT => {

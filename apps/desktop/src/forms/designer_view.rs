@@ -19,8 +19,8 @@ use super::designer::{
     ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, COPY_ITEM, CREATE, DOMAINS_WINDOW,
     DOWN, DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME, NEW_FORM,
     PALETTE_DOMAINS, PALETTE_FIELDS, PALETTE_RELATIONS, PALETTE_SECTIONS, PASTE_ITEM, PREVIEW,
-    PROPERTIES, PUBLISH, Palette, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, RESTORE_DRAFT, Rule,
-    SAVE, SAVE_SECTION, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    PROPERTIES, PUBLISH, PUBLISH_ANYWAY, Palette, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM,
+    RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
@@ -203,6 +203,47 @@ impl App {
         let mut body = Column::new().spacing(12);
         if let Some(why) = locked {
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
+        }
+        // The records the release would break (docs/adr/0442 §2): published only when asked again.
+        if let Some(b) = &w.breaking {
+            let fields: Vec<String> = b
+                .fields
+                .iter()
+                .map(|f| {
+                    let name = fields
+                        .iter()
+                        .find(|l| l.key() == f.field)
+                        .map_or(f.field.clone(), |l| l.label().to_owned());
+                    format!("{name} ({})", f.records)
+                })
+                .collect();
+            body = body.push(
+                container(
+                    row![
+                        icon(Icon::Info).size(14.0),
+                        column![
+                            label::strong(format!(
+                                "Yeni yayına {} kayıt uymuyor; önceki yayına uyuyorlardı.",
+                                b.records
+                            )),
+                            label::caption(format!(
+                                "Alanlar: {}. Kayıtları denetle ile görebilir, yayından önce düzeltebilirsiniz.",
+                                fields.join(", ")
+                            ))
+                            .style(muted),
+                        ]
+                        .spacing(2)
+                        .width(Fill),
+                        words::secondary(CANCEL, Some(msg(Event::DropPublish))),
+                        words::primary(PUBLISH_ANYWAY, Some(msg(Event::PublishAnyway))),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                )
+                .padding([6, 10])
+                .style(style::container::field_box)
+                .width(Fill),
+            );
         }
         // A draft kept on this device that is not the form's (docs/adr/0441 §5).
         if let Some(k) = &w.kept {
@@ -1154,46 +1195,117 @@ impl App {
             }
             FormItem::Action {
                 label: text,
+                kind,
                 tool,
+                step,
+                runs,
                 visible_when,
                 ..
             } => {
-                // Only a registered tool is offered (docs/adr/0441 §6): no address, query or script.
-                let tools: Vec<(String, String)> = self
-                    .processing
-                    .registry
-                    .tools()
-                    .iter()
-                    .map(|t| (t.id.clone(), t.label.clone()))
-                    .collect();
-                let at = tools.iter().position(|(i, _)| i == tool);
-                let ids: Vec<String> = tools.iter().map(|(i, _)| i.clone()).collect();
-                let pick = Select::new(
-                    tools
-                        .iter()
-                        .map(|(i, l)| Choice::new(l.clone()).detail(i.clone())),
-                    at,
-                    move |i| msg(Event::ActionTool(ids[i].clone())),
-                )
-                .placeholder("İşlem aracı");
-                let missing = at
-                    .is_none()
-                    .then(|| format!("“{tool}” kayıtlı bir işlem aracı değil; listeden seçin."));
+                use kentos_contracts::{ActionKind as K, ActionRuns as R};
+                let kinds = [K::Tool, K::Recompute, K::Step, K::Show];
+                let kind_pick = Select::new(
+                    [
+                        "İşlem aracı",
+                        "Hesapları yenile",
+                        "İş akışı adımı",
+                        "Çizimde göster",
+                    ]
+                    .map(Choice::new),
+                    kinds.iter().position(|k| k == kind),
+                    move |i| msg(Event::ActionKind(kinds[i])),
+                );
                 col = col
                     .push(label::strong("Eylem"))
-                    .push(words::field("Düğme", input("Düğmenin adı", text, Text::Label), None))
-                    .push(words::field("Araç", pick, missing))
+                    .push(words::field(
+                        "Düğme",
+                        input("Düğmenin adı", text, Text::Label),
+                        None,
+                    ))
+                    .push(words::field("Tür", kind_pick, None));
+                match kind {
+                    // Only a registered tool is offered (docs/adr/0441 §6): no address, query or script.
+                    K::Tool => {
+                        let tools: Vec<(String, String)> = self
+                            .processing
+                            .registry
+                            .tools()
+                            .iter()
+                            .map(|t| (t.id.clone(), t.label.clone()))
+                            .collect();
+                        let current = tool.clone().unwrap_or_default();
+                        let at = tools.iter().position(|(i, _)| *i == current);
+                        let ids: Vec<String> = tools.iter().map(|(i, _)| i.clone()).collect();
+                        let pick = Select::new(
+                            tools
+                                .iter()
+                                .map(|(i, l)| Choice::new(l.clone()).detail(i.clone())),
+                            at,
+                            move |i| msg(Event::ActionTool(ids[i].clone())),
+                        )
+                        .placeholder("İşlem aracı");
+                        let missing = at.is_none().then(|| {
+                            format!("“{current}” kayıtlı bir işlem aracı değil; listeden seçin.")
+                        });
+                        let places = [R::Auto, R::Here, R::Background];
+                        let runs_pick = Select::new(
+                            ["Otomatik", "Bu bilgisayarda", "Arka planda"].map(Choice::new),
+                            places.iter().position(|r| r == runs),
+                            move |i| msg(Event::ActionRuns(places[i])),
+                        );
+                        col = col
+                            .push(words::field("Araç", pick, missing))
+                            .push(words::field("Nerede çalışır", runs_pick, None));
+                    }
+                    K::Step => {
+                        let steps: Vec<String> = self
+                            .forms_window
+                            .as_ref()
+                            .and_then(|w| w.body.as_ref())
+                            .and_then(|b| b.workflow.as_ref())
+                            .map(|f| f.steps.iter().map(|s| s.label.clone()).collect())
+                            .unwrap_or_default();
+                        let at = step
+                            .as_ref()
+                            .and_then(|s| steps.iter().position(|x| x == s));
+                        let names = steps.clone();
+                        let pick = Select::new(
+                            steps.iter().map(|s| Choice::new(s.clone())),
+                            at,
+                            move |i| msg(Event::ActionStep(names[i].clone())),
+                        )
+                        .placeholder("Adım");
+                        let missing = (at.is_none()).then(|| {
+                            if steps.is_empty() {
+                                "Formun iş akışı yok; önce İş akışı'ndan adımlar ekleyin."
+                                    .to_owned()
+                            } else {
+                                "İş akışının bir adımını seçin.".to_owned()
+                            }
+                        });
+                        col = col.push(words::field("Adım", pick, missing));
+                    }
+                    K::Recompute | K::Show => {}
+                }
+                let says = match kind {
+                    K::Tool => {
+                        "Kayıt seçili olarak İşlemler'in aracını açar; araç kendi kurallarıyla yazar. Yalnız kayıtlı araçlar seçilir."
+                    }
+                    K::Recompute => {
+                        "Formun hesaplarını kayıtta yeniden çalıştırır (Hesapları yenile); değiştirilebilir hesaplara dokunmaz."
+                    }
+                    K::Step => {
+                        "İş akışının adımını kayıtta atar; adımın kuralları ve gerekçesi geçerlidir."
+                    }
+                    K::Show => "Kaydı çizimde gösterir ve seçer; hiçbir şey yazmaz.",
+                };
+                col = col
                     .push(rule_row(
                         "Görünürlük",
                         Rule::Visible(id.clone()),
                         visible_when.as_deref().unwrap_or(""),
                     ))
-                    .push(
-                        label::caption(
-                            "Formda bir düğme: kayıt seçili olarak İşlemler'in aracını açar. Yalnız kayıtlı araçlar seçilir.",
-                        )
-                        .style(muted),
-                    );
+                    .push(label::caption(says).style(muted));
             }
             FormItem::Attachments {
                 label: text,
@@ -2398,6 +2510,33 @@ impl App {
             last.version,
             changes.len()
         )));
+        // What the draft needs of its host that the release did not, and the other way (docs/adr/0442 §3).
+        let (was, now) = (
+            kentos_forms::requirements(&last.body),
+            kentos_forms::requirements(body),
+        );
+        let added: Vec<String> = now
+            .iter()
+            .filter(|r| !was.contains(r))
+            .map(|r| require_words(r))
+            .collect();
+        let gone: Vec<String> = was
+            .iter()
+            .filter(|r| !now.contains(r))
+            .map(|r| require_words(r))
+            .collect();
+        if !added.is_empty() {
+            col = col.push(words::text_line(
+                Kind::Warn,
+                format!("Yeni gerektirdikleri: {}", added.join(", ")),
+            ));
+        }
+        if !gone.is_empty() {
+            col = col.push(
+                label::caption(format!("Artık gerektirmedikleri: {}", gone.join(", ")))
+                    .style(muted),
+            );
+        }
         if changes.is_empty() {
             col = col.push(label::caption("Taslak son yayınla aynı.").style(muted));
         }
@@ -2417,7 +2556,23 @@ impl App {
                     }
                 }))
                 .width(14),
-                label::body(c.words.clone()).width(Fill)
+                label::body(c.words.clone()).width(Fill),
+                label::caption(
+                    c.areas
+                        .iter()
+                        .map(|a| match a.as_str() {
+                            "layout" => "yerleşim",
+                            "binding" => "bağ",
+                            "rule" => "kural",
+                            "action" => "eylem",
+                            "workflow" => "iş akışı",
+                            "tests" => "senaryo",
+                            other => other,
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" · ")
+                )
+                .style(muted)
             ]
             .spacing(6)
             .align_y(Center);
@@ -2439,6 +2594,19 @@ impl App {
         }))
         .height(Fill)
         .into()
+    }
+}
+
+/// A requirement's words (docs/adr/0441 §4).
+fn require_words(r: &str) -> String {
+    match r {
+        "moment" => "anın tarihi".into(),
+        "user" => "kullanıcının adı".into(),
+        "layers" => "başka katmanlar".into(),
+        "geometry" => "kaydın şekli".into(),
+        "attachments" => "ekler".into(),
+        "workflow" => "iş akışı".into(),
+        tool => format!("işlem aracı {}", tool.trim_start_matches("tool:")),
     }
 }
 
