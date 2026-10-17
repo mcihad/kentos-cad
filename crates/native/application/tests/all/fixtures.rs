@@ -37,7 +37,7 @@ use kentos_native_application::standards::{apply as standards_apply, check as st
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
-    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
+    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
     layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset,
@@ -833,6 +833,13 @@ impl Input for kentos_domain::contracts::EntitiesPick {
             "tolerance" => Some(&mut self.tolerance),
             _ => None,
         }
+    }
+}
+
+// Ids and a pattern: no number a case makes NaN (docs/adr/0501).
+impl Input for kentos_domain::contracts::EntitiesRelate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -2271,6 +2278,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_PICK => {
             run!(entities_pick, kentos_domain::contracts::EntitiesPick)
+        }
+        kentos_domain::contracts::CAD_ENTITIES_RELATE => {
+            run!(entities_relate, kentos_domain::contracts::EntitiesRelate)
         }
         kentos_domain::contracts::CAD_ENTITIES_SELECT => {
             run!(entities_select, kentos_domain::contracts::EntitiesSelect)

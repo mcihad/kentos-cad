@@ -194,6 +194,8 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `CBS-22` standart ilişkiler (ADR 0501, 17 Ekim): web'de gerekenler: `cad.entities.relate` işleyicisi (çekirdeğin
+  `ops::de9im`'i WASM'a bağlanır; TS türleri üretildi), `too_many_pairs` kodu ve `invalid_pattern`'ın genişleyen metni.
 - [ ] `FORM-BB` yayından kaldırma (ADR 0445, 17 Ekim): web'de gerekenler: formun `withdrawn`'ı ve `cad.forms.edit`'in `withdraw`'ı
   (TS türleri üretildi); web'in formla yazan işleyicilerinde `form_withdrawn`, tasarımcıda Yayından kaldır / Yeniden yayına al,
   Formla düzenle'nin açılmaması.
@@ -302,7 +304,7 @@ Liste:
 - [ ] `FORM-J` kayıt denetimi ve kaydırıcı (ADR 0406, 16 Ekim): web'de gerekenler: `cad.forms.audit`'in TS işleyicisi
   (`cad.forms.audit.json`), ön denetimin `slider`'ı ve `form_widget_needs_range`'i, web formunda kaydırıcı, Kayıtları denetle
   penceresi.
-- [ ] `FORM-I` ilişkiler (ADR 0405, 16 Ekim): web'de gerekenler: ayarların `relations`'ı (`.kcad` şema 60), `cad.relations.edit`
+- [ ] `FORM-I` ilişkiler (ADR 0405, 16 Ekim): web'de gerekenler: ayarların `relations`'ı (`.kcad` şema 72), `cad.relations.edit`
   ve `cad.entities.delete`'in `relation_restricted`'ının TS işleyicileri (`cad.relations.edit.json`,
   `cad.entities.delete.relations.json`), web belgesinde silme politikasının izlenmesi, İlişkiler penceresi, Bağla ve Bağı kopar.
 - [ ] `FORM-H` başka katmandan liste ve ilişkili kayıtlar (ADR 0404, 16 Ekim): web'de gerekenler: sözleşmenin `lookup`'ı,
@@ -800,7 +802,8 @@ Kabul: aynı basit düzenleme, ortak fixture ile native uygulamada, TS web uygul
 - [ ] `NUM-09` 2D, 2.5D ve 3D geometrileri birbirinden ayır; mevcut isteğe bağlı nokta Z'sini tam 3D model varmış gibi yorumlama. Curve, spline, surface ve solid extension'ları için sürümlü alan bırak.
 - [ ] `NUM-10` Topoloji için ortak edge/node kimliği, yön, delik, çoklu geometri, komşuluk ve geçersiz geometri raporunu kur; “onar” işlemi ayrı undo/preview komutu olsun.
 - [x] `NUM-11` Ölçü doğruluğu ve gösterim yuvarlaması ([ADR 0149](docs/adr/0149-measurement-accuracy-and-display-rounding.md); sahibin bildirimi, 1 Ekim: yarıçap ve çap ölçüsü arasında 0,001 fark; “hesaplamalar kusursuz olmalı”, “yuvarlama sorunu kabul edilemez”). Adımlar: 1) tek gösterim kuralı; 2) ölçülerin bağımsız denetimi; 3) eğrinin hesaplardaki yaklaşığı. — **1 Ekim, adım 1:** ekranda ve çizimde yazılan her sayı tek kurala bağlandı: önce 7 basamak, sonra gösterilen basamak, yarım sıfırdan uzağa, sıfır işaretsiz. Çekirdekte `display::fixed`, web'de `core/displayNumber.ts`. Bağımsız başvuru `numeric_display.py` 1556 durum; iki uygulama aynı, WASM üzerinden 10⁵ rastgele değerde de. Masaüstünün biçimlendiricisi, işlem araçları ve web'in 23 dosyadaki doğrudan `toFixed`'i kurala geçti. Yarımda biten bir yarıçapın ölçüsü artık yöne göre değişmiyor. — **1 Ekim, adım 2:** `measure_cases.py` (mpmath, 50 basamak) 224 durum yazar; çekirdek ve web WASM'ı sınır içinde ve 0–6 basamakta kesin değerin yazısıyla aynı. İki bulgu düzeltildi: eğrinin uzunluğu çizildiği kırık çizgiden ölçülüyordu (1,8 cm–1,08 m kısa), artık Bézier açıklıklarından uyarlamalı Gauss–Legendre tümleviyle; çok basık elipsin uzunluğu (1,3·10⁻⁸ m), artık aynı tümlevle. — **1 Ekim, adım 3:** hesaplar eğriyi ve elipsi 0,1 mm'lik açık bir sınırla alır (`geom::curve_outline`: Bézier açıklığı ve elips parçası sınır tutana dek ikiye bölünür): kenet, tıklama, seçme, budama ve uzatma sınırı, yol, Böl, Parçala, Patlat, alan işlemleri; tek yerin sorgusu yalnız oraya erişen parçaları böler. Değişen 27 dondurulmuş cevap bağımsız denetimle güncellendi; eski uçlar eğriden 2,27 cm'ye kadar uzaktı. Kenet 2 500 eğrili zorlamada 0,74 ms. İleride: kesin eğri kenarları (kesişim çekirdeğinde Bézier ve elips) gerekirse ayrı karar. Durum: üç adım tamam.
-- [ ] `GEO-01` Kaplamanın (`geom::overlay`) birleşimi kendi sonucunu, uç daireleri o sonucun sınırına değen tamponlarla yeniden birleştirince alanı iki kez sayıyor: hizmet alanının ilk kuşağı (deliksiz tek alan) ikinci kuşağın tamponlarıyla yeniden birleşince bütün tamponların bir kerede birleşiminden (ve shapely'nin 27 590,47 m²'sinden) büyük çıkıyor. Hizmet alanı her kuşağı kendi tamponlarından birleştirdiği için etkilenmez (ADR 0209 §12); birleşimleri zincirleyen bir iş etkilenir. Kanıt: `crates/shared/geometry-core/tests/all/network.rs`'in yok sayılan `geo01_a_union_joined_again_with_touching_circles` testi. Kabul: test açılıp geçer, `geoprocess_cases.py` ve `network_cases.py` değişmeden geçer.
+- [x] `GEO-01` Kaplamanın (`geom::overlay`) birleşimi kendi sonucunu, uç daireleri o sonucun sınırına değen tamponlarla yeniden birleştirince alanı iki kez sayıyor: hizmet alanının ilk kuşağı (deliksiz tek alan) ikinci kuşağın tamponlarıyla yeniden birleşince bütün tamponların bir kerede birleşiminden (ve shapely'nin 27 590,47 m²'sinden) büyük çıkıyor. Hizmet alanı her kuşağı kendi tamponlarından birleştirdiği için etkilenmez (ADR 0209 §12); birleşimleri zincirleyen bir iş etkilenir. Kanıt: `crates/shared/geometry-core/tests/all/network.rs`'in yok sayılan `geo01_a_union_joined_again_with_touching_circles` testi. Kabul: test açılıp geçer, `geoprocess_cases.py` ve `network_cases.py` değişmeden geçer.
+  — **17 Ekim: kapandı (ADR 0221 §10'un kurallarıyla); test açıldı, korpus `fixtures/overlay/v1`, [ADR 0500](docs/adr/0500-overlay-correctness-corpus.md).**
 - [ ] `GEO-02` Tamponlar birbirine tam değdiğinde hizmet alanının alanları bütçeyi aşıyor: 50 m'lik ızgara şehirde (100 800 parça) Kenar payı 25 m iken komşu sokakların tamponları her blokta tek çizgide buluşur ve 5 ile 10 dakikalık alanlar 826 ms sürer (9 Ekim); bütçe 300 ms, araçların Kenar payıyla (50 m) 283 ms. Değen ama örtüşmeyen tampon çiftleri düzenlemede kesişim adayı oluyor; onları önceden ayırmak ya da ortak kenarları birleştirmek ölçülüp seçilmeli. Kaynak: ADR 0209 Doğrulama, `cargo test --release -p kentos-geometry-core --test all network::timing -- --ignored --nocapture`.
 
 PROJ işlemin kullanılabilir grid ve doğruluğa göre seçilmesini destekler; bu yüzden engine sürümü ve dönüşüm verisi platform uyumunun parçasıdır. Her dış kütüphane çıktısına bit düzeyinde eşitlik sözü verilmez: saf KentOS işlemlerinde deterministik fixture, reprojection/harici kernel'de belgelenmiş sayısal tolerans kullanılır. [PROJ işlem seçimi](https://proj.org/en/stable/operations/operations_computation.html), [PROJ doğruluk ve grid seçenekleri](https://proj.org/en/stable/development/reference/functions.html).
@@ -1598,7 +1601,7 @@ burada aşamaları izlenir.
 - [x] `FORM-A` Form elemanları ve klavye: Tab ve Shift+Tab pencerenin alanlarında döner, onay kutusu, anahtar, parçalı seçim,
   radyo, açılır ve seçim kutusu klavyeyle. — **16 Ekim, [ADR 0400](docs/adr/0400-form-elements-and-keyboard.md).**
 - [x] `FORM-B` Form çekirdeği (FM1, plan `FORM-FIRST-02`–`07`, `10`): sözleşme `kentos.forms/1 core`, alanın kararlı kimliği,
-  `.kcad` şema 60, ön denetim (gizlenebilen zorunlu alan dahil), kaydın kuralları ve doğrulaması, katmandan form; tipli evet/hayır
+  `.kcad` şema 72, ön denetim (gizlenebilen zorunlu alan dahil), kaydın kuralları ve doğrulaması, katmandan form; tipli evet/hayır
   ve sayı alanları ifadelerde türüyle. — **16 Ekim, [ADR 0401](docs/adr/0401-forms-core.md) §1–§7.**
 - [x] `FORM-C` Komutlar, Python ve MCP (plan `FORM-FIRST-12`, `18`, `FORM-API-01`–`04`, `FORM-RULE-02`, `14`): `cad.forms.edit`,
   `cad.forms.validate`, `cad.forms.submit`, `cad.entities.set`'te yazma profili (`form_rules`); ortak durumlar bağımsız başvurudan.
@@ -1633,7 +1636,7 @@ burada aşamaları izlenir.
   kayıtları arasında gezinme. — **16 Ekim, [ADR 0408](docs/adr/0408-multiple-values-and-record-stepping.md).**
 - [x] `FORM-M` Çoktan çoğa ilişki (çok değerli başvuru alanı, bağlantı tablosu olmadan; silme politikası öbür bağları
   korur) ve formdan yeni alt kayıt. — **16 Ekim, [ADR 0409](docs/adr/0409-many-to-many-and-new-child.md).**
-- [x] `FORM-N` Geometrisiz kayıt (tablo satırı): `record` türü, `cad.records.create`, `.kcad` şema 60, sunucuda boş geometri,
+- [x] `FORM-N` Geometrisiz kayıt (tablo satırı): `record` türü, `cad.records.create`, `.kcad` şema 72, sunucuda boş geometri,
   Öznitelik tablosunda Kayıt ekle, formun Yeni alt kaydı. — **16 Ekim, [ADR 0410](docs/adr/0410-records-without-geometry.md).**
 - [x] `FORM-P` Tabloda başka katmandan listenin (ADR 0404) etiketiyle gösterim; Veri aktar'la CSV ve tablo dosyasından kayıtlar. — **16 Ekim, ADR 0410 §4, §6.**
 - [x] `FORM-O` Çizim komutları (`cad.point.create`, `cad.polygon.create` …) öznitelikleri alanların kuralıyla yazar: tek biçim,
@@ -1643,7 +1646,7 @@ burada aşamaları izlenir.
   [ADR 0411](docs/adr/0411-form-permissions-and-server-guard.md).**
 - [x] `FORM-Q` Veri girişi masaüstünde: belgenin nesne kuralı (yalnız öznitelik), eşitleme formla yazılanı gönderir. — **16 Ekim,
   ADR 0411 §5.**
-- [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
+- [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 72. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
 - [x] `FORM-BC` Bir ajanın form işinin değerlendirilmesi: `kentos.forms_eval` (geçerlilik, kapsam, fark, verideki yönerge, gizli
   değer ayrı ayrı), elle yazılmış görev ve cevap korpusu. — **17 Ekim, [ADR 0446](docs/adr/0446-forms-agent-eval.md).**
@@ -1720,7 +1723,7 @@ burada aşamaları izlenir.
 - [x] `FORM-AA` Alanın bölme ve birleştirme kuralı: Kopyala, Boşalt, Varsayılan, Alan oranında paylaştır; İlkinin değeri, Boşalt,
   Topla, En küçüğü, En büyüğü; toplam son basamağına dek korunur. — **16 Ekim, [ADR 0419](docs/adr/0419-split-and-merge-policies.md).**
 - [x] `FORM-Z` Kullanımdan kalkan liste değeri: tutan kayıtta kalır ve görünür, yeni seçimde sunulmaz, formla yeniden yazılmaz; Alanlar'da
-  Kalktı, `.kcad` şema 60. — **16 Ekim, [ADR 0418](docs/adr/0418-retired-values.md).**
+  Kalktı, `.kcad` şema 72. — **16 Ekim, [ADR 0418](docs/adr/0418-retired-values.md).**
 - [x] `FORM-Y` Değiştirilebilir hesap: boşken hesaplanır, yazılan değer kalır, boşaltılınca yeniden hesaplanır; formda izleme ve ↺. —
   **16 Ekim, [ADR 0417](docs/adr/0417-overridable-calculations.md).**
 - [x] `FORM-X` Tasarımcıda Bağlar: seçili alanın kurallarının okuduğu alanlar ve alanı okuyan kurallar. — **16 Ekim, ADR 0414 §5.**
@@ -1733,9 +1736,20 @@ burada aşamaları izlenir.
   şablon ve adlar aynı adımda, anahtarla anılan alan kimliğini tutar, yayımlanmış sürüm değişmez; Alanlar penceresinde liste ve
   silme uyarısı. — **16 Ekim, [ADR 0414](docs/adr/0414-field-usage-and-renames.md).**
 - [x] `FORM-T` Öznitelik tablosunda koşullu biçim: satır ve alan kuralları, zemin, yazı rengi, kalınlık; `cad.layers.table`, Koşullu
-  biçim penceresi, `.kcad` şema 60. — **16 Ekim, [ADR 0413](docs/adr/0413-conditional-table-formatting.md).**
+  biçim penceresi, `.kcad` şema 72. — **16 Ekim, [ADR 0413](docs/adr/0413-conditional-table-formatting.md).**
 - [x] `FORM-R` Alan düzeyinde okuma yetkisi: formun göstermediği alan Veri girişine gönderilmez, yazmasında korunur, Veri girişi
   indiremez. — **16 Ekim, ADR 0411 §6.**
+
+### 16.7 Kullanılabilir CBS ([plan/gis.md](plan/gis.md))
+
+Sahibin talimatı (17 Ekim 2026): “plan gis.md ile başla, bu dosyadaki maddeleri yapacağız”. Maddeler `CBS-01`…`CBS-44`
+plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başlar. Masaüstü, ortak Rust, Python ve MCP; web durur.
+
+- [x] `CBS-13` GEO-01 kapandı ve bindirmenin doğruluk korpusu (30 durum: GEOS ve kapalı formüller; geçerlilik,
+  idempotentlik, özdeşlikler, zincir). — **17 Ekim, [ADR 0500](docs/adr/0500-overlay-correctness-corpus.md).**
+- [x] `CBS-22` Standart ilişkiler: kesin DE-9IM matrisi (`ops::de9im`), on yüklem ve desen, `cad.entities.relate`
+  (Python, MCP; 33 durum GEOS'la). Konuma göre seç'te seçenek ve PostGIS karşılaştırması CBS-40 ve CBS-04'te. — **17 Ekim,
+  [ADR 0501](docs/adr/0501-standard-relations-de9im.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

@@ -2368,6 +2368,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.entities.relate",
+        refusals: &[&[
+            "no_objects",
+            "invalid_input",
+            "invalid_pattern",
+            "entity_not_found",
+            "too_many_pairs",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.select",
         refusals: &[&[
             "not_finite",

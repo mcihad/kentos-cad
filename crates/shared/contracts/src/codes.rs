@@ -839,7 +839,9 @@ codes! {
     /// A layer states file against its rules.
     INVALID_STATES = "invalid_states", Failed, false, "Katman durumları dosyası kurallarına uymuyor.";
     /// A layer name pattern that does not read (docs/adr/0311 §4).
-    INVALID_PATTERN = "invalid_pattern", Failed, false, "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme.";
+    INVALID_PATTERN = "invalid_pattern", Failed, false, "Örüntü okunmuyor: katman adında boş ya da kapanmayan küme, DE-9IM deseninde T, F, *, 0, 1, 2 dışında harf ya da dokuzdan başka uzunluk.";
+    /// More pairs than `cad.entities.relate` answers (docs/adr/0501 §3).
+    TOO_MANY_PAIRS = "too_many_pairs", Failed, false, "1 000 000'dan çok çift olurdu; nesneleri daha küçük kümelere bölün.";
     /// Katmanları çevir without a rule (docs/adr/0311 §5).
     NO_RULES = "no_rules", Failed, false, "Çevirme kuralı verilmedi.";
     /// A drawing standard neither named nor given (docs/adr/0312 §1).

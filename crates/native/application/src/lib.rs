@@ -116,6 +116,7 @@ pub use region::{entities_boundary, entities_hatch};
 pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
+pub mod entities_relate;
 pub mod entities_select;
 pub mod entities_vertex;
 pub mod shapes;
@@ -423,6 +424,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_PICK,
         kentos_contracts::CAD_ENTITIES_PICK_VERSION,
+    ),
+    // The standard DE-9IM relations ([`entities_relate`], docs/adr/0501).
+    (
+        kentos_contracts::CAD_ENTITIES_RELATE,
+        kentos_contracts::CAD_ENTITIES_RELATE_VERSION,
     ),
     // The selection as one explicit query ([`entities_select`], docs/adr/0275).
     (

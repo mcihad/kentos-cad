@@ -5532,6 +5532,32 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ENTITIES_RELATE.into(),
+            version: crate::CAD_ENTITIES_RELATE_VERSION,
+            title: "Standart ilişkiler".into(),
+            summary: "a'nın her nesnesinin b'nin her nesnesiyle DE-9IM matrisini standart profille verir: kayan noktaya kadar kesin, Konuma göre seç'in 1 mm'lik toleransı yok (OGC SFA, PostGIS ST_Relate gibi). \
+                      predicate (intersects, disjoint, contains, within, covers, coveredBy, touches, crosses, overlaps, equals) ya da pattern (dokuz harf: T, F, *, 0, 1, 2) verilirse yalnız tutan çiftler; ikisi de yoksa bütün çiftler matrisleriyle. \
+                      Sınırdaki nokta covers'ta tutar, contains'te tutmaz. Nesne alanları ve delikleriyle (yaylar kesin), açık yollarıyla ya da noktalarıyla okunur; Z okunmaz; yardımcı çizgi ve ışın okunmaz (unread). Kimlikler verildiği için gizli ve kilitli nesneler de okunur. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["iliski".into(), "relate".into(), "de9im".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesRelate>(),
+            output: schema::<crate::EntitiesRelated>(),
+            plan: Some(schema::<crate::EntitiesRelated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parselin sınırındaki nokta: kapsar ama içermez".into(),
+                input: json!({ "a": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "b": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"], "predicate": "covers" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_SELECT.into(),
             version: crate::CAD_ENTITIES_SELECT_VERSION,
             title: "Nesne seç".into(),
@@ -6367,6 +6393,9 @@ mod tests {
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_RELATE => {
+                        serde_json::from_value::<crate::EntitiesRelate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_SELECT => {
                         serde_json::from_value::<crate::EntitiesSelect>(e.input.clone()).map(|_| ())

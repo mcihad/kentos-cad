@@ -196,7 +196,9 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/04/07/11/13/14/16. Dış PostGIS kaynağında iki komşudan yalnız biri haritaya yüklenmişken ortak sınırı düzenle; ikisi de aynı transaction'da ve beklenen revision'larla güncellenmeli. Komşuda yetki/sürüm engeli varsa sıkı profil hiçbirini yazmamalı. Yerel topolojik düzenlemenin mevcut fixture'ları değişmeden korunmalı. Dış provider olmadan bu genişleme tamamlandı sayılmaz; yerel özellik ise zaten tamamdır.
 
-- [ ] **CBS-13 — GEO-01 birleşim hatasını gider ve zincirli overlay doğruluğunu doğrula — P0**
+- [x] **CBS-13 — GEO-01 birleşim hatasını gider ve zincirli overlay doğruluğunu doğrula — P0**
+
+  *Yapıldı (17 Ekim 2026; [ADR 0500](../docs/adr/0500-overlay-correctness-corpus.md)): GEO-01 testi açık ve geçiyor; `fixtures/overlay/v1` 30 durum (GEOS ve 50 basamaklı kapalı formüller), geçerlilik, idempotentlik, özdeşlik ve zincir denetimiyle; çekirdeğin 10⁻⁶ m toleransı durumda açık. GEO-02 ayrı.*
 
   **Mevcut:** Robust predicate'ler ve analitik CAD kenarları var. Ancak GEO-01'in yok sayılan testi kaynakta duruyor; sabit toleranslarla farklı işlemlerin aynı sınırı farklı yorumlama riski incelenmeli [K08]. Bu konu yeni analiz eklemekten önce gelir.
 
@@ -272,7 +274,9 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 ## E — Vektör analizleri ve tekrarlanabilir işlemler
 
-- [ ] **CBS-22 — Mevcut ilişkilerden ayrı sürümlü standart DE-9IM profili ekle — P0**
+- [x] **CBS-22 — Mevcut ilişkilerden ayrı sürümlü standart DE-9IM profili ekle — P0**
+
+  *Yapıldı (17 Ekim 2026; [ADR 0501](../docs/adr/0501-standard-relations-de9im.md)): `ops::de9im` (kesin matris, yaylar kesin, on yüklem, desen), `cad.entities.relate` (Python, MCP), 33 durum GEOS'la (QGIS 4.2.3). Konuma göre seç'in toleranslı anlamı değişmedi. Arayüzde seçenek CBS-40'ta, PostGIS'e itilen sorguyla karşılaştırma CBS-04'te.*
 
   **Mevcut:** Altı ilişki ve sabit metrik toleranslı sorgu var [K06]. `contains`, sınırda içerme ve yakınlık aynı anlamda kullanılmamalı; PostGIS ile yerel sorgu farkı ürün hatasına dönüşmemeli.
 

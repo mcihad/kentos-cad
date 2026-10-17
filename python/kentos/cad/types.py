@@ -2414,6 +2414,26 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class RelatePredicate(_StrEnum):
+    """A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's
+    relations, which allow 1 mm.
+    """
+    INTERSECTS = "intersects"
+    DISJOINT = "disjoint"
+    CONTAINS = "contains"
+    WITHIN = "within"
+    COVERS = "covers"
+    COVERED_BY = "coveredBy"
+    TOUCHES = "touches"
+    CROSSES = "crosses"
+    OVERLAPS = "overlaps"
+    EQUALS = "equals"
+
+
+RelatePredicateName = Literal["intersects", "disjoint", "contains", "within", "covers", "coveredBy", "touches", "crosses", "overlaps", "equals"]
+"""The names of :class:`RelatePredicate`, for a plain string."""
+
+
 class RelatedView(_StrEnum):
     """How a related item shows its objects (docs/adr/0425).
 
@@ -11515,6 +11535,74 @@ class EntitiesPropertiesSet(_Model):
             changed=list(data["changed"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesRelate(_Model):
+    """Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard
+    DE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of
+    `T`, `F`, `*`, `0`, `1`, `2`) only the pairs it holds for are answered; with neither, every pair and its matrix. An
+    object is read as a query reads it: its areas with their holes (arcs exact), its open paths or its points; Z is not
+    read. Hidden and locked objects are read as well: the ids are given.
+
+    Refusals (`CommandError.code`), in this order: `no_objects` (`a` or `b` empty), `invalid_input` (both `predicate`
+    and `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more
+    than 1 000 000 pairs).
+    Attributes:
+        a: The objects related, by their lasting ids.
+        b: The objects they are related to.
+    """
+    a: list[str]
+    b: list[str]
+    pattern: str | None | Unset = UNSET
+    predicate: RelatePredicate | RelatePredicateName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = list(self.a)
+        out["b"] = list(self.b)
+        if self.pattern is not UNSET:
+            out["pattern"] = self.pattern
+        if self.predicate is not UNSET:
+            out["predicate"] = None if self.predicate is None else _enum_out(self.predicate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRelate:
+        return cls(
+            a=list(data["a"]),
+            b=list(data["b"]),
+            pattern=data.get("pattern", UNSET),
+            predicate=UNSET if "predicate" not in data else None if data["predicate"] is None else _enum_in(RelatePredicate, data["predicate"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesRelated(_Model):
+    """Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile
+    does not read (a construction line, a ray), the revision.
+    Attributes:
+        revision: The document's revision the objects were read at, as decimal text.
+    """
+    pairs: list[RelatedPair]
+    revision: str
+    unread: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pairs"] = [e0.to_json() for e0 in self.pairs]
+        out["revision"] = self.revision
+        if self.unread is not UNSET:
+            out["unread"] = list(self.unread)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRelated:
+        return cls(
+            pairs=[RelatedPair.from_json(e0) for e0 in data["pairs"]],
+            revision=data["revision"],
+            unread=list(data["unread"]) if "unread" in data else UNSET,
         )
 
 
@@ -24533,6 +24621,32 @@ class RegularPolygonCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RelatedPair(_Model):
+    """A pair and its matrix.
+    Attributes:
+        matrix: The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).
+    """
+    a: str
+    b: str
+    matrix: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        out["matrix"] = self.matrix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelatedPair:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            matrix=data["matrix"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RelationFollowed(_Model):
     """What a relation did to a deleted parent's children (docs/adr/0440 §1).
     Attributes:
@@ -36955,6 +37069,8 @@ __all__ = [
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
+    "EntitiesRelate",
+    "EntitiesRelated",
     "EntitiesReverse",
     "EntitiesSelect",
     "EntitiesSelected",
@@ -37516,7 +37632,10 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RelatePredicate",
+    "RelatePredicateName",
     "RelatedFormItem",
+    "RelatedPair",
     "RelatedView",
     "RelatedViewName",
     "RelationDelete",

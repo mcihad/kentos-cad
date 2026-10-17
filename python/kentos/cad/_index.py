@@ -55,6 +55,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.order": entities.order,
     "cad.entities.paste": entities.paste,
     "cad.entities.pick": entities.pick,
+    "cad.entities.relate": entities.relate,
     "cad.entities.reverse": entities.reverse,
     "cad.entities.select": entities.select,
     "cad.entities.set": entities.set,

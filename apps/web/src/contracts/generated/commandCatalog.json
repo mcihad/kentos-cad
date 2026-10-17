@@ -528188,6 +528188,221 @@
       ]
     },
     {
+      "id": "cad.entities.relate",
+      "version": 1,
+      "title": "Standart ilişkiler",
+      "summary": "a'nın her nesnesinin b'nin her nesnesiyle DE-9IM matrisini standart profille verir: kayan noktaya kadar kesin, Konuma göre seç'in 1 mm'lik toleransı yok (OGC SFA, PostGIS ST_Relate gibi). predicate (intersects, disjoint, contains, within, covers, coveredBy, touches, crosses, overlaps, equals) ya da pattern (dokuz harf: T, F, *, 0, 1, 2) verilirse yalnız tutan çiftler; ikisi de yoksa bütün çiftler matrisleriyle. Sınırdaki nokta covers'ta tutar, contains'te tutmaz. Nesne alanları ve delikleriyle (yaylar kesin), açık yollarıyla ya da noktalarıyla okunur; Z okunmaz; yardımcı çizgi ve ışın okunmaz (unread). Kimlikler verildiği için gizli ve kilitli nesneler de okunur. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "iliski",
+        "relate",
+        "de9im"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "RelatePredicate": {
+            "description": "A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's\nrelations, which allow 1 mm.",
+            "enum": [
+              "intersects",
+              "disjoint",
+              "contains",
+              "within",
+              "covers",
+              "coveredBy",
+              "touches",
+              "crosses",
+              "overlaps",
+              "equals"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard\nDE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of\n`T`, `F`, `*`, `0`, `1`, `2`) only the pairs it holds for are answered; with neither, every pair and its matrix. An\nobject is read as a query reads it: its areas with their holes (arcs exact), its open paths or its points; Z is not\nread. Hidden and locked objects are read as well: the ids are given.\n\nRefusals (`CommandError.code`), in this order: `no_objects` (`a` or `b` empty), `invalid_input` (both `predicate`\nand `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more\nthan 1 000 000 pairs).",
+        "properties": {
+          "a": {
+            "description": "The objects related, by their lasting ids.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "b": {
+            "description": "The objects they are related to.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pattern": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "predicate": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RelatePredicate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ],
+        "title": "EntitiesRelate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "RelatedPair": {
+            "description": "A pair and its matrix.",
+            "properties": {
+              "a": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "b": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "matrix": {
+                "description": "The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b",
+              "matrix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile\ndoes not read (a construction line, a ray), the revision.",
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/RelatedPair"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unread": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pairs",
+          "revision"
+        ],
+        "title": "EntitiesRelated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "RelatedPair": {
+            "description": "A pair and its matrix.",
+            "properties": {
+              "a": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "b": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "matrix": {
+                "description": "The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b",
+              "matrix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile\ndoes not read (a construction line, a ray), the revision.",
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/RelatedPair"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unread": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pairs",
+          "revision"
+        ],
+        "title": "EntitiesRelated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "invalid_input",
+          "invalid_pattern",
+          "entity_not_found",
+          "too_many_pairs"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselin sınırındaki nokta: kapsar ama içermez",
+          "input": {
+            "a": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+            ],
+            "b": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+            ],
+            "predicate": "covers"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",
@@ -533970,7 +534185,13 @@
       "code": "invalid_pattern",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme."
+      "meaning": "Örüntü okunmuyor: katman adında boş ya da kapanmayan küme, DE-9IM deseninde T, F, *, 0, 1, 2 dışında harf ya da dokuzdan başka uzunluk."
+    },
+    {
+      "code": "too_many_pairs",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "1 000 000'dan çok çift olurdu; nesneleri daha küçük kümelere bölün."
     },
     {
       "code": "no_rules",

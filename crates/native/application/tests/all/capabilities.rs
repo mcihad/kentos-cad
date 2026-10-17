@@ -107,6 +107,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "eğrinin kopyası yaklaşıktır, kesin bir beklentiyle yazılamaz; geometri-core'un offset_notes testinde eğriye uzaklığıyla denetlenir (ADR 0293)",
     ),
     (
+        "cad.entities.relate",
+        "too_many_pairs",
+        "bir milyondan çok çift için binlerce kimlik gerekir; durum dosyasını büyütmeye değmez, sınır entities_relate.rs'in MAX_RELATE_PAIRS denetimidir (ADR 0501 §3)",
+    ),
+    (
         "cad.entities.select",
         "too_many_points",
         "100 001 noktalı ya da kimlikli durum dosyayı megabaytlarca büyütür; bu dosyanın selections_beyond_the_limit testinde",
