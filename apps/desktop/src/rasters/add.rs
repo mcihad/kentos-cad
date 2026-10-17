@@ -508,6 +508,8 @@ impl App {
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             }],
             operation: Some(CreateOperation::Raster),
             expected_revision: None,

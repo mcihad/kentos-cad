@@ -874,6 +874,57 @@ mod tests {
         ));
     }
 
+    /// A hatch too dense for the screen (5 cm apart: 0.05 mm on paper at 1:1000, under a pixel; the renderers tint
+    /// it) goes to the sheet as every line it has (docs/adr/0332 §3): the screen's simplification is not the plot's.
+    #[test]
+    fn a_hatch_the_screen_tints_is_plotted_line_by_line() {
+        let o = VectorScale {
+            scale: 1000.0,
+            origin: [0.0, 0.0],
+        };
+        let data: Vec<f32> = vec![
+            0.0, 0.0, 100.0, 0.0, 100.0, 100.0, 0.0, 0.0, 100.0, 100.0, 0.0, 100.0,
+        ];
+        let paint = FillPaintBatch::Hatch {
+            color: [0.0, 0.0, 0.0, 1.0],
+            angle: 0.0,
+            spacing: 0.05,
+            width: 0.13,
+            offset: 0.0,
+            dash: None,
+            dash_offset: 0.0,
+            stagger: 0.0,
+            unit: Unit::World,
+        };
+        let batch = StyledBatch {
+            range: 0..data.len(),
+            kind: BatchKind::Fill {
+                paint: paint.clone(),
+            },
+            level: 0.0,
+            key: 0,
+            bounds: [0.0, 0.0, 100.0, 100.0],
+            origin: [0.0, 0.0],
+            reach: 0.0,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+            group: 0,
+            effect: None,
+        };
+        let layer = StyledLayer {
+            data,
+            batches: vec![batch.clone()],
+            pictures: Vec::new(),
+            dropped: 0,
+        };
+        let shapes = fill_paths(&layer, &batch, &paint, &o).expect("a vector form");
+        let lines: usize = shapes.iter().map(|s| s.parts.len()).sum();
+        // The lines at 0, 0.05 … 100 m: 2001, each across the square.
+        assert_eq!(lines, 2001);
+        assert!(shapes[0].parts.iter().all(|p| (p.points[1][0] - p.points[0][0] - 100.0).abs() < 1e-9));
+    }
+
     #[test]
     fn colours_and_lengths_are_the_web_s() {
         assert_eq!(color([1.0, 0.5, 0.0, 1.0], 1.0), "#ff8000");

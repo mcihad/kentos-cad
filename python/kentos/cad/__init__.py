@@ -471,6 +471,8 @@ __all__ = [
     "GridTableEdit",
     "HatchAssoc",
     "HatchCurve",
+    "HatchDrawOrder",
+    "HatchDrawOrderName",
     "HatchEdit",
     "HatchEntity",
     "HatchEntityGeometry",

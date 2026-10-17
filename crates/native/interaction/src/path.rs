@@ -1552,6 +1552,8 @@ impl Path {
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             }],
             operation: None,
             expected_revision: None,

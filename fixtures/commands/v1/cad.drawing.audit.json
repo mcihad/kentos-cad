@@ -278,6 +278,45 @@
     "rotation": 0,
     "labelOf": "0192f5a2-0000-7000-8000-00000000ffff",
     "labelScale": 500
+   },
+   {
+    "kind": "hatch",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {},
+    "ring": [
+     {
+      "x": 50,
+      "y": 0
+     },
+     {
+      "x": 60,
+      "y": 0
+     },
+     {
+      "x": 60,
+      "y": 10
+     },
+     {
+      "x": 50,
+      "y": 10
+     }
+    ],
+    "pattern": {
+     "type": "solid",
+     "angle": 0,
+     "spacing": 1
+    },
+    "assoc": {
+     "outer": "0192f5a2-0000-7000-8000-00000000fffe",
+     "cutouts": [
+      "0192f5a2-0000-7000-8000-00000000ffff"
+     ],
+     "seed": {
+      "x": 55,
+      "y": 5
+     }
+    }
    }
   ],
   "styles": {
@@ -378,6 +417,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -432,7 +483,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -486,6 +538,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -530,7 +594,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -551,7 +616,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -644,6 +710,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -716,7 +811,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -772,6 +868,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -826,7 +934,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "changed"
      }
@@ -872,6 +981,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -921,7 +1042,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -977,6 +1099,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -1031,7 +1165,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "changed"
      }
@@ -1077,6 +1212,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -1126,7 +1273,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -1184,6 +1332,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -1228,7 +1388,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -1249,7 +1410,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -1342,6 +1504,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -1402,7 +1593,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -1456,6 +1648,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -1500,7 +1704,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -1521,7 +1726,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -1614,6 +1820,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -1691,7 +1926,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "changed"
      }
@@ -1744,6 +1980,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -1799,7 +2047,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -1853,6 +2102,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -1897,7 +2158,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -1918,7 +2180,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -2011,6 +2274,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -2091,7 +2383,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -2148,6 +2441,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -2202,7 +2507,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "changed"
      }
@@ -2254,6 +2560,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -2296,7 +2614,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -2351,6 +2670,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -2395,7 +2726,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -2416,7 +2748,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -2509,6 +2842,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -2564,6 +2926,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -2608,7 +2982,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -2629,7 +3004,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -2722,6 +3098,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -2740,7 +3145,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -2843,6 +3249,45 @@
         "offset": 1.5,
         "height": 0.25,
         "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        },
+        "assoc": {
+         "outer": "0192f5a2-0000-7000-8000-00000000fffe",
+         "cutouts": [
+          "0192f5a2-0000-7000-8000-00000000ffff"
+         ],
+         "seed": {
+          "x": 55,
+          "y": 5
+         }
+        }
        }
       }
      }
@@ -2859,7 +3304,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -2952,6 +3398,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       }
      }
@@ -3005,6 +3480,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -3049,7 +3536,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -3070,7 +3558,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "2": {
@@ -3163,6 +3652,35 @@
         },
         "offset": 1.5,
         "height": 0.25
+       },
+       "9": {
+        "kind": "hatch",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 0
+         },
+         {
+          "x": 60,
+          "y": 10
+         },
+         {
+          "x": 50,
+          "y": 10
+         }
+        ],
+        "pattern": {
+         "type": "solid",
+         "angle": 0,
+         "spacing": 1
+        }
        }
       },
       "revision": "changed",
@@ -3249,7 +3767,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "entities": {
        "8": {
@@ -3327,6 +3846,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": false
         }
        ],
        "unused": [
@@ -3386,7 +3917,8 @@
        4,
        5,
        6,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -3447,6 +3979,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -3512,7 +4056,8 @@
        4,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "changed"
      }
@@ -3552,6 +4097,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -3593,7 +4150,8 @@
        4,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -3612,7 +4170,8 @@
        "$uidOf:4",
        "$uidOf:5",
        "$uidOf:6",
-       "$uidOf:8"
+       "$uidOf:8",
+       "$uidOf:9"
       ]
      },
      "result": "$any"
@@ -4075,6 +4634,18 @@
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
          "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": true
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+         "fixed": true
         }
        ],
        "unused": [
@@ -4119,7 +4690,8 @@
         "$uidOf:2",
         "$uidOf:4",
         "$uidOf:5",
-        "$uidOf:6"
+        "$uidOf:6",
+        "$uidOf:9"
        ],
        "revision": "$current"
       },
@@ -4140,7 +4712,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -4186,6 +4759,18 @@
          "code": "brokenLink",
          "uid": "$uidOf:8",
          "message": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
+         "fixed": false
+        },
+        {
+         "code": "brokenHatch",
+         "uid": "$uidOf:9",
+         "message": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+         "fixed": false
+        },
+        {
+         "code": "missingCutout",
+         "uid": "$uidOf:9",
+         "message": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
          "fixed": false
         }
        ],
@@ -4241,7 +4826,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same"
      }
@@ -4327,7 +4913,8 @@
        5,
        6,
        7,
-       8
+       8,
+       9
       ],
       "revision": "same",
       "canUndo": false

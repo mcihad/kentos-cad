@@ -24,6 +24,10 @@ pub enum AuditCode {
     BrokenLink,
     /// An associative hatch one of whose boundary objects is gone.
     BrokenHatch,
+    /// A hatch leaving open a text that is gone (docs/adr/0332 §2).
+    MissingCutout,
+    /// A hatch leaving open its own linked label: a cycle (docs/adr/0332 §2).
+    HatchTextCycle,
     /// An associative dimension's live reference to an object that is gone.
     BrokenDimension,
     /// A text or a table naming a text style the project does not have.

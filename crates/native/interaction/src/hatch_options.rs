@@ -30,6 +30,31 @@ pub enum Asking {
     Origin,
     /// Özellik al: a hatch whose pattern the next hatches take (docs/adr/0331 §2).
     Inherit,
+    /// Saydamlık, a percentage (docs/adr/0332 §1).
+    Transparency,
+}
+
+/// Sıra's choices (docs/adr/0332 §1), `Memory::hatch_order`'s order: their words and the command's.
+pub const ORDERS: [(&str, kentos_contracts::HatchDrawOrder); 5] = [
+    ("atama", kentos_contracts::HatchDrawOrder::None),
+    ("arkaya", kentos_contracts::HatchDrawOrder::Back),
+    ("öne", kentos_contracts::HatchDrawOrder::Front),
+    ("sınırın arkasına", kentos_contracts::HatchDrawOrder::BehindBoundary),
+    ("sınırın önüne", kentos_contracts::HatchDrawOrder::AboveBoundary),
+];
+
+/// The next hatches' Saydamlık and Sıra as the command takes them.
+pub fn look_of(m: &Memory) -> (Option<f64>, Option<kentos_contracts::HatchDrawOrder>) {
+    let order = ORDERS[usize::from(m.hatch_order.min(4))].1;
+    (
+        (m.hatch_transparency > 0.0).then_some(m.hatch_transparency),
+        (order != kentos_contracts::HatchDrawOrder::None).then_some(order),
+    )
+}
+
+/// Saydamlık as it is said: “%40”.
+fn percent(m: &Memory) -> String {
+    format!("%{}", js_number((m.hatch_transparency * 100.0).round()))
 }
 
 /// Başlangıç's rules (docs/adr/0331 §2), `Memory::hatch_origin`'s order: their words and what the command takes.
@@ -172,7 +197,10 @@ pub fn with_pattern_options(prompt: Prompt, m: &Memory, user: &[String]) -> Prom
             .option_with("Başlangıç", "S", ORIGINS[usize::from(m.hatch_origin.min(6))])
             .option_if(!m.hatch_world, "Ölçekli", "L", on(m.hatch_annotative));
     }
-    prompt.option("Özellik al", "Z")
+    prompt
+        .option_with("Saydamlık", "M", percent(m))
+        .option_with("Sıra", "O", ORDERS[usize::from(m.hatch_order.min(4))].0)
+        .option("Özellik al", "Z")
 }
 
 /// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar.
@@ -210,6 +238,7 @@ pub fn asking_prompt(label: &'static str, asking: Asking) -> Prompt {
         .option("İkinci renk", "R"),
         Asking::Origin => Prompt::new(label, "desenin başlangıç noktasına tıklayın ya da Y,X yazın"),
         Asking::Inherit => Prompt::new(label, "özelliklerini alacağınız taramaya tıklayın"),
+        Asking::Transparency => Prompt::new(label, "saydamlığı yüzde olarak yazın (0: opak, en çok 90)"),
     }
 }
 
@@ -290,6 +319,8 @@ pub fn inherit(h: &kentos_contracts::HatchEntity, m: &mut Memory, user: &[String
         }
         None => m.hatch_origin = 0,
     }
+    // Its transparency too (docs/adr/0332 §1).
+    m.hatch_transparency = h.base.look.transparency.unwrap_or(0.0);
 }
 
 /// The options' keys: whether `key` was one of them (a key that asks for a
@@ -323,6 +354,8 @@ pub fn option(key: &str, tie: bool, asking: &mut Option<Asking>, cx: &mut Contex
         }
         "L" if lined && !m.hatch_world => m.hatch_annotative = !m.hatch_annotative,
         "Z" => *asking = Some(Asking::Inherit),
+        "M" => *asking = Some(Asking::Transparency),
+        "O" => m.hatch_order = (m.hatch_order + 1) % 5,
         "R" if gradient => *asking = Some(Asking::Colour),
         "T" if gradient => m.hatch_inverted = !m.hatch_inverted,
         // taranmaz → taranır → iç içe → taranmaz.
@@ -384,6 +417,16 @@ pub fn answer(asking: &mut Option<Asking>, text: &str, cx: &mut Context<'_>) -> 
             None => cx.say(Level::Warn, format!("Başlangıç noktası Y,X olarak yazılmalı; “{t}” yazıldı.")),
         },
         Asking::Inherit => cx.say(Level::Warn, "Özelliklerini alacağınız taramaya tıklayın; Esc vazgeçer."),
+        Asking::Transparency => match parse_number(t.trim_start_matches('%')) {
+            Some(n) if (0.0..=90.0).contains(&n) => {
+                cx.memory.hatch_transparency = n / 100.0;
+                *asking = None;
+            }
+            _ => cx.say(
+                Level::Warn,
+                format!("Saydamlık yüzde olarak 0 ile 90 arasında bir sayı olmalı; “{t}” yazıldı."),
+            ),
+        },
         Asking::Colour => match colour_of(t) {
             Some(c) => {
                 cx.memory.hatch_color2 = u32::from_str_radix(&c[1..], 16).unwrap_or(0xFF_FF_FF);
@@ -457,6 +500,19 @@ pub fn choices_of(key: &str, m: &Memory, user: &[String]) -> Vec<OptionChoice> {
                 command: None,
             })
             .collect(),
+        "O" => ["Atama", "Arkaya gönder", "Öne getir", "Sınırın arkasına", "Sınırın önüne"]
+            .iter()
+            .zip(ORDERS)
+            .enumerate()
+            .map(|(k, (label, (typed, _)))| OptionChoice {
+                label: (*label).to_owned(),
+                typed: typed.to_owned(),
+                icon: None,
+                preview: None,
+                checked: usize::from(m.hatch_order) == k,
+                command: None,
+            })
+            .collect(),
         "R" => {
             let now = colour_text(m);
             COLOURS
@@ -491,6 +547,13 @@ pub fn choose(key: &str, typed: &str, asking: &mut Option<Asking>, cx: &mut Cont
             Some(c) => {
                 cx.memory.hatch_color2 = u32::from_str_radix(&c[1..], 16).unwrap_or(0xFF_FF_FF);
                 *asking = None;
+                true
+            }
+            None => false,
+        },
+        "O" => match ORDERS.iter().position(|(w, _)| *w == typed) {
+            Some(k) => {
+                cx.memory.hatch_order = k as u8;
                 true
             }
             None => false,

@@ -783,6 +783,8 @@ impl App {
                 symbol: None,
                 label_of: None,
                 label_scale: None,
+                order: None,
+                transparency: None,
             }],
             operation: None,
             expected_revision: None,

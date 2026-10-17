@@ -84,6 +84,8 @@ from .types import (  # noqa: F401
     EntitiesVertexed,
     EntityEdit,
     ExplodeDensity,
+    HatchDrawOrder,
+    HatchDrawOrderName,
     HatchPatternSpec,
     HatchRegion,
     LengthenChange,
@@ -2226,12 +2228,18 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
     (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin
     kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili
     ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta
-    aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). Bilinmeyen
-    ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa
-    not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara
-    araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan
-    cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative).
+    transparency (0–0,9) taramaların kendi saydamlığı; drawOrder katmanın içindeki sıra:
+    none (yeni nesne gibi), back, front, behindBoundary ve aboveBoundary (sınırının
+    kapalı nesnesi ve adalarının hemen altı ya da üstü; sınır başka katmandaysa sıra
+    yazılmaz, order_other_layer); sınıra gelen sıra order_limit. Bilinmeyen ad
+    unknown_pattern; desen bölge için çok sıksa ya da bütün bölgeler birlikte 200
+    000'den çok çizgi verirse pattern_too_dense; bölge yoksa not_enclosed. İş olarak
+    çalışırken noktalar ve bölgeler arasında durdurulabilir (cancelled). Bölgeleri
+    paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan
+    aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.hatch"
@@ -2252,10 +2260,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        draw_order: HatchDrawOrder | HatchDrawOrderName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        transparency: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesCreated:
@@ -2281,11 +2291,17 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün
         bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim
         ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da
-        dolu ve degradede not_annotative). Bilinmeyen ad unknown_pattern; desen bölge için
-        çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri
-        çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı
-        halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        dolu ve degradede not_annotative). transparency (0–0,9) taramaların kendi
+        saydamlığı; drawOrder katmanın içindeki sıra: none (yeni nesne gibi), back, front,
+        behindBoundary ve aboveBoundary (sınırının kapalı nesnesi ve adalarının hemen altı
+        ya da üstü; sınır başka katmandaysa sıra yazılmaz, order_other_layer); sınıra gelen
+        sıra order_limit. Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa ya da
+        bütün bölgeler birlikte 200 000'den çok çizgi verirse pattern_too_dense; bölge yoksa
+        not_enclosed. İş olarak çalışırken noktalar ve bölgeler arasında durdurulabilir
+        (cancelled). Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara
+        araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan
+        cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -2294,6 +2310,8 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id: The layer the hatches go to.
             attrs: GIS attributes, text in v1. Absent: none.
             color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+            draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+                `none`.
             expected_revision: The document revision the input was prepared against, as decimal
                 text. When given and the document is no longer at it, nothing is
                 written and the answer is `conflict`.
@@ -2301,6 +2319,8 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
                 is drawn with lines. Absent: the layer's. Unit: paper-mm.
             symbol: Its own symbol, a library item's id. Absent: the layer's style.
+            transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
+                HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -2319,10 +2339,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
+            draw_order=draw_order,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            transparency=transparency,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -2335,10 +2357,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        draw_order: HatchDrawOrder | HatchDrawOrderName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        transparency: float | None | Unset = UNSET,
     ) -> EntitiesCreatePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -2349,10 +2373,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
+            draw_order=draw_order,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            transparency=transparency,
         ))
 
     def validate(
@@ -2365,10 +2391,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        draw_order: HatchDrawOrder | HatchDrawOrderName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        transparency: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -2379,10 +2407,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
+            draw_order=draw_order,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            transparency=transparency,
         ))
 
     def answer(
@@ -2395,10 +2425,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
+        draw_order: HatchDrawOrder | HatchDrawOrderName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        transparency: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -2414,10 +2446,12 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
+            draw_order=draw_order,
             expected_revision=expected_revision,
             label=label,
             line_weight=line_weight,
             symbol=symbol,
+            transparency=transparency,
         ), op=op, request_id=request_id, expected=expected)
 
 

@@ -387,6 +387,18 @@ pub struct EntitiesHatch {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
+    /// The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
+    /// HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub transparency: Option<f64>,
+    /// Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+    /// `none`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub draw_order: Option<HatchDrawOrder>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
@@ -394,6 +406,27 @@ pub struct EntitiesHatch {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// Where a new hatch is drawn among the objects of its layer (docs/adr/0332 §1): the draw order is the layer's own
+/// (docs/adr/0260 §4); across layers the layers' order decides.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchDrawOrder {
+    /// Atama: as a new object, over what its layer had.
+    #[default]
+    None,
+    /// Arkaya: under every object of its layer.
+    Back,
+    /// Öne: over every object of its layer.
+    Front,
+    /// Sınırın arkasında: just under its boundary's objects on its layer.
+    BehindBoundary,
+    /// Sınırın önünde: just over its boundary's objects on its layer.
+    AboveBoundary,
 }
 
 #[cfg(test)]

@@ -469,6 +469,8 @@ def hatch_cases():
                    warnings=[warning("gaps_closed", "1 boşluk kapatıldı (toplam 0.125 m, en uzunu 0.125 m); taranan alan 80.00 m².", "region.gap")]),
     ]
     out += pattern_extra_cases(p_in, n_in, inner_seed)
+    out += look_cases(p_in)
+    out += cutout_cases(p_in)
     one = {"region": at_point(*p_in), "pattern": DOLU, "layerId": "tarama"}
     out += [
         refused("Bilinmeyen desen", {**one, "pattern": {"name": "Yok"}}, "unknown_pattern",
@@ -599,6 +601,85 @@ def pattern_extra_cases(p_in, n_in, inner_seed):
         refused("Başlangıç noktası sonlu olmalı", {"region": lone, "pattern": {"name": "ANSI31", "origin": {"kind": "point", "at": P(X, Y)}}, "layerId": "tarama"},
                 "not_finite", not_finite_point("Desenin başlangıç noktasının", "x"), "pattern.origin.at.x", non_finite={"pattern.origin.at.x": "NaN"}),
     ]
+
+
+def with_look(case, inp, ent):
+    """The case's input with `inp` and its hatches with `ent` (docs/adr/0332 §1: Saydamlık, Sıra)."""
+    for step in case["steps"]:
+        step["input"].update(inp)
+        for e in step.get("expect", {}).get("entities", {}).values():
+            e.update(ent)
+        for e in step.get("result", {}).get("output", {}).get("entities", []):
+            e.update(ent)
+    return case
+
+
+# A drawing whose parcel (20) is drawn at 5 and its building (21) at 3 in Yapı's order (docs/adr/0332 §1).
+ORDERED = {**SETUP, "entities": [{**e, "order": 5} if e["id"] == 20 else {**e, "order": 3} if e["id"] == 21 else e
+                                  for e in ENTITIES]}
+ORDER_OTHER_LAYER = ("Tarama sınırından başka katmanda: önünde mi arkasında mı çizileceğini katmanların sırası belirler; "
+                     "taramanın katmanını Katmanlar panelinde sınırınkinin altına alın.")
+
+
+def look_cases(p_in):
+    """Saydamlık and Sıra (docs/adr/0332 §1): the transparency written as given (0 not at all); the draw order on the
+    hatch's layer: under (min − 1) or over (max + 1) every object there, or just under or over its boundary's objects
+    there (the closed object and its islands); a boundary only on other layers leaves it unordered and says so."""
+    ansi = pattern("ANSI31")
+    lone = at_point(*p_in, associative=False)
+    made = [(PARCEL, [BUILDING], ansi, None)]
+    case = lambda name, inp, ent, layer_id="tarama", warnings=(), plan=False: with_look(  # noqa: E731
+        hatch_case(name, lone, {"name": "ANSI31"}, made, layer_id=layer_id, warnings=warnings, plan=plan), inp, ent)
+    return [
+        case("Saydamlık %40: taramanın kendi saydamlığı", {"transparency": 0.4}, {"transparency": 0.4}),
+        case("Saydamlık 0: yazılmaz, katmanınki", {"transparency": 0}, {}),
+        case("Saydamlık planda da görünür", {"transparency": 0.25}, {"transparency": 0.25}, plan=True),
+        case("Sıra atama: yeni nesne gibi, sıra yazılmaz", {"drawOrder": "none"}, {}),
+        on_setup(case("Sıra arkaya: katmanın bütün nesnelerinin altında (en küçük 0 − 1)", {"drawOrder": "back"}, {"order": -1},
+                      layer_id="yapi"), ORDERED),
+        on_setup(case("Sıra öne: katmanın bütün nesnelerinin üstünde (en büyük 5 + 1)", {"drawOrder": "front"}, {"order": 6},
+                      layer_id="yapi"), ORDERED),
+        on_setup(case("Sınırın arkasına: kapalı nesnesinin ve adasının en küçüğünün altında (3 − 1)", {"drawOrder": "behindBoundary"},
+                      {"order": 2}, layer_id="yapi"), ORDERED),
+        on_setup(case("Sınırın önüne: kapalı nesnesinin ve adasının en büyüğünün üstünde (5 + 1)", {"drawOrder": "aboveBoundary"},
+                      {"order": 6}, layer_id="yapi"), ORDERED),
+        case("Sınırın arkasına, sırası yazılmamış sınır: 0 − 1", {"drawOrder": "behindBoundary"}, {"order": -1}, layer_id="yapi"),
+        case("Sınırın arkasına, sınır başka katmanda: sıra yazılmaz, katmanların sırası söylenir", {"drawOrder": "behindBoundary"}, {},
+             warnings=[warning("order_other_layer", ORDER_OTHER_LAYER, "drawOrder")]),
+        case("Boş katmanda arkaya: 0 − 1", {"drawOrder": "back"}, {"order": -1}),
+        case("Saydamlık ve sıra birlikte", {"transparency": 0.5, "drawOrder": "behindBoundary"}, {"transparency": 0.5, "order": -1},
+             layer_id="yapi"),
+        on_setup(refused("Sıra sınırda: en öndeki 2³¹ − 1'den öne alınamaz",
+                         {"region": lone, "pattern": {"name": "ANSI31"}, "layerId": "yapi", "drawOrder": "front"}, "order_limit",
+                         "Katmanın çizim sırası sınıra geldi; tarama daha arkaya ya da öne alınamaz. Nesneleri ters yöne taşıyarak yer açın.",
+                         "drawOrder"),
+                 {**SETUP, "entities": [{**e, "order": 2**31 - 1} if e["id"] == 20 else e for e in ENTITIES]}),
+        refused("Saydamlık 0,9'dan büyük olamaz", {"region": lone, "pattern": {"name": "ANSI31"}, "layerId": "tarama", "transparency": 0.95},
+                "invalid_transparency", "Saydamlık 0.95; 0 ile 0,9 arasında olmalı (%0–90).", "transparency"),
+        refused("Saydamlık eksi olamaz", {"region": lone, "pattern": {"name": "ANSI31"}, "layerId": "tarama", "transparency": -0.1},
+                "invalid_transparency", "Saydamlık -0.1; 0 ile 0,9 arasında olmalı (%0–90).", "transparency"),
+    ]
+
+
+CUTOUT_GONE = "1 taramanın boş bıraktığı yazı silindi; taramalar artık orayı da tarar."
+
+
+def cutout_cases(p_in):
+    """A text a hatch leaves open, deleted (docs/adr/0332 §2): it leaves the hatch's list and the command says so. The
+    hatch's own region (around the text's box) is the core's; the first step is not compared here."""
+    text = {"kind": "text", "id": 40, "layerId": "yapi", "attrs": {}, "p": P(X + 52, Y + 14), "text": "5", "height": 1,
+            "rotation": 0}
+    setup = {**SETUP, "entities": ENTITIES + [text]}
+    return [{"name": "Boş bırakılan yazı silinince taramanın listesinden çıkar; silme söyler (cutout_gone)", "setup": setup,
+             "steps": [
+                 {"op": "captureUid", "id": 40, "as": "yazi"},
+                 {"op": "execute", "input": {"region": at_point(*p_in, texts=True), "pattern": {"name": "ANSI31"},
+                                             "layerId": "tarama"}, "result": "$any"},
+                 {"op": "execute", "command": "cad.entities.delete", "input": {"uids": ["$uid:yazi"]},
+                  "result": completed({"removed": ["$uid:yazi"], "locked": [], "revision": "$current"},
+                                      [warning("cutout_gone", CUTOUT_GONE)]),
+                  "expect": {"ids": IDS + [41], "revision": "changed"}},
+             ]}]
 
 
 FILES = [

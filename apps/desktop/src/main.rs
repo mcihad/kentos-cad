@@ -122,6 +122,8 @@ mod hatch_scenes;
 mod hatch_boundary_scenes;
 #[cfg(test)]
 mod hatch_pattern_scenes;
+#[cfg(test)]
+mod hatch_look_scenes;
 mod history;
 #[cfg(test)]
 mod history_scenes;

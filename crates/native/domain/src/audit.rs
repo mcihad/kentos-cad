@@ -4,6 +4,8 @@
 //!
 //! - a linked text whose object is gone (repair: the link goes, the text stays);
 //! - an associative hatch one of whose boundary objects is gone (repair: it is no longer associative);
+//! - a hatch that leaves open a text that is gone (repair: the text leaves its list, the region is cut again), or a
+//!   text that is its own linked label (repair: the same; its place is read from the hatch, docs/adr/0332 §2);
 //! - an associative dimension's live reference to an object that is gone (repair: the reference breaks as a deletion
 //!   breaks it, `object_gone`, the point keeping its place);
 //! - a text or a table naming a text style the project does not have, a dimension naming a dimension style it does not
@@ -23,6 +25,8 @@ use crate::identity::{Slot, Uuid};
 pub enum AuditKind {
     BrokenLink,
     BrokenHatch,
+    MissingCutout,
+    HatchTextCycle,
     BrokenDimension,
     MissingTextStyle,
     MissingDimensionStyle,
@@ -96,11 +100,33 @@ impl Document {
             }
             Entity::Hatch(h) => {
                 if let Some(assoc) = &h.assoc {
-                    let gone = assoc.objects().any(|id| self.gone(id.0));
+                    let gone = assoc
+                        .outer
+                        .iter()
+                        .chain(&assoc.bounds)
+                        .chain(&assoc.islands)
+                        .any(|id| self.gone(id.0));
                     if gone {
                         say(
                             AuditKind::BrokenHatch,
                             "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+                        );
+                    }
+                    if assoc.cutouts.iter().any(|id| self.gone(id.0)) {
+                        say(
+                            AuditKind::MissingCutout,
+                            "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
+                        );
+                    }
+                    let own = self.uid(slot);
+                    if assoc.cutouts.iter().any(|id| {
+                        self.slot_of(Uuid::from_bytes(id.0))
+                            .and_then(|s| self.get(s))
+                            .is_some_and(|e| crate::hatch_ties::is_own_label(e, own))
+                    }) {
+                        say(
+                            AuditKind::HatchTextCycle,
+                            "Taramanın boş bıraktığı yazı taramanın kendi bağlı etiketi: yeri taramadan okunur, boşluğu taramayı yeniden değiştirir (döngü). Onarım yazıyı listeden çıkarır; tarama onu boş bırakmaz.",
                         );
                     }
                 }
@@ -147,6 +173,19 @@ impl Document {
                 (Entity::Text(t), AuditKind::MissingTextStyle) => t.face.text_style = None,
                 (Entity::Table(t), AuditKind::MissingTextStyle) => t.face.text_style = None,
                 (Entity::Hatch(h), AuditKind::BrokenHatch) => h.assoc = None,
+                (Entity::Hatch(h), AuditKind::MissingCutout | AuditKind::HatchTextCycle) => {
+                    let own = self.uid(slot);
+                    if let Some(a) = h.assoc.as_mut() {
+                        a.cutouts.retain(|id| {
+                            self.slot_of(Uuid::from_bytes(id.0))
+                                .and_then(|s| self.get(s))
+                                .is_some_and(|e| !crate::hatch_ties::is_own_label(e, own))
+                        });
+                    }
+                    if let Some(again) = self.recut_hatch(h) {
+                        *h = again;
+                    }
+                }
                 (Entity::Dimension(d), AuditKind::BrokenDimension) => {
                     if let Some(refs) = d.refs.as_mut() {
                         for r in [&mut refs.a, &mut refs.b, &mut refs.c]

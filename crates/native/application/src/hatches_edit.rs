@@ -399,7 +399,7 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
             let (slot, u, h) = hatch_at(doc, uid, "edit.uid")?;
             point_region_checks(doc, region, "edit.region")?;
             checks::revision(doc, input.expected_revision.as_deref())?;
-            let (found, said) = regions(doc, store, region, &mut RegionCache::default())
+            let (found, said) = regions(doc, store, region, &mut RegionCache::default(), &|| false)
                 .map_err(|stop| reroot(stop, "region", "edit.region"))?;
             warnings.extend(said.into_iter().map(|mut w| {
                 w.path = w.path.map(|p| p.replacen("region", "edit.region", 1));
@@ -657,8 +657,8 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
 /// A region's refusal said at the edit's region.
 fn reroot(stop: Stop, from: &str, to: &str) -> Stop {
     let mut stop = stop;
-    let (Stop::Failed(e) | Stop::Conflict(e)) = &mut stop;
-    if let Some(p) = &mut e.path
+    if let Stop::Failed(e) | Stop::Conflict(e) = &mut stop
+        && let Some(p) = &mut e.path
         && p.starts_with(from)
     {
         *p = p.replacen(from, to, 1);

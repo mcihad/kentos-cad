@@ -770,6 +770,9 @@ codes! {
     GAPS_CLOSED = "gaps_closed", Warning, false, "Çizgi işindeki boşluklar kapatılarak bölge bulundu.";
     /// İç içe adalar asked in the line work: taken as Dış.
     ISLANDS_NOT_NESTED = "islands_not_nested", Warning, false, "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı.";
+    CUTOUT_GONE = "cutout_gone", Warning, false, "Taramanın boş bıraktığı yazı silindi; tarama artık orayı da tarar.";
+    HATCH_TEXT_CYCLE = "hatch_text_cycle", Warning, false, "Taramanın kendi bağlı etiketi boş bırakılmaz (döngü): yeri taramadan okunur; etiket taramanın listesinden çıkarıldı.";
+    ORDER_OTHER_LAYER = "order_other_layer", Warning, false, "Tarama sınırından başka katmanda; önünde mi arkasında mı çizileceğini katmanların sırası belirler.";
     /// A boundary's ellipse or curve written as its chords (an area holds lines and arcs).
     CURVES_APPROXIMATED = "curves_approximated", Warning, false, "Sınırın elips ya da eğri kenarları 0,1 mm'lik kirişleriyle yazıldı.";
     /// No PAT text to take in.

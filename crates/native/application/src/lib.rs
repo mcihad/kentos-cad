@@ -78,6 +78,7 @@ pub mod dimensions_edit;
 pub mod dimensions_query;
 pub mod fields_edit;
 pub mod hatches_edit;
+mod hatch_notes;
 pub mod leaders_edit;
 pub mod fonts_report;
 pub mod texts_check;

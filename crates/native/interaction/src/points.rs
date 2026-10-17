@@ -389,6 +389,8 @@ pub(crate) fn write_objects_each(
                 label_of: None,
                 label_scale: None,
                 symbol: cx.template_symbol(),
+                order: None,
+                transparency: None,
             })
             .collect(),
         operation,

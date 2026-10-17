@@ -680,6 +680,9 @@ pub struct Memory {
     pub hatch_origin_at: Option<kentos_geometry_core::Vec2>,
     pub hatch_origin_across: bool,
     pub hatch_annotative: bool,
+    /// docs/adr/0332 §1: Saydamlık (0 to 0.9) and Sıra (`hatch_options::ORDERS`' place) of the next hatches.
+    pub hatch_transparency: f64,
+    pub hatch_order: u8,
     /// Alan kesiştir's Kaynakları sil, Alan çıkar's Çıkarılanları sil and
     /// İçine tıklayarak alan's Adalar (`AreaIntersectTool.erase`,
     /// `AreaSubtractTool.eraseCutters`, `BoundaryTool.islands`).
@@ -1093,6 +1096,8 @@ impl Default for Memory {
             hatch_origin_at: None,
             hatch_origin_across: false,
             hatch_annotative: false,
+            hatch_transparency: 0.0,
+            hatch_order: 0,
             area_intersect_erase: false,
             area_subtract_erase: false,
             boundary_islands: true,

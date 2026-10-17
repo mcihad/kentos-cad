@@ -414,9 +414,9 @@ Mevcut desen/degrade ve ilişkili tarama kodu korunmalıdır. Hedef yeni bir tar
 - [x] **CAD-HATCH-06:** PAT import/export ve kullanıcı desenleri; pattern name, family, dash ve origin bilgilerini korusun. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §1.*
 - [x] **CAD-HATCH-07:** Pattern scale/angle/origin, match hatch properties ve align across objects seçeneklerini tamamla. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §2.*
 - [x] **CAD-HATCH-08:** Çok ölçekli/annotative pattern ile kaynak world ölçeğinde pattern açık ayrı seçenekler olsun. — *17 Ekim; [ADR 0331](../docs/adr/0331-hatch-patterns-origin-and-annotative.md) §3.*
-- [ ] **CAD-HATCH-09:** Solid/gradient transparency ve ön/arka çizim sırası tutarlı olsun; text background mask ve wipeout ayrı nesne/özellikler olarak ele alınsın.
-- [ ] **CAD-HATCH-10:** Bağlı metinleri boş bırakma davranışı metin taşındığında da güncellensin; döngü ve missing text durumu raporlansın.
-- [ ] **CAD-HATCH-11:** Çok büyük/dense hatch için bütçe ve cancellation olsun; desenin ekranda sadeleşmesi kaynak ölçü/plot doğruluğunu değiştirmesin.
+- [x] **CAD-HATCH-09:** Solid/gradient transparency ve ön/arka çizim sırası tutarlı olsun; text background mask ve wipeout ayrı nesne/özellikler olarak ele alınsın. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §1.*
+- [x] **CAD-HATCH-10:** Bağlı metinleri boş bırakma davranışı metin taşındığında da güncellensin; döngü ve missing text durumu raporlansın. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §2.*
+- [x] **CAD-HATCH-11:** Çok büyük/dense hatch için bütçe ve cancellation olsun; desenin ekranda sadeleşmesi kaynak ölçü/plot doğruluğunu değiştirmesin. — *17 Ekim; [ADR 0332](../docs/adr/0332-hatch-look-order-texts-and-budget.md) §3.*
 - [ ] **CAD-HATCH-12:** Render ve PDF'de çizgi kalınlığı, dash, kesişim ve clip kuralları aynı görünüşü üretsin.
 - [ ] **CAD-HATCH-13:** DXF HATCH boundary loops, source references, gradients ve custom pattern aktarımı için bağımsız dosyalarla round-trip test et.
 

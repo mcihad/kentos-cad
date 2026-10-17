@@ -315,5 +315,7 @@ fn object(
         label_of: None,
         label_scale: None,
         symbol: m.stamp.symbol.clone(),
+        order: None,
+        transparency: None,
     }
 }

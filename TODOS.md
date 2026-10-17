@@ -209,6 +209,11 @@ Liste:
   `cad.annotations.scales.json`); PAT okuma ve yazma biçim işçisinde; Tarama desenleri penceresi; Tarama'nın Ölçek tabanı,
   Başlangıç, Ölçekli ve Özellik al seçenekleri, Taramayı düzenle'nin Hizala'sı; Öznitelikler'in Başlangıç ve ölçekli satırları;
   izler `hatch-patterns.json` ve `hatches.json`.
+- [ ] `CAD-HATCH-09`…`11` taramanın saydamlığı ve sırası, boş bıraktığı yazılar, bütçe ve iptal (ADR 0332, 17 Ekim): web'de gerekenler:
+  `cad.entities.hatch`'in `transparency` ve `drawOrder`'ı ile `cad.entities.create`'in `transparency` ve `order`'ı web işleyicilerinde
+  (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
+  kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
+  komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
 - [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
   `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
   WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in

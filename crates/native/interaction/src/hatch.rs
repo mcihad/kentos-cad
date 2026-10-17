@@ -144,6 +144,8 @@ impl Hatch {
                 symbol: cx.template_symbol(),
             },
             expected_revision: None,
+            draw_order: options::look_of(&m).1,
+            transparency: options::look_of(&m).0,
         }
     }
 

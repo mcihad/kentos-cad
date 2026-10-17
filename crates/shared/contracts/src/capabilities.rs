@@ -567,6 +567,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &[
                 "no_objects",
+                "invalid_transparency",
                 "not_finite",
                 "too_few_corners",
                 "too_few_points",
@@ -1214,12 +1215,22 @@ const ENTRIES: &[Entry] = &[
                 "invalid_region",
                 "invalid_gap",
                 "not_annotative",
+                "invalid_transparency",
+                "order_limit",
             ],
             LAYER,
             LOOK,
             REVISION,
         ],
-        warnings: &["not_closed", "layer_hidden", "gaps_closed", "islands_not_nested"],
+        warnings: &[
+            "not_closed",
+            "layer_hidden",
+            "gaps_closed",
+            "islands_not_nested",
+            "order_other_layer",
+            "cutout_gone",
+            "hatch_text_cycle",
+        ],
         targets: || {
             vec![target(
                 Some("objects"),

@@ -114,6 +114,8 @@ impl VertexPoints {
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             })
             .collect();
         let names = match (&points[0].name, &points[count - 1].name) {

@@ -235,18 +235,22 @@ class AuditCode(_StrEnum):
 
     - ``brokenLink``: A linked text whose object is gone.
     - ``brokenHatch``: An associative hatch one of whose boundary objects is gone.
+    - ``missingCutout``: A hatch leaving open a text that is gone (docs/adr/0332 §2).
+    - ``hatchTextCycle``: A hatch leaving open its own linked label: a cycle (docs/adr/0332 §2).
     - ``brokenDimension``: An associative dimension's live reference to an object that is gone.
     - ``missingTextStyle``: A text or a table naming a text style the project does not have.
     - ``missingDimensionStyle``: A dimension naming a dimension style the project does not have.
     """
     BROKEN_LINK = "brokenLink"
     BROKEN_HATCH = "brokenHatch"
+    MISSING_CUTOUT = "missingCutout"
+    HATCH_TEXT_CYCLE = "hatchTextCycle"
     BROKEN_DIMENSION = "brokenDimension"
     MISSING_TEXT_STYLE = "missingTextStyle"
     MISSING_DIMENSION_STYLE = "missingDimensionStyle"
 
 
-AuditCodeName = Literal["brokenLink", "brokenHatch", "brokenDimension", "missingTextStyle", "missingDimensionStyle"]
+AuditCodeName = Literal["brokenLink", "brokenHatch", "missingCutout", "hatchTextCycle", "brokenDimension", "missingTextStyle", "missingDimensionStyle"]
 """The names of :class:`AuditCode`, for a plain string."""
 
 
@@ -1101,6 +1105,27 @@ class GrantRole(_StrEnum):
 
 GrantRoleName = Literal["viewer", "commenter", "editor", "manager"]
 """The names of :class:`GrantRole`, for a plain string."""
+
+
+class HatchDrawOrder(_StrEnum):
+    """Where a new hatch is drawn among the objects of its layer (docs/adr/0332 §1): the draw order is the layer's own
+    (docs/adr/0260 §4); across layers the layers' order decides.
+
+    - ``none``: Atama: as a new object, over what its layer had.
+    - ``back``: Arkaya: under every object of its layer.
+    - ``front``: Öne: over every object of its layer.
+    - ``behindBoundary``: Sınırın arkasında: just under its boundary's objects on its layer.
+    - ``aboveBoundary``: Sınırın önünde: just over its boundary's objects on its layer.
+    """
+    NONE = "none"
+    BACK = "back"
+    FRONT = "front"
+    BEHIND_BOUNDARY = "behindBoundary"
+    ABOVE_BOUNDARY = "aboveBoundary"
+
+
+HatchDrawOrderName = Literal["none", "back", "front", "behindBoundary", "aboveBoundary"]
+"""The names of :class:`HatchDrawOrder`, for a plain string."""
 
 
 class HatchPatternType(_StrEnum):
@@ -10017,6 +10042,8 @@ class EntitiesHatch(_Model):
         layer_id: The layer the hatches go to.
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override, `#RRGGBB`. Absent: the layer's colour (katmana göre).
+        draw_order: Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+            `none`.
         expected_revision: The document revision the input was prepared against, as decimal
             text. When given and the document is no longer at it, nothing is
             written and the answer is `conflict`.
@@ -10024,16 +10051,20 @@ class EntitiesHatch(_Model):
         line_weight: Its own line weight, paper mm (0 the thinnest, at most 100), for what
             is drawn with lines. Absent: the layer's. Unit: paper-mm.
         symbol: Its own symbol, a library item's id. Absent: the layer's style.
+        transparency: The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
+            HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's. Unit: 1.
     """
     region: HatchRegion
     pattern: HatchPatternSpec
     layer_id: str
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
+    draw_order: HatchDrawOrder | HatchDrawOrderName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10044,6 +10075,8 @@ class EntitiesHatch(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.draw_order is not UNSET:
+            out["drawOrder"] = None if self.draw_order is None else _enum_out(self.draw_order)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
@@ -10052,6 +10085,8 @@ class EntitiesHatch(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -10062,10 +10097,12 @@ class EntitiesHatch(_Model):
             layer_id=data["layerId"],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
+            draw_order=UNSET if "drawOrder" not in data else None if data["drawOrder"] is None else _enum_in(HatchDrawOrder, data["drawOrder"]),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -17292,10 +17329,14 @@ class NewObject(_Model):
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre). Unit: paper-mm.
+        order: Its place in its layer's draw order (`ObjectLook.order`, docs/adr/0260 §4): Tarama's Sıra (docs/adr/0332 §1).
+            Absent: 0, drawn by its slot after the objects before it. Unit: count.
         symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of its layer's style: an object template's (docs/adr/0176).
             The id is not looked up: the libraries are the host's. Absent: the
             layer's style.
+        transparency: Its own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0260 §2): Tarama's
+            (docs/adr/0332 §1). Absent: its layer's. Unit: 1.
     """
     geometry: EntityGeometry
     attrs: dict[str, str] | None | Unset = UNSET
@@ -17305,7 +17346,9 @@ class NewObject(_Model):
     label_scale: float | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17324,8 +17367,12 @@ class NewObject(_Model):
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
         return out
 
     @classmethod
@@ -17339,7 +17386,9 @@ class NewObject(_Model):
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
         )
 
 
@@ -31845,6 +31894,8 @@ __all__ = [
     "GridTableEdit",
     "HatchAssoc",
     "HatchCurve",
+    "HatchDrawOrder",
+    "HatchDrawOrderName",
     "HatchEdit",
     "HatchEntity",
     "HatchEntityGeometry",

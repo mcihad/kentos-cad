@@ -1678,8 +1678,8 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_DRAWING_AUDIT_VERSION,
             title: "Denetle".into(),
             summary: "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). \
-                      Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). \
-                      fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. \
+                      Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan tarama (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle; döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). \
+                      fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar ve tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. \
                       Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. \
                       Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -2787,7 +2787,8 @@ pub fn catalog() -> CommandCatalog {
                       region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. \
                       pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), \
                       origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). \
-                      Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
+                      transparency (0–0,9) taramaların kendi saydamlığı; drawOrder katmanın içindeki sıra: none (yeni nesne gibi), back, front, behindBoundary ve aboveBoundary (sınırının kapalı nesnesi ve adalarının hemen altı ya da üstü; sınır başka katmandaysa sıra yazılmaz, order_other_layer); sınıra gelen sıra order_limit. \
+                      Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa ya da bütün bölgeler birlikte 200 000'den çok çizgi verirse pattern_too_dense; bölge yoksa not_enclosed. İş olarak çalışırken noktalar ve bölgeler arasında durdurulabilir (cancelled). \
                       Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],

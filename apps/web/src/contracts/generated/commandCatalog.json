@@ -179524,7 +179524,7 @@
       "id": "cad.drawing.audit",
       "version": 1,
       "title": "Denetle",
-      "summary": "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan tarama (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle; döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar ve tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -179587,6 +179587,16 @@
               {
                 "const": "brokenHatch",
                 "description": "An associative hatch one of whose boundary objects is gone.",
+                "type": "string"
+              },
+              {
+                "const": "missingCutout",
+                "description": "A hatch leaving open a text that is gone (docs/adr/0332 §2).",
+                "type": "string"
+              },
+              {
+                "const": "hatchTextCycle",
+                "description": "A hatch leaving open its own linked label: a cycle (docs/adr/0332 §2).",
                 "type": "string"
               },
               {
@@ -179723,6 +179733,16 @@
               {
                 "const": "brokenHatch",
                 "description": "An associative hatch one of whose boundary objects is gone.",
+                "type": "string"
+              },
+              {
+                "const": "missingCutout",
+                "description": "A hatch leaving open a text that is gone (docs/adr/0332 §2).",
+                "type": "string"
+              },
+              {
+                "const": "hatchTextCycle",
+                "description": "A hatch leaving open its own linked label: a cycle (docs/adr/0332 §2).",
                 "type": "string"
               },
               {
@@ -350498,7 +350518,7 @@
       "id": "cad.entities.hatch",
       "version": 1,
       "title": "Tara",
-      "summary": "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). transparency (0–0,9) taramaların kendi saydamlığı; drawOrder katmanın içindeki sıra: none (yeni nesne gibi), back, front, behindBoundary ve aboveBoundary (sınırının kapalı nesnesi ve adalarının hemen altı ya da üstü; sınır başka katmandaysa sıra yazılmaz, order_other_layer); sınıra gelen sıra order_limit. Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa ya da bütün bölgeler birlikte 200 000'den çok çizgi verirse pattern_too_dense; bölge yoksa not_enclosed. İş olarak çalışırken noktalar ve bölgeler arasında durdurulabilir (cancelled). Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -350523,6 +350543,36 @@
               "center"
             ],
             "type": "string"
+          },
+          "HatchDrawOrder": {
+            "description": "Where a new hatch is drawn among the objects of its layer (docs/adr/0332 §1): the draw order is the layer's own\n(docs/adr/0260 §4); across layers the layers' order decides.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "Atama: as a new object, over what its layer had.",
+                "type": "string"
+              },
+              {
+                "const": "back",
+                "description": "Arkaya: under every object of its layer.",
+                "type": "string"
+              },
+              {
+                "const": "front",
+                "description": "Öne: over every object of its layer.",
+                "type": "string"
+              },
+              {
+                "const": "behindBoundary",
+                "description": "Sınırın arkasında: just under its boundary's objects on its layer.",
+                "type": "string"
+              },
+              {
+                "const": "aboveBoundary",
+                "description": "Sınırın önünde: just over its boundary's objects on its layer.",
+                "type": "string"
+              }
+            ]
           },
           "HatchOrigin": {
             "description": "Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).",
@@ -350959,6 +351009,17 @@
               "null"
             ]
           },
+          "drawOrder": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HatchDrawOrder"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:\n`none`."
+          },
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal\ntext. When given and the document is no longer at it, nothing is\nwritten and the answer is `conflict`.",
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -351001,6 +351062,17 @@
               "string",
               "null"
             ]
+          },
+          "transparency": {
+            "description": "The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's\nHPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.",
+            "format": "double",
+            "maximum": 0.9,
+            "minimum": 0.0,
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
           }
         },
         "required": [
@@ -358032,6 +358104,8 @@
           "invalid_region",
           "invalid_gap",
           "not_annotative",
+          "invalid_transparency",
+          "order_limit",
           "not_a_layer",
           "layer_locked",
           "invalid_line_weight",
@@ -358042,7 +358116,10 @@
           "not_closed",
           "layer_hidden",
           "gaps_closed",
-          "islands_not_nested"
+          "islands_not_nested",
+          "order_other_layer",
+          "cutout_gone",
+          "hatch_text_cycle"
         ]
       },
       "examples": [
@@ -361304,12 +361381,32 @@
                 ],
                 "x-unit": "paper-mm"
               },
+              "order": {
+                "description": "Its place in its layer's draw order (`ObjectLook.order`, docs/adr/0260 §4): Tarama's Sıra (docs/adr/0332 §1).\nAbsent: 0, drawn by its slot after the objects before it.",
+                "format": "int32",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "symbol": {
                 "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
                 "type": [
                   "string",
                   "null"
                 ]
+              },
+              "transparency": {
+                "description": "Its own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0260 §2): Tarama's\n(docs/adr/0332 §1). Absent: its layer's.",
+                "format": "double",
+                "maximum": 0.9,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
               }
             },
             "required": [
@@ -369648,6 +369745,7 @@
       "capabilities": {
         "refusals": [
           "no_objects",
+          "invalid_transparency",
           "not_finite",
           "too_few_corners",
           "too_few_points",
@@ -482131,6 +482229,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı."
+    },
+    {
+      "code": "cutout_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taramanın boş bıraktığı yazı silindi; tarama artık orayı da tarar."
+    },
+    {
+      "code": "hatch_text_cycle",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Taramanın kendi bağlı etiketi boş bırakılmaz (döngü): yeri taramadan okunur; etiket taramanın listesinden çıkarıldı."
+    },
+    {
+      "code": "order_other_layer",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tarama sınırından başka katmanda; önünde mi arkasında mı çizileceğini katmanların sırası belirler."
     },
     {
       "code": "curves_approximated",

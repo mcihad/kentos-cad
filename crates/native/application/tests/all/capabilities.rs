@@ -65,6 +65,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
         "cad.entities.hatch",
+        "hatch_text_cycle",
+        "taramanın kendi bağlı etiketi: durum dosyasının kurulumu kalıcı kimlik taşımaz, yazı taramaya bağlanamaz; kentos-domain'in hatch_texts testinde (ADR 0332)",
+    ),
+    (
+        "cad.entities.hatch",
         "invalid_region",
         "1000'den çok ek nokta: durum dosyasında bin noktalık bir girdi yazmaya değmez; ret sınırın kendisidir.",
     ),

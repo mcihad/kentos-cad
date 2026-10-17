@@ -726,6 +726,15 @@ cases.append({
 })
 
 cases.append({
+    "name": "nesnenin saydamlığı 0 ile 0,9 arasında olmalı (Tarama'nın, docs/adr/0332 §1): invalid_transparency",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(XLINE), {**O(RAY), "transparency": 1.5}]},
+         "result": failed("invalid_transparency", "Saydamlık 1.5; 0 ile 0,9 arasında olmalı (%0–90).", "objects[1].transparency"),
+         "expect": NOTHING},
+    ],
+})
+
+cases.append({
     "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; çakışma katmandan önce",
     "steps": [
         {"op": "captureRevision", "as": "r0"},

@@ -120,6 +120,7 @@ fn pointed_scenes() -> Vec<Pointed> {
     all.extend(crate::topology_scenes::pointed());
     all.extend(crate::hatch_scenes::pointed());
     all.extend(crate::hatch_pattern_scenes::pointed());
+    all.extend(crate::hatch_look_scenes::pointed());
     all.extend(crate::selection_scenes::pointed());
     all.extend(crate::point_calc_scenes::pointed());
     all.extend(crate::raster_scenes::pointed());
@@ -451,6 +452,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::hatch_scenes::scenes());
     all.extend(crate::hatch_boundary_scenes::scenes());
     all.extend(crate::hatch_pattern_scenes::scenes());
+    all.extend(crate::hatch_look_scenes::scenes());
     all.extend(crate::selection_scenes::scenes());
     all.extend(crate::point_calc_scenes::scenes());
     all.extend(crate::stationing_scenes::scenes());

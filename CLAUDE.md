@@ -567,6 +567,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çizim ölçeğiyle taşınır); `cad.hatches.edit`'in Deseni değiştir ve Taramaları hizala'sı; Tarama'nın Ölçek tabanı (E),
   Başlangıç (S), Ölçekli (L), Özellik al (Z), Taramayı düzenle'nin Hizala (H)'sı; `.kcad` şema 71, `FORMATS_VERSION` 80
   (ADR 0331);
+  taramanın saydamlığı, sırası, boş bıraktığı yazılar ve bütçesi: `cad.entities.hatch`'in `transparency`'si ve `drawOrder`'ı
+  (none, back, front, behindBoundary, aboveBoundary; katmanın içinde, sınır başka katmandaysa `order_other_layer`), `NewObject`'in
+  `transparency` ve `order`'ı, Tarama'nın Saydamlık (M) ve Sıra (O); yeniden kesilen taramanın bağlı yazıları aynı adımda turlarla,
+  kendi etiketi boş bırakılmaz, `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'de `missingCutout` ve `hatchTextCycle`; komutun
+  toplam 200 000 çizgilik bütçesi ve işte iptal (`Stop::Cancelled`), ekranın tonu paftayı değiştirmez (ADR 0332);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1124,6 +1129,7 @@ cargo test -p kentos-desktop text_outputs; KENTOS_SHOTS_ONLY=yazi-duzeni,yazi-li
 KENTOS_SHOTS_ONLY=tarama-yuz-bagi,tarama-kesin-sinir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-domain --test all hatch_boundaries; cargo test -p kentos-formats --test dxf_write a_hatch_boundary   # taramanın kaynak sınırı (yay, elips, NURBS kesin; DXF HATCH kenarlarıyla) ve çizgilerle kapanan yüzün bağı, .run/shots/arac-tarama-yuz-bagi-*, -kesin-sinir-* (ADR 0328)
 python3 scripts/fixtures/hatch_edit_cases.py --check; KENTOS_SHOTS_ONLY=tarama-ic-ice,tarama-bosluk,tarama-duzenle cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # cad.hatches.edit'in 40 durumu KentOS kodu olmadan; iç içe adalar, boşluğu kapanan oda ve Taramayı düzenle'nin resimleri, .run/shots/arac-tarama-* (ADR 0329)
 python3 scripts/fixtures/hatch_pattern_file_cases.py --check; KENTOS_SHOTS_ONLY=tarama-desenleri,tarama-hizala,tarama-baslangic,tarama-olcekli,tarama-desen-proje cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # PAT okuma ve yazma, cad.hatchpatterns.edit'in 30 durumu KentOS kodu olmadan; Tarama desenleri, Hizala, Başlangıç, ölçekli tarama ve Desen menüsünün proje desenleri, .run/shots/arac-tarama-* (ADR 0331)
+cargo test -p kentos-domain --test all hatch_texts; cargo test -p kentos-native-application --lib budget_tests; KENTOS_SHOTS_ONLY=tarama-saydam,tarama-yazi-tasindi,tarama-sira cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # boş bırakılan yazıların izlenmesi ve döngüsü, bütçe ve iptal; yarı saydam dolu tarama sınırının arkasında, maskenin örttüğü desen, taşınan yazının boşluğu ve Sıra menüsü, .run/shots/arac-tarama-* (ADR 0332)
 KENTOS_SHOTS_ONLY=olcu-bag,olcu-yakin,olcu-izleme,olcu-zincir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # bağ vurgusu (yakında kâğıt zeminde de), izleyen ölçüler ve zincir, .run/shots/arac-olcu-bag-*, -yakin-*, -izleme-*, -zincir-* (ADR 0320)
 cargo test --release -p kentos-desktop label_picture::tests::timing -- --ignored --nocapture   # 1 300 eğik yazının resmi, haleyle ve halesiz (ADR 0055'in 17 Ekim eki)
 KENTOS_SHOTS_ONLY=blok-dinamik,blok-kitaplik,blok-kitaplik-kategori cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test -p kentos-geometry-core --test all block_dynamic   # KentOS blok kitaplığı ve dinamik blokların değerleri (.run/shots/arac-blok-*), varyantlar çekirdekte (ADR 0318)

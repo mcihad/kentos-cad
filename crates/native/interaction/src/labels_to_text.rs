@@ -225,6 +225,8 @@ impl LabelsToText {
             label_of: None,
             label_scale: None,
             symbol: None,
+            order: None,
+            transparency: None,
         };
         let mut objects: Vec<NewObject> = r
             .texts

@@ -8194,6 +8194,5152 @@
       ]
     },
     {
+      "name": "Saydamlık %40: taramanın kendi saydamlığı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "transparency": 0.4
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "transparency": 0.4
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saydamlık 0: yazılmaz, katmanınki",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "transparency": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saydamlık planda da görünür",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "transparency": 0.25
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "hatch",
+                  "id": 0,
+                  "layerId": "tarama",
+                  "attrs": {},
+                  "ring": [
+                    {
+                      "x": 487040,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487060,
+                      "y": 4420000
+                    },
+                    {
+                      "x": 487060,
+                      "y": 4420020
+                    },
+                    {
+                      "x": 487040,
+                      "y": 4420020
+                    }
+                  ],
+                  "holes": [
+                    [
+                      {
+                        "x": 487044,
+                        "y": 4420004
+                      },
+                      {
+                        "x": 487044,
+                        "y": 4420008
+                      },
+                      {
+                        "x": 487048,
+                        "y": 4420008
+                      },
+                      {
+                        "x": 487048,
+                        "y": 4420004
+                      }
+                    ]
+                  ],
+                  "pattern": {
+                    "type": "pattern",
+                    "angle": 0.0,
+                    "spacing": 1,
+                    "name": "ANSI31",
+                    "scale": 0.5,
+                    "lines": [
+                      {
+                        "angle": 45,
+                        "origin": [
+                          0,
+                          0
+                        ],
+                        "offset": [
+                          0,
+                          3.175
+                        ]
+                      }
+                    ]
+                  },
+                  "transparency": 0.25
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıra atama: yeni nesne gibi, sıra yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "drawOrder": "none"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıra arkaya: katmanın bütün nesnelerinin altında (en küçük 0 − 1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "back"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": -1
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ],
+            "order": 5
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ],
+            "order": 3
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sıra öne: katmanın bütün nesnelerinin üstünde (en büyük 5 + 1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "front"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": 6
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ],
+            "order": 5
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ],
+            "order": 3
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sınırın arkasına: kapalı nesnesinin ve adasının en küçüğünün altında (3 − 1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "behindBoundary"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": 2
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ],
+            "order": 5
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ],
+            "order": 3
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sınırın önüne: kapalı nesnesinin ve adasının en büyüğünün üstünde (5 + 1)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "aboveBoundary"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": 6
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ],
+            "order": 5
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ],
+            "order": 3
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sınırın arkasına, sırası yazılmamış sınır: 0 − 1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "behindBoundary"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": -1
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınırın arkasına, sınır başka katmanda: sıra yazılmaz, katmanların sırası söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "drawOrder": "behindBoundary"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "order_other_layer",
+                "message": "Tarama sınırından başka katmanda: önünde mi arkasında mı çizileceğini katmanların sırası belirler; taramanın katmanını Katmanlar panelinde sınırınkinin altına alın.",
+                "path": "drawOrder"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş katmanda arkaya: 0 − 1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "drawOrder": "back"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "order": -1
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saydamlık ve sıra birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "transparency": 0.5,
+            "drawOrder": "behindBoundary"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "yapi",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487044,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487044,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420008
+                    },
+                    {
+                      "x": 487048,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1,
+                  "name": "ANSI31",
+                  "scale": 0.5,
+                  "lines": [
+                    {
+                      "angle": 45,
+                      "origin": [
+                        0,
+                        0
+                      ],
+                      "offset": [
+                        0,
+                        3.175
+                      ]
+                    }
+                  ]
+                },
+                "transparency": 0.5,
+                "order": -1
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıra sınırda: en öndeki 2³¹ − 1'den öne alınamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "yapi",
+            "drawOrder": "front"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "order_limit",
+              "message": "Katmanın çizim sırası sınıra geldi; tarama daha arkaya ya da öne alınamaz. Nesneleri ters yöne taşıyarak yer açın.",
+              "path": "drawOrder"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ],
+            "order": 2147483647
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Saydamlık 0,9'dan büyük olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "transparency": 0.95
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_transparency",
+              "message": "Saydamlık 0.95; 0 ile 0,9 arasında olmalı (%0–90).",
+              "path": "transparency"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saydamlık eksi olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "associative": false
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama",
+            "transparency": -0.1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_transparency",
+              "message": "Saydamlık -0.1; 0 ile 0,9 arasında olmalı (%0–90).",
+              "path": "transparency"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş bırakılan yazı silinince taramanın listesinden çıkar; silme söyler (cutout_gone)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Bölge komutları",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "alan",
+            "name": "Alan",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "tarama",
+            "name": "Tarama",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "grup",
+            "name": "Grup",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "alt",
+                "name": "Alt",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 10,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487010,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487010,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 13,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487000,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487000,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 14,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487004,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420003
+              },
+              {
+                "x": 487006,
+                "y": 4420005
+              },
+              {
+                "x": 487004,
+                "y": 4420005
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 15,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 16,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487030,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 17,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487030,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 18,
+            "layerId": "sinir",
+            "attrs": {},
+            "a": {
+              "x": 487020,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487020,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 19,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487025,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487025,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "yapi",
+            "attrs": {
+              "Ada": "5"
+            },
+            "pts": [
+              {
+                "x": 487040,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420000
+              },
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487040,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 21,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487044,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420004
+              },
+              {
+                "x": 487048,
+                "y": 4420008
+              },
+              {
+                "x": 487044,
+                "y": 4420008
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 22,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 23,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487080,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 24,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487080,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 25,
+            "layerId": "gizli",
+            "attrs": {},
+            "a": {
+              "x": 487070,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487070,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 26,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487090,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487100,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "polygon",
+            "id": 27,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420000
+              },
+              {
+                "x": 487150,
+                "y": 4420020
+              },
+              {
+                "x": 487130,
+                "y": 4420020
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 28,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487134,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420004
+              },
+              {
+                "x": 487146,
+                "y": 4420016
+              },
+              {
+                "x": 487134,
+                "y": 4420016
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 29,
+            "layerId": "yapi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 487138,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420008
+              },
+              {
+                "x": 487142,
+                "y": 4420012
+              },
+              {
+                "x": 487138,
+                "y": 4420012
+              }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 30,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "line",
+            "id": 31,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420000
+            },
+            "b": {
+              "x": 487120,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 32,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487120,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420008
+            }
+          },
+          {
+            "kind": "line",
+            "id": 33,
+            "layerId": "yapi",
+            "attrs": {},
+            "a": {
+              "x": 487110,
+              "y": 4420008
+            },
+            "b": {
+              "x": 487110,
+              "y": 4420000.125
+            }
+          },
+          {
+            "kind": "text",
+            "id": 40,
+            "layerId": "yapi",
+            "attrs": {},
+            "p": {
+              "x": 487052,
+              "y": 4420014
+            },
+            "text": "5",
+            "height": 1,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 40,
+          "as": "yazi"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "texts": true
+            },
+            "pattern": {
+              "name": "ANSI31"
+            },
+            "layerId": "tarama"
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uid:yazi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:yazi"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "cutout_gone",
+                "message": "1 taramanın boş bıraktığı yazı silindi; taramalar artık orayı da tarar."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              41
+            ],
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "Bilinmeyen desen",
       "steps": [
         {

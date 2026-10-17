@@ -377,6 +377,9 @@ pub(crate) struct History {
 #[derive(Debug)]
 pub struct Group(Option<u64>);
 
+/// The most rounds of linked texts and hatches after a step (docs/adr/0332 §2).
+const HATCH_TEXT_ROUNDS: usize = 4;
+
 impl Document {
     /// Runs `body` as one undo step named `label`, all or nothing.
     ///
@@ -613,8 +616,22 @@ impl Document {
         let follow = self.follow_links(ops);
         ops.extend(follow);
         // After the linked texts: a text a hatch leaves open may have moved with its object.
-        let ties = self.follow_hatches(ops);
-        ops.extend(ties);
+        let mut ties = self.follow_hatches(ops);
+        ops.extend(ties.iter().cloned());
+        // A hatch cut again moves the texts linked to it, which may be left open by other hatches (docs/adr/0332 §2):
+        // a few rounds, each from the last one's changes; a hatch's own label is never left open, so they settle.
+        for _ in 0..HATCH_TEXT_ROUNDS {
+            if ties.is_empty() {
+                break;
+            }
+            let texts = self.follow_links(&ties);
+            if texts.is_empty() {
+                break;
+            }
+            ops.extend(texts.iter().cloned());
+            ties = self.follow_hatches(&texts);
+            ops.extend(ties.iter().cloned());
+        }
         // After the hatches: an array's items and path (docs/adr/0300 §3), before the dimensions tied to the items.
         let arrays = self.follow_arrays(ops);
         ops.extend(arrays);

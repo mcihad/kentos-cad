@@ -18,7 +18,7 @@ use kentos_contracts::{
     EntitiesCreatePlan, EntitiesCreated, EntitiesHatch, EntityGeometry, EntityId, HatchAssoc,
     HatchPattern as ContractPattern, HatchPatternSpec, HatchPatternType, HatchRegion, HatchWay,
     TrimBoundaries, Vec2 as Point,
-    IslandStyle,
+    Entity, HatchDrawOrder, IslandStyle,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
@@ -751,6 +751,7 @@ pub(crate) fn regions(
     store: &Store,
     region: &HatchRegion,
     cache: &mut RegionCache,
+    stopped: &dyn Fn() -> bool,
 ) -> Result<(Vec<Planned>, Vec<CommandWarning>), Stop> {
     let font = drawing_font(doc.settings().drawing_font);
     let style = region.islands_taken();
@@ -783,6 +784,10 @@ pub(crate) fn regions(
             };
             let mut planned: Vec<Planned> = Vec::new();
             for (k, at) in std::iter::once(at).chain(also_at.iter()).enumerate() {
+                // A job asked to stop stops between the points (docs/adr/0332 §3).
+                if stopped() {
+                    return Err(Stop::Cancelled);
+                }
                 let p = Vec2::new(at.x, at.y);
                 let found: Vec<Planned> = if lines {
                     let (index, bridged) = cache.faces(
@@ -1210,7 +1215,9 @@ fn check_hatch(
     doc: &Document,
     store: Option<&Store>,
     input: &EntitiesHatch,
+    job: Option<&crate::jobs::Progress>,
 ) -> Result<(Vec<Planned>, EntitiesCreate, Vec<CommandWarning>), Stop> {
+    let stopped = || job.is_some_and(crate::jobs::Progress::stopped);
     let pattern = pattern_of_spec(&input.pattern, doc.settings())?;
     let (associative, _way) = match &input.region {
         HatchRegion::Point {
@@ -1276,6 +1283,15 @@ fn check_hatch(
             (associative.unwrap_or(true), HatchWay::Object)
         }
     };
+    if let Some(x) = input.transparency
+        && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+    {
+        return Err(refuse(
+            codes::INVALID_TRANSPARENCY,
+            format!("Saydamlık {x}; 0 ile 0,9 arasında olmalı (%0–90)."),
+            "transparency",
+        ));
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     match &input.region {
         HatchRegion::Point {
@@ -1312,7 +1328,7 @@ fn check_hatch(
         }
     };
     let (planned, mut warnings) =
-        regions(doc, store, &input.region, &mut RegionCache::default())?;
+        regions(doc, store, &input.region, &mut RegionCache::default(), &stopped)?;
     warnings.extend(planned.iter().filter_map(|p| gaps_said(doc, p)));
     let core = core_pattern(&pattern);
     let rings: Vec<Vec<Vec2>> = planned.iter().map(|p| ring_points(&p.area.outer)).collect();
@@ -1325,7 +1341,17 @@ fn check_hatch(
         })
     });
     let mut geometries = Vec::with_capacity(planned.len());
-    for (p, ring) in planned.iter().zip(rings) {
+    let mut bounding: Vec<Vec<EntityId>> = Vec::with_capacity(planned.len());
+    let count = planned.len() as u64;
+    let mut lines = 0.0;
+    for (k, (p, ring)) in planned.iter().zip(rings).enumerate() {
+        // Region by region, a job says how far it came and stops when asked (docs/adr/0332 §3).
+        if stopped() {
+            return Err(Stop::Cancelled);
+        }
+        if let Some(job) = job {
+            job.set(k as u64, count);
+        }
         let holes: Vec<Vec<Vec2>> = p.area.holes.iter().map(ring_points).collect();
         let mut pattern = pattern.clone();
         pattern.origin = origin_of(input.pattern.origin.as_ref(), box_of([ring.as_slice()]), all);
@@ -1336,7 +1362,23 @@ fn check_hatch(
                 "pattern",
             ));
         }
-        let (assoc, boundary) = hatch_ties_of(doc, store, p, &input.region, associative);
+        // Sınırın arkasında / önünde (docs/adr/0332 §1) asks for the boundary's objects even when the hatch follows nothing.
+        let bound = matches!(
+            input.draw_order,
+            Some(HatchDrawOrder::BehindBoundary | HatchDrawOrder::AboveBoundary)
+        );
+        // The whole command's budget (docs/adr/0332 §3): what a sheet cuts into lines at most, over every region.
+        lines += lines_over(&ring, &core);
+        if lines > MAX_COMMAND_LINES {
+            return Err(refuse(
+                codes::PATTERN_TOO_DENSE,
+                "Bu taramalar birlikte 200 000'den çok çizgi verir; bölgeleri birkaç komutla tarayın, ölçeği büyütün ya da başka bir desen seçin.".into(),
+                "pattern",
+            ));
+        }
+        let (assoc, boundary) = hatch_ties_of(doc, store, p, &input.region, associative || bound);
+        bounding.push(assoc.as_ref().map(boundary_objects).unwrap_or_default());
+        let assoc = if associative { assoc } else { None };
         geometries.push(EntityGeometry::Hatch {
             ring: wire(&ring),
             holes: (!holes.is_empty()).then(|| holes.iter().map(|h| wire(h)).collect()),
@@ -1346,13 +1388,117 @@ fn check_hatch(
             annotative: annotative.clone(),
         });
     }
-    let objects = creating::input(
+    let mut objects = creating::input(
         &input.layer_id,
         geometries,
         &input.look,
         CreateOperation::Hatch,
     );
+    let orders = hatch_orders(doc, &input.layer_id, input.draw_order, &bounding, &mut warnings)?;
+    for (o, order) in objects.objects.iter_mut().zip(orders) {
+        o.transparency = input.transparency.filter(|x| *x > 0.0);
+        o.order = order;
+    }
     Ok((planned, objects, warnings))
+}
+
+/// The most lines one `cad.entities.hatch` writes over all its regions (docs/adr/0332 §3): what a sheet's PDF cuts
+/// a hatch batch into at most (kentos-plot's `MAX_HATCH_PIECES`).
+pub(crate) const MAX_COMMAND_LINES: f64 = 200_000.0;
+
+/// How many lines a pattern's families draw across a ring, all families together (their whole lines, before the
+/// ring cuts them); none for a solid or a gradient.
+pub(crate) fn lines_over(ring: &[Vec2], p: &kentos_geometry_core::entity::HatchPattern) -> f64 {
+    use kentos_geometry_core::geom::hatch_pattern::paints;
+    paints(p)
+        .iter()
+        .filter(|f| f.spacing > 0.0)
+        .map(|f| {
+            let r = f.angle.to_radians();
+            let (c, s) = (r.cos(), r.sin());
+            let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+            for q in ring {
+                let v = -q.x * s + q.y * c;
+                lo = lo.min(v);
+                hi = hi.max(v);
+            }
+            ((hi - lo) / f.spacing).floor() + 1.0
+        })
+        .sum()
+}
+
+/// The objects a hatch's region was found from: its closed object, its face's line work and its islands (not the
+/// texts it leaves open).
+fn boundary_objects(a: &HatchAssoc) -> Vec<EntityId> {
+    a.outer
+        .iter()
+        .chain(&a.bounds)
+        .chain(&a.islands)
+        .copied()
+        .collect()
+}
+
+/// Each new hatch's place in its layer's draw order (docs/adr/0332 §1; AutoCAD's HPDRAWORDER): none, under or over
+/// every object of the layer, or just under or over its boundary's objects there. A boundary only on other layers
+/// leaves the hatch as a new object and says that the layers' order decides (`order_other_layer`).
+fn hatch_orders(
+    doc: &Document,
+    layer_id: &str,
+    how: Option<HatchDrawOrder>,
+    bounding: &[Vec<EntityId>],
+    warnings: &mut Vec<CommandWarning>,
+) -> Result<Vec<Option<i32>>, Stop> {
+    let how = how.unwrap_or_default();
+    if how == HatchDrawOrder::None {
+        return Ok(vec![None; bounding.len()]);
+    }
+    let order = |e: &Entity| i64::from(e.base().look.order.unwrap_or(0));
+    let layer: Vec<i64> = doc.by_layer(layer_id).map(order).collect();
+    let (low, high) = (
+        layer.iter().copied().min().unwrap_or(0),
+        layer.iter().copied().max().unwrap_or(0),
+    );
+    let mut elsewhere = false;
+    let mut out = Vec::with_capacity(bounding.len());
+    for objects in bounding {
+        let at: Option<i64> = match how {
+            HatchDrawOrder::None => None,
+            HatchDrawOrder::Back => Some(low - 1),
+            HatchDrawOrder::Front => Some(high + 1),
+            HatchDrawOrder::BehindBoundary | HatchDrawOrder::AboveBoundary => {
+                let mine: Vec<i64> = objects
+                    .iter()
+                    .filter_map(|id| doc.slot_of(Uuid::from_bytes(id.0)).and_then(|s| doc.get(s)))
+                    .filter(|e| e.base().layer_id == layer_id)
+                    .map(order)
+                    .collect();
+                elsewhere |= mine.is_empty() && !objects.is_empty();
+                if how == HatchDrawOrder::BehindBoundary {
+                    mine.iter().copied().min().map(|o| o - 1)
+                } else {
+                    mine.iter().copied().max().map(|o| o + 1)
+                }
+            }
+        };
+        if let Some(o) = at
+            && !(i64::from(i32::MIN)..=i64::from(i32::MAX)).contains(&o)
+        {
+            return Err(refuse(
+                codes::ORDER_LIMIT,
+                "Katmanın çizim sırası sınıra geldi; tarama daha arkaya ya da öne alınamaz. Nesneleri ters yöne taşıyarak yer açın.".into(),
+                "drawOrder",
+            ));
+        }
+        out.push(at.and_then(|o| i32::try_from(o).ok()).filter(|o| *o != 0));
+    }
+    if elsewhere {
+        warnings.push(CommandWarning {
+            code: codes::ORDER_OTHER_LAYER.into(),
+            message: "Tarama sınırından başka katmanda: önünde mi arkasında mı çizileceğini katmanların sırası belirler; taramanın katmanını Katmanlar panelinde sınırınkinin altına alın.".into(),
+            path: Some("drawOrder".into()),
+        });
+    }
+    Ok(out)
 }
 
 /// The checks of a point region given elsewhere (Sınırı yeniden seç, docs/adr/0329 §4), its paths under `at`: the
@@ -1468,7 +1614,7 @@ pub mod entities_hatch {
     use super::*;
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesHatch) -> CommandResult<()> {
-        match check_hatch(cx.doc, cx.store, input) {
+        match check_hatch(cx.doc, cx.store, input, cx.job) {
             Ok((_, objects, warnings)) => {
                 creating::with_warnings(creating::validate(cx, &objects), warnings)
             }
@@ -1489,7 +1635,7 @@ pub mod entities_hatch {
         store: Option<&Store>,
         input: &EntitiesHatch,
     ) -> CommandResult<EntitiesCreatePlan> {
-        match check_hatch(doc, store, input) {
+        match check_hatch(doc, store, input, None) {
             Ok((_, objects, warnings)) => {
                 creating::with_warnings(creating::plan(doc, &objects), warnings)
             }
@@ -1514,7 +1660,7 @@ pub mod entities_hatch {
                 &own
             }
         };
-        regions(doc, store, &input.region, cache)
+        regions(doc, store, &input.region, cache, &|| false)
             .map(|(planned, _)| planned)
             .unwrap_or_default()
     }
@@ -1528,12 +1674,80 @@ pub mod entities_hatch {
             kentos_contracts::CAD_ENTITIES_HATCH,
             kentos_contracts::CAD_ENTITIES_HATCH_VERSION,
             input,
-            |cx, input| match check_hatch(cx.doc, cx.store, &input) {
+            |cx, input| match check_hatch(cx.doc, cx.store, &input, cx.job) {
                 Ok((_, objects, warnings)) => {
                     creating::with_warnings(creating::execute(cx, objects), warnings)
                 }
                 Err(stop) => stop.into(),
             },
         )
+    }
+}
+
+#[cfg(test)]
+mod budget_tests {
+    use super::*;
+
+    /// A 100 m square of lines 1 m apart: 101 lines; crossed, 202; the budget is the sum over every region.
+    #[test]
+    fn the_lines_a_pattern_draws_are_counted_family_by_family() {
+        let ring = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(100.0, 0.0),
+            Vec2::new(100.0, 100.0),
+            Vec2::new(0.0, 100.0),
+        ];
+        let lines = |kind: HatchPatternType| {
+            core_pattern(&ContractPattern {
+                kind,
+                angle: 0.0,
+                spacing: 1.0,
+                name: None,
+                scale: None,
+                lines: None,
+                gradient: None,
+                origin: None,
+            })
+        };
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Lines)), 101.0);
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Cross)), 202.0);
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Solid)), 0.0);
+        // A thousand such squares pass the budget's 200 000 at the 991st.
+        let crossed = lines_over(&ring, &lines(HatchPatternType::Cross));
+        assert!(990.0 * crossed < MAX_COMMAND_LINES && 991.0 * crossed > MAX_COMMAND_LINES);
+    }
+
+    /// A hatch run as a job asked to stop stops between its points and writes nothing (docs/adr/0332 §3).
+    #[test]
+    fn a_hatch_job_asked_to_stop_writes_nothing() {
+        let snapshot = serde_json::json!({"format":"kentos.document","version":1,"name":"İptal","settings":{"srid":5256,
+            "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":100},
+            "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A","type":"layer","visible":true,"locked":false,
+            "expanded":true,"style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
+            "activeLayer":"a","entities":[{"kind":"polygon","id":1,"layerId":"a","attrs":{},
+            "pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}],
+            "styles":{"items":[],"categories":[]}});
+        let mut doc = Document::from_snapshot(
+            kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
+        )
+        .expect("opens");
+        let at = doc.revision();
+        let envelope = kentos_contracts::CallEnvelope {
+            command: kentos_contracts::CAD_ENTITIES_HATCH.into(),
+            version: None,
+            op: kentos_contracts::CallOp::Execute,
+            input: serde_json::json!({"region": {"kind": "point", "at": {"x": 5, "y": 5}}, "pattern": {"name": "ANSI31"},
+                                      "layerId": "a"}),
+            request_id: None,
+            expected: None,
+        };
+        let progress = crate::jobs::Progress::default();
+        progress.stop();
+        let answer = crate::call::call_in_job(&mut doc, envelope.clone(), &progress);
+        assert!(matches!(answer.result, CommandResult::Cancelled), "{:?}", answer.result);
+        assert_eq!(doc.revision(), at, "nothing written");
+        // Not asked to stop, it writes.
+        let answer = crate::call::call_in_job(&mut doc, envelope, &crate::jobs::Progress::default());
+        assert!(matches!(answer.result, CommandResult::Completed { .. }), "{:?}", answer.result);
     }
 }

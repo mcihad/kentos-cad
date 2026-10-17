@@ -158,6 +158,8 @@ pub fn write_results(
                     label_of: None,
                     label_scale: None,
                     symbol: None,
+                    order: None,
+                    transparency: None,
                 })
                 .collect(),
             operation: None,

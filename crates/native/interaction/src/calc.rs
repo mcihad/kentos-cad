@@ -62,6 +62,8 @@ pub fn add_points(
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             }
         })
         .collect();

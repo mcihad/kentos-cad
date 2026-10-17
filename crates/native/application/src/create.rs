@@ -203,6 +203,15 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     for (i, object) in input.objects.iter().enumerate() {
         check_geometry(&object.geometry, "objects", i, "nesnenin")?;
         checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
+        if let Some(x) = object.transparency
+            && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+        {
+            return Err(Stop::failed(error(
+                codes::INVALID_TRANSPARENCY,
+                format!("Saydamlık {x}; 0 ile 0,9 arasında olmalı (%0–90)."),
+                Some(format!("objects[{i}].transparency")),
+            )));
+        }
         check_link(object, i)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -417,6 +426,8 @@ fn entities(
                 EntityBase {
                     look: kentos_contracts::ObjectLook {
                         line_type: object.line_type,
+                        transparency: object.transparency,
+                        order: object.order.filter(|o| *o != 0),
                         ..Default::default()
                     },
                     id: 0,

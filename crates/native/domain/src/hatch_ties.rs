@@ -48,6 +48,11 @@ fn untied(h: &HatchEntity) -> HatchEntity {
     }
 }
 
+/// Whether `e` is a text linked to the object `own` (docs/adr/0175 §4).
+pub(crate) fn is_own_label(e: &Entity, own: Option<Uuid>) -> bool {
+    matches!((e, own), (Entity::Text(t), Some(own)) if t.label_of.is_some_and(|l| Uuid::from_bytes(l.0) == own))
+}
+
 fn point(p: &CoreVec2) -> Vec2 {
     Vec2 { x: p.x, y: p.y }
 }
@@ -57,7 +62,14 @@ impl Document {
     /// gives no region (its closed object gone or open, its face's line
     /// work closing nothing around the seed, nothing left). Its exact
     /// boundary is the region's (docs/adr/0328 §1).
-    fn retied(&self, h: &HatchEntity, shifts: &HashMap<Uuid, CoreVec2>) -> Option<HatchEntity> {
+    /// A text that is the hatch's own linked label (`own`, the hatch's id) is not left open: its place is read from the
+    /// hatch's region, which leaving it open would change again (docs/adr/0332 §2).
+    fn retied(
+        &self,
+        h: &HatchEntity,
+        shifts: &HashMap<Uuid, CoreVec2>,
+        own: Option<Uuid>,
+    ) -> Option<HatchEntity> {
         let a = h.assoc.as_ref()?;
         let object = |id: &EntityId| {
             self.store
@@ -76,7 +88,10 @@ impl Document {
                 .collect()
         };
         let islands = present(&a.islands);
-        let cutouts = present(&a.cutouts);
+        let cutouts: Vec<(EntityId, Arc<Entity>)> = present(&a.cutouts)
+            .into_iter()
+            .filter(|(_, e)| !is_own_label(e, own))
+            .collect();
         let bounds = present(&a.bounds);
         let island_shapes = shapes(&islands);
         // An insert's box needs its block's definition.
@@ -184,7 +199,7 @@ impl Document {
     /// The tied hatch `h` cut again from its objects as they are now (docs/adr/0329 §4: a tie changed by a command);
     /// none when its objects give no region.
     pub fn recut_hatch(&self, h: &HatchEntity) -> Option<HatchEntity> {
-        self.retied(h, &HashMap::new())
+        self.retied(h, &HashMap::new(), None)
     }
 
     /// What keeps the associative hatches with their objects after `ops` (a
@@ -250,7 +265,9 @@ impl Document {
                 let Entity::Hatch(h) = &*current.entity else {
                     continue;
                 };
-                let next = self.retied(h, &shifts).unwrap_or_else(|| untied(h));
+                let next = self
+                    .retied(h, &shifts, Some(current.uid))
+                    .unwrap_or_else(|| untied(h));
                 if next != *h {
                     out.push(updated(current, next));
                 }
@@ -266,7 +283,9 @@ impl Document {
             let Entity::Hatch(h) = &*current.entity else {
                 continue;
             };
-            let next = self.retied(h, &shifts).unwrap_or_else(|| untied(h));
+            let next = self
+                    .retied(h, &shifts, Some(current.uid))
+                    .unwrap_or_else(|| untied(h));
             if next != *h {
                 out.push(updated(current, next));
             }
