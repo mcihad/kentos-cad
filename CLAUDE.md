@@ -540,6 +540,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kayıttan önce uçları ve blokları izler (`kentos_domain::leader_ties`); `cad.leaders.edit` (addArm, removeArm, align, collect,
   content, blocks, look, style, bind), `cad.styles.edit`'in `leader` türü; Kol ekle, Kol sil, Hizala, Topla, Blok içerik, Kılavuz
   stilleri penceresi, Öznitelikler'de kollar ve uç bağları; DXF'in MULTILEADER kolları ve LEADER olarak kollar (ADR 0326);
+  tablonun hücreleri, bağlı çizelge ve DXF biçimleri: tablonun `styles`'ı (aralıkların hizası, kalını, rengi, dolgusu, basamağı;
+  sonraki öncekini ezer), `formulas`'ı (`=` ile; A1 başvuruları ve aralıklar, TOPLA … YUVARLA Türkçe ve İngilizce adlarıyla,
+  `#DEĞER!` … `#DÖNGÜ!`, satır ve sütunla kayan başvurular; `kentos_contracts::table_formula`) ve `fields`'ı (ADR 0325'in kaynakları,
+  Blok sayısı `blockCount`); blok çizelgesi (`TableSource::Blocks`); belge hesaplanan tabloları kayıttan önce yazar
+  (`kentos_domain::table_cells`); dosya kaynağının `path`, `digest`, gömülü `copy` ve `overrides`'ı (keep, replace), Tabloyu
+  güncelle'nin raporu, Dosyaya bağla; `.kcad` şema 68, `FORMATS_VERSION` 77, paketli kaydın 25. türü; `cad.tables.edit` (edit,
+  refresh, link, unlink); Tabloyu düzenle'nin ikinci araç satırı ve biçimli ızgarası; DXF dışa aktar'da Ölçüler ve Kılavuzlar
+  Yerel nesne ya da Blok görünüşü ve KentOS verisini yaz (`DxfWriteInput.annotations`; ACAD_TABLE ve MULTILEADER yazılmaz)
+  (ADR 0327);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1088,6 +1097,8 @@ python3 scripts/fixtures/annotative_cases.py --check   # ölçekli açıklamalar
 cargo test -p kentos-desktop annotative_sheet; KENTOS_SHOTS_ONLY=olcekli-oznitelik,olcekli-yeri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # kabul odasının 1:50 ve 1:100 paftaları masaüstünün PDF'iyle, değerin yüksekliği pdftotext -bbox ile; Öznitelikler'in ölçek satırları ve Ölçekteki yeri, .run/shots/arac-olcekli-* (ADR 0323)
 python3 scripts/fixtures/leader_command_cases.py --check   # cad.leaders.edit durumlarını (kollar, hizala, topla, blok içeriğin yerleri, uçların bağı ve izlemesi, silmeler, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.leaders.edit.json (ADR 0326)
 KENTOS_SHOTS_ONLY=kilavuz-kollar,kilavuz-hizala,kilavuz-stilleri cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # çok kollu kılavuzun resimleri, .run/shots/arac-kilavuz-* (ADR 0326)
+python3 scripts/fixtures/table_command_cases.py --check   # cad.tables.edit durumlarını (hücreler, formüller ve hataları, kayan başvurular, biçimler, alanlar ve blok sayısı, blok çizelgesi, bağlı dosyanın güncellemesi ve kuralları, bağlama, retler) KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.tables.edit.json (ADR 0327)
+KENTOS_SHOTS_ONLY=tablo-formul,tablo-baglanti,dxf-bicimler cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; cargo test --release -p kentos-native-application --test all tables_cmd::timing -- --ignored --nocapture   # formüllü ve biçimli tablo, bağlı tablo ve blok çizelgesi, DXF'in biçimleri (.run/shots/arac-tablo-formul-*, -baglanti-*, arac-dxf-bicimler-*), 1001 formüllü tablonun süreleri (ADR 0327)
 python3 scripts/fixtures/text_command_cases.py --check   # alanların (değerler, kayma, izleme, döngü, kopuk) ve yazının komutlarının (Bul ve değiştir, Numarala, Birleştir, Satırlara ayır, Yazı denetimi) durumlarını KentOS kodu olmadan denetle; durumlar fixtures/commands/v1/cad.{fields.edit,texts.edit,texts.check}.json (ADR 0325)
 KENTOS_SHOTS_ONLY=yazi-alanlar,yazi-alan-ekle,yazi-numarala,yazi-denetimi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # alanların ve yazı komutlarının resimleri, .run/shots/arac-yazi-* (ADR 0325)
 python3 scripts/fixtures/paragraph_cases.py --check; python3 scripts/fixtures/font_report_cases.py --check   # yazının düzeninin yerleşimini (girintiler, asılı liste, sekmeler, kesirler, sütunlar) ve cad.fonts.report durumlarını KentOS kodu olmadan denetle; durumlar fixtures/text/v1/paragraph.json, fixtures/commands/v1/cad.fonts.report.json (ADR 0324)

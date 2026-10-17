@@ -44,7 +44,7 @@
 //! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any, its scales as JSON if any (option 4) |
-//! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
+//! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet, then schema 68's styles, formulas, fields, link and block schedule as one JSON object if any (docs/adr/0327) |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
@@ -1546,6 +1546,9 @@ impl Packer {
                 }
             }
             Entity::Table(TableEntity {
+                styles,
+                formulas,
+                fields,
                 base: _,
                 p,
                 rotation,
@@ -1621,10 +1624,10 @@ impl Packer {
                     flags |= OPT[10];
                     self.float(*f);
                 }
-                if let Some(source) = source {
+                if let Some(source) = source.as_ref().filter(|s| !matches!(s, TableSource::Blocks { .. })) {
                     flags |= OPT[9];
                     match source {
-                        TableSource::File { name, sheet } => {
+                        TableSource::File { name, sheet, .. } => {
                             self.int(3);
                             self.int(u32::from(sheet.is_some()));
                             self.text(name);
@@ -1645,6 +1648,11 @@ impl Packer {
                             }
                         }
                     }
+                }
+                // Schema 68's styles, formulas, fields, linked file and block schedule (docs/adr/0327): one JSON object.
+                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref()) {
+                    flags |= OPT[11];
+                    self.text(&j);
                 }
             }
         }
@@ -2088,8 +2096,9 @@ fn allowed(kind: u8) -> u32 {
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
         // parameter values (docs/adr/0318 §3).
         13 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
-        15 => OPT[..11].iter().fold(0, |m, b| m | b),
+        // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184); schema 68's cells
+        // (docs/adr/0327).
+        15 => OPT[..12].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
         // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207), dataset (docs/adr/0243).
@@ -2847,7 +2856,7 @@ fn geometry(
             };
             let oblique = if has(8) { Some(c.float()?) } else { None };
             let frame = if has(10) { Some(c.float()?) } else { None };
-            let source = if has(9) {
+            let mut source = if has(9) {
                 match c.int()? {
                     3 => {
                         let sheet = match c.int()? {
@@ -2861,7 +2870,14 @@ fn geometry(
                         } else {
                             None
                         };
-                        Some(TableSource::File { name, sheet })
+                        Some(TableSource::File {
+                            path: None,
+                            copy: None,
+                            digest: None,
+                            overrides: Default::default(),
+                            name,
+                            sheet,
+                        })
                     }
                     kind @ 0..=2 => {
                         let k = c.usize()?;
@@ -2887,7 +2903,33 @@ fn geometry(
             } else {
                 None
             };
+            let more: TableCells = if has(11) {
+                let t = c.text(|| place("styles"))?;
+                serde_json::from_str(&t).map_err(|_| broken("tablonun hücre verisi"))?
+            } else {
+                TableCells::default()
+            };
+            if let Some(schedule) = more.schedule {
+                source = Some(schedule);
+            }
+            if let Some(l) = more.link
+                && let Some(TableSource::File {
+                    path,
+                    digest,
+                    copy,
+                    overrides,
+                    ..
+                }) = &mut source
+            {
+                *path = l.path;
+                *digest = l.digest;
+                *copy = l.copy;
+                *overrides = l.overrides;
+            }
             Entity::Table(TableEntity {
+                styles: more.styles,
+                formulas: more.formulas,
+                fields: more.fields,
                 base,
                 p,
                 rotation,
@@ -3350,6 +3392,70 @@ fn multileader_json(
         leader_style: style.map(str::to_owned),
     })
     .unwrap_or_default()
+}
+
+/// A table's schema 68 fields (docs/adr/0327) as the columns carry them: one JSON object.
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TableCells {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    styles: Vec<kentos_contracts::CellStyle>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    formulas: Vec<kentos_contracts::CellFormula>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    fields: Vec<kentos_contracts::CellField>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    link: Option<TableLink>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    schedule: Option<TableSource>,
+}
+
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TableLink {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    copy: Option<Vec<Vec<String>>>,
+    #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
+    overrides: kentos_contracts::SourceOverrides,
+}
+
+fn table_cells_json(
+    styles: &[kentos_contracts::CellStyle],
+    formulas: &[kentos_contracts::CellFormula],
+    fields: &[kentos_contracts::CellField],
+    source: Option<&TableSource>,
+) -> Option<String> {
+    let link = match source {
+        Some(TableSource::File {
+            path,
+            digest,
+            copy,
+            overrides,
+            ..
+        }) if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() => Some(TableLink {
+            path: path.clone(),
+            digest: digest.clone(),
+            copy: copy.clone(),
+            overrides: *overrides,
+        }),
+        _ => None,
+    };
+    let schedule = source.filter(|s| matches!(s, TableSource::Blocks { .. })).cloned();
+    if styles.is_empty() && formulas.is_empty() && fields.is_empty() && link.is_none() && schedule.is_none() {
+        return None;
+    }
+    serde_json::to_string(&TableCells {
+        styles: styles.to_vec(),
+        formulas: formulas.to_vec(),
+        fields: fields.to_vec(),
+        link,
+        schedule,
+    })
+    .ok()
 }
 
 // ── Comparing ───────────────────────────────────────────────────────────

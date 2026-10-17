@@ -230,6 +230,8 @@ pub(super) struct Features {
     text_fields: bool,
     /// Schema 67: a leader's `arms`, `tip`, `blocks` and `leaderStyle` (docs/adr/0326).
     pub(super) multileader: bool,
+    /// Schema 68: a table's `styles`, `formulas`, `fields`, `link` and `schedule` (docs/adr/0327).
+    pub(super) table_cells: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -312,6 +314,7 @@ impl Features {
             paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
             text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
             multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
+            table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -445,25 +448,28 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.annotative && key == "annotative")
                     || (has.multileader && matches!(key, "arms" | "tip" | "blocks" | "leaderStyle"))
             }
-            Kind::Table => matches!(
-                key,
-                "p" | "rotation"
-                    | "height"
-                    | "rows"
-                    | "columns"
-                    | "cells"
-                    | "merges"
-                    | "aligns"
-                    | "header"
-                    | "grid"
-                    | "frame"
-                    | "source"
-                    | "textStyle"
-                    | "font"
-                    | "bold"
-                    | "italic"
-                    | "oblique"
-            ),
+            Kind::Table => {
+                matches!(
+                    key,
+                    "p" | "rotation"
+                        | "height"
+                        | "rows"
+                        | "columns"
+                        | "cells"
+                        | "merges"
+                        | "aligns"
+                        | "header"
+                        | "grid"
+                        | "frame"
+                        | "source"
+                        | "textStyle"
+                        | "font"
+                        | "bold"
+                        | "italic"
+                        | "oblique"
+                ) || (has.table_cells
+                    && matches!(key, "styles" | "formulas" | "fields" | "link" | "schedule"))
+            }
             Kind::Image => matches!(
                 key,
                 "p" | "width"
@@ -655,6 +661,25 @@ struct Fields {
     frame: Option<f64>,
     source: Option<TableSource>,
     table_at: TablePlaces,
+    /// Schema 68 (docs/adr/0327): a table's cells' styles, formulas and fields, a linked file's data.
+    table_styles: Vec<kentos_contracts::CellStyle>,
+    table_formulas: Vec<kentos_contracts::CellFormula>,
+    table_fields: Vec<kentos_contracts::CellField>,
+    table_link: Option<Link>,
+}
+
+/// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Link {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    copy: Option<Vec<Vec<String>>>,
+    #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
+    overrides: kentos_contracts::SourceOverrides,
 }
 
 /// Where a table's fields are in the payload, for a refusal of its shape.
@@ -1157,6 +1182,48 @@ pub(super) fn object(
                 f.leader_blocks = b;
             }
             "leaderStyle" if kind == Kind::Leader => f.leader_style = Some(text(r)?),
+            // Schema 68 (docs/adr/0327): a table's styles, formulas, fields and sources, as their JSON; checked with
+            // the table.
+            "styles" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellStyle>, usize) = json_part(r, "tablonun biçimleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş biçim listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_styles = v;
+            }
+            "formulas" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellFormula>, usize) = json_part(r, "tablonun formülleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş formül listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_formulas = v;
+            }
+            "fields" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellField>, usize) = json_part(r, "tablonun alanları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş alan listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_fields = v;
+            }
+            "link" if kind == Kind::Table => {
+                let (v, at): (Link, usize) = json_part(r, "tablonun bağlı dosyası")?;
+                if v.path.is_none() && v.digest.is_none() && v.copy.is_none() && v.overrides.is_keep() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş bağ yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_link = Some(v);
+            }
+            "schedule" if kind == Kind::Table => {
+                let (v, at): (TableSource, usize) = json_part(r, "tablonun blok çizelgesi")?;
+                if !matches!(v, TableSource::Blocks { .. }) || f.source.is_some() {
+                    return Err(r.fail_at(Code::BadValue, at, "çizelge yalnız blok çizelgesidir ve kaynakla birlikte yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.source = Some(v);
+            }
             // Schema 66 (docs/adr/0325 §1): a text's fields, as their JSON; checked with its letters.
             "fields" => {
                 let (l, at): (Vec<kentos_contracts::TextField>, usize) = json_part(r, "yazının alanları")?;
@@ -1913,7 +1980,34 @@ fn build(
             if let Some((_, words)) = f.face.problem() {
                 return Err(r.fail_at(Code::BadValue, f.face_at, &words));
             }
+            let mut source = f.source.take();
+            if let Some(link) = f.table_link.take() {
+                match &mut source {
+                    Some(TableSource::File {
+                        path,
+                        digest,
+                        copy,
+                        overrides,
+                        ..
+                    }) => {
+                        *path = link.path;
+                        *digest = link.digest;
+                        *copy = link.copy;
+                        *overrides = link.overrides;
+                    }
+                    _ => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            f.table_at.source,
+                            "bağ yalnız dosyadan gelen tablonun kaynağıyla yazılır",
+                        ));
+                    }
+                }
+            }
             let table = TableEntity {
+                styles: std::mem::take(&mut f.table_styles),
+                formulas: std::mem::take(&mut f.table_formulas),
+                fields: std::mem::take(&mut f.table_fields),
                 base,
                 p: required(r, f.p, "p")?,
                 rotation: required(r, f.rotation, "rotation")?,
@@ -1927,10 +2021,10 @@ fn build(
                 grid: f.grid,
                 frame: f.frame,
                 face: std::mem::take(&mut f.face),
-                source: f.source.take(),
+                source,
             };
             // Its rows, columns, cells and ranges hold together (docs/adr/0184 §1).
-            if let Some((field, words)) = table.shape().problem() {
+            if let Some((field, words)) = table.problem() {
                 return Err(field_fail(r, field, f.table_at.of(field), &words));
             }
             Entity::Table(table)
@@ -2347,6 +2441,10 @@ fn table_source(r: &mut Reader<'_>) -> Result<TableSource, KcadError> {
             ));
         }
         return Ok(TableSource::File {
+            path: None,
+            overrides: Default::default(),
+            digest: None,
+            copy: None,
             name: required(r, name, "name")?,
             sheet,
         });

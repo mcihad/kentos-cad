@@ -191,6 +191,14 @@ Liste:
   Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
   `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
   kullanıcının kendi TTF/OTF yazı tipleri.
+- [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
+  `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
+  WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in
+  paketleyicisi ve dolguların çizimi), belgenin hesaplanan tabloları (`table_cells.rs`'in ikizi: blok çizelgesi, alanlar,
+  formüller), `cad.tables.edit` TS işleyicisi (dosyanın baytları ve SHA-256'sı tarayıcıda; yol yerine dosya tutamacı), Tabloyu
+  düzenle'nin ikinci araç satırı ve ızgaranın biçimleri, Tabloyu güncelle'nin rapor ve dosya sorusu, Dosyaya bağla, Blok çizelgesi
+  tablosu, DXF dışa aktar'ın Açıklamalar'ı (`DxfWriteInput.annotations`). Masaüstünde de açık: ACAD_TABLE ve MULTILEADER
+  yazımı (bir AutoCAD'le sınanınca), çok satırlı hücre.
 - [ ] `CAD-ANNO-25`…`27` çok kollu kılavuz (ADR 0326, 17 Ekim): web'de gerekenler: `.kcad` şema 67 (`arms`, `tip`, `blocks`,
   `leaderStyle`, `leaderStyles`), çekirdeğin kolları çizmesi ve seçmesi WASM'la (`arm_layouts`), paketli kaydın 24. türü (kollu ya da bloklu kılavuz:
   15'inki ve ardından kollar ve blok sayısı; web'in paketleyicisi), belgenin izlemesi (`leader_ties.rs`'in ikizi), `cad.leaders.edit` ve `cad.styles.edit` leader TS işleyicileri, Kol ekle,

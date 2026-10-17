@@ -82,6 +82,21 @@ pub enum DrawingFont {
     PlexMono,
 }
 
+impl DrawingFont {
+    /// The geometry core's id of the typeface a drawing writes in (none: Barlow).
+    pub fn id_of(font: Option<DrawingFont>) -> &'static str {
+        match font {
+            None | Some(DrawingFont::Barlow) => "barlow",
+            Some(DrawingFont::Arimo) => "arimo",
+            Some(DrawingFont::Overpass) => "overpass",
+            Some(DrawingFont::Quicksand) => "quicksand",
+            Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
+            Some(DrawingFont::CourierPrime) => "courier-prime",
+            Some(DrawingFont::PlexMono) => "plex-mono",
+        }
+    }
+}
+
 /// The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
 /// Geometry stays in metres: the unit is where the user meets the numbers
 /// (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A

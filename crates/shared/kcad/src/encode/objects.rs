@@ -850,7 +850,7 @@ impl<'d> Encoder<'d> {
                     return refuse(self, "rows", "blok tanımında tablo olamaz");
                 }
                 // A size that is not finite meets the float's own refusal (`non_finite`), with its place.
-                if let Some((field, words)) = e.shape().problem() {
+                if let Some((field, words)) = e.problem() {
                     let finite = match field {
                         "height" => e.height.is_finite(),
                         "rows" => e.rows.iter().all(|x| x.is_finite()),
@@ -912,7 +912,49 @@ impl<'d> Encoder<'d> {
                             "tablonun kaynağındaki nesnenin kimliği boş olamaz",
                         );
                     }
-                    f.push(("source", Val::Source(source)));
+                    match source {
+                        // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON.
+                        TableSource::Blocks { .. } => {
+                            f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
+                        }
+                        TableSource::File {
+                            path,
+                            digest,
+                            copy,
+                            overrides,
+                            ..
+                        } => {
+                            f.push(("source", Val::Source(source)));
+                            // Schema 68 (docs/adr/0327 §5): a linked file's path, digest, copy and rule, as their JSON.
+                            if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() {
+                                let mut link = serde_json::Map::new();
+                                if let Some(p) = path {
+                                    link.insert("path".into(), serde_json::json!(p));
+                                }
+                                if let Some(d) = digest {
+                                    link.insert("digest".into(), serde_json::json!(d));
+                                }
+                                if let Some(c) = copy {
+                                    link.insert("copy".into(), serde_json::json!(c));
+                                }
+                                if !overrides.is_keep() {
+                                    link.insert("overrides".into(), serde_json::json!(overrides));
+                                }
+                                f.push(("link", Val::Json(serde_json::Value::Object(link))));
+                            }
+                        }
+                        _ => f.push(("source", Val::Source(source))),
+                    }
+                }
+                // Schema 68 (docs/adr/0327 §1–§3): the cells' styles, formulas and fields, as their JSON.
+                if !e.styles.is_empty() {
+                    f.push(("styles", Val::Json(serde_json::to_value(&e.styles).unwrap_or_default())));
+                }
+                if !e.formulas.is_empty() {
+                    f.push(("formulas", Val::Json(serde_json::to_value(&e.formulas).unwrap_or_default())));
+                }
+                if !e.fields.is_empty() {
+                    f.push(("fields", Val::Json(serde_json::to_value(&e.fields).unwrap_or_default())));
                 }
             }
             Entity::Image(e) => {
@@ -1527,7 +1569,7 @@ impl<'d> Encoder<'d> {
             }
             Val::Source(source) => {
                 match source {
-                    TableSource::File { name, sheet } => {
+                    TableSource::File { name, sheet, .. } => {
                         self.open(2 + usize::from(sheet.is_some()), true)?;
                         // kind (4), name (4), sheet (5).
                         self.key("kind");

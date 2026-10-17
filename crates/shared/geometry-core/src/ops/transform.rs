@@ -596,6 +596,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             grid,
             frame,
             source,
+            styles,
             face,
         } => {
             // Mirrored, the table's new top left is the image of its top right when its baseline turns back,
@@ -624,6 +625,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 grid: grid.clone(),
                 frame: frame.map(|f| f * s),
                 source: source.clone(),
+                styles: styles.clone(),
                 face: face.clone(),
             }
         }

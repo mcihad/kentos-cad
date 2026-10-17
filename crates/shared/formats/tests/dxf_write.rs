@@ -20,6 +20,15 @@ use kentos_formats::math::{atan2, cos, sin};
 const Y0: f64 = 452_345.123;
 const X0: f64 = 4_412_345.678;
 
+
+/// The report's notes but the one each table, dimension and leader gets of how it was written (docs/adr/0327 §6).
+fn other_notes(r: &ExportReport) -> Vec<&kentos_contracts::ReportItem> {
+    r.notes
+        .iter()
+        .filter(|n| !n.reason.contains(" yazıldı, KentOS verisi"))
+        .collect()
+}
+
 fn v(x: f64, y: f64) -> Vec2 {
     Vec2 { x, y }
 }
@@ -503,6 +512,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         })
         .collect();
     DxfWriteInput {
+        annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
@@ -852,7 +862,7 @@ fn a_dimension_is_a_dxf_dimension_with_a_block_of_its_own() {
     assert_eq!(entities_of(&p, "ARC").len(), 1);
     assert_eq!(report.counts.get("dimension"), Some(&7));
     assert!(
-        report.notes.iter().all(|n| n.what != "Ölçü"),
+        other_notes(&report).iter().all(|n| n.what != "Ölçü"),
         "{:?}",
         report.notes
     );
@@ -1013,6 +1023,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         }),
     ];
     let (text, report) = write(&DxfWriteInput {
+        annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
@@ -1073,6 +1084,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 #[test]
 fn nothing_to_write_is_still_a_file_autocad_opens() {
     let (text, report) = write(&DxfWriteInput {
+        annotations: Default::default(),
         notes: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
@@ -2422,7 +2434,7 @@ fn an_attribute_text_on_more_lines_is_written_on_one_and_said() {
 #[test]
 fn the_leaders_fixture_is_written_to_its_committed_bytes() {
     let report = written_as_committed("leaders");
-    assert!(report.notes.is_empty(), "{:?}", report.notes);
+    assert!(other_notes(&report).is_empty(), "{:?}", report.notes);
     assert!(report.skipped.is_empty(), "{:?}", report.skipped);
 }
 
@@ -2499,9 +2511,8 @@ fn leaders_read_back_as_they_were() {
 #[test]
 fn the_dimensions_fixture_is_written_to_its_committed_bytes() {
     let report = written_as_committed("dimensions");
-    let notes: Vec<(&str, &str, u32)> = report
-        .notes
-        .iter()
+    let notes: Vec<(&str, &str, u32)> = other_notes(&report)
+        .into_iter()
         .map(|n| (n.what.as_str(), n.reason.as_str(), n.count))
         .collect();
     assert_eq!(
@@ -2686,9 +2697,8 @@ fn paragraphs_read_back_as_they_were() {
 #[test]
 fn the_styles_fixture_is_written_to_its_committed_bytes() {
     let report = written_as_committed("styles");
-    let notes: Vec<(&str, u32)> = report
-        .notes
-        .iter()
+    let notes: Vec<(&str, u32)> = other_notes(&report)
+        .into_iter()
         .map(|n| (n.what.as_str(), n.count))
         .collect();
     assert_eq!(notes, [("Ölçü stili", 2)], "{:?}", report.notes);
@@ -3239,7 +3249,7 @@ fn a_leaders_arms_read_back_as_they_were() {
     let one = DxfWriteInput { entities: vec![Entity::Leader(first.clone())], blocks: Vec::new(), ..input };
     let (text, report) = write(&one);
     assert_eq!(entities_of(&pairs(&text), "LEADER").len(), 3);
-    assert!(report.notes.is_empty(), "{:?}", report.notes);
+    assert!(other_notes(&report).is_empty(), "{:?}", report.notes);
     let r = read(&text);
     let leaders: Vec<&kentos_contracts::LeaderEntity> = r
         .entities
@@ -3252,4 +3262,80 @@ fn a_leaders_arms_read_back_as_they_were() {
     assert_eq!(leaders.len(), 1);
     assert_eq!(leaders[0].arms, first.arms);
     assert_eq!(leaders[0].pts, first.pts);
+}
+
+/// The annotations' forms (docs/adr/0327 §6): written as their look in blocks with KentOS's data, dimensions and
+/// leaders come back whole (their kinds, points, texts and looks); without KentOS's data a table comes back as the
+/// block it draws, a native dimension as a dimension. Each kind is said once with its form.
+#[test]
+fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
+    use kentos_contracts::{DxfAnnotations, DxfForm};
+    let kinds = |r: &ImportResult, k: &str| r.entities.iter().filter(|e| e.kind() == k).count();
+    // Dimensions and leaders as blocks, with KentOS's data.
+    for (name, kind, what) in [("dimensions", "dimension", "Ölçü"), ("leaders", "leader", "Kılavuz")] {
+        let mut input = fixture_input(name);
+        input.annotations = DxfAnnotations {
+            dimensions: DxfForm::Block,
+            leaders: DxfForm::Block,
+            metadata: true,
+        };
+        let n = input.entities.iter().filter(|e| e.kind() == kind).count();
+        let (text, report) = write(&input);
+        let p = pairs(&text);
+        // A block definition's are written as they are (the form is the drawing's objects').
+        let inside = input
+            .blocks
+            .iter()
+            .flat_map(|b| &b.entities)
+            .filter(|e| matches!(e.kind(), "dimension" | "leader"))
+            .count();
+        assert_eq!(entities_of(&p, "DIMENSION").len() + entities_of(&p, "LEADER").len(), inside, "{name}");
+        assert!(
+            report.notes.iter().any(|n| n.what == what && n.reason.starts_with("blok görünüşü olarak")),
+            "{:?}",
+            report.notes
+        );
+        let r = read(&text);
+        assert_eq!(kinds(&r, kind), n, "{name}: {:?}", r.report);
+        let geometry = |e: &Entity| {
+            let mut v = serde_json::to_value(e).expect("JSON");
+            for k in ["id", "layerId", "attrs", "label", "color", "lineWeight", "refs", "tip", "blocks"] {
+                v.as_object_mut().expect("object").remove(k);
+            }
+            v
+        };
+        let wrote: Vec<serde_json::Value> = input.entities.iter().filter(|e| e.kind() == kind).map(geometry).collect();
+        let back: Vec<serde_json::Value> = r.entities.iter().filter(|e| e.kind() == kind).map(geometry).collect();
+        assert_eq!(wrote, back, "{name}");
+    }
+    // A table without KentOS's data: its block, no table.
+    let mut input = fixture_input("tables");
+    input.annotations = DxfAnnotations {
+        metadata: false,
+        ..DxfAnnotations::default()
+    };
+    let (text, report) = write(&input);
+    assert!(
+        report.notes.iter().any(|n| n.what == "Tablo" && n.reason.contains("KentOS verisi olmadan")),
+        "{:?}",
+        report.notes
+    );
+    let r = read(&text);
+    assert_eq!(kinds(&r, "table"), 0);
+    // A native dimension without KentOS's data: still a dimension.
+    let mut input = fixture_input("dimensions");
+    input.annotations.metadata = false;
+    let (text, _) = write(&input);
+    let n = input.entities.iter().filter(|e| e.kind() == "dimension").count();
+    let r = read(&text);
+    // What DXF cannot say of a dimension KentOS draws its own way comes in as its lines and texts, and is said.
+    let exploded: u32 = r
+        .report
+        .notes
+        .iter()
+        .filter(|n| n.what == "Ölçü (DIMENSION)")
+        .map(|n| n.count)
+        .sum();
+    assert_eq!(kinds(&r, "dimension") + exploded as usize, n, "{:?}", r.report);
+    assert!(kinds(&r, "dimension") >= 4);
 }

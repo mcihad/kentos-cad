@@ -305,6 +305,38 @@ pub(super) struct Writer<'a> {
     pub arrows: &'a mut Vec<(kentos_contracts::LeaderArrow, u64)>,
     /// What a block's objects are drawn with now (`block_head`).
     pub pen: Pen,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6).
+    pub forms: kentos_contracts::DxfAnnotations,
+}
+
+/// What the report says of a table, a dimension or a leader as `forms` writes it (docs/adr/0327 §6).
+pub(super) fn form_words(what: &str, block: bool, metadata: bool) -> String {
+    let native = match what {
+        "Ölçü" => "DIMENSION olarak (yerel nesne)",
+        _ => "LEADER ve MTEXT olarak (yerel nesneler)",
+    };
+    let form = if block || what == "Tablo" {
+        "blok görünüşü olarak (adsız blok ve INSERT)"
+    } else {
+        native
+    };
+    let kind = match what {
+        "Tablo" => "tablo",
+        "Ölçü" => "ölçü",
+        _ => "kılavuz",
+    };
+    let back = match (block || what == "Tablo", metadata) {
+        (_, true) => format!("KentOS verisiyle: KentOS {kind} olarak bütün alanlarıyla geri okur"),
+        (true, false) => "KentOS verisi olmadan: KentOS da blok olarak geri okur".to_owned(),
+        (false, false) => format!("KentOS verisi olmadan: KentOS {kind} olarak DXF'in söylediği kadarıyla geri okur"),
+    };
+    let edit = if block || what == "Tablo" {
+        format!("; başka programlar gösterir ama {kind} olarak düzenleyemez")
+    } else {
+        String::new()
+    };
+    let table = if what == "Tablo" { " (DXF'in ACAD_TABLE'ı yazılmaz)" } else { "" };
+    format!("{form}{table} yazıldı, {back}{edit}")
 }
 
 /// What a block's object is drawn with (docs/adr/0205 §6): a colour, a line
@@ -1309,7 +1341,7 @@ impl Writer<'_> {
                 .skip("Tablo", "blok tanımında tablo olamaz; yazılmadı", 0);
             return false;
         }
-        if let Some((_, why)) = t.shape().problem() {
+        if let Some((_, why)) = t.problem() {
             self.report.skip("Tablo", &format!("{why} Yazılmadı."), 0);
             return false;
         }
@@ -1421,12 +1453,9 @@ impl Writer<'_> {
                 0,
             );
         }
-        self.report.note(
-            "Tablo",
-            "DXF'te KentOS tablosu yok: çizgi ve yazılarından bir blok (*U) olarak yazıldı; başka programlar blok olarak gösterir, KentOS tablo olarak geri okur",
-            0,
-        );
-        self.end(meta);
+        let words = form_words("Tablo", true, self.forms.metadata);
+        self.report.note("Tablo", &words, 0);
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
         true
     }
 
@@ -1497,8 +1526,15 @@ impl Writer<'_> {
         let text_pen = self.dimension_pen(look.text_color.as_deref(), None, None);
         // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
         let record = self.handles.take();
-        *self.dimensions += 1;
-        let name = format!("*D{}", *self.dimensions);
+        let block_form = self.forms.dimensions == kentos_contracts::DxfForm::Block;
+        // Its look as a block of its own (docs/adr/0327 §6): an anonymous *U an INSERT places, not a *D.
+        let name = if block_form {
+            *self.anonymous += 1;
+            format!("*U{}", *self.anonymous)
+        } else {
+            *self.dimensions += 1;
+            format!("*D{}", *self.dimensions)
+        };
         self.records.push((record, name.clone(), 0));
         self.block_begin(record, &name);
         let arc = match l.pick.first() {
@@ -1557,6 +1593,10 @@ impl Writer<'_> {
         }
         self.pen = Pen::default();
         self.block_end(record);
+        if block_form {
+            self.insert_whole(&d.base, &name, &Entity::Dimension(d.clone()), "Ölçü");
+            return true;
+        }
 
         // The DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION): its common groups, then its kind's.
         self.begin(def.entity, &d.base);
@@ -1637,8 +1677,47 @@ impl Writer<'_> {
         if !d.look.is_plain() {
             m.look = serde_json::to_string(&d.look).ok();
         }
-        self.end(m);
+        let words = form_words("Ölçü", false, self.forms.metadata);
+        self.report.note("Ölçü", &words, 0);
+        self.end(if self.forms.metadata { m } else { Meta::default() });
         true
+    }
+
+    /// An INSERT at the origin of the anonymous block `name` that draws `whole` (a dimension's or a leader's look,
+    /// docs/adr/0327 §6); KentOS's data, when written, is the object itself, which KentOS reads back.
+    pub(super) fn insert_whole(
+        &mut self,
+        base: &kentos_contracts::EntityBase,
+        name: &str,
+        whole: &Entity,
+        what: &str,
+    ) {
+        self.begin("INSERT", base);
+        self.out.str(100, "AcDbBlockReference");
+        self.out.str(2, name);
+        self.out.xyz(10, v(0.0, 0.0));
+        let mut meta = Meta::default();
+        if self.forms.metadata {
+            meta = Self::base_meta(base);
+            meta.object = serde_json::to_string(whole).ok();
+            let bare = Meta {
+                label: None,
+                attrs: Default::default(),
+                symbol: None,
+                ..meta.clone()
+            };
+            if xdata::size(&xdata::groups(&bare)) > xdata::MAX_BYTES {
+                meta.object = None;
+                self.report.note(
+                    what,
+                    "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için KentOS verisi yazılmadı; KentOS blok olarak geri okur",
+                    0,
+                );
+            }
+        }
+        let words = form_words(what, true, self.forms.metadata);
+        self.report.note(what, &words, 0);
+        self.end(meta);
     }
 
     /// The groups of a dimension's kind (its subclass and points).
@@ -1864,6 +1943,37 @@ impl Writer<'_> {
         mask: bool,
         style: &str,
     ) {
+        // Middle centre.
+        self.block_mtext_at(record, middle, height, rotation, text, 5, mask, style);
+    }
+
+    /// A leader's note in its block (docs/adr/0327 §6): attached at `attach` (MTEXT's 71), in Standard.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn block_mtext_attached(
+        &mut self,
+        record: u64,
+        at: Vec2,
+        height: f64,
+        rotation: f64,
+        text: &str,
+        attach: i64,
+        mask: bool,
+    ) {
+        self.block_mtext_at(record, at, height, rotation, text, attach, mask, "Standard");
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn block_mtext_at(
+        &mut self,
+        record: u64,
+        middle: Vec2,
+        height: f64,
+        rotation: f64,
+        text: &str,
+        attach: i64,
+        mask: bool,
+        style: &str,
+    ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
         let o = &mut *self.blocks;
@@ -1871,8 +1981,8 @@ impl Writer<'_> {
         o.xyz(10, middle);
         o.real(40, height);
         o.real(41, 0.0);
-        // Middle centre, left to right.
-        o.int(71, 5);
+        // Where it hangs from its point, left to right.
+        o.int(71, attach);
         o.int(72, 1);
         mtext_chunks(o, &dim::mtext_value(text));
         // The value's typeface (docs/adr/0183 §7): a face record's, else Standard.

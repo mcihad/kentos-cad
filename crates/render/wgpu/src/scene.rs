@@ -1384,6 +1384,7 @@ fn shape(entity: &Entity) -> Shape {
             opacity: c.cloud.opacity,
         },
         Entity::Table(t) => Shape::Table {
+            styles: None,
             p: v(&t.p),
             rotation: t.rotation,
             height: t.height,

@@ -626,6 +626,9 @@ impl Document {
         // After the objects settled: the texts' fields read their values (docs/adr/0325 §2).
         let fields = self.follow_fields(ops);
         ops.extend(fields);
+        // After the fields: the tables' schedules, fields and formulas (docs/adr/0327).
+        let tables = self.follow_tables(ops);
+        ops.extend(tables);
         // Last: the style fields the step set apart by hand (docs/adr/0322 §5).
         let marks = self.mark_overrides(ops);
         ops.extend(marks);

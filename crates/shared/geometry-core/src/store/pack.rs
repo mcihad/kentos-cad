@@ -739,8 +739,9 @@ impl Reader<'_> {
             // docs/adr/0184: the corner, turn and height; the rows' heights and the columns'
             // widths; each cell's words, row by row; the merged ranges; the alignments (−1
             // none); the heading flag; the lines (−1 all, else `TABLE_GRIDS`); the frame's
-            // width (NaN none); the face.
-            18 => {
+            // width (NaN none); the face. Kind 25 (docs/adr/0327 §1): a table with cell styles, 18's then the
+            // styles' JSON text.
+            18 | 25 => {
                 let p = self.pt()?;
                 let (rotation, height) = (self.num()?, self.num()?);
                 let rows = self.values()?.unwrap_or_default();
@@ -789,7 +790,15 @@ impl Reader<'_> {
                 let font = self.font()?;
                 let (bold, italic) = (self.flag()?, self.flag()?);
                 let oblique = self.num()?;
+                let styles = if kind == 25.0 {
+                    let text = self.string()?.unwrap_or_default();
+                    let json = crate::api::json::Json::parse(&text)?;
+                    Some(<Vec<crate::entity::CellLook> as crate::api::json::FromJson>::from_json(&json)?)
+                } else {
+                    None
+                };
                 Shape::Table {
+                    styles,
                     p,
                     rotation,
                     height,
@@ -1380,9 +1389,11 @@ impl Packer {
                 grid,
                 frame,
                 source: _,
+                styles,
                 face,
             } => {
-                self.put(&[18.0, p.x, p.y, *rotation, *height]);
+                let styled = styles.as_ref().filter(|s| !s.is_empty());
+                self.put(&[if styled.is_some() { 25.0 } else { 18.0 }, p.x, p.y, *rotation, *height]);
                 self.values(Some(rows));
                 self.values(Some(columns));
                 for row in cells {
@@ -1423,6 +1434,11 @@ impl Packer {
                     flag(face.italic),
                     face.oblique.unwrap_or(f64::NAN),
                 ]);
+                if let Some(list) = styled {
+                    let text = crate::api::json::to_string(list);
+                    let w = self.string(&text);
+                    self.put(&[w]);
+                }
             }
         }
     }

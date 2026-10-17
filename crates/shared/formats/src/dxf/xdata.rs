@@ -122,6 +122,9 @@ pub struct Meta {
     pub arms: Option<String>,
     /// The LEADER is another arm of a leader written before it.
     pub arm: bool,
+    /// The INSERT draws a KentOS object as a block (a dimension's or a leader's look, docs/adr/0327 §6): the object
+    /// as the contract's JSON, which KentOS reads back.
+    pub object: Option<String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -270,6 +273,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.arm {
         item("arm", &mut out, |_| {});
+    }
+    if let Some(a) = &meta.object {
+        item("object", &mut out, |o| string(a, o));
     }
     if let Some(a) = &meta.arms {
         item("arms", &mut out, |o| string(a, o));
@@ -540,6 +546,7 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "line" => m.line = true,
             "arm" => m.arm = true,
             "arms" => m.arms = text(a).or(m.arms),
+            "object" => m.object = text(a).or(m.object),
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
             "arrow" => m.arrow = text(a).or(m.arrow),
@@ -605,6 +612,7 @@ mod tests {
             fields: Some("[]".into()),
             arms: Some("[[[1,2]]]".into()),
             arm: true,
+            object: Some("{\"kind\":\"leader\"}".into()),
             label: Some("attr".into()),
             attrs,
             symbol: Some("mpyy.konut".into()),

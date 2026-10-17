@@ -282,6 +282,11 @@ impl Document {
                     None if s.srid == 0 => "Yerel".to_owned(),
                     None => format!("EPSG:{}", s.srid),
                 }),
+                ProjectValue::BlockCount => name
+                    .as_deref()
+                    .and_then(|n| self.block_count(n))
+                    .map(|c| c.to_string())
+                    .ok_or(FieldBroken::NotNamed),
                 ProjectValue::Variable => {
                     match name
                         .as_deref()

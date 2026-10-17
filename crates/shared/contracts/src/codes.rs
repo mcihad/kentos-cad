@@ -750,6 +750,16 @@ codes! {
     ARM_NOT_FOUND = "arm_not_found", Failed, false, "Kılavuzda bu sırada kol yok.";
     /// A leader's arms, blocks or note against their rules.
     INVALID_LEADER = "invalid_leader", Failed, false, "Kılavuzun kolları, blokları ya da notu kurallarına uymuyor.";
+    /// A row, a column or a range outside the table.
+    CELL_OUT_OF_RANGE = "cell_out_of_range", Failed, false, "Satır, sütun ya da aralık tablonun dışında.";
+    /// A table without a source to write it again from.
+    NO_SOURCE = "no_source", Failed, false, "Tablonun kaynağı yok: Tabloyu güncelle çizelgeleri ve dosyaya bağlı tabloları yazar.";
+    /// A linked table's file not where its path says.
+    SOURCE_MISSING = "source_missing", Warning, false, "Tablonun dosyası yolunda yok; tablo olduğu gibi kaldı.";
+    /// A linked table's file that does not read as a table.
+    SOURCE_UNREADABLE = "source_unreadable", Warning, false, "Tablonun dosyası tablo olarak okunamadı; tablo olduğu gibi kaldı.";
+    /// A table that names a file but is linked to none.
+    SOURCE_UNLINKED = "source_unlinked", Warning, false, "Tablo bir dosyanın adını taşıyor ama ona bağlı değil; Dosyaya bağla ile seçin.";
     /// An object given as a content block that is not a block insert.
     NOT_AN_INSERT = "not_an_insert", Failed, false, "Verilen nesne bir blok yerleştirmesi değil.";
     /// Numarala's start, step or digits out of their bounds.

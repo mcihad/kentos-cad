@@ -214,13 +214,23 @@ SCHEMA_WITH_PARAGRAPH_LAYOUT = 65
 # Schema 66: schema 65, a text's `fields`: ranges of its letters bound to a source (docs/adr/0325).
 SCHEMA_WITH_TEXT_FIELDS = 66
 FIELD_OBJECT_VALUES = ("area", "perimeter", "length", "layer", "label", "attribute", "text", "x", "y")
-FIELD_PROJECT_VALUES = ("name", "scale", "unit", "crs", "variable")
+FIELD_PROJECT_VALUES = ("name", "scale", "unit", "crs", "variable", "blockCount")
 FIELD_UNITS = ("mm", "cm", "m", "km", "m2", "donum", "ha")
 FIELD_BROKEN = ("removed", "noValue", "notNamed", "cycle")
 MAX_FIELDS = 256
 # Schema 67: schema 66, a leader's `arms`, `tip`, `blocks`, `leaderStyle` and the settings' `leaderStyles` (docs/adr/0326).
 SCHEMA_WITH_MULTILEADER = 67
 MAX_LEADER_ARMS = 64
+# Schema 68: schema 67, a table's `styles`, `formulas`, `fields`, its linked file's `link` and a block schedule's
+# `schedule` (docs/adr/0327).
+SCHEMA_WITH_TABLE_CELLS = 68
+MAX_CELL_STYLES = 1000
+MAX_FORMULAS = 10_000
+MAX_CELL_FIELDS = 1000
+MAX_FORMULA_LETTERS = 1000
+MAX_CELL_DECIMALS = 10
+COLOUR = re.compile(r"#[0-9A-Fa-f]{6}")
+SHA256_HEX = re.compile(r"[0-9A-Fa-f]{64}")
 UUID_TEXT = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 # A layout's numbers in the text's height, at most this much; at most this many tab stops (docs/adr/0324 §1).
 MAX_PARAGRAPH_HEIGHTS = 1000.0
@@ -413,7 +423,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1926,6 +1936,7 @@ class _Schema:
         self.paragraph_layout = version >= SCHEMA_WITH_PARAGRAPH_LAYOUT
         self.text_fields = version >= SCHEMA_WITH_TEXT_FIELDS
         self.multileader = version >= SCHEMA_WITH_MULTILEADER
+        self.table_cells = version >= SCHEMA_WITH_TABLE_CELLS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3439,6 +3450,7 @@ class _Schema:
                 self.text_path_rules(fields)
                 self.path.pop()
             if kind == "table":
+                self.table_sources(fields)
                 self.table_rules(fields)
             if kind == "image":
                 self.image_rules(fields)
@@ -3785,10 +3797,8 @@ class _Schema:
                 self.fail("bad_value", f"{n}. alan {f['start']}–{f['end']}: yazının {letters} harfi içinde, sırayla ve ayrı olmalı")
             last = f["end"]
             src = f["source"]
-            needs = src["value"] in ("attribute", "variable")
-            named = bool(src.get("name", "").strip())
-            if needs != named:
-                self.fail("bad_value", f"{n}. alan: ad yalnız öznitelik ve değişken alanında, onlarda zorunlu")
+            if self.field_source_problem(src):
+                self.fail("bad_value", f"{n}. alan: {self.field_source_problem(src)}")
             fm = f.get("format")
             if fm is not None:
                 if fm.get("decimals", 0) > 10:
@@ -4334,6 +4344,147 @@ class _Schema:
         if o is not None and not (MIN_CLOUD_OPACITY <= o <= MAX_CLOUD_OPACITY):
             self.fail("bad_value", f"Nokta bulutunun donukluğu 0.1 ile 1 arasında olmalı; {o} verildi.")
 
+    def field_source_problem(self, src):
+        """A field's source's names as the contract wants them (`FieldSource::problem`): an attribute's, a variable's
+        and a block count's name, no other."""
+        needs = src["value"] in ("attribute", "variable", "blockCount")
+        named = bool(src.get("name", "").strip())
+        if needs and not named:
+            return "ad öznitelik, değişken ve blok sayısı alanında zorunlu"
+        if named and not needs:
+            return "ad yalnız öznitelik, değişken ve blok sayısı alanında verilir"
+        return None
+
+    # A table's cells beyond their words (schema 68, docs/adr/0327).
+
+    def cell_styles(self, v):
+        one = self.fields({**{k: (self.uint(32), True) for k in ("row", "col", "rows", "cols")},
+                           "align": (self.enum(("left", "center", "right")), False), "bold": (self.bool, False),
+                           "color": (self.text, False), "fill": (self.text, False), "decimals": (self.uint(32), False)})
+        styles = self.array(one)(v)
+        if not styles:
+            self.fail("bad_value", "boş biçim listesi yazılmaz")
+        return styles
+
+    def cell_formulas(self, v):
+        formulas = self.array(self.fields({"row": (self.uint(32), True), "col": (self.uint(32), True), "formula": (self.text, True)}))(v)
+        if not formulas:
+            self.fail("bad_value", "boş formül listesi yazılmaz")
+        return formulas
+
+    def cell_fields(self, v):
+        def source(src):
+            if type(src) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            if src.get("kind") == "object":
+                return self.fields({"kind": (self.text, True), "uid": (self.uid_text, True), "value": (self.enum(FIELD_OBJECT_VALUES), True), "name": (self.text, False)})(src)
+            if src.get("kind") == "project":
+                return self.fields({"kind": (self.text, True), "value": (self.enum(FIELD_PROJECT_VALUES), True), "name": (self.text, False)})(src)
+            self.fail("bad_value", f"alanın kaynağı {src.get('kind')!r}: object ya da project olmalı")
+
+        fmt = self.fields({"decimals": (self.uint(8), False), "unit": (self.enum(FIELD_UNITS), False), "comma": (self.true_flag, False), "prefix": (self.text, False), "suffix": (self.text, False)})
+        one = self.fields({"row": (self.uint(32), True), "col": (self.uint(32), True), "source": (source, True), "format": (fmt, False), "broken": (self.enum(FIELD_BROKEN), False)})
+        fields = self.array(one)(v)
+        if not fields:
+            self.fail("bad_value", "boş alan listesi yazılmaz")
+        return fields
+
+    def uid_text(self, u):
+        if type(u) is not str or not UUID_TEXT.fullmatch(u):
+            self.fail("bad_value", "nesnenin kimliği küçük harfli, tireli bir UUID olmalı")
+        return u
+
+    def table_link(self, v):
+        copy_ = lambda rs: [[self.text(w) for w in self.array(lambda x: x)(r)] for r in self.array(lambda x: x)(rs)]  # noqa: E731
+        d = self.fields({"path": (self.text, False), "digest": (self.text, False), "copy": (copy_, False),
+                         "overrides": (self.enum(("keep", "replace")), False)})(v)
+        if d.get("overrides") == "keep":
+            self.path.append("overrides")
+            self.fail("bad_value", "keep yazılmaz; bağın varsayılanıdır")
+        if not d:
+            self.fail("bad_value", "boş bağ yazılmaz")
+        return d
+
+    def table_schedule(self, v):
+        d = self.fields({"kind": (self.enum(("blocks",)), True), "names": (self.array(self.text), False), "by": (self.text, False)})(v)
+        if "names" in d and not d["names"]:
+            self.path.append("names")
+            self.fail("bad_value", "boş ad listesi yazılmaz")
+        return d
+
+    def table_sources(self, t):
+        """A table's schedule is its source; a link joins its file source (docs/adr/0327 §4–§5)."""
+        if "schedule" in t:
+            if "source" in t:
+                self.path.append("schedule")
+                self.fail("bad_value", "çizelge yalnız blok çizelgesidir ve kaynakla birlikte yazılmaz")
+            t["source"] = t.pop("schedule")
+        if "link" in t:
+            link = t.pop("link")
+            src = t.get("source")
+            if src is None or src["kind"] != "file":
+                self.path.append("link")
+                self.fail("bad_value", "bağ yalnız dosyadan gelen tablonun kaynağıyla yazılır")
+            src.update(link)
+
+    def cells_rules(self, t, n, m, refuse):
+        """The contract's `cells_problem_of` (kentos_contracts::table_cells), in its order."""
+        merges = t.get("merges", [])
+
+        def hidden(r, c):
+            return any(g["row"] <= r < g["row"] + g["rows"] and g["col"] <= c < g["col"] + g["cols"] and (g["row"], g["col"]) != (r, c) for g in merges)
+
+        styles = t.get("styles", [])
+        if len(styles) > MAX_CELL_STYLES:
+            refuse("styles", f"bir tabloda en çok {MAX_CELL_STYLES} biçim olur")
+        for k, st in enumerate(styles):
+            if st["rows"] == 0 or st["cols"] == 0 or st["row"] + st["rows"] > n or st["col"] + st["cols"] > m:
+                refuse("styles", f"{k + 1}. biçimin aralığı tablonun içinde olmalı")
+            for what in ("color", "fill"):
+                if what in st and not COLOUR.fullmatch(st[what]):
+                    refuse("styles", f"{k + 1}. biçimin rengi “{st[what]}”; #rrggbb olmalı")
+            if st.get("decimals", 0) > MAX_CELL_DECIMALS:
+                refuse("styles", f"{k + 1}. biçimin basamağı en çok {MAX_CELL_DECIMALS} olur")
+            if not any(x in st for x in ("align", "bold", "color", "fill", "decimals")):
+                refuse("styles", f"{k + 1}. biçim hiçbir şey vermiyor")
+        formulas = t.get("formulas", [])
+        if len(formulas) > MAX_FORMULAS:
+            refuse("formulas", f"bir tabloda en çok {MAX_FORMULAS} formül olur")
+        seen = set()
+        for f in formulas:
+            r, c, words = f["row"], f["col"], f["formula"]
+            if not (r < n and c < m):
+                refuse("formulas", "formülün hücresi tablonun içinde olmalı")
+            if hidden(r, c):
+                refuse("formulas", "formülün hücresi birleşik bir alanın içinde")
+            if not (words.startswith("=") and len(words.encode("utf-8")) > 1) or len(words) > MAX_FORMULA_LETTERS or any(unicodedata.category(x) == "Cc" for x in words):
+                refuse("formulas", "formül “=” ile başlayan, tek satırlık bir yazıdır")
+            if (r, c) in seen:
+                refuse("formulas", "bir hücreye iki formül verildi")
+            seen.add((r, c))
+        fields = t.get("fields", [])
+        if len(fields) > MAX_CELL_FIELDS:
+            refuse("fields", f"bir tabloda en çok {MAX_CELL_FIELDS} alan olur")
+        fielded = set()
+        for f in fields:
+            r, c = f["row"], f["col"]
+            if not (r < n and c < m) or hidden(r, c):
+                refuse("fields", "alanın hücresi tablonun içinde ve birleşik alanın sol üst hücresi olmalı")
+            if (r, c) in seen:
+                refuse("fields", "bir hücre hem formül hem alan olamaz")
+            if (r, c) in fielded:
+                refuse("fields", "bir hücreye iki alan verildi")
+            fielded.add((r, c))
+            why = self.field_source_problem(f["source"])
+            if why:
+                refuse("fields", why)
+            fm = f.get("format")
+            if fm is not None:
+                if fm.get("decimals", 0) > 10:
+                    refuse("fields", "alanın basamağı en çok 10 olur")
+                if not fm:
+                    refuse("fields", "boş biçim yazılmaz")
+
     def table_rules(self, t):
         """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
         def refuse(field, words):
@@ -4380,7 +4531,16 @@ class _Schema:
             refuse("aligns", "her sütunun hizası verilmeli")
         src = t.get("source")
         if src is not None:
-            if src["kind"] == "file":
+            if src["kind"] == "blocks":
+                if any(not x.strip() for x in src.get("names", [])) or ("by" in src and not src["by"].strip()):
+                    refuse("source", "blok çizelgesinin blok ve öznitelik adları boş olamaz")
+            elif src["kind"] == "file":
+                if "path" in src and (not src["path"].strip() or any(unicodedata.category(c) == "Cc" for c in src["path"])):
+                    refuse("source", "tablonun bağlı dosyasının yolu boş olamaz")
+                if "digest" in src and not SHA256_HEX.fullmatch(src["digest"]):
+                    refuse("source", "bağlı dosyanın özeti 64 onaltılık rakamlık bir SHA-256 olmalı")
+                if "copy" in src and (len(src["copy"]) > MAX_TABLE_ROWS or any(len(r) > MAX_TABLE_COLUMNS or any(any(unicodedata.category(c) == "Cc" for c in w) or len(w) > MAX_CELL_LETTERS for w in r) for r in src["copy"])):
+                    refuse("source", "dosyanın gömülü kopyası bir tablonun sınırlarını aşıyor")
                 name = src["name"]
                 if not name.strip() or any(unicodedata.category(c) == "Cc" for c in name):
                     refuse("source", "kaynak dosyanın adı boş olamaz")
@@ -4388,6 +4548,7 @@ class _Schema:
                     refuse("source", "kaynak sayfanın adı boş olamaz")
             elif not 0 < len(src["objects"]) <= MAX_SOURCE_OBJECTS:
                 refuse("source", f"tablonun kaynağı {len(src['objects'])} nesne gösteriyor")
+        self.cells_rules(t, n, m, refuse)
 
     # Hatches (docs/adr/0186).
 
@@ -5093,6 +5254,9 @@ ENTITY_KINDS = {
         "italic": (s.face_flag, False),
         "oblique": (s.oblique, False),
         "source": (s.table_source, False),
+        # Schema 68 (docs/adr/0327): the cells' styles, formulas and fields, a linked file's data, a block schedule.
+        **({"styles": (s.cell_styles, False), "formulas": (s.cell_formulas, False), "fields": (s.cell_fields, False),
+            "link": (s.table_link, False), "schedule": (s.table_schedule, False)} if s.table_cells else {}),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, its one source, its clip and opacity; `mirror` only when true; only in
     # the drawing.

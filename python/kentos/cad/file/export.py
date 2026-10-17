@@ -12,6 +12,7 @@ from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  #
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     BlockFileExported,
+    DxfAnnotations,
     DxfExported,
     ExportBlock,
     ExportDxf,
@@ -196,6 +197,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         /,
         *,
         path: str,
+        annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         request_id: str | None = None,
@@ -212,6 +214,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         Args:
             doc: The drawing it works on.
             path: The file to write, an absolute path.
+            annotations: How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
             layers: The layers whose objects to write (ids); every object when absent.
             overwrite: Write over a file that is there.
             request_id: Names this write: sent again with the same call it is answered as
@@ -228,6 +231,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         """
         return self.execute_input(doc, ExportDxf(
             path=path,
+            annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
         ), request_id=request_id, expected=expected)
@@ -238,6 +242,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         /,
         *,
         path: str,
+        annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
     ) -> DxfExported:
@@ -246,6 +251,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         """
         return self.plan_input(doc, ExportDxf(
             path=path,
+            annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
         ))
@@ -256,6 +262,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         /,
         *,
         path: str,
+        annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
     ) -> list[CommandNote]:
@@ -264,6 +271,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         """
         return self.validate_input(doc, ExportDxf(
             path=path,
+            annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
         ))
@@ -274,6 +282,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         /,
         *,
         path: str,
+        annotations: DxfAnnotations | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         op: str = "execute",
@@ -287,6 +296,7 @@ class _FileExportDxf(LocalCommand[ExportDxf, DxfExported, DxfExported]):
         """
         return self.answer_input(doc, ExportDxf(
             path=path,
+            annotations=annotations,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
         ), op=op, request_id=request_id, expected=expected)

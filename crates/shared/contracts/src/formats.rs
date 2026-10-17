@@ -181,7 +181,7 @@ use crate::layer::LineType;
 /// 74 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script:
 ///    `.kcad` document schema 65; in the typed columns the text's option 16 (its JSON text) and a run's flags 8 and 16
 ///    together. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 76;
+pub const FORMATS_VERSION: u32 = 77;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -1182,11 +1182,67 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_scale: Option<f64>,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
+    #[serde(default, skip_serializing_if = "DxfAnnotations::is_default")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<DxfAnnotations>", optional))]
+    pub annotations: DxfAnnotations,
     /// What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
     /// block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportItem>>", optional))]
     pub notes: Vec<ReportItem>,
+}
+
+/// What a dimension or a leader becomes in DXF (docs/adr/0327 §6).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DxfForm {
+    /// Its own DXF entity (DIMENSION; LEADER and MTEXT): another program edits it as one.
+    #[default]
+    Native,
+    /// Its look as an anonymous block's lines, arrowheads and texts, placed by an INSERT: every program shows it as
+    /// KentOS draws it, none edits it as a dimension or a leader.
+    Block,
+}
+
+/// How tables, dimensions and leaders are written in DXF (docs/adr/0327 §6). A table is always its look as a block
+/// (DXF's ACAD_TABLE is not written); KentOS's data, when written, gives each back to KentOS whole.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DxfAnnotations {
+    #[serde(default)]
+    pub dimensions: DxfForm,
+    #[serde(default)]
+    pub leaders: DxfForm,
+    /// KentOS's data on them (the table's cells and styles, the dimension's and the leader's own fields).
+    #[serde(default = "yes")]
+    pub metadata: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+impl Default for DxfAnnotations {
+    fn default() -> Self {
+        DxfAnnotations {
+            dimensions: DxfForm::Native,
+            leaders: DxfForm::Native,
+            metadata: true,
+        }
+    }
+}
+
+impl DxfAnnotations {
+    pub fn is_default(&self) -> bool {
+        *self == DxfAnnotations::default()
+    }
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

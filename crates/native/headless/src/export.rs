@@ -116,6 +116,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         }
     }
     DxfWriteInput {
+        annotations: Default::default(),
         notes,
         // The project's line types and their scale (docs/adr/0313 §6).
         line_type_scale: settings.line_type_scale,

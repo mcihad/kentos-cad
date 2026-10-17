@@ -1325,6 +1325,24 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["leader"], &[], Some("not_a_leader"), None)],
     },
     Entry {
+        id: "cad.tables.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_table",
+                "cell_out_of_range",
+                "invalid_table",
+                "not_finite",
+                "no_source",
+                "source_missing",
+                "source_unreadable",
+            ],
+            REVISION,
+        ],
+        warnings: &["source_missing", "source_unreadable", "source_unlinked"],
+        targets: || vec![target(None, &["table"], &[], Some("not_a_table"), None)],
+    },
+    Entry {
         id: "cad.fonts.report",
         refusals: &[&["empty_name", "invalid_name"]],
         warnings: &["font_substituted"],

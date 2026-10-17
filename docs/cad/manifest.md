@@ -17,23 +17,23 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 81 | 132 | 38 | 38 | 289 |
-| geometry | 17 | 59 | 0 | 8 | 84 |
+| semantic | 84 | 132 | 38 | 38 | 292 |
+| geometry | 16 | 59 | 0 | 8 | 83 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 3 | 23 | 1 | 4 | 31 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 101 | 340 | 103 | 205 | 749 |
+| **toplam** | 103 | 340 | 103 | 205 | 751 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 544 satırdan 132'i: geometry 76, none 20, processing 13, query 23.
+CBS'ye özgü olmayan 546 satırdan 131'i: geometry 75, none 20, processing 13, query 23.
 
-### Sonucu çağıran hesaplar (geometry) — 76
+### Sonucu çağıran hesaplar (geometry) — 75
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,7 +45,6 @@ CBS'ye özgü olmayan 544 satırdan 132'i: geometry 76, none 20, processing 13, 
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `raster.georef` | Raster oturt… | shared | cad.entities.edit `rasterGeoref` |  |
-| `table.update` | Tabloyu güncelle | cad | cad.entities.edit `tableUpdate` |  |
 | `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |

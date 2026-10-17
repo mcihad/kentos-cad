@@ -7,55 +7,15 @@
 use std::collections::HashSet;
 
 use kentos_contracts::{
-    AreaUnit, DrawingUnit, Entity, EntityBase, EntityGeometry, TableAlign, TableGrid, TableSheet,
-    TableSource, TextFace,
+    EntityBase, EntityGeometry, TableAlign, TableGrid, TableSheet, TableSource, TextFace,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::ops::compare::Attrs;
-use kentos_geometry_core::ops::table::{self as rules, Cells, Listed, ScheduleKind, Units};
-use kentos_native_application::elevation::paths as elevated_paths;
+use kentos_geometry_core::ops::table::{self as rules, Cells, ScheduleKind};
 use kentos_native_application::geometry::{drawing_font, entity_of, shape};
 
 use crate::Vec2;
-use crate::format::{Axes, Format};
 
-/// The project's settings a schedule writes its numbers by.
-pub fn units(f: &Format) -> Units {
-    Units {
-        cad: f.axes == Axes::Cad,
-        unit: match f.unit {
-            DrawingUnit::Mm => rules::Unit::Mm,
-            DrawingUnit::Cm => rules::Unit::Cm,
-            DrawingUnit::M => rules::Unit::M,
-            DrawingUnit::In => rules::Unit::In,
-            DrawingUnit::Ft => rules::Unit::Ft,
-        },
-        area_unit: match f.area_unit {
-            AreaUnit::Donum => rules::AreaUnit::Donum,
-            AreaUnit::Ha => rules::AreaUnit::Ha,
-            AreaUnit::M2 => rules::AreaUnit::M2,
-        },
-        length_decimals: f.length_decimals,
-        area_decimals: f.area_decimals,
-    }
-}
-
-/// An object as a schedule reads it: its shape, paths with their
-/// elevations, label and attributes.
-pub fn listed(e: &Entity) -> Listed {
-    let base = e.base();
-    Listed {
-        shape: shape(e),
-        paths: elevated_paths(e),
-        label: base.label.clone(),
-        attrs: Attrs(
-            base.attrs
-                .iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect(),
-        ),
-    }
-}
+pub use kentos_native_application::table_schedule::{listed, schedule, units};
 
 /// The objects at `slots`, in the drawing's order.
 pub fn in_order(doc: &Document, slots: &[Slot]) -> Vec<Slot> {
@@ -64,16 +24,6 @@ pub fn in_order(doc: &Document, slots: &[Slot]) -> Vec<Slot> {
         .map(|e| Slot(e.base().id))
         .filter(|s| wanted.contains(&s.0))
         .collect()
-}
-
-/// The schedule of `kind` the objects at `slots` write (in the order given).
-pub fn schedule(doc: &Document, kind: ScheduleKind, slots: &[Slot], f: &Format) -> Cells {
-    let objects: Vec<Listed> = slots
-        .iter()
-        .filter_map(|s| doc.get(*s))
-        .map(listed)
-        .collect();
-    rules::schedule(kind, &objects, &units(f))
 }
 
 /// The source a schedule of `kind` keeps: the objects' persistent ids, in order.
@@ -152,6 +102,9 @@ pub fn new_table(
             .collect()
     });
     let mut geometry = EntityGeometry::Table {
+        styles: None,
+        formulas: None,
+        fields: None,
         p: kentos_contracts::Vec2 { x: p.x, y: p.y },
         rotation: 0.0,
         height: look.height,

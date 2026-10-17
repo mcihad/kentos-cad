@@ -1002,6 +1002,17 @@ impl Labels<'_> {
         }
     }
 
+    /// A table cell's fill (docs/adr/0327 §1): its colour as the drawing's colours show it.
+    fn fill_cell(&self, frame: &mut impl Ink, quad: [Point; 4], fill: &str, of: Option<Slot>) {
+        let mut color = self.colors.named(fill).unwrap_or(self.colors.label);
+        // On a dark drawing (light letters) a light fill is a tint, so the letters stay read.
+        let l = self.colors.label;
+        if 0.2126 * l.r + 0.7152 * l.g + 0.0722 * l.b > 0.5 {
+            color.a *= 0.3;
+        }
+        frame.fill_quad(quad, color, of);
+    }
+
     fn ink_of(&self, name: Option<&str>) -> Color {
         match name {
             None | Some("fg" | "fg-dim") => self.colors.label,
@@ -1167,6 +1178,8 @@ impl Labels<'_> {
         let layers = self.doc.layers();
         // The label engine's label being drawn: its frame's look (docs/adr/0212 §3.8).
         let mut current: Option<Placed> = None;
+        // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
+        let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
         for (spot, grow) in self.spots.iter() {
             // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
             self.camera.set(grown(self.view, *grow));
@@ -1285,6 +1298,25 @@ impl Labels<'_> {
                     let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
                         continue;
                     };
+                    // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
+                    if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
+                        let shape = kentos_native_application::geometry::shape(entity);
+                        if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
+                            for f in g.fills() {
+                                let q = f.corners.map(|p| self.screen(p));
+                                let (cx, cy) = (
+                                    q.iter().map(|p| p.x).sum::<f32>() / 4.0,
+                                    q.iter().map(|p| p.y).sum::<f32>() / 4.0,
+                                );
+                                let inset = q.map(|p| {
+                                    let (dx, dy) = (cx - p.x, cy - p.y);
+                                    let l = (dx * dx + dy * dy).sqrt().max(1.0);
+                                    Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
+                                });
+                                self.fill_cell(frame, inset, &f.fill, Some(slot));
+                            }
+                        }
+                    }
                     let heading = Run {
                         start: 0,
                         end: 0,
@@ -1295,10 +1327,13 @@ impl Labels<'_> {
                         color: None,
                     };
                     let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
+                    // A cell style's colour over the table's (docs/adr/0327 §1).
+                    let own = t.cell_style(*row, *col).color;
                     let color = self.ink_of(
-                        base.color
+                        own.as_deref().or(base
+                            .color
                             .as_deref()
-                            .or(layer.map(|l| l.style.color.as_str())),
+                            .or(layer.map(|l| l.style.color.as_str()))),
                     );
                     self.draw(
                         frame,

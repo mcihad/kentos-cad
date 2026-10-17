@@ -460,6 +460,9 @@ impl Fields {
                 mask: self.mask.unwrap_or(false),
             }),
             "table" => Entity::Table(TableEntity {
+                styles: Vec::new(),
+                formulas: Vec::new(),
+                fields: Vec::new(),
                 base,
                 p: need(self.p, "p")?,
                 rotation: need(self.rotation, "rotation")?,
@@ -695,6 +698,8 @@ struct Input {
     line_types: Vec<kentos_contracts::LineTypeDef>,
     #[serde(default)]
     line_type_scale: Option<f64>,
+    #[serde(default)]
+    annotations: kentos_contracts::DxfAnnotations,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -707,6 +712,7 @@ impl<'de> Deserialize<'de> for WriteInput {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<WriteInput, D::Error> {
         let i = Input::deserialize(d)?;
         Ok(WriteInput(DxfWriteInput {
+            annotations: i.annotations,
             notes: Vec::new(),
             entities: i.entities.0,
             layers: i.layers,

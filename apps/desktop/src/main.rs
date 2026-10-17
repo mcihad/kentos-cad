@@ -88,6 +88,8 @@ mod text_field_scenes;
 #[cfg(test)]
 mod multileader_scenes;
 #[cfg(test)]
+mod table_cells_scenes;
+#[cfg(test)]
 mod dimension_option_scenes;
 #[cfg(test)]
 mod dimension_scenes;

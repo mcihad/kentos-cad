@@ -2,7 +2,10 @@
 import type { Annotative } from "./Annotative";
 import type { AreaPart } from "./AreaPart";
 import type { BlockId } from "./BlockId";
+import type { CellField } from "./CellField";
+import type { CellFormula } from "./CellFormula";
 import type { CellRange } from "./CellRange";
+import type { CellStyle } from "./CellStyle";
 import type { DimensionArrow } from "./DimensionArrow";
 import type { DimensionBreak } from "./DimensionBreak";
 import type { DimensionOptions } from "./DimensionOptions";
@@ -327,6 +330,10 @@ frame?: number,
  * Where its rows came from; absent: written by hand.
  */
 source?: TableSource, 
+/**
+ * Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
+ */
+styles?: Array<CellStyle>, formulas?: Array<CellFormula>, fields?: Array<CellField>, 
 /**
  * The project's text style it follows, by its id; absent: Standart.
  */

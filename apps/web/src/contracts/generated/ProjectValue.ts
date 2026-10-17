@@ -3,4 +3,4 @@
 /**
  * The project's value a field writes.
  */
-export type ProjectValue = "name" | "scale" | "unit" | "crs" | "variable";
+export type ProjectValue = "name" | "scale" | "unit" | "crs" | "variable" | "blockCount";

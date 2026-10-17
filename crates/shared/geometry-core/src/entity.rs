@@ -204,6 +204,39 @@ crate::json_struct!(CellRange {
     cols
 });
 
+/// A style over a table's range of cells (docs/adr/0327 §1): what it sets, a later over an earlier.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CellLook {
+    pub row: usize,
+    pub col: usize,
+    pub rows: usize,
+    pub cols: usize,
+    pub align: Option<String>,
+    pub bold: Option<bool>,
+    pub color: Option<String>,
+    pub fill: Option<String>,
+    pub decimals: Option<usize>,
+}
+
+crate::json_struct!(CellLook {
+    row,
+    col,
+    rows,
+    cols,
+    align,
+    bold,
+    color,
+    fill,
+    decimals
+});
+
+impl CellLook {
+    /// Whether the cell at `row`, `col` is in its range.
+    pub fn holds(&self, row: usize, col: usize) -> bool {
+        row >= self.row && row < self.row + self.rows && col >= self.col && col < self.col + self.cols
+    }
+}
+
 impl CellRange {
     /// Whether the cell at `row`, `col` is in it.
     pub fn holds(&self, row: usize, col: usize) -> bool {
@@ -424,6 +457,8 @@ pub enum Shape {
         /// Its frame's width, metres: the outline drawn as a band (docs/adr/0184 §2).
         frame: Option<f64>,
         source: Option<crate::api::json::Json>,
+        /// Its cells' styles (docs/adr/0327 §1).
+        styles: Option<Vec<CellLook>>,
         face: crate::text::face::Face,
     },
     /// A picture (docs/adr/0192): its frame from `p`, its lower left corner,
@@ -497,7 +532,7 @@ crate::json_tagged!(Shape, "kind",
     Hatch => "hatch" { ring, holes, pattern, assoc },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
-    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
+    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },

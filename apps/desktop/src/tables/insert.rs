@@ -318,6 +318,10 @@ impl App {
                     None => Now::Cells(
                         cells,
                         Some(TableSource::File {
+                            path: None,
+                            overrides: Default::default(),
+                            digest: None,
+                            copy: None,
                             name: name.clone(),
                             sheet: sheet.name.clone(),
                         }),

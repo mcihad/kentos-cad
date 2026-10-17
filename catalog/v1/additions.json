@@ -1062,6 +1062,33 @@
       "shortcuts": [],
       "category": "Açıklama",
       "status": "implemented"
+    },
+    {
+      "id": "table.link",
+      "title": "Dosyaya bağla",
+      "short": "Dosyaya bağla",
+      "icon": "tableLink",
+      "description": "Seçili tabloyu seçilen tablo dosyasına (XLSX, ODS, CSV, TXT) bağlar ve ondan yazar: yol (çizimin klasöründeyse göreli), dosyanın SHA-256 özeti ve okunan hücrelerin kopyası saklanır; Tabloyu güncelle sonra dosyayı yolundan okur, aynı baytları yazmaz, elle değişen hücreleri dosyadaki karşılığı değişmedikçe korur (cad.tables.edit link; AutoCAD'in DATALINK'i).",
+      "aliases": [
+        "DATALINK",
+        "DOSYAYABAGLA"
+      ],
+      "shortcuts": [],
+      "category": "Tablo",
+      "status": "implemented"
+    },
+    {
+      "id": "table.blockSchedule",
+      "title": "Blok çizelgesi tablosu",
+      "short": "Blok çizelgesi",
+      "icon": "tableBlocks",
+      "description": "Seçili yerleştirmelerin bloklarını (seçim yoksa çizimdeki bütün blokları) sayan bir tabloyu imleçten yerleştirir: Blok, Adet ve Toplam; çizim her değiştiğinde (kapı eklenince, silinince) tablo kendiliğinden güncellenir (tablonun blocks kaynağı).",
+      "aliases": [
+        "BLOKCIZELGESITABLO"
+      ],
+      "shortcuts": [],
+      "category": "Tablo",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1174,7 +1201,12 @@
     "leaderAlign": "<path d=\"M2.5 6.5 6 4h5\"/><path d=\"M2.5 16 6 13.5h5\"/><path d=\"M13.5 2.5v15\" stroke-dasharray=\"2 1.5\"/><path d=\"M11 4h2.5M11 13.5h2.5\"/>",
     "leaderCollect": "<circle cx=\"12.5\" cy=\"7\" r=\"2.5\"/><circle cx=\"17\" cy=\"7\" r=\"2.5\"/><path d=\"M3 15 9.5 8.5h.5\"/><path d=\"M3 4.5 9.5 7\"/>",
     "leaderBlocks": "<path d=\"M3 16 9 10h3\"/><circle cx=\"15\" cy=\"10\" r=\"3\"/><path d=\"m3 16 2.6-.6-2-2Z\"/>",
-    "leaderStyles": "<path d=\"M3 16.5 8.5 11h4\"/><path d=\"m3 16.5 2.6-.6-2-2Z\"/><path d=\"M10.5 3.5h7v5h-7z\"/><path d=\"M12.5 6h3\"/>"
+    "leaderStyles": "<path d=\"M3 16.5 8.5 11h4\"/><path d=\"m3 16.5 2.6-.6-2-2Z\"/><path d=\"M10.5 3.5h7v5h-7z\"/><path d=\"M12.5 6h3\"/>",
+    "tableLink": "<rect x=\"2.5\" y=\"3.5\" width=\"11\" height=\"9\" rx=\"1\"/><path d=\"M2.5 8h11M8 3.5v9\"/><path d=\"M11.5 15.5h-1a2 2 0 0 1 0-4h1\"/><path d=\"M15 11.5h1a2 2 0 0 1 0 4h-1\"/><path d=\"M12.5 13.5h2\"/>",
+    "tableBlocks": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\"/><path d=\"M2.5 7h15M9 7v10.5\"/><path d=\"M12 10h3v3h-3Z\"/><path d=\"M4.5 11h2.5M4.5 14h2.5\"/>",
+    "tableBold": "<path d=\"M6 3.5h5a3 3 0 0 1 0 6H6Z\"/><path d=\"M6 9.5h6a3.5 3.5 0 0 1 0 7H6Z\"/>",
+    "tableClearStyle": "<path d=\"M7.5 16.5 4 13l8.5-8.5L16 8l-8.5 8.5h9\"/><path d=\"M8.5 9 12 12.5\"/>",
+    "tableUnfield": "<path d=\"M7 3.5c-2 0-2 1.2-2 3.2S4 9.8 3 10c1 .2 2 1 2 3.1s0 3.4 2 3.4\"/><path d=\"M13 3.5c2 0 2 1.2 2 3.2s1 3.1 2 3.3c-1 .2-2 1-2 3.1s0 3.4-2 3.4\"/><path d=\"M4 16.5 16 3.5\"/>"
   },
   "ribbon": [
     {
@@ -1820,6 +1852,23 @@
         },
         {
           "command": "leader.styles",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "annotate",
+      "into": "Tablo",
+      "items": [
+        {
+          "command": "table.link",
+          "size": "small"
+        },
+        {
+          "command": "table.blockSchedule",
           "size": "small"
         }
       ]

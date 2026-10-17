@@ -2195,6 +2195,44 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Tablonun hücreleri, formülleri, alanları ve dosyası (docs/adr/0327), held together by
+        // fixtures/commands/v1/cad.tables.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_TABLES_EDIT.into(),
+            version: crate::CAD_TABLES_EDIT_VERSION,
+            title: "Tabloları düzenle".into(),
+            summary: "Tablolarda tek bir işlem yapar; tek geri alma adımı. edit (Tabloyu düzenle) edits'i sırayla uygular: setCell hücrenin yazısı                       (= ile başlayan yazı formüldür, hücrenin yazısı sonucu: A1 başvuruları, A1:C3 aralıkları, + - * / ^, TOPLA/SUM, ORTALAMA/AVERAGE, MİN/MIN, MAK/MAX, SAY/COUNT,                       YUVARLA/ROUND, MUTLAK/ABS; argümanlar , ya da ; ile; hatalar #AD? #BAŞV! #DEĞER! #SAYI/0! #SAYI! #DÖNGÜ!), insertRows, deleteRows, insertColumns,                       deleteColumns (birleşik alanlar, biçimler, formüllerin başvuruları ve alanlar kayar; silinen hücreye başvuru #BAŞV!), merge, unmerge,                       style (aralığa hiza, kalın, yazı rengi, dolgu, formül ve alan değerinin basamağı; sonraki öncekinin üstüne), clearStyle,                       field (hücreyi bir kaynağa bağlar: nesnenin alanı, uzunluğu …, projenin değişkeni ya da blockCount adlı bloğun yerleştirme sayısı; değer her adımda yazılır),                       unfield, rowHeight, columnWidth, fit (sütunları yazılarına sığdırır). refresh (Tabloyu güncelle) çizelgeyi nesnelerinden, bağlı tabloyu dosyasının yolundan                       (göreliyse base'den) yeniden yazar: aynı baytlar (SHA-256 özeti) yazılmaz, yolunda olmayan dosya source_missing; elle değiştirilen hücre, dosyadaki                       karşılığı değişmedikçe korunur (overrides keep) ya da dosyanınki yazılır (replace); blok çizelgesi çizimin her adımında kendiliğinden yazılır.                       link (Dosyaya bağla) tabloyu dosyanın sayfasından yazar ve ona bağlar; unlink kaynağı bırakır. Kilitli katmandaki tablo reddedilir.                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TablesEdit>(),
+            output: schema::<crate::TablesEdited>(),
+            plan: Some(schema::<crate::TablesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Son satıra alanların toplamını yaz ve kalın yap".into(),
+                    input: json!({ "operation": { "kind": "edit", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "edits": [
+                        { "kind": "setCell", "row": 4, "col": 2, "words": "=TOPLA(C2:C4)" },
+                        { "kind": "style", "row": 4, "col": 0, "rows": 1, "cols": 3, "bold": true, "fill": "#eef2f7" }
+                    ] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Bağlı tabloları dosyalarından güncelle".into(),
+                    input: json!({ "operation": { "kind": "refresh", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "base": "/home/proje" } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                                         "report": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "status": "updated", "kept": 1, "replaced": 0 }],
+                                         "revision": "13" })),
+                },
+            ],
+        },
         // Alanlar (docs/adr/0325 §1–§3), held together by fixtures/commands/v1/cad.fields.edit.json.
         CommandDescriptor {
             id: crate::CAD_FIELDS_EDIT.into(),
@@ -5267,6 +5305,9 @@ mod tests {
                     crate::CAD_FIELDS_EDIT => {
                         serde_json::from_value::<crate::FieldsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_TABLES_EDIT => {
+                        serde_json::from_value::<crate::TablesEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LEADERS_EDIT => {
                         serde_json::from_value::<crate::LeadersEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5532,6 +5573,9 @@ mod tests {
                         }
                         crate::CAD_LEADERS_EDIT => {
                             serde_json::from_value::<crate::LeadersEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TABLES_EDIT => {
+                            serde_json::from_value::<crate::TablesEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_TEXTS_EDIT => {
                             serde_json::from_value::<crate::TextsEdited>(output.clone()).map(|_| ())

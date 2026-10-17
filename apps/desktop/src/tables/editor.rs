@@ -5,9 +5,12 @@
 //! cells merged and unmerged (the core's `ops::table_edit`, refusals said in
 //! the status line); a column's alignment, the heading row, Çizgiler and
 //! Kalın çerçeve, a column's width and a row's height, Yazıya sığdır;
-//! Kaynaktan ayır. A column widens as its words ask. Ctrl+Z and Ctrl+Y undo
-//! and redo inside the window; Kaydet writes the table in one step
-//! (`cad.entities.edit` `table`, “Tablo”).
+//! Kaynaktan ayır. A column widens as its words ask. Cells' styles (Kalın,
+//! Yazı rengi, Dolgu, Basamak, Biçimi temizle), `=` formulas worked out as
+//! they are typed, fields (Blok sayısı) (docs/adr/0327). Every change is one
+//! of `cad.tables.edit`'s edits: the draft is the command's plan of them, Ctrl+Z
+//! and Ctrl+Y take them back and again inside the window, Kaydet runs them in
+//! one step (“Tabloyu düzenle”).
 
 use iced::keyboard::key::Named;
 use iced::widget::{
@@ -15,16 +18,14 @@ use iced::widget::{
 };
 use iced::{Center, Element, Fill, Length, Task, Theme};
 use kentos_contracts::{
-    CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, TableAlign, TableEntity,
-    TableGrid,
+    CommandResult, Entity, FieldSource, ProjectValue, TableAlign, TableEdit, TableEntity,
+    TableGrid, TablesEdit, TablesOperation,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::CellRange;
-use kentos_geometry_core::ops::table::sizes;
-use kentos_geometry_core::ops::table_edit::{self, Edit};
 use kentos_interaction::Level;
-use kentos_native_application::geometry::{drawing_font, edit_geometry, entity_of, shape};
-use kentos_native_application::{ExecutionContext, edit};
+use kentos_native_application::{ExecutionContext, tables_edit};
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame, Tip, focus_ring, overlay, tip};
@@ -46,6 +47,13 @@ pub(crate) const BAR: &str = "table-bar";
 const ROW_PX: f32 = 26.0;
 /// The grid's height, logical pixels.
 const GRID_PX: f32 = 330.0;
+
+/// The grid's height in a window `window_h` tall: at most `GRID_PX`, less in a low window so the dialog's buttons
+/// stay in it (the rest of the dialog is about 420 px), never under five rows.
+fn grid_px(window_h: f32) -> f32 {
+    let most = typography::scaled(GRID_PX);
+    (window_h - typography::scaled(420.0)).clamp(typography::scaled(ROW_PX) * 5.0, most)
+}
 /// The row numbers' column.
 const GUTTER_PX: f32 = 44.0;
 /// The rows drawn past the window either way.
@@ -73,8 +81,14 @@ pub struct Editor {
     version: u64,
     pub(crate) draft: TableEntity,
     saved: TableEntity,
-    past: Vec<TableEntity>,
-    future: Vec<TableEntity>,
+    /// The edits made, in order: the draft is `cad.tables.edit`'s plan of them.
+    edits: Vec<TableEdit>,
+    /// How many edits there were before each step (Ctrl+Z goes back to it).
+    steps: Vec<usize>,
+    /// The steps taken back (Ctrl+Y makes them again).
+    redo: Vec<Vec<TableEdit>>,
+    /// The drawing's blocks' names, for Blok sayısı.
+    blocks: Vec<String>,
     active: (usize, usize),
     anchor: (usize, usize),
     /// The bar's words, as typed.
@@ -109,7 +123,33 @@ pub enum Tool {
     Fit,
     Undo,
     Redo,
+    /// The selection's cells' styles (docs/adr/0327 §1).
+    Bold,
+    Color(usize),
+    Fill(usize),
+    Decimals(u32),
+    ClearStyle,
+    /// The active cell bound to the count of `blocks[i]`'s inserts, or let go of.
+    Field(usize),
+    Unfield,
 }
+
+/// Yazı rengi's colours: name and `#rrggbb`.
+pub const TEXT_COLORS: [(&str, &str); 5] = [
+    ("Siyah", "#1b1f24"),
+    ("Kırmızı", "#c0392b"),
+    ("Mavi", "#1f5fa8"),
+    ("Yeşil", "#2e7d32"),
+    ("Turuncu", "#c46a00"),
+];
+/// Dolgu's colours, light enough to read through.
+pub const FILLS: [(&str, &str); 5] = [
+    ("Gri", "#eceff3"),
+    ("Sarı", "#fff3c4"),
+    ("Mavi", "#e2edfb"),
+    ("Yeşil", "#e3f3e6"),
+    ("Pembe", "#fbe4e6"),
+];
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -150,20 +190,6 @@ fn msg(event: Event) -> Message {
     Message::TableEditor(event)
 }
 
-/// A table's core shape.
-fn core(t: &TableEntity) -> kentos_geometry_core::entity::Shape {
-    shape(&Entity::Table(t.clone()))
-}
-
-/// The table the core gives back, with the draft's object fields.
-fn back(t: &TableEntity, s: kentos_geometry_core::entity::Shape) -> Option<TableEntity> {
-    let g = edit_geometry(s)?;
-    match entity_of(&g, t.base.clone()) {
-        Entity::Table(out) => Some(out),
-        _ => None,
-    }
-}
-
 /// The merged range holding a cell, if any.
 fn range_at(t: &TableEntity, r: usize, c: usize) -> Option<CellRange> {
     t.merges.iter().find(|m| m.holds(r, c)).map(|m| CellRange {
@@ -188,7 +214,11 @@ impl Editor {
         range_at(&self.draft, r, c).map_or((r, c), |g| (g.row, g.col))
     }
 
+    /// What the bar shows for a cell: its formula, else its words.
     fn words_at(&self, (r, c): (usize, usize)) -> String {
+        if let Some(f) = self.draft.formula_at(r, c) {
+            return f.formula.clone();
+        }
         self.draft
             .cells
             .get(r)
@@ -252,42 +282,6 @@ impl Editor {
         self.words = self.words_at(self.owner(self.active));
     }
 
-    /// Keeps a step for Ctrl+Z, then makes `next` the draft.
-    fn take(&mut self, next: TableEntity) {
-        self.version += 1;
-        self.past.push(std::mem::replace(&mut self.draft, next));
-        if self.past.len() > 200 {
-            self.past.remove(0);
-        }
-        self.future.clear();
-        self.problem = None;
-        self.clamp();
-    }
-
-    /// Each column at least as wide as its words ask (a cell never spills).
-    fn widen(t: &mut TableEntity, font: kentos_geometry_core::text::Font) {
-        if let Some(fit) = sizes(&core(t), font) {
-            for (w, f) in t.columns.iter_mut().zip(fit.columns) {
-                *w = w.max(f);
-            }
-        }
-    }
-
-    /// One of the core's edits on the draft; a refusal is said in the status line.
-    fn edit(&mut self, e: Edit, grow: bool, font: kentos_geometry_core::text::Font) -> bool {
-        let out = table_edit::edit(&core(&self.draft), &e);
-        let Some(next) = out.table.and_then(|s| back(&self.draft, s)) else {
-            self.problem = Some(out.problem.unwrap_or_else(|| "Yapılamadı.".to_owned()));
-            return false;
-        };
-        let mut next = next;
-        if grow {
-            Self::widen(&mut next, font);
-        }
-        self.take(next);
-        true
-    }
-
     /// Moves the active cell by rows and columns, over merged ranges; with `extend` the anchor stays.
     fn step(&mut self, dr: isize, dc: isize, extend: bool) {
         let g = range_at(&self.draft, self.active.0, self.active.1);
@@ -315,10 +309,10 @@ impl Editor {
     }
 
     /// The scroll that shows the active cell.
-    fn reveal(&mut self) -> Option<f32> {
+    fn reveal(&mut self, grid: f32) -> Option<f32> {
         let top = self.active.0 as f32 * typography::scaled(ROW_PX);
         let row = typography::scaled(ROW_PX);
-        let view = typography::scaled(GRID_PX) - row;
+        let view = grid - row;
         if top < self.scroll {
             Some(top)
         } else if top + row > self.scroll + view {
@@ -352,8 +346,10 @@ impl App {
             version: 0,
             draft: t.clone(),
             saved: t.clone(),
-            past: Vec::new(),
-            future: Vec::new(),
+            edits: Vec::new(),
+            steps: Vec::new(),
+            redo: Vec::new(),
+            blocks: doc.model.blocks().iter().map(|b| b.name.clone()).collect(),
             active: (0, 0),
             anchor: (0, 0),
             words: String::new(),
@@ -371,12 +367,90 @@ impl App {
         iced::widget::operation::focus(Id::new("table-grid"))
     }
 
-    fn table_font(&self) -> kentos_geometry_core::text::Font {
-        drawing_font(
-            self.document
-                .as_ref()
-                .and_then(|d| d.model.settings().drawing_font),
-        )
+    /// The draft as `cad.tables.edit` would write `edits`: the saved table when there are none, the refusal's words
+    /// when it refuses them.
+    fn table_planned(&self, uid: Uuid, edits: &[TableEdit], saved: &TableEntity) -> Result<TableEntity, String> {
+        if edits.is_empty() {
+            return Ok(saved.clone());
+        }
+        let Some(doc) = &self.document else {
+            return Err("Çizim yok.".to_owned());
+        };
+        let input = TablesEdit {
+            operation: TablesOperation::Edit {
+                uid: uid.to_string(),
+                edits: edits.to_vec(),
+            },
+            expected_revision: None,
+        };
+        match tables_edit::plan_in(&doc.model, &input) {
+            CommandResult::Completed { output, .. } => Ok(match output.tables.into_iter().next() {
+                Some(Entity::Table(t)) => t,
+                _ => saved.clone(),
+            }),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
+            _ => Err("Yapılamadı.".to_owned()),
+        }
+    }
+
+    /// One step of edits: the draft their plan, or the refusal said in the window.
+    fn table_push(&mut self, group: Vec<TableEdit>) {
+        let Some(e) = self.table_editor.as_ref() else {
+            return;
+        };
+        if group.is_empty() {
+            return;
+        }
+        let mut all = e.edits.clone();
+        all.extend(group);
+        let planned = self.table_planned(e.uid, &all, &e.saved);
+        let Some(e) = self.table_editor.as_mut() else {
+            return;
+        };
+        match planned {
+            Ok(t) => {
+                e.steps.push(e.edits.len());
+                e.edits = all;
+                e.redo.clear();
+                e.draft = t;
+                e.version += 1;
+                e.problem = None;
+                e.clamp();
+            }
+            Err(why) => e.problem = Some(why),
+        }
+    }
+
+    /// Ctrl+Z (`back`) or Ctrl+Y: a step taken back or made again.
+    fn table_step(&mut self, back: bool) {
+        let Some(e) = self.table_editor.as_mut() else {
+            return;
+        };
+        if back {
+            let Some(n) = e.steps.pop() else {
+                return;
+            };
+            let tail = e.edits.split_off(n);
+            e.redo.push(tail);
+        } else {
+            let Some(group) = e.redo.pop() else {
+                return;
+            };
+            e.steps.push(e.edits.len());
+            e.edits.extend(group);
+        }
+        let (uid, edits, saved) = (e.uid, e.edits.clone(), e.saved.clone());
+        let planned = self.table_planned(uid, &edits, &saved);
+        if let Some(e) = self.table_editor.as_mut() {
+            if let Ok(t) = planned {
+                e.draft = t;
+            }
+            e.version += 1;
+            e.problem = None;
+            e.clamp();
+        }
     }
 
     /// The grid's keys while the window is open: ↑ ↓ ← → (Shift: a range),
@@ -429,16 +503,18 @@ impl App {
     }
 
     pub(crate) fn table_editor_event(&mut self, event: Event) -> Task<Message> {
-        let font = self.table_font();
         let format = self.format();
         let Some(e) = self.table_editor.as_mut() else {
             return Task::none();
         };
         let mut task = Task::none();
         let before = (e.active, e.anchor, e.version);
+        // The step this event makes, and a step taken back or made again.
+        let mut group: Vec<TableEdit> = Vec::new();
+        let mut step: Option<bool> = None;
         match event {
             Event::Cell(r, c) => {
-                commit_words(e, font);
+                group.extend(commit_edits(e));
                 e.active = (r, c);
                 if !self.modifiers.shift() {
                     e.anchor = (r, c);
@@ -463,20 +539,18 @@ impl App {
             }
             Event::Words(t) => e.words = t,
             Event::Commit => {
-                commit_words(e, font);
+                group.extend(commit_edits(e));
                 e.step(1, 0, false);
                 task = iced::widget::operation::focus(Id::new("table-grid"));
             }
-            Event::Tool(t) => tool(e, t, font),
+            Event::Tool(Tool::Undo) => step = Some(true),
+            Event::Tool(Tool::Redo) => step = Some(false),
+            Event::Tool(t) => group.extend(tool_edits(e, t)),
             Event::Width(t) => e.width = t,
             Event::Height(t) => e.height = t,
             Event::FrameWidth(t) => e.frame = t,
-            Event::CommitSizes => sizes_typed(e, &format),
-            Event::Detach => {
-                let mut next = e.draft.clone();
-                next.source = None;
-                e.take(next);
-            }
+            Event::CommitSizes => group.extend(sizes_edits(e, &format)),
+            Event::Detach => group.push(TableEdit::Unlink),
             Event::Scrolled(y) => e.scroll = y,
             Event::Key(key, shift, bar) => {
                 if bar {
@@ -486,7 +560,7 @@ impl App {
                             task = iced::widget::operation::focus(Id::new("table-grid"));
                         }
                         Named::Tab => {
-                            commit_words(e, font);
+                            group.extend(commit_edits(e));
                             e.step(0, if shift { -1 } else { 1 }, false);
                             task = iced::widget::operation::focus(Id::new("table-grid"));
                         }
@@ -501,7 +575,7 @@ impl App {
                         Named::Tab => e.step(0, if shift { -1 } else { 1 }, false),
                         // Words given the bar without its keyboard (a trace's fill) are written as its Enter would.
                         Named::Enter if e.words != e.words_at(e.owner(e.active)) => {
-                            commit_words(e, font);
+                            group.extend(commit_edits(e));
                             e.step(1, 0, false);
                         }
                         Named::Enter | Named::F2 => {
@@ -511,7 +585,7 @@ impl App {
                                 iced::widget::operation::move_cursor_to_end(Id::new(BAR)),
                             ]);
                         }
-                        Named::Delete | Named::Backspace => clear_selected(e),
+                        Named::Delete | Named::Backspace => group.extend(clear_edits(e)),
                         Named::Escape => return self.table_editor_event(Event::Close),
                         _ => {}
                     }
@@ -531,7 +605,7 @@ impl App {
                 return Task::none();
             }
             Event::Close => {
-                if e.draft != e.saved {
+                if !e.edits.is_empty() && e.draft != e.saved {
                     e.asking = true;
                 } else {
                     self.table_editor = None;
@@ -553,6 +627,11 @@ impl App {
                 return Task::none();
             }
         }
+        if let Some(back) = step {
+            self.table_step(back);
+        }
+        self.table_push(group);
+        let grid = grid_px(self.window_size.height);
         let Some(e) = self.table_editor.as_mut() else {
             return task;
         };
@@ -561,7 +640,7 @@ impl App {
             return task;
         }
         e.fields(&format);
-        if let Some(y) = e.reveal() {
+        if let Some(y) = e.reveal(grid) {
             e.scroll = y;
             task = Task::batch([
                 task,
@@ -577,31 +656,27 @@ impl App {
         task
     }
 
-    /// Kaydet: the table written in one step “Tablo” (`cad.entities.edit` `table`).
+    /// Kaydet: the edits run in one step “Tabloyu düzenle” (`cad.tables.edit`).
     fn save_table_editor(&mut self) {
         let Some(e) = self.table_editor.as_ref() else {
             return;
         };
-        if e.draft == e.saved {
+        if e.edits.is_empty() || e.draft == e.saved {
             self.table_editor = None;
             self.dialog = None;
             return;
         }
-        let Some(geometry) = edit_geometry(core(&e.draft)) else {
-            return;
-        };
-        let input = EntitiesEdit {
-            operation: EditOperation::Table,
-            changes: vec![EntityEdit::Update {
+        let input = TablesEdit {
+            operation: TablesOperation::Edit {
                 uid: e.uid.to_string(),
-                geometry,
-            }],
+                edits: e.edits.clone(),
+            },
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        match tables_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { warnings, .. } => {
                 for w in warnings {
                     self.warn(w.message);
@@ -812,19 +887,98 @@ impl App {
                 "Geri al (Ctrl+Z)".into(),
                 Tool::Undo,
                 None,
-                !e.past.is_empty()
+                !e.steps.is_empty()
             ),
             tool_button(
                 "redo",
                 "Yinele (Ctrl+Y)".into(),
                 Tool::Redo,
                 None,
-                !e.future.is_empty()
+                !e.redo.is_empty()
             ),
         ]
         .spacing(2)
         .align_y(Center);
-        let toolbar = container(tools)
+        // The cells' styles and fields (docs/adr/0327 §1, §3): a row of their own.
+        let style = e.draft.cell_style(at_cell(e).0, at_cell(e).1);
+        let bold_on = style.bold.unwrap_or(e.draft.header && at_cell(e).0 == 0);
+        let swatches = |list: &[(&str, &str)]| -> Vec<Choice> {
+            list.iter()
+                .map(|(name, hex)| Choice::new(*name).color(hex_color(hex)))
+                .collect()
+        };
+        let picked = |list: &[(&str, &str)], now: &Option<String>| {
+            now.as_deref().and_then(|c| list.iter().position(|(_, h)| *h == c))
+        };
+        let decimals: Vec<Choice> = (0..=4).map(|d| Choice::new(format!("{d} basamak"))).collect();
+        let blocks: Vec<Choice> = e.blocks.iter().map(Choice::new).collect();
+        let field_now = e.draft.field_at(at_cell(e).0, at_cell(e).1).and_then(|f| match &f.source {
+            FieldSource::Project { value: ProjectValue::BlockCount, name: Some(n) } => {
+                e.blocks.iter().position(|b| b == n)
+            }
+            _ => None,
+        });
+        let narrow = |w: f32, el: Element<'static, Message>| -> Element<'static, Message> {
+            container(el).width(Length::Fixed(typography::scaled(w))).into()
+        };
+        let format_tools = row![
+            tool_button("tableBold", "Kalın: seçili hücreler".into(), Tool::Bold, Some(bold_on), true),
+            tip(
+                narrow(
+                    118.0,
+                    Select::new(swatches(&TEXT_COLORS), picked(&TEXT_COLORS, &style.color), |i| {
+                        msg(Event::Tool(Tool::Color(i)))
+                    })
+                    .placeholder("Yazı rengi")
+                    .into()
+                ),
+                Tip::new("Yazı rengi: seçili hücreler"),
+                iced::widget::tooltip::Position::Top,
+            ),
+            tip(
+                narrow(
+                    104.0,
+                    Select::new(swatches(&FILLS), picked(&FILLS, &style.fill), |i| {
+                        msg(Event::Tool(Tool::Fill(i)))
+                    })
+                    .placeholder("Dolgu")
+                    .into()
+                ),
+                Tip::new("Dolgu: seçili hücrelerin zemini"),
+                iced::widget::tooltip::Position::Top,
+            ),
+            tip(
+                narrow(
+                    112.0,
+                    Select::new(decimals, style.decimals.map(|d| d as usize), |i| {
+                        msg(Event::Tool(Tool::Decimals(i as u32)))
+                    })
+                    .placeholder("Basamak")
+                    .into()
+                ),
+                Tip::new("Basamak: formül ve alan değerlerinin ondalığı"),
+                iced::widget::tooltip::Position::Top,
+            ),
+            tool_button("tableClearStyle", "Biçimi temizle: seçili hücrelere değen biçimler".into(), Tool::ClearStyle, None, !e.draft.styles.is_empty()),
+            gap(),
+            tip(
+                narrow(
+                    150.0,
+                    Select::new(blocks, field_now, |i| msg(Event::Tool(Tool::Field(i))))
+                        .placeholder("Blok sayısı")
+                        .into()
+                ),
+                Tip::new("Alan: etkin hücre seçilen bloğun yerleştirme sayısını yazar, çizim değişince güncellenir"),
+                iced::widget::tooltip::Position::Top,
+            ),
+            tool_button("tableUnfield", "Alanı kaldır: yazısı kalır".into(), Tool::Unfield, None, field_now.is_some() || e.draft.field_at(at_cell(e).0, at_cell(e).1).is_some()),
+            gap(),
+            label::caption(cell_note(e))
+                .wrapping(iced::widget::text::Wrapping::None),
+        ]
+        .spacing(4)
+        .align_y(Center);
+        let toolbar = container(column![tools, format_tools].spacing(4))
             .padding(4)
             .width(Fill)
             .style(style::container::header);
@@ -884,7 +1038,8 @@ impl App {
             })
             .collect();
         let total_w = gutter + widths.iter().sum::<f32>();
-        let view_h = typography::scaled(GRID_PX) - row_px;
+        let grid = grid_px(self.window_size.height);
+        let view_h = grid - row_px;
         let first = ((e.scroll / row_px) as usize).saturating_sub(OVERSCAN);
         let last = (((e.scroll + view_h) / row_px).ceil() as usize + OVERSCAN).min(n);
         let in_range = |i: usize, j: usize| {
@@ -922,9 +1077,17 @@ impl App {
                     }
                     None => ((i, j), 1, 1),
                 };
-                let words = e.words_at(top);
+                // The cell as the table shows it: a formula's worked out value, its style's look (docs/adr/0327 §1).
+                let words = e
+                    .draft
+                    .cells
+                    .get(top.0)
+                    .and_then(|row| row.get(top.1))
+                    .cloned()
+                    .unwrap_or_default();
                 let heading = e.draft.header && top.0 == 0;
-                let alignment = if heading {
+                let look = e.draft.cell_style(top.0, top.1);
+                let alignment = look.align.unwrap_or(if heading {
                     TableAlign::Center
                 } else {
                     e.draft
@@ -932,13 +1095,15 @@ impl App {
                         .as_ref()
                         .and_then(|a| a.get(top.1).copied())
                         .unwrap_or(TableAlign::Left)
-                };
+                });
+                let fill = look.fill.as_deref().map(hex_color);
+                let ink = look.color.as_deref().map(hex_color);
                 let w: f32 = widths[j..(j + span_cols).min(m)].iter().sum();
                 let h = span_rows as f32 * row_px;
                 let active = top == e.active;
                 let chosen = in_range(i, j);
                 let mut text = label::body(words).wrapping(iced::widget::text::Wrapping::None);
-                if heading {
+                if look.bold.unwrap_or(heading) {
                     text = text.font(typography::ui_strong());
                 }
                 let place = match alignment {
@@ -953,7 +1118,7 @@ impl App {
                     .align_x(place)
                     .align_y(Center)
                     .clip(true)
-                    .style(move |theme: &Theme| cell_style(theme, chosen, active));
+                    .style(move |theme: &Theme| cell_style(theme, chosen, active, fill, ink));
                 cells.push(
                     pin(mouse_area(face)
                         .on_press(msg(Event::Cell(top.0, top.1)))
@@ -996,7 +1161,7 @@ impl App {
                 )),
         )
         .width(Fill)
-        .height(Length::Fixed(typography::scaled(GRID_PX) + 12.0))
+        .height(Length::Fixed(grid + 12.0))
         .style(style::container::field_box);
         // The sizes row.
         let unit = format.length_unit_label();
@@ -1067,6 +1232,7 @@ impl App {
                     kentos_contracts::TableSource::Coordinates { .. } => "tableCoordinates",
                     kentos_contracts::TableSource::Areas { .. } => "tableAreas",
                     kentos_contracts::TableSource::Attributes { .. } => "tableAttributes",
+                    kentos_contracts::TableSource::Blocks { .. } => "tableBlocks",
                 };
                 row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),
@@ -1147,6 +1313,39 @@ impl App {
     }
 }
 
+/// The active cell's owner (a merged range's top left).
+fn at_cell(e: &Editor) -> (usize, usize) {
+    e.owner(e.active)
+}
+
+/// What the active cell is beyond its words: its formula or its field.
+fn cell_note(e: &Editor) -> String {
+    let (r, c) = at_cell(e);
+    if let Some(f) = e.draft.formula_at(r, c) {
+        return format!("Formül: {}", f.formula);
+    }
+    if let Some(f) = e.draft.field_at(r, c) {
+        let what = match &f.source {
+            FieldSource::Project { value, name } => match name {
+                Some(n) => format!("{} ({n})", value.label()),
+                None => value.label().to_owned(),
+            },
+            FieldSource::Object { value, .. } => format!("Nesnenin {}", value.label().to_lowercase()),
+        };
+        return match f.broken {
+            Some(b) => format!("Alan: {what}; okunamadı: {}", b.words()),
+            None => format!("Alan: {what}"),
+        };
+    }
+    "Formül için = ile başlayın: =TOPLA(B2:B5), =B2*C2".to_owned()
+}
+
+/// `#rrggbb` as a colour (a swatch).
+fn hex_color(hex: &str) -> iced::Color {
+    let n = u32::from_str_radix(hex.trim_start_matches('#'), 16).unwrap_or(0);
+    iced::Color::from_rgb8((n >> 16) as u8, (n >> 8) as u8, n as u8)
+}
+
 /// A toolbar button by its words (its tip, as the web's `aria-label`): a trace's `press`.
 fn tool_by_words(words: &str) -> Option<Tool> {
     let counted = |suffix: &str| {
@@ -1175,202 +1374,179 @@ fn tool_by_words(words: &str) -> Option<Tool> {
         "Yinele (Ctrl+Y)" => Tool::Redo,
         "Satırı sil" => Tool::DeleteRows,
         "Sütunu sil" => Tool::DeleteColumns,
+        "Kalın: seçili hücreler" => Tool::Bold,
+        "Biçimi temizle: seçili hücrelere değen biçimler" => Tool::ClearStyle,
+        "Alanı kaldır: yazısı kalır" => Tool::Unfield,
         _ if counted(" satırı sil") => Tool::DeleteRows,
         _ if counted(" sütunu sil") => Tool::DeleteColumns,
         _ => return None,
     })
 }
 
-/// Writes the active cell's words from the bar, the column widened as they ask.
-fn commit_words(e: &mut Editor, font: kentos_geometry_core::text::Font) {
+/// The bar's words written to the active cell (a formula when they begin with `=`), the column widened as they ask.
+fn commit_edits(e: &Editor) -> Vec<TableEdit> {
     let at = e.owner(e.active);
     if e.words == e.words_at(at) {
-        return;
+        return Vec::new();
     }
-    let words = e.words.clone();
-    e.edit(
-        Edit::SetCell {
-            row: at.0,
-            col: at.1,
-            words,
+    vec![
+        TableEdit::SetCell {
+            row: at.0 as u32,
+            col: at.1 as u32,
+            words: e.words.clone(),
         },
-        true,
-        font,
-    );
+        TableEdit::Fit {
+            from: at.1 as u32,
+            count: 1,
+            grow: true,
+            rows: false,
+        },
+    ]
 }
 
-/// Clears the selected cells' words, one step.
-fn clear_selected(e: &mut Editor) {
+/// The selected cells' words cleared, one step.
+fn clear_edits(e: &Editor) -> Vec<TableEdit> {
     let r = e.selected();
-    let mut next = e.draft.clone();
-    let mut any = false;
+    let mut out = Vec::new();
     for i in r.row..r.row + r.rows {
         for j in r.col..r.col + r.cols {
-            if next
-                .cells
-                .get(i)
-                .and_then(|row| row.get(j))
-                .is_some_and(|w| !w.is_empty())
-            {
-                let out = table_edit::edit(
-                    &core(&next),
-                    &Edit::SetCell {
-                        row: i,
-                        col: j,
-                        words: String::new(),
-                    },
-                );
-                if let Some(t) = out.table.and_then(|s| back(&next, s)) {
-                    next = t;
-                    any = true;
-                }
+            let hidden = range_at(&e.draft, i, j).is_some_and(|g| (g.row, g.col) != (i, j));
+            if !hidden && !e.words_at((i, j)).is_empty() {
+                out.push(TableEdit::SetCell {
+                    row: i as u32,
+                    col: j as u32,
+                    words: String::new(),
+                });
             }
         }
     }
-    if any {
-        e.take(next);
-    }
+    out
 }
 
-/// A toolbar button's work.
-fn tool(e: &mut Editor, t: Tool, font: kentos_geometry_core::text::Font) {
+/// A style over the selection.
+fn style_edit(r: CellRange, f: impl FnOnce(&mut TableEdit)) -> TableEdit {
+    let mut s = TableEdit::Style {
+        row: r.row as u32,
+        col: r.col as u32,
+        rows: r.rows as u32,
+        cols: r.cols as u32,
+        align: None,
+        bold: None,
+        color: None,
+        fill: None,
+        decimals: None,
+    };
+    f(&mut s);
+    s
+}
+
+/// A toolbar button's edits (Ctrl+Z and Ctrl+Y are the window's).
+fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
     let r = e.selected();
+    let (row, col, rows, cols) = (r.row as u32, r.col as u32, r.rows as u32, r.cols as u32);
+    let fit_new = |at: u32, count: u32| TableEdit::Fit {
+        from: at,
+        count,
+        grow: true,
+        rows: false,
+    };
     match t {
-        Tool::RowAbove => {
-            e.edit(
-                Edit::InsertRows {
-                    at: r.row,
-                    count: r.rows,
-                },
-                false,
-                font,
-            );
-        }
-        Tool::RowBelow => {
-            e.edit(
-                Edit::InsertRows {
-                    at: r.row + r.rows,
-                    count: r.rows,
-                },
-                false,
-                font,
-            );
-        }
-        Tool::ColumnLeft => {
-            e.edit(
-                Edit::InsertColumns {
-                    at: r.col,
-                    count: r.cols,
-                },
-                true,
-                font,
-            );
-        }
-        Tool::ColumnRight => {
-            e.edit(
-                Edit::InsertColumns {
-                    at: r.col + r.cols,
-                    count: r.cols,
-                },
-                true,
-                font,
-            );
-        }
-        Tool::DeleteRows => {
-            e.edit(
-                Edit::DeleteRows {
-                    from: r.row,
-                    count: r.rows,
-                },
-                false,
-                font,
-            );
-        }
-        Tool::DeleteColumns => {
-            e.edit(
-                Edit::DeleteColumns {
-                    from: r.col,
-                    count: r.cols,
-                },
-                false,
-                font,
-            );
-        }
-        Tool::Merge => {
-            e.edit(Edit::Merge(r), false, font);
-        }
-        Tool::Unmerge => {
-            e.edit(
-                Edit::Unmerge {
-                    row: e.active.0,
-                    col: e.active.1,
-                },
-                false,
-                font,
-            );
-        }
-        Tool::Align(a) => {
-            let mut next = e.draft.clone();
-            let mut aligns = next
-                .aligns
-                .take()
-                .unwrap_or_else(|| vec![TableAlign::Left; e.m()]);
-            for j in r.col..r.col + r.cols {
-                if let Some(x) = aligns.get_mut(j) {
-                    *x = a;
-                }
-            }
-            next.aligns = (!aligns.iter().all(|x| *x == TableAlign::Left)).then_some(aligns);
-            e.take(next);
-        }
-        Tool::Header => {
-            let mut next = e.draft.clone();
-            next.header = !next.header;
-            e.take(next);
-        }
-        Tool::Grid(g) => {
-            let mut next = e.draft.clone();
-            next.grid = g;
-            e.take(next);
-        }
-        Tool::Frame => {
-            let mut next = e.draft.clone();
-            // 0,7 mm on paper, as Tablo ekle's (the web's).
-            next.frame = match next.frame {
+        Tool::RowAbove => vec![TableEdit::InsertRows { at: row, count: rows }],
+        Tool::RowBelow => vec![TableEdit::InsertRows {
+            at: row + rows,
+            count: rows,
+        }],
+        Tool::ColumnLeft => vec![TableEdit::InsertColumns { at: col, count: cols }, fit_new(col, cols)],
+        Tool::ColumnRight => vec![
+            TableEdit::InsertColumns {
+                at: col + cols,
+                count: cols,
+            },
+            fit_new(col + cols, cols),
+        ],
+        Tool::DeleteRows => vec![TableEdit::DeleteRows { from: row, count: rows }],
+        Tool::DeleteColumns => vec![TableEdit::DeleteColumns { from: col, count: cols }],
+        Tool::Merge => vec![TableEdit::Merge { row, col, rows, cols }],
+        Tool::Unmerge => vec![TableEdit::Unmerge {
+            row: e.active.0 as u32,
+            col: e.active.1 as u32,
+        }],
+        Tool::Align(a) => vec![TableEdit::ColumnAlign {
+            from: col,
+            count: cols,
+            align: a,
+        }],
+        Tool::Header => vec![TableEdit::Header { on: !e.draft.header }],
+        Tool::Grid(g) => vec![TableEdit::Grid { grid: g }],
+        // 0,7 mm on paper, as Tablo ekle's (the web's).
+        Tool::Frame => vec![TableEdit::Frame {
+            width: match e.draft.frame {
                 Some(_) => None,
                 None => Some(0.7 / 1000.0 * e.scale),
-            };
-            e.take(next);
+            },
+        }],
+        Tool::Fit => vec![TableEdit::Fit {
+            from: 0,
+            count: e.m() as u32,
+            grow: false,
+            rows: true,
+        }],
+        Tool::Bold => {
+            let on = e.draft.cell_style(r.row, r.col).bold.unwrap_or(e.draft.header && r.row == 0);
+            vec![style_edit(r, |s| {
+                if let TableEdit::Style { bold, .. } = s {
+                    *bold = Some(!on);
+                }
+            })]
         }
-        Tool::Fit => {
-            if let Some(s) = sizes(&core(&e.draft), font) {
-                let mut next = e.draft.clone();
-                next.rows = s.rows;
-                next.columns = s.columns;
-                e.take(next);
+        Tool::Color(i) => vec![style_edit(r, |s| {
+            if let TableEdit::Style { color, .. } = s {
+                *color = TEXT_COLORS.get(i).map(|(_, c)| (*c).to_owned());
+            }
+        })],
+        Tool::Fill(i) => vec![style_edit(r, |s| {
+            if let TableEdit::Style { fill, .. } = s {
+                *fill = FILLS.get(i).map(|(_, c)| (*c).to_owned());
+            }
+        })],
+        Tool::Decimals(d) => vec![style_edit(r, |s| {
+            if let TableEdit::Style { decimals, .. } = s {
+                *decimals = Some(d);
+            }
+        })],
+        Tool::ClearStyle => vec![TableEdit::ClearStyle { row, col, rows, cols }],
+        Tool::Field(i) => match e.blocks.get(i) {
+            Some(name) => {
+                let at = e.owner(e.active);
+                vec![TableEdit::Field {
+                    row: at.0 as u32,
+                    col: at.1 as u32,
+                    source: FieldSource::Project {
+                        value: ProjectValue::BlockCount,
+                        name: Some(name.clone()),
+                    },
+                    format: None,
+                }]
+            }
+            None => Vec::new(),
+        },
+        Tool::Unfield => {
+            let at = e.owner(e.active);
+            if e.draft.field_at(at.0, at.1).is_some() {
+                vec![TableEdit::Unfield {
+                    row: at.0 as u32,
+                    col: at.1 as u32,
+                }]
+            } else {
+                Vec::new()
             }
         }
-        Tool::Undo => {
-            if let Some(prev) = e.past.pop() {
-                e.future.push(std::mem::replace(&mut e.draft, prev));
-                e.version += 1;
-                e.problem = None;
-                e.clamp();
-            }
-        }
-        Tool::Redo => {
-            if let Some(next) = e.future.pop() {
-                e.past.push(std::mem::replace(&mut e.draft, next));
-                e.version += 1;
-                e.problem = None;
-                e.clamp();
-            }
-        }
+        Tool::Undo | Tool::Redo => Vec::new(),
     }
 }
 
 /// The sizes row typed: the selected columns' width, rows' height and the frame, in the project's unit.
-fn sizes_typed(e: &mut Editor, f: &kentos_interaction::Format) {
+fn sizes_edits(e: &Editor, f: &kentos_interaction::Format) -> Vec<TableEdit> {
     let number = |t: &str| {
         t.trim()
             .replace(',', ".")
@@ -1379,25 +1555,34 @@ fn sizes_typed(e: &mut Editor, f: &kentos_interaction::Format) {
             .filter(|v| v.is_finite() && *v > 0.0)
     };
     let r = e.selected();
-    let mut next = e.draft.clone();
-    if let Some(w) = number(&e.width) {
-        for j in r.col..r.col + r.cols {
-            next.columns[j] = f.to_metres(w);
-        }
-    }
-    if let Some(h) = number(&e.height) {
-        for i in r.row..r.row + r.rows {
-            next.rows[i] = f.to_metres(h);
-        }
-    }
-    if next.frame.is_some()
-        && let Some(w) = number(&e.frame)
+    let mut out = Vec::new();
+    if let Some(w) = number(&e.width)
+        && (r.col..r.col + r.cols).any(|j| e.draft.columns[j] != f.to_metres(w))
     {
-        next.frame = Some(w / 1000.0 * e.scale);
+        out.push(TableEdit::ColumnWidth {
+            from: r.col as u32,
+            count: r.cols as u32,
+            width: f.to_metres(w),
+        });
     }
-    if next != e.draft {
-        e.take(next);
+    if let Some(h) = number(&e.height)
+        && (r.row..r.row + r.rows).any(|i| e.draft.rows[i] != f.to_metres(h))
+    {
+        out.push(TableEdit::RowHeight {
+            from: r.row as u32,
+            count: r.rows as u32,
+            height: f.to_metres(h),
+        });
     }
+    if let Some(fr) = e.draft.frame
+        && let Some(w) = number(&e.frame)
+        && fr != w / 1000.0 * e.scale
+    {
+        out.push(TableEdit::Frame {
+            width: Some(w / 1000.0 * e.scale),
+        });
+    }
+    out
 }
 
 /// A row number's or a column letter's cell: the header's look, the accent on the selection's.
@@ -1420,15 +1605,36 @@ fn gutter_style(theme: &Theme, on: bool) -> container::Style {
 }
 
 /// A cell: lines between, the selection's fill, the active cell's accent ring.
-fn cell_style(theme: &Theme, chosen: bool, active: bool) -> container::Style {
+/// A grid cell: the selection's colour when chosen, else its fill; its style's colour, on a fill a dark ink, else
+/// the theme's text (a dark colour lightened on a dark theme, to be read).
+fn cell_style(
+    theme: &Theme,
+    chosen: bool,
+    active: bool,
+    fill: Option<iced::Color>,
+    ink: Option<iced::Color>,
+) -> container::Style {
     let t = Tokens::of(theme);
+    let dark = t.is_dark;
+    let filled = fill.filter(|_| !chosen);
+    let text = match (ink, filled) {
+        (Some(c), Some(_)) => c,
+        (Some(c), None) if dark => iced::Color::from_rgb(
+            c.r + (1.0 - c.r) * 0.45,
+            c.g + (1.0 - c.g) * 0.45,
+            c.b + (1.0 - c.b) * 0.45,
+        ),
+        (Some(c), None) => c,
+        (None, Some(_)) => iced::Color::from_rgb8(0x1b, 0x1f, 0x24),
+        (None, None) => t.text,
+    };
     container::Style {
         background: Some(iced::Background::Color(if chosen {
             t.selection()
         } else {
-            t.field
+            filled.unwrap_or(t.field)
         })),
-        text_color: Some(t.text),
+        text_color: Some(text),
         border: iced::Border {
             color: if active { t.accent } else { t.border },
             width: if active { 2.0 } else { 0.5 },

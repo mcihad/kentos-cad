@@ -806,6 +806,20 @@ DrawingUnitName = Literal["mm", "cm", "m", "in", "ft"]
 """The names of :class:`DrawingUnit`, for a plain string."""
 
 
+class DxfForm(_StrEnum):
+    """What a dimension or a leader becomes in DXF (docs/adr/0327 §6).
+
+    - ``native``: Its own DXF entity (DIMENSION; LEADER and MTEXT): another program edits it as one.
+    - ``block``: Its look as an anonymous block's lines, arrowheads and texts, placed by an INSERT: every program shows it as
+    """
+    NATIVE = "native"
+    BLOCK = "block"
+
+
+DxfFormName = Literal["native", "block"]
+"""The names of :class:`DxfForm`, for a plain string."""
+
+
 class EditOperation(_StrEnum):
     """The modify tool an edit comes from; it names the undo step.
 
@@ -1923,15 +1937,17 @@ class ProjectValue(_StrEnum):
     - ``unit``: The drawing unit, `m`.
     - ``crs``: The coordinate system, `EPSG:5254`, or `Yerel`.
     - ``variable``: The project's variable named (docs/adr/0214 §4).
+    - ``blockCount``: How many inserts of the block named the drawing holds (docs/adr/0327 §3).
     """
     NAME = "name"
     SCALE = "scale"
     UNIT = "unit"
     CRS = "crs"
     VARIABLE = "variable"
+    BLOCK_COUNT = "blockCount"
 
 
-ProjectValueName = Literal["name", "scale", "unit", "crs", "variable"]
+ProjectValueName = Literal["name", "scale", "unit", "crs", "variable", "blockCount"]
 """The names of :class:`ProjectValue`, for a plain string."""
 
 
@@ -2146,6 +2162,20 @@ SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant",
 """The names of :class:`SnapKindName`, for a plain string."""
 
 
+class SourceOverrides(_StrEnum):
+    """What Tabloyu güncelle does with a cell changed by hand since its file was last read (docs/adr/0327 §5).
+
+    - ``keep``: Kept while the file's cell there stays as it was.
+    - ``replace``: The file's words written over it.
+    """
+    KEEP = "keep"
+    REPLACE = "replace"
+
+
+SourceOverridesName = Literal["keep", "replace"]
+"""The names of :class:`SourceOverrides`, for a plain string."""
+
+
 class StackMode(_StrEnum):
     """When a label is cut into lines.
 
@@ -2245,6 +2275,28 @@ class TableGrid(_StrEnum):
 
 TableGridName = Literal["outer", "rows", "none"]
 """The names of :class:`TableGrid`, for a plain string."""
+
+
+class TableRefresh(_StrEnum):
+    """What Tabloyu güncelle did with a table.
+
+    - ``updated``: Written again.
+    - ``unchanged``: Its source gives what it has (a file's same bytes).
+    - ``missing``: Its file is not where its path says: it stays as it was.
+    - ``unreadable``: Its file cannot be read as a table: it stays as it was.
+    - ``unlinked``: It names a file but is linked to none: choose the file (Dosyaya bağla).
+    - ``live``: A block schedule: the document keeps it at every step.
+    """
+    UPDATED = "updated"
+    UNCHANGED = "unchanged"
+    MISSING = "missing"
+    UNREADABLE = "unreadable"
+    UNLINKED = "unlinked"
+    LIVE = "live"
+
+
+TableRefreshName = Literal["updated", "unchanged", "missing", "unreadable", "unlinked", "live"]
+"""The names of :class:`TableRefresh`, for a plain string."""
 
 
 class TenantKind(_StrEnum):
@@ -3390,6 +3442,44 @@ class SubPlace(_Union):
         return _variant(_SUB_PLACE, "SubPlace", "kind", data).from_json(data)
 
 
+class TableEdit(_Union):
+    """One edit of a table's cells, rows and columns, applied in order (Tabloyu düzenle).
+
+    One of:
+
+    - :class:`SetCellTableEdit` (``kind: setCell``)
+    - :class:`InsertRowsTableEdit` (``kind: insertRows``)
+    - :class:`DeleteRowsTableEdit` (``kind: deleteRows``)
+    - :class:`InsertColumnsTableEdit` (``kind: insertColumns``)
+    - :class:`DeleteColumnsTableEdit` (``kind: deleteColumns``)
+    - :class:`MergeTableEdit` (``kind: merge``)
+    - :class:`UnmergeTableEdit` (``kind: unmerge``)
+    - :class:`StyleTableEdit` (``kind: style``)
+    - :class:`ClearStyleTableEdit` (``kind: clearStyle``)
+    - :class:`FieldTableEdit` (``kind: field``)
+    - :class:`UnfieldTableEdit` (``kind: unfield``)
+    - :class:`RowHeightTableEdit` (``kind: rowHeight``)
+    - :class:`ColumnWidthTableEdit` (``kind: columnWidth``)
+    - :class:`FitTableEdit` (``kind: fit``)
+    - :class:`ColumnAlignTableEdit` (``kind: columnAlign``)
+    - :class:`HeaderTableEdit` (``kind: header``)
+    - :class:`GridTableEdit` (``kind: grid``)
+    - :class:`FrameTableEdit` (``kind: frame``)
+    - :class:`UnlinkTableEdit` (``kind: unlink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableEdit:
+        return _variant(_TABLE_EDIT, "TableEdit", "kind", data).from_json(data)
+
+
 class TableSource(_Union):
     """Where a table's rows came from (docs/adr/0184 §5).
 
@@ -3399,6 +3489,7 @@ class TableSource(_Union):
     - :class:`AreasTableSource` (``kind: areas``)
     - :class:`AttributesTableSource` (``kind: attributes``)
     - :class:`FileTableSource` (``kind: file``)
+    - :class:`BlocksTableSource` (``kind: blocks``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -3411,6 +3502,29 @@ class TableSource(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> TableSource:
         return _variant(_TABLE_SOURCE, "TableSource", "kind", data).from_json(data)
+
+
+class TablesOperation(_Union):
+    """What `cad.tables.edit` does.
+
+    One of:
+
+    - :class:`EditTablesOperation` (``kind: edit``)
+    - :class:`RefreshTablesOperation` (``kind: refresh``)
+    - :class:`LinkTablesOperation` (``kind: link``)
+    - :class:`UnlinkTablesOperation` (``kind: unlink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TablesOperation:
+        return _variant(_TABLES_OPERATION, "TablesOperation", "kind", data).from_json(data)
 
 
 class TextEdit(_Union):
@@ -5850,6 +5964,68 @@ class Bounds(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CellField(_Model):
+    """A cell bound to a source (docs/adr/0327 §3): its words are the value last written, `####` when broken.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    row: int
+    col: int
+    source: FieldSource
+    broken: FieldBroken | FieldBrokenName | None | Unset = UNSET
+    format: FieldFormat | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["source"] = self.source.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else self.format.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CellField:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            source=FieldSource.from_json(data["source"]),
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(FieldBroken, data["broken"]),
+            format=UNSET if "format" not in data else None if data["format"] is None else FieldFormat.from_json(data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CellFormula(_Model):
+    """A cell's formula (docs/adr/0327 §2): its words begin with `=`; the cell's words are its result.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    row: int
+    col: int
+    formula: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["formula"] = self.formula
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CellFormula:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            formula=data["formula"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CellRange(_Model):
     """A merged range: `rows` × `cols` cells from row `row`, column `col`.
     Attributes:
@@ -5878,6 +6054,62 @@ class CellRange(_Model):
             col=data["col"],
             rows=data["rows"],
             cols=data["cols"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CellStyle(_Model):
+    """A style over a range of cells (docs/adr/0327 §1); what it leaves absent the cells take from the styles before it,
+    then from the table.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+        rows: Unit: count.
+        cols: Unit: count.
+        color: Its words' colour, `#rrggbb`.
+        decimals: The decimals a formula's or a field's number is written with. Unit: count.
+        fill: Its background, `#rrggbb`.
+    """
+    row: int
+    col: int
+    rows: int
+    cols: int
+    align: TableAlign | TableAlignName | None | Unset = UNSET
+    bold: bool | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    decimals: int | None | Unset = UNSET
+    fill: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CellStyle:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            rows=data["rows"],
+            cols=data["cols"],
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TableAlign, data["align"]),
+            bold=data.get("bold", UNSET),
+            color=data.get("color", UNSET),
+            decimals=data.get("decimals", UNSET),
+            fill=data.get("fill", UNSET),
         )
 
 
@@ -8111,6 +8343,33 @@ class DrawingStandard(_Model):
             line_types=[_enum_in(LineType, e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             naming=list(data["naming"]) if "naming" in data else UNSET,
             text_styles=[StandardTextStyle.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DxfAnnotations(_Model):
+    """How tables, dimensions and leaders are written in DXF (docs/adr/0327 §6). A table is always its look as a block
+    (DXF's ACAD_TABLE is not written); KentOS's data, when written, gives each back to KentOS whole.
+    Attributes:
+        metadata: KentOS's data on them (the table's cells and styles, the dimension's and the leader's own fields).
+    """
+    dimensions: DxfForm | DxfFormName = DxfForm.NATIVE
+    leaders: DxfForm | DxfFormName = DxfForm.NATIVE
+    metadata: bool = True
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dimensions"] = _enum_out(self.dimensions)
+        out["leaders"] = _enum_out(self.leaders)
+        out["metadata"] = self.metadata
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DxfAnnotations:
+        return cls(
+            dimensions=_enum_in(DxfForm, data["dimensions"]) if "dimensions" in data else DxfForm.NATIVE,
+            leaders=_enum_in(DxfForm, data["leaders"]) if "leaders" in data else DxfForm.NATIVE,
+            metadata=data["metadata"] if "metadata" in data else True,
         )
 
 
@@ -11186,16 +11445,20 @@ class ExportDxf(_Model):
     `layers[i]`), `nothing_to_export` (no object to write), `file_unwritable`.
     Attributes:
         path: The file to write, an absolute path.
+        annotations: How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
         layers: The layers whose objects to write (ids); every object when absent.
         overwrite: Write over a file that is there.
     """
     path: str
+    annotations: DxfAnnotations | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
     overwrite: bool = False
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
+        if self.annotations is not UNSET:
+            out["annotations"] = None if self.annotations is None else self.annotations.to_json()
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
         out["overwrite"] = self.overwrite
@@ -11205,6 +11468,7 @@ class ExportDxf(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ExportDxf:
         return cls(
             path=data["path"],
+            annotations=UNSET if "annotations" not in data else None if data["annotations"] is None else DxfAnnotations.from_json(data["annotations"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
         )
@@ -21885,7 +22149,9 @@ class TableEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        fields: Its cells bound to a source: their words are its value (docs/adr/0327 §3).
         font: Its typeface; absent: the project's, in the look of docs/adr/0055.
+        formulas: Its formulas: their cells' words are their results (docs/adr/0327 §2).
         frame: Its frame's width, metres: the outline drawn as a band that wide
             inside it (Kalın çerçeve); absent: a line as the others. Unit: length.
         grid: Which of its lines are drawn; absent: all.
@@ -21907,6 +22173,7 @@ class TableEntity(Entity):
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
+        styles: Its cells' styles, a later over an earlier (docs/adr/0327 §1).
         symbol: Library symbol overriding the layer's style.
         text_style: The project's text style it follows, by its id; absent: Standart.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -21928,7 +22195,9 @@ class TableEntity(Entity):
     bold: bool | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    fields: list[CellField] | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    formulas: list[CellFormula] | Unset = UNSET
     frame: float | None | Unset = UNSET
     grid: TableGrid | TableGridName | None | Unset = UNSET
     header: bool | Unset = UNSET
@@ -21944,6 +22213,7 @@ class TableEntity(Entity):
     order: int | None | Unset = UNSET
     overrides: list[str] | Unset = UNSET
     source: TableSource | None | Unset = UNSET
+    styles: list[CellStyle] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -21970,8 +22240,12 @@ class TableEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.formulas is not UNSET:
+            out["formulas"] = [e0.to_json() for e0 in self.formulas]
         if self.frame is not UNSET:
             out["frame"] = None if self.frame is None else float(self.frame)
         if self.grid is not UNSET:
@@ -22002,6 +22276,8 @@ class TableEntity(Entity):
             out["overrides"] = list(self.overrides)
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
+        if self.styles is not UNSET:
+            out["styles"] = [e0.to_json() for e0 in self.styles]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.text_style is not UNSET:
@@ -22029,7 +22305,9 @@ class TableEntity(Entity):
             bold=data.get("bold", UNSET),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            fields=[CellField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            formulas=[CellFormula.from_json(e0) for e0 in data["formulas"]] if "formulas" in data else UNSET,
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
             header=data.get("header", UNSET),
@@ -22045,10 +22323,120 @@ class TableEntity(Entity):
             order=data.get("order", UNSET),
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
+            styles=[CellStyle.from_json(e0) for e0 in data["styles"]] if "styles" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TableReport(_Model):
+    """A table Tabloyu güncelle looked at.
+    Attributes:
+        kept: Cells changed by hand kept (their file's cell as it was). Unit: count.
+        replaced: Cells changed by hand the file's words were written over (it changed there too, or the rule is replace). Unit: count.
+    """
+    uid: str
+    status: TableRefresh | TableRefreshName
+    kept: int
+    replaced: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["status"] = _enum_out(self.status)
+        out["kept"] = self.kept
+        out["replaced"] = self.replaced
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableReport:
+        return cls(
+            uid=data["uid"],
+            status=_enum_in(TableRefresh, data["status"]),
+            kept=data["kept"],
+            replaced=data["replaced"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TablesEdit(_Model):
+    """Input of `cad.tables.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_table`, `layer_locked`,
+    `no_entities`, `cell_out_of_range`, `invalid_table`, `not_finite`, `no_source`, `source_missing`,
+    `source_unreadable`.
+    """
+    operation: TablesOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TablesEdit:
+        return cls(
+            operation=TablesOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TablesEdited(_Model):
+    """Output of `cad.tables.edit` v1.
+    Attributes:
+        changed: The tables that changed, by their persistent ids.
+        report: What Tabloyu güncelle and Dosyaya bağla did with each table.
+    """
+    changed: list[str]
+    revision: str
+    report: list[TableReport] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.report is not UNSET:
+            out["report"] = [e0.to_json() for e0 in self.report]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TablesEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            report=[TableReport.from_json(e0) for e0 in data["report"]] if "report" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TablesPlan(_Model):
+    """What `cad.tables.edit` would write (plan mode).
+    Attributes:
+        tables: The tables as execute would write them.
+    """
+    tables: list[Entity]
+    revision: str
+    report: list[TableReport] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["revision"] = self.revision
+        if self.report is not UNSET:
+            out["report"] = [e0.to_json() for e0 in self.report]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TablesPlan:
+        return cls(
+            tables=[Entity.from_json(e0) for e0 in data["tables"]],
+            revision=data["revision"],
+            report=[TableReport.from_json(e0) for e0 in data["report"]] if "report" in data else UNSET,
         )
 
 
@@ -26697,6 +27085,7 @@ class TableEntityGeometry(EntityGeometry):
             right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
         overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         source: Where its rows came from; absent: written by hand.
+        styles: Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
         text_style: The project's text style it follows, by its id; absent: Standart.
     """
     TAG_VALUE: ClassVar[str] = "table"
@@ -26708,7 +27097,9 @@ class TableEntityGeometry(EntityGeometry):
     cells: list[list[str]]
     aligns: list[TableAlign | TableAlignName] | None | Unset = UNSET
     bold: bool | Unset = UNSET
+    fields: list[CellField] | None | Unset = UNSET
     font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    formulas: list[CellFormula] | None | Unset = UNSET
     frame: float | None | Unset = UNSET
     grid: TableGrid | TableGridName | None | Unset = UNSET
     header: bool | Unset = UNSET
@@ -26717,6 +27108,7 @@ class TableEntityGeometry(EntityGeometry):
     oblique: float | None | Unset = UNSET
     overrides: list[str] | Unset = UNSET
     source: TableSource | None | Unset = UNSET
+    styles: list[CellStyle] | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -26731,8 +27123,12 @@ class TableEntityGeometry(EntityGeometry):
             out["aligns"] = None if self.aligns is None else [_enum_out(e0) for e0 in self.aligns]
         if self.bold is not UNSET:
             out["bold"] = self.bold
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else [e0.to_json() for e0 in self.fields]
         if self.font is not UNSET:
             out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.formulas is not UNSET:
+            out["formulas"] = None if self.formulas is None else [e0.to_json() for e0 in self.formulas]
         if self.frame is not UNSET:
             out["frame"] = None if self.frame is None else float(self.frame)
         if self.grid is not UNSET:
@@ -26749,6 +27145,8 @@ class TableEntityGeometry(EntityGeometry):
             out["overrides"] = list(self.overrides)
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
+        if self.styles is not UNSET:
+            out["styles"] = None if self.styles is None else [e0.to_json() for e0 in self.styles]
         if self.text_style is not UNSET:
             out["textStyle"] = self.text_style
         return out
@@ -26764,7 +27162,9 @@ class TableEntityGeometry(EntityGeometry):
             cells=[list(e0) for e0 in data["cells"]],
             aligns=UNSET if "aligns" not in data else None if data["aligns"] is None else [_enum_in(TableAlign, e0) for e0 in data["aligns"]],
             bold=data.get("bold", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else [CellField.from_json(e0) for e0 in data["fields"]],
             font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            formulas=UNSET if "formulas" not in data else None if data["formulas"] is None else [CellFormula.from_json(e0) for e0 in data["formulas"]],
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
             header=data.get("header", UNSET),
@@ -26773,6 +27173,7 @@ class TableEntityGeometry(EntityGeometry):
             oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
+            styles=UNSET if "styles" not in data else None if data["styles"] is None else [CellStyle.from_json(e0) for e0 in data["styles"]],
             text_style=data.get("textStyle", UNSET),
         )
 
@@ -27077,7 +27478,7 @@ class ObjectFieldSource(FieldSource):
 class ProjectFieldSource(FieldSource):
     """The project.
     Attributes:
-        name: The variable's name, with `variable`.
+        name: The variable's name, with `variable`; the block's, with `blockCount`.
     """
     TAG_VALUE: ClassVar[str] = "project"
     value: ProjectValue | ProjectValueName
@@ -28563,6 +28964,531 @@ class AlongSubPlace(SubPlace):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetCellTableEdit(TableEdit):
+    """The cell's words (one line); words beginning with `=` are its formula, its words then its result. A cell
+    inside a merged range is its top left's.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "setCell"
+    row: int
+    col: int
+    words: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "setCell"}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["words"] = self.words
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetCellTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            words=data["words"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertRowsTableEdit(TableEdit):
+    """`count` empty rows before row `at` (the number of rows: after the last); merged ranges, styles, formulas'
+    references and fields move with the rows.
+    Attributes:
+        at: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "insertRows"
+    at: int
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insertRows"}
+        out["at"] = self.at
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertRowsTableEdit:
+        return cls(
+            at=data["at"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteRowsTableEdit(TableEdit):
+    """`count` rows from row `from` taken away; a formula reading one of them reads `#BAŞV!`.
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "deleteRows"
+    from_: int
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "deleteRows"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteRowsTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertColumnsTableEdit(TableEdit):
+    """
+    Attributes:
+        at: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "insertColumns"
+    at: int
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "insertColumns"}
+        out["at"] = self.at
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertColumnsTableEdit:
+        return cls(
+            at=data["at"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteColumnsTableEdit(TableEdit):
+    """
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "deleteColumns"
+    from_: int
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "deleteColumns"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteColumnsTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MergeTableEdit(TableEdit):
+    """The range merged: its words its cells', the empty ones left out, joined by a space; ranges inside it absorbed.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+        rows: Unit: count.
+        cols: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "merge"
+    row: int
+    col: int
+    rows: int
+    cols: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "merge"}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MergeTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            rows=data["rows"],
+            cols=data["cols"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnmergeTableEdit(TableEdit):
+    """The merged range the cell is in let go of.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "unmerge"
+    row: int
+    col: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unmerge"}
+        out["row"] = self.row
+        out["col"] = self.col
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnmergeTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StyleTableEdit(TableEdit):
+    """A style over the range: what it gives (at least one), over the styles before it.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+        rows: Unit: count.
+        cols: Unit: count.
+        decimals: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "style"
+    row: int
+    col: int
+    rows: int
+    cols: int
+    align: TableAlign | TableAlignName | None | Unset = UNSET
+    bold: bool | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    decimals: int | None | Unset = UNSET
+    fill: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "style"}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StyleTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            rows=data["rows"],
+            cols=data["cols"],
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TableAlign, data["align"]),
+            bold=data.get("bold", UNSET),
+            color=data.get("color", UNSET),
+            decimals=data.get("decimals", UNSET),
+            fill=data.get("fill", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClearStyleTableEdit(TableEdit):
+    """The styles that meet the range taken away, whole.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+        rows: Unit: count.
+        cols: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "clearStyle"
+    row: int
+    col: int
+    rows: int
+    cols: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "clearStyle"}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["rows"] = self.rows
+        out["cols"] = self.cols
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClearStyleTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            rows=data["rows"],
+            cols=data["cols"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldTableEdit(TableEdit):
+    """The cell bound to `source` (its formula, if any, taken away): its words the value.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "field"
+    row: int
+    col: int
+    source: FieldSource
+    format: FieldFormat | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "field"}
+        out["row"] = self.row
+        out["col"] = self.col
+        out["source"] = self.source.to_json()
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else self.format.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+            source=FieldSource.from_json(data["source"]),
+            format=UNSET if "format" not in data else None if data["format"] is None else FieldFormat.from_json(data["format"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnfieldTableEdit(TableEdit):
+    """The cell's field let go of: its words stay.
+    Attributes:
+        row: Unit: index.
+        col: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "unfield"
+    row: int
+    col: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unfield"}
+        out["row"] = self.row
+        out["col"] = self.col
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnfieldTableEdit:
+        return cls(
+            row=data["row"],
+            col=data["col"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RowHeightTableEdit(TableEdit):
+    """`count` rows from `from` made `height` metres high.
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+        height: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rowHeight"
+    from_: int
+    count: int
+    height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rowHeight"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        out["height"] = float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RowHeightTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+            height=float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnWidthTableEdit(TableEdit):
+    """`count` columns from `from` made `width` metres wide.
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+        width: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "columnWidth"
+    from_: int
+    count: int
+    width: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "columnWidth"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        out["width"] = float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnWidthTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+            width=float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FitTableEdit(TableEdit):
+    """Sığdır: `count` columns from `from` as wide as their words ask, in the drawing's typeface; with `grow` only
+    those narrower get wider; with `rows` every row `ROW` text heights high too (Yazıya sığdır).
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "fit"
+    from_: int
+    count: int
+    grow: bool | Unset = UNSET
+    rows: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fit"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        if self.grow is not UNSET:
+            out["grow"] = self.grow
+        if self.rows is not UNSET:
+            out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FitTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+            grow=data.get("grow", UNSET),
+            rows=data.get("rows", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnAlignTableEdit(TableEdit):
+    """`count` columns from `from` aligned so (the column's, under the cells' styles).
+    Attributes:
+        from_: Unit: index.
+        count: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "columnAlign"
+    from_: int
+    count: int
+    align: TableAlign | TableAlignName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "columnAlign"}
+        out["from"] = self.from_
+        out["count"] = self.count
+        out["align"] = _enum_out(self.align)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnAlignTableEdit:
+        return cls(
+            from_=data["from"],
+            count=data["count"],
+            align=_enum_in(TableAlign, data["align"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HeaderTableEdit(TableEdit):
+    """The first row the heading (bold, centred) or not."""
+    TAG_VALUE: ClassVar[str] = "header"
+    on: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "header"}
+        out["on"] = self.on
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HeaderTableEdit:
+        return cls(
+            on=data["on"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridTableEdit(TableEdit):
+    """Which lines are drawn (null: all)."""
+    TAG_VALUE: ClassVar[str] = "grid"
+    grid: TableGrid | TableGridName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "grid"}
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else _enum_out(self.grid)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridTableEdit:
+        return cls(
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else _enum_in(TableGrid, data["grid"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FrameTableEdit(TableEdit):
+    """Kalın çerçeve's width, metres (null: a line as the others).
+    Attributes:
+        width: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "frame"
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "frame"}
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FrameTableEdit:
+        return cls(
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnlinkTableEdit(TableEdit):
+    """Kaynağı bırak: the table follows no source."""
+    TAG_VALUE: ClassVar[str] = "unlink"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unlink"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnlinkTableEdit:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class CoordinatesTableSource(TableSource):
     """Koordinat çizelgesi: the points and vertices of these objects."""
     TAG_VALUE: ClassVar[str] = "coordinates"
@@ -28618,14 +29544,29 @@ class AttributesTableSource(TableSource):
 
 @dataclass(kw_only=True, slots=True)
 class FileTableSource(TableSource):
-    """A CSV or Excel file by its name (and sheet): it is chosen again to update."""
+    """A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the
+    drawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell
+    changed by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.
+    """
     TAG_VALUE: ClassVar[str] = "file"
     name: str
+    copy: list[list[str]] | None | Unset = UNSET
+    digest: str | None | Unset = UNSET
+    overrides: SourceOverrides | SourceOverridesName | Unset = UNSET
+    path: str | None | Unset = UNSET
     sheet: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "file"}
         out["name"] = self.name
+        if self.copy is not UNSET:
+            out["copy"] = None if self.copy is None else [list(e0) for e0 in self.copy]
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        if self.overrides is not UNSET:
+            out["overrides"] = _enum_out(self.overrides)
+        if self.path is not UNSET:
+            out["path"] = self.path
         if self.sheet is not UNSET:
             out["sheet"] = self.sheet
         return out
@@ -28634,7 +29575,134 @@ class FileTableSource(TableSource):
     def from_json(cls, data: Mapping[str, Any]) -> FileTableSource:
         return cls(
             name=data["name"],
+            copy=UNSET if "copy" not in data else None if data["copy"] is None else [list(e0) for e0 in data["copy"]],
+            digest=data.get("digest", UNSET),
+            overrides=_enum_in(SourceOverrides, data["overrides"]) if "overrides" in data else UNSET,
+            path=data.get("path", UNSET),
             sheet=data.get("sheet", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BlocksTableSource(TableSource):
+    """Blok çizelgesi (docs/adr/0327 §4): the inserts of the blocks named (none named: every block placed) counted,
+    by the attribute `by` when given; written again by the document at every step.
+    """
+    TAG_VALUE: ClassVar[str] = "blocks"
+    by: str | None | Unset = UNSET
+    names: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "blocks"}
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.names is not UNSET:
+            out["names"] = list(self.names)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BlocksTableSource:
+        return cls(
+            by=data.get("by", UNSET),
+            names=list(data["names"]) if "names" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EditTablesOperation(TablesOperation):
+    """Tabloyu düzenle: the edits in order, as one step."""
+    TAG_VALUE: ClassVar[str] = "edit"
+    uid: str
+    edits: list[TableEdit]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "edit"}
+        out["uid"] = self.uid
+        out["edits"] = [e0.to_json() for e0 in self.edits]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EditTablesOperation:
+        return cls(
+            uid=data["uid"],
+            edits=[TableEdit.from_json(e0) for e0 in data["edits"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshTablesOperation(TablesOperation):
+    """Tabloyu güncelle: each table written again from its source (a schedule from its objects, a linked file
+    from its path, read from `base`, the drawing's folder, when relative); a block schedule is the document's.
+    """
+    TAG_VALUE: ClassVar[str] = "refresh"
+    uids: list[str]
+    base: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refresh"}
+        out["uids"] = list(self.uids)
+        if self.base is not UNSET:
+            out["base"] = self.base
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshTablesOperation:
+        return cls(
+            uids=list(data["uids"]),
+            base=data.get("base", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinkTablesOperation(TablesOperation):
+    """Dosyaya bağla: the table's cells from the file at `path` (its sheet `sheet`, the first when none) and the table
+    linked to it: its path, digest and copy kept, `overrides` its rule.
+    """
+    TAG_VALUE: ClassVar[str] = "link"
+    uid: str
+    path: str
+    base: str | None | Unset = UNSET
+    overrides: SourceOverrides | SourceOverridesName | None | Unset = UNSET
+    sheet: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "link"}
+        out["uid"] = self.uid
+        out["path"] = self.path
+        if self.base is not UNSET:
+            out["base"] = self.base
+        if self.overrides is not UNSET:
+            out["overrides"] = None if self.overrides is None else _enum_out(self.overrides)
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinkTablesOperation:
+        return cls(
+            uid=data["uid"],
+            path=data["path"],
+            base=data.get("base", UNSET),
+            overrides=UNSET if "overrides" not in data else None if data["overrides"] is None else _enum_in(SourceOverrides, data["overrides"]),
+            sheet=data.get("sheet", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnlinkTablesOperation(TablesOperation):
+    """Kaynağı bırak: the tables keep their cells and follow no source."""
+    TAG_VALUE: ClassVar[str] = "unlink"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unlink"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnlinkTablesOperation:
+        return cls(
+            uids=list(data["uids"]),
         )
 
 
@@ -29497,7 +30565,13 @@ _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
 
 
-_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource}
+_TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "unlink": UnlinkTableEdit}
+
+
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource}
+
+
+_TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
 
 
 _TEXT_EDIT: dict[str, type[TextEdit]] = {"replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit}
@@ -29646,6 +30720,7 @@ __all__ = [
     "BlocksQuery",
     "BlocksReplace",
     "BlocksReplaced",
+    "BlocksTableSource",
     "BothNetworkDirection",
     "Bounds",
     "BreakDimensionEdit",
@@ -29653,7 +30728,10 @@ __all__ = [
     "BreakLineName",
     "CalloutKind",
     "CalloutKindName",
+    "CellField",
+    "CellFormula",
     "CellRange",
+    "CellStyle",
     "CenterLineDimensionMeasure",
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
@@ -29684,6 +30762,7 @@ __all__ = [
     "CleanupIgnore",
     "CleanupIgnoreName",
     "CleanupReport",
+    "ClearStyleTableEdit",
     "Clip",
     "CloseCurveEdit",
     "ClosedPolylines",
@@ -29694,6 +30773,8 @@ __all__ = [
     "CloudRenderName",
     "CloudSource",
     "CollectLeaderEdit",
+    "ColumnAlignTableEdit",
+    "ColumnWidthTableEdit",
     "CombineTextEdit",
     "CommitResult",
     "ConstructedCurve",
@@ -29727,7 +30808,9 @@ __all__ = [
     "DatumTransform",
     "DecurveCurveEdit",
     "DeleteBlockChange",
+    "DeleteColumnsTableEdit",
     "DeleteFeatureChange",
+    "DeleteRowsTableEdit",
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
@@ -29782,7 +30865,10 @@ __all__ = [
     "DrawingStandard",
     "DrawingUnit",
     "DrawingUnitName",
+    "DxfAnnotations",
     "DxfExported",
+    "DxfForm",
+    "DxfFormName",
     "DxfImported",
     "DynamicBlock",
     "DynamicLengthenChange",
@@ -29791,6 +30877,7 @@ __all__ = [
     "EdgeRegularFrame",
     "EditOperation",
     "EditOperationName",
+    "EditTablesOperation",
     "ElevationDimensionMeasure",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
@@ -29878,6 +30965,7 @@ __all__ = [
     "FieldNetworkDirection",
     "FieldRename",
     "FieldSource",
+    "FieldTableEdit",
     "FieldUnit",
     "FieldUnitName",
     "FieldsEdit",
@@ -29889,6 +30977,7 @@ __all__ = [
     "FileUnitName",
     "FilletRectangleCorners",
     "FitNurbsBy",
+    "FitTableEdit",
     "FlipBlockAction",
     "FlipBlockParameter",
     "FontMatch",
@@ -29897,6 +30986,7 @@ __all__ = [
     "FontsReported",
     "FormatFieldEdit",
     "FoundSnap",
+    "FrameTableEdit",
     "FrameUcsTo",
     "FrozenBlock",
     "GeographicCrsSystem",
@@ -29907,6 +30997,7 @@ __all__ = [
     "GrantRoleName",
     "GridArrayLayout",
     "GridChoice",
+    "GridTableEdit",
     "HatchAssoc",
     "HatchEntity",
     "HatchEntityGeometry",
@@ -29918,6 +31009,7 @@ __all__ = [
     "HatchRegion",
     "HatchWay",
     "HatchWayName",
+    "HeaderTableEdit",
     "Helmert",
     "ImageEntity",
     "ImageEntityGeometry",
@@ -29930,12 +31022,14 @@ __all__ = [
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",
+    "InsertColumnsTableEdit",
     "InsertEntity",
     "InsertEntityGeometry",
     "InsertFieldEdit",
     "InsertKnotCurveEdit",
     "InsertParameters",
     "InsertProxy",
+    "InsertRowsTableEdit",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",
@@ -30073,6 +31167,7 @@ __all__ = [
     "LinearBlockParameter",
     "LinearDimensionMeasure",
     "LinesCornerPick",
+    "LinkTablesOperation",
     "LocalCrsSystem",
     "LocalDefinition",
     "LookLeaderEdit",
@@ -30083,6 +31178,7 @@ __all__ = [
     "MatchProperty",
     "MatchPropertyName",
     "MeasuredPoint",
+    "MergeTableEdit",
     "MidPointConstruction",
     "MidSubPlace",
     "MirrorText",
@@ -30267,6 +31363,7 @@ __all__ = [
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
+    "RefreshTablesOperation",
     "RegistryDatum",
     "RegistryDatumName",
     "RegularFrame",
@@ -30289,6 +31386,7 @@ __all__ = [
     "RotateBlockAction",
     "RotateTransform",
     "RotateUcsTo",
+    "RowHeightTableEdit",
     "RubberLink",
     "RubbersheetTransform",
     "SaveUcsTo",
@@ -30312,6 +31410,7 @@ __all__ = [
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SetCellTableEdit",
     "SettingsChanged",
     "SettingsSet",
     "SharpRectangleCorners",
@@ -30330,6 +31429,8 @@ __all__ = [
     "SnapFound",
     "SnapKindName",
     "SnapKindNameName",
+    "SourceOverrides",
+    "SourceOverridesName",
     "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
@@ -30359,6 +31460,7 @@ __all__ = [
     "StyleFont",
     "StyleImpact",
     "StyleLeaderEdit",
+    "StyleTableEdit",
     "StylesEdit",
     "StylesEdited",
     "StylesImpact",
@@ -30367,11 +31469,19 @@ __all__ = [
     "SurveySettings",
     "TableAlign",
     "TableAlignName",
+    "TableEdit",
     "TableEntity",
     "TableEntityGeometry",
     "TableGrid",
     "TableGridName",
+    "TableRefresh",
+    "TableRefreshName",
+    "TableReport",
     "TableSource",
+    "TablesEdit",
+    "TablesEdited",
+    "TablesOperation",
+    "TablesPlan",
     "TangentsCurveEdit",
     "TenantKind",
     "TenantKindName",
@@ -30427,6 +31537,7 @@ __all__ = [
     "UcsSet",
     "UcsTo",
     "UnbreakDimensionEdit",
+    "UnfieldTableEdit",
     "UnitDecision",
     "UnitGeometry",
     "UnitGeometryName",
@@ -30434,6 +31545,9 @@ __all__ = [
     "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
+    "UnlinkTableEdit",
+    "UnlinkTablesOperation",
+    "UnmergeTableEdit",
     "UnusedResource",
     "UpdateBlockChange",
     "UpdateEntityEdit",

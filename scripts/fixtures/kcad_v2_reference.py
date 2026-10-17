@@ -1288,6 +1288,24 @@ def table_shape(e):
         assert 0 < 2 * e["frame"] < min(sum(e["columns"]), sum(e["rows"])), "çerçeve tablonun içinde"
 
 
+def table_parts(e):
+    """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
+    `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
+    src = e.get("source")
+    if src is None or src["kind"] not in ("blocks", "file"):
+        return e
+    e = dict(e)
+    if src["kind"] == "blocks":
+        assert src.get("names", [None]), "boş ad listesi yazılmaz"
+        e["schedule"] = e.pop("source")
+        return e
+    link = {k: src[k] for k in ("path", "digest", "copy", "overrides") if k in src and not (k == "overrides" and src[k] == "keep")}
+    if link:
+        e["source"] = {k: src[k] for k in ("kind", "name", "sheet") if k in src}
+        e["link"] = link
+    return e
+
+
 def image_shape(e):
     """The contract's picture rule, as far as an example needs it held (docs/adr/0192 §1)."""
     assert 0 < e["width"] <= 1e7 and 0 < e["height"] <= 1e7, "resmin boyu sıfırdan büyük"
@@ -1498,6 +1516,13 @@ KINDS = {
         "italic": (lambda b: boolean(b) if b is True else None, False),
         "oblique": (f64, False),
         "source": (table_source, False),
+        # Schema 68 (docs/adr/0327): the cells' styles, formulas and fields, a linked file's data and a block schedule,
+        # as their JSON.
+        "styles": (opaque, False),
+        "formulas": (opaque, False),
+        "fields": (opaque, False),
+        "link": (opaque, False),
+        "schedule": (opaque, False),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, one source, its clip in its own fractions, its opacity; `mirror`
     # only when true; only in the drawing.
@@ -1681,6 +1706,7 @@ def entity(e, uid, index):
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
+        e = table_parts(e)
     if kind == "image":
         assert uid is not None, "blok tanımında resim olamaz"
         image_shape(e)
@@ -1986,6 +2012,13 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
+    def tabled(es):
+        def linked(src):
+            return src["kind"] == "blocks" or (src["kind"] == "file" and (any(k in src for k in ("path", "digest", "copy")) or src.get("overrides", "keep") != "keep"))
+        return any(e["kind"] == "table" and (any(k in e for k in ("styles", "formulas", "fields")) or ("source" in e and linked(e["source"]))) for e in es)
+    if tabled(entities):
+        return 68
     # Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the leader styles.
     multi = lambda es: any(e["kind"] == "leader" and any(k in e for k in ("arms", "tip", "blocks", "leaderStyle")) for e in es)  # noqa: E731
     if multi(entities) or any(multi(b["entities"]) for b in blocks or []) or (settings or {}).get("leaderStyles"):
@@ -2370,7 +2403,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-68.kcad"] = container(root(cmap(parts), version=uint(68)))
+    files["schema-version-69.kcad"] = container(root(cmap(parts), version=uint(69)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3716,6 +3749,31 @@ def build():
     out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
     out["text-fields.kcad"] = container(document(load("text-fields.json")))
     out["multileader.kcad"] = container(document(load("multileader.json")))
+    # A table's cells' styles, formulas and fields, a linked file and a block schedule are schema 68's (docs/adr/0327):
+    # in schema 67 an unknown field; empty lists, a bad colour, a formula over a field, a link without a file source,
+    # a schedule beside a source and a bad digest refused.
+    out["table-cells.kcad"] = container(document(load("table-cells.json")))
+    payload = document(load("table-cells.json"))
+    assert payload.count(b"\x67version\x18\x44") == 1
+    out["broken/table-cells-in-schema-67.kcad"] = container(payload.replace(b"\x67version\x18\x44", b"\x67version\x18\x43"))
+
+    def cells_broken(change):
+        d = load("table-cells.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/table-styles-empty.kcad"] = cells_broken(lambda d: d["entities"][2].update(styles=[]))
+    out["broken/table-style-colour.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"][0].update(fill="mavi"))
+    out["broken/table-style-outside.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"][2].update(rows=4))
+    out["broken/table-style-nothing.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"].append({"row": 1, "col": 0, "rows": 1, "cols": 1}))
+    out["broken/table-formula-not-formula.kcad"] = cells_broken(lambda d: d["entities"][2]["formulas"][0].update(formula="TOPLA(B3:B4)"))
+    out["broken/table-formula-in-merge.kcad"] = cells_broken(lambda d: d["entities"][2]["formulas"].append({"row": 0, "col": 1, "formula": "=1"}))
+    out["broken/table-field-on-formula.kcad"] = cells_broken(lambda d: d["entities"][2]["fields"][0].update(col=1))
+    out["broken/table-field-unnamed.kcad"] = cells_broken(lambda d: d["entities"][2]["fields"][0]["source"].pop("name"))
+    out["broken/table-link-digest.kcad"] = cells_broken(lambda d: d["entities"][3]["source"].update(digest="abc"))
+    out["broken/table-link-not-file.kcad"] = cells_broken(lambda d: d["entities"][2].update(link={"path": "alanlar.csv"}))
+    out["broken/table-schedule-and-source.kcad"] = cells_broken(lambda d: d["entities"][2].update(schedule={"kind": "blocks"}))
+    out["broken/table-schedule-name-empty.kcad"] = cells_broken(lambda d: d["entities"][4]["source"].update(names=[" "]))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

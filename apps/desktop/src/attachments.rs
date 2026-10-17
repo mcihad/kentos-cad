@@ -221,7 +221,7 @@ impl App {
     }
 
     /// The drawing's folder, a linked file's base.
-    fn drawing_folder(&self) -> Option<PathBuf> {
+    pub(crate) fn drawing_folder(&self) -> Option<PathBuf> {
         self.document
             .as_ref()
             .and_then(|d| d.path.as_deref())

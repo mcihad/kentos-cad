@@ -107,66 +107,41 @@ pub fn contract_layout(
     })
 }
 
-/// A table's source as the core carries it, unread (docs/adr/0184 §5): the
-/// contract's JSON (`kind`, then `objects` or `name` and `sheet`).
+/// A table's source as the core carries it, unread (docs/adr/0184 §5, docs/adr/0327 §4–§5): the contract's JSON
+/// (`kind`, then `objects`, a file's `name`, `sheet` and link, or a block schedule's `names` and `by`).
 pub fn core_source(source: Option<&TableSource>) -> Option<Json> {
-    let source = source?;
-    let mut fields = vec![("kind".to_owned(), Json::Str(source.kind().to_owned()))];
-    match source {
-        TableSource::File { name, sheet } => {
-            fields.push(("name".to_owned(), Json::Str(name.clone())));
-            if let Some(s) = sheet {
-                fields.push(("sheet".to_owned(), Json::Str(s.clone())));
-            }
-        }
-        _ => fields.push((
-            "objects".to_owned(),
-            Json::Arr(
-                source
-                    .objects()
-                    .iter()
-                    .map(|id| Json::Str(id.to_text()))
-                    .collect(),
-            ),
-        )),
-    }
-    Some(Json::Obj(fields))
+    Json::parse(&serde_json::to_string(source?).ok()?).ok()
 }
 
 /// The source the core carried, as the contract writes it; none for one it cannot read.
 pub fn contract_source(source: Option<Json>) -> Option<TableSource> {
-    let source = source?;
-    let text = |k: &str| match source.get(k) {
-        Json::Str(s) => Some(s.clone()),
-        _ => None,
-    };
-    if text("kind")? == "file" {
-        return Some(TableSource::File {
-            name: text("name")?,
-            sheet: text("sheet"),
-        });
-    }
-    let Json::Arr(ids) = source.get("objects") else {
-        return None;
-    };
-    let objects = ids
-        .iter()
-        .map(|id| match id {
-            Json::Str(s) => kentos_contracts::EntityId::parse(s),
-            _ => None,
-        })
-        .collect::<Option<Vec<_>>>()?;
-    Some(match text("kind")?.as_str() {
-        "coordinates" => TableSource::Coordinates { objects },
-        "areas" => TableSource::Areas { objects },
-        "attributes" => TableSource::Attributes { objects },
-        _ => return None,
+    serde_json::from_str(&kentos_geometry_core::api::json::to_string(&source?)).ok()
+}
+
+/// A table's cell styles as the core takes them (docs/adr/0327 §1).
+pub fn core_looks(styles: &[kentos_contracts::CellStyle]) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
+    (!styles.is_empty()).then(|| {
+        styles
+            .iter()
+            .map(|s| kentos_geometry_core::entity::CellLook {
+                row: s.range.row as usize,
+                col: s.range.col as usize,
+                rows: s.range.rows as usize,
+                cols: s.range.cols as usize,
+                align: s.align.map(|a| a.name().to_owned()),
+                bold: s.bold,
+                color: s.color.clone(),
+                fill: s.fill.clone(),
+                decimals: s.decimals.map(|d| d as usize),
+            })
+            .collect()
     })
 }
 
 /// A table as the core takes it (docs/adr/0184 §1).
 pub fn core_table(t: &TableEntity) -> Shape {
     Shape::Table {
+        styles: core_looks(&t.styles),
         p: v(&t.p),
         rotation: t.rotation,
         height: t.height,
@@ -565,15 +540,7 @@ fn pattern_of(name: &str) -> Option<HatchPatternType> {
 /// project's `drawingFont`; Barlow without one): what text boxes, the
 /// geometry store and a polar array's middle are measured in.
 pub fn drawing_font(font: Option<DrawingFont>) -> Font {
-    Font::from_id(match font {
-        None | Some(DrawingFont::Barlow) => "barlow",
-        Some(DrawingFont::Arimo) => "arimo",
-        Some(DrawingFont::Overpass) => "overpass",
-        Some(DrawingFont::Quicksand) => "quicksand",
-        Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
-        Some(DrawingFont::CourierPrime) => "courier-prime",
-        Some(DrawingFont::PlexMono) => "plex-mono",
-    })
+    Font::from_id(DrawingFont::id_of(font))
 }
 
 /// A picture's fields as the geometry core takes them (docs/adr/0192).
@@ -1269,6 +1236,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (
             Entity::Table(e),
             Shape::Table {
+                styles: _,
                 p: at,
                 rotation,
                 height,
@@ -1602,6 +1570,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
         }),
         EntityGeometry::Table {
+            styles,
+            formulas,
+            fields,
             p,
             rotation,
             height,
@@ -1616,6 +1587,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             source,
         } => Entity::Table(TableEntity {
+            styles: styles.unwrap_or_default(),
+            formulas: formulas.unwrap_or_default(),
+            fields: fields.unwrap_or_default(),
             base,
             p,
             rotation,
@@ -1881,6 +1855,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         },
         // A table's alignment or lines the contract does not name are none of its (docs/adr/0184 §1).
         Shape::Table {
+            styles: _,
             p: at,
             rotation,
             height,
@@ -1895,6 +1870,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             source,
             face,
         } => EntityGeometry::Table {
+            styles: None,
+            formulas: None,
+            fields: None,
             p: p(at),
             rotation,
             height,

@@ -37,11 +37,22 @@ pub struct CellPlace {
     pub at: Vec2,
     /// Its words' width, metres.
     pub width: f64,
-    /// Bold: a heading row's, or the face's.
+    /// Bold: a heading row's, the face's or its style's.
     pub bold: bool,
+    /// Its words' colour from its style, `#rrggbb` (docs/adr/0327 §1); none: the table's.
+    pub color: Option<String>,
 }
 
-crate::json_struct!(out CellPlace { row, col, at, width, bold });
+crate::json_struct!(out CellPlace { row, col, at, width, bold, color });
+
+/// A cell's (or a merged range's) background from its style (docs/adr/0327 §1): its corners in the outline's order.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CellFill {
+    pub corners: [Vec2; 4],
+    pub fill: String,
+}
+
+crate::json_struct!(out CellFill { corners, fill });
 
 /// Where a table's parts go.
 #[derive(Clone, Debug, PartialEq)]
@@ -55,13 +66,16 @@ pub struct TableLayout {
     pub frame: Vec<[Vec2; 4]>,
     /// Every cell with words, row by row.
     pub cells: Vec<CellPlace>,
+    /// The cells with a background, row by row, under its lines and words.
+    pub fills: Vec<CellFill>,
 }
 
 crate::json_struct!(out TableLayout {
     outline,
     lines,
     frame,
-    cells
+    cells,
+    fills
 });
 
 /// A table's fields as its layout reads them.
@@ -79,6 +93,7 @@ pub struct TableGeom<'a> {
     pub frame: Option<f64>,
     pub face: &'a Face,
     pub source: Option<&'a crate::api::json::Json>,
+    pub styles: &'a [crate::entity::CellLook],
 }
 
 /// A table shape's fields; none for any other shape.
@@ -97,6 +112,7 @@ pub fn table_geom(s: &Shape) -> Option<TableGeom<'_>> {
             grid,
             frame,
             source,
+            styles,
             face,
         } => Some(TableGeom {
             p: *p,
@@ -112,6 +128,7 @@ pub fn table_geom(s: &Shape) -> Option<TableGeom<'_>> {
             frame: *frame,
             face,
             source: source.as_ref(),
+            styles: styles.as_deref().unwrap_or(&[]),
         }),
         _ => None,
     }
@@ -277,6 +294,7 @@ impl TableGeom<'_> {
             grid: self.grid.map(str::to_owned),
             frame: self.frame,
             source: self.source.cloned(),
+            styles: (!self.styles.is_empty()).then(|| self.styles.to_vec()),
             face: self.face.clone(),
         })
     }
@@ -335,14 +353,16 @@ impl TableGeom<'_> {
                     continue;
                 };
                 let heading = self.header && i == 0;
-                let bold = heading || self.face.is_bold();
+                let style = self.style_at(i, j);
+                let bold = style.bold.unwrap_or(heading || self.face.is_bold());
                 let width = width_em_in(words, typeface, bold) * h;
-                let align = if heading {
-                    "center"
-                } else {
-                    self.aligns
+                let align = match style.align.as_deref() {
+                    Some(a) => a,
+                    None if heading => "center",
+                    None => self
+                        .aligns
                         .and_then(|a| a.get(j))
-                        .map_or("left", String::as_str)
+                        .map_or("left", String::as_str),
                 };
                 let x = match align {
                     "center" => (x0 + x1) / 2.0 - width / 2.0,
@@ -356,6 +376,7 @@ impl TableGeom<'_> {
                     at: self.point(x, y),
                     width,
                     bold,
+                    color: style.color,
                 });
             }
         }
@@ -364,7 +385,77 @@ impl TableGeom<'_> {
             lines: self.lines(),
             frame: self.band_strips(),
             cells,
+            fills: self.fills(),
         }
+    }
+
+    /// The style of the cell at `row`, `col`: each field from the last style over it that sets it.
+    pub fn style_at(&self, row: usize, col: usize) -> crate::entity::CellLook {
+        let mut out = crate::entity::CellLook {
+            row,
+            col,
+            rows: 1,
+            cols: 1,
+            align: None,
+            bold: None,
+            color: None,
+            fill: None,
+            decimals: None,
+        };
+        for s in self.styles.iter().filter(|s| s.holds(row, col)) {
+            if s.align.is_some() {
+                out.align = s.align.clone();
+            }
+            if s.bold.is_some() {
+                out.bold = s.bold;
+            }
+            if s.color.is_some() {
+                out.color = s.color.clone();
+            }
+            if s.fill.is_some() {
+                out.fill = s.fill.clone();
+            }
+            if s.decimals.is_some() {
+                out.decimals = s.decimals;
+            }
+        }
+        out
+    }
+
+    /// The backgrounds its styles give, a merged range's over its whole box, row by row.
+    pub fn fills(&self) -> Vec<CellFill> {
+        if self.styles.iter().all(|s| s.fill.is_none()) {
+            return Vec::new();
+        }
+        let (xs, ys) = (edges(self.columns), edges(self.rows));
+        let mut out = Vec::new();
+        for i in 0..self.rows.len() {
+            for j in 0..self.columns.len() {
+                let (rows, cols) = match self.merge_at(i, j) {
+                    Some(r) if (r.row, r.col) == (i, j) => (r.rows, r.cols),
+                    Some(_) => continue,
+                    None => (1, 1),
+                };
+                let Some(fill) = self.style_at(i, j).fill else {
+                    continue;
+                };
+                let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) =
+                    (xs.get(j), xs.get(j + cols), ys.get(i), ys.get(i + rows))
+                else {
+                    continue;
+                };
+                out.push(CellFill {
+                    corners: [
+                        self.point(x0, y0),
+                        self.point(x1, y0),
+                        self.point(x1, y1),
+                        self.point(x0, y1),
+                    ],
+                    fill,
+                });
+            }
+        }
+        out
     }
 }
 
@@ -395,7 +486,11 @@ pub fn fit_widths(t: &TableGeom<'_>, font: Font, least: f64) -> Vec<f64> {
             if words.is_empty() || j >= out.len() || t.merge_at(i, j).is_some() {
                 continue;
             }
-            let bold = (t.header && i == 0) || t.face.is_bold();
+            // A cell style's bold over the heading's and the face's (docs/adr/0327 §1), as the layout's.
+            let bold = t
+                .style_at(i, j)
+                .bold
+                .unwrap_or((t.header && i == 0) || t.face.is_bold());
             let w = width_em_in(words, typeface, bold) * t.height + 2.0 * PAD * t.height;
             if w > out[j] {
                 out[j] = w;

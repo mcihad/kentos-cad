@@ -14,7 +14,7 @@
 //! back, and its arrowhead when a block of the drawing has the arrow
 //! block's name.
 
-use kentos_contracts::{LeaderArrow, LeaderEntity, Vec2};
+use kentos_contracts::{Entity, LeaderArrow, LeaderEntity, Vec2};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::arrowhead::{ArrowKind, arrowhead};
 use kentos_geometry_core::geom::leader::layout;
@@ -77,6 +77,9 @@ impl Writer<'_> {
         ) else {
             return false;
         };
+        if self.forms.leaders == kentos_contracts::DxfForm::Block {
+            return self.leader_block(l, &laid);
+        }
         let landing = laid.landing.map(|[_, end]| v(end.x, end.y));
         let me = self.begin("LEADER", &l.base);
         let note_handle = note.map(|_| self.handles.take());
@@ -139,7 +142,9 @@ impl Writer<'_> {
             let arms: Vec<Vec<[f64; 2]>> = l.arms.iter().map(|a| a.pts.iter().map(|p| [p.x, p.y]).collect()).collect();
             meta.arms = serde_json::to_string(&arms).ok();
         }
-        self.end(meta);
+        let words = super::form_words(WHAT, false, self.forms.metadata);
+        self.report.note(WHAT, &words, 0);
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
         if let (Some(h), Some(text), Some(at), Some(align)) =
             (note_handle, note, laid.note_point, laid.note_align)
         {
@@ -182,7 +187,71 @@ impl Writer<'_> {
         self.out.xyz(211, v(c, s));
         let mut meta = Self::base_meta(&l.base);
         meta.arm = true;
-        self.end(meta);
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
+    }
+
+    /// A leader's look as a block (docs/adr/0327 §6): each arm's line from where it leaves its arrowhead, its
+    /// arrowheads filled (SOLIDs) or drawn, its note an MTEXT where its layout puts it; an INSERT at the origin places
+    /// it, KentOS's data the leader itself.
+    fn leader_block(&mut self, l: &LeaderEntity, laid: &kentos_geometry_core::geom::leader::LeaderLayout) -> bool {
+        let record = self.handles.take();
+        *self.anonymous += 1;
+        let name = format!("*U{}", *self.anonymous);
+        self.records.push((record, name.clone(), 0));
+        self.block_begin(record, &name);
+        let at = |p: &CoreVec2| v(p.x, p.y);
+        let pts: Vec<CoreVec2> = l.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
+        let mut drawn = vec![(
+            kentos_geometry_core::geom::leader::drawn_path(&pts, laid),
+            laid.head.clone(),
+        )];
+        drawn.extend(kentos_geometry_core::geom::leader::arm_layouts(&crate::blocks::shape(
+            &Entity::Leader(l.clone()),
+        )));
+        for (path, head) in &drawn {
+            let line: Vec<Vec2> = path.iter().map(at).collect();
+            for p in &line {
+                self.grow(*p);
+            }
+            if line.len() >= 2 {
+                self.block_polyline(record, &line, false);
+            }
+            for ring in &head.fills {
+                match ring.len() {
+                    3 => self.block_solid(record, [at(&ring[0]), at(&ring[1]), at(&ring[2])]),
+                    4 => self.block_quad(record, [at(&ring[0]), at(&ring[1]), at(&ring[2]), at(&ring[3])]),
+                    _ => {
+                        let pts: Vec<Vec2> = ring.iter().map(at).collect();
+                        if pts.len() > 2 {
+                            self.block_polyline(record, &pts, true);
+                        }
+                    }
+                }
+            }
+            for hl in &head.lines {
+                let pts: Vec<Vec2> = hl.pts.iter().map(at).collect();
+                self.block_polyline(record, &pts, hl.closed);
+            }
+        }
+        if let (Some(text), Some(p), Some(align)) = (
+            l.text.as_deref().filter(|t| !t.trim().is_empty()),
+            laid.note_point,
+            laid.note_align,
+        ) {
+            // The middle of its left or right at the note's point (MTEXT's 4 and 6).
+            let attach = if align == TextAlign::MiddleRight { 6 } else { 4 };
+            self.block_mtext_attached(record, at(&p), l.height, l.rotation, text, attach, l.mask);
+        }
+        self.block_end(record);
+        self.insert_whole(&l.base, &name, &Entity::Leader(l.clone()), WHAT);
+        if !l.blocks.is_empty() {
+            self.report.note(
+                WHAT,
+                "blok içeriği kılavuzun bloğunda değil, kendi yerleştirmeleri olarak yazıldı",
+                0,
+            );
+        }
+        true
     }
 
     /// The block record of AutoCAD's arrow block `name` for `arrow`

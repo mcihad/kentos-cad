@@ -229,6 +229,7 @@ pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
 /// A table as the core takes it (docs/adr/0184 §1).
 pub fn core_table(t: &TableEntity) -> Shape {
     Shape::Table {
+        styles: None,
         p: core(t.p),
         rotation: t.rotation,
         height: t.height,

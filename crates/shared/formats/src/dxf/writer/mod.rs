@@ -375,6 +375,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 ltypes: &mut ltypes,
                 arrows: &mut arrows,
                 pen: entities::Pen::default(),
+                forms: Default::default(),
             };
             for e in &def.entities {
                 w.entity(e);
@@ -433,6 +434,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             ltypes: &mut ltypes,
             arrows: &mut arrows,
             pen: entities::Pen::default(),
+            forms: input.annotations,
         };
         // In their drawing order (docs/adr/0260 §5): AutoCAD draws a file's objects in its order.
         let mut drawn: Vec<&kentos_contracts::Entity> = input.entities.iter().collect();

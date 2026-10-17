@@ -1,0 +1,363 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tablonun hücreleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 500.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "tablo",
+      "name": "Tablolar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "tablo",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1043",
+        "Parsel": "7"
+      },
+      "label": "7",
+      "pts": [
+        {
+          "x": 499970.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 499970.0,
+          "y": 4400000.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1043",
+        "Parsel": "8"
+      },
+      "label": "8",
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4399980.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        }
+      ]
+    },
+    {
+      "kind": "table",
+      "id": 3,
+      "layerId": "tablo",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400040.0
+      },
+      "rotation": 0.0,
+      "height": 1.25,
+      "rows": [
+        2.5,
+        2.5,
+        2.5,
+        2.5,
+        2.5
+      ],
+      "columns": [
+        9.5,
+        11.25,
+        11.0
+      ],
+      "cells": [
+        [
+          "1043 ada parselleri",
+          "",
+          ""
+        ],
+        [
+          "Ad",
+          "Alan (m²)",
+          "Çevre (m)"
+        ],
+        [
+          "7",
+          "600.00",
+          "100.000"
+        ],
+        [
+          "8",
+          "400.00",
+          "80.000"
+        ],
+        [
+          "Toplam",
+          "1000.00",
+          "3 kapı"
+        ]
+      ],
+      "merges": [
+        {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 3
+        }
+      ],
+      "aligns": [
+        "left",
+        "right",
+        "right"
+      ],
+      "grid": "rows",
+      "frame": 0.25,
+      "font": "arimo",
+      "bold": true,
+      "source": {
+        "kind": "areas",
+        "objects": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2801",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2802"
+        ]
+      },
+      "styles": [
+        {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "align": "center",
+          "fill": "#DCE6F5"
+        },
+        {
+          "row": 4,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true,
+          "color": "#1F3A93"
+        },
+        {
+          "row": 2,
+          "col": 1,
+          "rows": 3,
+          "cols": 1,
+          "decimals": 2
+        }
+      ],
+      "formulas": [
+        {
+          "row": 4,
+          "col": 1,
+          "formula": "=TOPLA(B3:B4)"
+        }
+      ],
+      "fields": [
+        {
+          "row": 4,
+          "col": 2,
+          "source": {
+            "kind": "project",
+            "value": "blockCount",
+            "name": "Kapı"
+          },
+          "format": {
+            "suffix": " kapı"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "table",
+      "id": 4,
+      "layerId": "tablo",
+      "attrs": {
+        "Not": "Excel'den"
+      },
+      "label": "Noktalar",
+      "p": {
+        "x": 500040.0,
+        "y": 4400040.0
+      },
+      "rotation": 30.0,
+      "height": 1.25,
+      "rows": [
+        2.5,
+        2.5,
+        2.5
+      ],
+      "columns": [
+        6.0,
+        12.5,
+        13.0
+      ],
+      "cells": [
+        [
+          "Nokta",
+          "X",
+          "Y"
+        ],
+        [
+          "101",
+          "499970.000",
+          "4399980.000"
+        ],
+        [
+          "102",
+          "500020.000",
+          "4399980.000"
+        ]
+      ],
+      "header": true,
+      "source": {
+        "kind": "file",
+        "name": "noktalar.xlsx",
+        "sheet": "Sayfa1",
+        "path": "tablolar/noktalar.xlsx",
+        "digest": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "copy": [
+          [
+            "Nokta",
+            "X",
+            "Y"
+          ],
+          [
+            "101",
+            "499970.000",
+            "4399980.000"
+          ],
+          [
+            "102",
+            "500020.000",
+            "4399980.000"
+          ]
+        ],
+        "overrides": "replace"
+      }
+    },
+    {
+      "kind": "table",
+      "id": 5,
+      "layerId": "tablo",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400070.0
+      },
+      "rotation": 0.0,
+      "height": 1.25,
+      "rows": [
+        2.5,
+        2.5,
+        2.5
+      ],
+      "columns": [
+        10.0,
+        8.0
+      ],
+      "cells": [
+        [
+          "Blok",
+          "Adet"
+        ],
+        [
+          "Kapı",
+          "3"
+        ],
+        [
+          "Toplam",
+          "3"
+        ]
+      ],
+      "header": true,
+      "source": {
+        "kind": "blocks",
+        "names": [
+          "Kapı"
+        ]
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2801",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2802",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2803",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2804",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2805"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

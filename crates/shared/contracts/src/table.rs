@@ -81,6 +81,18 @@ pub struct TableEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<TableSource>,
+    /// Its cells' styles, a later over an earlier (docs/adr/0327 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellStyle>>", optional))]
+    pub styles: Vec<crate::CellStyle>,
+    /// Its formulas: their cells' words are their results (docs/adr/0327 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellFormula>>", optional))]
+    pub formulas: Vec<crate::CellFormula>,
+    /// Its cells bound to a source: their words are its value (docs/adr/0327 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CellField>>", optional))]
+    pub fields: Vec<crate::CellField>,
 }
 
 /// A merged range: `rows` × `cols` cells from row `row`, column `col`.
@@ -181,12 +193,37 @@ pub enum TableSource {
     Areas { objects: Vec<EntityId> },
     /// Öznitelik tablosu: these objects' attributes.
     Attributes { objects: Vec<EntityId> },
-    /// A CSV or Excel file by its name (and sheet): it is chosen again to update.
+    /// A CSV or Excel file by its name (and sheet). Linked (docs/adr/0327 §5): its path (absolute, or from the
+    /// drawing's folder), the SHA-256 of the bytes last read, the cells they gave (the embedded copy: what a cell
+    /// changed by hand differs from) and what is done with such a cell; unlinked, it is chosen again to update.
+    #[serde(rename_all = "camelCase")]
     File {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         sheet: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        path: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        digest: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        copy: Option<Vec<Vec<String>>>,
+        #[serde(default, skip_serializing_if = "crate::SourceOverrides::is_keep")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<crate::SourceOverrides>", optional))]
+        overrides: crate::SourceOverrides,
+    },
+    /// Blok çizelgesi (docs/adr/0327 §4): the inserts of the blocks named (none named: every block placed) counted,
+    /// by the attribute `by` when given; written again by the document at every step.
+    Blocks {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+        names: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        by: Option<String>,
     },
 }
 
@@ -198,6 +235,7 @@ impl TableSource {
             TableSource::Areas { .. } => "areas",
             TableSource::Attributes { .. } => "attributes",
             TableSource::File { .. } => "file",
+            TableSource::Blocks { .. } => "blocks",
         }
     }
 
@@ -207,7 +245,7 @@ impl TableSource {
             TableSource::Coordinates { objects }
             | TableSource::Areas { objects }
             | TableSource::Attributes { objects } => objects,
-            TableSource::File { .. } => &[],
+            TableSource::File { .. } | TableSource::Blocks { .. } => &[],
         }
     }
 }
@@ -402,7 +440,46 @@ impl TableShape<'_> {
             ));
         }
         match self.source {
-            Some(TableSource::File { name, sheet }) => {
+            Some(TableSource::Blocks { names, by }) => {
+                if names.iter().any(|n| n.trim().is_empty()) || by.as_deref().is_some_and(|b| b.trim().is_empty()) {
+                    return Some((
+                        "source",
+                        "Blok çizelgesinin blok ve öznitelik adları boş olamaz.".to_owned(),
+                    ));
+                }
+            }
+            Some(TableSource::File {
+                name,
+                sheet,
+                path,
+                digest,
+                copy,
+                ..
+            }) => {
+                if path.as_deref().is_some_and(|p| p.trim().is_empty() || p.chars().any(char::is_control)) {
+                    return Some((
+                        "source",
+                        "Tablonun bağlı dosyasının yolu boş olamaz.".to_owned(),
+                    ));
+                }
+                if digest
+                    .as_deref()
+                    .is_some_and(|d| d.len() != 64 || !d.bytes().all(|b| b.is_ascii_hexdigit()))
+                {
+                    return Some((
+                        "source",
+                        "Tablonun bağlı dosyasının özeti 64 onaltılık rakamlık bir SHA-256 olmalı.".to_owned(),
+                    ));
+                }
+                if let Some(copy) = copy
+                    && (copy.len() > MAX_TABLE_ROWS
+                        || copy.iter().any(|r| r.len() > MAX_TABLE_COLUMNS || r.iter().any(|w| cell_problem(w).is_some())))
+                {
+                    return Some((
+                        "source",
+                        "Tablonun dosyasının gömülü kopyası bir tablonun sınırlarını aşıyor ya da hücresi tek satır değil.".to_owned(),
+                    ));
+                }
                 if name.trim().is_empty() || name.chars().any(char::is_control) {
                     return Some((
                         "source",
@@ -444,6 +521,13 @@ impl TableEntity {
             frame: self.frame,
             source: self.source.as_ref(),
         }
+    }
+
+    /// What is wrong with it: its shape's problem, then its styles', formulas' and fields' (docs/adr/0327).
+    pub fn problem(&self) -> Option<(&'static str, String)> {
+        self.shape()
+            .problem()
+            .or_else(|| crate::table_cells::cells_problem(self))
     }
 
     /// The range the cell at `row`, `col` is merged into, if any.

@@ -64,7 +64,7 @@ pub enum FieldSource {
     #[serde(rename_all = "camelCase")]
     Project {
         value: ProjectValue,
-        /// The variable's name, with `variable`.
+        /// The variable's name, with `variable`; the block's, with `blockCount`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
@@ -114,6 +114,8 @@ pub enum ProjectValue {
     Crs,
     /// The project's variable named (docs/adr/0214 §4).
     Variable,
+    /// How many inserts of the block named the drawing holds (docs/adr/0327 §3).
+    BlockCount,
 }
 
 /// How a field writes a number.
@@ -255,6 +257,7 @@ impl ProjectValue {
             Self::Unit => "Çizim birimi",
             Self::Crs => "Koordinat sistemi",
             Self::Variable => "Değişken",
+            Self::BlockCount => "Blok sayısı",
         }
     }
 }
@@ -283,8 +286,13 @@ impl FieldSource {
                 (ProjectValue::Variable, false) => {
                     Some("Değişken alanı değişkenin adını ister (`name`).".to_owned())
                 }
-                (ProjectValue::Variable, true) | (_, false) => None,
-                (_, true) => Some("Ad yalnız değişken alanında verilir.".to_owned()),
+                (ProjectValue::BlockCount, false) => {
+                    Some("Blok sayısı alanı bloğun adını ister (`name`).".to_owned())
+                }
+                (ProjectValue::Variable | ProjectValue::BlockCount, true) | (_, false) => None,
+                (_, true) => {
+                    Some("Ad yalnız değişken ve blok sayısı alanında verilir.".to_owned())
+                }
             },
         }
     }

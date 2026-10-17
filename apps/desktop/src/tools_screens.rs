@@ -480,6 +480,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::paragraph_layout_scenes::scenes());
     all.extend(crate::text_field_scenes::scenes());
     all.extend(crate::multileader_scenes::scenes());
+    all.extend(crate::table_cells_scenes::scenes());
     all.extend(crate::style_override_scenes::scenes());
     all.extend(crate::match_scenes::scenes());
     all.extend(crate::cleanup_scenes::scenes());
@@ -526,6 +527,8 @@ fn screens() {
                     continue;
                 }
                 let mut app = app_with_drawing();
+                // The window's size, as a resize tells it: what fits the window (a dialog's grid) follows it.
+                app.window_size = Size::new(width, height);
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);

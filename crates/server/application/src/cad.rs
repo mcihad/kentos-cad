@@ -335,7 +335,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             if in_block {
                 return Err("Blok tanımında tablo olamaz".into());
             }
-            if let Some((_, why)) = x.shape().problem() {
+            if let Some((_, why)) = x.problem() {
                 return Err(why);
             }
             if let Some((_, why)) = x.face.problem() {

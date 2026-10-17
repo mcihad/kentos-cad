@@ -14,7 +14,7 @@ use std::fmt;
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::blocks::placed_blocks;
-use kentos_contracts::{Entity, ExportReport};
+use kentos_contracts::{DxfAnnotations, DxfForm, Entity, ExportReport};
 use kentos_interaction::{Format, Level};
 use kentos_ui::label;
 use kentos_ui::widget::segmented::Segmented;
@@ -69,6 +69,21 @@ pub struct State {
     status: Option<(bool, String)>,
     /// What the writer said and how many layers it wrote: logged once the file is written.
     written: Option<(ExportReport, usize)>,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6).
+    annotations: DxfAnnotations,
+}
+
+/// A dimension's or a leader's form as the window names it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Form(pub DxfForm);
+
+impl fmt::Display for Form {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self.0 {
+            DxfForm::Native => "Yerel nesne",
+            DxfForm::Block => "Blok görünüşü",
+        })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +93,9 @@ pub enum Event {
     ToggleAll,
     Run,
     Bytes(Vec<u8>, ExportReport, usize),
+    Dimensions(Form),
+    Leaders(Form),
+    Metadata,
 }
 
 fn event(e: Event) -> Message {
@@ -96,6 +114,7 @@ impl State {
             writing: false,
             status: None,
             written: None,
+            annotations: DxfAnnotations::default(),
         }
     }
 }
@@ -185,6 +204,9 @@ impl App {
                     s.excluded.extend(ids);
                 }
             }
+            Event::Dimensions(f) => s.annotations.dimensions = f.0,
+            Event::Leaders(f) => s.annotations.leaders = f.0,
+            Event::Metadata => s.annotations.metadata = !s.annotations.metadata,
             Event::Run | Event::Bytes(..) => {}
         }
         Task::none()
@@ -202,7 +224,8 @@ impl App {
             return Task::none();
         }
         // The headless host's builder: a script and the window write the same file (docs/adr/0252).
-        let input = kentos_headless::export::dxf_input(&doc.model, &chosen);
+        let mut input = kentos_headless::export::dxf_input(&doc.model, &chosen);
+        input.annotations = s.annotations;
         let count = input.layers.len();
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;
@@ -277,7 +300,8 @@ impl App {
                 Some("AutoCAD 2007 DXF (UTF-8, birim metre); koordinatlar yuvarlanmadan, tam yazılır.".to_owned()),
             ))
             .push(self.dxf_export_layers(s))
-            .push(self.dxf_export_summary(&chosen));
+            .push(dxf_export_forms(s))
+            .push(self.dxf_export_summary(&chosen, &s.annotations));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -374,6 +398,7 @@ impl App {
     fn dxf_export_summary<'a>(
         &'a self,
         chosen: &[(String, Vec<&'a Entity>)],
+        forms: &DxfAnnotations,
     ) -> Element<'a, Message> {
         let Some(doc) = &self.document else {
             return words::summary(Vec::new());
@@ -462,7 +487,14 @@ impl App {
             )
         }];
         if dimensions > 0 {
-            lines.push(words::text_line(Line::Info, format!("{dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.")));
+            // What comes back is the form and the data written (docs/adr/0327 §6).
+            let line = match (forms.dimensions, forms.metadata) {
+                (DxfForm::Native, true) => format!("{dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur."),
+                (DxfForm::Native, false) => format!("{dimensions} ölçü DXF ölçüsü olarak yazılır; KentOS verisi yazılmadığından KentOS'a DXF'in taşıdığı kadarıyla geri okunur: bağları, stilden ayrılanları ve seçenekleri düşer."),
+                (DxfForm::Block, true) => format!("{dimensions} ölçü KentOS'un çizdiği gibi adsız blok (*U) olarak yazılır: her programda aynı görünür, düzenlenemez. KentOS'a ölçü olarak geri okunur."),
+                (DxfForm::Block, false) => format!("{dimensions} ölçü KentOS'un çizdiği gibi adsız blok (*U) olarak yazılır: her programda aynı görünür, düzenlenemez. KentOS verisi yazılmadığından KentOS'a blok olarak geri okunur."),
+            };
+            lines.push(words::text_line(Line::Info, line));
         }
         if without_kind > 0 {
             lines.push(words::text_line(Line::Info, format!("{without_kind} semt ve eğim ölçüsünün DXF'te karşılığı yoktur: hizalı ölçü olarak, kendi çizgileri ve değeriyle yazılır; başka programlar çizgilerini gösterir, KentOS ölçü olarak geri okur.")));
@@ -513,7 +545,14 @@ impl App {
             } else {
                 String::new()
             };
-            lines.push(words::text_line(Line::Info, format!("{} kılavuz LEADER olarak, notları da onlara bağlı MTEXT'ler olarak yazılır; KentOS'a kılavuz olarak geri okunur.{arrows}", leaders.len())));
+            let n = leaders.len();
+            let line = match (forms.leaders, forms.metadata) {
+                (DxfForm::Native, true) => format!("{n} kılavuz LEADER olarak, notları da onlara bağlı MTEXT'ler olarak yazılır; KentOS'a kılavuz olarak geri okunur.{arrows}"),
+                (DxfForm::Native, false) => format!("{n} kılavuz LEADER olarak, notları da onlara bağlı MTEXT'ler olarak yazılır; KentOS verisi yazılmadığından kolları, uç bağları ve stili düşer.{arrows}"),
+                (DxfForm::Block, true) => format!("{n} kılavuz KentOS'un çizdiği gibi adsız blok (*U) olarak yazılır: her programda aynı görünür, düzenlenemez. KentOS'a kılavuz olarak geri okunur."),
+                (DxfForm::Block, false) => format!("{n} kılavuz KentOS'un çizdiği gibi adsız blok (*U) olarak yazılır: her programda aynı görünür, düzenlenemez. KentOS verisi yazılmadığından KentOS'a blok olarak geri okunur."),
+            };
+            lines.push(words::text_line(Line::Info, line));
         }
         if themed {
             lines.push(words::text_line(Line::Info, "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir."));
@@ -545,6 +584,43 @@ pub fn dimension_text(
     look: &kentos_contracts::DimensionLook,
 ) -> String {
     format.dimension_in(prefix, unit, value, look)
+}
+
+/// Açıklamalar (docs/adr/0327 §6): what dimensions and leaders become, and KentOS's data on them and on tables.
+fn dxf_export_forms(s: &State) -> Element<'_, Message> {
+    let forms = [Form(DxfForm::Native), Form(DxfForm::Block)];
+    let choice = |now: DxfForm, on: fn(Form) -> Event| {
+        Segmented::new_with(forms.to_vec(), Form(now), move |f| event(on(f)), |_| true)
+    };
+    let line = |name: &'static str, el: Element<'static, Message>| -> Element<'static, Message> {
+        row![
+            iced::widget::container(label::body(name)).width(Length::Fixed(110.0)),
+            el
+        ]
+        .spacing(8)
+        .align_y(Center)
+        .into()
+    };
+    let a = s.annotations;
+    let body = column![
+        line("Ölçüler", choice(a.dimensions, Event::Dimensions).into()),
+        line("Kılavuzlar", choice(a.leaders, Event::Leaders).into()),
+        words::check(
+            a.metadata,
+            "KentOS verisini yaz: tablo, ölçü ve kılavuz KentOS'a bütün alanlarıyla geri gelir",
+            Some(event(Event::Metadata)),
+        ),
+    ]
+    .spacing(8);
+    words::field(
+        "Açıklamalar",
+        body,
+        Some(
+            "Yerel nesne: başka programlar ölçü ya da kılavuz olarak düzenler. Blok görünüşü: KentOS'un çizdiği gibi görünür, düzenlenemez. \
+             Tablolar her zaman blok görünüşüyle yazılır (DXF'in ACAD_TABLE'ı yazılmaz). Yazılanlar türleriyle raporda söylenir."
+                .to_owned(),
+        ),
+    )
 }
 
 #[cfg(test)]

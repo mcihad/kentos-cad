@@ -522,6 +522,29 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                         }
                     }
                 }
+                // A table keeps its cells' styles, formulas and fields when the edit gives none (docs/adr/0327), clipped
+                // to its new rows and columns; a linked file's data when the edit's source names the same file.
+                if let (Entity::Table(was), Entity::Table(now)) = (entity, &mut next) {
+                    if let EntityGeometry::Table {
+                        styles,
+                        formulas,
+                        fields,
+                        ..
+                    } = geometry
+                    {
+                        if styles.is_none() {
+                            now.styles = was.styles.clone();
+                        }
+                        if formulas.is_none() {
+                            now.formulas = was.formulas.clone();
+                        }
+                        if fields.is_none() {
+                            now.fields = was.fields.clone();
+                        }
+                    }
+                    let (n, m) = (now.rows.len(), now.columns.len());
+                    now.clip_to(n, m);
+                }
                 // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
                 // document lets a point go when the edit moved it, its object unchanged.
                 if let (Entity::Dimension(was), Entity::Dimension(now)) = (entity, &mut next)
@@ -1076,6 +1099,37 @@ pub(crate) fn check_geometry(
             source: source.as_ref(),
         };
         if let Some((field, words)) = shape.problem() {
+            return Err(Stop::failed(error(
+                codes::INVALID_TABLE,
+                words,
+                at(&format!(".{field}")),
+            )));
+        }
+    }
+    // Its cells' styles, formulas and fields (docs/adr/0327), when the edit gives them.
+    if let EntityGeometry::Table {
+        rows,
+        columns,
+        cells,
+        merges,
+        styles,
+        formulas,
+        fields,
+        ..
+    } = g
+        && (styles.is_some() || formulas.is_some() || fields.is_some())
+    {
+        let (none_s, none_f, none_d) = (Vec::new(), Vec::new(), Vec::new());
+        let problem = kentos_contracts::cells_problem_of(
+            rows.len(),
+            columns.len(),
+            merges,
+            styles.as_ref().unwrap_or(&none_s),
+            formulas.as_ref().unwrap_or(&none_f),
+            fields.as_ref().unwrap_or(&none_d),
+        );
+        let _ = cells;
+        if let Some((field, words)) = problem {
             return Err(Stop::failed(error(
                 codes::INVALID_TABLE,
                 words,

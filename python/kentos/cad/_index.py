@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, texts, ucs, units, views
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -94,6 +94,7 @@ COMMANDS: dict[str, Any] = {
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,
+    "cad.tables.edit": tables.edit,
     "cad.texts.check": texts.check,
     "cad.texts.edit": texts.edit,
     "cad.ucs.set": ucs.set,
@@ -128,4 +129,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "fonts", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "texts", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "fonts", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "rectangle", "scenarios", "settings", "sheets", "snap", "standards", "styles", "tables", "texts", "ucs", "units", "views",)

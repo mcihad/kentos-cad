@@ -80,6 +80,8 @@ pub mod fields_edit;
 pub mod leaders_edit;
 pub mod fonts_report;
 pub mod texts_check;
+pub mod table_schedule;
+pub mod tables_edit;
 pub mod texts_edit;
 pub mod dimensions_reassociate;
 pub mod divide;
@@ -231,6 +233,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LEADERS_EDIT,
         kentos_contracts::CAD_LEADERS_EDIT_VERSION,
+    ),
+    // Tablonun hücreleri, formülleri, alanları ve dosyası ([`tables_edit`], docs/adr/0327).
+    (
+        kentos_contracts::CAD_TABLES_EDIT,
+        kentos_contracts::CAD_TABLES_EDIT_VERSION,
     ),
     // Alanlar and the text commands ([`fields_edit`], [`texts_edit`], [`texts_check`], docs/adr/0325 §3).
     (

@@ -66,6 +66,16 @@ pub(crate) struct Store {
     always: BTreeSet<Slot>,
     /// Every text with fields.
     with_fields: BTreeSet<Slot>,
+    /// The tables with fields, formulas or a block schedule (docs/adr/0327): worked out before a step is recorded.
+    computed: BTreeSet<Slot>,
+}
+
+/// Whether a table has cells the document works out (docs/adr/0327).
+fn computed_table(stored: &Stored) -> bool {
+    matches!(&*stored.entity, Entity::Table(t)
+        if !t.fields.is_empty()
+            || !t.formulas.is_empty()
+            || matches!(t.source, Some(kentos_contracts::TableSource::Blocks { .. })))
 }
 
 /// The objects a text's fields read, and whether one reads the project or a layer's name (docs/adr/0325 §2).
@@ -208,7 +218,20 @@ impl Store {
         self.with_fields.len()
     }
 
+    /// Whether any table has worked out cells.
+    pub fn has_computed_tables(&self) -> bool {
+        !self.computed.is_empty()
+    }
+
+    /// The tables with worked out cells, in slot order.
+    pub fn computed_table_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.computed.iter().copied()
+    }
+
     fn link(&mut self, stored: &Stored) {
+        if computed_table(stored) {
+            self.computed.insert(stored.slot());
+        }
         if let Some((of, always)) = fields_of(stored) {
             for uid in of {
                 self.fielded.entry(uid).or_default().insert(stored.slot());
@@ -230,6 +253,7 @@ impl Store {
     }
 
     fn unlink(&mut self, stored: &Stored) {
+        self.computed.remove(&stored.slot());
         if let Some((of, _)) = fields_of(stored) {
             for uid in of {
                 if let Some(texts) = self.fielded.get_mut(&uid) {

@@ -785,16 +785,16 @@
     "table.edit": {
       "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.tables.edit"
       ],
-      "operation": "table"
+      "note": "Pencerenin her değişikliği cad.tables.edit'in bir düzenlemesidir (hücre, formül, satır ve sütun, biçim, alan, boylar); önizleme komutun planı, Kaydet aynı düzenlemeleri tek adımda yazar (ADR 0327)."
     },
     "table.update": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.tables.edit"
       ],
-      "operation": "tableUpdate"
+      "note": "Seçili ya da kaynağı olan bütün tabloların kimlikleri ve çizimin klasörü refresh işlemine verilir; bağlı olmayan ya da yolunda olmayan dosya sorulup link işlemiyle bağlanır (ADR 0327)."
     },
     "template.apply": {
       "level": "semantic",
@@ -1216,8 +1216,7 @@
         "cad.annotations.scales"
       ],
       "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323)."
-    }
-,
+    },
     "text.fonts": {
       "level": "query",
       "via": [
@@ -1308,6 +1307,21 @@
         "cad.styles.edit"
       ],
       "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326)."
+    },
+    "table.link": {
+      "level": "semantic",
+      "via": [
+        "cad.tables.edit"
+      ],
+      "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327)."
+    },
+    "table.blockSchedule": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Tablo blocks kaynağıyla yazılır; çizelgenin satırlarını belge her adımda kendisi yazar (ADR 0327)."
     }
   },
   "tools": {

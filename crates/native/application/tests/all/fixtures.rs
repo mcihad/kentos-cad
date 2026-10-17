@@ -36,7 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, leaders_edit, fonts_report, texts_check, texts_edit,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
@@ -1195,6 +1195,24 @@ impl Input for kentos_domain::contracts::LeadersEdit {
     }
 }
 
+impl Input for kentos_domain::contracts::TablesEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::{TableEdit, TablesOperation};
+        let TablesOperation::Edit { edits, .. } = &mut self.operation else {
+            return None;
+        };
+        // `operation.edits[i].height` or `.width`.
+        let rest = path.strip_prefix("operation.edits[")?;
+        let (i, field) = rest.split_once("].")?;
+        match (edits.get_mut(i.parse::<usize>().ok()?)?, field) {
+            (TableEdit::RowHeight { height, .. }, "height") => Some(height),
+            (TableEdit::ColumnWidth { width, .. }, "width") => Some(width),
+            (TableEdit::Frame { width: Some(w) }, "width") => Some(w),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_domain::contracts::FieldsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2121,6 +2139,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_LEADERS_EDIT => {
             run!(leaders_edit, kentos_domain::contracts::LeadersEdit)
+        }
+        kentos_domain::contracts::CAD_TABLES_EDIT => {
+            run!(tables_edit, kentos_domain::contracts::TablesEdit)
         }
         kentos_domain::contracts::CAD_FIELDS_EDIT => {
             run!(fields_edit, kentos_domain::contracts::FieldsEdit)

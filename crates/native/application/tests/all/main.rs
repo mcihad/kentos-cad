@@ -29,5 +29,6 @@ mod python_calls;
 mod reassociate;
 mod standards_cmd;
 mod stretch_ties;
+mod tables_cmd;
 mod transform;
 mod units;

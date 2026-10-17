@@ -1403,6 +1403,21 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
+    let tabled = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Table(t)
+                if !t.styles.is_empty()
+                    || !t.formulas.is_empty()
+                    || !t.fields.is_empty()
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { .. }))
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, .. })
+                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep()))
+        })
+    };
+    if tabled(&doc.entities) {
+        return crate::SCHEMA_WITH_TABLE_CELLS;
+    }
     // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the project's leader styles.
     let multi = |list: &[Entity]| {
         list.iter().any(|e| {

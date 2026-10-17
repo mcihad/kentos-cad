@@ -2319,6 +2319,9 @@ impl App {
                 }
             }
             "table.update" => return self.update_tables(),
+            // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
+            "table.link" => return self.link_table(),
+            "table.blockSchedule" => self.place_block_schedule(),
             // Yazı ve ölçü stilleri (docs/adr/0183 §5).
             "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
             "style.dimensionStyles" => {

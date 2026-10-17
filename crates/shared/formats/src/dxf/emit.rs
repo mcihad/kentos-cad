@@ -1400,6 +1400,15 @@ impl<'l> Emitter<'l> {
                         Err(why) => self.note("Tablo", why, e.line),
                     }
                 }
+                // A KentOS dimension or leader written as its look (docs/adr/0327 §6): its INSERT carries it.
+                if ctx.chain.is_empty()
+                    && let Some(json) = e.meta.as_ref().and_then(|m| m.object.as_deref())
+                {
+                    match self.whole_of(e, ctx, &layer, json, &placed) {
+                        Ok(o) => return self.push(o),
+                        Err(why) => self.note("KentOS nesnesi", why, e.line),
+                    }
+                }
                 // A KentOS text along a curve (docs/adr/0196 §5): its INSERT carries it; else its block's letters.
                 if ctx.chain.is_empty()
                     && let Some(json) = e.meta.as_ref().and_then(|m| m.along.as_deref())
@@ -2558,10 +2567,60 @@ impl<'l> Emitter<'l> {
         {
             t.source = None;
         }
-        if t.shape().problem().is_some() || t.face.problem().is_some() {
+        if t.problem().is_some() || t.face.problem().is_some() {
             return Err("KentOS verisindeki tablo geçersiz; çizgi ve yazıları alındı");
         }
         Ok(t)
+    }
+
+    /// A dimension or a leader from its INSERT's KentOS data (docs/adr/0327 §6), as written: its INSERT at the origin,
+    /// unturned and unscaled; one another program moved keeps its block's lines and texts. What it was tied to (a
+    /// dimension's references, a leader's tips and content blocks) is the writing drawing's and is let go.
+    fn whole_of(
+        &self,
+        e: &Parsed,
+        ctx: &Ctx,
+        layer: &str,
+        json: &str,
+        placed: &Placed,
+    ) -> Result<Entity, &'static str> {
+        let still = placed.p[0] == 0.0
+            && placed.p[1] == 0.0
+            && placed.scale[0] == 1.0
+            && placed.scale[1] == 1.0
+            && placed.rotation == 0.0
+            && placed.array.0 * placed.array.1 <= 1
+            && super::extrusion_z(e.common.extrusion) == 1.0;
+        if !still {
+            return Err("başka bir programda taşınmış, dönmüş ya da ölçeklenmiş; bloğunun çizgi ve yazıları alındı");
+        }
+        let broken = "KentOS verisi okunamadı; bloğunun çizgi ve yazıları alındı";
+        let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
+        let map = value.as_object_mut().ok_or(broken)?;
+        map.insert("id".into(), 0.into());
+        map.insert("layerId".into(), layer.into());
+        map.insert(
+            "attrs".into(),
+            serde_json::Value::Object(Default::default()),
+        );
+        let mut o: Entity = serde_json::from_value(value).map_err(|_| broken)?;
+        let b = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
+        match &mut o {
+            Entity::Dimension(d) => {
+                d.refs = None;
+                d.base = b;
+            }
+            Entity::Leader(l) => {
+                l.tip = None;
+                l.blocks = Vec::new();
+                for a in &mut l.arms {
+                    a.tip = None;
+                }
+                l.base = b;
+            }
+            _ => return Err(broken),
+        }
+        Ok(o)
     }
 
     /// A text along a curve from its INSERT's KentOS data (docs/adr/0196 §5):

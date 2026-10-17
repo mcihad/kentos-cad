@@ -12,6 +12,6 @@ export type FieldSource = { "kind": "object", uid: EntityId, value: ObjectValue,
  */
 name?: string, } | { "kind": "project", value: ProjectValue, 
 /**
- * The variable's name, with `variable`.
+ * The variable's name, with `variable`; the block's, with `blockCount`.
  */
 name?: string, };

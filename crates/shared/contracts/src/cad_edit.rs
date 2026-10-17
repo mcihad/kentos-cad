@@ -645,6 +645,16 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<crate::TableSource>,
+        /// Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        styles: Option<Vec<crate::CellStyle>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        formulas: Option<Vec<crate::CellFormula>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        fields: Option<Vec<crate::CellField>>,
     },
     /// A picture (docs/adr/0192 §1): its lower left corner `p`, its width
     /// and height (metres, over 0), turned by `rotation` (radians,
