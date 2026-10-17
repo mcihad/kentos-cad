@@ -568,6 +568,161 @@ impl Preflight<'_> {
                 ));
             }
         }
+        self.lookup_extras(f, layer, lookup, other);
+    }
+
+    /// A list's order, columns, page, copies, stamp and geometry (docs/adr/0439): their fields exist,
+    /// the kinds it compares, writes and copies go together, its numbers are in bounds.
+    fn lookup_extras(
+        &mut self,
+        f: &FormField,
+        layer: &LayerField,
+        lookup: &kentos_contracts::FormLookup,
+        other: &crate::OtherLayer,
+    ) {
+        let at = |code: &str, message: String| {
+            issue(
+                code,
+                FormSeverity::Error,
+                Some(&f.id),
+                Some(&f.field),
+                Some("lookup"),
+                message,
+            )
+        };
+        let theirs = |key: &str| other.fields.iter().find(|x| x.key() == key);
+        let ours = |key: &str| self.fields.iter().find(|x| x.key() == key);
+        let mut issues = Vec::new();
+        // Their fields the list reads beyond its key, label and chain.
+        let mut read: Vec<&str> = lookup.columns.iter().map(String::as_str).collect();
+        read.extend(lookup.sort.as_ref().map(|s| s.field.as_str()));
+        read.extend(lookup.copy.iter().map(|c| c.from.as_str()));
+        for key in read {
+            if key != kentos_contracts::LOOKUP_UID && theirs(key).is_none() {
+                issues.push(at(
+                    codes::LOOKUP_FIELD,
+                    format!("“{}” katmanında “{key}” alanı yok.", other.name),
+                ));
+            }
+        }
+        // Our fields the list writes.
+        let mut written: Vec<&str> = lookup.copy.iter().map(|c| c.to.as_str()).collect();
+        written.extend(lookup.stamp.as_deref());
+        for key in written {
+            if ours(key).is_none() {
+                issues.push(at(
+                    codes::LOOKUP_FIELD,
+                    format!("Formun katmanında “{key}” alanı yok."),
+                ));
+            }
+        }
+        // The kinds: the key into the field, each match, each copy.
+        let kind_of = |x: Option<&LayerField>, key: &str| {
+            if key == kentos_contracts::LOOKUP_UID {
+                Some(LayerFieldKind::Text)
+            } else {
+                x.map(|x| x.kind)
+            }
+        };
+        if let Some(k) = kind_of(theirs(&lookup.key), &lookup.key)
+            && !writes_into(k, layer.kind)
+        {
+            issues.push(at(
+                codes::LOOKUP_TYPE,
+                format!(
+                    "“{}” alanı {} ister; listenin saklanan alanı {}. Aynı türden bir alan seçin.",
+                    layer.label(),
+                    kind_words(layer.kind),
+                    kind_words(k)
+                ),
+            ));
+        }
+        for m in &lookup.matches {
+            if let (Some(a), Some(b)) = (theirs(&m.field), ours(&m.record))
+                && family(a.kind) != family(b.kind)
+            {
+                issues.push(at(
+                    codes::LOOKUP_TYPE,
+                    format!(
+                        "Zincirde “{}” ({}) ile “{}” ({}) karşılaştırılamaz; aynı türden alanları eşleyin.",
+                        a.label(),
+                        kind_words(a.kind),
+                        b.label(),
+                        kind_words(b.kind)
+                    ),
+                ));
+            }
+        }
+        for c in &lookup.copy {
+            if let (Some(k), Some(b)) = (kind_of(theirs(&c.from), &c.from), ours(&c.to))
+                && !writes_into(k, b.kind)
+            {
+                issues.push(at(
+                    codes::LOOKUP_TYPE,
+                    format!(
+                        "“{}” alanına {} kopyalanamaz; “{}” {} ister.",
+                        b.label(),
+                        kind_words(k),
+                        b.label(),
+                        kind_words(b.kind)
+                    ),
+                ));
+            }
+            if c.to == f.field || Some(c.to.as_str()) == lookup.stamp.as_deref() {
+                issues.push(at(
+                    codes::LOOKUP_TYPE,
+                    format!(
+                        "“{}” alanı hem listenin değeri ya da kaynak damgası hem kopyanın hedefi olamaz.",
+                        c.to
+                    ),
+                ));
+            }
+        }
+        if let Some(b) = lookup.stamp.as_deref().and_then(ours)
+            && b.kind != LayerFieldKind::Text
+        {
+            issues.push(at(
+                codes::LOOKUP_TYPE,
+                format!(
+                    "Kaynak damgası metin alanına yazılır; “{}” metin değil.",
+                    b.label()
+                ),
+            ));
+        }
+        if lookup.columns.len() > kentos_contracts::MOST_LOOKUP_COLUMNS {
+            issues.push(at(
+                codes::LOOKUP_TYPE,
+                format!(
+                    "Liste en çok {} sütun gösterir; {} verildi.",
+                    kentos_contracts::MOST_LOOKUP_COLUMNS,
+                    lookup.columns.len()
+                ),
+            ));
+        }
+        if lookup
+            .limit
+            .is_some_and(|n| n == 0 || n > kentos_contracts::MOST_LOOKUP_LIMIT)
+        {
+            issues.push(at(
+                codes::LOOKUP_TYPE,
+                format!(
+                    "Listenin sayfası 1 ile {} arasında olmalı.",
+                    kentos_contracts::MOST_LOOKUP_LIMIT
+                ),
+            ));
+        }
+        if lookup
+            .spatial
+            .as_ref()
+            .and_then(|s| s.tolerance)
+            .is_some_and(|t| !t.is_finite() || t < 0.0)
+        {
+            issues.push(at(
+                codes::LOOKUP_TYPE,
+                "Mekânsal listenin toleransı sıfır ya da artı bir sayı olmalı.".to_owned(),
+            ));
+        }
+        self.issues.extend(issues);
     }
 
     /// A related item (docs/adr/0404 §4): its layer and its field exist.
@@ -722,5 +877,38 @@ impl Preflight<'_> {
             ));
         }
         Some(expr)
+    }
+}
+
+/// A field kind's family: what compares with what (docs/adr/0439 §4).
+fn family(kind: LayerFieldKind) -> u8 {
+    match kind {
+        LayerFieldKind::Text => 0,
+        LayerFieldKind::Integer | LayerFieldKind::Decimal => 1,
+        LayerFieldKind::Date => 2,
+        LayerFieldKind::DateTime => 3,
+        LayerFieldKind::Time => 4,
+        LayerFieldKind::Boolean => 5,
+    }
+}
+
+/// Whether a value of kind `from` may be written into a field of kind `to`: the same family (an
+/// integer into a decimal, not a decimal into an integer), or any into text.
+fn writes_into(from: LayerFieldKind, to: LayerFieldKind) -> bool {
+    to == LayerFieldKind::Text
+        || (family(from) == family(to)
+            && !(from == LayerFieldKind::Decimal && to == LayerFieldKind::Integer))
+}
+
+/// A field kind in words.
+fn kind_words(kind: LayerFieldKind) -> &'static str {
+    match kind {
+        LayerFieldKind::Text => "metin",
+        LayerFieldKind::Integer => "tam sayı",
+        LayerFieldKind::Decimal => "ondalık sayı",
+        LayerFieldKind::Date => "tarih",
+        LayerFieldKind::DateTime => "tarih ve saat",
+        LayerFieldKind::Time => "saat",
+        LayerFieldKind::Boolean => "evet/hayır",
     }
 }

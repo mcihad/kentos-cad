@@ -62,6 +62,7 @@ fn fill(app: &mut App, values: &Value) {
         "sourceKey",
         "map",
         "existing",
+        "duplicates",
         "geometry",
         "append",
         "east",

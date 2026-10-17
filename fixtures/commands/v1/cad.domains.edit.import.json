@@ -1,0 +1,3855 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.domains.edit",
+ "commandVersion": 1,
+ "title": "Değer listeleri",
+ "note": "ADR 0439 §7: değer listesi paketinin içe aktarılması. Written by scripts/fixtures/sources_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Değer listeleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "domains": [
+    {
+     "id": "malzeme",
+     "name": "Yapı malzemesi",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ah",
+       "label": "Ahşap"
+      },
+      {
+       "code": "bt",
+       "label": "Betonarme"
+      },
+      {
+       "code": "ym",
+       "label": "Yığma"
+      }
+     ]
+    },
+    {
+     "id": "kat",
+     "name": "Kat sayısı",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "id": "genislik",
+     "name": "Yol genişliği",
+     "kind": "decimal",
+     "values": [
+      {
+       "code": "2.5",
+       "label": "Dar"
+      },
+      {
+       "code": "3.5",
+       "label": "Geniş"
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ]
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "depo",
+    "name": "Depo",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ],
+      "domain": "malzeme"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Eski yapılar",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "eski",
+      "name": "Eski",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Genişlik",
+      "kind": "decimal",
+      "values": [
+       {
+        "code": "2.5",
+        "label": "Dar"
+       },
+       {
+        "code": "3.5",
+        "label": "Geniş"
+       }
+      ],
+      "domain": "genislik",
+      "scale": 1
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah",
+     "Kat": "3",
+     "Etiket": "a; b"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "bt",
+     "Kat": "45"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "depo",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ym"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "eski",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "yol",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Genişlik": "2.5"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "yeni listeler eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        },
+        {
+         "id": "yas",
+         "name": "Bina yaşı",
+         "kind": "integer",
+         "min": "0",
+         "max": "300"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "imported": [
+        "cati",
+        "yas"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        },
+        {
+         "id": "yas",
+         "name": "Bina yaşı",
+         "kind": "integer",
+         "min": "0",
+         "max": "300"
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "projedekiyle aynı liste olduğu gibi kalır: değişiklik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik",
+          "scale": 1
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı ve yeni liste: yalnız yeni eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "imported": [
+        "cati"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı kimlikli farklı liste reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_exists",
+       "message": "Projede “malzeme” kimlikli başka bir “Yapı malzemesi” listesi var; replace ile değiştirin ya da paketten çıkarın.",
+       "path": "edit/domains/0/id"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: liste değişir, bağlı alanlar izler (kilitli katmanınki de)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        {
+         "layer": "depo",
+         "field": "Malzeme"
+        },
+        {
+         "layer": "eski",
+         "field": "Malzeme"
+        }
+       ],
+       "recoded": 0,
+       "imported": [
+        "malzeme"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap yapı"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           },
+           {
+            "code": "ce",
+            "label": "Çelik"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap yapı"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             },
+             {
+              "code": "ce",
+              "label": "Çelik"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: kayıtların tuttuğu kod listeden çıkamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          }
+         ]
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_code_in_use",
+       "message": "1 kayıt listeden çıkan kodları tutuyor (ym); recode ile başka bir koda taşıyın ya da kodu kullanımdan kaldırın.",
+       "path": "edit/domains/0/values"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: kullanımdan kalkan kod kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma",
+           "retired": true
+          }
+         ]
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        {
+         "layer": "depo",
+         "field": "Malzeme"
+        },
+        {
+         "layer": "eski",
+         "field": "Malzeme"
+        }
+       ],
+       "recoded": 0,
+       "imported": [
+        "malzeme"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma",
+           "retired": true
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma",
+            "retired": true
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma",
+              "retired": true
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: türü değişemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "decimal",
+         "min": "1"
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_mismatch",
+       "message": "“Kat sayısı” listesinin türü değişemez; projedeki liste tam sayı türünde.",
+       "path": "edit/domains/0/kind"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: aralık dışında kalan kayıt uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "30"
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "imported": [
+        "kat"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "30"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş paket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_domain",
+       "message": "Paket boş; içinde en az bir değer listesi olmalı.",
+       "path": "edit/domains"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "pakette aynı kimlik iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        },
+        {
+         "id": "cati",
+         "name": "Başka çatı",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_domain",
+       "message": "“cati” kimlikli liste pakette iki kez var.",
+       "path": "edit/domains/1/id"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz liste: ne kod ne aralık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "bos",
+         "name": "Boş",
+         "kind": "text"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_domain",
+       "message": "“Boş” listesinde ne kod var ne aralık; kod ekleyin ya da en azını veya en çoğunu verin.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "adı projedeki başka listeninkiyle aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "kat2",
+         "name": "kat sayısı",
+         "kind": "integer",
+         "min": "0"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_domain",
+       "message": "“kat sayısı” adlı iki değer listesi var.",
+       "path": "edit"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace: ondalık kod bağlı alanın basamağına sığmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.75",
+           "label": "Çok geniş"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_mismatch",
+       "message": "“Genişlik” alanının değer listesindeki “3.75” kodu alanın türüne uymuyor.",
+       "path": "edit/domains/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "replace olmadan aynı liste yine değişiklik değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik",
+          "scale": 1
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "imported": [
+        "cati"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        },
+        {
+         "id": "yas",
+         "name": "Bina yaşı",
+         "kind": "integer",
+         "min": "0",
+         "max": "300"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulamada aynı kimlikli farklı liste",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_exists",
+       "message": "Projede “malzeme” kimlikli başka bir “Yapı malzemesi” listesi var; replace ile değiştirin ya da paketten çıkarın.",
+       "path": "edit/domains/0/id"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hariç uçlu, birimli aralık ve günlü değerli liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        },
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [],
+       "recoded": 0,
+       "imported": [
+        "egim",
+        "durum"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        },
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilk liste geçerli, ikincisi reddedilince hiçbiri eklenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        },
+        {
+         "id": "malzeme",
+         "name": "Malzeme 2",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "domain_exists",
+       "message": "Projede “malzeme” kimlikli başka bir “Yapı malzemesi” listesi var; replace ile değiştirin ya da paketten çıkarın.",
+       "path": "edit/domains/1/id"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma listeleri ve kopyaları geri verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        }
+       ],
+       "replace": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fields": [
+        {
+         "layer": "depo",
+         "field": "Malzeme"
+        },
+        {
+         "layer": "eski",
+         "field": "Malzeme"
+        }
+       ],
+       "recoded": 0,
+       "imported": [
+        "malzeme"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap yapı"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          },
+          {
+           "code": "ce",
+           "label": "Çelik"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap yapı"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           },
+           {
+            "code": "ce",
+            "label": "Çelik"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap yapı"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             },
+             {
+              "code": "ce",
+              "label": "Çelik"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "scale": 1,
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "settings": {
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "layers": [
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ]
+         },
+         {
+          "id": "kat-sayisi",
+          "name": "Kat",
+          "kind": "integer",
+          "min": "1",
+          "max": "40"
+         },
+         {
+          "name": "Etiket",
+          "kind": "text",
+          "multiple": true,
+          "values": [
+           {
+            "code": "a",
+            "label": "A"
+           },
+           {
+            "code": "b",
+            "label": "B"
+           }
+          ]
+         },
+         {
+          "name": "Not",
+          "kind": "text"
+         }
+        ]
+       },
+       {
+        "id": "depo",
+        "name": "Depo",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       },
+       {
+        "id": "grup",
+        "name": "Eski yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "eski",
+          "name": "Eski",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": [],
+          "fields": [
+           {
+            "name": "Malzeme",
+            "kind": "text",
+            "values": [
+             {
+              "code": "ah",
+              "label": "Ahşap"
+             },
+             {
+              "code": "bt",
+              "label": "Betonarme"
+             },
+             {
+              "code": "ym",
+              "label": "Yığma"
+             }
+            ],
+            "domain": "malzeme"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Genişlik",
+          "kind": "decimal",
+          "values": [
+           {
+            "code": "2.5",
+            "label": "Dar"
+           },
+           {
+            "code": "3.5",
+            "label": "Geniş"
+           }
+          ],
+          "domain": "genislik",
+          "scale": 1
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "eski sürüme göre hazırlanmış paket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "import",
+       "domains": [
+        {
+         "id": "cati",
+         "name": "Çatı türü",
+         "kind": "text",
+         "values": [
+          {
+           "code": "dz",
+           "label": "Düz"
+          },
+          {
+           "code": "bh",
+           "label": "Beşik"
+          }
+         ]
+        }
+       ]
+      },
+      "expectedRevision": "07"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

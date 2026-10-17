@@ -262,7 +262,29 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
     vec![
         ("form-agac-oneri", tree_missing, name_focused),
         ("form-aranir-liste", searched_list, province_focused),
+        ("form-kaynak-arama", sources_search, neighbourhood_focused),
+        ("form-kaynak-tasarim", sources_designer, properties_down),
     ]
+}
+
+fn neighbourhood_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    focused(s, app, "Mahalle");
+}
+
+/// The designer's properties scrolled to the list's extras (docs/adr/0439).
+fn properties_down(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    use iced::futures::StreamExt as _;
+    let task: iced::Task<Message> = iced::widget::operation::snap_to(
+        crate::forms::designer_view::PROPERTIES_SCROLL,
+        iced::widget::scrollable::RelativeOffset { x: 0.0, y: 0.55 },
+    );
+    if let Some(mut stream) = iced_runtime::task::into_stream(task) {
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+            if let iced_runtime::Action::Widget(operation) = action {
+                s.operate(app.view(), operation);
+            }
+        }
+    }
 }
 
 /// A published form of `layer` with `items`.
@@ -983,13 +1005,259 @@ fn chosen_facilities(app: &mut App) {
     run(app, "data.formEdit");
 }
 
-/// The province being searched: “an” typed.
+/// Parcels and buildings (docs/adr/0439): a building's parcel chosen from the parcels holding it, their
+/// area, owner and day shown beside it and under it, copied into the building with a stamp; the
+/// neighbourhoods searched a page at a time; the project's value lists.
+fn sources(app: &mut App) {
+    let mut o = Objects::new();
+    // Ada, parsel, the square, area, owner and day.
+    type Parcel<'a> = (&'a str, &'a str, [f64; 4], &'a str, &'a str, &'a str);
+    let parcels: [Parcel<'_>; 4] = [
+        (
+            "101",
+            "5",
+            [0.0, 0.0, 30.0, 24.0],
+            "450.50",
+            "Ayşe Kaya",
+            "2024-03-01",
+        ),
+        (
+            "101",
+            "12",
+            [30.0, 0.0, 60.0, 24.0],
+            "1200.00",
+            "Ali Can",
+            "2023-11-20",
+        ),
+        ("102", "1", [0.0, 24.0, 30.0, 48.0], "80.25", "", ""),
+        (
+            "102",
+            "4",
+            [30.0, 24.0, 60.0, 48.0],
+            "640.00",
+            "Veli Can",
+            "2025-06-12",
+        ),
+    ];
+    for (ada, parsel, [x0, y0, x1, y1], alan, malik, tarih) in parcels {
+        let id = o.path("parsel", &[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], true);
+        let no = format!("{ada}/{parsel}");
+        let mut attrs = vec![
+            ("ada", ada),
+            ("parsel", parsel),
+            ("no", no.as_str()),
+            ("alan", alan),
+        ];
+        if !malik.is_empty() {
+            attrs.push(("malik", malik));
+        }
+        if !tarih.is_empty() {
+            attrs.push(("tarih", tarih));
+        }
+        o.data(id, &attrs, Some(no.as_str()));
+    }
+    let b1 = o.path(
+        "bina",
+        &[[6.0, 5.0], [20.0, 5.0], [20.0, 17.0], [6.0, 17.0]],
+        true,
+    );
+    o.data(b1, &[("Kat", "3")], None);
+    let b2 = o.path(
+        "bina",
+        &[[38.0, 30.0], [52.0, 30.0], [52.0, 42.0], [38.0, 42.0]],
+        true,
+    );
+    o.data(b2, &[("Kat", "5"), ("Mahalle", "M07")], None);
+    // Forty neighbourhoods, records without geometry: a list searched a page at a time.
+    let names = [
+        "Akpınar",
+        "Aşağı Ayrancı",
+        "Bahçelievler",
+        "Balgat",
+        "Beşevler",
+        "Birlik",
+        "Cebeci",
+        "Çankaya",
+        "Çayyolu",
+        "Demirtepe",
+        "Dikmen",
+        "Emek",
+        "Esat",
+        "Etlik",
+        "Gaziosmanpaşa",
+        "Göztepe",
+        "Hilal",
+        "İncesu",
+        "İlkadım",
+        "Kavaklıdere",
+        "Keçiören",
+        "Kızılay",
+        "Kocatepe",
+        "Kurtuluş",
+        "Maltepe",
+        "Mebusevleri",
+        "Mustafa Kemal",
+        "Oran",
+        "Ostim",
+        "Öveçler",
+        "Remzi Oğuz Arık",
+        "Sağlık",
+        "Sıhhiye",
+        "Söğütözü",
+        "Tandoğan",
+        "Ümitköy",
+        "Yenimahalle",
+        "Yukarı Ayrancı",
+        "Yüzüncüyıl",
+        "Zafertepe",
+    ];
+    for (i, name) in names.iter().enumerate() {
+        let id = o.record("mahalle");
+        let code = format!("M{:02}", i + 1);
+        let ilce = if i % 3 == 0 {
+            "Yenimahalle"
+        } else {
+            "Çankaya"
+        };
+        o.data(
+            id,
+            &[("kod", code.as_str()), ("ad", name), ("ilce", ilce)],
+            None,
+        );
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut parsel = crate::tools_scenes::layer("parsel", "Parsel", "#B45309", 0.35);
+        parsel["fields"] = json!([
+            { "name": "ada", "alias": "Ada", "kind": "integer" },
+            { "name": "parsel", "alias": "Parsel", "kind": "integer" },
+            { "name": "no", "alias": "Ada/Parsel", "kind": "text" },
+            { "name": "alan", "alias": "Yüzölçümü", "kind": "decimal", "scale": 2, "unit": "m²" },
+            { "name": "malik", "alias": "Malik", "kind": "text" },
+            { "name": "tarih", "alias": "Tescil", "kind": "date" }]);
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#0E7490", 0.35);
+        bina["fields"] = json!([
+            { "name": "Parsel", "kind": "text" },
+            { "name": "Ada", "kind": "integer" },
+            { "name": "Alan", "alias": "Parsel alanı", "kind": "decimal", "scale": 2, "unit": "m²" },
+            { "name": "Malik", "kind": "text" },
+            { "name": "Kaynak", "kind": "text" },
+            { "name": "Kat", "kind": "integer" },
+            { "name": "Mahalle", "kind": "text" }]);
+        let mut mahalle = crate::tools_scenes::layer("mahalle", "Mahalle", "#6D28D9", 0.25);
+        mahalle["fields"] = json!([
+            { "name": "kod", "kind": "text" }, { "name": "ad", "kind": "text" }, { "name": "ilce", "alias": "İlçe", "kind": "text" }]);
+        layers.push(parsel);
+        layers.push(bina);
+        layers.push(mahalle);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+    });
+    let body = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "parsel", "field": "Parsel", "lookup": {
+            "layer": "parsel", "key": "$uid", "label": "no", "columns": ["alan", "malik", "tarih"],
+            "sort": { "field": "alan", "descending": true },
+            "copy": [{ "from": "ada", "to": "Ada" }, { "from": "alan", "to": "Alan" }, { "from": "malik", "to": "Malik" }],
+            "stamp": "Kaynak", "duplicates": "refuse", "spatial": { "relation": "contains" } } },
+        { "type": "field", "id": "kat", "field": "Kat" },
+        { "type": "field", "id": "mahalle", "field": "Mahalle", "widget": "search", "minSearch": 2, "lookup": {
+            "layer": "mahalle", "key": "kod", "label": "ad", "columns": ["ilce"], "limit": 12 } },
+        { "type": "field", "id": "ada", "field": "Ada", "readOnly": true },
+        { "type": "field", "id": "alan", "field": "Alan", "readOnly": true },
+        { "type": "field", "id": "malik", "field": "Malik", "readOnly": true },
+        { "type": "field", "id": "kaynak", "field": "Kaynak", "readOnly": true }
+    ] });
+    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let form = json!({ "id": "bina", "name": "Bina", "layer": "bina", "draft": body.clone(),
+        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    settings.domains = serde_json::from_value(json!([
+        { "id": "cati", "name": "Çatı türü", "kind": "text",
+          "values": [{ "code": "dz", "label": "Düz" }, { "code": "bh", "label": "Beşik" }, { "code": "kr", "label": "Kırma" }] },
+        { "id": "kat", "name": "Kat sayısı", "kind": "integer", "min": "1", "max": "40" }]))
+    .expect("lists");
+    settings.variables = serde_json::from_value(json!([])).expect("variables");
+    doc.model.set_settings(settings);
+    app.features.layer = Some("bina".into());
+}
+
+/// Formlar on the building form, its parcel item chosen: the list's order, columns, page, duplicates,
+/// geometry, copies and stamp.
+fn sources_designer(app: &mut App) {
+    sources(app);
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("parsel".into()));
+}
+
+/// Formla düzenle on the first building: the parcels holding it offered with their columns, 101/5
+/// chosen, its area, owner and day under it, copied into the building with the stamp.
+fn sources_entry(app: &mut App) {
+    sources(app);
+    app.selection.set([Slot(5)]);
+    run(app, "data.formEdit");
+    entry(app, entry::Event::Value("Parsel".into(), "101/5".into()));
+}
+
+/// The neighbourhoods searched: “ka” typed, a page of suggestions with their district, Daha fazla.
+fn sources_search(app: &mut App) {
+    sources(app);
+    app.selection.set([Slot(6)]);
+    run(app, "data.formEdit");
+    searched(app, "Mahalle", "a");
+    let _ = app.update(Message::FormEntry(entry::Event::More("Mahalle".into())));
+    searched(app, "Mahalle", "ka");
+}
+
+/// Değer listeleri with İçe aktar…, Dışa aktar… and Aynı kimlikli listeleri değiştir.
+fn sources_domains(app: &mut App) {
+    sources(app);
+    run(app, "data.domains");
+}
+
+/// Alanlar on the parcels after Değerleri biçime çevir: values typed before the fields were (an
+/// import's 450,5, 01.03.2024) in their canonical texts, what did not fit said.
+fn sources_migrated(app: &mut App) {
+    sources(app);
+    let doc = app.document.as_mut().expect("a drawing");
+    for (slot, attrs) in [
+        (1, [("alan", "450,5"), ("tarih", "01.03.2024")]),
+        (2, [("alan", "1.200"), ("tarih", "20.11.2023")]),
+        (3, [("alan", "seksen"), ("tarih", "2024-02-30")]),
+    ] {
+        if let Some(mut e) = doc.model.get(Slot(slot)).cloned() {
+            for (k, v) in attrs {
+                e.base_mut().attrs.insert(k.into(), v.into());
+            }
+            doc.model
+                .update_many(vec![(Slot(slot), e)], "Eski değerler");
+        }
+    }
+    let _ = app.open_layer_fields("parsel");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Migrate));
+}
+
+/// The province being searched: “an” typed, typing paused.
 fn searched_list(app: &mut App) {
     chosen_facilities(app);
+    searched(app, "İl", "an");
+}
+
+/// `text` typed into the searched list of `key` and its turn come (docs/adr/0439 §6): what the pause
+/// after typing delivers.
+fn searched(app: &mut App, key: &str, text: &str) {
     let _ = app.update(Message::FormEntry(entry::Event::Query(
-        "İl".into(),
-        "an".into(),
+        key.into(),
+        text.into(),
     )));
+    let turn = app
+        .form_entry
+        .as_ref()
+        .and_then(|e| e.search_for_tests(key).0);
+    if let Some(turn) = turn {
+        let _ = app.update(Message::FormEntry(entry::Event::Search(key.into(), turn)));
+    }
 }
 
 /// A drafted building with its floor count emptied: kept incomplete, Gönder asks for it (docs/adr/0432).
@@ -2156,6 +2424,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-alan-ekleri", permit_fields),
         ("form-deger-gunleri", permit_values),
         ("form-kural-baglari", permit_designer),
+        ("form-kaynak-giris", sources_entry),
+        ("form-deger-paketi", sources_domains),
+        ("form-degerleri-bicime", sources_migrated),
         ("deger-listeleri", domains_window),
         ("deger-listesi-alan", domains_field),
         ("form-cipler", chosen_facilities),
@@ -2569,6 +2840,143 @@ mod tests {
         );
         entry(&mut app, entry::Event::Save);
         assert!(app.form_entry.is_none(), "written and closed");
+    }
+
+    /// docs/adr/0439 §1–§5: only the parcels holding the building are offered, with their columns; the
+    /// chosen one's values are copied with a stamp and its columns shown; Kaydet writes them.
+    #[test]
+    fn a_chosen_parcel_is_copied_with_its_stamp_and_shown_with_its_columns() {
+        let mut app = crate::files_testing::app_with_drawing();
+        sources_entry(&mut app);
+        let e = app.form_entry.as_ref().expect("open");
+        let state = e.state_for_tests("parsel").expect("the parcel's state");
+        let offered: Vec<&str> = state
+            .options
+            .as_ref()
+            .map(|o| o.iter().map(|c| c.label.as_str()).collect())
+            .unwrap_or_default();
+        assert_eq!(offered, ["101/5"], "only the parcel holding the building");
+        let preview = state.preview.as_ref().expect("the chosen parcel's columns");
+        assert_eq!(preview[0].value, "450.50");
+        entry(&mut app, entry::Event::Save);
+        assert!(app.form_entry.is_none(), "written and closed");
+        let doc = &app.document.as_ref().unwrap().model;
+        let attrs = &doc.get(Slot(5)).unwrap().base().attrs;
+        assert_eq!(attrs.get("Ada").map(String::as_str), Some("101"));
+        assert_eq!(attrs.get("Alan").map(String::as_str), Some("450.50"));
+        assert_eq!(attrs.get("Malik").map(String::as_str), Some("Ayşe Kaya"));
+        assert!(
+            attrs
+                .get("Kaynak")
+                .is_some_and(|s| s.starts_with("Parsel · ") && s.contains(" · #")),
+            "{attrs:?}"
+        );
+    }
+
+    /// docs/adr/0439 §6: a searched list searches once typing paused; an answer whose turn passed is
+    /// dropped, the newest is taken.
+    #[test]
+    fn a_searched_list_takes_the_newest_answer_and_drops_a_late_one() {
+        let mut app = crate::files_testing::app_with_drawing();
+        sources(&mut app);
+        app.selection.set([Slot(6)]);
+        run(&mut app, "data.formEdit");
+        let _ = app.update(Message::FormEntry(entry::Event::Query(
+            "Mahalle".into(),
+            "k".into(),
+        )));
+        let first = app
+            .form_entry
+            .as_ref()
+            .unwrap()
+            .search_for_tests("Mahalle")
+            .0
+            .unwrap();
+        let _ = app.update(Message::FormEntry(entry::Event::Query(
+            "Mahalle".into(),
+            "ka".into(),
+        )));
+        let second = app
+            .form_entry
+            .as_ref()
+            .unwrap()
+            .search_for_tests("Mahalle")
+            .0
+            .unwrap();
+        assert!(second > first);
+        let _ = app.update(Message::FormEntry(entry::Event::Search(
+            "Mahalle".into(),
+            first,
+        )));
+        assert_eq!(
+            app.form_entry
+                .as_ref()
+                .unwrap()
+                .search_for_tests("Mahalle")
+                .1,
+            None,
+            "a late answer is dropped"
+        );
+        let _ = app.update(Message::FormEntry(entry::Event::Search(
+            "Mahalle".into(),
+            second,
+        )));
+        assert_eq!(
+            app.form_entry
+                .as_ref()
+                .unwrap()
+                .search_for_tests("Mahalle")
+                .1
+                .as_deref(),
+            Some("ka")
+        );
+        // An answer for another field does not land here.
+        let _ = app.update(Message::FormEntry(entry::Event::Search(
+            "Kat".into(),
+            second,
+        )));
+        assert_eq!(
+            app.form_entry.as_ref().unwrap().search_for_tests("Kat").1,
+            None
+        );
+    }
+
+    /// docs/adr/0439 §7: the project's value lists go out as a package and come back in.
+    #[test]
+    fn the_value_lists_go_out_as_a_package_and_come_back() {
+        let mut app = crate::files_testing::app_with_drawing();
+        sources_domains(&mut app);
+        let text = app.domains_package_text().expect("a package");
+        let doc = app.document.as_mut().unwrap();
+        let mut settings = doc.model.settings().clone();
+        settings.domains.retain(|d| d.id != "cati");
+        doc.model.set_settings(settings);
+        app.domains_imported(Some(("deger-listeleri.kliste".into(), text)));
+        let ids: Vec<String> = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .settings()
+            .domains
+            .iter()
+            .map(|d| d.id.clone())
+            .collect();
+        assert_eq!(ids, ["kat", "cati"]);
+    }
+
+    /// docs/adr/0439 §8: Değerleri biçime çevir writes an import's values in their fields' canonical texts
+    /// and keeps what does not fit as written.
+    #[test]
+    fn values_written_before_the_fields_are_turned_into_their_canonical_texts() {
+        let mut app = crate::files_testing::app_with_drawing();
+        sources_migrated(&mut app);
+        let doc = &app.document.as_ref().unwrap().model;
+        let a = |slot: u32, k: &str| doc.get(Slot(slot)).unwrap().base().attrs.get(k).cloned();
+        assert_eq!(a(1, "alan").as_deref(), Some("450.5"));
+        assert_eq!(a(1, "tarih").as_deref(), Some("2024-03-01"));
+        assert_eq!(a(3, "alan").as_deref(), Some("seksen"), "kept as written");
+        assert!(doc.can_undo());
     }
 
     #[test]

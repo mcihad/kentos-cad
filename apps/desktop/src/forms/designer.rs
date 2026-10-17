@@ -206,6 +206,10 @@ pub enum Event {
     /// The list's key (`$uid`: the object's persistent id) and its label's field.
     LookupKey(String),
     LookupLabel(Option<String>),
+    /// The list's order, columns, page, duplicates, geometry, copies and stamp (docs/adr/0439).
+    Lookup(LookupEdit),
+    /// A searched list's letters before it searches (docs/adr/0439 §6).
+    MinSearch(String),
     /// The chain: a match added, its two fields, one removed.
     AddMatch,
     MatchField(usize, String),
@@ -308,6 +312,107 @@ pub fn find<'a>(items: &'a [FormItem], id: &str) -> Option<&'a FormItem> {
             find(i.items(), id)
         }
     })
+}
+
+/// An edit of a field's list from another layer (docs/adr/0439).
+#[derive(Clone, Debug)]
+pub enum LookupEdit {
+    ColumnAdd(String),
+    ColumnRemove(usize),
+    /// The field it sorts by; none: the labels.
+    Sort(Option<String>),
+    Descending(bool),
+    /// The page as typed; empty: every value.
+    Limit(String),
+    /// A link of the chain compared folded.
+    Fold(usize, bool),
+    Duplicates(kentos_contracts::LookupDuplicates),
+    /// The relation to the record's geometry; none: not spatial.
+    Spatial(Option<kentos_contracts::LookupRelation>),
+    /// The tolerance as typed.
+    Tolerance(String),
+    CopyAdd,
+    CopyFrom(usize, String),
+    CopyTo(usize, String),
+    CopyRemove(usize),
+    /// The record's field told where a copy came from.
+    Stamp(Option<String>),
+}
+
+impl LookupEdit {
+    /// The edit made on `l`.
+    fn apply(&self, l: &mut kentos_contracts::FormLookup) {
+        match self {
+            LookupEdit::ColumnAdd(key) => {
+                if !l.columns.contains(key)
+                    && l.columns.len() < kentos_contracts::MOST_LOOKUP_COLUMNS
+                {
+                    l.columns.push(key.clone());
+                }
+            }
+            LookupEdit::ColumnRemove(i) => {
+                if *i < l.columns.len() {
+                    l.columns.remove(*i);
+                }
+            }
+            LookupEdit::Sort(field) => {
+                l.sort = field.clone().map(|field| kentos_contracts::LookupSort {
+                    field,
+                    descending: l.sort.as_ref().is_some_and(|s| s.descending),
+                });
+            }
+            LookupEdit::Descending(on) => {
+                if let Some(s) = l.sort.as_mut() {
+                    s.descending = *on;
+                }
+            }
+            LookupEdit::Limit(text) => {
+                l.limit = text.trim().parse::<u32>().ok().filter(|n| *n > 0);
+            }
+            LookupEdit::Fold(i, on) => {
+                if let Some(m) = l.matches.get_mut(*i) {
+                    m.fold = *on;
+                }
+            }
+            LookupEdit::Duplicates(d) => l.duplicates = *d,
+            LookupEdit::Spatial(relation) => {
+                l.spatial = relation.map(|relation| kentos_contracts::LookupSpatial {
+                    relation,
+                    tolerance: l.spatial.as_ref().and_then(|s| s.tolerance),
+                });
+            }
+            LookupEdit::Tolerance(text) => {
+                if let Some(s) = l.spatial.as_mut() {
+                    s.tolerance = text
+                        .trim()
+                        .replace(',', ".")
+                        .parse::<f64>()
+                        .ok()
+                        .filter(|t| t.is_finite() && *t > 0.0);
+                }
+            }
+            LookupEdit::CopyAdd => l.copy.push(kentos_contracts::LookupCopy {
+                from: String::new(),
+                to: String::new(),
+            }),
+            LookupEdit::CopyFrom(i, key) => {
+                if let Some(c) = l.copy.get_mut(*i) {
+                    c.from = key.clone();
+                }
+            }
+            LookupEdit::CopyTo(i, key) => {
+                if let Some(c) = l.copy.get_mut(*i) {
+                    c.to = key.clone();
+                }
+            }
+            LookupEdit::CopyRemove(i) => {
+                if *i < l.copy.len() {
+                    l.copy.remove(*i);
+                }
+            }
+            LookupEdit::Stamp(key) => l.stamp = key.clone(),
+        }
+    }
 }
 
 fn find_mut<'a>(items: &'a mut [FormItem], id: &str) -> Option<&'a mut FormItem> {
@@ -1094,9 +1199,7 @@ impl App {
                             f.lookup = layer.clone().map(|layer| kentos_contracts::FormLookup {
                                 layer,
                                 key: kentos_contracts::LOOKUP_UID.into(),
-                                label: None,
-                                matches: Vec::new(),
-                                filter: None,
+                                ..kentos_contracts::FormLookup::default()
                             });
                         }
                     });
@@ -1124,6 +1227,26 @@ impl App {
                     });
                 }
             }
+            Event::Lookup(edit) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
+                            && let Some(l) = f.lookup.as_mut()
+                        {
+                            edit.apply(l);
+                        }
+                    });
+                }
+            }
+            Event::MinSearch(text) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.min_search = text.trim().parse::<u32>().ok().filter(|n| *n > 0);
+                        }
+                    });
+                }
+            }
             Event::AddMatch => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -1133,6 +1256,7 @@ impl App {
                             l.matches.push(kentos_contracts::LookupMatch {
                                 field: String::new(),
                                 record: String::new(),
+                                fold: false,
                             });
                         }
                     });

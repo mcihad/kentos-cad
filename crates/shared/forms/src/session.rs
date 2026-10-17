@@ -11,8 +11,8 @@
 //! - A write through the form changes only the form's fields, none hidden or read-only.
 
 use kentos_contracts::{
-    AttachmentAccept, FormBody, FormField, FormIssue, FormItem, FormItemState, FormSeverity,
-    FormWidget, LayerField, check_value, js_trim,
+    AttachmentAccept, FieldChoice, FormBody, FormField, FormIssue, FormItem, FormItemState,
+    FormSeverity, FormWidget, LayerField, check_value, js_trim,
 };
 use kentos_expression::js::text::fold_turkish;
 use kentos_expression::template::{self, Template};
@@ -344,6 +344,8 @@ impl Prepared {
                 choices: None,
                 text: None,
                 options: None,
+                more: None,
+                preview: None,
                 related: None,
                 suggestions: None,
                 attachments: None,
@@ -421,8 +423,25 @@ impl Prepared {
                 .iter()
                 .find(|(id, _)| *id == state.id)
                 .map(|(_, t)| t.clone());
-            if let Some(list) = node.field.as_ref().and_then(|b| b.lookup.as_ref()) {
-                state.options = Some(list.choices(attrs));
+            if let Some(b) = node.field.as_ref()
+                && let Some(list) = &b.lookup
+            {
+                // A page of the list and the count of the rest (docs/adr/0439 §1); the chosen
+                // object's columns, live.
+                let mut options = list.choices(attrs, object);
+                if let Some(n) = list.limit
+                    && options.len() > n
+                {
+                    state.more = u32::try_from(options.len() - n).ok();
+                    options.truncate(n);
+                }
+                state.options = Some(options);
+                let name = &self.fields[b.index].name;
+                state.preview = attrs
+                    .get(name)
+                    .map(|v| js_trim(v))
+                    .filter(|v| !v.is_empty())
+                    .and_then(|v| list.preview(v));
             }
             if let Some(related) = &node.related {
                 state.related = Some(related.of(object));
@@ -434,15 +453,22 @@ impl Prepared {
         states
     }
 
+    /// A field item's whole list from another layer for the record, past its page (docs/adr/0439 §1):
+    /// what a searched list searches; none for an item without one.
+    pub fn options(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<FieldChoice>> {
+        let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
+        Some(b.lookup.as_ref()?.choices(attrs, object))
+    }
+
     /// The listed values a field item offers for the record, in the list's order: none when the item
     /// has no filter (every listed value is offered).
     pub fn choices(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<String>> {
         let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
         if let Some(list) = &b.lookup {
             return Some(
-                list.offered(attrs)
+                list.offered(attrs, object)
                     .into_iter()
-                    .map(|r| r.0.clone())
+                    .map(|r| r.code.clone())
                     .collect(),
             );
         }
@@ -510,6 +536,47 @@ impl Prepared {
                 Some((n.id.clone(), note.template.fill(&values, None)))
             })
             .collect()
+    }
+
+    /// The record's fields' names the lists copy into or stamp.
+    fn copy_targets(&self) -> std::collections::HashSet<&str> {
+        self.items
+            .iter()
+            .filter_map(|n| n.field.as_ref()?.lookup.as_ref())
+            .flat_map(|l| l.targets())
+            .collect()
+    }
+
+    /// `attrs` with the copies of each list whose value was chosen anew (docs/adr/0439 §3): its value
+    /// differs from `before`'s (none: a new record), or its stamp names another value. The chosen
+    /// object's fields are copied over the record's, the stamp says where from; an emptied value
+    /// leaves the copies as they are.
+    pub fn copied(&self, before: Option<&Attrs>, attrs: &Attrs) -> Attrs {
+        let mut out = attrs.clone();
+        for b in self.items.iter().filter_map(|n| n.field.as_ref()) {
+            let Some(list) = b.lookup.as_ref().filter(|l| l.copies()) else {
+                continue;
+            };
+            let field = &self.fields[b.index];
+            if field.multiple {
+                continue;
+            }
+            let now = attrs.get(&field.name).map_or("", |v| js_trim(v));
+            if now.is_empty() {
+                continue;
+            }
+            let was = before
+                .and_then(|a| a.get(&field.name))
+                .map_or("", |v| js_trim(v));
+            let mut copied = out.clone();
+            list.copy_into(&mut copied, now, self.today.as_deref());
+            // A value kept whose copies already stand is left alone: a copy is not a live view.
+            if before.is_some() && was == now && !list.stale_stamp(&out, now) {
+                continue;
+            }
+            out = copied;
+        }
+        out
     }
 
     /// The record completed (docs/adr/0402 §3): a new record's empty fields take their plain
@@ -778,18 +845,60 @@ impl Prepared {
             } else {
                 vec![canonical.as_str()]
             };
-            if let Some(list) = &b.lookup
-                && held
+            if let Some(list) = &b.lookup {
+                let offered = list.offered(attrs, object);
+                if held
                     .iter()
-                    .any(|code| !list.offered(attrs).iter().any(|r| r.0 == *code))
-            {
-                issues.push(at(
-                    codes::LOOKUP_MISSING,
-                    FormSeverity::Error,
-                    Some("lookup".into()),
-                    format!("“{label}” için “{value}” listede yok; listeden seçin."),
-                ));
-                continue;
+                    .any(|code| !offered.iter().any(|r| r.code == *code))
+                {
+                    issues.push(at(
+                        codes::LOOKUP_MISSING,
+                        FormSeverity::Error,
+                        Some("lookup".into()),
+                        format!("“{label}” için “{value}” listede yok; listeden seçin."),
+                    ));
+                    continue;
+                }
+                // A code more than one object holds (docs/adr/0439 §4).
+                if list.policy != kentos_contracts::LookupDuplicates::First
+                    && let Some((code, n)) = held
+                        .iter()
+                        .find_map(|c| list.duplicated(c).map(|n| (*c, n)))
+                {
+                    let refused = list.policy == kentos_contracts::LookupDuplicates::Refuse;
+                    issues.push(at(
+                        codes::LOOKUP_DUPLICATE,
+                        if refused {
+                            FormSeverity::Error
+                        } else {
+                            FormSeverity::Warning
+                        },
+                        Some("lookup".into()),
+                        if refused {
+                            format!(
+                                "“{label}” için “{code}” listenin katmanında {n} kayıtta var; anahtar tekil değil, başka bir değer seçin ya da kaynağı düzeltin."
+                            )
+                        } else {
+                            format!(
+                                "“{label}” için “{code}” listenin katmanında {n} kayıtta var; ilkininki alındı. Kaynağı düzeltin ya da yinelenen kuralını seçin."
+                            )
+                        },
+                    ));
+                    if refused {
+                        continue;
+                    }
+                }
+                // The copy's source changed after the copy (docs/adr/0439 §3).
+                if !field.multiple && list.stale(attrs, &canonical) {
+                    issues.push(at(
+                        codes::LOOKUP_STALE,
+                        FormSeverity::Warning,
+                        Some("lookup.stamp".into()),
+                        format!(
+                            "“{label}” için kopyalanan değerler kaynakta değişti; değeri yeniden seçerek güncelleyin."
+                        ),
+                    ));
+                }
             }
             // A multiple field's codes are asked one by one (docs/adr/0408 §2).
             let codes: Vec<&str> = if field.multiple {
@@ -1007,6 +1116,8 @@ impl Prepared {
                 changed.push(index);
             }
         }
+        // A list's value chosen anew brings its copies (docs/adr/0439 §3).
+        let written = self.copied((!new).then_some(before), &written);
         let (after, completed) = self.complete(&written, object, new);
         issues.extend(self.locked(&changed, &after, object));
         issues.extend(self.retired(&changed, before, &after));
@@ -1047,8 +1158,16 @@ impl Prepared {
         let mut issues = Vec::new();
         let mut changed = Vec::new();
         let (completed, worked) = self.complete(after, object, false);
+        // A list's copies written as the list copies them are the form's (docs/adr/0439 §3).
+        let copies = self.copied(Some(before), after);
+        let targets = self.copy_targets();
         for (index, field) in self.fields.iter().enumerate() {
             if before.get(&field.name) == after.get(&field.name) {
+                continue;
+            }
+            if targets.contains(field.name.as_str())
+                && copies.get(&field.name) == after.get(&field.name)
+            {
                 continue;
             }
             if self.calculated(index) {

@@ -180,6 +180,8 @@ pub mod forms_recompute;
 pub mod forms_test;
 pub mod forms_transition;
 pub mod domains_edit;
+pub mod domains_export;
+pub mod fields_migrate;
 pub mod forms_export;
 pub mod forms_import;
 pub mod forms_validate;
@@ -266,6 +268,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_DOMAINS_EDIT,
         kentos_contracts::CAD_DOMAINS_EDIT_VERSION,
+    ),
+    // The value lists as a package and a layer's values in their canonical texts (docs/adr/0439 §7, §8).
+    (
+        kentos_contracts::CAD_DOMAINS_EXPORT,
+        kentos_contracts::CAD_DOMAINS_EXPORT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_FIELDS_MIGRATE,
+        kentos_contracts::CAD_FIELDS_MIGRATE_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_EXPORT,

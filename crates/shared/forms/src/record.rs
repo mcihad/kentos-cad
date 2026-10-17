@@ -31,6 +31,9 @@ pub struct Object {
     /// Its attachments, counted (docs/adr/0407 §1); none where the record's attachments are not
     /// judged (a new record, the document's following of a write).
     pub attachments: Option<Attached>,
+    /// Its geometry: what a spatial list asks the other layer's objects about (docs/adr/0439 §5);
+    /// none for a record without geometry.
+    pub shape: Option<std::sync::Arc<kentos_geometry_core::entity::Shape>>,
 }
 
 /// How many attachments an object holds: all of them and its photos.

@@ -566,6 +566,33 @@ def join_plan(targets, sources):
     return {"matches": matches, "repeated": len(repeated), "unused": keyed - len(used) - repeated_rows}
 
 
+def join_policy(plan, targets, sources, duplicates):
+    """docs/adr/0439 §4: Yinelenen anahtar. "skip" unmatches the targets of a key the source holds more than once,
+    "stop" refuses (a message) naming the first such key as written; "first" leaves the plan. Returns
+    (plan, repeated keys, refusal)."""
+    seen, first = {}, None
+    for s in sources:
+        k = join_key(s) if s is not None else None
+        if k is None:
+            continue
+        seen[k] = seen.get(k, 0) + 1
+        if seen[k] == 2 and first is None:
+            first = s.strip(JS_SPACE)
+    keys = {k for k, n in seen.items() if n > 1}
+    if duplicates == "stop" and keys:
+        return plan, keys, (f"Kaynakta {len(keys)} anahtar birden çok kez var (ilki “{first}”); yinelenen anahtar kuralını "
+                            "değiştirin ya da kaynağı düzeltin.")
+    if duplicates == "skip":
+        plan = dict(plan)
+        plan["matches"] = [None if (t is not None and join_key(t) in keys) else m for t, m in zip(targets, plan["matches"])]
+    return plan, keys, None
+
+
+def repeated_words(n, duplicates):
+    return (f"{n} anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı." if duplicates == "skip"
+            else f"{n} anahtar kaynakta birden çok kez var; ilk satırları alındı.")
+
+
 NUMBERS = [" 1,50 ", "-0.0", "+007", "1e3", "1.2.3", "", ",5", "5,", "-", "12345678901234567890123456789012", "١٢", "0001.000", "-3"]
 
 FIGURES = [
@@ -945,7 +972,13 @@ def case_join(cid, title, values, targets, target_key, rows, source_key, fields,
     k = header.index(source_key)
     body = rows[1:]
     take = [i for i, h in enumerate(header) if i != k] if not fields else [header.index(f) for f in fields]
-    plan = join_plan([BY_ID[t]["attrs"].get(target_key) for t in targets], [r[k] if k < len(r) else None for r in body])
+    tkeys = [BY_ID[t]["attrs"].get(target_key) for t in targets]
+    skeys = [r[k] if k < len(r) else None for r in body]
+    duplicates = values.get("duplicates", "first")
+    plan, _, refused = join_policy(join_plan(tkeys, skeys), tkeys, skeys, duplicates)
+    if refused:
+        return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "attributes.joinByField"},
+                "values": values, "expect": {"status": "error", "message": refused}}
     changes = {}
     for t, m in zip(targets, plan["matches"]):
         if m is None:
@@ -972,7 +1005,7 @@ def case_join(cid, title, values, targets, target_key, rows, source_key, fields,
     unmatched = len(targets) - matched
     lines = []
     if plan["repeated"]:
-        lines.append({"level": "warn", "text": f"{plan['repeated']} anahtar kaynakta birden çok kez var; ilk satırları alındı."})
+        lines.append({"level": "warn", "text": repeated_words(plan["repeated"], duplicates)})
     if unmatched:
         lines.append({"level": "info", "text": f"{unmatched} hedef nesnenin kaynakta eşi yok."})
     if plan["unused"]:
@@ -1141,6 +1174,19 @@ def build_processing():
         case_join("join-file", "Anahtarla birleştir, CSV'den: önekle bütün sütunlar; 03 ile 3 aynı anahtar",
                   {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "file", "file": "malikler.csv", "sourceKey": "", "fields": "", "prefix": "Tapu "},
                   parcels, "Parsel", CSV_ROWS, "Parsel", [], "Tapu ", False),
+        # docs/adr/0439 §4: Yinelenen anahtar chosen.
+        case_join("join-duplicates-skip", "Anahtarla birleştir, Yinelenen anahtar Aktarma: yinelenen anahtarın hedefine bir şey aktarılmaz",
+                  {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "file", "file": "malikler.csv", "sourceKey": "", "fields": "", "prefix": "Tapu ",
+                   "duplicates": "skip"},
+                  parcels, "Parsel", CSV_ROWS, "Parsel", [], "Tapu ", False),
+        case_join("join-duplicates-stop", "Anahtarla birleştir, Yinelenen anahtar Durdur: kaynakta yinelenen anahtar varsa çalışmaz, ilkini söyler",
+                  {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "layer", "source": lay("kayit"), "sourceKey": "", "fields": "Malik",
+                   "duplicates": "stop"},
+                  parcels, "Parsel", layer_rows("kayit", "Parsel", ["Malik"]), "Parsel", ["Malik"], "", False),
+        case_join("join-duplicates-first", "Anahtarla birleştir, Yinelenen anahtar İlk satırı al açıkça: ilk satır alınır ve söylenir",
+                  {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "layer", "source": lay("kayit"), "sourceKey": "", "fields": "Malik",
+                   "duplicates": "first"},
+                  parcels, "Parsel", layer_rows("kayit", "Parsel", ["Malik"]), "Parsel", ["Malik"], "", False),
         {
             "id": "refuse-join-column",
             "title": "Dosyada kaynak anahtar sütunu yoksa çalışmaz, sütunları söyler",

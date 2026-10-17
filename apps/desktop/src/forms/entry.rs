@@ -135,6 +135,16 @@ pub struct Entry {
     suggestions: BTreeMap<String, Vec<String>>,
     /// What is typed into a searched list (docs/adr/0431), by the field's key, until a value is picked.
     queries: BTreeMap<String, String>,
+    /// What a searched list searched for (docs/adr/0439 §6): the text typed once typing paused. A
+    /// search waits for its turn (`pending`, by a growing number): an answer whose number is no
+    /// longer the field's, or that came for another field, is dropped.
+    searched: BTreeMap<String, String>,
+    pending: BTreeMap<String, u64>,
+    turn: u64,
+    /// How many pages of suggestions a searched list shows (Daha fazla).
+    pages: BTreeMap<String, usize>,
+    /// A paged list's whole list for the record, by its item (docs/adr/0439 §1): what its search searches.
+    whole: BTreeMap<String, Vec<kentos_contracts::FieldChoice>>,
     /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
     /// the preview and with many records.
     place: Option<(usize, usize)>,
@@ -196,6 +206,10 @@ pub enum Event {
     Value(String, String),
     /// Typed into a searched list (docs/adr/0431): the field's key and the text; no value yet.
     Query(String, String),
+    /// A searched list's turn came (docs/adr/0439 §6): the field's key and the search's number.
+    Search(String, u64),
+    /// A searched list shows a page more.
+    More(String),
     Note(String, text_editor::Action),
     Tab(usize),
     /// A collapsed group's title: open or close it.
@@ -226,6 +240,13 @@ pub enum Event {
     Save,
     Cancel,
 }
+
+/// How long typing pauses before a searched list is searched (docs/adr/0439 §6).
+const SEARCH_PAUSE: std::time::Duration = std::time::Duration::from_millis(150);
+/// The suggestions of a searched list's page.
+const SEARCH_PAGE: usize = 12;
+/// A list longer than this is searched rather than laid out.
+const LONG_LIST: usize = 200;
 
 fn msg(event: Event) -> Message {
     Message::FormEntry(event)
@@ -324,6 +345,18 @@ impl Entry {
             moment,
         );
         self.items = prepared.described(&after, &self.screen.object);
+        // A paged list's search reaches every value (docs/adr/0439 §1).
+        self.whole = self
+            .items
+            .iter()
+            .filter(|s| s.more.is_some())
+            .filter_map(|s| {
+                Some((
+                    s.id.clone(),
+                    prepared.options(&s.id, &after, &self.screen.object)?,
+                ))
+            })
+            .collect();
         let asked: Vec<Option<String>> = prepared
             .unique_keys()
             .iter()
@@ -486,6 +519,18 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn conflict_for_tests(&self) -> bool {
         self.conflict.is_some()
+    }
+
+    /// An item's state for the record.
+    #[cfg(test)]
+    pub(crate) fn state_for_tests(&self, id: &str) -> Option<&FormItemState> {
+        self.state(id)
+    }
+
+    /// A searched list's search waiting for its turn (docs/adr/0439 §6), and what it searched.
+    #[cfg(test)]
+    pub(crate) fn search_for_tests(&self, key: &str) -> (Option<u64>, Option<String>) {
+        (self.pending.get(key).copied(), self.searched.get(key).cloned())
     }
 
     /// The tabs shown, in order: a step form's steps.
@@ -754,6 +799,11 @@ impl App {
             mixed: BTreeSet::new(),
             suggestions: BTreeMap::new(),
             queries: BTreeMap::new(),
+            searched: BTreeMap::new(),
+            pending: BTreeMap::new(),
+            turn: 0,
+            pages: BTreeMap::new(),
+            whole: BTreeMap::new(),
             place: None,
             follows: BTreeSet::new(),
         };
@@ -1159,11 +1209,32 @@ impl App {
         };
         match event {
             Event::Query(key, text) => {
-                e.queries.insert(key, text);
+                e.queries.insert(key.clone(), text);
+                e.pages.remove(&key);
+                // Typing pauses before the list is searched; a newer key press takes the turn.
+                e.turn += 1;
+                e.pending.insert(key.clone(), e.turn);
+                let after = e.msg(Event::Search(key, e.turn));
+                return crate::hover_card::after(SEARCH_PAUSE, after);
+            }
+            Event::Search(key, turn) => {
+                if e.pending.get(&key) == Some(&turn) {
+                    e.pending.remove(&key);
+                    if let Some(text) = e.queries.get(&key) {
+                        e.searched.insert(key, text.clone());
+                    }
+                }
+                return Task::none();
+            }
+            Event::More(key) => {
+                *e.pages.entry(key).or_insert(1) += 1;
                 return Task::none();
             }
             Event::Value(key, text) => {
                 e.queries.remove(&key);
+                e.searched.remove(&key);
+                e.pending.remove(&key);
+                e.pages.remove(&key);
                 // A long text's editor shows a value given as a whole (a trace's, a pick's) too.
                 if let Some(content) = e.notes.get_mut(&key)
                     && content.text().trim_end_matches('\n') != text
@@ -2116,6 +2187,33 @@ impl App {
                     let read_only = locked || f.mirror || state.is_some_and(|s| s.read_only);
                     let words = f.label.clone().unwrap_or_else(|| field.label().to_owned());
                     let control = entry_control(e, f, field, read_only);
+                    // A list's chosen object, its columns live, and the values past the page
+                    // (docs/adr/0439 §1, §2).
+                    let control: Element<'a, Message> = match state.map(|s| (&s.preview, s.more)) {
+                        Some((preview, more)) if preview.is_some() || more.is_some() => {
+                            let mut col = Column::new().spacing(3).push(control);
+                            if let Some(p) = preview {
+                                let line: Vec<String> = p
+                                    .iter()
+                                    .filter(|v| !v.value.is_empty())
+                                    .map(|v| format!("{}: {}", v.label, v.value))
+                                    .collect();
+                                if !line.is_empty() {
+                                    col = col.push(label::caption(line.join("  ·  ")).style(muted));
+                                }
+                            }
+                            if let Some(n) = more.filter(|_| !read_only) {
+                                col = col.push(
+                                    label::caption(format!(
+                                        "Listede {n} değer daha var; aramak için yazın."
+                                    ))
+                                    .style(muted),
+                                );
+                            }
+                            col.into()
+                        }
+                        _ => control,
+                    };
                     // A number's unit after it (docs/adr/0438 §4).
                     let control: Element<'a, Message> = match &field.unit {
                         Some(unit) => Row::new()
@@ -2545,9 +2643,20 @@ fn entry_control<'a>(
     // What the item's choice filter offers for the record; every listed value without one.
     let offered = e.state(&item.id).and_then(|s| s.choices.as_ref());
     // A list from another layer offers its values for the record (docs/adr/0404 §2).
+    // A paged list's whole list where it is searched; its page elsewhere (docs/adr/0439 §1).
+    let more = e.state(&item.id).and_then(|s| s.more);
+    let paged = match kentos_forms::widget_of(item, field) {
+        FormWidget::Search => true,
+        FormWidget::List => more.is_some(),
+        _ => false,
+    };
+    let options = e
+        .whole
+        .get(&item.id)
+        .filter(|_| paged)
+        .or_else(|| e.state(&item.id).and_then(|s| s.options.as_ref()));
     let looked: Option<Vec<(String, String)>> = item.lookup.as_ref().map(|_| {
-        e.state(&item.id)
-            .and_then(|s| s.options.as_ref())
+        options
             .map(|o| {
                 o.iter()
                     .map(|c| (c.code.clone(), c.label.clone()))
@@ -2555,6 +2664,14 @@ fn entry_control<'a>(
             })
             .unwrap_or_default()
     });
+    // A value's columns from its layer, said beside its label (docs/adr/0439 §2).
+    let details: BTreeMap<&str, &str> = options
+        .map(|o| {
+            o.iter()
+                .filter_map(|c| Some((c.code.as_str(), c.description.as_deref()?)))
+                .collect()
+        })
+        .unwrap_or_default();
     // A retired value, or one outside its days (docs/adr/0438 §5), only for the record holding it
     // (docs/adr/0418).
     let listed = field.offered_values_on(
@@ -2589,9 +2706,11 @@ fn entry_control<'a>(
             .as_ref()
             .and(choices.iter().position(|(_, l)| *l == value))
     });
-    // A list from another layer is not known before the record: its segmented choice is a list.
+    // A list from another layer is not known before the record: its segmented choice is a list. A
+    // long list is searched (docs/adr/0439 §6): its values are not all laid out.
     let widget = match kentos_forms::widget_of(item, field) {
         FormWidget::Segmented if looked.is_some() => FormWidget::List,
+        FormWidget::List if choices.len() > LONG_LIST || more.is_some() => FormWidget::Search,
         w => w,
     };
     match widget {
@@ -2764,30 +2883,81 @@ fn entry_control<'a>(
             let shown = query
                 .clone()
                 .unwrap_or_else(|| at.map_or_else(|| value.clone(), |i| choices[i].1.clone()));
-            let labels: Vec<String> = choices.iter().map(|(_, l)| l.clone()).collect();
-            let offered: Vec<String> = match &query {
-                Some(q) if !q.is_empty() => kentos_forms::suggestions_for(&labels, q, 12)
-                    .into_iter()
-                    .cloned()
-                    .collect(),
-                _ => labels.iter().take(12).cloned().collect(),
-            };
-            let picked: Vec<String> = offered
+            // What was searched once typing paused, a page at a time; a value's columns searched
+            // with its label (docs/adr/0439 §2, §6).
+            let searched = e.searched.get(&key).filter(|_| query.is_some());
+            let least = item.min_search.unwrap_or(1).max(1) as usize;
+            let short = searched.is_some_and(|q| !q.is_empty() && q.chars().count() < least);
+            let page = SEARCH_PAGE * e.pages.get(&key).copied().unwrap_or(1);
+            let texts: Vec<String> = choices
                 .iter()
-                .filter_map(|l| choices.iter().find(|(_, x)| x == l).map(|(c, _)| c.clone()))
+                .map(|(c, l)| match details.get(c.as_str()) {
+                    Some(d) => format!("{l} {d}"),
+                    None => l.clone(),
+                })
                 .collect();
+            // The labels holding what is typed first, then the values whose columns hold it.
+            let labels: Vec<String> = choices.iter().map(|(_, l)| l.clone()).collect();
+            let found: Vec<usize> = match searched {
+                _ if short => Vec::new(),
+                Some(q) if !q.is_empty() => {
+                    let mut out: Vec<usize> = kentos_forms::suggestions_for(&labels, q, page + 1)
+                        .into_iter()
+                        .filter_map(|s| labels.iter().position(|x| std::ptr::eq(x, s)))
+                        .collect();
+                    if out.len() <= page {
+                        for s in kentos_forms::suggestions_for(&texts, q, page + 1) {
+                            if let Some(i) = texts.iter().position(|x| std::ptr::eq(x, s))
+                                && !out.contains(&i)
+                            {
+                                out.push(i);
+                            }
+                            if out.len() > page {
+                                break;
+                            }
+                        }
+                    }
+                    out
+                }
+                _ => (0..choices.len().min(page + 1)).collect(),
+            };
+            let more = found.len() > page;
+            let found: Vec<usize> = found.into_iter().take(page).collect();
+            let picked: Vec<String> = found.iter().map(|&i| choices[i].0.clone()).collect();
+            let shown_count = picked.len();
             let k = key.clone();
+            let km = key.clone();
             let on_pick = set.clone();
-            kentos_ui::widget::Suggest::new(shown.as_str(), placeholder.as_str())
+            let mut rows: Vec<kentos_ui::widget::suggest::Suggestion<'a>> = found
+                .iter()
+                .map(|&i| {
+                    let s = kentos_ui::widget::suggest::Suggestion::new(choices[i].1.clone());
+                    match details.get(choices[i].0.as_str()) {
+                        Some(d) => s.detail((*d).to_owned()),
+                        None => s,
+                    }
+                })
+                .collect();
+            if more {
+                rows.push(kentos_ui::widget::suggest::Suggestion::offer("Daha fazla göster"));
+            }
+            let mut suggest = kentos_ui::widget::Suggest::new(shown.as_str(), placeholder.as_str())
                 .id(input_id(&key))
                 .on_input(move |t| e.msg(Event::Query(k.clone(), t)))
-                .suggestions(
-                    offered
-                        .into_iter()
-                        .map(kentos_ui::widget::suggest::Suggestion::new),
-                )
-                .on_pick(move |i| on_pick(picked.get(i).cloned().unwrap_or_default()))
-                .into()
+                .suggestions(rows)
+                .on_pick(move |i| {
+                    if i >= shown_count {
+                        e.msg(Event::More(km.clone()))
+                    } else {
+                        on_pick(picked.get(i).cloned().unwrap_or_default())
+                    }
+                });
+            if short {
+                suggest = suggest.note(format!("Aramak için en az {least} harf yazın."));
+            } else if query.is_some() && e.pending.contains_key(&key) {
+                suggest = suggest.note("Aranıyor…");
+            }
+            suggest.into()
         }
         FormWidget::Check => {
             let on = code == "true";
@@ -2808,7 +2978,10 @@ fn entry_control<'a>(
             let picks = choices.clone();
             let set_pick = set.clone();
             let mut select = Select::new(
-                choices.iter().map(|(_, l)| Choice::new(l.clone())),
+                choices.iter().map(|(c, l)| match details.get(c.as_str()) {
+                    Some(d) => Choice::new(l.clone()).detail((*d).to_owned()),
+                    None => Choice::new(l.clone()),
+                }),
                 at,
                 move |i| set_pick(picks[i].0.clone()),
             );

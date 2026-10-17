@@ -51,6 +51,11 @@ kc = load("kcad_reader", ROOT / "tools/kcad/kcad.py")
 # The templates' independent splitting (docs/adr/0225 §6): a note's text with `{…}`.
 tc = load("template_cases", ROOT / "scripts/fixtures/template_cases.py")
 cc = load("chart_cases", ROOT / "scripts/fixtures/chart_cases.py")  # the natural order, ADR 0227
+# The spatial relations' independent reference (docs/adr/0200 §1): a spatial list's (docs/adr/0439 §5).
+sq = load("spatial_query_cases", ROOT / "scripts/fixtures/spatial_query_cases.py")
+# A value as people read it (docs/adr/0199 §4): a list's columns (docs/adr/0439 §2).
+lfc = load("layer_field_cases", ROOT / "scripts/fixtures/layer_field_cases.py")
+display_value = lfc.display
 
 # uzunluk(metin): the text's UTF-16 units, as JavaScript counts them.
 el.FUNCTIONS["UZUNLUK"] = (1, 1, lambda args: None if args[0] is None else float(el.units(el.text(args[0]))))
@@ -66,6 +71,36 @@ MOST_NAME = 64
 
 def key_of(f):
     return f.get("id", f["name"])
+
+
+# docs/adr/0439 §4: the kinds that compare with each other.
+FAMILY = {"text": 0, "integer": 1, "decimal": 1, "date": 2, "datetime": 3, "time": 4, "boolean": 5}
+
+
+def writes_into(src, dst):
+    """A value of kind `src` into a field of kind `dst`: the same family (not a decimal into an integer), or
+    anything into text."""
+    return dst == "text" or (FAMILY[src] == FAMILY[dst] and not (src == "decimal" and dst == "integer"))
+
+
+def fingerprint(values):
+    """The copied values' fingerprint (docs/adr/0439 §3): FNV-1a, 32 bits, of their UTF-8 texts each ended by
+    U+001F, an empty one as nothing; eight lower-case hexadecimal digits."""
+    h = 0x811C9DC5
+    for v in values:
+        for b in (v or "").encode() + b"\x1f":
+            h ^= b
+            h = (h * 0x01000193) & 0xFFFFFFFF
+    return f"{h:08x}"
+
+
+def same_key(numeric, folded, k, w):
+    """A list's value against the record's (docs/adr/0439 §4): numbers by value, text exactly or folded."""
+    if numeric:
+        return Fraction(k) == Fraction(w)
+    if folded:
+        return fold(k.strip(JS_SPACE)).lower() == fold(w.strip(JS_SPACE)).lower()
+    return k == w
 
 
 def fold(text):
@@ -506,6 +541,53 @@ def preflight(body, fields, variables=(), world=None):
                 issues.append(issue("form_lookup_field", True, f["id"], key, "lookup"))
         if "filter" in lk and parse(lk["filter"]) is None:
             issues.append(issue("form_rule_invalid", True, f["id"], key, "lookup.filter"))
+        lookup_extras(f, layer, lk, other)
+
+    def lookup_extras(f, layer, lk, other):
+        """docs/adr/0439: the order's, columns' and copies' fields exist in the list's layer, the copies' and
+        the stamp's in the form's; the kinds compared, written and copied go together; the numbers in bounds."""
+        key = f["field"]
+
+        def bad(code):
+            issues.append(issue(code, True, f["id"], key, "lookup"))
+
+        theirs = lambda k: next((x for x in other["fields"] if key_of(x) == k), None)  # noqa: E731
+        ours = lambda k: next((x for x in fields if key_of(x) == k), None)  # noqa: E731
+        read = list(lk.get("columns", [])) + ([lk["sort"]["field"]] if "sort" in lk else []) + \
+            [c["from"] for c in lk.get("copy", [])]
+        for k in read:
+            if k != UID_KEY and theirs(k) is None:
+                bad("form_lookup_field")
+        for k in [c["to"] for c in lk.get("copy", [])] + ([lk["stamp"]] if "stamp" in lk else []):
+            if ours(k) is None:
+                bad("form_lookup_field")
+
+        def kind_of(x, k):
+            return "text" if k == UID_KEY else (x["kind"] if x else None)
+
+        k = kind_of(theirs(lk["key"]), lk["key"])
+        if k is not None and not writes_into(k, layer["kind"]):
+            bad("form_lookup_type")
+        for m in lk.get("matches", []):
+            a, b = theirs(m["field"]), ours(m["record"])
+            if a and b and FAMILY[a["kind"]] != FAMILY[b["kind"]]:
+                bad("form_lookup_type")
+        for c in lk.get("copy", []):
+            k, b = kind_of(theirs(c["from"]), c["from"]), ours(c["to"])
+            if k is not None and b is not None and not writes_into(k, b["kind"]):
+                bad("form_lookup_type")
+            if c["to"] == key or c["to"] == lk.get("stamp"):
+                bad("form_lookup_type")
+        s = ours(lk["stamp"]) if "stamp" in lk else None
+        if s is not None and s["kind"] != "text":
+            bad("form_lookup_type")
+        if len(lk.get("columns", [])) > 4:
+            bad("form_lookup_type")
+        if "limit" in lk and not 0 < lk["limit"] <= 1000:
+            bad("form_lookup_type")
+        tol = lk.get("spatial", {}).get("tolerance")
+        if tol is not None and tol < 0:
+            bad("form_lookup_type")
 
     def related(x):
         if "visibleWhen" in x:
@@ -615,6 +697,7 @@ class Form:
         walk(body["items"], None)
         # The lists from other layers, made once (docs/adr/0404 §1), and the related items' objects.
         still = {n: v for n, v in self.variables.items() if n not in MOMENT}
+        self.unit = 1  # the cases' geometry speaks metres
         self.lists, self.related = {}, {}
         for x, _ in self.nodes:
             if x["type"] == "field" and "lookup" in x:
@@ -635,45 +718,191 @@ class Form:
             self.calc_order.append(k)
 
     def list_of(self, lk, other, still):
+        """A list (docs/adr/0404 §1, docs/adr/0439): rows (code, label, keys, columns, copies, shape), sorted; the
+        chain's links (record field's name, numeric, folded); the codes more than one object holds."""
+        import functools
+
+        def field(k):
+            return next((y for y in other["fields"] if key_of(y) == k), None)
+
         def name(k):
-            return next((y["name"] for y in other["fields"] if key_of(y) == k), None)
+            y = field(k)
+            return y["name"] if y else None
 
         def val(uid, attrs, k):
             v = uid if k == UID_KEY else attrs.get(name(k) or "", "")
             v = v.strip(JS_SPACE)
             return v or None
 
-        rows, seen = [], set()
-        for uid, attrs in other["rows"]:
+        def column(uid, attrs, k):
+            if k == UID_KEY:
+                return uid
+            v = val(uid, attrs, k)
+            return "" if v is None else display_value(field(k), v)
+
+        # The server's world reads no shapes: a spatial list is not narrowed there.
+        shapes = other.get("shapes")
+        spatial = lk.get("spatial") if shapes is not None and len(shapes) == len(other["rows"]) else None
+        rows, seen, counts = [], set(), {}
+        for i, (uid, attrs) in enumerate(other["rows"]):
             code = val(uid, attrs, lk["key"])
             if code is None:
                 continue
             if "filter" in lk and not holds(lk["filter"], other["fields"], attrs, {"variables": still, "object": {}}):
                 continue
+            counts[code] = counts.get(code, 0) + 1
             if code in seen:
                 continue
             seen.add(code)
             label = (val(uid, attrs, lk["label"]) if "label" in lk else None) or code
             keys = [val(uid, attrs, m["field"]) for m in lk.get("matches", [])]
-            rows.append((code, label, keys))
-        import functools
-        rows.sort(key=functools.cmp_to_key(lambda a, b: cc.natural_cmp(a[1], b[1]) or ((a[0] > b[0]) - (a[0] < b[0]))))
-        record = [next(f["name"] for f in self.fields if key_of(f) == m["record"]) for m in lk.get("matches", [])]
-        return rows, record
+            columns = [column(uid, attrs, k) for k in lk.get("columns", [])]
+            copies = [val(uid, attrs, c["from"]) for c in lk.get("copy", [])]
+            shape = shapes[i] if spatial else None
+            by = val(uid, attrs, lk["sort"]["field"]) if "sort" in lk else None
+            rows.append(((code, label, keys, columns, copies, shape), by))
 
-    def offered(self, x, attrs):
-        rows, record = self.lists[x["id"]]
-        wanted = [attrs.get(n, "").strip(JS_SPACE) or None for n in record]
+        def natural(a, b):
+            return cc.natural_cmp(a[1], b[1]) or ((a[0] > b[0]) - (a[0] < b[0]))
+
+        if "sort" in lk:
+            sf = field(lk["sort"]["field"])
+            numbers = sf is not None and sf["kind"] in ("integer", "decimal")
+            plain = sf is not None and sf["kind"] in ("date", "datetime", "time")
+            down = bool(lk["sort"].get("descending"))
+
+            def by_field(a, b):
+                (ra, va), (rb, vb) = a, b
+                if va is None or vb is None:
+                    o = (va is None) - (vb is None)
+                else:
+                    if numbers:
+                        x, y = Fraction(va), Fraction(vb)
+                    else:
+                        x, y = va, vb
+                    if numbers or plain:
+                        o = (x > y) - (x < y)
+                    else:
+                        o = cc.natural_cmp(va, vb)
+                    o = -o if down else o
+                return o or natural(ra, rb)
+
+            rows.sort(key=functools.cmp_to_key(by_field))
+        else:
+            rows.sort(key=functools.cmp_to_key(lambda a, b: natural(a[0], b[0])))
+        chain = []
+        for m in lk.get("matches", []):
+            ours = next((f for f in self.fields if key_of(f) == m["record"]), None)
+            if ours is None:
+                continue
+            theirs = field(m["field"])
+            numeric = ours["kind"] in ("integer", "decimal") and theirs is not None and \
+                theirs["kind"] in ("integer", "decimal")
+            chain.append((ours["name"], numeric, bool(m.get("fold"))))
+        unit = self.unit
+        tol = (spatial.get("tolerance") or 0) / unit if spatial else 0
+        return {"rows": [r for r, _ in rows], "chain": chain, "dups": {c: n for c, n in counts.items() if n > 1},
+                "lookup": lk, "layer": other["name"], "spatial": spatial, "tolerance": tol,
+                "copyTo": [next(f["name"] for f in self.fields if key_of(f) == c["to"]) for c in lk.get("copy", [])],
+                "stamp": next((f["name"] for f in self.fields if key_of(f) == lk["stamp"]), None) if "stamp" in lk else None,
+                "columns": [(field(k)["alias"] if field(k) and field(k).get("alias") else (field(k)["name"] if field(k) else "Kimlik"))
+                            for k in lk.get("columns", [])]}
+
+    def offered(self, x, attrs, obj=None):
+        lst = self.lists[x["id"]]
+        wanted = [attrs.get(n, "").strip(JS_SPACE) or None for n, _, _ in lst["chain"]]
         if any(w is None for w in wanted):
             return []
-        return [r for r in rows if r[2] == wanted]
+        rows = [r for r in lst["rows"]
+                if all(k is not None and same_key(num, fo, k, w) for k, w, (_, num, fo) in zip(r[2], wanted, lst["chain"]))]
+        spatial = lst["spatial"]
+        if not spatial:
+            return rows
+        record = (obj or {}).get("shape")
+        if record is None:
+            return []
+        tol, rel = lst["tolerance"], spatial["relation"]
+        if rel == "nearest":
+            best = None
+            for r in rows:
+                if r[5] is None:
+                    continue
+                d = sq.distance(r[5], record)
+                if (tol > 0 and d > tol) or (best is not None and d >= best[0]):
+                    continue
+                best = (d, r)
+            return [best[1]] if best else []
+        out = []
+        for r in rows:
+            s = r[5]
+            if s is None:
+                continue
+            if rel == "contains":
+                ok = sq.contains(s, record)
+            elif rel == "within":
+                ok = sq.contains(record, s)
+            elif tol > 0:
+                ok = sq.distance(s, record) <= tol
+            else:
+                ok = sq.intersects(s, record)
+            if ok:
+                out.append(r)
+        return out
 
     def code_of(self, x, text):
-        rows, _ = self.lists[x["id"]]
+        rows = self.lists[x["id"]]["rows"]
         t = text.strip(JS_SPACE)
         if any(r[0] == t for r in rows):
             return t
         return next((r[0] for r in rows if r[1] == t), t)
+
+    def copied(self, before, attrs):
+        """docs/adr/0439 §3: each list whose value was chosen anew (differs from `before`'s; none: a new record), or
+        whose stamp names another value, copies the chosen object's fields and stamps the record."""
+        out = dict(attrs)
+        for x, _ in self.bound():
+            lst = self.lists.get(x["id"]) if "lookup" in x else None
+            if lst is None or not (lst["copyTo"] or lst["stamp"]):
+                continue
+            f = self.layer(x)
+            if f.get("multiple"):
+                continue
+            now = attrs.get(f["name"], "").strip(JS_SPACE)
+            if not now:
+                continue
+            was = (before or {}).get(f["name"], "").strip(JS_SPACE)
+            row = next((r for r in lst["rows"] if r[0] == now), None)
+            stamped = lst["stamp"] is not None and (out.get(lst["stamp"]) is None
+                                                     or (out[lst["stamp"]].split(" · ") + [None, None])[1] != now)
+            if before is not None and was == now and not stamped:
+                continue
+            if row is None:
+                continue
+            for to, v in zip(lst["copyTo"], row[4]):
+                if v is None:
+                    out.pop(to, None)
+                else:
+                    out[to] = v
+            if lst["stamp"] is not None:
+                fp = fingerprint(row[4])
+                held = out.get(lst["stamp"])
+                parts = held.split(" · ") if held is not None else []
+                if not (len(parts) >= 3 and parts[1] == now and parts[2] == "#" + fp):
+                    text = f"{lst['layer']} · {now} · #{fp}"
+                    if self.today:
+                        text += " · " + self.today
+                    out[lst["stamp"]] = text
+        return out
+
+    def copy_targets(self):
+        out = set()
+        for x, _ in self.bound():
+            lst = self.lists.get(x["id"]) if "lookup" in x else None
+            if lst:
+                out.update(lst["copyTo"])
+                if lst["stamp"]:
+                    out.add(lst["stamp"])
+        return out
 
     def ctx(self, obj, extra=None):
         v = dict(self.variables)
@@ -717,7 +946,7 @@ class Form:
 
     def choices(self, x, attrs, obj=None):
         if "lookup" in x:
-            return [r[0] for r in self.offered(x, attrs)]
+            return [r[0] for r in self.offered(x, attrs, obj)]
         if "choiceFilter" not in x:
             return None
         f = self.layer(x)
@@ -737,7 +966,25 @@ class Form:
                 if c is not None:
                     state["choices"] = c
                 if "lookup" in x:
-                    state["options"] = [{"code": r[0], "label": r[1]} for r in self.offered(x, attrs)]
+                    # docs/adr/0439: a value's columns its description, a page and the rest's count, the chosen
+                    # object's columns.
+                    lst = self.lists[x["id"]]
+                    options = []
+                    for r in self.offered(x, attrs, obj):
+                        o = {"code": r[0], "label": r[1]}
+                        shown = [c for c in r[3] if c]
+                        if shown:
+                            o["description"] = " · ".join(shown)
+                        options.append(o)
+                    limit = lst["lookup"].get("limit")
+                    if limit is not None and len(options) > limit:
+                        state["more"] = len(options) - limit
+                        options = options[:limit]
+                    state["options"] = options
+                    v = attrs.get(self.layer(x)["name"], "").strip(JS_SPACE)
+                    row = next((r for r in lst["rows"] if r[0] == v), None) if v else None
+                    if row is not None and lst["columns"]:
+                        state["preview"] = [{"label": lab, "value": val} for lab, val in zip(lst["columns"], row[3])]
             elif x["type"] == "attachments":
                 n = counted(obj, x.get("accept", "any"))
                 if n is not None:
@@ -856,9 +1103,24 @@ class Form:
                 issues.append(issue("form_color_invalid", True, x["id"], key_of(f)))
                 continue
             held = [p.strip(JS_SPACE) for p in canonical.split(";") if p.strip(JS_SPACE)] if f.get("multiple") else [canonical]
-            if "lookup" in x and any(h not in [r[0] for r in self.offered(x, attrs)] for h in held):
+            if "lookup" in x and any(h not in [r[0] for r in self.offered(x, attrs, obj)] for h in held):
                 issues.append(issue("form_lookup_missing", True, x["id"], key_of(f), "lookup"))
                 continue
+            if "lookup" in x:
+                lst = self.lists[x["id"]]
+                policy = lst["lookup"].get("duplicates", "warn")
+                dup = next((h for h in held if h in lst["dups"]), None)
+                if policy != "first" and dup is not None:
+                    issues.append(issue("form_lookup_duplicate", policy == "refuse", x["id"], key_of(f), "lookup"))
+                    if policy == "refuse":
+                        continue
+                # docs/adr/0439 §3: the copy's source changed after the copy.
+                if lst["stamp"] is not None and not f.get("multiple") and lst["stamp"] in attrs:
+                    parts = attrs[lst["stamp"]].split(" · ")
+                    row = next((r for r in lst["rows"] if r[0] == canonical), None)
+                    if row is not None and len(parts) >= 3 and parts[1] == canonical \
+                            and parts[2] != "#" + fingerprint(row[4]):
+                        issues.append(issue("form_lookup_stale", False, x["id"], key_of(f), "lookup.stamp"))
             offered = None if "lookup" in x else self.choices(x, attrs, obj)
             codes = [p.strip(JS_SPACE) for p in canonical.split(";") if p.strip(JS_SPACE)] if f.get("multiple") else [canonical]
             listed = [c["code"] for c in f.get("values", [])]
@@ -934,6 +1196,7 @@ class Form:
                 asked.append((key, f["name"], written.get(f["name"])))
             elif before.get(f["name"]) != written.get(f["name"]):
                 changed.append(key)
+        written = self.copied(None if new else before, written)
         after, completed = self.complete(written, obj, new)
         issues += self.locked(changed, after, obj)
         issues += self.retired(changed, before, after)
@@ -949,8 +1212,11 @@ class Form:
         issues, changed = [], []
         on_form = [x["field"] for x, _ in self.bound()]
         completed, worked = self.complete(after, obj, False)
+        copies, targets = self.copied(before, after), self.copy_targets()
         for f in self.fields:
             if before.get(f["name"]) == after.get(f["name"]):
+                continue
+            if f["name"] in targets and copies.get(f["name"]) == after.get(f["name"]):
                 continue
             if self.calculated(key_of(f)):
                 if after.get(f["name"]) != completed.get(f["name"]):
@@ -1233,6 +1499,11 @@ def core():
     pre.extend(look_pre)
     records.extend(look_records)
     assess.extend(look_assess)
+    src_pre, src_records, src_assess, src_enforce = sources_core()
+    pre.extend(src_pre)
+    records.extend(src_records)
+    assess.extend(src_assess)
+    enforce.extend(src_enforce)
 
     gen = []
     for name, fields in (
@@ -1441,6 +1712,181 @@ def lookup_cases():
                    "body": nm_body, "variables": [], "world": LOOK_WORLD, "object": LOOK_OBJECT, "before": {"İl": "06"},
                    "values": [["Parseller", "101/12; 101/5; 101/12"]], "new": False, "after": after, "issues": issues})
     return pre, records, assess
+
+
+# ── Lists from other layers: order, columns, page, chain, duplicates, copies, geometry (docs/adr/0439) ──
+
+def _sq(name, x0, y0, x1, y1):
+    return sq.square(name, x0, y0, x1, y1)[1]
+
+
+SRC_PARCELS = [
+    # uid, attrs, shape
+    ("p-a", {"ada": "101", "parsel": "5", "mahalle": "İNÖNÜ", "mkod": "06", "alan": "450.50", "malik": "Ayşe Kaya",
+             "tarih": "2024-03-01"}, _sq("A", 0, 0, 100, 100)),
+    ("p-b", {"ada": "101", "parsel": "12", "mahalle": "Kızılay", "mkod": "7", "alan": "1200", "malik": "Ali Can",
+             "tarih": "2023-11-20"}, _sq("B", 100, 0, 200, 100)),
+    ("p-c", {"ada": "102", "parsel": "1", "mahalle": "kızılay", "mkod": "7", "alan": "80.25"}, _sq("C", 0, 100, 100, 200)),
+    # Ada 101 parsel 12 again (a duplicate code for the ada-parsel key).
+    ("p-d", {"ada": "101", "parsel": "12", "mahalle": "Kızılay", "mkod": "7", "alan": "1201", "malik": "Veli Can"},
+     _sq("D", 300, 300, 310, 310)),
+]
+SRC_FIELDS = [{"name": "ada", "kind": "integer"}, {"name": "parsel", "kind": "integer"},
+              {"name": "mahalle", "kind": "text"}, {"name": "mkod", "kind": "integer"},
+              {"name": "alan", "alias": "Yüzölçümü", "kind": "decimal", "scale": 2}, {"name": "malik", "kind": "text"},
+              {"name": "tarih", "kind": "date"}, {"name": "no", "kind": "text"}]
+for _uid, _a, _ in SRC_PARCELS:
+    _a["no"] = f"{_a['ada']}/{_a['parsel']}"
+
+
+def src_world(shapes=True):
+    """The world as a case writes it (rows with their geometry) and as the twin reads it."""
+    json_rows = [[u, a, s["json"]] if shapes else [u, a] for u, a, s in SRC_PARCELS]
+    py = {"parsel": {"name": "Parsel", "fields": SRC_FIELDS, "rows": [[u, a] for u, a, _ in SRC_PARCELS]}}
+    if shapes:
+        py["parsel"]["shapes"] = [s for _, _, s in SRC_PARCELS]
+    return {"parsel": {"name": "Parsel", "fields": SRC_FIELDS, "rows": json_rows}}, py
+
+
+SRC_OWN = [{"name": "Parsel", "kind": "text"}, {"name": "Ada", "kind": "integer"}, {"name": "Alan", "kind": "decimal"},
+           {"name": "Malik", "kind": "text"}, {"name": "Kaynak", "kind": "text"}, {"name": "Mahalle", "kind": "text"},
+           {"name": "MahKod", "kind": "integer"}, {"name": "Kat", "kind": "integer"}]
+SRC_LOOKUP = {"layer": "parsel", "key": "$uid", "label": "no", "columns": ["alan", "malik", "tarih"],
+              "sort": {"field": "alan", "descending": True}, "limit": 2,
+              "copy": [{"from": "ada", "to": "Ada"}, {"from": "alan", "to": "Alan"}, {"from": "malik", "to": "Malik"}],
+              "stamp": "Kaynak"}
+SRC_BODY = {"revision": 1, "items": [{"type": "field", "id": "parsel", "field": "Parsel", "lookup": SRC_LOOKUP},
+                                     {"type": "field", "id": "kat", "field": "Kat"}]}
+assert kc.body_problem(SRC_BODY) is None
+SRC_TODAY = [{"name": "tarih", "value": "2026-10-17"}]
+
+
+def src_body(**lookup):
+    b = copy.deepcopy(SRC_BODY)
+    b["items"][0]["lookup"].update(lookup)
+    for k in [k for k, v in lookup.items() if v is None]:
+        del b["items"][0]["lookup"][k]
+    return b
+
+
+def src_object(shape=None):
+    """The object as a case writes it and as the twin reads it."""
+    j = {"uid": "bina-1"}
+    if shape is not None:
+        j["entity"] = shape["json"]
+    return j, ({**j, "shape": shape} if shape is not None else dict(j))
+
+
+def sources_core():
+    pre, records, assess, enforce = [], [], [], []
+    wj, wp = src_world()
+
+    def case(name, body, fields=SRC_OWN):
+        assert kc.body_problem(body) is None, name
+        pre.append({"name": f"kaynak: {name}", "fields": fields, "body": body, "variables": [], "world": wj,
+                    "issues": preflight(body, fields, (), wp)})
+
+    case("sıralama, sütunlar, sayfa, kopya, damga, konum ve yinelenen kuralı: sorun yok",
+         src_body(spatial={"relation": "contains", "tolerance": 0.5}, duplicates="refuse"))
+    case("listenin ve kaydın olmayan alanları",
+         src_body(columns=["alan", "yok"], sort={"field": "eksik"}, copy=[{"from": "hiç", "to": "Ada"},
+                                                                         {"from": "alan", "to": "Yok"}], stamp="Damga"))
+    case("türü uymayan kopya, damga ve hedef",
+         src_body(copy=[{"from": "alan", "to": "Ada"}, {"from": "malik", "to": "Parsel"}], stamp="Kat"))
+    case("sayıya metin anahtar yazılamaz",
+         {"revision": 1, "items": [{"type": "field", "id": "kat", "field": "Kat",
+                                    "lookup": {"layer": "parsel", "key": "mahalle"}}]})
+    case("zincir türü uymayan alanları karşılaştıramaz",
+         {"revision": 1, "items": [{"type": "field", "id": "parsel", "field": "Parsel",
+                                    "lookup": {"layer": "parsel", "key": "$uid",
+                                               "matches": [{"field": "mkod", "record": "Mahalle"}]}}]})
+    case("tam sayı alanına tam sayı anahtar, metin alanına sayı anahtar yazılır",
+         {"revision": 1, "items": [{"type": "field", "id": "kat", "field": "Kat",
+                                    "lookup": {"layer": "parsel", "key": "ada"}},
+                                   {"type": "field", "id": "mahalle", "field": "Mahalle",
+                                    "lookup": {"layer": "parsel", "key": "mkod"}}]})
+
+    def record(name, body, attrs, obj=None, world=(wj, wp), variables=()):
+        oj, op = obj if obj is not None else src_object()
+        form = Form(body, SRC_OWN, variables, world[1])
+        records.append({"name": f"kaynak: {name}", "fields": SRC_OWN, "body": copy.deepcopy(body), "variables": list(variables),
+                        "world": world[0], "object": oj, "attrs": attrs, "items": form.described(attrs, op),
+                        "issues": form.validate(attrs, op)})
+
+    record("yüzölçümüne göre azalan, sütunlarıyla, ilk iki değer ve kalanın sayısı", SRC_BODY, {})
+    record("seçilen parselin sütunları canlı gösterilir", SRC_BODY, {"Parsel": "p-c"})
+    record("doğal sıra, sayfasız", src_body(sort=None, limit=None, columns=None), {})
+    record("tarihe göre artan: boş tarihler sonda", src_body(sort={"field": "tarih"}, limit=None), {})
+    chain = {"revision": 1, "items": [
+        {"type": "field", "id": "parsel", "field": "Parsel",
+         "lookup": {"layer": "parsel", "key": "$uid", "label": "no", "matches": [{"field": "mkod", "record": "MahKod"}]}},
+        {"type": "field", "id": "mah", "field": "Mahalle"}, {"type": "field", "id": "mk", "field": "MahKod"}]}
+    record("sayılar değeriyle eşlenir: 6, 06'yı bulur", chain, {"MahKod": "6"})
+    folded = copy.deepcopy(chain)
+    folded["items"][0]["lookup"]["matches"] = [{"field": "mahalle", "record": "Mahalle"}]
+    record("katlanmadan: küçük harfle yazılan mahalle bulunmaz", folded, {"Mahalle": "inönü"})
+    folded["items"][0]["lookup"]["matches"][0]["fold"] = True
+    record("katlanarak: İNÖNÜ ve inönü, Kızılay ve kızılay aynıdır", folded, {"Mahalle": "KIZILAY"})
+    by_no = {"revision": 1, "items": [{"type": "field", "id": "parsel", "field": "Parsel",
+                                       "lookup": {"layer": "parsel", "key": "no", "label": "malik"}}]}
+    record("yinelenen kod: ilkininki alınır ve uyarılır", by_no, {"Parsel": "101/12"})
+    first = copy.deepcopy(by_no)
+    first["items"][0]["lookup"]["duplicates"] = "first"
+    record("yinelenen kod: ilkini al seçildiyse sessiz", first, {"Parsel": "101/12"})
+    refuse = copy.deepcopy(by_no)
+    refuse["items"][0]["lookup"]["duplicates"] = "refuse"
+    record("yinelenen kod reddedilir; tekil kod geçer", refuse, {"Parsel": "101/12"})
+    record("tekil kod reddedilmez", refuse, {"Parsel": "102/1"})
+    stale = {"Parsel": "p-b", "Ada": "101", "Alan": "1100", "Malik": "Ali Can",
+             "Kaynak": "Parsel · p-b · #00000000 · 2025-01-01"}
+    record("kopyanın kaynağı değiştiyse uyarılır", SRC_BODY, stale)
+    building = src_object(_sq("bina", 10, 10, 30, 30))
+    record("kaydı içeren parsel: yalnız A", src_body(spatial={"relation": "contains"}, limit=None),
+           {"Parsel": "p-b"}, building)
+    straddle = src_object(_sq("bina", 90, 10, 110, 30))
+    record("iki parsele taşan bina: içeren yok, kesişen A ve B",
+           src_body(spatial={"relation": "intersects"}, limit=None), {}, straddle)
+    record("bir metre toleransla dokunan parsel de kesişir",
+           src_body(spatial={"relation": "intersects", "tolerance": 1}, limit=None), {},
+           src_object(_sq("bina", 100.5, 100.5, 120, 120)))
+    record("kaydın içinde kalan parsel", src_body(spatial={"relation": "within"}, limit=None), {},
+           src_object(_sq("ada", -10, 90, 110, 210)))
+    near = src_object(sq.point("kuyu", sq.P(150, 150))[1])
+    record("en yakın: eşit uzaklıkta listenin ilki", src_body(spatial={"relation": "nearest"}, sort=None, limit=None),
+           {}, near)
+    record("en yakın, toleransın dışında kalınca hiçbiri",
+           src_body(spatial={"relation": "nearest", "tolerance": 40}, sort=None, limit=None), {}, near)
+    record("geometrisiz kayda mekânsal liste bir şey sunmaz",
+           src_body(spatial={"relation": "contains"}, limit=None), {"Parsel": "p-a"})
+    record("şekiller verilmeyen dünyada mekânsal liste daraltmaz",
+           src_body(spatial={"relation": "contains"}, limit=None), {"Parsel": "p-b"}, building, world=src_world(False))
+
+    def write(name, before, values, body=SRC_BODY, obj=None, new=False):
+        oj, op = obj if obj is not None else src_object()
+        after, issues = Form(body, SRC_OWN, SRC_TODAY, wp).assess(before, values, op, new)
+        assess.append({"name": f"kaynak: {name}", "fields": SRC_OWN, "body": body, "variables": SRC_TODAY,
+                       "world": wj, "object": oj, "before": before, "values": values, "new": new, "after": after,
+                       "issues": issues})
+
+    write("etiketle seçilen parselin alanları kopyalanır, damga yazılır", {}, [["Parsel", "101/5"]])
+    write("yeni kayıtta da", {}, [["Parsel", "102/1"]], new=True)
+    write("damgasız eski değer seçilince kopyalanır", {"Parsel": "p-a"}, [["Kat", "3"]])
+    kept = {"Parsel": "p-b", "Ada": "101", "Alan": "999", "Malik": "Ali Can",
+            "Kaynak": f"Parsel · p-b · #{fingerprint(['101', '999', 'Ali Can'])} · 2025-01-01"}
+    write("değer değişmezse kopya olduğu gibi kalır; kaynağın değiştiği söylenir", kept, [["Kat", "2"]])
+    write("değer boşalınca kopyalar kalır", kept, [["Parsel", ""]])
+    write("kaynağın boş alanı kopyayı boşaltır", kept, [["Parsel", "102/1"]])
+
+    def guard(name, before, after, body=SRC_BODY):
+        oj, op = src_object()
+        enforce.append({"name": f"kaynak: {name}", "fields": SRC_OWN, "body": body, "variables": SRC_TODAY,
+                        "world": wj, "object": oj, "before": before, "after": after,
+                        "issues": Form(body, SRC_OWN, SRC_TODAY, wp).enforce(before, after, op)})
+
+    copied = Form(SRC_BODY, SRC_OWN, SRC_TODAY, wp).copied({}, {"Parsel": "p-a"})
+    guard("formun göstermediği kopya hedefleri kopyanın değeriyle yazılabilir", {}, copied)
+    guard("kopya hedefine başka değer yazılamaz", {}, {**copied, "Malik": "Başkası"})
+    return pre, records, assess, enforce
 
 
 def calc_cases():

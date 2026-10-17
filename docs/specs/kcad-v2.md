@@ -629,7 +629,10 @@ tam sayı, anahtarlar kanonik sırada). Yazıcı varsayılan değerindeki alanı
   `requiredWhen`, `readOnlyWhen`, `default`, `defaultExpr`, `calculate`, `choiceFilter`, `unique`, `reuseLast` ve `suggest`
   (ADR 0407 §3) yalnız `true`, `widget`'ın değerleri `text`, `textArea`, `number`, `date`, `check`, `switch`, `list`, `radio`,
   `segmented`, `slider` (ADR 0406), `color` (ADR 0407) ve `checkList` (ADR 0408), `lookup`: başka katmandan değer listesi, `layer`, `key` (alanın anahtarı ya da nesnenin kimliği için `$uid`), `label`,
-  en çok 20 `matches` (`field`, `record`) ve `filter`, ADR 0404 §1; `checks`: `rule`, `message` ve yalnız `true` olarak
+  en çok 20 `matches` (`field`, `record`, yalnız `true` olarak `fold`) ve `filter`, ADR 0404 §1; ADR 0439'dan `sort` (`field`,
+  yalnız `true` olarak `descending`), en çok 4 `columns`, `limit` (1–1000), en çok 20 `copy` (`from`, `to`), `stamp`,
+  `duplicates` (`first` ya da `refuse`; `warn` varsayılandır, yazılmaz) ve `spatial` (`relation`: `contains`, `within`,
+  `intersects`, `nearest`; `tolerance` sıfır ya da artı sayı); alanın `minSearch`'ü 1–10; `checks`: `rule`, `message` ve yalnız `true` olarak
   `warning`, en çok 20), `note` (`text`; `{…}` ifadeleriyle şablon), `related` (`label`, `layer`, `field`, `visibleWhen`:
   başka katmanın bu kayda başvuran nesneleri, ADR 0404 §4), `attachments` (`label`, `accept`: `photo` ya da `document`, `any`
   varsayılandır, yazılmaz; `min`, `max` 0–100, en az en çoktan büyük olamaz; `visibleWhen`: kaydın ekleri, ADR 0407 §1). Her öğenin `id`'si form içinde tekildir; en çok 4 düzey, 500 öğe; kurallar İfadeyle seç'in dilindedir, en çok 2000

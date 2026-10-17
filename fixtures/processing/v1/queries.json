@@ -1014,6 +1014,163 @@
    }
   },
   {
+   "id": "join-duplicates-skip",
+   "title": "Anahtarla birleştir, Yinelenen anahtar Aktarma: yinelenen anahtarın hedefine bir şey aktarılmaz",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "malikler.csv",
+    "sourceKey": "",
+    "fields": "",
+    "prefix": "Tapu ",
+    "duplicates": "skip"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne eşleşti; 1 nesnede 2 alan aktarıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı."
+     },
+     {
+      "level": "info",
+      "text": "3 hedef nesnenin kaynakta eşi yok."
+     },
+     {
+      "level": "info",
+      "text": "1 kaynak satırı hiçbir hedefle eşleşmedi."
+     }
+    ],
+    "undo": "Anahtarla birleştir",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Tapu Malik": "Ayşe Yılmaz",
+       "Tapu Hisse": "1/2"
+      },
+      "label": "1"
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "changed": [
+      1
+     ]
+    }
+   }
+  },
+  {
+   "id": "join-duplicates-stop",
+   "title": "Anahtarla birleştir, Yinelenen anahtar Durdur: kaynakta yinelenen anahtar varsa çalışmaz, ilkini söyler",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "sourceKey": "",
+    "fields": "Malik",
+    "duplicates": "stop"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynakta 1 anahtar birden çok kez var (ilki “002”); yinelenen anahtar kuralını değiştirin ya da kaynağı düzeltin."
+   }
+  },
+  {
+   "id": "join-duplicates-first",
+   "title": "Anahtarla birleştir, Yinelenen anahtar İlk satırı al açıkça: ilk satır alınır ve söylenir",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "sourceKey": "",
+    "fields": "Malik",
+    "duplicates": "first"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne eşleşti; 2 nesnede 1 alan aktarıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "info",
+      "text": "2 hedef nesnenin kaynakta eşi yok."
+     },
+     {
+      "level": "info",
+      "text": "1 kaynak satırı hiçbir hedefle eşleşmedi."
+     }
+    ],
+    "undo": "Anahtarla birleştir",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Malik": "Hasan Demir"
+      },
+      "label": "2"
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "changed": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
    "id": "refuse-join-column",
    "title": "Dosyada kaynak anahtar sütunu yoksa çalışmaz, sütunları söyler",
    "document": "queries.kcad",

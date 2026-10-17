@@ -1756,6 +1756,25 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.domains.export",
+        refusals: &[&["unknown_domain"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.fields.migrate",
+        refusals: &[&[
+            "invalid_revision",
+            "revision_conflict",
+            "layer_not_found",
+            "not_a_layer",
+            "field_not_found",
+            "layer_locked",
+        ]],
+        warnings: &["values_unfit"],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.export",
         refusals: &[&["unknown_form", "form_unpublished"]],
         warnings: &[],

@@ -23,6 +23,19 @@ impl Document {
     /// with its fields and its objects' persistent ids and attributes.
     pub fn form_world(&self, body: &FormBody) -> World {
         let mut world = World::new();
+        // The layers a spatial list reads: their objects' shapes too (docs/adr/0439 §5).
+        let spatial: HashSet<&str> = body
+            .walk()
+            .into_iter()
+            .filter_map(|(_, item)| match item {
+                FormItem::Field(f) => f
+                    .lookup
+                    .as_ref()
+                    .filter(|l| l.spatial.is_some())
+                    .map(|l| l.layer.as_str()),
+                _ => None,
+            })
+            .collect();
         for (_, item) in body.walk() {
             let layer = match item {
                 FormItem::Field(f) => f.lookup.as_ref().map(|l| l.layer.as_str()),
@@ -36,15 +49,24 @@ impl Document {
             let Some(node) = self.layers.get(layer) else {
                 continue;
             };
+            let objects: Vec<_> = self.by_layer_with_uids(layer).collect();
             world.insert(
                 layer.to_owned(),
                 OtherLayer {
                     name: node.name.clone(),
                     fields: node.fields.clone(),
-                    rows: self
-                        .by_layer_with_uids(layer)
+                    rows: objects
+                        .iter()
                         .map(|(uid, e)| (uid.to_string(), e.base().attrs.clone()))
                         .collect(),
+                    shapes: if spatial.contains(layer) {
+                        objects
+                            .iter()
+                            .map(|(_, e)| kentos_forms::object_of(e, "", 0.0).shape)
+                            .collect()
+                    } else {
+                        Vec::new()
+                    },
                 },
             );
         }
@@ -67,12 +89,19 @@ impl Document {
         // The objects the step left on such a layer, in the order they came, and whether each is new.
         let mut order: Vec<Uuid> = Vec::new();
         let mut new: HashMap<Uuid, bool> = HashMap::new();
+        // Each changed object's attributes before the step: what a list's copy compares with.
+        let mut before: HashMap<Uuid, kentos_forms::Attrs> = HashMap::new();
         for op in ops {
             match op {
                 Op::Add(s) | Op::Update { after: s, .. }
                     if layers.contains(s.entity.base().layer_id.as_str()) =>
                 {
                     let added = matches!(op, Op::Add(_));
+                    if let Op::Update { before: b, .. } = op {
+                        before
+                            .entry(s.uid)
+                            .or_insert_with(|| b.entity.base().attrs.clone());
+                    }
                     match new.get_mut(&s.uid) {
                         Some(was) => *was |= added,
                         None => {
@@ -133,10 +162,12 @@ impl Document {
                 .map_or_else(String::new, |n| n.name.clone());
             let id = f64::from(current.slot().0);
             let mut entity = (*current.entity).clone();
+            let was = (!added).then(|| before.get(&uid)).flatten();
             for (_, p) in prepared.iter().filter(|(l, _)| *l == layer) {
                 let mut object = kentos_forms::object_of(&entity, &name, id);
                 object.uid = Some(current.uid.to_string());
-                let (attrs, _) = p.complete(&entity.base().attrs, &object, added);
+                let copied = p.copied(was, &entity.base().attrs);
+                let (attrs, _) = p.complete(&copied, &object, added);
                 entity.base_mut().attrs = attrs;
             }
             if entity.base().attrs != current.entity.base().attrs {

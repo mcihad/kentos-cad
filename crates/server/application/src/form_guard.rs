@@ -132,6 +132,8 @@ pub fn world_of(tree: &[LayerNode], rows: &[(String, String, BTreeMap<String, St
                 name: node.map(|n| n.name.clone()).unwrap_or_default(),
                 fields: node.map(|n| n.fields.clone()).unwrap_or_default(),
                 rows: Vec::new(),
+                // The server reads no shapes: a spatial list is not narrowed here (docs/adr/0439 §5).
+                shapes: Vec::new(),
             }
         });
         entry.rows.push((uid.clone(), attrs.clone()));

@@ -278,6 +278,16 @@
               ],
               "description": "The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or\n`choiceFilter`."
             },
+            "minSearch": {
+              "description": "A searched list searches once this many letters are typed (docs/adr/0439 §6); none: from the\nfirst.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ],
+              "x-unit": "count"
+            },
             "mirror": {
               "description": "A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the\nfield's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written\nonly as `true`.",
               "type": "boolean"
@@ -514,8 +524,26 @@
     },
     "FormLookup": {
       "additionalProperties": false,
-      "description": "A field's list of values from another layer (docs/adr/0404 §1).",
+      "description": "A field's list of values from another layer (docs/adr/0404 §1, docs/adr/0439 §1).",
       "properties": {
+        "columns": {
+          "description": "Its layer's fields shown beside a value's label in the list and under the chosen value\n(docs/adr/0439 §2), in order; at most [`MOST_LOOKUP_COLUMNS`].",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "copy": {
+          "description": "The chosen object's fields copied into the record's when the value is chosen (docs/adr/0439\n§3): a copy, kept when the source changes.",
+          "items": {
+            "$ref": "#/$defs/LookupCopy"
+          },
+          "type": "array"
+        },
+        "duplicates": {
+          "$ref": "#/$defs/LookupDuplicates",
+          "description": "What a code held by more than one of the list's objects is (docs/adr/0439 §4)."
+        },
         "filter": {
           "description": "Asked of each of the list's objects (its fields by name, the project's `@` values).",
           "type": [
@@ -538,12 +566,51 @@
           "description": "The list's layer id.",
           "type": "string"
         },
+        "limit": {
+          "description": "How many values a page of the list holds (docs/adr/0439 §1): a form's state carries the\nfirst ones and the count of the rest; searching reaches them all. None: every value.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "matches": {
           "description": "The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).",
           "items": {
             "$ref": "#/$defs/LookupMatch"
           },
           "type": "array"
+        },
+        "sort": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LookupSort"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The list's order (docs/adr/0439 §1): by a field of its layer; none: the labels' natural order."
+        },
+        "spatial": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LookupSpatial"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Only the list's objects standing so to the record's geometry are offered (docs/adr/0439 §5)."
+        },
+        "stamp": {
+          "description": "A text field of the record that is told where the copy came from (docs/adr/0439 §3): the\nlayer, the code, the copied values' fingerprint and the day.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -782,6 +849,45 @@
       ],
       "type": "object"
     },
+    "LookupCopy": {
+      "additionalProperties": false,
+      "description": "A field of the chosen object copied into a field of the record.",
+      "properties": {
+        "from": {
+          "description": "The list's field's key.",
+          "type": "string"
+        },
+        "to": {
+          "description": "The record's field's key.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "LookupDuplicates": {
+      "description": "What a code held by more than one of the list's objects is (docs/adr/0439 §4).",
+      "oneOf": [
+        {
+          "const": "warn",
+          "description": "The first object's is taken and a record holding it is warned (`form_lookup_duplicate`).",
+          "type": "string"
+        },
+        {
+          "const": "first",
+          "description": "The first object's is taken, as chosen.",
+          "type": "string"
+        },
+        {
+          "const": "refuse",
+          "description": "A record may not hold it (`form_lookup_duplicate`, an error).",
+          "type": "string"
+        }
+      ]
+    },
     "LookupMatch": {
       "additionalProperties": false,
       "description": "A field of the list's layer that must equal a field of the record.",
@@ -789,6 +895,10 @@
         "field": {
           "description": "The list's field's key.",
           "type": "string"
+        },
+        "fold": {
+          "description": "Compared without regard to case, Turkish letters folded (`İ` and `i`, `I` and `ı`), ends\ntrimmed (docs/adr/0439 §4); written only as `true`. Numbers are compared by their values.",
+          "type": "boolean"
         },
         "record": {
           "description": "The record's field's key.",
@@ -798,6 +908,71 @@
       "required": [
         "field",
         "record"
+      ],
+      "type": "object"
+    },
+    "LookupRelation": {
+      "description": "How a list's object stands to the record's geometry.",
+      "oneOf": [
+        {
+          "const": "contains",
+          "description": "The object holds the record (a building's parcel).",
+          "type": "string"
+        },
+        {
+          "const": "within",
+          "description": "The record holds the object.",
+          "type": "string"
+        },
+        {
+          "const": "intersects",
+          "description": "They have a point in common (within the tolerance).",
+          "type": "string"
+        },
+        {
+          "const": "nearest",
+          "description": "The nearest object (within the tolerance, when given); ties by the list's order.",
+          "type": "string"
+        }
+      ]
+    },
+    "LookupSort": {
+      "additionalProperties": false,
+      "description": "A list's order by a field of its layer.",
+      "properties": {
+        "descending": {
+          "description": "The greatest first; written only as `true`.",
+          "type": "boolean"
+        },
+        "field": {
+          "description": "The field's key: numbers by value, dates as written, text in natural order; empty ones last.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "type": "object"
+    },
+    "LookupSpatial": {
+      "additionalProperties": false,
+      "description": "The objects of the list a record's geometry takes (docs/adr/0439 §5).",
+      "properties": {
+        "relation": {
+          "$ref": "#/$defs/LookupRelation"
+        },
+        "tolerance": {
+          "description": "How far apart still counts, in the drawing's unit; none: 0 (nearest: any distance).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "relation"
       ],
       "type": "object"
     },

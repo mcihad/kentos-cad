@@ -5,15 +5,16 @@
 //! target objects whose key matches.
 //! Keys match trimmed; two numbers as numbers (`007` is `7`), otherwise as
 //! texts exactly (the core's `ops::statistics::join_plan`). A key the source
-//! has more than once takes its first row; unmatched targets and unused rows
-//! are counted and said. One undo step.
+//! has more than once takes its first row, its targets take nothing or the
+//! tool stops, as Yinelenen anahtar says (docs/adr/0439 §4); unmatched
+//! targets and unused rows are counted and said. One undo step.
 
 use kentos_contracts::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::statistics::join_plan;
 use serde_json::{Value, json};
 
-use super::join_source::{missing, source_table};
+use super::join_source::{duplicates_param, missing, source_table, with_policy};
 use super::queries::{attr, with_attr};
 use crate::parameters::field_names;
 use crate::text::js_trim;
@@ -42,7 +43,7 @@ pub fn tool() -> Tool {
         description: "Ortak bir anahtar alanla (parsel numarası, kimlik) başka bir katmandan ya da CSV, TXT, Excel dosyasından öznitelik aktarır.".into(),
         help: Some([
             "Örnek: tapu kayıtlarının malik ve hisse sütunlarını parsel numarasıyla parsellere aktarmak.",
-            "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (007 ile 7 aynı), değilse metin olarak tam. Kaynakta aynı anahtar birden çok kez varsa ilk satır alınır ve söylenir.",
+            "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (007 ile 7 aynı), değilse metin olarak tam; boş anahtar eşleşmez. Kaynakta aynı anahtar birden çok kez varsa Yinelenen anahtar ne olacağını söyler: ilk satır alınır ve söylenir, bu anahtarlı hedeflere hiçbir şey aktarılmaz ya da araç çalışmaz.",
             "Dosyanın ilk satırı sütun adlarıdır; Excel dosyasının ilk sayfası okunur. Aktarılacak alanlar boş bırakılırsa anahtardan başka bütün alanlar aktarılır; önek yeni alanların adının başına eklenir. Kaynakta boş olan değer hedefte alanı boşaltır.",
         ]
         .join("\n\n")),
@@ -144,6 +145,7 @@ pub fn tool() -> Tool {
                 },
             )
             .default_value(json!("overwrite")),
+            duplicates_param(),
         ],
         outputs: vec![
             OutputDef::new("changed", "Değişen nesneler", OutputKind::Features),
@@ -195,7 +197,16 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     feedback.progress(0.0, "Anahtarlar eşleniyor");
     let target_keys: Vec<Option<&str>> = targets.iter().map(|t| attr(t, target_key)).collect();
     let source_keys: Vec<Option<&str>> = rows.iter().map(|r| r.get(k).copied()).collect();
-    let plan = join_plan(&target_keys, &source_keys);
+    let skip = v.text("duplicates") == "skip";
+    let plan = match with_policy(
+        join_plan(&target_keys, &source_keys),
+        &target_keys,
+        &source_keys,
+        v.text("duplicates"),
+    ) {
+        Ok((plan, _)) => plan,
+        Err(why) => return RunResult::refused(why),
+    };
     let prefix = v.text("prefix");
     let only_empty = v.text("existing") == "empty";
     let mut update = Vec::new();
@@ -231,10 +242,17 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         }
     }
     if plan.repeated > 0 {
-        feedback.warn(format!(
-            "{} anahtar kaynakta birden çok kez var; ilk satırları alındı.",
-            plan.repeated
-        ));
+        feedback.warn(if skip {
+            format!(
+                "{} anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı.",
+                plan.repeated
+            )
+        } else {
+            format!(
+                "{} anahtar kaynakta birden çok kez var; ilk satırları alındı.",
+                plan.repeated
+            )
+        });
     }
     if targets.len() > matched {
         feedback.info(format!(

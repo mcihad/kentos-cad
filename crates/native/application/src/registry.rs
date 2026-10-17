@@ -19,9 +19,9 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, DomainsEdit, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
-    block_params, blocks_query, blocks_replace, domains_edit, file_import_block, forms_export,
+    block_params, blocks_query, blocks_replace, domains_edit, domains_export, fields_migrate, file_import_block, forms_export,
     forms_import,
 };
 use serde_json::Value;
@@ -130,6 +130,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_FORMS_COMPARE => $then!(forms_compare, FormsCompare),
             kentos_contracts::CAD_FORMS_TRANSITION => $then!(forms_transition, FormsTransition),
             kentos_contracts::CAD_DOMAINS_EDIT => $then!(domains_edit, DomainsEdit),
+            kentos_contracts::CAD_DOMAINS_EXPORT => $then!(domains_export, DomainsExport),
+            kentos_contracts::CAD_FIELDS_MIGRATE => $then!(fields_migrate, FieldsMigrate),
             kentos_contracts::CAD_FORMS_EXPORT => $then!(forms_export, FormsExport),
             kentos_contracts::CAD_FORMS_IMPORT => $then!(forms_import, FormsImport),
             kentos_contracts::CAD_FORMS_RECOMPUTE => $then!(forms_recompute, FormsRecompute),

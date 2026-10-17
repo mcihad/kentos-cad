@@ -9,6 +9,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::REVISION_TEXT;
+use crate::domains::FieldDomain;
 use crate::fields::{FieldChoice, LayerFieldKind};
 
 pub const CAD_DOMAINS_EDIT: &str = "cad.domains.edit";
@@ -107,6 +108,15 @@ pub enum DomainsOp {
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         detach: bool,
     },
+    /// İçe aktar (docs/adr/0439 §7): the lists of a package (`cad.domains.export`'s) added; a list of
+    /// the same id kept when equal, else refused (`domain_exists`) unless `replace`, which replaces
+    /// it as Kaydet does (its kind kept, a code records hold not dropped).
+    Import {
+        domains: Vec<FieldDomain>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        replace: bool,
+    },
     /// Bağla: a field linked to a list (none: unlinked, its copy kept as its own).
     Link {
         layer: String,
@@ -164,8 +174,49 @@ pub struct DomainsEdited {
     /// The records `recode` moved to another code.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub recoded: u32,
+    /// The lists an import added or replaced, in the package's order (docs/adr/0439 §7).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub imported: Vec<String>,
     /// Whether anything changed (a plan: would change).
     pub changed: bool,
     /// The document revision afterwards (a plan: as it is).
     pub revision: String,
+}
+
+pub const CAD_DOMAINS_EXPORT: &str = "cad.domains.export";
+pub const CAD_DOMAINS_EXPORT_VERSION: u32 = 1;
+
+/// The format of a value lists' package (docs/adr/0439 §7).
+pub const DOMAINS_PACKAGE: &str = "kentos.domains";
+pub const DOMAINS_PACKAGE_VERSION: u32 = 1;
+
+/// Input of `cad.domains.export` v1: the lists by their ids, in the order given; none: every list in the
+/// project's order.
+///
+/// Refusals: `unknown_domain`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DomainsExport {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub ids: Vec<String>,
+}
+
+/// A value lists' package (`.kliste`): what `cad.domains.export` gives and `cad.domains.edit`'s import
+/// takes (docs/adr/0439 §7). It carries the lists alone: no record, link or permission.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DomainsPackage {
+    /// `kentos.domains`.
+    pub format: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
+    pub domains: Vec<FieldDomain>,
 }

@@ -98,6 +98,11 @@ suggest?: boolean,
  */
 lookup?: FormLookup, 
 /**
+ * A searched list searches once this many letters are typed (docs/adr/0439 §6); none: from the
+ * first.
+ */
+minSearch?: number, 
+/**
  * What the record must satisfy, in order.
  */
 checks?: Array<FormCheck>, 

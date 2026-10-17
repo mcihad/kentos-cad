@@ -13,7 +13,7 @@
 pub mod audit;
 pub mod contingents;
 pub mod designer;
-mod designer_view;
+pub(crate) mod designer_view;
 pub mod domains;
 pub mod entry;
 pub mod layer_rules;

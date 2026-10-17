@@ -43,6 +43,8 @@ const CANCEL: &str = "Vazgeç";
 const NEW: &str = "Yeni liste";
 const REMOVE: &str = "Listeyi sil";
 const ADD_CODE: &str = "Kod ekle";
+const IMPORT: &str = "İçe aktar…";
+const EXPORT: &str = "Dışa aktar…";
 const CODED: &str = "Kod listesi";
 const RANGED: &str = "Aralık";
 /// The kinds a list fits, in the order the window offers them.
@@ -71,6 +73,8 @@ pub struct Window {
     from: Vec<FromField>,
     /// The codes a list dropped and the code its records move to, by the list's id.
     pub recode: BTreeMap<String, BTreeMap<String, String>>,
+    /// İçe aktar replaces a list of an id the project has (docs/adr/0439 §7).
+    pub replace: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -98,6 +102,13 @@ pub enum Event {
     Unit(String),
     /// A dropped code's records moved to another code; none: not moved.
     Recode(String, Option<String>),
+    /// Dışa aktar… and İçe aktar… (docs/adr/0439 §7): the saved lists into a package file and a
+    /// package's lists into the project; whether a list of an id the project has is replaced.
+    Export,
+    Exported(Option<std::path::PathBuf>),
+    Import,
+    Imported(Option<(String, String)>),
+    Replace(bool),
     Save,
     Cancel,
 }
@@ -120,14 +131,26 @@ impl App {
             domains,
             from: Vec::new(),
             recode: BTreeMap::new(),
+            replace: false,
         });
         self.dialog = Some(Dialog::Domains);
         Task::none()
     }
 
     pub(crate) fn domains_event(&mut self, event: Event) -> Task<Message> {
-        if let Event::FromField(layer, key) = &event {
-            return self.domain_from_field(layer, key);
+        match &event {
+            Event::FromField(layer, key) => return self.domain_from_field(layer, key),
+            Event::Export => return self.export_domains(),
+            Event::Exported(path) => {
+                self.domains_exported(path.clone());
+                return Task::none();
+            }
+            Event::Import => return self.import_domains(),
+            Event::Imported(read) => {
+                self.domains_imported(read.clone());
+                return Task::none();
+            }
+            _ => {}
         }
         let Some(w) = self.domains.as_mut() else {
             return Task::none();
@@ -135,7 +158,12 @@ impl App {
         let at = w.chosen.filter(|i| *i < w.domains.len());
         let chosen = at.and_then(|i| w.domains.get_mut(i));
         match event {
-            Event::FromField(..) => {}
+            Event::FromField(..)
+            | Event::Export
+            | Event::Exported(_)
+            | Event::Import
+            | Event::Imported(_) => {}
+            Event::Replace(on) => w.replace = on,
             Event::Choose(i) => w.chosen = Some(i),
             Event::New => {
                 let mut n = w.domains.len() + 1;
@@ -436,6 +464,142 @@ impl App {
         Task::none()
     }
 
+    /// Whether the window holds changes Kaydet has not written.
+    fn domains_edited(&self) -> bool {
+        self.domains
+            .as_ref()
+            .is_some_and(|w| !Self::domain_edits(w).is_empty())
+    }
+
+    /// Dışa aktar…: where the project's saved lists go, asked (docs/adr/0439 §7).
+    fn export_domains(&mut self) -> Task<Message> {
+        if self.domains_edited() {
+            self.warn("Önce değişiklikleri kaydedin ya da vazgeçin; dışa aktarma kaydedilmiş listeleri yazar.");
+            return Task::none();
+        }
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("Değer listelerini dışa aktar")
+                    .add_filter("KentOS değer listeleri (.kliste)", &["kliste"])
+                    .set_file_name("deger-listeleri.kliste")
+                    .save_file()
+                    .await?;
+                Some(file.path().to_path_buf())
+            },
+            |path| msg(Event::Exported(path)),
+        )
+    }
+
+    /// The package written through `cad.domains.export`: every saved list.
+    fn domains_exported(&mut self, path: Option<std::path::PathBuf>) {
+        let Some(path) = path else { return };
+        let Some(text) = self.domains_package_text() else {
+            return;
+        };
+        match std::fs::write(&path, text) {
+            Ok(()) => self.say(
+                Level::Success,
+                format!("Değer listeleri {} dosyasına yazıldı.", path.display()),
+            ),
+            Err(e) => self.warn(format!(
+                "{} yazılamadı: {e}. Başka bir yer seçin.",
+                path.display()
+            )),
+        }
+    }
+
+    /// The project's lists as their package file holds them.
+    pub(crate) fn domains_package_text(&mut self) -> Option<String> {
+        let doc = self.document.as_mut()?;
+        let result = kentos_native_application::domains_export::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            kentos_contracts::DomainsExport { ids: Vec::new() },
+        );
+        let package = self.answered(result)?;
+        serde_json::to_string_pretty(&package)
+            .ok()
+            .map(|t| t + "\n")
+    }
+
+    /// İçe aktar…: which package, asked.
+    fn import_domains(&mut self) -> Task<Message> {
+        if self.domains_edited() {
+            self.warn(
+                "Önce değişiklikleri kaydedin ya da vazgeçin; içe aktarma listeleri hemen yazar.",
+            );
+            return Task::none();
+        }
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("Değer listelerini içe aktar")
+                    .add_filter("KentOS değer listeleri (.kliste)", &["kliste"])
+                    .pick_file()
+                    .await?;
+                let bytes = file.read().await;
+                Some((
+                    file.file_name(),
+                    String::from_utf8_lossy(&bytes).into_owned(),
+                ))
+            },
+            |read| msg(Event::Imported(read)),
+        )
+    }
+
+    /// The package's lists written through `cad.domains.edit`'s import, as one undo step; the window
+    /// shows the project's lists anew.
+    pub(crate) fn domains_imported(&mut self, read: Option<(String, String)>) {
+        let Some((file, text)) = read else { return };
+        let package: kentos_contracts::DomainsPackage = match serde_json::from_str(&text) {
+            Ok(p) => p,
+            Err(e) => {
+                self.warn(format!(
+                    "{file} bir KentOS değer listesi paketi değil: {e}."
+                ));
+                return;
+            }
+        };
+        if package.format != kentos_contracts::DOMAINS_PACKAGE {
+            self.warn(format!("{file} bir KentOS değer listesi paketi değil."));
+            return;
+        }
+        let replace = self.domains.as_ref().is_some_and(|w| w.replace);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let result = domains_edit::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            DomainsEdit {
+                edit: DomainsOp::Import {
+                    domains: package.domains,
+                    replace,
+                },
+                expected_revision: None,
+            },
+        );
+        let Some(done) = self.answered(result) else {
+            return;
+        };
+        let chosen = self.domains.as_ref().and_then(|w| w.chosen);
+        let _ = self.open_domains();
+        if let Some(w) = self.domains.as_mut() {
+            w.replace = replace;
+            w.chosen = done
+                .imported
+                .first()
+                .and_then(|id| w.domains.iter().position(|d| d.id == *id))
+                .or(chosen);
+        }
+        self.say(
+            Level::Success,
+            match done.imported.len() {
+                0 => format!("{file}: listeler projedekilerle aynı; bir şey değişmedi."),
+                n => format!("{file}: {n} değer listesi içe aktarıldı."),
+            },
+        );
+    }
+
     /// The fields with a list or range of their own, which Alandan offers: (layer, key, “Layer › Field”).
     fn listed_fields(&self) -> Vec<(String, String, String)> {
         let Some(doc) = &self.document else {
@@ -538,6 +702,16 @@ impl App {
                 .width(Fill),
             words::secondary(NEW, Some(msg(Event::New))),
             from_field,
+            row![
+                words::secondary(IMPORT, Some(msg(Event::Import))),
+                words::secondary(EXPORT, Some(msg(Event::Export))),
+            ]
+            .spacing(6),
+            words::check(
+                w.replace,
+                "Aynı kimlikli listeleri değiştir",
+                Some(msg(Event::Replace(!w.replace))),
+            ),
         ]
         .spacing(8);
         let at = w.chosen.filter(|i| *i < w.domains.len());
@@ -588,6 +762,8 @@ impl App {
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(ADD_CODE) => Some(msg(Event::AddCode)),
+            Control::Press(IMPORT) => Some(msg(Event::Import)),
+            Control::Press(EXPORT) => Some(msg(Event::Export)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

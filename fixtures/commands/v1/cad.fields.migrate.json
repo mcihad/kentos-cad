@@ -1,0 +1,1649 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.fields.migrate",
+ "commandVersion": 1,
+ "title": "Değerleri biçime çevir",
+ "note": "ADR 0439 §8: katmanın değerlerinin alanların biçimine çevrilmesi. Written by scripts/fixtures/sources_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Değerlerin göçü",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     },
+     {
+      "name": "Tarih",
+      "kind": "date"
+     },
+     {
+      "name": "Ruhsat",
+      "kind": "boolean"
+     },
+     {
+      "name": "Tür",
+      "kind": "text",
+      "values": [
+       {
+        "code": "k",
+        "label": "Konut"
+       },
+       {
+        "code": "t",
+        "label": "Ticari"
+       }
+      ]
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     },
+     {
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Tespit",
+      "kind": "datetime"
+     },
+     {
+      "name": "Saat",
+      "kind": "time"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Eski",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "eski",
+      "name": "Eski parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Ada",
+        "kind": "integer"
+       },
+       {
+        "id": "alan",
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2
+       },
+       {
+        "name": "Tarih",
+        "kind": "date"
+       },
+       {
+        "name": "Ruhsat",
+        "kind": "boolean"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "temiz",
+    "name": "Temiz",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     },
+     {
+      "name": "Tarih",
+      "kind": "date"
+     },
+     {
+      "name": "Ruhsat",
+      "kind": "boolean"
+     }
+    ]
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Ada": "101",
+     "Alan": "450,5",
+     "Tarih": "17.10.2026",
+     "Ruhsat": "evet",
+     "Tür": "Konut",
+     "Not": "köşe parsel",
+     "ESKI_KOD": "A1",
+     "Tespit": "17.10.2026 14:30",
+     "Saat": "8:05",
+     "Etiket": "A; B"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Ada": " 102 ",
+     "Alan": "1.234,5",
+     "Tarih": "2026-13-40",
+     "Ruhsat": "",
+     "Tür": "t",
+     "Kat": "45",
+     "Saat": "08:05:00"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Alan": "abc",
+     "MAHALLE": "Kızılay",
+     "Kat": "3"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Ada": "103",
+     "Alan": "12.50",
+     "Tarih": "2026-10-17",
+     "Ruhsat": "true",
+     "Tür": "k",
+     "Etiket": "b"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "eski",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Ada": "7,0",
+     "Ruhsat": "hayır"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "temiz",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Ada": "5",
+     "Ruhsat": "false"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bütün tipli alanlar: virgüllü ondalık, tarih, evet, etiket, tarih ve saat, saat, çok değerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Ada",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "alan",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 2,
+         "blank": 0,
+         "absent": 0,
+         "samples": [
+          "1.234,5",
+          "abc"
+         ]
+        },
+        {
+         "field": "Tarih",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 1,
+         "samples": [
+          "2026-13-40"
+         ]
+        },
+        {
+         "field": "Ruhsat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 1,
+         "absent": 1
+        },
+        {
+         "field": "Tür",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "Kat",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 2,
+         "samples": [
+          "45"
+         ]
+        },
+        {
+         "field": "Tespit",
+         "changed": 1,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 3
+        },
+        {
+         "field": "Saat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        },
+        {
+         "field": "Etiket",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        }
+       ],
+       "objects": 2,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "4 değer alanına uymuyor; yazıldığı gibi bırakıldı (“1.234,5”, “2026-13-40”, “45”, “abc”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450.5",
+         "Tarih": "2026-10-17",
+         "Ruhsat": "true",
+         "Tür": "k",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "2026-10-17T14:30:00",
+         "Saat": "08:05:00",
+         "Etiket": "a; b"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "102",
+         "Alan": "1.234,5",
+         "Tarih": "2026-13-40",
+         "Ruhsat": "",
+         "Tür": "t",
+         "Kat": "45",
+         "Saat": "08:05:00"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "tek alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "alan"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "alan",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 2,
+         "blank": 0,
+         "absent": 0,
+         "samples": [
+          "1.234,5",
+          "abc"
+         ]
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "2 değer alanına uymuyor; yazıldığı gibi bırakıldı (“1.234,5”, “abc”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450.5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanlar katmanın sırasıyla, her biri bir kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Saat",
+       "Ada",
+       "Saat"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Ada",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "Saat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        }
+       ],
+       "objects": 2,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "08:05:00",
+         "Etiket": "A; B"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "102",
+         "Alan": "1.234,5",
+         "Tarih": "2026-13-40",
+         "Ruhsat": "",
+         "Tür": "t",
+         "Kat": "45",
+         "Saat": "08:05:00"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "listesiz metin alanı istenirse değerleri olduğu gibi sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Not"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Not",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 3
+        }
+       ],
+       "objects": 0,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listedeki etiket kodu olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Tür"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Tür",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "k",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralık dışındaki değer uymaz, yazıldığı gibi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Kat"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Kat",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 2,
+         "samples": [
+          "45"
+         ]
+        }
+       ],
+       "objects": 0,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "1 değer alanına uymuyor; yazıldığı gibi bırakıldı (“45”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşluklu tam sayı biçimine çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Ada"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Ada",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "Ada": "102",
+         "Alan": "1.234,5",
+         "Tarih": "2026-13-40",
+         "Ruhsat": "",
+         "Tür": "t",
+         "Kat": "45",
+         "Saat": "08:05:00"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz tarih uymaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Tarih"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Tarih",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 1,
+         "samples": [
+          "2026-13-40"
+         ]
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "1 değer alanına uymuyor; yazıldığı gibi bırakıldı (“2026-13-40”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "2026-10-17",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş değer boş kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Ruhsat"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Ruhsat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 1,
+         "absent": 1
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "true",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarih ve saat",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Tespit"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Tespit",
+         "changed": 1,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 3
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "2026-10-17T14:30:00",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok değerli alanın etiketleri kodları olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Etiket"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Etiket",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "a; b"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Ada",
+       "Renk"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“Parsel” katmanında “Renk” alanı yok.",
+       "path": "fields/1"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup katman değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Eski” bir katman grubu; alanlar yalnız katmanın olur. Grubun bir katmanını verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmanın değeri çevrilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Eski parsel” katmanı kilitli; değerleri biçime çevrilemez. Kilidi Katmanlar panelinden açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmanda değişecek bir şey yoksa ret yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski",
+      "fields": [
+       "Tarih"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "eski",
+       "fields": [
+        {
+         "field": "Tarih",
+         "changed": 0,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        }
+       ],
+       "objects": 0,
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "biçimindeki değerler: değişiklik yok, geri alma adımı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "temiz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "temiz",
+       "fields": [
+        {
+         "field": "Ada",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 0
+        },
+        {
+         "field": "alan",
+         "changed": 0,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "Tarih",
+         "changed": 0,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "Ruhsat",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 0
+        }
+       ],
+       "objects": 0,
+       "changed": false,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "Ada",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "alan",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 2,
+         "blank": 0,
+         "absent": 0,
+         "samples": [
+          "1.234,5",
+          "abc"
+         ]
+        },
+        {
+         "field": "Tarih",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 1,
+         "samples": [
+          "2026-13-40"
+         ]
+        },
+        {
+         "field": "Ruhsat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 1,
+         "absent": 1
+        },
+        {
+         "field": "Tür",
+         "changed": 1,
+         "kept": 2,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 1
+        },
+        {
+         "field": "Kat",
+         "changed": 0,
+         "kept": 1,
+         "unfit": 1,
+         "blank": 0,
+         "absent": 2,
+         "samples": [
+          "45"
+         ]
+        },
+        {
+         "field": "Tespit",
+         "changed": 1,
+         "kept": 0,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 3
+        },
+        {
+         "field": "Saat",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        },
+        {
+         "field": "Etiket",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 0,
+         "blank": 0,
+         "absent": 2
+        }
+       ],
+       "objects": 2,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "4 değer alanına uymuyor; yazıldığı gibi bırakıldı (“1.234,5”, “2026-13-40”, “45”, “abc”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama uyarıyı söyler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "layer": "parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "4 değer alanına uymuyor; yazıldığı gibi bırakıldı (“1.234,5”, “2026-13-40”, “45”, “abc”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "planda olmayan alan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "Renk"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“Parsel” katmanında “Renk” alanı yok.",
+       "path": "fields/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma değerleri yazıldıkları gibi geri verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "fields": [
+       "alan"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "fields": [
+        {
+         "field": "alan",
+         "changed": 1,
+         "kept": 1,
+         "unfit": 2,
+         "blank": 0,
+         "absent": 0,
+         "samples": [
+          "1.234,5",
+          "abc"
+         ]
+        }
+       ],
+       "objects": 1,
+       "unknown": [
+        "ESKI_KOD",
+        "MAHALLE"
+       ],
+       "changed": true,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_unfit",
+        "message": "2 değer alanına uymuyor; yazıldığı gibi bırakıldı (“1.234,5”, “abc”). Formla düzenle ya da Öznitelik tablosuyla düzeltin.",
+        "path": "fields"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450.5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Alan": "450,5",
+         "Tarih": "17.10.2026",
+         "Ruhsat": "evet",
+         "Tür": "Konut",
+         "Not": "köşe parsel",
+         "ESKI_KOD": "A1",
+         "Tespit": "17.10.2026 14:30",
+         "Saat": "8:05",
+         "Etiket": "A; B"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "expectedRevision": "07"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizim değiştikten sonra hazırlanmış göç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

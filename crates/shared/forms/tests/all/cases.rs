@@ -59,18 +59,24 @@ fn world(c: &Value) -> World {
     };
     all.iter()
         .map(|(id, l)| {
-            let rows = l["rows"]
-                .as_array()
-                .expect("rows")
+            let list = l["rows"].as_array().expect("rows");
+            let rows = list
                 .iter()
                 .map(|r| (r[0].as_str().expect("a uid").to_owned(), attrs(&r[1])))
                 .collect();
+            // A row's third element is its object's geometry (docs/adr/0439 §5).
+            let shapes = if list.iter().any(|r| r.get(2).is_some()) {
+                list.iter().map(|r| r.get(2).and_then(shape)).collect()
+            } else {
+                Vec::new()
+            };
             (
                 id.clone(),
                 OtherLayer {
                     name: l["name"].as_str().expect("a name").to_owned(),
                     fields: serde_json::from_value(l["fields"].clone()).expect("fields"),
                     rows,
+                    shapes,
                 },
             )
         })
@@ -92,8 +98,17 @@ fn object(c: &Value) -> Object {
             all: a["all"].as_u64().unwrap_or(0) as u32,
             photos: a["photos"].as_u64().unwrap_or(0) as u32,
         }),
+        shape: o.get("entity").and_then(shape),
         ..Object::default()
     }
+}
+
+/// An object's shape from its geometry's JSON (the geometry core reads it as the contract writes it).
+fn shape(v: &Value) -> Option<std::sync::Arc<kentos_geometry_core::entity::Shape>> {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    let json = Json::parse(&v.to_string()).expect("json");
+    let core = kentos_geometry_core::entity::Entity::from_json(&json).expect("an entity");
+    Some(std::sync::Arc::new(core.shape))
 }
 
 /// The issues without their sentences, which are the core's own.

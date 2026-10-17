@@ -35,6 +35,8 @@ struct Planned {
     recodes: Vec<(Slot, Entity)>,
     domain: Option<String>,
     warnings: Vec<CommandWarning>,
+    /// The lists an import added or replaced.
+    imported: Vec<String>,
 }
 
 fn unknown_domain(id: &str, path: &str) -> Stop {
@@ -202,6 +204,7 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
         recodes: Vec::new(),
         domain,
         warnings: Vec::new(),
+        imported: Vec::new(),
     };
     match &input.edit {
         DomainsOp::Create {
@@ -438,6 +441,7 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
             }
             Ok(planned)
         }
+        DomainsOp::Import { domains, replace } => import(doc, now, domains, *replace),
         DomainsOp::Link {
             layer,
             field,
@@ -478,6 +482,97 @@ fn check(doc: &Document, input: &DomainsEdit) -> Result<Planned, Stop> {
     }
 }
 
+/// İçe aktar (docs/adr/0439 §7): the package's lists added; one of an id the project has is kept when
+/// equal, refused unless `replace`, which replaces it as Kaydet does: its kind kept, its linked fields
+/// still fitting, no code their records hold dropped.
+fn import(
+    doc: &Document,
+    now: &[FieldDomain],
+    domains: &[FieldDomain],
+    replace: bool,
+) -> Result<Planned, Stop> {
+    if domains.is_empty() {
+        return Err(fail(
+            codes::INVALID_DOMAIN,
+            "Paket boş; içinde en az bir değer listesi olmalı.".to_owned(),
+            "edit/domains",
+        ));
+    }
+    let mut next = now.to_vec();
+    let mut imported = Vec::new();
+    let mut warnings = Vec::new();
+    for (i, d) in domains.iter().enumerate() {
+        let path = format!("edit/domains/{i}");
+        if domains[..i].iter().any(|x| x.id == d.id) {
+            return Err(fail(
+                codes::INVALID_DOMAIN,
+                format!("“{}” kimlikli liste pakette iki kez var.", d.id),
+                &format!("{path}/id"),
+            ));
+        }
+        let Some(old) = now.iter().find(|x| x.id == d.id) else {
+            next.push(d.clone());
+            imported.push(d.id.clone());
+            continue;
+        };
+        if old == d {
+            continue;
+        }
+        if !replace {
+            return Err(fail(
+                codes::DOMAIN_EXISTS,
+                format!(
+                    "Projede “{}” kimlikli başka bir “{}” listesi var; replace ile değiştirin ya da paketten çıkarın.",
+                    d.id, old.name
+                ),
+                &format!("{path}/id"),
+            ));
+        }
+        if old.kind != d.kind {
+            return Err(fail(
+                codes::DOMAIN_MISMATCH,
+                format!(
+                    "“{}” listesinin türü değişemez; projedeki liste {} türünde.",
+                    old.name,
+                    old.kind.label().to_lowercase()
+                ),
+                &format!("{path}/kind"),
+            ));
+        }
+        let uses = domain_uses(doc.layers().nodes(), &d.id);
+        for (layer, key) in &uses {
+            if let Ok(f) = field_of(doc, layer, key)
+                && let Some(problem) = link_problem(d, f)
+            {
+                return Err(fail(codes::DOMAIN_MISMATCH, problem, &path));
+            }
+        }
+        match &d.values {
+            Some(list) => {
+                let (n, lost) = misfits(doc, &uses, list, &BTreeMap::new());
+                if n > 0 {
+                    return Err(in_use_refusal(n, &lost, &format!("{path}/values")));
+                }
+            }
+            None => warnings.extend(outside_warning(outside(doc, &uses, d))),
+        }
+        for x in next.iter_mut().filter(|x| x.id == d.id) {
+            *x = d.clone();
+        }
+        imported.push(d.id.clone());
+    }
+    domains_fit(&next)?;
+    Ok(Planned {
+        domains: next,
+        links: Vec::new(),
+        links_first: false,
+        recodes: Vec::new(),
+        domain: None,
+        warnings,
+        imported,
+    })
+}
+
 /// The fields whose definition `p` changes, in the layer tree's order.
 fn changed_fields(doc: &Document, p: &Planned) -> Vec<DomainField> {
     let mut out = Vec::new();
@@ -513,6 +608,7 @@ fn answer(doc: &Document, p: &Planned, revision: String) -> DomainsEdited {
         domain: p.domain.clone(),
         fields,
         recoded: p.recodes.len() as u32,
+        imported: p.imported.clone(),
         changed,
         revision,
     }

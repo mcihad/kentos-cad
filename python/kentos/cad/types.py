@@ -1510,6 +1510,40 @@ LookPartName = Literal["color", "lineType", "lineWeight", "transparency"]
 """The names of :class:`LookPart`, for a plain string."""
 
 
+class LookupDuplicates(_StrEnum):
+    """What a code held by more than one of the list's objects is (docs/adr/0439 §4).
+
+    - ``warn``: The first object's is taken and a record holding it is warned (`form_lookup_duplicate`).
+    - ``first``: The first object's is taken, as chosen.
+    - ``refuse``: A record may not hold it (`form_lookup_duplicate`, an error).
+    """
+    WARN = "warn"
+    FIRST = "first"
+    REFUSE = "refuse"
+
+
+LookupDuplicatesName = Literal["warn", "first", "refuse"]
+"""The names of :class:`LookupDuplicates`, for a plain string."""
+
+
+class LookupRelation(_StrEnum):
+    """How a list's object stands to the record's geometry.
+
+    - ``contains``: The object holds the record (a building's parcel).
+    - ``within``: The record holds the object.
+    - ``intersects``: They have a point in common (within the tolerance).
+    - ``nearest``: The nearest object (within the tolerance, when given); ties by the list's order.
+    """
+    CONTAINS = "contains"
+    WITHIN = "within"
+    INTERSECTS = "intersects"
+    NEAREST = "nearest"
+
+
+LookupRelationName = Literal["contains", "within", "intersects", "nearest"]
+"""The names of :class:`LookupRelation`, for a plain string."""
+
+
 class MatchProperty(_StrEnum):
     """A property Özellik kopyala gives (AutoCAD's MATCHPROP settings).
 
@@ -2794,6 +2828,7 @@ class DomainsOp(_Union):
     - :class:`FromFieldDomainsOp` (``kind: fromField``)
     - :class:`UpdateDomainsOp` (``kind: update``)
     - :class:`RemoveDomainsOp` (``kind: remove``)
+    - :class:`ImportDomainsOp` (``kind: import``)
     - :class:`LinkDomainsOp` (``kind: link``)
     """
     __slots__ = ()
@@ -7345,12 +7380,14 @@ class DomainsEdited(_Model):
         changed: Whether anything changed (a plan: would change).
         revision: The document revision afterwards (a plan: as it is).
         domain: The list made, changed or taken away (a link: the list linked, none when unlinked).
+        imported: The lists an import added or replaced, in the package's order (docs/adr/0439 §7).
     """
     fields: list[DomainField]
     recoded: int
     changed: bool
     revision: str
     domain: str | None | Unset = UNSET
+    imported: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -7360,6 +7397,8 @@ class DomainsEdited(_Model):
         out["revision"] = self.revision
         if self.domain is not UNSET:
             out["domain"] = self.domain
+        if self.imported is not UNSET:
+            out["imported"] = list(self.imported)
         return out
 
     @classmethod
@@ -7370,6 +7409,57 @@ class DomainsEdited(_Model):
             changed=data["changed"],
             revision=data["revision"],
             domain=data.get("domain", UNSET),
+            imported=list(data["imported"]) if "imported" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DomainsExport(_Model):
+    """Input of `cad.domains.export` v1: the lists by their ids, in the order given; none: every list in the
+    project's order.
+
+    Refusals: `unknown_domain`.
+    """
+    ids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.ids is not UNSET:
+            out["ids"] = list(self.ids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainsExport:
+        return cls(
+            ids=list(data["ids"]) if "ids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DomainsPackage(_Model):
+    """A value lists' package (`.kliste`): what `cad.domains.export` gives and `cad.domains.edit`'s import
+    takes (docs/adr/0439 §7). It carries the lists alone: no record, link or permission.
+    Attributes:
+        format: `kentos.domains`.
+        version: Unit: version.
+    """
+    format: str
+    version: int
+    domains: list[FieldDomain]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["domains"] = [e0.to_json() for e0 in self.domains]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainsPackage:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]],
         )
 
 
@@ -10912,6 +11002,51 @@ class FieldGroup(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldMigration(_Model):
+    """What a field's values became.
+    Attributes:
+        field: The field's key.
+        changed: Values written anew in their canonical text. Unit: count.
+        kept: Values already canonical. Unit: count.
+        unfit: Values that do not fit the field, kept as written. Unit: count.
+        blank: Empty values (an attribute holding only white space), kept empty. Unit: count.
+        absent: Objects without the attribute. Unit: count.
+        samples: The first values that do not fit (at most five), as written.
+    """
+    field: str
+    changed: int
+    kept: int
+    unfit: int
+    blank: int
+    absent: int
+    samples: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["changed"] = self.changed
+        out["kept"] = self.kept
+        out["unfit"] = self.unfit
+        out["blank"] = self.blank
+        out["absent"] = self.absent
+        if self.samples is not UNSET:
+            out["samples"] = list(self.samples)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldMigration:
+        return cls(
+            field=data["field"],
+            changed=data["changed"],
+            kept=data["kept"],
+            unfit=data["unfit"],
+            blank=data["blank"],
+            absent=data["absent"],
+            samples=list(data["samples"]) if "samples" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldRename(_Model):
     """A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
     key `from` becomes `to`, its values kept.
@@ -10962,6 +11097,83 @@ class FieldUse(_Model):
             path=data["path"],
             how=_enum_in(FieldUseHow, data["how"]),
             kept=data.get("kept", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsMigrate(_Model):
+    """Input of `cad.fields.migrate` v1 (docs/adr/0439 §8): a layer's values written before its fields
+    were typed, turned into their fields' canonical texts (`1,5` into `1.5`, `17.10.2026` into
+    `2026-10-17`, `evet` into `true`, a listed value's label into its code). Nothing is lost: a value
+    that does not fit is kept as written and counted, an empty one stays empty, an attribute no field
+    names stays as it is.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`);
+    `layer_not_found`, `not_a_layer`, `field_not_found`, `layer_locked`. Warnings: `values_unfit`.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        fields: The fields' keys; none: every field of the layer that is not text without a list.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsMigrate:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsMigrated(_Model):
+    """Output (and plan) of `cad.fields.migrate` v1.
+    Attributes:
+        fields: Each field, in the layer's order.
+        objects: The objects one of whose values changed. Unit: count.
+        changed: Whether anything changed (a plan: would change).
+        revision: The document revision afterwards (a plan: as it is).
+        unknown: The attributes no field of the layer names, kept as they are (their names, sorted).
+    """
+    layer: str
+    fields: list[FieldMigration]
+    objects: int
+    changed: bool
+    revision: str
+    unknown: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        out["objects"] = self.objects
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.unknown is not UNSET:
+            out["unknown"] = list(self.unknown)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsMigrated:
+        return cls(
+            layer=data["layer"],
+            fields=[FieldMigration.from_json(e0) for e0 in data["fields"]],
+            objects=data["objects"],
+            changed=data["changed"],
+            revision=data["revision"],
+            unknown=list(data["unknown"]) if "unknown" in data else UNSET,
         )
 
 
@@ -11229,7 +11441,9 @@ class FormItemState(_Model):
     Attributes:
         attachments: An attachments item's count of what it counts (docs/adr/0407 §1). Unit: count.
         choices: The listed values a field with a choice filter offers for the record, in the list's order.
+        more: How many more values the list offers past its page (docs/adr/0439 §1). Unit: count.
         options: A field's list from another layer for the record: codes and labels (docs/adr/0404 §2).
+        preview: The chosen object's columns, live (docs/adr/0439 §2): each column's label and its value.
         related: A related item's objects: their persistent ids (docs/adr/0404 §4).
         suggestions: A suggesting field's values in the layer, the most used first (docs/adr/0407 §3).
         text: A note's text with the record's values put in (a note whose text has `{…}`).
@@ -11238,7 +11452,9 @@ class FormItemState(_Model):
     shown: bool
     attachments: int | None | Unset = UNSET
     choices: list[str] | None | Unset = UNSET
+    more: int | None | Unset = UNSET
     options: list[FieldChoice] | None | Unset = UNSET
+    preview: list[FormPreviewValue] | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     related: list[str] | None | Unset = UNSET
     required: bool | Unset = UNSET
@@ -11253,8 +11469,12 @@ class FormItemState(_Model):
             out["attachments"] = self.attachments
         if self.choices is not UNSET:
             out["choices"] = None if self.choices is None else list(self.choices)
+        if self.more is not UNSET:
+            out["more"] = self.more
         if self.options is not UNSET:
             out["options"] = None if self.options is None else [e0.to_json() for e0 in self.options]
+        if self.preview is not UNSET:
+            out["preview"] = None if self.preview is None else [e0.to_json() for e0 in self.preview]
         if self.read_only is not UNSET:
             out["readOnly"] = self.read_only
         if self.related is not UNSET:
@@ -11274,7 +11494,9 @@ class FormItemState(_Model):
             shown=data["shown"],
             attachments=data.get("attachments", UNSET),
             choices=UNSET if "choices" not in data else None if data["choices"] is None else list(data["choices"]),
+            more=data.get("more", UNSET),
             options=UNSET if "options" not in data else None if data["options"] is None else [FieldChoice.from_json(e0) for e0 in data["options"]],
+            preview=UNSET if "preview" not in data else None if data["preview"] is None else [FormPreviewValue.from_json(e0) for e0 in data["preview"]],
             read_only=data.get("readOnly", UNSET),
             related=UNSET if "related" not in data else None if data["related"] is None else list(data["related"]),
             required=data.get("required", UNSET),
@@ -11285,30 +11507,62 @@ class FormItemState(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class FormLookup(_Model):
-    """A field's list of values from another layer (docs/adr/0404 §1).
+    """A field's list of values from another layer (docs/adr/0404 §1, docs/adr/0439 §1).
     Attributes:
         layer: The list's layer id.
         key: Its field's key whose value is written; `$uid`: the object's persistent id (a reference).
+        columns: Its layer's fields shown beside a value's label in the list and under the chosen value
+            (docs/adr/0439 §2), in order; at most [`MOST_LOOKUP_COLUMNS`].
+        copy: The chosen object's fields copied into the record's when the value is chosen (docs/adr/0439
+            §3): a copy, kept when the source changes.
+        duplicates: What a code held by more than one of the list's objects is (docs/adr/0439 §4).
         filter: Asked of each of the list's objects (its fields by name, the project's `@` values).
         label: Its field's key shown; none: the key's.
+        limit: How many values a page of the list holds (docs/adr/0439 §1): a form's state carries the
+            first ones and the count of the rest; searching reaches them all. None: every value. Unit: count.
         matches: The list's object is offered when its field equals the record's (a chain: il, ilçe, mahalle).
+        sort: The list's order (docs/adr/0439 §1): by a field of its layer; none: the labels' natural order.
+        spatial: Only the list's objects standing so to the record's geometry are offered (docs/adr/0439 §5).
+        stamp: A text field of the record that is told where the copy came from (docs/adr/0439 §3): the
+            layer, the code, the copied values' fingerprint and the day.
     """
     layer: str
     key: str
+    columns: list[str] | Unset = UNSET
+    copy: list[LookupCopy] | Unset = UNSET
+    duplicates: LookupDuplicates | LookupDuplicatesName | Unset = UNSET
     filter: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
     matches: list[LookupMatch] | Unset = UNSET
+    sort: LookupSort | None | Unset = UNSET
+    spatial: LookupSpatial | None | Unset = UNSET
+    stamp: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layer"] = self.layer
         out["key"] = self.key
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
+        if self.copy is not UNSET:
+            out["copy"] = [e0.to_json() for e0 in self.copy]
+        if self.duplicates is not UNSET:
+            out["duplicates"] = _enum_out(self.duplicates)
         if self.filter is not UNSET:
             out["filter"] = self.filter
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
         if self.matches is not UNSET:
             out["matches"] = [e0.to_json() for e0 in self.matches]
+        if self.sort is not UNSET:
+            out["sort"] = None if self.sort is None else self.sort.to_json()
+        if self.spatial is not UNSET:
+            out["spatial"] = None if self.spatial is None else self.spatial.to_json()
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
         return out
 
     @classmethod
@@ -11316,9 +11570,16 @@ class FormLookup(_Model):
         return cls(
             layer=data["layer"],
             key=data["key"],
+            columns=list(data["columns"]) if "columns" in data else UNSET,
+            copy=[LookupCopy.from_json(e0) for e0 in data["copy"]] if "copy" in data else UNSET,
+            duplicates=_enum_in(LookupDuplicates, data["duplicates"]) if "duplicates" in data else UNSET,
             filter=data.get("filter", UNSET),
             label=data.get("label", UNSET),
+            limit=data.get("limit", UNSET),
             matches=[LookupMatch.from_json(e0) for e0 in data["matches"]] if "matches" in data else UNSET,
+            sort=UNSET if "sort" not in data else None if data["sort"] is None else LookupSort.from_json(data["sort"]),
+            spatial=UNSET if "spatial" not in data else None if data["spatial"] is None else LookupSpatial.from_json(data["spatial"]),
+            stamp=data.get("stamp", UNSET),
         )
 
 
@@ -11360,6 +11621,26 @@ class FormPackage(_Model):
             body=FormBody.from_json(data["body"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]],
             domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormPreviewValue(_Model):
+    """A column of the chosen object (docs/adr/0439 §2)."""
+    label: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormPreviewValue:
+        return cls(
+            label=data["label"],
+            value=data["value"],
         )
 
 
@@ -17195,19 +17476,48 @@ class LocalDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LookupCopy(_Model):
+    """A field of the chosen object copied into a field of the record.
+    Attributes:
+        from_: The list's field's key.
+        to: The record's field's key.
+    """
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupCopy:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LookupMatch(_Model):
     """A field of the list's layer that must equal a field of the record.
     Attributes:
         field: The list's field's key.
         record: The record's field's key.
+        fold: Compared without regard to case, Turkish letters folded (`İ` and `i`, `I` and `ı`), ends
+            trimmed (docs/adr/0439 §4); written only as `true`. Numbers are compared by their values.
     """
     field: str
     record: str
+    fold: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["field"] = self.field
         out["record"] = self.record
+        if self.fold is not UNSET:
+            out["fold"] = self.fold
         return out
 
     @classmethod
@@ -17215,6 +17525,7 @@ class LookupMatch(_Model):
         return cls(
             field=data["field"],
             record=data["record"],
+            fold=data.get("fold", UNSET),
         )
 
 
@@ -17235,6 +17546,55 @@ class LookupRow(_Model):
         return cls(
             label=data["label"],
             values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LookupSort(_Model):
+    """A list's order by a field of its layer.
+    Attributes:
+        field: The field's key: numbers by value, dates as written, text in natural order; empty ones last.
+        descending: The greatest first; written only as `true`.
+    """
+    field: str
+    descending: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        if self.descending is not UNSET:
+            out["descending"] = self.descending
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupSort:
+        return cls(
+            field=data["field"],
+            descending=data.get("descending", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LookupSpatial(_Model):
+    """The objects of the list a record's geometry takes (docs/adr/0439 §5).
+    Attributes:
+        tolerance: How far apart still counts, in the drawing's unit; none: 0 (nearest: any distance). Unit: length.
+    """
+    relation: LookupRelation | LookupRelationName
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = _enum_out(self.relation)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LookupSpatial:
+        return cls(
+            relation=_enum_in(LookupRelation, data["relation"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
 
@@ -26722,6 +27082,31 @@ class RemoveDomainsOp(DomainsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportDomainsOp(DomainsOp):
+    """İçe aktar (docs/adr/0439 §7): the lists of a package (`cad.domains.export`'s) added; a list of
+    the same id kept when equal, else refused (`domain_exists`) unless `replace`, which replaces
+    it as Kaydet does (its kind kept, a code records hold not dropped).
+    """
+    TAG_VALUE: ClassVar[str] = "import"
+    domains: list[FieldDomain]
+    replace: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "import"}
+        out["domains"] = [e0.to_json() for e0 in self.domains]
+        if self.replace is not UNSET:
+            out["replace"] = self.replace
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportDomainsOp:
+        return cls(
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]],
+            replace=data.get("replace", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinkDomainsOp(DomainsOp):
     """Bağla: a field linked to a list (none: unlinked, its copy kept as its own)."""
     TAG_VALUE: ClassVar[str] = "link"
@@ -28079,6 +28464,8 @@ class FieldFormItem(FormItem):
         label: The label; none: the field's alias or name.
         lookup: The field's values from another layer (docs/adr/0404 §1). Not with the field's own list or
             `choiceFilter`.
+        min_search: A searched list searches once this many letters are typed (docs/adr/0439 §6); none: from the
+            first. Unit: count.
         mirror: A mirror (docs/adr/0437): the field's value shown again, read-only, where the form needs it; the
             field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
             only as `true`.
@@ -28110,6 +28497,7 @@ class FieldFormItem(FormItem):
     help: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     lookup: FormLookup | None | Unset = UNSET
+    min_search: int | None | Unset = UNSET
     mirror: bool | Unset = UNSET
     overridable: bool | Unset = UNSET
     placeholder: str | None | Unset = UNSET
@@ -28143,6 +28531,8 @@ class FieldFormItem(FormItem):
             out["label"] = self.label
         if self.lookup is not UNSET:
             out["lookup"] = None if self.lookup is None else self.lookup.to_json()
+        if self.min_search is not UNSET:
+            out["minSearch"] = self.min_search
         if self.mirror is not UNSET:
             out["mirror"] = self.mirror
         if self.overridable is not UNSET:
@@ -28182,6 +28572,7 @@ class FieldFormItem(FormItem):
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
             lookup=UNSET if "lookup" not in data else None if data["lookup"] is None else FormLookup.from_json(data["lookup"]),
+            min_search=data.get("minSearch", UNSET),
             mirror=data.get("mirror", UNSET),
             overridable=data.get("overridable", UNSET),
             placeholder=data.get("placeholder", UNSET),
@@ -30509,7 +30900,7 @@ _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimen
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
 
 
-_DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "link": LinkDomainsOp}
+_DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "record": RecordEntity}
@@ -30818,7 +31209,9 @@ __all__ = [
     "DomainField",
     "DomainsEdit",
     "DomainsEdited",
+    "DomainsExport",
     "DomainsOp",
+    "DomainsPackage",
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",
@@ -30921,11 +31314,14 @@ __all__ = [
     "FieldDomain",
     "FieldFormItem",
     "FieldGroup",
+    "FieldMigration",
     "FieldNetworkDirection",
     "FieldRename",
     "FieldUse",
     "FieldUseHow",
     "FieldUseHowName",
+    "FieldsMigrate",
+    "FieldsMigrated",
     "FieldsUsage",
     "FieldsUsed",
     "FileCommit",
@@ -30947,6 +31343,7 @@ __all__ = [
     "FormItemState",
     "FormLookup",
     "FormPackage",
+    "FormPreviewValue",
     "FormRelease",
     "FormSeverity",
     "FormSeverityName",
@@ -31010,6 +31407,7 @@ __all__ = [
     "ImpactTarget",
     "ImpactTargetName",
     "ImportBlock",
+    "ImportDomainsOp",
     "ImportDxf",
     "ImportedLayer",
     "InfoCard",
@@ -31162,8 +31560,15 @@ __all__ = [
     "LookPart",
     "LookPartName",
     "LookupBlockParameter",
+    "LookupCopy",
+    "LookupDuplicates",
+    "LookupDuplicatesName",
     "LookupMatch",
+    "LookupRelation",
+    "LookupRelationName",
     "LookupRow",
+    "LookupSort",
+    "LookupSpatial",
     "MatchProperty",
     "MatchPropertyName",
     "MeasuredPoint",

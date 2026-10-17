@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from layer_field_cases import check, parse_decimal, trim  # noqa: E402
-from spatial_query_cases import join_key, join_plan  # noqa: E402
+from spatial_query_cases import join_key, join_plan, join_policy, repeated_words  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 PROC_DIR = ROOT / "fixtures" / "processing" / "v1"
@@ -231,7 +231,13 @@ def run(values):
                 return c
         return m["default"] if trim(m["default"]) != "" else None
 
-    plan = join_plan([t["attrs"].get(target_key) for t in targets], [row[k] if k < len(row) else "" for row in rows])
+    tkeys = [t["attrs"].get(target_key) for t in targets]
+    skeys = [row[k] if k < len(row) else "" for row in rows]
+    duplicates = values.get("duplicates", "first")
+    plan, repeated, refused = join_policy(join_plan(tkeys, skeys), tkeys, skeys, duplicates)
+    if refused:
+        return {"refused": refused}
+    skip = duplicates == "skip"
     existing = values.get("existing", "overwrite")
     report, update, add, log = [], [], [], []
     misfits = 0
@@ -239,7 +245,9 @@ def run(values):
         key_text = trim(t["attrs"].get(target_key, ""))
         r = plan["matches"][n]
         if r is None:
-            report.append([key_text, "Eşleşmedi", "", "" if key_text else "Anahtarı boş."])
+            note = "Anahtarı boş." if not key_text else (
+                "Anahtar kaynakta yineleniyor; aktarılmadı." if skip and join_key(key_text) in repeated else "")
+            report.append([key_text, "Eşleşmedi", "", note])
             continue
         attrs = dict(t["attrs"])
         changes, notes = [], []
@@ -298,6 +306,10 @@ def run(values):
         jk = join_key(kt) if kt else None
         if jk is None:
             report.append(["", "Kullanılmadı", "", "Anahtarı boş."])
+            unused += 1
+            continue
+        if skip and jk in repeated:
+            report.append([kt, "Kullanılmadı", "", "Anahtar kaynakta yineleniyor; aktarılmadı."])
             unused += 1
             continue
         if firsts[jk] != r:
@@ -371,7 +383,7 @@ def run(values):
     updated = sum(1 for row in report if row[1] == "Güncellendi")
     unmatched = sum(1 for row in report if row[1] == "Eşleşmedi")
     if plan["repeated"]:
-        log.append({"level": "warn", "text": f"{plan['repeated']} anahtar kaynakta birden çok kez var; ilk satırları alındı."})
+        log.append({"level": "warn", "text": repeated_words(plan["repeated"], duplicates)})
     if misfits:
         log.append({"level": "warn", "text": f"{misfits} değer alanına uymadığı için yazılmadı; nedenleri raporda."})
     if not_added:
@@ -441,6 +453,13 @@ def build():
         case("empty-target", "Boş hedef katmana: yalnız eklenir (yinelenen anahtar kullanılmaz)", {**survey, "target": L("yeni"), "geometry": False}),
         case("locked-target", "Kilitli hedef katman: çalıştırma başlamaz", {**deed, "target": L("arsiv")}),
         case("group-target", "Hedef bir grup: çalıştırma başlamaz", {**deed, "target": L("paftalar")}),
+        # docs/adr/0439 §4: Yinelenen anahtar chosen.
+        case("deed-duplicates-skip", "Tapu listesi, Yinelenen anahtar Aktarma: yinelenen anahtarın hedefi eşleşmez, satırları kullanılmaz",
+             {**deed, "duplicates": "skip"}),
+        case("deed-duplicates-stop", "Tapu listesi, Yinelenen anahtar Durdur: çalışmaz, ilk yinelenen anahtarı söyler",
+             {**deed, "duplicates": "stop"}),
+        case("survey-duplicates-skip", "Ölçüm katmanı, Aktarma ve Eşleşmeyenleri ekle: yinelenen anahtarın satırları eklenmez",
+             {**survey, "duplicates": "skip"}),
     ]
     return {"format": "kentos.processing-cases", "version": 1, "tolerance": 1e-9, "documents": {},
             "files": {"tapu.csv": "tapu.csv", "noktalar.csv": "noktalar.csv"}, "cases": cases}

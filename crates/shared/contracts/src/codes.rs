@@ -749,6 +749,8 @@ codes! {
     DOMAIN_IN_USE = "domain_in_use", Failed, false, "Değer listesine bağlı alanlar var.";
     /// Records outside a range a list's change set (docs/adr/0430).
     DOMAIN_VALUES_OUTSIDE = "domain_values_outside", Warning, false, "Bazı kayıtların değeri listenin aralığı dışında kaldı.";
+    /// Values a field migration kept as written since they do not fit (docs/adr/0439 §8).
+    VALUES_UNFIT = "values_unfit", Warning, false, "Bazı değerler alanlarına uymuyor; yazıldıkları gibi bırakıldı.";
     /// A layer's subtypes that do not fit its fields (docs/adr/0422 §3).
     INVALID_SUBTYPES = "invalid_subtypes", Failed, false, "Alt türler katmanın alanlarına uymuyor.";
     /// Records a form's recomputation left as they were (docs/adr/0421).

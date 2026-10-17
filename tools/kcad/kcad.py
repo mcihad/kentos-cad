@@ -1761,13 +1761,24 @@ def body_problem(body):
                 return f"“{iid}” öğesinin kuralı geçersiz"
             lk = i.get("lookup")
             if lk is not None:
-                # docs/adr/0404 §1: a field's list from another layer.
+                # docs/adr/0404 §1: a field's list from another layer; docs/adr/0439: its order,
+                # columns, page, copies, stamp and tolerance.
                 names = [lk["layer"], lk["key"]] + ([lk["label"]] if "label" in lk else []) + \
-                    [n for m in lk.get("matches", []) for n in (m["field"], m["record"])]
+                    [n for m in lk.get("matches", []) for n in (m["field"], m["record"])] + \
+                    ([lk["sort"]["field"]] if "sort" in lk else []) + lk.get("columns", []) + \
+                    [n for c in lk.get("copy", []) for n in (c["from"], c["to"])] + \
+                    ([lk["stamp"]] if "stamp" in lk else [])
                 if any(not n.strip() or len(n) > MOST_FORM_NAME for n in names) \
                         or len(lk.get("matches", [])) > MOST_FORM_CHECKS \
+                        or len(lk.get("copy", [])) > MOST_FORM_CHECKS \
                         or ("filter" in lk and not _rule_ok(lk["filter"])):
                     return f"“{iid}” alanının listesi geçersiz"
+                tol = lk.get("spatial", {}).get("tolerance")
+                if len(lk.get("columns", [])) > 4 or not 0 < lk.get("limit", 1) <= 1000 \
+                        or (tol is not None and (tol != tol or tol in (float("inf"), float("-inf")) or tol < 0)):
+                    return f"“{iid}” alanının listesinin sınırları geçersiz"
+            if "minSearch" in i and not 0 < i["minSearch"] <= 10:
+                return f"“{iid}” alanının aramaya başlama harf sayısı geçersiz"
             checks = i.get("checks", [])
             if len(checks) > MOST_FORM_CHECKS or any(not _rule_ok(c["rule"]) or not c["message"].strip() or not _form_text_ok(c["message"], MOST_FORM_TEXT) for c in checks):
                 return f"“{iid}” alanının denetimi geçersiz"
@@ -3656,13 +3667,34 @@ class _Schema:
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False),
                              "on": (self.enum(("save", "submit")), False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
-        match = self.fields({"field": (self.text, True), "record": (self.text, True)})
+        match = self.fields({"field": (self.text, True), "record": (self.text, True),
+                             # docs/adr/0439 §4: compared folded.
+                             "fold": (true_, False)})
+        # docs/adr/0439: the list's order, columns, page, copies, stamp, duplicates and geometry.
+        sort = self.fields({"field": (self.text, True), "descending": (true_, False)})
+        copy = self.fields({"from": (self.text, True), "to": (self.text, True)})
+
+        def tolerance(v):
+            if type(v) not in (int, float) or type(v) is bool:
+                self.fail("wrong_type", "sayı olmalı")
+            return v
+
+        spatial = self.fields({"relation": (self.enum(("contains", "within", "intersects", "nearest")), True),
+                               "tolerance": (tolerance, False)})
         lookup = self.fields({
             "layer": (self.text, True),
             "key": (self.text, True),
             "label": (self.text, False),
             "matches": (nonempty(self.array(match)), False),
             "filter": (self.text, False),
+            "sort": (sort, False),
+            "columns": (nonempty(self.array(self.text)), False),
+            "limit": (self.uint(32), False),
+            "copy": (nonempty(self.array(copy)), False),
+            "stamp": (self.text, False),
+            # "warn" is the default and is not written.
+            "duplicates": (self.enum(("first", "refuse")), False),
+            "spatial": (spatial, False),
         })
 
         def item(x):
@@ -3701,6 +3733,8 @@ class _Schema:
                     "overridable": (true_, False),
                     "suggest": (true_, False),
                     "lookup": (lookup, False),
+                    # docs/adr/0439 §6: a searched list's letters before it searches.
+                    "minSearch": (self.uint(32), False),
                     "checks": (nonempty(self.array(check)), False),
                     # docs/adr/0437: the field shown again, read-only.
                     "mirror": (true_, False),

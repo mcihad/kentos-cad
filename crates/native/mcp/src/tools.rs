@@ -582,6 +582,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.forms.recompute"
             | "cad.forms.transition"
             | "cad.domains.edit"
+            | "cad.fields.migrate"
             | "cad.forms.import"
             // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
             | "cad.relations.edit"

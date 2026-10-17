@@ -45,7 +45,7 @@ pub fn tool() -> Tool {
         description: "Başka bir katmandan ya da CSV, TXT, Excel dosyasından ortak anahtarla öznitelikleri alan eşlemesiyle aktarır; isterse geometriyi günceller, eşleşmeyenleri ekler.".into(),
         help: Some([
             "Örnekler: tapu listesindeki malik, hisse ve yüzölçümünü parsel numarasıyla parsellere aktarmak; başka bir ekibin güncel ölçümünü mevcut katmana geometrisiyle işlemek, yeni parselleri eklemek; koordinat listesinden noktaları adlarıyla güncellemek ve yenilerini eklemek.",
-            "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (002 ile 2 aynı). Kaynakta yinelenen anahtarın ilk satırı alınır; hedefte aynı anahtarlı nesnelerin hepsi güncellenir.",
+            "Anahtarlar baştaki ve sondaki boşluklar atılarak karşılaştırılır; iki taraf da sayıysa sayı olarak (002 ile 2 aynı). Kaynakta yinelenen anahtarda Yinelenen anahtar ne olacağını söyler: ilk satırı alınır, bu anahtarlı hedeflere hiçbir şey aktarılmaz (satırları eklenmez) ya da araç çalışmaz; hedefte aynı anahtarlı nesnelerin hepsi güncellenir.",
             "Alan eşleme her hedef alana bir kaynak sütun ya da varsayılan değer verir: hücre boşsa varsayılan yazılır. Eşleme boşsa anahtardan başka bütün sütunlar kendi adlarıyla aktarılır. Hedef katmanın alanı tipliyse değer alanın kuralıyla yazılır; uymayan değer yazılmaz ve raporda nedeni söylenir.",
             "Eşleşmeyenleri ekle açıkken hiçbir nesnenin almadığı satırlar hedef katmana eklenir: katmandan geometrisiyle, dosyadan Doğu ve Kuzey sütunlarından nokta olarak; iki sütun da boşsa geometrisiz kayıt (tablo satırı) olarak. Yalnız raporla açıkken çizim değişmez; rapor ne olacağını gösterir.",
         ]
@@ -152,6 +152,7 @@ pub fn tool() -> Tool {
                 },
             )
             .default_value(json!("overwrite")),
+            super::join_source::duplicates_param(),
             ParamDef::new("geometry", "Geometriyi güncelle", ParamKind::Boolean)
                 .default_value(json!(false))
                 .shown_when(from_layer)
@@ -310,7 +311,20 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     };
     let target_keys: Vec<Option<&str>> = targets.iter().map(|t| attr(t, target_key)).collect();
     let source_keys: Vec<Option<&str>> = (0..rows.len()).map(|r| Some(cell(r, k))).collect();
-    let plan = join_plan(&target_keys, &source_keys);
+    let skip = v.text("duplicates") == "skip";
+    let (plan, repeated_keys) = match super::join_source::with_policy(
+        join_plan(&target_keys, &source_keys),
+        &target_keys,
+        &source_keys,
+        v.text("duplicates"),
+    ) {
+        Ok(p) => p,
+        Err(why) => return RunResult::refused(why),
+    };
+    let is_repeated = |text: &str| {
+        skip && kentos_geometry_core::ops::statistics::join_key(text)
+            .is_some_and(|k| repeated_keys.contains(&k))
+    };
     let fields = ctx.fields(&layer_id);
     let field_of = |name: &str| fields.iter().find(|f| f.name == name);
     let mut report: Vec<[String; 4]> = Vec::new();
@@ -326,6 +340,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             unmatched += 1;
             let note = if key_text.is_empty() {
                 "Anahtarı boş."
+            } else if is_repeated(&key_text) {
+                "Anahtar kaynakta yineleniyor; aktarılmadı."
             } else {
                 ""
             };
@@ -417,6 +433,16 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 "Kullanılmadı".into(),
                 String::new(),
                 "Anahtarı boş.".into(),
+            ]);
+            continue;
+        }
+        if is_repeated(&key_text) {
+            unused_rows += 1;
+            report.push([
+                key_text,
+                "Kullanılmadı".into(),
+                String::new(),
+                "Anahtar kaynakta yineleniyor; aktarılmadı.".into(),
             ]);
             continue;
         }
@@ -568,10 +594,17 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         ));
     }
     if plan.repeated > 0 {
-        feedback.warn(format!(
-            "{} anahtar kaynakta birden çok kez var; ilk satırları alındı.",
-            plan.repeated
-        ));
+        feedback.warn(if skip {
+            format!(
+                "{} anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı.",
+                plan.repeated
+            )
+        } else {
+            format!(
+                "{} anahtar kaynakta birden çok kez var; ilk satırları alındı.",
+                plan.repeated
+            )
+        });
     }
     if misfits > 0 {
         feedback.warn(format!(

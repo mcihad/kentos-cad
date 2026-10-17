@@ -399,12 +399,51 @@ def plan(state, edit):
                 g["domain"] = edit["domain"]
             links = [(edit["layer"], g)]
         return now, links, False, {}, edit.get("domain"), warnings
+    if kind == "import":
+        # docs/adr/0439 §7: a package's lists added; one of an id the project has kept when equal, refused unless
+        # `replace`, which replaces it as update does (its kind kept, linked fields fitting, held codes kept).
+        ds = edit["domains"]
+        if not ds:
+            raise Refused("invalid_domain", "Paket boş; içinde en az bir değer listesi olmalı.", "edit/domains")
+        nxt, imported, warnings = copy.deepcopy(now), [], []
+        for i, d in enumerate(ds):
+            path = f"edit/domains/{i}"
+            if any(x["id"] == d["id"] for x in ds[:i]):
+                raise Refused("invalid_domain", f"“{d['id']}” kimlikli liste pakette iki kez var.", f"{path}/id")
+            old = find(d["id"])
+            if old is None:
+                nxt.append(copy.deepcopy(d))
+                imported.append(d["id"])
+                continue
+            if old == d:
+                continue
+            if not edit.get("replace"):
+                raise Refused("domain_exists", f"Projede “{d['id']}” kimlikli başka bir “{old['name']}” listesi var; "
+                              "replace ile değiştirin ya da paketten çıkarın.", f"{path}/id")
+            if old["kind"] != d["kind"]:
+                raise Refused("domain_mismatch", f"“{old['name']}” listesinin türü değişemez; projedeki liste "
+                              f"{KIND_WORDS[old['kind']]} türünde.", f"{path}/kind")
+            used = uses(state["layers"], d["id"])
+            for lay, k in used:
+                w = link_words(d, field_at(state, lay, k))
+                if w:
+                    raise Refused("domain_mismatch", w, path)
+            if "values" in d:
+                n, lost = misfits(state, used, d["values"], {})
+                if n:
+                    raise in_use(n, lost, f"{path}/values")
+            else:
+                warnings += warning(outside(state, used, d))
+            nxt = [copy.deepcopy(d) if x["id"] == d["id"] else x for x in nxt]
+            imported.append(d["id"])
+        fits(nxt)
+        return nxt, [], False, {}, None, warnings, imported
     raise AssertionError(kind)
 
 
 def applied_state(state, p):
     """The state after the plan `p`, and the fields whose definition changed."""
-    domains, links, _, recodes, _, _ = p
+    domains, links, _, recodes, _, _ = p[:6]
     after = copy.deepcopy(state)
     after["domains"] = copy.deepcopy(domains)
     changed = []
@@ -422,8 +461,10 @@ def applied_state(state, p):
 
 def answer(state, p):
     after, changed = applied_state(state, p)
-    domains, _, _, recodes, domain, _ = p
+    domains, _, _, recodes, domain, _ = p[:6]
+    imported = p[6] if len(p) > 6 else []
     out = {**({"domain": domain} if domain is not None else {}), "fields": changed, "recoded": len(recodes),
+           **({"imported": imported} if imported else {}),
            "changed": domains != state["domains"] or bool(changed) or bool(recodes), "revision": "$current"}
     return after, out
 

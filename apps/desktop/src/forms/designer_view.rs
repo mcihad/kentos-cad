@@ -16,11 +16,14 @@ use kentos_ui::widget::tree_view::{self, Node, TreeView};
 
 use super::designer::{
     ADD_ATTACHMENTS, ADD_GROUP, ADD_LOCATION, ADD_NOTE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL,
-    CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, NAME, NEW_FORM,
-    PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM, Rule,
-    SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    CHANGES, COPY_ITEM, CREATE, DOWN, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME,
+    NEW_FORM, PASTE_ITEM, PREVIEW, PROPERTIES, PUBLISH, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM,
+    Rule, SAVE, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
+
+/// The item's properties' scroll, which a picture moves to the list's extras.
+pub(crate) const PROPERTIES_SCROLL: &str = "forms-properties";
 use crate::exchange::words::{self, Kind};
 
 /// A row of the item tree: its depth, its icon and words.
@@ -849,7 +852,29 @@ impl App {
                         "Yansımasını ekle",
                         Some(msg(Event::AddMirror)),
                     ))
-                    .push(self.lookup_rows(&id, f, error_of("lookup")))
+                    .push(self.lookup_rows(&id, f, error_of("lookup")));
+                // A searched list starts after a few letters (docs/adr/0439 §6).
+                if f.widget == Some(FormWidget::Search) {
+                    col = col.push(words::field(
+                        "Aramaya başlama",
+                        row![
+                            text_input(
+                                "1",
+                                &f.min_search.map(|n| n.to_string()).unwrap_or_default()
+                            )
+                            .size(typography::body())
+                            .on_input(|t| msg(Event::MinSearch(t)))
+                            .padding([5, 8])
+                            .width(70)
+                            .style(style::field::input),
+                            label::caption("harften sonra").style(muted),
+                        ]
+                        .spacing(6)
+                        .align_y(Center),
+                        None,
+                    ));
+                }
+                col = col
                     .push(
                         row![
                             words::check(
@@ -1010,6 +1035,7 @@ impl App {
             bottom: 0.0,
             left: 4.0,
         }))
+        .id(PROPERTIES_SCROLL)
         .height(Fill)
         .into()
     }
@@ -1308,11 +1334,21 @@ impl App {
                 move |j| msg(Event::MatchRecord(i, ok[j].clone())),
             )
             .placeholder("Kaydın alanı");
+            // Aa: compared without regard to case (docs/adr/0439 §4).
+            let fold = button(label::caption("Aa"))
+                .on_press(msg(Event::Lookup(LookupEdit::Fold(i, !m.fold))))
+                .padding([4, 6])
+                .style(style::button::tool(m.fold));
             col = col.push(
                 row![
                     container(theirs).width(Fill),
                     label::caption("=").style(muted),
                     container(ours).width(Fill),
+                    kentos_ui::widget::tip(
+                        fold,
+                        kentos_ui::widget::Tip::new("Büyük küçük harfe bakmadan karşılaştır"),
+                        iced::widget::tooltip::Position::Top,
+                    ),
                     button(icon(Icon::Close).size(12.0))
                         .on_press(msg(Event::RemoveMatch(i)))
                         .padding([5, 6])
@@ -1333,7 +1369,8 @@ impl App {
         .padding([5, 8])
         .font(typography::mono())
         .style(style::field::input);
-        col.push(words::secondary("Zincir ekle", Some(msg(Event::AddMatch))))
+        col = col
+            .push(words::secondary("Zincir ekle", Some(msg(Event::AddMatch))))
             .push(words::field(
                 "Listenin süzgeci",
                 row![
@@ -1346,7 +1383,196 @@ impl App {
                 .spacing(4)
                 .align_y(Center),
                 None,
+            ));
+        col.push(self.lookup_extras(l, &their, &own)).into()
+    }
+
+    /// A list's order, columns, page, duplicates, geometry, copies and stamp (docs/adr/0439).
+    fn lookup_extras<'a>(
+        &'a self,
+        l: &kentos_contracts::FormLookup,
+        their: &[LayerField],
+        own: &[LayerField],
+    ) -> Element<'a, Message> {
+        let edit = |e: LookupEdit| msg(Event::Lookup(e));
+        let their_keys: Vec<String> = their.iter().map(|x| x.key().to_owned()).collect();
+        let their_names: Vec<String> = their.iter().map(|x| x.label().to_owned()).collect();
+        let name_of = |key: &str| {
+            their_keys
+                .iter()
+                .position(|k| k == key)
+                .map_or_else(|| "Kimlik".to_owned(), |i| their_names[i].clone())
+        };
+        // Sıralama: the labels, or a field, greatest first when asked.
+        let mut sorts = vec![Choice::new("Etiketin doğal sırası")];
+        sorts.extend(their_names.iter().map(|n| Choice::new(n.clone())));
+        let at_sort = l.sort.as_ref().map_or(Some(0), |s| {
+            their_keys.iter().position(|k| *k == s.field).map(|i| i + 1)
+        });
+        let sk = their_keys.clone();
+        let sort = Select::new(sorts, at_sort, move |i| {
+            msg(Event::Lookup(LookupEdit::Sort(
+                (i > 0).then(|| sk[i - 1].clone()),
+            )))
+        });
+        let descending = l.sort.as_ref().is_some_and(|s| s.descending);
+        let sort_row = row![
+            container(sort).width(Fill),
+            button(label::caption("Azalan"))
+                .on_press_maybe(
+                    l.sort
+                        .is_some()
+                        .then(|| edit(LookupEdit::Descending(!descending)))
+                )
+                .padding([4, 8])
+                .style(style::button::tool(descending)),
+        ]
+        .spacing(4)
+        .align_y(Center);
+        // Sütunlar: chips, one more added from the layer's fields.
+        let mut chips = Row::new().spacing(4);
+        for (i, c) in l.columns.iter().enumerate() {
+            chips = chips.push(
+                button(
+                    row![label::caption(name_of(c)), icon(Icon::Close).size(10.0)]
+                        .spacing(4)
+                        .align_y(Center),
+                )
+                .padding([2, 8])
+                .style(style::button::chip(true))
+                .on_press(edit(LookupEdit::ColumnRemove(i))),
+            );
+        }
+        let free: Vec<(String, String)> =
+            std::iter::once((kentos_contracts::LOOKUP_UID.to_owned(), "Kimlik".to_owned()))
+                .chain(their_keys.iter().cloned().zip(their_names.iter().cloned()))
+                .filter(|(k, _)| !l.columns.contains(k))
+                .collect();
+        let mut columns = Column::new().spacing(4);
+        if !l.columns.is_empty() {
+            columns = columns.push(chips.wrap());
+        }
+        if l.columns.len() < kentos_contracts::MOST_LOOKUP_COLUMNS {
+            let fk: Vec<String> = free.iter().map(|(k, _)| k.clone()).collect();
+            columns = columns.push(
+                container(
+                    Select::new(
+                        free.iter().map(|(_, n)| Choice::new(n.clone())),
+                        None,
+                        move |i| msg(Event::Lookup(LookupEdit::ColumnAdd(fk[i].clone()))),
+                    )
+                    .placeholder("Sütun ekle…"),
+                )
+                .width(200),
+            );
+        }
+        let limit = text_input("Hepsi", &l.limit.map(|n| n.to_string()).unwrap_or_default())
+            .size(typography::body())
+            .on_input(move |t| msg(Event::Lookup(LookupEdit::Limit(t))))
+            .padding([5, 8])
+            .width(90)
+            .style(style::field::input);
+        // Yinelenen anahtar.
+        use kentos_contracts::LookupDuplicates as D;
+        let dups = [D::Warn, D::First, D::Refuse];
+        let duplicates = Select::new(
+            ["Uyar, ilkini al", "İlkini al", "Reddet"].map(Choice::new),
+            dups.iter().position(|d| *d == l.duplicates),
+            move |i| msg(Event::Lookup(LookupEdit::Duplicates(dups[i]))),
+        );
+        // Konum: the relation to the record's geometry and its tolerance.
+        use kentos_contracts::LookupRelation as R;
+        let mut places = vec![Choice::new("Konuma bakma")];
+        places.extend(R::ALL.iter().map(|r| Choice::new(r.label())));
+        let at_place = l.spatial.as_ref().map_or(Some(0), |s| {
+            R::ALL.iter().position(|r| *r == s.relation).map(|i| i + 1)
+        });
+        let place = Select::new(places, at_place, move |i| {
+            msg(Event::Lookup(LookupEdit::Spatial(
+                (i > 0).then(|| R::ALL[i - 1]),
+            )))
+        });
+        let mut place_row = Row::new()
+            .spacing(4)
+            .align_y(Center)
+            .push(container(place).width(Fill));
+        if let Some(s) = &l.spatial {
+            place_row = place_row
+                .push(label::caption("Tolerans").style(muted))
+                .push(
+                    text_input("0", &s.tolerance.map(|t| t.to_string()).unwrap_or_default())
+                        .size(typography::body())
+                        .on_input(move |t| msg(Event::Lookup(LookupEdit::Tolerance(t))))
+                        .padding([5, 8])
+                        .width(80)
+                        .style(style::field::input),
+                );
+        }
+        // Kopyala: the chosen object's field into the record's, each row; the stamp.
+        let own_keys: Vec<String> = own.iter().map(|x| x.key().to_owned()).collect();
+        let own_names: Vec<String> = own.iter().map(|x| x.label().to_owned()).collect();
+        let mut copies = Column::new().spacing(4);
+        for (i, c) in l.copy.iter().enumerate() {
+            let tk = their_keys.clone();
+            let ok = own_keys.clone();
+            copies = copies.push(
+                row![
+                    container(
+                        Select::new(
+                            their_names.iter().map(|n| Choice::new(n.clone())),
+                            tk.iter().position(|k| *k == c.from),
+                            move |j| msg(Event::Lookup(LookupEdit::CopyFrom(i, tk[j].clone()))),
+                        )
+                        .placeholder("Listenin alanı")
+                    )
+                    .width(Fill),
+                    label::caption("→").style(muted),
+                    container(
+                        Select::new(
+                            own_names.iter().map(|n| Choice::new(n.clone())),
+                            ok.iter().position(|k| *k == c.to),
+                            move |j| msg(Event::Lookup(LookupEdit::CopyTo(i, ok[j].clone()))),
+                        )
+                        .placeholder("Kaydın alanı")
+                    )
+                    .width(Fill),
+                    button(icon(Icon::Close).size(12.0))
+                        .on_press(edit(LookupEdit::CopyRemove(i)))
+                        .padding([5, 6])
+                        .style(style::button::tool(false)),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
+        let texts: Vec<&LayerField> = own
+            .iter()
+            .filter(|x| x.kind == kentos_contracts::LayerFieldKind::Text)
+            .collect();
+        let tkeys: Vec<String> = texts.iter().map(|x| x.key().to_owned()).collect();
+        let mut stamps = vec![Choice::new("Damga yok")];
+        stamps.extend(texts.iter().map(|x| Choice::new(x.label().to_owned())));
+        let at_stamp = l.stamp.as_ref().map_or(Some(0), |s| {
+            tkeys.iter().position(|k| k == s).map(|i| i + 1)
+        });
+        let stamp = Select::new(stamps, at_stamp, move |i| {
+            msg(Event::Lookup(LookupEdit::Stamp(
+                (i > 0).then(|| tkeys[i - 1].clone()),
+            )))
+        });
+        Column::new()
+            .spacing(8)
+            .push(words::field("Sıralama", sort_row, None))
+            .push(words::field("Sütunlar", columns, None))
+            .push(words::field("Sayfa", limit, None))
+            .push(words::field("Yinelenen anahtar", duplicates, None))
+            .push(words::field("Konum", place_row, None))
+            .push(words::field("Kopyala", copies, None))
+            .push(words::secondary(
+                "Kopya ekle",
+                Some(edit(LookupEdit::CopyAdd)),
             ))
+            .push(words::field("Kaynak damgası", stamp, None))
             .into()
     }
 

@@ -41,6 +41,7 @@ const REMOVE: &str = "Sil";
 const UP: &str = "Yukarı";
 const DOWN: &str = "Aşağı";
 const FROM_DATA: &str = "Verilerden al";
+const MIGRATE: &str = "Değerleri biçime çevir";
 
 /// The table's columns: header and width (logical pixels).
 const HEADS: [(&str, f32); 9] = [
@@ -266,6 +267,8 @@ pub enum Cell {
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// Değerleri biçime çevir (docs/adr/0439 §8): the layer's values in their saved fields' canonical texts.
+    Migrate,
     /// A row's cell typed into.
     Type(usize, Cell, String),
     /// A row's kind chosen (by its place in the list).
@@ -496,6 +499,18 @@ impl App {
                 if w.chosen.is_none() && !w.rows.is_empty() {
                     w.chosen = Some(0);
                 }
+            }
+            Event::Migrate => {
+                if w.changed() {
+                    w.said = Some((
+                        Kind::Warn,
+                        "Önce alanları kaydedin; değerler kaydedilmiş alanların biçimine çevrilir."
+                            .to_owned(),
+                    ));
+                    return Task::none();
+                }
+                let layer = w.layer.clone();
+                return self.migrate_layer_values(&layer);
             }
             Event::Save => return self.save_layer_fields(),
             Event::Cancel => {
@@ -925,6 +940,7 @@ impl App {
             ),
             iced::widget::space::horizontal(),
             tool("fieldsFromData", FROM_DATA, Some(msg(Event::FromData))),
+            tool("conversion", MIGRATE, Some(msg(Event::Migrate))),
         ]
         .spacing(8)
         .align_y(Center);
@@ -1226,6 +1242,7 @@ impl App {
                 .filter(|&i| i + 1 < w.rows.len())
                 .map(|_| msg(Event::Down)),
             Control::Press(FROM_DATA) => Some(msg(Event::FromData)),
+            Control::Press(MIGRATE) => Some(msg(Event::Migrate)),
             other => return Err(format!("“{FIELDS_TITLE}” penceresinde {other} yok")),
         })
     }
@@ -1295,6 +1312,68 @@ fn policy_box<'a>(w: &Window) -> Element<'a, Message> {
     .spacing(16)
     .align_y(iced::Alignment::End)
     .into()
+}
+
+impl App {
+    /// The layer's values written in their fields' canonical texts through `cad.fields.migrate`, as one
+    /// undo step; the window says what changed and what did not fit (docs/adr/0439 §8).
+    fn migrate_layer_values(&mut self, layer: &str) -> Task<Message> {
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = kentos_native_application::fields_migrate::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_contracts::FieldsMigrate {
+                layer: layer.to_owned(),
+                fields: Vec::new(),
+                expected_revision: None,
+            },
+        );
+        let (said, done) = match result {
+            kentos_contracts::CommandResult::Completed { output, warnings } => {
+                let changed: u32 = output.fields.iter().map(|f| f.changed).sum();
+                let unfit: u32 = output.fields.iter().map(|f| f.unfit).sum();
+                let mut text = if changed == 0 {
+                    "Değerler zaten alanların biçiminde; bir şey değişmedi.".to_owned()
+                } else {
+                    format!(
+                        "{} kayıtta {changed} değer alanların biçimine çevrildi.",
+                        output.objects
+                    )
+                };
+                if unfit > 0 {
+                    text.push_str(&format!(
+                        " {unfit} değer alanına uymadığı için yazıldığı gibi kaldı."
+                    ));
+                }
+                if !output.unknown.is_empty() {
+                    text.push_str(&format!(
+                        " Alanı olmayan öznitelikler korundu: {}.",
+                        output.unknown.join(", ")
+                    ));
+                }
+                let kind = if warnings.is_empty() {
+                    Kind::Ok
+                } else {
+                    Kind::Warn
+                };
+                ((kind, text), changed > 0)
+            }
+            kentos_contracts::CommandResult::Failed { error }
+            | kentos_contracts::CommandResult::Conflict { error }
+            | kentos_contracts::CommandResult::NeedsInput { error } => {
+                ((Kind::Error, error.message), false)
+            }
+            _ => return Task::none(),
+        };
+        if done {
+            self.say(kentos_interaction::Level::Success, said.1.clone());
+        }
+        if let Some(w) = self.layer_fields.as_mut() {
+            w.said = Some(said);
+        }
+        Task::none()
+    }
 }
 
 #[cfg(test)]

@@ -512,8 +512,8 @@ impl AttachmentAccept {
 /// The most attachments an attachments item may ask for.
 pub const MOST_FORM_ATTACHMENTS: u32 = 100;
 
-/// A field's list of values from another layer (docs/adr/0404 §1).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// A field's list of values from another layer (docs/adr/0404 §1, docs/adr/0439 §1).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -535,6 +535,162 @@ pub struct FormLookup {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub filter: Option<String>,
+    /// The list's order (docs/adr/0439 §1): by a field of its layer; none: the labels' natural order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sort: Option<LookupSort>,
+    /// Its layer's fields shown beside a value's label in the list and under the chosen value
+    /// (docs/adr/0439 §2), in order; at most [`MOST_LOOKUP_COLUMNS`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub columns: Vec<String>,
+    /// How many values a page of the list holds (docs/adr/0439 §1): a form's state carries the
+    /// first ones and the count of the rest; searching reaches them all. None: every value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub limit: Option<u32>,
+    /// The chosen object's fields copied into the record's when the value is chosen (docs/adr/0439
+    /// §3): a copy, kept when the source changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LookupCopy>>", optional))]
+    pub copy: Vec<LookupCopy>,
+    /// A text field of the record that is told where the copy came from (docs/adr/0439 §3): the
+    /// layer, the code, the copied values' fingerprint and the day.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stamp: Option<String>,
+    /// What a code held by more than one of the list's objects is (docs/adr/0439 §4).
+    #[serde(default, skip_serializing_if = "LookupDuplicates::is_warn")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<LookupDuplicates>", optional))]
+    pub duplicates: LookupDuplicates,
+    /// Only the list's objects standing so to the record's geometry are offered (docs/adr/0439 §5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub spatial: Option<LookupSpatial>,
+}
+
+/// The most columns a list from another layer shows.
+pub const MOST_LOOKUP_COLUMNS: usize = 4;
+
+/// The most values a page of a list from another layer holds.
+pub const MOST_LOOKUP_LIMIT: u32 = 1000;
+
+/// The most letters a searched list waits for.
+pub const MOST_MIN_SEARCH: u32 = 10;
+
+/// A list's order by a field of its layer.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LookupSort {
+    /// The field's key: numbers by value, dates as written, text in natural order; empty ones last.
+    pub field: String,
+    /// The greatest first; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub descending: bool,
+}
+
+/// A field of the chosen object copied into a field of the record.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LookupCopy {
+    /// The list's field's key.
+    pub from: String,
+    /// The record's field's key.
+    pub to: String,
+}
+
+/// What a code held by more than one of the list's objects is (docs/adr/0439 §4).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LookupDuplicates {
+    /// The first object's is taken and a record holding it is warned (`form_lookup_duplicate`).
+    #[default]
+    Warn,
+    /// The first object's is taken, as chosen.
+    First,
+    /// A record may not hold it (`form_lookup_duplicate`, an error).
+    Refuse,
+}
+
+impl LookupDuplicates {
+    pub fn is_warn(&self) -> bool {
+        *self == LookupDuplicates::Warn
+    }
+}
+
+/// The objects of the list a record's geometry takes (docs/adr/0439 §5).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LookupSpatial {
+    pub relation: LookupRelation,
+    /// How far apart still counts, in the drawing's unit; none: 0 (nearest: any distance).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: Option<f64>,
+}
+
+// The tolerance is a finite number (the preflight refuses another): equal to itself.
+impl Eq for LookupSpatial {}
+
+/// How a list's object stands to the record's geometry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LookupRelation {
+    /// The object holds the record (a building's parcel).
+    Contains,
+    /// The record holds the object.
+    Within,
+    /// They have a point in common (within the tolerance).
+    Intersects,
+    /// The nearest object (within the tolerance, when given); ties by the list's order.
+    Nearest,
+}
+
+impl LookupRelation {
+    pub const ALL: [LookupRelation; 4] = [
+        LookupRelation::Contains,
+        LookupRelation::Within,
+        LookupRelation::Intersects,
+        LookupRelation::Nearest,
+    ];
+
+    /// Its key in the form's JSON.
+    pub fn key(self) -> &'static str {
+        match self {
+            LookupRelation::Contains => "contains",
+            LookupRelation::Within => "within",
+            LookupRelation::Intersects => "intersects",
+            LookupRelation::Nearest => "nearest",
+        }
+    }
+
+    /// Its name in the designer.
+    pub fn label(self) -> &'static str {
+        match self {
+            LookupRelation::Contains => "Kaydı içeren",
+            LookupRelation::Within => "Kaydın içinde kalan",
+            LookupRelation::Intersects => "Kayıtla kesişen",
+            LookupRelation::Nearest => "Kayda en yakın",
+        }
+    }
 }
 
 /// A field of the list's layer that must equal a field of the record.
@@ -548,6 +704,11 @@ pub struct LookupMatch {
     pub field: String,
     /// The record's field's key.
     pub record: String,
+    /// Compared without regard to case, Turkish letters folded (`İ` and `i`, `I` and `ı`), ends
+    /// trimmed (docs/adr/0439 §4); written only as `true`. Numbers are compared by their values.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub fold: bool,
 }
 
 /// The lookup key that writes the object's persistent id (docs/adr/0404 §3).
@@ -646,6 +807,12 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub lookup: Option<FormLookup>,
+    /// A searched list searches once this many letters are typed (docs/adr/0439 §6); none: from the
+    /// first.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub min_search: Option<u32>,
     /// What the record must satisfy, in order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormCheck>>", optional))]
@@ -682,6 +849,7 @@ impl FormField {
             overridable: false,
             suggest: false,
             lookup: None,
+            min_search: None,
             checks: Vec::new(),
             mirror: false,
         }
@@ -887,6 +1055,15 @@ pub struct FormItemState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub options: Option<Vec<crate::FieldChoice>>,
+    /// How many more values the list offers past its page (docs/adr/0439 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub more: Option<u32>,
+    /// The chosen object's columns, live (docs/adr/0439 §2): each column's label and its value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub preview: Option<Vec<FormPreviewValue>>,
     /// A related item's objects: their persistent ids (docs/adr/0404 §4).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -900,6 +1077,17 @@ pub struct FormItemState {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub attachments: Option<u32>,
+}
+
+/// A column of the chosen object (docs/adr/0439 §2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormPreviewValue {
+    pub label: String,
+    pub value: String,
 }
 
 impl FormItem {
@@ -1227,17 +1415,39 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                     let names = [Some(&l.layer), Some(&l.key), l.label.as_ref()]
                         .into_iter()
                         .flatten()
-                        .chain(l.matches.iter().flat_map(|m| [&m.field, &m.record]));
+                        .chain(l.matches.iter().flat_map(|m| [&m.field, &m.record]))
+                        // docs/adr/0439: its order's, columns', copies' and stamp's fields.
+                        .chain(l.sort.iter().map(|s| &s.field))
+                        .chain(&l.columns)
+                        .chain(l.copy.iter().flat_map(|c| [&c.from, &c.to]))
+                        .chain(&l.stamp);
                     if names
                         .clone()
                         .any(|t| t.trim().is_empty() || t.chars().count() > MOST_FORM_NAME)
                         || l.matches.len() > MOST_FORM_CHECKS
+                        || l.copy.len() > MOST_FORM_CHECKS
                         || l.filter.as_deref().is_some_and(|r| !rule_ok(r))
                     {
                         return Some(format!(
-                            "“{id}” alanının listesinin katmanı, alanları ve süzgeci yazılmalı; adlar en çok {MOST_FORM_NAME}, süzgeç {MOST_FORM_RULE} karakter, en çok {MOST_FORM_CHECKS} eşleşme olur."
+                            "“{id}” alanının listesinin katmanı, alanları ve süzgeci yazılmalı; adlar en çok {MOST_FORM_NAME}, süzgeç {MOST_FORM_RULE} karakter, en çok {MOST_FORM_CHECKS} eşleşme ve kopya olur."
                         ));
                     }
+                    if l.columns.len() > MOST_LOOKUP_COLUMNS
+                        || l.limit.is_some_and(|n| n == 0 || n > MOST_LOOKUP_LIMIT)
+                        || l.spatial
+                            .as_ref()
+                            .and_then(|s| s.tolerance)
+                            .is_some_and(|t| !t.is_finite() || t < 0.0)
+                    {
+                        return Some(format!(
+                            "“{id}” alanının listesi en çok {MOST_LOOKUP_COLUMNS} sütun gösterir, sayfası 1 ile {MOST_LOOKUP_LIMIT} arasındadır, toleransı sıfır ya da artı bir sayıdır."
+                        ));
+                    }
+                }
+                if f.min_search.is_some_and(|n| n == 0 || n > MOST_MIN_SEARCH) {
+                    return Some(format!(
+                        "“{id}” alanının aramaya başlama harf sayısı 1 ile {MOST_MIN_SEARCH} arasındadır."
+                    ));
                 }
                 if f.default
                     .as_deref()

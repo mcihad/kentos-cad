@@ -94,6 +94,9 @@ pub mod codes {
     pub const LOOKUP_LAYER: &str = "form_lookup_layer";
     /// A list from another layer, or a related item, names a field its layer has not.
     pub const LOOKUP_FIELD: &str = "form_lookup_field";
+    /// A list from another layer compares, writes or copies fields of kinds that do not go together
+    /// (docs/adr/0439 §4), or its page, columns or tolerance are out of bounds.
+    pub const LOOKUP_TYPE: &str = "form_lookup_type";
     // A record.
     /// A shown, required field is empty.
     pub const REQUIRED: &str = "form_required";
@@ -126,6 +129,11 @@ pub mod codes {
     pub const CHOICE_FILTERED: &str = "form_choice_filtered";
     /// A value a field's list from another layer does not offer the record (docs/adr/0404 §2).
     pub const LOOKUP_MISSING: &str = "form_lookup_missing";
+    /// The record's value is held by more than one of the list's objects (docs/adr/0439 §4): a
+    /// warning, or an error when the list refuses duplicates.
+    pub const LOOKUP_DUPLICATE: &str = "form_lookup_duplicate";
+    /// The source of a copy changed after the copy (docs/adr/0439 §3; a warning).
+    pub const LOOKUP_STALE: &str = "form_lookup_stale";
     /// A soft check that is not true (a warning).
     pub const CHECK_WARNING: &str = "form_check_warning";
     /// A unique field's value another object of the layer has.

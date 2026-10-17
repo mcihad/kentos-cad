@@ -18,6 +18,10 @@ fields: Array<DomainField>,
  */
 recoded: number, 
 /**
+ * The lists an import added or replaced, in the package's order (docs/adr/0439 §7).
+ */
+imported?: Array<string>, 
+/**
  * Whether anything changed (a plan: would change).
  */
 changed: boolean, 

@@ -1,52 +1,96 @@
-//! What a form reads of other layers (docs/adr/0404): a field's list of values from another layer
-//! and the objects of another layer that refer to a record.
+//! What a form reads of other layers (docs/adr/0404, docs/adr/0439): a field's list of values from
+//! another layer and the objects of another layer that refer to a record.
 //!
 //! - A list is made once, when the form is prepared: the list layer's objects that the filter takes,
-//!   each key once (the first object's label), in the labels' natural order. A record narrows it
-//!   by the chain (`matches`): an object is offered when each of its matched fields equals the
-//!   record's; an empty record field offers nothing.
+//!   each key once (the first object's label), in the labels' natural order or by a field of its
+//!   layer (`sort`). A record narrows it by the chain (`matches`): an object is offered when each of
+//!   its matched fields equals the record's (numbers by value, text exactly or folded); an empty
+//!   record field offers nothing. A spatial list narrows it further by the record's geometry.
 //! - `$uid` as the key writes the object's persistent id: the record refers to it.
+//! - A code more than one object holds is a duplicate: the first object's is taken, and the record
+//!   holding it is warned or refused as the list says.
+//! - The chosen object's fields may be copied into the record's (`copy`), with a stamp of where they
+//!   came from: the layer, the code, a fingerprint of the copied values and the day.
 //! - A related item lists the other layer's objects whose field holds the record's persistent id.
 
-use std::collections::{BTreeMap, HashSet};
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::sync::Arc;
 
-use kentos_contracts::{FieldChoice, FormLookup, LOOKUP_UID, LayerField, js_trim};
+use kentos_contracts::{
+    FieldChoice, FormLookup, FormPreviewValue, LOOKUP_UID, LayerField, LayerFieldKind,
+    LookupDuplicates, LookupRelation, compare_decimals, display_value, js_trim,
+};
+use kentos_expression::js::text::fold_turkish;
 use kentos_expression::{Unit, Variable, compile_with};
+use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::ops::spatial_query::{self, Geometry};
 
 use crate::record::{Attrs, Object, holds, schema_in};
 
-/// Another layer a form reads: its name, its fields and its objects (persistent id, attributes).
+/// Another layer a form reads: its name, its fields and its objects (persistent id, attributes) and,
+/// for a spatial list, their shapes in the same order (docs/adr/0439 §5; empty otherwise).
 #[derive(Clone, Debug, Default)]
 pub struct OtherLayer {
     pub name: String,
     pub fields: Vec<LayerField>,
     pub rows: Vec<(String, Attrs)>,
+    pub shapes: Vec<Option<Arc<Shape>>>,
 }
 
 /// The other layers a form reads, by their ids.
 pub type World = BTreeMap<String, OtherLayer>;
 
+/// A value of a list: its code, its label, its matched fields' values, its columns shown, its copied
+/// fields' values and its geometry for a spatial list.
+#[derive(Clone, Debug)]
+pub(crate) struct Row {
+    pub code: String,
+    pub label: String,
+    keys: Vec<Option<String>>,
+    columns: Vec<String>,
+    copies: Vec<Option<String>>,
+    place: Option<Arc<Geometry>>,
+}
+
+/// A link of the chain: the record's field's name and how its values compare.
+#[derive(Clone, Debug)]
+struct Link {
+    name: String,
+    numeric: bool,
+    fold: bool,
+}
+
 /// A field's list from another layer, made once.
 #[derive(Clone, Debug)]
 pub(crate) struct List {
-    /// Each value: its code, its label and its matched fields' values.
-    pub rows: Vec<(String, String, Vec<Option<String>>)>,
-    /// The record's fields' names the chain reads, in the matches' order.
-    pub record: Vec<String>,
+    pub rows: Vec<Row>,
+    chain: Vec<Link>,
+    /// The codes more than one object holds, with how many hold each.
+    duplicates: HashMap<String, usize>,
+    pub policy: LookupDuplicates,
+    /// The page's length.
+    pub limit: Option<usize>,
+    /// The columns' labels.
+    columns: Vec<String>,
+    /// The record's fields' names the copies write, in the copies' order, and the stamp's.
+    copy_to: Vec<String>,
+    stamp: Option<String>,
+    /// The list layer's name, for the stamp.
+    layer: String,
+    /// The relation and the tolerance in metres.
+    spatial: Option<(LookupRelation, f64)>,
 }
 
 impl List {
     /// The values the record is offered.
-    pub(crate) fn offered<'a>(
-        &'a self,
-        attrs: &'a Attrs,
-    ) -> Vec<&'a (String, String, Vec<Option<String>>)> {
+    pub(crate) fn offered<'a>(&'a self, attrs: &'a Attrs, object: &Object) -> Vec<&'a Row> {
         let wanted: Vec<Option<&str>> = self
-            .record
+            .chain
             .iter()
-            .map(|name| {
+            .map(|l| {
                 attrs
-                    .get(name)
+                    .get(&l.name)
                     .map(|v| js_trim(v))
                     .filter(|v| !v.is_empty())
             })
@@ -54,37 +98,228 @@ impl List {
         if wanted.iter().any(Option::is_none) {
             return Vec::new();
         }
-        self.rows
-            .iter()
-            .filter(|(_, _, keys)| keys.iter().zip(&wanted).all(|(k, w)| k.as_deref() == *w))
+        let chained = self.rows.iter().filter(|r| {
+            r.keys
+                .iter()
+                .zip(&wanted)
+                .zip(&self.chain)
+                .all(|((k, w), link)| k.as_deref().is_some_and(|k| same(link, k, w.unwrap_or(""))))
+        });
+        let Some((relation, tolerance)) = self.spatial else {
+            return chained.collect();
+        };
+        let Some(record) = object.shape.as_deref().and_then(spatial_query::geometry_of) else {
+            return Vec::new();
+        };
+        if relation == LookupRelation::Nearest {
+            let mut best: Option<(f64, &Row)> = None;
+            for r in chained {
+                let Some(place) = &r.place else { continue };
+                let d = spatial_query::distance(place, &record);
+                if (tolerance > 0.0 && d > tolerance) || best.is_some_and(|(b, _)| d >= b) {
+                    continue;
+                }
+                best = Some((d, r));
+            }
+            return best.map(|(_, r)| r).into_iter().collect();
+        }
+        chained
+            .filter(|r| {
+                r.place
+                    .as_deref()
+                    .is_some_and(|place| stands(relation, tolerance, place, &record))
+            })
             .collect()
     }
 
-    /// The record's offered values as choices.
-    pub(crate) fn choices(&self, attrs: &Attrs) -> Vec<FieldChoice> {
-        self.offered(attrs)
+    /// The record's offered values as choices, a value's columns its description.
+    pub(crate) fn choices(&self, attrs: &Attrs, object: &Object) -> Vec<FieldChoice> {
+        self.offered(attrs, object)
             .into_iter()
-            .map(|(code, label, _)| FieldChoice {
-                code: code.clone(),
-                label: label.clone(),
+            .map(|r| FieldChoice {
+                code: r.code.clone(),
+                label: r.label.clone(),
                 retired: false,
-                description: None,
+                description: described(&r.columns),
                 from: None,
                 until: None,
             })
             .collect()
     }
 
+    /// The first object holding `code`.
+    pub(crate) fn row(&self, code: &str) -> Option<&Row> {
+        self.rows.iter().find(|r| r.code == code)
+    }
+
+    /// The chosen object's columns, each with its label (docs/adr/0439 §2); none without columns or
+    /// a value in the list.
+    pub(crate) fn preview(&self, code: &str) -> Option<Vec<FormPreviewValue>> {
+        if self.columns.is_empty() {
+            return None;
+        }
+        let row = self.row(code)?;
+        Some(
+            self.columns
+                .iter()
+                .zip(&row.columns)
+                .map(|(label, value)| FormPreviewValue {
+                    label: label.clone(),
+                    value: value.clone(),
+                })
+                .collect(),
+        )
+    }
+
+    /// How many objects hold `code`, when more than one does.
+    pub(crate) fn duplicated(&self, code: &str) -> Option<usize> {
+        self.duplicates.get(code).copied()
+    }
+
     /// The code a typed text names: the text, or the code of the one value labelled so.
     pub(crate) fn code_of<'a>(&'a self, text: &'a str) -> &'a str {
         let t = js_trim(text);
-        if self.rows.iter().any(|(code, _, _)| code == t) {
+        if self.rows.iter().any(|r| r.code == t) {
             return t;
         }
         self.rows
             .iter()
-            .find(|(_, label, _)| label == t)
-            .map_or(t, |(code, _, _)| code.as_str())
+            .find(|r| r.label == t)
+            .map_or(t, |r| r.code.as_str())
+    }
+
+    /// The record's fields' names the list copies into or stamps.
+    pub(crate) fn targets(&self) -> impl Iterator<Item = &str> {
+        self.copy_to.iter().chain(&self.stamp).map(String::as_str)
+    }
+
+    /// Whether the list copies or stamps.
+    pub(crate) fn copies(&self) -> bool {
+        !self.copy_to.is_empty() || self.stamp.is_some()
+    }
+
+    /// The record `attrs` with the chosen object's copied fields and the stamp written, the field
+    /// named `field` holding `code` (docs/adr/0439 §3); a stamp that already names the code and the
+    /// copied values is kept (its day with it).
+    pub(crate) fn copy_into(&self, attrs: &mut Attrs, code: &str, today: Option<&str>) {
+        let Some(row) = self.row(code) else { return };
+        for (to, value) in self.copy_to.iter().zip(&row.copies) {
+            match value {
+                Some(v) => {
+                    attrs.insert(to.clone(), v.clone());
+                }
+                None => {
+                    attrs.remove(to);
+                }
+            }
+        }
+        if let Some(stamp) = &self.stamp {
+            let print = fingerprint(&row.copies);
+            let kept = attrs
+                .get(stamp)
+                .is_some_and(|s| stamp_names(s, code, &print));
+            if !kept {
+                let mut text = format!("{} · {code} · #{print}", self.layer);
+                if let Some(day) = today {
+                    text.push_str(" · ");
+                    text.push_str(day);
+                }
+                attrs.insert(stamp.clone(), text);
+            }
+        }
+    }
+
+    /// Whether the list stamps and the record's stamp does not name `code`.
+    pub(crate) fn stale_stamp(&self, attrs: &Attrs, code: &str) -> bool {
+        self.stamp.as_ref().is_some_and(|s| {
+            attrs.get(s).is_none_or(|text| {
+                let mut parts = text.split(" · ");
+                let _ = parts.next();
+                parts.next() != Some(code)
+            })
+        })
+    }
+
+    /// Whether the record's stamp names `code` with copied values the source no longer has: the
+    /// source changed after the copy (docs/adr/0439 §3).
+    pub(crate) fn stale(&self, attrs: &Attrs, code: &str) -> bool {
+        let (Some(stamp), Some(row)) = (&self.stamp, self.row(code)) else {
+            return false;
+        };
+        let Some(text) = attrs.get(stamp) else {
+            return false;
+        };
+        let mut parts = text.split(" · ");
+        let (_, held, print) = (parts.next(), parts.next(), parts.next());
+        held == Some(code)
+            && print.is_some_and(|p| p.strip_prefix('#') != Some(fingerprint(&row.copies).as_str()))
+    }
+}
+
+/// Whether the stamp `text` names `code` and the fingerprint `print`.
+fn stamp_names(text: &str, code: &str, print: &str) -> bool {
+    let mut parts = text.split(" · ");
+    let _ = parts.next();
+    parts.next() == Some(code) && parts.next().and_then(|p| p.strip_prefix('#')) == Some(print)
+}
+
+/// The copied values' fingerprint: FNV-1a (32 bits) of their texts, an empty one as nothing, each
+/// ended by U+001F, in eight lower-case hexadecimal digits.
+pub(crate) fn fingerprint(values: &[Option<String>]) -> String {
+    let mut h: u32 = 0x811c_9dc5;
+    for v in values {
+        for b in v.as_deref().unwrap_or("").bytes().chain([0x1f]) {
+            h ^= u32::from(b);
+            h = h.wrapping_mul(0x0100_0193);
+        }
+    }
+    format!("{h:08x}")
+}
+
+/// A value's columns as one description: the filled ones joined by “ · ”; none when all are empty.
+fn described(columns: &[String]) -> Option<String> {
+    let shown: Vec<&str> = columns
+        .iter()
+        .map(String::as_str)
+        .filter(|c| !c.is_empty())
+        .collect();
+    (!shown.is_empty()).then(|| shown.join(" · "))
+}
+
+/// Whether a list's value `k` equals the record's `w` by the link's rule.
+fn same(link: &Link, k: &str, w: &str) -> bool {
+    if link.numeric {
+        return compare_decimals(k, w) == Some(Ordering::Equal);
+    }
+    if link.fold {
+        return folded(k) == folded(w);
+    }
+    k == w
+}
+
+/// A text folded: trimmed, Turkish letters folded, lower case.
+fn folded(text: &str) -> String {
+    fold_turkish(js_trim(text)).to_lowercase()
+}
+
+/// Whether the list's object `place` stands in `relation` to the record's geometry.
+fn stands(relation: LookupRelation, tolerance: f64, place: &Geometry, record: &Geometry) -> bool {
+    let (a, b) = (&place.bounds, &record.bounds);
+    let apart = a.min_x - tolerance > b.max_x
+        || b.min_x - tolerance > a.max_x
+        || a.min_y - tolerance > b.max_y
+        || b.min_y - tolerance > a.max_y;
+    if apart {
+        return false;
+    }
+    match relation {
+        LookupRelation::Contains => spatial_query::contains(place, record),
+        LookupRelation::Within => spatial_query::contains(record, place),
+        LookupRelation::Intersects if tolerance > 0.0 => {
+            spatial_query::distance(place, record) <= tolerance
+        }
+        LookupRelation::Intersects => spatial_query::intersects(place, record),
+        LookupRelation::Nearest => true,
     }
 }
 
@@ -96,6 +331,11 @@ fn name_of<'a>(fields: &'a [LayerField], key: &str) -> Option<&'a str> {
         .map(|f| f.name.as_str())
 }
 
+/// A layer field by its key.
+fn field_of<'a>(fields: &'a [LayerField], key: &str) -> Option<&'a LayerField> {
+    fields.iter().find(|f| f.key() == key)
+}
+
 /// The value of an object's field (`$uid`: its persistent id), trimmed; none when empty.
 fn value<'a>(uid: &'a str, attrs: &'a Attrs, name: Option<&str>, by_uid: bool) -> Option<&'a str> {
     let v = if by_uid {
@@ -105,6 +345,37 @@ fn value<'a>(uid: &'a str, attrs: &'a Attrs, name: Option<&str>, by_uid: bool) -
     };
     let v = js_trim(v);
     (!v.is_empty()).then_some(v)
+}
+
+/// Whether a field's kind is a number's.
+fn numeric(kind: LayerFieldKind) -> bool {
+    matches!(kind, LayerFieldKind::Integer | LayerFieldKind::Decimal)
+}
+
+/// Two sort values in the list's order: numbers by value, dates as written, text naturally; an empty
+/// one after a filled one whichever the direction.
+fn sort_order(
+    numbers: bool,
+    plain: bool,
+    descending: bool,
+    a: Option<&str>,
+    b: Option<&str>,
+) -> Ordering {
+    match (a, b) {
+        (None, None) => Ordering::Equal,
+        (None, Some(_)) => Ordering::Greater,
+        (Some(_), None) => Ordering::Less,
+        (Some(a), Some(b)) => {
+            let o = if numbers {
+                compare_decimals(a, b).unwrap_or_else(|| a.cmp(b))
+            } else if plain {
+                a.cmp(b)
+            } else {
+                kentos_geometry_core::text::natural::natural_cmp(a, b)
+            };
+            if descending { o.reverse() } else { o }
+        }
+    }
 }
 
 /// The list of `lookup` over the record's layer `fields` (the preflight said it holds); none when
@@ -128,18 +399,55 @@ pub(crate) fn list_of(
         .iter()
         .map(|m| name_of(&other.fields, &m.field))
         .collect();
+    // A column or a copy by key: `$uid` is the object's id, a field its value (shown as people read it).
+    let columns: Vec<(bool, Option<&LayerField>)> = lookup
+        .columns
+        .iter()
+        .map(|c| (c == LOOKUP_UID, field_of(&other.fields, c)))
+        .collect();
+    let copies: Vec<(bool, Option<&str>)> = lookup
+        .copy
+        .iter()
+        .map(|c| (c.from == LOOKUP_UID, name_of(&other.fields, &c.from)))
+        .collect();
+    let sort = lookup.sort.as_ref().map(|s| {
+        let f = field_of(&other.fields, &s.field);
+        (
+            s.field == LOOKUP_UID,
+            f.map(|f| f.name.as_str()),
+            f.is_some_and(|f| numeric(f.kind)),
+            f.is_some_and(|f| f.kind.is_temporal()),
+            s.descending,
+        )
+    });
     let filter = lookup
         .filter
         .as_deref()
         .and_then(|src| compile_with(src, &schema_in(&other.fields, variables, unit)).ok());
+    // A world without the layer's shapes (the server's) does not narrow by geometry.
+    let spatial = lookup
+        .spatial
+        .as_ref()
+        .filter(|_| other.shapes.len() == other.rows.len())
+        .map(|s| {
+            (
+                s.relation,
+                s.tolerance.unwrap_or(0.0).max(0.0) / unit.factor(),
+            )
+        });
     let none = Object::default();
     let mut seen = HashSet::new();
-    let mut rows = Vec::new();
-    for (uid, attrs) in &other.rows {
+    let mut counts: HashMap<String, usize> = HashMap::new();
+    let mut rows: Vec<(Row, Option<String>)> = Vec::new();
+    for (i, (uid, attrs)) in other.rows.iter().enumerate() {
         let Some(code) = value(uid, attrs, key, by_uid) else {
             continue;
         };
-        if filter.as_ref().is_some_and(|e| !holds(e, attrs, &none)) || !seen.insert(code) {
+        if filter.as_ref().is_some_and(|e| !holds(e, attrs, &none)) {
+            continue;
+        }
+        *counts.entry(code.to_owned()).or_default() += 1;
+        if !seen.insert(code) {
             continue;
         }
         let shown = match label {
@@ -150,18 +458,92 @@ pub(crate) fn list_of(
             .iter()
             .map(|name| value(uid, attrs, *name, false).map(str::to_owned))
             .collect();
-        rows.push((code.to_owned(), shown.to_owned(), keys));
-    }
-    rows.sort_by(|a, b| {
-        kentos_geometry_core::text::natural::natural_cmp(&a.1, &b.1).then_with(|| a.0.cmp(&b.0))
-    });
-    Some(List {
-        rows,
-        record: lookup
-            .matches
+        let columns = columns
             .iter()
-            .filter_map(|m| name_of(fields, &m.record).map(str::to_owned))
+            .map(|(by, f)| match (by, f) {
+                (true, _) => uid.clone(),
+                (false, Some(f)) => value(uid, attrs, Some(&f.name), false)
+                    .map_or_else(String::new, |v| display_value(f, v)),
+                (false, None) => String::new(),
+            })
+            .collect();
+        let copied = copies
+            .iter()
+            .map(|(by, name)| value(uid, attrs, *name, *by).map(str::to_owned))
+            .collect();
+        let place = spatial.and_then(|_| {
+            other
+                .shapes
+                .get(i)
+                .and_then(Option::as_deref)
+                .and_then(spatial_query::geometry_of)
+                .map(Arc::new)
+        });
+        let by = sort
+            .and_then(|(s_uid, s_name, ..)| value(uid, attrs, s_name, s_uid).map(str::to_owned));
+        rows.push((
+            Row {
+                code: code.to_owned(),
+                label: shown.to_owned(),
+                keys,
+                columns,
+                copies: copied,
+                place,
+            },
+            by,
+        ));
+    }
+    let natural = |a: &Row, b: &Row| {
+        kentos_geometry_core::text::natural::natural_cmp(&a.label, &b.label)
+            .then_with(|| a.code.cmp(&b.code))
+    };
+    match sort {
+        Some((_, _, numbers, plain, descending)) => rows.sort_by(|(ra, a), (rb, b)| {
+            sort_order(numbers, plain, descending, a.as_deref(), b.as_deref())
+                .then_with(|| natural(ra, rb))
+        }),
+        None => rows.sort_by(|(a, _), (b, _)| natural(a, b)),
+    }
+    let chain = lookup
+        .matches
+        .iter()
+        .filter_map(|m| {
+            let ours = field_of(fields, &m.record)?;
+            let theirs = field_of(&other.fields, &m.field);
+            Some(Link {
+                name: ours.name.clone(),
+                numeric: numeric(ours.kind) && theirs.is_some_and(|t| numeric(t.kind)),
+                fold: m.fold,
+            })
+        })
+        .collect();
+    counts.retain(|_, n| *n > 1);
+    Some(List {
+        rows: rows.into_iter().map(|(r, _)| r).collect(),
+        chain,
+        duplicates: counts,
+        policy: lookup.duplicates,
+        limit: lookup.limit.map(|n| n as usize),
+        columns: lookup
+            .columns
+            .iter()
+            .map(|c| {
+                field_of(&other.fields, c)
+                    .map_or_else(|| "Kimlik".to_owned(), |f| f.label().to_owned())
+            })
             .collect(),
+        copy_to: lookup
+            .copy
+            .iter()
+            .filter_map(|c| name_of(fields, &c.to).map(str::to_owned))
+            .collect(),
+        stamp: lookup
+            .stamp
+            .as_deref()
+            .and_then(|s| name_of(fields, s))
+            .map(str::to_owned),
+        layer: other.name.clone(),
+        spatial,
     })
 }
 
@@ -257,6 +639,7 @@ mod tests {
                     row("u3", "B-3"),
                     row("u1", "B-9"),
                 ],
+                shapes: Vec::new(),
             },
         );
         w
@@ -270,8 +653,7 @@ mod tests {
             layer: "bina".into(),
             key: LOOKUP_UID.into(),
             label: Some("Kod".into()),
-            matches: Vec::new(),
-            filter: None,
+            ..FormLookup::default()
         };
         let labels = labels_of(&lookup, &world());
         assert_eq!(labels.get("u1").map(String::as_str), Some("B-1"));

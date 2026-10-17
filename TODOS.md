@@ -194,6 +194,12 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AV` kaynaklar, başvurular ve göç (ADR 0439, 17 Ekim): web'de gerekenler: `FormLookup`'un `sort`, `columns`,
+  `limit`, `copy`, `stamp`, `duplicates`, `spatial`'ı, `LookupMatch.fold`, `FormField.minSearch`, durumun `more` ve `preview`'u,
+  `cad.domains.export`, `cad.domains.edit`'in `import`'u, `cad.fields.migrate` (TS türleri üretildi); form çekirdeğinin web
+  bağlayıcısında listenin yeni kuralları ve kopya, formda sütunlar, önizleme, sayfalı ve gecikmeli arama, Değer listeleri'nde içe
+  ve dışa aktarma, Alanlar'da Değerleri biçime çevir; işlem araçlarının web tarafında Anahtarla birleştir ve Veri aktar'ın
+  Yinelenen anahtar parametresi (`processing/builtin/joinByField.ts`, `transfer.ts`, `joinSource.ts`).
 - [ ] `FORM-AU` kayıt kuralları ve alan ekleri (ADR 0438, 17 Ekim): web'de gerekenler: `rules`, `unique`, `minExclusive`,
   `maxExclusive`, `unit`, değerin `description`, `from`, `until`, `FormCheck.on`, `FormsSubmit.release` ve `opened` (TS türleri
   üretildi); web'in yazma yollarında kurallar ve tekil alan, Kayıt kuralları penceresi, Alanlar'da ekler, formda birim, açıklama,
@@ -1531,6 +1537,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AV` Kaynaklar, başvurular ve göç: başka katmandan listenin sırası, sütunları, sayfası, kopyası ve kaynak damgası,
+  türüyle ve katlanarak karşılaştırma, yinelenen anahtar kuralı (işlem araçlarında da), mekânsal liste, sayfalı ve gecikmeli arama,
+  değer listelerinin paketi, Değerleri biçime çevir. — **17 Ekim, [ADR 0439](docs/adr/0439-sources-references-and-migration.md).**
 - [x] `FORM-AU` Kayıt kuralları (her yazmada), kontrol zamanı, ekranın yayını ve kaydı, tekil alan, hariç uç, birim, değerin
   açıklaması ve günleri. — **17 Ekim, [ADR 0438](docs/adr/0438-record-rules-and-field-extras.md).**
 - [x] `FORM-AT` Tasarımcı ekleri: yansıma, ağaç biçimli seçim, adım adım form, öğeyi kopyala ve yapıştır (yeni kimlikler, alanlar

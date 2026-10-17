@@ -1,0 +1,2400 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.domains.export",
+ "commandVersion": 1,
+ "title": "Değer listelerini dışa aktar",
+ "note": "ADR 0439 §7: projenin değer listelerinin paketi. Written by scripts/fixtures/sources_cases.py without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Değer listeleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "domains": [
+    {
+     "id": "malzeme",
+     "name": "Yapı malzemesi",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ah",
+       "label": "Ahşap"
+      },
+      {
+       "code": "bt",
+       "label": "Betonarme"
+      },
+      {
+       "code": "ym",
+       "label": "Yığma"
+      }
+     ]
+    },
+    {
+     "id": "kat",
+     "name": "Kat sayısı",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "id": "genislik",
+     "name": "Yol genişliği",
+     "kind": "decimal",
+     "values": [
+      {
+       "code": "2.5",
+       "label": "Dar"
+      },
+      {
+       "code": "3.5",
+       "label": "Geniş"
+      }
+     ]
+    },
+    {
+     "id": "egim",
+     "name": "Eğim",
+     "kind": "decimal",
+     "min": "0",
+     "max": "90",
+     "maxExclusive": true,
+     "unit": "°"
+    },
+    {
+     "id": "durum",
+     "name": "Durum",
+     "description": "Yapının kullanım durumu.",
+     "kind": "text",
+     "values": [
+      {
+       "code": "k",
+       "label": "Kullanılıyor"
+      },
+      {
+       "code": "b",
+       "label": "Boş",
+       "description": "İçinde kimse yok."
+      },
+      {
+       "code": "y",
+       "label": "Yıkık",
+       "retired": true
+      },
+      {
+       "code": "r",
+       "label": "Restorasyon",
+       "from": "2026-01-01"
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ]
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "depo",
+    "name": "Depo",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ],
+      "domain": "malzeme"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Eski yapılar",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "eski",
+      "name": "Eski",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Genişlik",
+      "kind": "decimal",
+      "values": [
+       {
+        "code": "2.5",
+        "label": "Dar"
+       },
+       {
+        "code": "3.5",
+        "label": "Geniş"
+       }
+      ],
+      "domain": "genislik",
+      "scale": 1
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah",
+     "Kat": "3",
+     "Etiket": "a; b"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "bt",
+     "Kat": "45"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "depo",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ym"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "eski",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "yol",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Genişlik": "2.5"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bütün listeler projenin sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        },
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tek liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "kat"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "verilen sırayla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "durum",
+       "malzeme"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        },
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı kimlik bir kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "kat",
+       "kat",
+       "malzeme",
+       "kat"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hariç uçlu ve birimli aralık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "egim"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklamalı, kullanımdan kalkmış ve günlü değerleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "durum"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık kodlu liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "genislik"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“yok” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci kimlik olmayan liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "kat",
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“yok” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/1"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "üçüncü kimlik olmayan liste, öncekiler geçerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "kat",
+       "malzeme",
+       "eksik"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“eksik” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/2"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "büyük küçük harf ayrıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "Kat"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“Kat” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı paketi verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "ids": [
+       "malzeme"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "planda olmayan liste",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "ids": [
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“yok” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "ids": [
+       "egim",
+       "durum"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulamada olmayan liste",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "ids": [
+       "egim",
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“yok” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/1"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün listelerin planı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        },
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listesiz proje boş paket verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Değer listeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ]
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Etiket",
+        "kind": "text",
+        "multiple": true,
+        "values": [
+         {
+          "code": "a",
+          "label": "A"
+         },
+         {
+          "code": "b",
+          "label": "B"
+         }
+        ]
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "depo",
+      "name": "Depo",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Eski yapılar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "eski",
+        "name": "Eski",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Genişlik",
+        "kind": "decimal",
+        "values": [
+         {
+          "code": "2.5",
+          "label": "Dar"
+         },
+         {
+          "code": "3.5",
+          "label": "Geniş"
+         }
+        ],
+        "domain": "genislik",
+        "scale": 1
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah",
+       "Kat": "3",
+       "Etiket": "a; b"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "bt",
+       "Kat": "45"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "depo",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ym"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "eski",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yol",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Genişlik": "2.5"
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "listesiz projede kimlik verilirse ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "kat"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“kat” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Değer listeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ]
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Etiket",
+        "kind": "text",
+        "multiple": true,
+        "values": [
+         {
+          "code": "a",
+          "label": "A"
+         },
+         {
+          "code": "b",
+          "label": "B"
+         }
+        ]
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "depo",
+      "name": "Depo",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Eski yapılar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "eski",
+        "name": "Eski",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Genişlik",
+        "kind": "decimal",
+        "values": [
+         {
+          "code": "2.5",
+          "label": "Dar"
+         },
+         {
+          "code": "3.5",
+          "label": "Geniş"
+         }
+        ],
+        "domain": "genislik",
+        "scale": 1
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah",
+       "Kat": "3",
+       "Etiket": "a; b"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "bt",
+       "Kat": "45"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "depo",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ym"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "eski",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yol",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Genişlik": "2.5"
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "tek listeli proje",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Değer listeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "kat",
+       "name": "Kat sayısı",
+       "kind": "integer",
+       "min": "1",
+       "max": "40"
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ]
+       },
+       {
+        "id": "kat-sayisi",
+        "name": "Kat",
+        "kind": "integer",
+        "min": "1",
+        "max": "40"
+       },
+       {
+        "name": "Etiket",
+        "kind": "text",
+        "multiple": true,
+        "values": [
+         {
+          "code": "a",
+          "label": "A"
+         },
+         {
+          "code": "b",
+          "label": "B"
+         }
+        ]
+       },
+       {
+        "name": "Not",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "depo",
+      "name": "Depo",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Eski yapılar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "eski",
+        "name": "Eski",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "Malzeme",
+          "kind": "text",
+          "values": [
+           {
+            "code": "ah",
+            "label": "Ahşap"
+           },
+           {
+            "code": "bt",
+            "label": "Betonarme"
+           },
+           {
+            "code": "ym",
+            "label": "Yığma"
+           }
+          ],
+          "domain": "malzeme"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Genişlik",
+        "kind": "decimal",
+        "values": [
+         {
+          "code": "2.5",
+          "label": "Dar"
+         },
+         {
+          "code": "3.5",
+          "label": "Geniş"
+         }
+        ],
+        "domain": "genislik",
+        "scale": 1
+       }
+      ]
+     }
+    ],
+    "activeLayer": "bina",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah",
+       "Kat": "3",
+       "Etiket": "a; b"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "bina",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "bt",
+       "Kat": "45"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "depo",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ym"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "eski",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Malzeme": "ah"
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "yol",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ],
+      "attrs": {
+       "Genişlik": "2.5"
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "bütün kimlikler ters sırayla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       "durum",
+       "egim",
+       "genislik",
+       "kat",
+       "malzeme"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "format": "kentos.domains",
+       "version": 1,
+       "domains": [
+        {
+         "id": "durum",
+         "name": "Durum",
+         "description": "Yapının kullanım durumu.",
+         "kind": "text",
+         "values": [
+          {
+           "code": "k",
+           "label": "Kullanılıyor"
+          },
+          {
+           "code": "b",
+           "label": "Boş",
+           "description": "İçinde kimse yok."
+          },
+          {
+           "code": "y",
+           "label": "Yıkık",
+           "retired": true
+          },
+          {
+           "code": "r",
+           "label": "Restorasyon",
+           "from": "2026-01-01"
+          }
+         ]
+        },
+        {
+         "id": "egim",
+         "name": "Eğim",
+         "kind": "decimal",
+         "min": "0",
+         "max": "90",
+         "maxExclusive": true,
+         "unit": "°"
+        },
+        {
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "kind": "decimal",
+         "values": [
+          {
+           "code": "2.5",
+           "label": "Dar"
+          },
+          {
+           "code": "3.5",
+           "label": "Geniş"
+          }
+         ]
+        },
+        {
+         "id": "kat",
+         "name": "Kat sayısı",
+         "kind": "integer",
+         "min": "1",
+         "max": "40"
+        },
+        {
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "kind": "text",
+         "values": [
+          {
+           "code": "ah",
+           "label": "Ahşap"
+          },
+          {
+           "code": "bt",
+           "label": "Betonarme"
+          },
+          {
+           "code": "ym",
+           "label": "Yığma"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başta boşluklu kimlik başka kimliktir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ids": [
+       " kat"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_domain",
+       "message": "“ kat” kimlikli bir değer listesi yok. Değer listeleri penceresinden var olan bir listeyi seçin.",
+       "path": "ids/0"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

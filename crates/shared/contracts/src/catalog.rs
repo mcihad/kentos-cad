@@ -4313,6 +4313,62 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // The value lists as a package (docs/adr/0439 §7), held together by fixtures/commands/v1/cad.domains.export.json.
+        CommandDescriptor {
+            id: crate::CAD_DOMAINS_EXPORT.into(),
+            version: crate::CAD_DOMAINS_EXPORT_VERSION,
+            title: "Değer listelerini dışa aktar".into(),
+            summary: "Projenin değer listelerini paket olarak verir (kentos.domains, .kliste), hiçbir şey yazmaz: verilen kimliklerin \
+                      listeleri verildiği sırayla, kimlik verilmezse bütün listeler projenin sırasıyla. Kayıt, bağ ya da yetki taşımaz; \
+                      cad.domains.edit'in import işlemi başka bir projeye alır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DomainsExport>(),
+            output: schema::<crate::DomainsPackage>(),
+            plan: Some(schema::<crate::DomainsPackage>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yapı malzemesi listesini paket olarak al".into(),
+                input: json!({ "ids": ["yapi-malzemesi"] }),
+                output: None,
+            }],
+        },
+        // A layer's values in their fields' canonical texts (docs/adr/0439 §8), held together by
+        // fixtures/commands/v1/cad.fields.migrate.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_MIGRATE.into(),
+            version: crate::CAD_FIELDS_MIGRATE_VERSION,
+            title: "Değerleri biçime çevir".into(),
+            summary: "Katmanın alanları tiplenmeden önce yazılmış değerlerini alanlarının biçimine çevirir: 1,5 1.5, 17.10.2026 \
+                      2026-10-17, evet true, listedeki değerin etiketi kodu olur. Kayıpsızdır: alana uymayan değer yazıldığı gibi kalır \
+                      ve sayılır (values_unfit), boş değer boş, hiçbir alanın adlandırmadığı öznitelik olduğu gibi kalır. Alan verilmezse \
+                      katmanın listesiz metin olmayan bütün alanları. Tek geri alma adımı “Değerleri biçime çevir”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FieldsMigrate>(),
+            output: schema::<crate::FieldsMigrated>(),
+            plan: Some(schema::<crate::FieldsMigrated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanının değerlerini biçime çevir".into(),
+                input: json!({ "layer": "parsel" }),
+                output: None,
+            }],
+        },
         // A form package out and in (docs/adr/0435), held together by fixtures/commands/v1/cad.forms.export.json and
         // cad.forms.import.json.
         CommandDescriptor {
@@ -5637,6 +5693,12 @@ mod tests {
                     crate::CAD_DOMAINS_EDIT => {
                         serde_json::from_value::<crate::DomainsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DOMAINS_EXPORT => {
+                        serde_json::from_value::<crate::DomainsExport>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FIELDS_MIGRATE => {
+                        serde_json::from_value::<crate::FieldsMigrate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_EXPORT => {
                         serde_json::from_value::<crate::FormsExport>(e.input.clone()).map(|_| ())
                     }
@@ -5984,6 +6046,14 @@ mod tests {
                         }
                         crate::CAD_DOMAINS_EDIT => {
                             serde_json::from_value::<crate::DomainsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DOMAINS_EXPORT => {
+                            serde_json::from_value::<crate::DomainsPackage>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FIELDS_MIGRATE => {
+                            serde_json::from_value::<crate::FieldsMigrated>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_EXPORT => {

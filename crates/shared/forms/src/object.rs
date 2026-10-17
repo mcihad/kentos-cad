@@ -67,5 +67,6 @@ pub fn object_of(e: &Entity, layer: &str, id: f64) -> Object {
         vertices: corners,
         uid: None,
         attachments: None,
+        shape: shape.map(std::sync::Arc::new),
     }
 }

@@ -11,4 +11,9 @@ field: string,
 /**
  * The record's field's key.
  */
-record: string, };
+record: string, 
+/**
+ * Compared without regard to case, Turkish letters folded (`İ` and `i`, `I` and `ı`), ends
+ * trimmed (docs/adr/0439 §4); written only as `true`. Numbers are compared by their values.
+ */
+fold?: boolean, };

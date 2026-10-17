@@ -1318,6 +1318,411 @@
      }
     ]
    }
+  },
+  {
+   "id": "deed-duplicates-skip",
+   "title": "Tapu listesi, Yinelenen anahtar Aktarma: yinelenen anahtarın hedefi eşleşmez, satırları kullanılmaz",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false,
+    "duplicates": "skip"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 nesne güncellendi, 0 eklendi; 3 hedefin eşi yok, 4 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı."
+     },
+     {
+      "level": "warn",
+      "text": "3 değer alanına uymadığı için yazılmadı; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 2,
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Malik": "Fatma Ak",
+       "Mahalle": "Merkez",
+       "Hisse": "1/2",
+       "Alan": "410.5",
+       "Tescil": "2020-01-15",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Hisse": "1/2",
+       "Alan": "400.00",
+       "Mahalle": "Yeni",
+       "Durum": "Tescilli"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Mahalle": "Merkez",
+       "Malik": "Can Er",
+       "Hisse": "1",
+       "Durum": "Tescilli"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "added": 0,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Eşleşmedi",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ],
+       [
+        "2",
+        "Güncellendi",
+        "Malik: (boş) → Fatma Ak; Hisse: (boş) → 1/2; Alan: (boş) → 410.5; Tescil: (boş) → 2020-01-15; Durum: (boş) → Tescilli",
+        ""
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Malik: Ayşe Kaya → (boş); Durum: (boş) → Tescilli",
+        "“Alan” alanı ondalık sayı ister; “12,5x” verildi. Rakamlarla, ondalığı nokta ya da virgülle yazın."
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er; Hisse: (boş) → 1; Durum: (boş) → Tescilli",
+        "“Alan” alanı en çok 2 ondalık basamak alır; “399,999” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın. “Tescil” alanı tarih ister; “31.02.2020” verildi. GG.AA.YYYY ya da YYYY-AA-GG yazın."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "1",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ],
+       [
+        "9",
+        "Kullanılmadı",
+        "",
+        ""
+       ],
+       [
+        "1",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ],
+       [
+        "",
+        "Kullanılmadı",
+        "",
+        "Anahtarı boş."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "deed-duplicates-stop",
+   "title": "Tapu listesi, Yinelenen anahtar Durdur: çalışmaz, ilk yinelenen anahtarı söyler",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "file",
+    "file": "tapu.csv",
+    "sourceKey": "PARSEL",
+    "map": [
+     {
+      "target": "Malik",
+      "source": "MALIK_ADI",
+      "default": ""
+     },
+     {
+      "target": "Hisse",
+      "source": "HISSE",
+      "default": ""
+     },
+     {
+      "target": "Alan",
+      "source": "YUZOLCUM",
+      "default": ""
+     },
+     {
+      "target": "Tescil",
+      "source": "TESCIL_TARIHI",
+      "default": ""
+     },
+     {
+      "target": "Durum",
+      "source": "",
+      "default": "Tescilli"
+     }
+    ],
+    "existing": "overwrite",
+    "geometry": false,
+    "append": false,
+    "east": "",
+    "north": "",
+    "reportOnly": false,
+    "duplicates": "stop"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kaynakta 1 anahtar birden çok kez var (ilki “1”); yinelenen anahtar kuralını değiştirin ya da kaynağı düzeltin."
+   }
+  },
+  {
+   "id": "survey-duplicates-skip",
+   "title": "Ölçüm katmanı, Aktarma ve Eşleşmeyenleri ekle: yinelenen anahtarın satırları eklenmez",
+   "document": "transfer.kcad",
+   "run": {
+    "tool": "attributes.transfer"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "olcum"
+    },
+    "sourceKey": "",
+    "map": [],
+    "existing": "overwrite",
+    "geometry": true,
+    "append": true,
+    "east": "",
+    "north": "",
+    "reportOnly": false,
+    "duplicates": "skip"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne güncellendi, 1 eklendi; 4 hedefin eşi yok, 3 kaynak satırı kullanılmadı.",
+    "undo": "Veri aktar",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; bu anahtarlı hedeflere bir şey aktarılmadı."
+     },
+     {
+      "level": "warn",
+      "text": "1 kaynak satırı eklenemedi; nedenleri raporda."
+     }
+    ],
+    "updated": [
+     {
+      "id": 3,
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "101",
+       "Malik": "Ayşe Kaya",
+       "Hisse": "1/2",
+       "Alan": "400",
+       "Mahalle": "Yeni"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "101",
+       "Mahalle": "Merkez",
+       "Malik": "Can Er"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "attrs": {
+       "Parsel": "7",
+       "Ada": "102",
+       "Malik": "Zeynep Tan",
+       "Durum": "Beyanlı",
+       "Mahalle": "Merkez"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420050
+       },
+       {
+        "x": 487000,
+        "y": 4420050
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "added": 1,
+     "table": {
+      "columns": [
+       "Anahtar",
+       "Sonuç",
+       "Değişiklikler",
+       "Not"
+      ],
+      "rows": [
+       [
+        "1",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "2",
+        "Eşleşmedi",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ],
+       [
+        "3",
+        "Güncellendi",
+        "Alan: 400.00 → 400",
+        ""
+       ],
+       [
+        "4",
+        "Güncellendi",
+        "Malik: (boş) → Can Er",
+        "Geometrinin türü farklı; geometri güncellenmedi."
+       ],
+       [
+        "5",
+        "Eşleşmedi",
+        "",
+        ""
+       ],
+       [
+        "",
+        "Eşleşmedi",
+        "",
+        "Anahtarı boş."
+       ],
+       [
+        "2",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ],
+       [
+        "7",
+        "Eklendi",
+        "Parsel: 7; Ada: 102; Malik: Zeynep Tan; Durum: Beyanlı; Mahalle: Merkez",
+        ""
+       ],
+       [
+        "8",
+        "Eklenmedi",
+        "",
+        "“Ada” alanı zorunlu; boş bırakılamaz."
+       ],
+       [
+        "002",
+        "Kullanılmadı",
+        "",
+        "Anahtar kaynakta yineleniyor; aktarılmadı."
+       ]
+      ]
+     }
+    }
+   }
   }
  ]
 }
