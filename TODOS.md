@@ -1560,6 +1560,8 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-BC` Bir ajanın form işinin değerlendirilmesi: `kentos.forms_eval` (geçerlilik, kapsam, fark, verideki yönerge, gizli
+  değer ayrı ayrı), elle yazılmış görev ve cevap korpusu. — **17 Ekim, [ADR 0446](docs/adr/0446-forms-agent-eval.md).**
 - [x] `FORM-BB` Formu yayından kaldırma (kayıt yazılmaz, açık pencere yazılanı korur, kuralları uygulanan form kaldırılmaz) ve bağ
   tablosu (bağ satırları geometrisiz kayıt katmanı, iki ilişkiyle). — **17 Ekim,
   [ADR 0445](docs/adr/0445-withdraw-and-link-tables.md).**
