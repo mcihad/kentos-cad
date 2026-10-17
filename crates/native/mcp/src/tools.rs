@@ -275,7 +275,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                 "command": { "type": "string", "description": "Komutun kimliği (cad.entities.transform …)." },
                 "input": { "type": "object", "description": "Komutun girdisi, kataloğun şemasıyla." },
                 "requestId": request_id_arg(),
-                "expected": expected_arg()
+                "expected": expected_arg(),
+                "relaxConstraints": relax_arg()
             }),
             &["drawing", "command", "input"],
         ),
@@ -438,6 +439,13 @@ fn server_tool(c: &Value) -> Value {
     })
 }
 
+fn relax_arg() -> Value {
+    json!({
+        "type": "boolean",
+        "description": "Kısıtları gevşeterek yaz (ADR 0337): düzenlemeyi kısıtların çözümü izlemez, düzenlemenin bozduğu kısıtlar kaldırılır (constraints_relaxed). Verilmezse kısıtlı nesneyi değiştiren yazma kısıtları korur ya da hiçbir şey yazmaz (constraint_conflict)."
+    })
+}
+
 fn request_id_arg() -> Value {
     json!({
         "type": "string",
@@ -457,6 +465,7 @@ fn expected_arg() -> Value {
             "settings": { "type": "string" },
             "styles": { "type": "string" },
             "sheets": { "type": "string" },
+            "constraints": { "type": "string", "description": "Kısıtların ve parametrelerin damgası." },
             "plan": { "type": "string", "description": "op: plan'ın planId'si: yazma o plana eşit olmalı." }
         },
         "additionalProperties": false
@@ -480,6 +489,7 @@ fn command_tool(c: &Value) -> Value {
     });
     schema["properties"]["requestId"] = request_id_arg();
     schema["properties"]["expected"] = expected_arg();
+    schema["properties"]["relaxConstraints"] = relax_arg();
     match schema["required"].as_array_mut() {
         Some(required) => required.insert(0, json!("drawing")),
         None => schema["required"] = json!(["drawing"]),
@@ -1171,7 +1181,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
 fn envelope_of(command: &str, args: &Value) -> Value {
     let mut input = args.clone();
     if let Some(fields) = input.as_object_mut() {
-        for own in ["drawing", "op", "requestId", "expected"] {
+        for own in ["drawing", "op", "requestId", "expected", "relaxConstraints"] {
             fields.remove(own);
         }
     }
@@ -1180,7 +1190,7 @@ fn envelope_of(command: &str, args: &Value) -> Value {
         "op": text(args, "op").unwrap_or("execute"),
         "input": input,
     });
-    for own in ["requestId", "expected"] {
+    for own in ["requestId", "expected", "relaxConstraints"] {
         if let Some(v) = args.get(own) {
             envelope[own] = v.clone();
         }
@@ -1195,7 +1205,7 @@ fn job_envelope(args: &Value) -> Value {
         "op": "execute",
         "input": args.get("input").cloned().unwrap_or_else(|| json!({})),
     });
-    for own in ["requestId", "expected"] {
+    for own in ["requestId", "expected", "relaxConstraints"] {
         if let Some(v) = args.get(own) {
             envelope[own] = v.clone();
         }

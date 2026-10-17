@@ -215,6 +215,7 @@ fn bare(kind: CallKind, label: &str, base: u64, revision: u64) -> CallRecord {
         changed: Vec::new(),
         removed: Vec::new(),
         truncated: false,
+        relax_constraints: false,
         warnings: Vec::new(),
         parts: Vec::new(),
         effects: Vec::new(),

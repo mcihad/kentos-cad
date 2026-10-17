@@ -46,6 +46,8 @@ pub struct CallState {
     /// Whether the caller wants the summary and the plan's id.
     pub(crate) summary: bool,
     pub(crate) outcome: Option<Outcome>,
+    /// The call relaxes the constraints (docs/adr/0337 §1).
+    pub(crate) relax: bool,
 }
 
 impl CallState {
@@ -105,6 +107,7 @@ where
     let base = cx.doc.revision();
     let parts = (state.summary || state.plan.is_some()).then(|| PartStamps::of(cx.doc));
     let (store, job) = (cx.store, cx.job);
+    let relax = state.relax;
     let mut outcome: Option<Outcome> = None;
     let result = cx.doc.run_step(
         |doc| {
@@ -115,11 +118,24 @@ where
                 job,
             };
             match write(&mut inner, input) {
-                CommandResult::Completed { output, warnings } => Ok((output, warnings)),
+                CommandResult::Completed {
+                    output,
+                    mut warnings,
+                } => {
+                    // The constraints of the objects the write changed (docs/adr/0337).
+                    let stop = || job.is_some_and(crate::jobs::Progress::stopped);
+                    match crate::constraint_follow::follow(inner.doc, command, relax, &stop) {
+                        Ok(followed) => {
+                            warnings.extend(followed.warnings);
+                            Ok((output, warnings, followed.relaxed))
+                        }
+                        Err(stop) => Err(Box::new(stop.into())),
+                    }
+                }
                 other => Err(Box::new(other)),
             }
         },
-        |doc, report, (_, warnings)| {
+        |doc, report, (_, warnings, relaxed)| {
             if report.outermost {
                 let faults = doc.faults(report);
                 if !faults.is_empty() {
@@ -163,7 +179,7 @@ where
                     call: None,
                 });
             }
-            let row = row_of(
+            let mut row = row_of(
                 doc,
                 report,
                 command,
@@ -173,6 +189,7 @@ where
                 state.request.as_ref(),
                 base,
             );
+            row.relax_constraints = *relaxed;
             let request = state.request.as_ref().map(|(id, fingerprint)| RequestRecord {
                 request_id: id.clone(),
                 fingerprint: fingerprint.clone(),
@@ -186,7 +203,7 @@ where
         },
     );
     let answer = match result {
-        Ok(((output, mut warnings), report)) => {
+        Ok(((output, mut warnings, _), report)) => {
             // What the step did to the texts its hatches leave open (docs/adr/0332 §2).
             warnings.extend(crate::hatch_notes::notes(cx.doc, &report));
             if let Some(o) = &mut outcome {
@@ -294,6 +311,7 @@ fn row_of(
     let digest = kentos_contracts::encoding::sha256_hex(text.as_bytes())[..32].to_owned();
     let (created, changed, removed, truncated) = id_lists(report);
     CallRecord {
+        relax_constraints: false,
         seq: 0,
         kind: CallKind::Command,
         label: report.label.clone(),
@@ -921,16 +939,22 @@ pub fn preflight(
     let mut state = CallState {
         summary: true,
         plan: envelope.expected.as_ref().and_then(|e| e.plan.clone()),
+        relax: envelope.relax_constraints,
         ..CallState::default()
     };
     if let Some(id) = &envelope.request_id {
-        let fingerprint = id_of(&json!({
+        let mut called = json!({
             "command": envelope.command,
             "version": version,
             "op": envelope.op.name(),
             "input": input,
             "expected": envelope.expected.clone().unwrap_or_default(),
-        }));
+        });
+        // A relaxed call is another call (docs/adr/0337 §1); a kept one's print is as it was.
+        if envelope.relax_constraints {
+            called["relaxConstraints"] = json!(true);
+        }
+        let fingerprint = id_of(&called);
         if let Some(record) = doc.request(id) {
             if record.fingerprint != fingerprint {
                 return Err(Box::new(failed(
@@ -1070,6 +1094,26 @@ fn plan(
     match written.map(answer_of) {
         Ok(answer) if matches!(answer.result, CommandResult::Completed { .. }) => {
             let mut own = own;
+            // What the write would say that the plan does not (the constraints a write takes away or does not
+            // copy, docs/adr/0337 §2): the plan says it too.
+            if let (
+                CommandResult::Completed { warnings: said, .. },
+                CommandResult::Completed { warnings: more, .. },
+            ) = (&mut own.result, &answer.result)
+            {
+                let constraints = [
+                    codes::CONSTRAINTS_REMOVED,
+                    codes::CONSTRAINTS_RELAXED,
+                    codes::CONSTRAINTS_NOT_COPIED,
+                ];
+                for w in more {
+                    if constraints.contains(&w.code.as_str())
+                        && !said.iter().any(|s| s.code == w.code)
+                    {
+                        said.push(w.clone());
+                    }
+                }
+            }
             if let Some(o) = outcome {
                 let mut summary = o.summary;
                 // A plan writes nothing: the revision after is the one it would make.

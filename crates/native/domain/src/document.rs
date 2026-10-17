@@ -62,6 +62,8 @@ pub struct Document {
     pub(crate) object_policy: ObjectPolicy,
     /// Of those, the objects whose ends a point on none of the objects follows by its place (Buda, docs/adr/0320 §2).
     pub(crate) relocated_ends: std::collections::BTreeSet<Uuid>,
+    /// Whether writes relax the constraints instead of keeping them (docs/adr/0337 §1): the session's, not the file's.
+    pub(crate) relax: crate::constraint_follow::Relax,
     pub(crate) history: History,
     /// The journal of what was written and the ledger of requests executed
     /// (calls.rs, docs/adr/0253 §3, §6).
@@ -256,6 +258,7 @@ impl Document {
             relocated: Default::default(),
             object_policy: self.object_policy,
             relocated_ends: Default::default(),
+            relax: self.relax,
             history: History::default(),
             // A copy starts its own journal; the ledger it keeps, so a call
             // on the copy (a plan, a job) knows the requests already executed.

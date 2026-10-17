@@ -96342,7 +96342,8 @@
           "layer_locked",
           "warp_curves",
           "warp_shapes",
-          "rubber_bends"
+          "rubber_bends",
+          "constraints_not_copied"
         ]
       },
       "examples": [
@@ -115896,7 +115897,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "layer_locked"
+          "layer_locked",
+          "constraints_not_copied"
         ]
       },
       "examples": [
@@ -192706,6 +192708,9 @@
           "invalid_uid",
           "not_finite",
           "entity_not_found"
+        ],
+        "warnings": [
+          "constraints_not_copied"
         ]
       },
       "examples": [
@@ -555144,6 +555149,24 @@
       "meaning": "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır."
     },
     {
+      "code": "constraints_removed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kısıtlar kaldırıldı: andıkları nesne silindi, biçimi değişti ya da düzenleme onları bozdu."
+    },
+    {
+      "code": "constraints_relaxed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kısıtlar gevşetildi: düzenlemenin bozduğu kısıtlar kaldırıldı."
+    },
+    {
+      "code": "constraints_not_copied",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı kısıtlar kopyalanmadı: kopyalanmayan bir nesneyi anıyor ya da kopya ona uymuyor."
+    },
+    {
       "code": "already_committed",
       "kind": "failed",
       "retryable": false,
@@ -555248,7 +555271,12 @@
     "integrity_failed",
     "document_changed",
     "already_committed",
-    "unknown_job"
+    "unknown_job",
+    "constraint_conflict",
+    "constraint_singular",
+    "not_converged",
+    "constraints_removed",
+    "constraints_relaxed"
   ],
   "units": [
     {

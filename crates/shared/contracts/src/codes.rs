@@ -1103,6 +1103,12 @@ codes! {
     PARAMETER_READ = "parameter_read", Failed, false, "Parametreyi başka bir parametre okuyor ya da bir ölçü kısıtının; kaldırılmadı.";
     /// The solution turns a shape inside out; allowFlip writes it all the same.
     SHAPE_FLIPPED = "shape_flipped", Failed, false, "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır.";
+    /// Constraints a write left without their parts or unmet, taken away with it (docs/adr/0337 §2).
+    CONSTRAINTS_REMOVED = "constraints_removed", Warning, false, "Kısıtlar kaldırıldı: andıkları nesne silindi, biçimi değişti ya da düzenleme onları bozdu.";
+    /// A relaxed write: the constraints it left unmet went with it (docs/adr/0337 §1).
+    CONSTRAINTS_RELAXED = "constraints_relaxed", Warning, false, "Kısıtlar gevşetildi: düzenlemenin bozduğu kısıtlar kaldırıldı.";
+    /// Constraints a copy did not take: naming an object not copied, or not met by the copy (docs/adr/0337 §3).
+    CONSTRAINTS_NOT_COPIED = "constraints_not_copied", Warning, false, "Bazı kısıtlar kopyalanmadı: kopyalanmayan bir nesneyi anıyor ya da kopya ona uymuyor.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

@@ -28,4 +28,9 @@ requestId?: string,
 /**
  * The state the input was prepared against.
  */
-expected?: CallExpectations, };
+expected?: CallExpectations, 
+/**
+ * The write relaxes the constraints instead of keeping them (docs/adr/0337 §1): no solve follows it; the
+ * constraints it leaves unmet go with it (`constraints_relaxed`).
+ */
+relaxConstraints?: boolean, };

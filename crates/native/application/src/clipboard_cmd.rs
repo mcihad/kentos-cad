@@ -237,10 +237,24 @@ pub mod entities_copy {
     /// The copy of `input`'s objects in `doc`.
     pub fn answer(doc: &Document, input: &EntitiesCopy) -> CommandResult<Clip> {
         match copy_check(doc, input) {
-            Ok(clip) => CommandResult::Completed {
-                output: clip,
-                warnings: Vec::new(),
-            },
+            Ok(clip) => {
+                // The clipboard takes no constraints (docs/adr/0337 §3): said when the objects have some.
+                let ids: Vec<kentos_contracts::EntityId> = input
+                    .uids
+                    .iter()
+                    .filter_map(|u| {
+                        kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId)
+                    })
+                    .collect();
+                let held = crate::constraint_copy::any_constrained(doc, &ids);
+                CommandResult::Completed {
+                    output: clip,
+                    warnings: (held > 0)
+                        .then(|| crate::constraint_copy::not_copied(held))
+                        .into_iter()
+                        .collect(),
+                }
+            }
             Err(stop) => stop.into(),
         }
     }

@@ -28,6 +28,7 @@
 mod annotative;
 pub mod arrays;
 pub mod constraints;
+mod constraint_follow;
 pub mod audit;
 mod blocks;
 mod calls;
@@ -66,6 +67,7 @@ mod domains;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};
+pub use constraint_follow::{Relax, cad_element};
 pub use document::{Document, ObjectPolicy};
 pub use edit::{Refusal, SlotsExhausted, labels};
 pub use external::{External, ExternalMeta};

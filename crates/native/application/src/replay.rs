@@ -121,6 +121,7 @@ fn run_row(
         doc,
         store,
         CallEnvelope {
+            relax_constraints: row.relax_constraints,
             command: command.to_owned(),
             version: row.version,
             op: CallOp::Execute,

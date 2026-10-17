@@ -102,6 +102,9 @@ class SessionBase:
     def measure_many(self, uids: str, method: str | None = None) -> str:
         raise NotImplementedError
 
+    def relax(self, on: bool) -> None:
+        raise NotImplementedError
+
     def undo(self) -> str | None:
         raise NotImplementedError
 
@@ -747,6 +750,18 @@ class Document:
         `reference` when it only measures, and `parameters`, each its name, kind, expression and range. Both are
         absent when empty. Changed by `cad.constraints.edit`, read with the diagnosis by `cad.constraints.query`."""
         return dict(json.loads(self._session.constraints()))
+
+    @contextmanager
+    def relaxed(self) -> Iterator[None]:
+        """The writes inside relax the constraints (docs/adr/0337 §1, AutoCAD's Shift while editing): no solve follows
+        them; the constraints a write leaves unmet go with it, the warning ``constraints_relaxed`` says how many.
+        Outside, every write that changes constrained objects is followed by a solve that keeps them, or writes
+        nothing (``constraint_conflict``)."""
+        _host(self._session.relax, True)
+        try:
+            yield
+        finally:
+            _host(self._session.relax, False)
 
     def all_layers(self) -> Iterator[LayerNode]:
         """Every layer of the tree (not the groups), depth first."""

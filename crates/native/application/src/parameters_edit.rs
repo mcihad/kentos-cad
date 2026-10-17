@@ -79,7 +79,10 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ParametersEdit,
 ) -> CommandResult<ParametersEdited> {
-    let (set, solved) = match check(cx.doc, &input) {
+    // A job's stop reaches the solve (docs/adr/0337 §4).
+    let job = cx.job;
+    let stopped = move || job.is_some_and(crate::jobs::Progress::stopped);
+    let (set, solved) = match check_with(cx.doc, &input, &stopped) {
         Ok(planned) => planned,
         Err(stop) => return stop.into(),
     };
@@ -229,6 +232,14 @@ fn bound(change: Option<BoundChange>, now: Option<f64>) -> Option<f64> {
 }
 
 fn check(doc: &Document, input: &ParametersEdit) -> Result<(ConstraintSet, Solved), Stop> {
+    check_with(doc, input, &|| false)
+}
+
+fn check_with(
+    doc: &Document,
+    input: &ParametersEdit,
+    stop: &dyn Fn() -> bool,
+) -> Result<(ConstraintSet, Solved), Stop> {
     check_shape(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let mut set = doc.constraints().clone();
@@ -329,6 +340,6 @@ fn check(doc: &Document, input: &ParametersEdit) -> Result<(ConstraintSet, Solve
             }
         }
     }
-    let solved = settle(doc, &set, &[], &[], input.allow_flip, &|| false)?;
+    let solved = settle(doc, &set, &[], &[], input.allow_flip, stop)?;
     Ok((set, solved))
 }

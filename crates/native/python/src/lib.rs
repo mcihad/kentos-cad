@@ -303,6 +303,11 @@ impl PySession {
         self.inner.redo()
     }
 
+    /// Whether the writes relax the constraints (docs/adr/0337 §1).
+    fn relax(&mut self, on: bool) {
+        self.inner.relax(on);
+    }
+
     fn begin_group(&mut self, label: &str) -> PyResult<()> {
         self.inner.begin_group(label).map_err(host)
     }

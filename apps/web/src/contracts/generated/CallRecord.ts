@@ -43,7 +43,11 @@ created: Array<string>, changed: Array<string>, removed: Array<string>,
 /**
  * Whether a list was cut at [`JOURNAL_IDS`].
  */
-truncated?: boolean, warnings?: Array<CommandWarning>, 
+truncated?: boolean, 
+/**
+ * The write relaxed the constraints (docs/adr/0337 §1); a replay relaxes them too.
+ */
+relaxConstraints?: boolean, warnings?: Array<CommandWarning>, 
 /**
  * The project's parts it changed outside the undo step.
  */

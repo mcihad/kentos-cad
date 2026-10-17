@@ -325,6 +325,62 @@ impl Document {
         }
     }
 
+    /// The open step's ops so far (none outside a step).
+    fn step_ops(&self) -> &[Op] {
+        let Some(frame) = self.history.frames.last() else {
+            return &[];
+        };
+        self.history
+            .pending
+            .as_ref()
+            .map_or(&[][..], |s| &s.ops[frame.mark.min(s.ops.len())..])
+    }
+
+    /// The objects the open step changed so far (not those it added), each with its state before the step, in the
+    /// order first changed (docs/adr/0337 §1).
+    pub fn step_befores(&self) -> Vec<(Slot, Arc<Entity>)> {
+        let mut added = std::collections::HashSet::new();
+        let mut seen = std::collections::HashSet::new();
+        let mut out = Vec::new();
+        for op in self.step_ops() {
+            match op {
+                Op::Add(s) => {
+                    added.insert(s.slot());
+                }
+                Op::Update { before, .. }
+                    if !added.contains(&before.slot()) && seen.insert(before.slot()) =>
+                {
+                    out.push((before.slot(), before.entity.clone()));
+                }
+                _ => {}
+            }
+        }
+        out
+    }
+
+    /// Whether the open step changed the constraints itself (a constraint or parameter command, a copy).
+    pub fn step_touches_constraints(&self) -> bool {
+        self.step_ops()
+            .iter()
+            .any(|op| matches!(op, Op::Constraints { .. }))
+    }
+
+    /// Within a step: takes away now the constraints its writes so far left without their parts (docs/adr/0337
+    /// §2), into the step; how many went.
+    pub fn settle_constraints_now(&mut self) -> usize {
+        if self.history.pending.is_none() || self.history.frames.is_empty() {
+            return 0;
+        }
+        let ops = self.step_ops().to_vec();
+        let before = self.constraints.constraints.len();
+        let more = self.follow_constraints(&ops);
+        let after = self.constraints.constraints.len();
+        if let Some(step) = &mut self.history.pending {
+            step.ops.extend(more);
+        }
+        before.saturating_sub(after)
+    }
+
     /// Whether a step (`run_step`) is open: a command is being written.
     pub fn in_step(&self) -> bool {
         !self.history.frames.is_empty()

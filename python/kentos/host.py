@@ -183,6 +183,9 @@ class DesktopSession(_document.SessionBase):
     def measure_many(self, uids: str, method: str | None = None) -> str:
         return self._ask("measureMany", uids=json.loads(uids), method=method)
 
+    def relax(self, on: bool) -> None:
+        self._channel.call("relax", {"on": on})
+
     def begin_group(self, label: str) -> None:
         self._channel.call("begin_group", {"label": label})
 

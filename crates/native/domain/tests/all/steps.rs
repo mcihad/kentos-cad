@@ -61,6 +61,7 @@ fn moved(doc: &Document, slot: Slot, x: f64) -> Entity {
 /// A command's row as a seal gives it.
 fn row(command: &str) -> CallRecord {
     CallRecord {
+        relax_constraints: false,
         seq: 0,
         kind: CallKind::Command,
         label: None,

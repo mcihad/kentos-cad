@@ -101,6 +101,11 @@ pub struct CallEnvelope {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected: Option<CallExpectations>,
+    /// The write relaxes the constraints instead of keeping them (docs/adr/0337 §1): no solve follows it; the
+    /// constraints it leaves unmet go with it (`constraints_relaxed`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub relax_constraints: bool,
 }
 
 /// What must still hold for the call to write (docs/adr/0253 §2): the
@@ -478,6 +483,10 @@ pub struct CallRecord {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub truncated: bool,
+    /// The write relaxed the constraints (docs/adr/0337 §1); a replay relaxes them too.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub relax_constraints: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandWarning>>", optional))]
     pub warnings: Vec<CommandWarning>,

@@ -465,6 +465,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::divide_scenes::scenes());
     all.extend(crate::assoc_array_scenes::scenes());
     all.extend(crate::constraint_scenes::scenes());
+    all.extend(crate::constraint_follow_scenes::scenes());
     all.extend(crate::polyline_scenes::scenes());
     all.extend(crate::nurbs_scenes::scenes());
     all.extend(crate::curve_edit_scenes::scenes());

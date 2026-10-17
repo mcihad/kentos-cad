@@ -2511,11 +2511,15 @@ impl App {
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
             "address.providers" => return self.open_address_providers(),
+            // Gevşeterek düzenle: the next write relaxes the constraints (docs/adr/0337 §1); again, it does not.
+            "constraint.relaxNext" => self.relax_next(),
             // The user coordinate system (ucs.rs, docs/adr/0261).
             "ucs.world" => self.ucs_world(),
             "ucs.previous" => self.ucs_previous(),
             // Ölçekli açıklamalar (annotative.rs, docs/adr/0323 §4).
-            "annotation.make" => self.annotative_selection(kentos_contracts::AnnotativeOperation::Make),
+            "annotation.make" => {
+                self.annotative_selection(kentos_contracts::AnnotativeOperation::Make)
+            }
             "annotation.unmake" => {
                 self.annotative_selection(kentos_contracts::AnnotativeOperation::Unmake)
             }
@@ -2666,10 +2670,12 @@ impl App {
                     spacing: None,
                 }
             }),
-            "dimension.break" => self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Break {
-                uids,
-                objects: None,
-            }),
+            "dimension.break" => {
+                self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Break {
+                    uids,
+                    objects: None,
+                })
+            }
             "dimension.unbreak" => {
                 self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Unbreak { uids })
             }

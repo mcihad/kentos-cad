@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use kentos_contracts::capabilities::{KINDS, capabilities_of};
+use kentos_contracts::capabilities::{KINDS, PROTOCOL_CODES, capabilities_of};
 use kentos_contracts::{CallOp, DocumentSnapshotV2, FILE_COMMANDS};
 use kentos_domain::{Document, Uuid};
 use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, registry};
@@ -61,7 +61,8 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
                 match case["steps"].as_array() {
                     Some(steps) => {
                         for step in steps {
-                            let Some(id) = step["command"].as_str().filter(|id| *id != command) else {
+                            let Some(id) = step["command"].as_str().filter(|id| *id != command)
+                            else {
                                 walk(step, out.entry(command.clone()).or_default());
                                 continue;
                             };
@@ -187,6 +188,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "beklenmez: çekirdek yalnız boş zinciri reddeder, komut onu nothing_to_join ile önce yakalar (ADR 0254 §4)",
     ),
     (
+        "cad.entities.array",
+        "constraints_not_copied",
+        "ilişkili dizinin ve kopyalanmayan nesneyi anan kısıtın uyarısı; Kopyala'nın durumları (cad.constraints.edit.follow.json) aynı constraint_copy'den geçer (ADR 0337 §3)",
+    ),
+    (
         "cad.sheets.edit",
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",
@@ -218,8 +224,10 @@ fn every_code_a_case_reaches_is_listed_and_every_listed_one_is_reached_or_explai
         let listed: BTreeSet<String> = c.refusals.iter().chain(&c.warnings).cloned().collect();
         let got = reached.get(*id).cloned().unwrap_or_default();
         for code in &got {
-            let ok =
-                listed.contains(code) || (*id == "cad.changeset.apply" && every.contains(code));
+            // The protocol's codes any call may answer with (the constraints' follow, docs/adr/0337) need no listing.
+            let ok = listed.contains(code)
+                || PROTOCOL_CODES.contains(&code.as_str())
+                || (*id == "cad.changeset.apply" && every.contains(code));
             if !ok {
                 problems.push(format!("{id}: durumlar {code} veriyor, katalog anmıyor"));
             }

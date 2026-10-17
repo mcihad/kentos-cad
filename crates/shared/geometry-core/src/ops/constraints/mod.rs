@@ -240,6 +240,88 @@ pub fn has_part(shape: &Shape, element: &Element) -> bool {
         .is_some()
 }
 
+/// An object's numbering of parts: its kind, its unknowns' count and each ring's part, ring, vertex count and
+/// closedness. A constraint naming a vertex or an edge means the same part only while this stays (docs/adr/0337 §2).
+type Layout = (
+    std::mem::Discriminant<Shape>,
+    usize,
+    Vec<(u32, u32, usize, bool)>,
+);
+
+fn layout(shape: &Shape) -> Layout {
+    let shapes = std::slice::from_ref(shape);
+    let m = model::Model::new(shapes, &[true]);
+    let rings = m.slots[0]
+        .as_ref()
+        .map(|s| {
+            s.rings
+                .iter()
+                .map(|r| (r.part, r.ring, r.count, r.closed))
+                .collect()
+        })
+        .unwrap_or_default();
+    (std::mem::discriminant(shape), m.x.len(), rings)
+}
+
+/// How far an edit must move a number to have moved it (a metre's billionth): an edit that writes a whole object
+/// back with the others' values rounded has not dragged them.
+const MOVED: f64 = 1e-9;
+
+/// Whether two states of an object number their parts alike.
+pub fn same_layout(a: &Shape, b: &Shape) -> bool {
+    layout(a) == layout(b)
+}
+
+/// The parts of an object an edit moved, to hold where the edit put them (docs/adr/0337 §1): each point whose
+/// unknowns changed (by more than a metre's billionth) (an end, a vertex, a node, an arc's end) and a circle or an arc's circle whose centre or radius
+/// did. None when the edit changed the object's layout.
+pub fn moved_parts(before: &Shape, after: &Shape) -> Option<Vec<Element>> {
+    if !same_layout(before, after) {
+        return None;
+    }
+    let (b, a) = (std::slice::from_ref(before), std::slice::from_ref(after));
+    let (mb, ma) = (model::Model::new(b, &[true]), model::Model::new(a, &[true]));
+    let changed: Vec<bool> =
+        mb.x.iter()
+            .zip(&ma.x)
+            .map(|(x, y)| (x - y).abs() > MOVED)
+            .collect();
+    let mut parts = Vec::new();
+    match after {
+        Shape::Line { .. } => {
+            parts.extend([Element::Point(PointAt::Start), Element::Point(PointAt::End)])
+        }
+        Shape::Circle { .. } => parts.push(Element::Circle),
+        Shape::Arc { .. } => parts.extend([
+            Element::Circle,
+            Element::Point(PointAt::Start),
+            Element::Point(PointAt::End),
+        ]),
+        Shape::Point { parts: more, .. } => {
+            let count = 1 + more.as_ref().map_or(0, Vec::len);
+            parts.extend((0..count as u32).map(|k| Element::Point(PointAt::Node(k))));
+        }
+        _ => {
+            for r in ma.slots[0].iter().flat_map(|s| s.rings.iter()) {
+                parts.extend((0..r.count as u32).map(|index| {
+                    Element::Point(PointAt::Vertex {
+                        part: r.part,
+                        ring: r.ring,
+                        index,
+                    })
+                }));
+            }
+        }
+    }
+    parts.retain(|el| {
+        ma.element_vars(a, 0, el).is_some_and(|vars| {
+            vars.iter()
+                .any(|&j| changed.get(j).copied().unwrap_or(true))
+        })
+    });
+    Some(parts)
+}
+
 /// What a dimensional rule measures in `shapes`: a distance, an angle in [0, 2π), a radius or a diameter, in metres
 /// or radians; none for a geometric rule or parts the shapes do not have.
 pub fn measure(shapes: &[Shape], rule: &Rule) -> Option<f64> {

@@ -1740,6 +1740,7 @@ mod budget_tests {
                                       "layerId": "a"}),
             request_id: None,
             expected: None,
+            relax_constraints: false,
         };
         let progress = crate::jobs::Progress::default();
         progress.stop();

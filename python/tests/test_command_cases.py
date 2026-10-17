@@ -153,7 +153,12 @@ class Case:
             assert self.doc.revision == before, f"{at}: written"
             return
         layers_before = self.layer_ids()
-        outcome = wrapper.run(self.doc, typed, op=step["op"])
+        if step.get("relaxConstraints"):
+            # The write relaxes the constraints (docs/adr/0337 §1).
+            with self.doc.relaxed():
+                outcome = wrapper.run(self.doc, typed, op=step["op"])
+        else:
+            outcome = wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
         want = json.loads(json.dumps(step["result"]))
         if want == "$any":
@@ -257,6 +262,12 @@ class Case:
                     got.append(data)
                 # An insert names a block whose id the case cannot know by `$blockOf:Ad` (docs/adr/0316 §3).
                 same(got, self.block_ids(want, at), f"{at}: blocks")
+            elif key == "constraintKinds":
+                # The drawing's constraints' kinds in order and its parameters (docs/adr/0337).
+                got_kinds = [k["rule"]["kind"] for k in self.doc.constraints().get("constraints", [])]
+                same(got_kinds, want, f"{at}: constraintKinds")
+            elif key == "parameters":
+                same(self.doc.constraints().get("parameters", []), want, f"{at}: parameters")
             elif key == "arrays":
                 # The associative arrays in order, each without its id; the block and the items by `$blockOf:Ad` and
                 # `$uidOf:12` (docs/adr/0300).

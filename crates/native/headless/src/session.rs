@@ -144,6 +144,7 @@ impl Session {
         let answer = crate::file_commands::call(
             &mut self.doc,
             CallEnvelope {
+                relax_constraints: false,
                 command: command.to_owned(),
                 version: None,
                 op: kentos_contracts::CallOp::Execute,
@@ -341,6 +342,15 @@ impl Session {
     /// Opens a group: every command until [`end_group`](Self::end_group) is
     /// one undo step named `label` (TODOS.md PY-14); [`cancel_group`](Self::cancel_group)
     /// takes all of it back.
+    /// Whether the writes relax the constraints (docs/adr/0337 §1): on until set off.
+    pub fn relax(&mut self, on: bool) {
+        self.doc.set_relax(if on {
+            kentos_domain::Relax::On
+        } else {
+            kentos_domain::Relax::Off
+        });
+    }
+
     pub fn begin_group(&mut self, label: &str) -> Result<(), HeadlessError> {
         if self.group.is_some() {
             return Err(HeadlessError::new(

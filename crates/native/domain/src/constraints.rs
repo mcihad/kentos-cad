@@ -9,16 +9,18 @@
 //!
 //! The contract's rules read as the core solver's (`core_rule`) here, once, for the commands and the document alike.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use kentos_contracts::{
     CadElement, ConstraintRule, ConstraintSet, DistanceAxis, ElementRef, Entity, EntityId,
-    ParamUnits, ParameterKind, SubPlace, constraints_problem, param_expr_names, parse_param_expr,
+    ParamUnits, ParameterKind, SubPlace, constraints_problem,
 };
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
-use kentos_geometry_core::ops::constraints::{Axis, Element, PointAt, Ref, Rule, measure};
+use kentos_geometry_core::ops::constraints::{
+    Axis, Element, PointAt, Ref, Rule, has_part, measure, same_layout,
+};
 
 use crate::document::Document;
 use crate::edit::Refusal;
@@ -194,72 +196,74 @@ impl Document {
         Ok(true)
     }
 
-    /// The constraints naming objects the step deleted, taken away in the same step (docs/adr/0334 §1), with their
-    /// dimensions' parameters unless another parameter reads them: then the parameter stays a user parameter, its
-    /// value the one it had (a reference dimension's measured from the deleted object).
+    /// The constraints the step left without their parts, taken away in the same step (docs/adr/0334 §1, 0337 §2):
+    /// those naming an object it deleted, a vertex, an edge or a node of an object whose layout it changed, or a part
+    /// an object it changed no longer has. A dimension's parameter goes with it unless another parameter reads it:
+    /// then the parameter stays a user parameter, its value the one it had (a reference dimension's measured).
     pub(crate) fn follow_constraints(&mut self, ops: &[Op]) -> Vec<Op> {
         if self.constraints.constraints.is_empty() {
             return Vec::new();
         }
-        let here = |uid: &EntityId| self.store.slot_of(Uuid::from_bytes(uid.0)).is_some();
-        let gone: HashSet<EntityId> = self
+        // The objects the step changed: each one's state before it, the first the step saw.
+        let mut before: HashMap<EntityId, Arc<Entity>> = HashMap::new();
+        let mut removed: HashMap<EntityId, Arc<Entity>> = HashMap::new();
+        for op in ops {
+            match op {
+                Op::Update { before: b, .. } => {
+                    before
+                        .entry(EntityId(b.uid.into_bytes()))
+                        .or_insert_with(|| b.entity.clone());
+                }
+                Op::Remove(s) => {
+                    removed.insert(EntityId(s.uid.into_bytes()), s.entity.clone());
+                }
+                _ => {}
+            }
+        }
+        let now = |uid: &EntityId| {
+            self.store
+                .slot_of(Uuid::from_bytes(uid.0))
+                .and_then(|s| self.store.get(s))
+                .map(|s| s.entity.clone())
+        };
+        // Per changed object: its shape now and whether its layout stayed.
+        let mut changed: HashMap<EntityId, Option<(Shape, bool)>> = HashMap::new();
+        let mut lost = |r: &ElementRef| -> bool {
+            let Some(entity) = now(&r.uid) else {
+                return true;
+            };
+            let Some(was) = before.get(&r.uid) else {
+                return false;
+            };
+            let state = changed.entry(r.uid).or_insert_with(|| {
+                let shape = core_shape(&entity)?;
+                let same = core_shape(was).is_some_and(|b| same_layout(&b, &shape));
+                Some((shape, same))
+            });
+            let Some((shape, same)) = state else {
+                return false;
+            };
+            let indexed = match &r.element {
+                CadElement::Segment { .. } => true,
+                CadElement::Point { place } => {
+                    matches!(place, SubPlace::Vertex { .. } | SubPlace::Node { .. })
+                }
+                CadElement::Circle => false,
+            };
+            (indexed && !*same) || !has_part(shape, &core_element(&r.element))
+        };
+        let drop: Vec<usize> = self
             .constraints
             .constraints
             .iter()
-            .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
-            .filter(|u| !here(u))
+            .enumerate()
+            .filter(|(_, c)| c.rule.elements().into_iter().any(&mut lost))
+            .map(|(i, _)| i)
             .collect();
-        if gone.is_empty() {
+        if drop.is_empty() {
             return Vec::new();
         }
-        // The deleted objects as the step had them, for a reference value read by another parameter.
-        let removed: HashMap<EntityId, Arc<Entity>> = ops
-            .iter()
-            .filter_map(|op| match op {
-                Op::Remove(s) => Some((EntityId(s.uid.into_bytes()), s.entity.clone())),
-                _ => None,
-            })
-            .collect();
-        let mut next = (*self.constraints).clone();
-        let (dropped, kept): (Vec<_>, Vec<_>) = std::mem::take(&mut next.constraints)
-            .into_iter()
-            .partition(|c| c.rule.elements().iter().any(|e| gone.contains(&e.uid)));
-        next.constraints = kept;
-        let read: BTreeSet<String> = next
-            .parameters
-            .iter()
-            .filter_map(|p| parse_param_expr(&p.expression).ok())
-            .flat_map(|e| param_expr_names(&e))
-            .collect();
-        let units = ParamUnits::of(self.settings());
-        for c in &dropped {
-            let Some(name) = c.rule.parameter() else {
-                continue;
-            };
-            if !read.contains(name) {
-                next.parameters.retain(|p| p.name != name);
-                continue;
-            }
-            let Some(p) = next.parameters.iter_mut().find(|p| p.name == name) else {
-                continue;
-            };
-            if p.expression.is_empty() {
-                let shape_of = |uid: EntityId| {
-                    let e = match self
-                        .store
-                        .slot_of(Uuid::from_bytes(uid.0))
-                        .and_then(|s| self.store.get(s))
-                    {
-                        Some(s) => s.entity.clone(),
-                        None => removed.get(&uid)?.clone(),
-                    };
-                    core_shape(&e)
-                };
-                let v = measure_with(&c.rule, &shape_of)
-                    .map_or(0.0, |v| in_parameter_unit(units, p.kind, v));
-                p.expression = value_text(v);
-            }
-        }
+        let mut next = self.constraints_without_in(&self.constraints, &drop, &removed);
         // What is left must still keep the rules; when not (it cannot be by the steps above), the constraints go
         // whole rather than leave the drawing unsaveable.
         if self.constraints_refused(&next).is_some() {

@@ -95,6 +95,7 @@ const STEP_KEYS: &[&str] = &[
     "name",
     "expect",
     "note",
+    "relaxConstraints",
 ];
 
 /// JSON equality with numbers compared as numbers (the file's `1` is the document's `1.0`);
@@ -2665,6 +2666,19 @@ fn run_step(
     let before = doc.revision();
     match step["op"].as_str().unwrap_or("?") {
         // A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
+        // A write that relaxes the constraints (docs/adr/0337 §1).
+        "validate" | "plan" | "execute" if step["relaxConstraints"] == true => {
+            doc.set_relax(kentos_domain::Relax::Next);
+            let ran = run_command(
+                step["command"].as_str().unwrap_or(command),
+                doc,
+                state,
+                step,
+                at,
+            );
+            doc.set_relax(kentos_domain::Relax::Off);
+            ran?
+        }
         "validate" | "plan" | "execute" => run_command(
             step["command"].as_str().unwrap_or(command),
             doc,
@@ -2803,6 +2817,22 @@ fn check(
                 }
             }
             "canUndo" => expect_same(&json!(doc.can_undo()), want, "canUndo", at)?,
+            // The drawing's constraints' kinds in order and its parameters (docs/adr/0337).
+            "constraintKinds" => {
+                let kinds: Vec<Value> = doc
+                    .constraints()
+                    .constraints
+                    .iter()
+                    .map(|c| {
+                        serde_json::to_value(&c.rule).map_or(Value::Null, |r| r["kind"].clone())
+                    })
+                    .collect();
+                expect_same(&json!(kinds), want, "kısıtların türleri", at)?;
+            }
+            "parameters" => {
+                let got = serde_json::to_value(&doc.constraints().parameters).unwrap_or(Value::Null);
+                expect_same(&got, want, "parametreler", at)?;
+            }
             "canRedo" => expect_same(&json!(doc.can_redo()), want, "canRedo", at)?,
             "dirty" => expect_same(&json!(doc.is_dirty()), want, "dirty", at)?,
             "revision" => {

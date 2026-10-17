@@ -98,7 +98,10 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ConstraintsEdit,
 ) -> CommandResult<ConstraintsEdited> {
-    let planned = match check(cx.doc, &input, &|| false) {
+    // A job's stop reaches the solve (docs/adr/0337 §4).
+    let job = cx.job;
+    let stopped = move || job.is_some_and(crate::jobs::Progress::stopped);
+    let planned = match check(cx.doc, &input, &stopped) {
         Ok(planned) => planned,
         Err(stop) => return stop.into(),
     };
@@ -757,6 +760,9 @@ pub(crate) fn settle(
         ));
     }
     let solved = solve_set(doc, set, held, None, stop).map_err(unsolvable)?;
+    if solved.outcome.status == kentos_geometry_core::ops::constraints::Status::Cancelled {
+        return Err(Stop::Cancelled);
+    }
     let ids = |list: &[ConstraintId]| list.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let d = &solved.diagnosis;
     match d.status {

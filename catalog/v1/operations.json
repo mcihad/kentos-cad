@@ -994,6 +994,10 @@
       ],
       "note": "world komuta verilir; nesneler değişmez, UCS proje ayarıdır (ADR 0261 §2)."
     },
+    "constraint.relaxNext": {
+      "level": "session",
+      "note": "Belgenin oturum durumu (Relax::Next): bir sonraki yazan çağrı kısıtları gevşetir; Python'da with doc.relaxed(), MCP'de ve protokolde relaxConstraints (ADR 0337 §1)."
+    },
     "ucs.previous": {
       "level": "semantic",
       "via": [

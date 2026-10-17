@@ -101,6 +101,17 @@ fn write_execute(
     };
     // One associative array of a block's inserts (docs/adr/0300).
     if input.associative {
+        // An associative array's items are inserts of a block: they take no constraints (docs/adr/0337 §3).
+        let ids: Vec<kentos_contracts::EntityId> = checked
+            .sources
+            .iter()
+            .filter_map(|u| kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId))
+            .collect();
+        let held = crate::constraint_copy::any_constrained(cx.doc, &ids);
+        let mut warnings = checked.warnings;
+        if held > 0 {
+            warnings.push(crate::constraint_copy::not_copied(held));
+        }
         return match crate::array_assoc::write(
             cx.doc,
             &checked.sources,
@@ -114,7 +125,7 @@ fn write_execute(
                     array: Some(made.array),
                     revision: cx.doc.revision().to_string(),
                 },
-                warnings: checked.warnings,
+                warnings,
             },
             Err(stop) => stop.into(),
         };
@@ -133,6 +144,25 @@ fn write_execute(
             };
         }
     };
+    // The constraints among the copied objects, onto each item's copies (docs/adr/0337 §3).
+    let mut warnings = checked.warnings;
+    let per = checked.sources.len().max(1);
+    let groups: Vec<_> = slots
+        .chunks(per)
+        .map(|item| {
+            crate::constraint_copy::group_by_ids(
+                cx.doc,
+                checked.sources.iter().filter_map(|u| {
+                    kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId)
+                }),
+                item.iter().copied(),
+            )
+        })
+        .collect();
+    match crate::constraint_copy::copy_constraints(cx.doc, &groups, label(&input.layout)) {
+        Ok(note) => warnings.extend(note),
+        Err(stop) => return stop.into(),
+    }
     let doc = &*cx.doc;
     let created = slots
         .iter()
@@ -146,7 +176,7 @@ fn write_execute(
             array: None,
             revision: doc.revision().to_string(),
         },
-        warnings: checked.warnings,
+        warnings,
     }
 }
 

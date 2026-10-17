@@ -103,6 +103,12 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "document_changed",
     "already_committed",
     "unknown_job",
+    // Every write that changes constrained objects is followed by the constraints' solve (docs/adr/0337 §1, §2).
+    "constraint_conflict",
+    "constraint_singular",
+    "not_converged",
+    "constraints_removed",
+    "constraints_relaxed",
 ];
 
 /// The revision's two, every writing command's.
@@ -382,7 +388,13 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_locked", "warp_curves", "warp_shapes", "rubber_bends"],
+        warnings: &[
+            "layer_locked",
+            "warp_curves",
+            "warp_shapes",
+            "rubber_bends",
+            "constraints_not_copied",
+        ],
         targets: || {
             vec![
                 target(
@@ -469,7 +481,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_locked"],
+        warnings: &["layer_locked", "constraints_not_copied"],
         targets: || {
             vec![
                 target(
@@ -497,7 +509,7 @@ const ENTRIES: &[Entry] = &[
             "not_finite",
             "entity_not_found",
         ]],
-        warnings: &[],
+        warnings: &["constraints_not_copied"],
         targets: none,
     },
     Entry {

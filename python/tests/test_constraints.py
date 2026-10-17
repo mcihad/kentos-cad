@@ -103,6 +103,45 @@ class ConstraintTests(unittest.TestCase):
         self.assertEqual(refused.exception.code, "constraint_conflict")
         self.assertEqual(ends(doc, uids[2]), before)
 
+    def test_an_edit_keeps_the_constraints_or_relaxes_them(self) -> None:
+        """docs/adr/0337 §1: the right edge moved, the rectangle follows; the top edge moved against the held corner
+        and the height, nothing written; relaxed, written, the corners it breaks gone."""
+        doc, uids = room()
+        cad.constraints.edit(doc, edit=cad.ConstraintEdit.from_json({"kind": "add", "constraints": rectangle(uids)}))
+
+        def move(dx: float, dy: float) -> cad.Transform:
+            return cad.Transform.from_json({"kind": "move", "dx": dx, "dy": dy})
+
+
+        # The right edge moved against the width 6: refused.
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.entities.transform(doc, uids=[uids[1]], transform=move(2, 0))
+        self.assertEqual(refused.exception.code, "constraint_conflict")
+
+        # The top edge moved up: the held corner and the height refuse it; relaxed, two corners go.
+        top = ends(doc, uids[2])
+        with self.assertRaises(cad.CommandFailed) as refused:
+            cad.entities.transform(doc, uids=[uids[2]], transform=move(0, 1))
+        self.assertEqual(refused.exception.code, "constraint_conflict")
+        self.assertEqual(ends(doc, uids[2]), top)
+        count = len(doc.constraints()["constraints"])
+        with doc.relaxed(), self.assertWarns(cad.CommandWarning):
+            cad.entities.transform(doc, uids=[uids[2]], transform=move(0, 1))
+        self.assertEqual(len(doc.constraints()["constraints"]), count - 2)
+        self.assertAlmostEqual(ends(doc, uids[2])[0][1] - top[0][1], 1.0, places=9)
+
+        # Without the fix and the width, the right edge moved: the top and the bottom follow, the height stays 4.
+        doc, uids = room()
+        rules = [r for r in rectangle(uids) if r["rule"]["kind"] != "fix" and r["rule"].get("parameter") != "genislik"]
+        cad.constraints.edit(doc, edit=cad.ConstraintEdit.from_json({"kind": "add", "constraints": rules}))
+        right = ends(doc, uids[1])
+        cad.entities.transform(doc, uids=[uids[1]], transform=move(2, 0))
+        (a, b), (c, d) = ends(doc, uids[0]), ends(doc, uids[1])
+        self.assertAlmostEqual(b[0], right[0][0] + 2, places=9)
+        self.assertAlmostEqual(b[1] - a[1], 0.0, places=9)
+        self.assertAlmostEqual(d[1] - c[1], 4.0, places=9)
+        self.assertEqual(doc.undo(), "Taşı")
+
 
 if __name__ == "__main__":
     unittest.main()

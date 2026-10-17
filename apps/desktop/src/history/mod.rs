@@ -230,6 +230,7 @@ impl App {
             Call::Refused(r) => {
                 let revision = doc.map_or_else(|| "0".to_owned(), |d| d.revision().to_string());
                 CallRecord {
+                    relax_constraints: false,
                     seq: r.seq,
                     kind: CallKind::Command,
                     label: None,

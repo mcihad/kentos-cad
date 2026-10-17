@@ -190,6 +190,7 @@ impl Document {
             relocated: Default::default(),
             object_policy: Default::default(),
             relocated_ends: Default::default(),
+            relax: Default::default(),
             history: History::default(),
             calls: crate::calls::Calls::default(),
             edits: 0,

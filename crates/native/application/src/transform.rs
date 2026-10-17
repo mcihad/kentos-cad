@@ -136,11 +136,22 @@ fn write_execute(
         Err(stop) => return stop.into(),
     };
     let label = label(&input.transform, copy);
+    let mut warnings = checked.warnings;
     let (changed, created) = if copy {
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
         let copies = checked.moved.into_iter().map(unlinked).collect();
         match cx.doc.add_many(copies, label) {
             Ok(slots) => {
+                // The constraints among the copied objects, onto the copies (docs/adr/0337 §3).
+                let group = crate::constraint_copy::group_of(
+                    cx.doc,
+                    checked.sources.iter().map(|(slot, _)| *slot),
+                    slots.iter().copied(),
+                );
+                match crate::constraint_copy::copy_constraints(cx.doc, &[group], label) {
+                    Ok(note) => warnings.extend(note),
+                    Err(stop) => return stop.into(),
+                }
                 let doc = &*cx.doc;
                 let created = slots
                     .iter()
@@ -179,7 +190,7 @@ fn write_execute(
             locked: checked.locked,
             revision: cx.doc.revision().to_string(),
         },
-        warnings: checked.warnings,
+        warnings,
     }
 }
 
@@ -819,7 +830,11 @@ fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
     let Some(scales) = field.as_mut() else {
         return after;
     };
-    if scales.scales.iter().all(kentos_contracts::AnnotativeScale::is_plain) {
+    if scales
+        .scales
+        .iter()
+        .all(kentos_contracts::AnnotativeScale::is_plain)
+    {
         return after;
     }
     let length = determinant(m).abs().sqrt();

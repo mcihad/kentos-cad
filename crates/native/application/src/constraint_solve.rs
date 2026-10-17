@@ -211,6 +211,40 @@ pub struct Solved {
     pub flipped: Vec<Slot>,
 }
 
+/// The constraints of `set` (those at `only`, or all) the drawing as it is does not meet (docs/adr/0337): every
+/// object held, so each equation only checks, to the solver's tolerance; a fix at its place in `fix_from` (an edit's
+/// before), else where it is; a constraint whose parts are gone too. None when the parameters cannot be worked out.
+pub fn unmet(
+    doc: &Document,
+    set: &ConstraintSet,
+    only: Option<&[usize]>,
+    fix_from: Option<&HashMap<EntityId, Shape>>,
+) -> Vec<usize> {
+    let held: Vec<Held> = set
+        .constraints
+        .iter()
+        .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(|uid| Held { uid, element: None })
+        .collect();
+    let Ok(solved) = solve_set(doc, set, &held, fix_from, &|| false) else {
+        return Vec::new();
+    };
+    let o = &solved.outcome;
+    let mut out: Vec<usize> = o
+        .conflicting
+        .iter()
+        .chain(&o.singular)
+        .chain(&o.broken)
+        .copied()
+        .filter(|i| only.is_none_or(|s| s.contains(i)))
+        .collect();
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
 /// Extra unknowns a caller holds (a dragged grip, docs/adr/0337): by object id and part.
 #[derive(Clone, Copy, Debug)]
 pub struct Held {

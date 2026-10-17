@@ -1095,6 +1095,20 @@
    "tests": 2
   },
   {
+   "id": "constraint.relaxNext",
+   "kind": "command",
+   "title": "Gevşeterek düzenle",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Belgenin oturum durumu (Relax::Next): bir sonraki yazan çağrı kısıtları gevşetir; Python'da with doc.relaxed(), MCP'de ve protokolde relaxConstraints (ADR 0337 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "crs.points",
    "kind": "command",
    "title": "Nokta listesi içe aktar…",

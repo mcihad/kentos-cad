@@ -30,6 +30,7 @@ fn uid(doc: &Document, slot: u32) -> String {
 
 fn envelope(command: &str, op: CallOp, input: Value) -> CallEnvelope {
     CallEnvelope {
+        relax_constraints: false,
         command: command.into(),
         version: None,
         op,

@@ -38,7 +38,7 @@ fn ground() -> Objects {
     o
 }
 
-fn drawn(app: &mut App) {
+pub(crate) fn drawn(app: &mut App) {
     open(app, ground());
     make_cad(app);
     app.viewport.camera.fit(
@@ -87,7 +87,7 @@ fn add(rule: ConstraintRule, value: Option<&str>) -> NewConstraint {
 }
 
 /// The room made a rectangle 12 by 8 by the command.
-fn rectangle(app: &mut App) {
+pub(crate) fn rectangle(app: &mut App) {
     let mut constraints: Vec<NewConstraint> = (1..=4)
         .map(|i| {
             add(

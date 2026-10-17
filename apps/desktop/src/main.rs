@@ -27,6 +27,9 @@ mod appearance;
 mod appearance_tokens_tests;
 #[cfg(test)]
 mod assoc_array_scenes;
+mod constraint_relax;
+#[cfg(test)]
+mod constraint_follow_scenes;
 #[cfg(test)]
 mod constraint_scenes;
 #[cfg(test)]

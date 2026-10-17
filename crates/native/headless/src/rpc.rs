@@ -175,6 +175,16 @@ fn plain(doc: &mut Document, method: &str, params: &Value) -> Result<Value, Head
         "arrays" => to_value(&doc.arrays().iter().map(|a| &**a).collect::<Vec<_>>()),
         // The constraints and the parameter table (docs/adr/0334).
         "constraints" => to_value(doc.constraints()),
+        // The writes relax the constraints until set back (docs/adr/0337 §1; Python's `with doc.relaxed():`).
+        "relax" => {
+            let on = params.get("on").and_then(Value::as_bool).unwrap_or(false);
+            doc.set_relax(if on {
+                kentos_domain::Relax::On
+            } else {
+                kentos_domain::Relax::Off
+            });
+            Ok(Value::Null)
+        }
         "entities" => {
             let filter = Filter {
                 layer: optional_text(params, "layer")?,

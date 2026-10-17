@@ -44,6 +44,10 @@ pub mod arc;
 pub mod array;
 mod array_assoc;
 pub mod arrays_edit;
+pub mod constraint_copy;
+pub mod constraint_follow;
+#[cfg(test)]
+mod constraint_jobs_tests;
 pub mod constraint_solve;
 pub mod constraints_edit;
 pub mod constraints_query;
