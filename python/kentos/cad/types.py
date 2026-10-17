@@ -1706,6 +1706,22 @@ LeaderArrowName = Literal["open", "dot", "none", "closed", "open30", "open90", "
 """The names of :class:`LeaderArrow`, for a plain string."""
 
 
+class LeftWhy(_StrEnum):
+    """Why a link was not packed.
+
+    - ``missing``: The file is not there.
+    - ``database``: A database's table: the link stays, the computer that opens the package reaches the database itself.
+    - ``address``: An address (http, https): read where the package opens, not copied.
+    """
+    MISSING = "missing"
+    DATABASE = "database"
+    ADDRESS = "address"
+
+
+LeftWhyName = Literal["missing", "database", "address"]
+"""The names of :class:`LeftWhy`, for a plain string."""
+
+
 class LengthStyle(_StrEnum):
     """How lengths are written (docs/adr/0262 §2); none (no setting) is decimal
     in the drawing's unit. The three are an inch or foot drawing's.
@@ -2067,6 +2083,26 @@ class OrderTo(_StrEnum):
 
 OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
+
+
+class PackagedKind(_StrEnum):
+    """What a packed or left link is.
+
+    - ``source``: A bound layer's source.
+    - ``picture``: A linked image or raster, or a point cloud's file.
+    - ``sidecar``: A raster's world file or auxiliary file beside it.
+    - ``table``: A linked table's file.
+    - ``attachment``: An object's attachment.
+    """
+    SOURCE = "source"
+    PICTURE = "picture"
+    SIDECAR = "sidecar"
+    TABLE = "table"
+    ATTACHMENT = "attachment"
+
+
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment"]
+"""The names of :class:`PackagedKind`, for a plain string."""
 
 
 class ParametersOperation(_StrEnum):
@@ -21393,6 +21429,107 @@ class ObjectEnd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageLeft(_Model):
+    """A link left as it was.
+    Attributes:
+        path: The path or address as the project keeps it.
+        at: The object (its lasting id) or bound layer (its id) that keeps it.
+    """
+    kind: PackagedKind | PackagedKindName
+    path: str
+    why: LeftWhy | LeftWhyName
+    at: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["path"] = self.path
+        out["why"] = _enum_out(self.why)
+        out["at"] = self.at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageLeft:
+        return cls(
+            kind=_enum_in(PackagedKind, data["kind"]),
+            path=data["path"],
+            why=_enum_in(LeftWhy, data["why"]),
+            at=data["at"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PackageProject(_Model):
+    """Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
+    `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
+    `file_unwritable`. Warning: `package_left` (what was not copied, each said).
+    Attributes:
+        path: The folder to make, an absolute path; it must not be there, or be an empty folder.
+        from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
+            a relative link is not found (the drawing was never saved).
+        name: The project file's name in it (`.kcad` added when missing); none: the drawing's name.
+    """
+    path: str
+    from_: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageProject:
+        return cls(
+            path=data["path"],
+            from_=data.get("from", UNSET),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PackagedFile(_Model):
+    """A file copied into the package.
+    Attributes:
+        path: Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).
+        from_: The file it was copied from.
+        bytes: Unit: bytes.
+        links: How many links point to it. Unit: count.
+    """
+    path: str
+    from_: str
+    kind: PackagedKind | PackagedKindName
+    bytes: int
+    sha256: str
+    links: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["from"] = self.from_
+        out["kind"] = _enum_out(self.kind)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["links"] = self.links
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackagedFile:
+        return cls(
+            path=data["path"],
+            from_=data["from"],
+            kind=_enum_in(PackagedKind, data["kind"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            links=data["links"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParagraphLayout(_Model):
     """A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\\p` codes):
     every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
@@ -23509,6 +23646,48 @@ class ProjectMetadataUpdate(_Model):
             name=data.get("name", UNSET),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(ProjectType, data["projectType"]),
             tags=UNSET if "tags" not in data else None if data["tags"] is None else list(data["tags"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProjectPackaged(_Model):
+    """What `file.package` made, or with `plan` would make.
+    Attributes:
+        path: The folder.
+        project: The project file, its bytes and their SHA-256.
+        project_bytes: Unit: bytes.
+        bytes: Every byte written: the project file and the copies. Unit: bytes.
+    """
+    path: str
+    project: str
+    project_bytes: int
+    project_sha256: str
+    files: list[PackagedFile]
+    bytes: int
+    left: list[PackageLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["project"] = self.project
+        out["projectBytes"] = self.project_bytes
+        out["projectSha256"] = self.project_sha256
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["bytes"] = self.bytes
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectPackaged:
+        return cls(
+            path=data["path"],
+            project=data["project"],
+            project_bytes=data["projectBytes"],
+            project_sha256=data["projectSha256"],
+            files=[PackagedFile.from_json(e0) for e0 in data["files"]],
+            bytes=data["bytes"],
+            left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
 
@@ -26139,6 +26318,9 @@ class SourceLink(_Model):
             and attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to
             tell the layer's own edits from the file's.
         writable: Whether the table can be written: a feature or attribute table of a file KentOS may write.
+        relative: The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
+            the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
+            only when `path` is not there and the file it names has the same content. A database has none.
         srid: The EPSG code the table declares, none for an undefined system. Unit: epsg.
     """
     id: str
@@ -26149,6 +26331,7 @@ class SourceLink(_Model):
     revision: str
     digest: str
     writable: bool
+    relative: str | None | Unset = UNSET
     srid: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -26161,6 +26344,8 @@ class SourceLink(_Model):
         out["revision"] = self.revision
         out["digest"] = self.digest
         out["writable"] = self.writable
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
         if self.srid is not UNSET:
             out["srid"] = self.srid
         return out
@@ -26176,6 +26361,7 @@ class SourceLink(_Model):
             revision=data["revision"],
             digest=data["digest"],
             writable=data["writable"],
+            relative=data.get("relative", UNSET),
             srid=data.get("srid", UNSET),
         )
 
@@ -38129,6 +38315,8 @@ __all__ = [
     "LeadersEdit",
     "LeadersEdited",
     "LeadersPlan",
+    "LeftWhy",
+    "LeftWhyName",
     "LengthStyle",
     "LengthStyleName",
     "LengthenChange",
@@ -38243,6 +38431,11 @@ __all__ = [
     "OrderToName",
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
+    "PackageLeft",
+    "PackageProject",
+    "PackagedFile",
+    "PackagedKind",
+    "PackagedKindName",
     "ParagraphLayout",
     "ParallelPointConstruction",
     "ParamValue",
@@ -38330,6 +38523,7 @@ __all__ = [
     "ProjectInvitation",
     "ProjectInvite",
     "ProjectMetadataUpdate",
+    "ProjectPackaged",
     "ProjectPatch",
     "ProjectPermission",
     "ProjectPermissionName",

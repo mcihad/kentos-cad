@@ -4028,6 +4028,7 @@ class _Schema:
             "id": (self.text, True),
             "kind": (kind, True),
             "path": (self.text, True),
+            "relative": (self.text, False),
             "table": (self.text, True),
             "layer": (self.text, True),
             "revision": (self.text, True),
@@ -4053,8 +4054,25 @@ class _Schema:
                 if (at and ":" in user) or any(kv.split("=")[0].lower() == "password"
                                                for kv in tail.partition("?")[2].split("&") if kv):
                     self.fail("bad_value", "adreste parola var; parola projeye yazılmaz")
+                if "relative" in s:
+                    self.fail("bad_value", "veritabanının göreli yolu olmaz")
             elif not (s["path"].startswith("/") or s["path"][1:3] == ":\\"):
                 self.fail("bad_value", f"“{s['path']}” mutlak bir yol değil")
+            elif "relative" in s:
+                # docs/adr/0506: from the project file's folder, parts by "/", ".." only at the start.
+                r, up = s["relative"], True
+                if not r or len(r) > 4096 or "\0" in r or r.startswith("/") or "\\" in r or r[1:2] == ":":
+                    self.fail("bad_value", f"“{r}” göreli bir yol değil")
+                for part in r.split("/"):
+                    if part in ("", "."):
+                        self.fail("bad_value", f"“{r}” boş ya da . parçası taşıyor")
+                    if part == "..":
+                        if not up:
+                            self.fail("bad_value", f"“{r}” ortasında .. taşıyor")
+                    else:
+                        up = False
+                if up:
+                    self.fail("bad_value", f"“{r}” bir dosyayı göstermiyor")
             if not s["table"].strip():
                 self.fail("bad_value", "kaynağın tablosu boş")
             if s["layer"] in layers:

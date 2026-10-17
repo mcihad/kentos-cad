@@ -269,6 +269,13 @@
     "file.export.geojson": {
       "level": "none"
     },
+    "file.package": {
+      "level": "semantic",
+      "via": [
+        "file.package"
+      ],
+      "note": "Paketle file.package ile yazar (ADR 0506)."
+    },
     "file.export.gpkg": {
       "level": "semantic",
       "via": [
@@ -826,6 +833,13 @@
         "cad.sources.describe"
       ],
       "note": "cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503)."
+    },
+    "source.relink": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.edit"
+      ],
+      "note": "cad.sources.edit relink; açılışta taşınan dosyayı göreli yoluyla bulma source_places::relocate (ADR 0506)."
     },
     "source.unlink": {
       "level": "semantic",

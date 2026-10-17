@@ -75,6 +75,29 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
     s
 }
 
+/// SHA-256 of what `reader` gives, read in 1 MiB pieces (a file of any size in little memory): its bytes and the
+/// digest as 64 lowercase hex digits.
+pub fn sha256_reader_hex(mut reader: impl std::io::Read) -> std::io::Result<(u64, String)> {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    let mut buf = vec![0u8; 1 << 20];
+    let mut total = 0u64;
+    loop {
+        let n = reader.read(&mut buf)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+        total += n as u64;
+    }
+    let mut s = String::with_capacity(64);
+    for b in hasher.finalize() {
+        s.push(char::from(b"0123456789abcdef"[usize::from(b >> 4)]));
+        s.push(char::from(b"0123456789abcdef"[usize::from(b & 15)]));
+    }
+    Ok((total, s))
+}
+
 /// Serde of bytes as one base64 text (a picture's in a snapshot's JSON).
 pub mod base64_text {
     use serde::{Deserialize, Deserializer, Serializer};

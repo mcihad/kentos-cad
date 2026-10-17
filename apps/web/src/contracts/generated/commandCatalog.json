@@ -12371,6 +12371,13 @@
                 "description": "The file, an absolute path.",
                 "type": "string"
               },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
                 "type": "string"
@@ -21350,6 +21357,13 @@
               "path": {
                 "description": "The file, an absolute path.",
                 "type": "string"
+              },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
@@ -34691,6 +34705,13 @@
               "path": {
                 "description": "The file, an absolute path.",
                 "type": "string"
+              },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
@@ -504118,6 +504139,13 @@
                 "description": "The file, an absolute path.",
                 "type": "string"
               },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
                 "type": "string"
@@ -504413,6 +504441,13 @@
               "path": {
                 "description": "The file, an absolute path.",
                 "type": "string"
+              },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
@@ -504762,6 +504797,13 @@
                 "description": "The file, an absolute path.",
                 "type": "string"
               },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
                 "type": "string"
@@ -504892,6 +504934,13 @@
               "path": {
                 "description": "The file, an absolute path.",
                 "type": "string"
+              },
+              "relative": {
+                "description": "The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when\nthe file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read\nonly when `path` is not there and the file it names has the same content. A database has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
@@ -533363,6 +533412,418 @@
       ]
     },
     {
+      "id": "file.package",
+      "version": 1,
+      "title": "Paketle",
+      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "paketle",
+        "package"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,\n`name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),\n`file_unwritable`. Warning: `package_left` (what was not copied, each said).",
+        "properties": {
+          "from": {
+            "description": "The project file's folder, an absolute path: linked files written relative to it are read from there. None:\na relative link is not found (the drawing was never saved).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The project file's name in it (`.kcad` added when missing); none: the drawing's name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The folder to make, an absolute path; it must not be there, or be an empty folder.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "PackageProject",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LeftWhy": {
+            "description": "Why a link was not packed.",
+            "oneOf": [
+              {
+                "const": "missing",
+                "description": "The file is not there.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: the link stays, the computer that opens the package reaches the database itself.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address (http, https): read where the package opens, not copied.",
+                "type": "string"
+              }
+            ]
+          },
+          "PackageLeft": {
+            "description": "A link left as it was.",
+            "properties": {
+              "at": {
+                "description": "The object (its lasting id) or bound layer (its id) that keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PackagedKind"
+              },
+              "path": {
+                "description": "The path or address as the project keeps it.",
+                "type": "string"
+              },
+              "why": {
+                "$ref": "#/$defs/LeftWhy"
+              }
+            },
+            "required": [
+              "kind",
+              "path",
+              "why",
+              "at"
+            ],
+            "type": "object"
+          },
+          "PackagedFile": {
+            "description": "A file copied into the package.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "from": {
+                "description": "The file it was copied from.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PackagedKind"
+              },
+              "links": {
+                "description": "How many links point to it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "path": {
+                "description": "Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "from",
+              "kind",
+              "bytes",
+              "sha256",
+              "links"
+            ],
+            "type": "object"
+          },
+          "PackagedKind": {
+            "description": "What a packed or left link is.",
+            "oneOf": [
+              {
+                "const": "source",
+                "description": "A bound layer's source.",
+                "type": "string"
+              },
+              {
+                "const": "picture",
+                "description": "A linked image or raster, or a point cloud's file.",
+                "type": "string"
+              },
+              {
+                "const": "sidecar",
+                "description": "A raster's world file or auxiliary file beside it.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A linked table's file.",
+                "type": "string"
+              },
+              {
+                "const": "attachment",
+                "description": "An object's attachment.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.package` made, or with `plan` would make.",
+        "properties": {
+          "bytes": {
+            "description": "Every byte written: the project file and the copies.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/$defs/PackagedFile"
+            },
+            "type": "array"
+          },
+          "left": {
+            "items": {
+              "$ref": "#/$defs/PackageLeft"
+            },
+            "type": "array"
+          },
+          "path": {
+            "description": "The folder.",
+            "type": "string"
+          },
+          "project": {
+            "description": "The project file, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "projectBytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "projectSha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "project",
+          "projectBytes",
+          "projectSha256",
+          "files",
+          "bytes"
+        ],
+        "title": "ProjectPackaged",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LeftWhy": {
+            "description": "Why a link was not packed.",
+            "oneOf": [
+              {
+                "const": "missing",
+                "description": "The file is not there.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: the link stays, the computer that opens the package reaches the database itself.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address (http, https): read where the package opens, not copied.",
+                "type": "string"
+              }
+            ]
+          },
+          "PackageLeft": {
+            "description": "A link left as it was.",
+            "properties": {
+              "at": {
+                "description": "The object (its lasting id) or bound layer (its id) that keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PackagedKind"
+              },
+              "path": {
+                "description": "The path or address as the project keeps it.",
+                "type": "string"
+              },
+              "why": {
+                "$ref": "#/$defs/LeftWhy"
+              }
+            },
+            "required": [
+              "kind",
+              "path",
+              "why",
+              "at"
+            ],
+            "type": "object"
+          },
+          "PackagedFile": {
+            "description": "A file copied into the package.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "from": {
+                "description": "The file it was copied from.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/PackagedKind"
+              },
+              "links": {
+                "description": "How many links point to it.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "path": {
+                "description": "Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "from",
+              "kind",
+              "bytes",
+              "sha256",
+              "links"
+            ],
+            "type": "object"
+          },
+          "PackagedKind": {
+            "description": "What a packed or left link is.",
+            "oneOf": [
+              {
+                "const": "source",
+                "description": "A bound layer's source.",
+                "type": "string"
+              },
+              {
+                "const": "picture",
+                "description": "A linked image or raster, or a point cloud's file.",
+                "type": "string"
+              },
+              {
+                "const": "sidecar",
+                "description": "A raster's world file or auxiliary file beside it.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A linked table's file.",
+                "type": "string"
+              },
+              {
+                "const": "attachment",
+                "description": "An object's attachment.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.package` made, or with `plan` would make.",
+        "properties": {
+          "bytes": {
+            "description": "Every byte written: the project file and the copies.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/$defs/PackagedFile"
+            },
+            "type": "array"
+          },
+          "left": {
+            "items": {
+              "$ref": "#/$defs/PackageLeft"
+            },
+            "type": "array"
+          },
+          "path": {
+            "description": "The folder.",
+            "type": "string"
+          },
+          "project": {
+            "description": "The project file, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "projectBytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "projectSha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "project",
+          "projectBytes",
+          "projectSha256",
+          "files",
+          "bytes"
+        ],
+        "title": "ProjectPackaged",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "package_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Teslim klasörü",
+          "input": {
+            "from": "/is/kadastro",
+            "name": "kadastro",
+            "path": "/teslim/kadastro-paket"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.gpkg",
       "version": 1,
       "title": "GeoPackage dışa aktar",
@@ -537019,6 +537480,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bir projede en çok 1000 bağlı katman olur."
+    },
+    {
+      "code": "package_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı."
     },
     {
       "code": "export_losses",

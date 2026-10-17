@@ -15,8 +15,8 @@ use kentos_contracts::{
     CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, FILE_COMMANDS,
     FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION,
     FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION,
-    FileEffect, GpkgExported, GpkgTableExported, LayerNodeType, PdfExported, ReplayOutcome,
-    ReplayStep, codes,
+    FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported, GpkgTableExported, LayerNodeType,
+    PackageProject, PdfExported, ReplayOutcome, ReplayStep, codes,
 };
 use kentos_domain::Document;
 use kentos_native_application::call::{self, CallState};
@@ -553,6 +553,49 @@ fn run_typed(
             ))
         }};
     }
+    if command == FILE_PACKAGE {
+        let typed: PackageProject = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let planned = match crate::package::plan(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(p) => p,
+        };
+        let value = serde_json::to_value(&planned.output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings: planned.warnings,
+                },
+                None,
+            ),
+            CallOp::Execute => {
+                if let Err(refused) = crate::package::write(&planned) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                let effect = FileEffect {
+                    path: planned.output.project.clone(),
+                    bytes: planned.output.project_bytes,
+                    sha256: planned.output.project_sha256.clone(),
+                };
+                (
+                    CommandResult::Completed {
+                        output: value,
+                        warnings: planned.warnings,
+                    },
+                    Some(effect),
+                )
+            }
+        });
+    }
     if command == FILE_EXPORT_GPKG {
         let typed: ExportGpkg = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -608,6 +651,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
+        FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -625,6 +669,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_GPKG => serde_json::from_value::<ExportGpkg>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         _ => serde_json::from_value::<ExportPdf>(input.clone())

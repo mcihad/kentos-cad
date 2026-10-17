@@ -2440,6 +2440,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.package",
+        refusals: &[&["invalid_file_path", "file_exists", "file_unwritable"]],
+        warnings: &["package_left"],
+        targets: none,
+    },
+    Entry {
         id: "file.export.gpkg",
         refusals: &[&[
             "invalid_file_path",

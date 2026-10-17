@@ -34,6 +34,8 @@ pub struct Session {
     legacy: bool,
     group: Option<Group>,
     jobs: crate::rpc::Jobs,
+    /// What opening found of the bound files (docs/adr/0506).
+    located: kentos_native_application::source_places::Located,
 }
 
 impl Session {
@@ -49,8 +51,17 @@ impl Session {
 
     /// A `.kcad` file (v2, or v1 JSON).
     pub fn open(path: &Path) -> Result<Self, HeadlessError> {
-        let (doc, legacy) = files::read(path)?;
-        Ok(Self::of(doc, Some(path.to_path_buf()), legacy))
+        let (mut doc, legacy) = files::read(path)?;
+        // Bound GeoPackages moved with the project are found again (docs/adr/0506).
+        let located = kentos_native_application::source_places::relocate(&mut doc, path);
+        let mut session = Self::of(doc, Some(path.to_path_buf()), legacy);
+        session.located = located;
+        Ok(session)
+    }
+
+    /// What opening found of the bound files: moved to their relative path, missing, another content there.
+    pub fn located(&self) -> &kentos_native_application::source_places::Located {
+        &self.located
     }
 
     /// A drawing from a file's bytes (no path: a save names one).
@@ -66,6 +77,7 @@ impl Session {
             legacy,
             group: None,
             jobs: crate::rpc::Jobs::default(),
+            located: Default::default(),
         }
     }
 

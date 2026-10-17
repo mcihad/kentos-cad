@@ -260,6 +260,93 @@ fn screens() {
                 "import-parsel".into(),
             ))));
             picture(&mut app, &format!("gpkg-{mode}-6-soru"));
+            // Paketle (docs/adr/0506): a real package of the drawing, its answer said.
+            let _ = app.update(Message::DialogClosed);
+            let out = scratch(&format!("gpkg-paket-{mode}-{width}")).join("teslim");
+            let doc = app.document.as_ref().expect("a drawing");
+            let input = kentos_contracts::PackageProject {
+                path: out.display().to_string(),
+                name: Some("kadastro".into()),
+                from: None,
+            };
+            let planned = kentos_headless::package::plan(&doc.model, &input).expect("planned");
+            kentos_headless::package::write(&planned).expect("packed");
+            send(
+                &mut app,
+                Event::Package(super::package::Event::Done(Ok((
+                    planned.output,
+                    planned.warnings,
+                )))),
+            );
+            picture(&mut app, &format!("gpkg-{mode}-7-paket"));
         }
     }
+}
+
+#[test]
+fn a_moved_file_is_bound_again_and_a_package_is_said() {
+    // docs/adr/0506: Kaynak ▸ Yeniden bağla takes the same file in its new place, refuses another; Paketle's answer
+    // is said with what it left.
+    let dir = scratch("gpkg-relink");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(file.clone());
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Run));
+    let moved = dir.join("tasindi.gpkg");
+    std::fs::rename(&file, &moved).expect("moved");
+    app.picker = Picker::File(moved.clone());
+    let task = app.update(Message::Bound(crate::bound::Event::Relink(Some(
+        "import-parsel".into(),
+    ))));
+    drop(task);
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        "kaynak-1".into(),
+        Some(moved.clone()),
+    )));
+    assert!(
+        says(&app, "yeniden bağlandı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    assert_eq!(
+        app.bound_link("import-parsel").expect("bound").path,
+        moved.display().to_string()
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        "kaynak-1".into(),
+        Some(gpkg("kentos.gpkg")),
+    )));
+    assert!(
+        says(&app, "son eşleştiği dosya değil"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let out = kentos_contracts::ProjectPackaged {
+        path: "/teslim/paket".into(),
+        project: "/teslim/paket/proje.kcad".into(),
+        project_bytes: 10,
+        project_sha256: "0".repeat(64),
+        files: Vec::new(),
+        left: vec![kentos_contracts::PackageLeft {
+            kind: kentos_contracts::PackagedKind::Picture,
+            path: "/yok/kayip.jpg".into(),
+            why: kentos_contracts::LeftWhy::Missing,
+            at: String::new(),
+        }],
+        bytes: 10,
+    };
+    let warning = kentos_contracts::CommandWarning {
+        code: "package_left".into(),
+        message: "1 bağ pakete kopyalanmadı".into(),
+        path: None,
+    };
+    send(
+        &mut app,
+        Event::Package(super::package::Event::Done(Ok((out, vec![warning])))),
+    );
+    assert!(says(&app, "Paket yapıldı: /teslim/paket/proje.kcad"));
+    assert!(says(&app, "1 bağ pakete kopyalanmadı"));
 }

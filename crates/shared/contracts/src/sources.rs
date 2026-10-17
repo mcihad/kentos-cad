@@ -35,6 +35,12 @@ pub struct SourceLink {
     pub kind: SourceKind,
     /// The file, an absolute path.
     pub path: String,
+    /// The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
+    /// the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
+    /// only when `path` is not there and the file it names has the same content. A database has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub relative: Option<String>,
     /// The table in it.
     pub table: String,
     /// The drawing's layer that is its working copy.
@@ -78,6 +84,11 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
                 {
                     return Some(format!("{at}: dosya yolu mutlak değil (“{}”)", s.path));
                 }
+                if let Some(r) = &s.relative
+                    && let Some(why) = relative_problem(r)
+                {
+                    return Some(format!("{at}: göreli yolu {why} (“{r}”)"));
+                }
             }
             SourceKind::Postgis => {
                 if !is_database(&s.path) {
@@ -85,6 +96,9 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
                 }
                 if let Some(why) = address_problem(&s.path) {
                     return Some(format!("{at}: {why}"));
+                }
+                if s.relative.is_some() {
+                    return Some(format!("{at}: veritabanının göreli yolu olmaz"));
                 }
             }
         }
@@ -116,6 +130,33 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
         {
             return Some(format!("{at}: katmanın özeti 64 küçük onaltılı hane değil"));
         }
+    }
+    None
+}
+
+/// The longest a source's relative path may be, in letters.
+pub const MAX_RELATIVE: usize = 4096;
+
+/// What is wrong with a source's relative path, if anything (docs/adr/0506): not empty, not absolute, its parts
+/// separated by `/`, none empty or `.`; `..` only at the start.
+pub fn relative_problem(r: &str) -> Option<&'static str> {
+    if r.is_empty() || r.chars().count() > MAX_RELATIVE || r.contains('\0') {
+        return Some("boş, çok uzun ya da geçersiz");
+    }
+    if r.starts_with('/') || r.contains('\\') || r.get(1..2) == Some(":") {
+        return Some("göreli değil ya da / dışında ayırıcı taşıyor");
+    }
+    let mut up = true;
+    for part in r.split('/') {
+        match part {
+            "" | "." => return Some("boş ya da . parçası taşıyor"),
+            ".." if up => {}
+            ".." => return Some("ortasında .. taşıyor"),
+            _ => up = false,
+        }
+    }
+    if up {
+        return Some("bir dosyayı göstermiyor");
     }
     None
 }

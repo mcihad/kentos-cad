@@ -20,7 +20,8 @@
     "revision": "9f2c4c0e1b7a3d5e8f6a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f4a6b8c0d2e",
     "digest": "4b1d0c6e2f8a7d3c5e9b1a2f4c6e8d0b2a4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f",
     "srid": 5256,
-    "writable": true
+    "writable": true,
+    "relative": "veri/kadastro.gpkg"
    },
    {
     "id": "kaynak-2",

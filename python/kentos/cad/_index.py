@@ -137,6 +137,7 @@ COMMANDS: dict[str, Any] = {
     "file.import.block": file.import_.block,
     "file.import.dxf": file.import_.dxf,
     "file.import.gpkg": file.import_.gpkg,
+    "file.package": file.package,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,

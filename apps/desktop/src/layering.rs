@@ -579,6 +579,10 @@ impl App {
                         .icon(crate::icons::from_web(Some("sourceRead")))
                         .item("Kaynak durumu", bound(crate::bound::Event::Status))
                         .icon(crate::icons::from_web(Some("sourceLinked")))
+                        .item(
+                            "Yeniden bağla…",
+                            bound(crate::bound::Event::Relink(Some(id.clone()))),
+                        )
                         .separator()
                         .item(
                             "Bağı çöz",

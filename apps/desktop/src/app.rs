@@ -1727,7 +1727,7 @@ impl App {
             }
             Message::PointClouds(event) => return self.pointclouds_event(event),
             Message::Services(event) => return self.services_event(event),
-            Message::Bound(event) => self.bound_event(event),
+            Message::Bound(event) => return self.bound_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -1858,7 +1858,14 @@ impl App {
                 }
             }
             Message::Opened(None) | Message::Saved(None) => {}
-            Message::Opened(Some(Ok(doc))) => {
+            Message::Opened(Some(Ok(mut doc))) => {
+                // Bound GeoPackages moved with the project are found again (docs/adr/0506).
+                let located = match doc.path.clone() {
+                    Some(path) if doc.cloud_source().is_none() => {
+                        kentos_native_application::source_places::relocate(&mut doc.model, &path)
+                    }
+                    _ => Default::default(),
+                };
                 match doc.cloud_source() {
                     Some(source) => self.say(
                         Level::Success,
@@ -1883,6 +1890,7 @@ impl App {
                     );
                 }
                 self.show_document(*doc);
+                self.say_located(&located);
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
                 self.remember_file();
             }
@@ -2605,10 +2613,11 @@ impl App {
             "basemap.remove" => self.remove_basemap(),
             "service.connections" => self.open_connections(None),
             // Bağlı katmanlar (bound.rs, docs/adr/0503): the layer selected in the tree, else the active one.
-            "source.write" => self.bound_event(crate::bound::Event::Write(None)),
-            "source.read" => self.bound_event(crate::bound::Event::Read(None)),
-            "source.status" => self.bound_event(crate::bound::Event::Status),
-            "source.unlink" => self.bound_event(crate::bound::Event::Unlink(None)),
+            "source.write" => return self.bound_event(crate::bound::Event::Write(None)),
+            "source.read" => return self.bound_event(crate::bound::Event::Read(None)),
+            "source.status" => return self.bound_event(crate::bound::Event::Status),
+            "source.unlink" => return self.bound_event(crate::bound::Event::Unlink(None)),
+            "source.relink" => return self.bound_event(crate::bound::Event::Relink(None)),
             "service.add" => self.open_service_window(None),
             "service.feed" => self.open_feed_window(),
             "service.info" => self.start_service_info(),

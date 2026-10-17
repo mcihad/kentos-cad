@@ -968,6 +968,7 @@ fn link_table(
         id: next_id(doc),
         kind: at.kind(),
         path: path.to_owned(),
+        relative: None,
         table: table.to_owned(),
         digest: layer_digest(doc, &layer),
         layer,
@@ -1122,6 +1123,8 @@ fn edit_run(
             }
             load_at(at, &link.table, at_one("edit.path"))?;
             link.path = path.clone();
+            // The next save writes the new place's relative path (docs/adr/0506).
+            link.relative = None;
             set_link(doc, Some(link.clone()), None);
             Ok((
                 SourcesEdited {

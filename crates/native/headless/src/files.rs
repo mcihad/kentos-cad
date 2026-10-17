@@ -62,9 +62,12 @@ pub fn from_bytes(bytes: &[u8]) -> Result<(Document, bool), HeadlessError> {
     }
 }
 
-/// Writes `doc` as `.kcad` v2 to `path`; the bytes written.
+/// Writes `doc` as `.kcad` v2 to `path`; the bytes written. Bound GeoPackages get their path from the file's folder
+/// (docs/adr/0506).
 pub fn write(doc: &Document, path: &Path) -> Result<usize, HeadlessError> {
-    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).map_err(|e| {
+    let mut snapshot = doc.to_snapshot_v2();
+    kentos_native_application::source_places::with_relative(&mut snapshot.settings, path);
+    let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| {
         HeadlessError::new(
             "file_unwritable",
             format!("çizim KCAD v2'ye yazılamadı: {e}"),

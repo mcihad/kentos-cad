@@ -5,7 +5,7 @@
 //! asks first (the command's `pending_changes`), and goes on with `discard`; a write over a file another program
 //! changed is refused and said (`source_changed`).
 
-use iced::Element;
+use iced::{Element, Task};
 use kentos_contracts::{
     CommandResult, SourceLink, SourcesDescribe, SourcesEdit, SourcesEditOp, SourcesSync,
     SyncDirection,
@@ -14,7 +14,7 @@ use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::sources::{describe, edit, sync};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Dialog, Message, Picker};
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -26,6 +26,10 @@ pub enum Event {
     Status,
     /// Bağı çöz.
     Unlink(Option<String>),
+    /// Yeniden bağla… (docs/adr/0506): a moved file shown again; the file picked, then relinked.
+    Relink(Option<String>),
+    /// The file picked for a link (its id), none when the dialog was cancelled.
+    Relinked(String, Option<std::path::PathBuf>),
 }
 
 const NO_BOUND: &str = "Seçili ya da etkin katman bir kaynağa bağlı değil. GeoPackage'ı “Bağlı katman olarak aç” ile alın.";
@@ -59,8 +63,40 @@ impl App {
             .map_or_else(|| id.to_owned(), |n| n.name.clone())
     }
 
-    pub(crate) fn bound_event(&mut self, e: Event) {
+    pub(crate) fn bound_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::Relink(layer) => {
+                let Some(link) = self.bound_at_hand(layer) else {
+                    self.warn(NO_BOUND);
+                    return Task::none();
+                };
+                if link.kind != kentos_contracts::SourceKind::Geopackage {
+                    self.warn(
+                        "Veritabanına bağlı katmanın adresi PostGIS'e bağlan ile değiştirilir.",
+                    );
+                    return Task::none();
+                }
+                if let Picker::File(path) = &self.picker {
+                    return Task::done(Message::Bound(Event::Relinked(
+                        link.id,
+                        Some(path.clone()),
+                    )));
+                }
+                let id = link.id.clone();
+                return Task::perform(
+                    async move {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("Kaynağı yeniden bağla")
+                            .add_filter("GeoPackage", &["gpkg"])
+                            .pick_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    move |p| Message::Bound(Event::Relinked(id.clone(), p)),
+                );
+            }
+            Event::Relinked(id, Some(path)) => self.bound_relink(&id, &path),
+            Event::Relinked(_, None) => {}
             Event::Write(layer) => match self.bound_at_hand(layer) {
                 Some(link) => self.bound_sync(&link, SyncDirection::Write, false),
                 None => self.warn(NO_BOUND),
@@ -74,6 +110,44 @@ impl App {
                 None => self.warn(NO_BOUND),
             },
             Event::Status => self.bound_status(),
+        }
+        Task::none()
+    }
+
+    /// Relinks a bound layer to the file picked: the same file in its new place (`cad.sources.edit`'s `relink`).
+    fn bound_relink(&mut self, id: &str, path: &std::path::Path) {
+        let Some(link) = self.document.as_ref().and_then(|d| {
+            d.model
+                .settings()
+                .sources
+                .iter()
+                .find(|s| s.id == id)
+                .cloned()
+        }) else {
+            return;
+        };
+        let name = self.bound_name(&link.layer);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = SourcesEdit {
+            edit: SourcesEditOp::Relink {
+                id: id.to_owned(),
+                path: path.display().to_string(),
+            },
+        };
+        match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => self.announce(
+                Level::Success,
+                format!(
+                    "“{name}” katmanı {} dosyasına yeniden bağlandı.",
+                    file_name(&path.display().to_string())
+                ),
+            ),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.announce(Level::Error, error.message),
+            _ => {}
         }
     }
 
@@ -252,6 +326,37 @@ impl App {
                 )
             };
             self.announce(level, said);
+        }
+    }
+}
+
+impl App {
+    /// Says what opening found of the bound files (docs/adr/0506): moved with the project, missing, or another
+    /// content at the relative path (left for Kaynak ▸ Yeniden bağla).
+    pub(crate) fn say_located(
+        &mut self,
+        found: &kentos_native_application::source_places::Located,
+    ) {
+        for (_, layer, from, to) in &found.moved {
+            let name = self.bound_name(layer);
+            self.say(
+                Level::Info,
+                format!("“{name}” katmanının kaynağı yerinde değildi; projenin yanında bulundu: {} ({from} yerine).", file_name(to)),
+            );
+        }
+        for (_, layer, path) in &found.missing {
+            let name = self.bound_name(layer);
+            self.say(
+                Level::Warn,
+                format!("“{name}” katmanının kaynağı bulunamadı ({path}). Nesneler çizimde; dosyayı Kaynak ▸ Yeniden bağla ile gösterin."),
+            );
+        }
+        for (_, layer, path) in &found.differs {
+            let name = self.bound_name(layer);
+            self.say(
+                Level::Warn,
+                format!("“{name}” katmanının projenin yanındaki kaynağı ({}) son eşleştiği dosya değil; bağlanmadı.", file_name(path)),
+            );
         }
     }
 }

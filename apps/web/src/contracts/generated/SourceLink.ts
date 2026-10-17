@@ -14,6 +14,12 @@ id: string, kind: SourceKind,
  */
 path: string, 
 /**
+ * The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
+ * the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
+ * only when `path` is not there and the file it names has the same content. A database has none.
+ */
+relative?: string, 
+/**
  * The table in it.
  */
 table: string, 

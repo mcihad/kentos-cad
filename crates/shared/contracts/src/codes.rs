@@ -1091,6 +1091,8 @@ codes! {
     SOURCE_UNREACHABLE = "source_unreachable", Failed, false, "Veritabanına ulaşılamadı ya da bu ortamda onun sağlayıcısı yok.";
     /// More bound layers than a project keeps (docs/adr/0503).
     TOO_MANY_SOURCES = "too_many_sources", Failed, false, "Bir projede en çok 1000 bağlı katman olur.";
+    /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
+    PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.

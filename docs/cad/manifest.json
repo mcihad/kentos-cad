@@ -2807,6 +2807,22 @@
    "tests": 0
   },
   {
+   "id": "file.package",
+   "kind": "command",
+   "title": "Paketle…",
+   "level": "semantic",
+   "via": [
+    "file.package"
+   ],
+   "operation": null,
+   "python": "Connection: file.package",
+   "mcp": "file.package",
+   "note": "Paketle file.package ile yazar (ADR 0506).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.print",
    "kind": "command",
    "title": "Yazdır ve pafta çıktısı…",
@@ -6808,6 +6824,22 @@
    "mcp": "cad.sources.sync",
    "note": "cad.sources.sync read; katman değiştiyse soru ve discard (ADR 0503).",
    "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "source.relink",
+   "kind": "command",
+   "title": "Yeniden bağla…",
+   "level": "semantic",
+   "via": [
+    "cad.sources.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.edit",
+   "mcp": "cad.sources.edit",
+   "note": "cad.sources.edit relink; açılışta taşınan dosyayı göreli yoluyla bulma source_places::relocate (ADR 0506).",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },

@@ -39,6 +39,7 @@ pub(crate) mod gpkg;
 mod gpkg_tests;
 #[cfg(test)]
 mod kml_tests;
+pub(super) mod package;
 pub(crate) mod photo_import;
 mod postgis;
 #[cfg(test)]
@@ -135,6 +136,7 @@ pub enum Event {
     PhotoImport(photo_import::Event),
     Gpkg(gpkg::Event),
     Postgis(postgis::Event),
+    Package(package::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -142,7 +144,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 19] = [
+pub const COMMANDS: [&str; 20] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -162,6 +164,7 @@ pub const COMMANDS: [&str; 19] = [
     "file.export.gpkg",
     "source.link",
     "source.postgis",
+    "file.package",
 ];
 
 fn message(event: Event) -> Message {
@@ -197,6 +200,7 @@ impl App {
             "file.import.gpkg" => self.gpkg_pick(false),
             "source.link" => self.gpkg_pick(true),
             "source.postgis" => self.postgis_open(),
+            "file.package" => self.package_pick(),
             "file.export.gpkg" => self.gpkg_save(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
@@ -379,6 +383,7 @@ impl App {
             Event::PhotoImport(e) => self.photo_import_event(e),
             Event::Gpkg(e) => self.gpkg_event(e),
             Event::Postgis(e) => self.postgis_event(e),
+            Event::Package(e) => self.package_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();

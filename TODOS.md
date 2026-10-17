@@ -203,6 +203,9 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-36` göreli kaynak ve Paketle (ADR 0506, 17 Ekim): web'de gerekenler: `.kcad` okumasında `sources`'ın `relative`'i,
+  açılışta yeniden bulma (web'de dosya yolu yok: File System Access ya da sunucu yolu kararı), Yeniden bağla, `file.package`
+  (tarayıcıda klasör yazımı ya da sunucunun paketi); TS türleri üretildi.
 - [ ] `CBS-22` standart ilişkiler (ADR 0501, 17 Ekim): web'de gerekenler: `cad.entities.relate` işleyicisi (çekirdeğin
   `ops::de9im`'i WASM'a bağlanır; TS türleri üretildi), `too_many_pairs` kodu ve `invalid_pattern`'ın genişleyen metni.
 - [ ] `FORM-BB` yayından kaldırma (ADR 0445, 17 Ekim): web'de gerekenler: formun `withdrawn`'ı ve `cad.forms.edit`'in `withdraw`'ı
@@ -1781,6 +1784,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   parola projeye yazılmaz (`.kcad` okuyucuları da reddeder); masaüstünde PostGIS'e bağlan; geçici PostGIS'te ogr2ogr ve
   psycopg2'yle uçtan uca (`postgis_cases.py`). Kalan: sorguyu kaynağa itmek, sayfa sayfa ilk harita, view ve SQL katmanı,
   değişiklik izleme, milyon satır ölçümü. — **17 Ekim, [ADR 0505](docs/adr/0505-postgis-bound-layers.md).**
+- [ ] `CBS-36` taşınabilir proje (ikinci dilim): kaynağın göreli yolu (`SourceLink.relative`; kaydetmede yazılır, açılışta
+  aynı içerikteki dosya bulunur, `source_places`), Kaynak ▸ Yeniden bağla (`source.relink`), Paketle (`file.package`: proje
+  ve `veri/` altında bağlı GeoPackage, resim, raster dünya dosyalarıyla, bulut, tablo ve ek kopyaları; bütün ya da hiç,
+  her kopya SHA-256'sıyla; veritabanı, adres ve eksik dosya `package_left`); başsız uçtan uca test ve bağımsız
+  `package_cases.py`. Kalan: PostGIS tablosunun çevrimdışı kopyası, lisans ve erişim süzgeci, bağı gömülü kopyaya
+  çevirme. — **17 Ekim, [ADR 0506](docs/adr/0506-relative-sources-and-package.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

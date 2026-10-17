@@ -280,6 +280,7 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
             id: format!("kaynak-{n}"),
             kind: kentos_contracts::SourceKind::Geopackage,
             path: format!("/veri/{n}.gpkg"),
+            relative: None,
             table: "t".into(),
             layer: format!("katman-{n}"),
             revision: "0".repeat(64),

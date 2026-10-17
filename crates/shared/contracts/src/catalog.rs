@@ -5822,6 +5822,34 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // The project with the files it uses, in one folder (docs/adr/0506).
+        CommandDescriptor {
+            id: crate::FILE_PACKAGE.into(),
+            version: crate::FILE_PACKAGE_VERSION,
+            title: "Paketle".into(),
+            summary: "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. \
+                      Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. \
+                      Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. \
+                      Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["paketle".into(), "package".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PackageProject>(),
+            output: schema::<crate::ProjectPackaged>(),
+            plan: Some(schema::<crate::ProjectPackaged>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Teslim klasörü".into(),
+                input: json!({ "path": "/teslim/kadastro-paket", "name": "kadastro", "from": "/is/kadastro" }),
+                output: None,
+            }],
+        },
         // The drawing's layers as a GeoPackage (docs/adr/0502).
         CommandDescriptor {
             id: crate::FILE_EXPORT_GPKG.into(),
@@ -6548,6 +6576,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_GPKG => {
                         serde_json::from_value::<crate::ExportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_PACKAGE => {
+                        serde_json::from_value::<crate::PackageProject>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
