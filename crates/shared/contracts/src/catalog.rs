@@ -5230,7 +5230,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Kaynakları tanı".into(),
             summary: "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). \
                       path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. \
-                      Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz."
+                      Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz. \
+                      path bir PostGIS adresiyse (postgresql://kullanıcı@sunucu:5432/veritabanı; parolasız: invalid_address) veritabanının tek tam sayı anahtarlı tablolarını şema.tablo adlarıyla söyler; ulaşılamayan veritabanı source_unreachable, bağlı katmanında found false."
                 .into(),
             aliases: vec!["kaynaklar".into()],
             effect: CommandEffect::Query,
@@ -5263,7 +5264,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Kaynağa bağla".into(),
             summary: "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). \
                       Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. \
-                      unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ."
+                      unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. \
+                      path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable."
                 .into(),
             aliases: vec!["kaynakbagla".into()],
             effect: CommandEffect::Document,
@@ -5297,6 +5299,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. \
                       Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
                       read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). \
+                      PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. \
                       plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler."
                 .into(),
             aliases: vec!["kaynakesitle".into()],

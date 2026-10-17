@@ -384,6 +384,8 @@ use kentos_ui::theme::typography;
 fn main() -> iced::Result {
     // Embedded faces: nothing has to be installed on the machine.
     typography::load();
+    // Bound layers on PostGIS (docs/adr/0505).
+    kentos_postgis::register();
 
     // `kentos-cad snapshot çıktı.png [çizim.kcad]`: the window without a window.
     let mut args = std::env::args().skip(1).peekable();

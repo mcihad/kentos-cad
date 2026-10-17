@@ -35,7 +35,11 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
     eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın
     tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda
     olmayan (removed) nesne sayıları. Nesne ile satır kalıcı kimlikle eşlenir, satır
-    olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz.
+    olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz. path bir
+    PostGIS adresiyse (postgresql://kullanıcı@sunucu:5432/veritabanı; parolasız:
+    invalid_address) veritabanının tek tam sayı anahtarlı tablolarını şema.tablo
+    adlarıyla söyler; ulaşılamayan veritabanı source_unreachable, bağlı katmanında found
+    false.
     """
     __slots__ = ()
     id = "cad.sources.describe"
@@ -63,7 +67,10 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde
         olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. Nesne ile satır
         kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm
-        içinde). Hiçbir şey yazmaz.
+        içinde). Hiçbir şey yazmaz. path bir PostGIS adresiyse
+        (postgresql://kullanıcı@sunucu:5432/veritabanı; parolasız: invalid_address)
+        veritabanının tek tam sayı anahtarlı tablolarını şema.tablo adlarıyla söyler;
+        ulaşılamayan veritabanı source_unreachable, bağlı katmanında found false.
 
         Args:
             doc: The drawing it works on.
@@ -149,7 +156,10 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
     ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler
     kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256)
     olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok
-    1000 bağ.
+    1000 bağ. path bir PostGIS adresi de olabilir
+    (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese
+    yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam
+    sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.
     """
     __slots__ = ()
     id = "cad.sources.edit"
@@ -180,7 +190,10 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
         SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma
         adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni
         yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir
-        katman tek bağa (source_bound), en çok 1000 bağ.
+        katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir
+        (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese
+        yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam
+        sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.
 
         Args:
             doc: The drawing it works on.
@@ -265,8 +278,11 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
     alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek
     geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni
     satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse
-    discard olmadan okunmaz (pending_changes, conflict). plan dosyayı okur, hiçbir şey
-    yazmaz ve sayıları söyler.
+    discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı
+    kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü
+    yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan
+    veritabanı source_unreachable. plan dosyayı okur, hiçbir şey yazmaz ve sayıları
+    söyler.
     """
     __slots__ = ()
     id = "cad.sources.sync"
@@ -299,8 +315,11 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek
         geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni
         satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse
-        discard olmadan okunmaz (pending_changes, conflict). plan dosyayı okur, hiçbir şey
-        yazmaz ve sayıları söyler.
+        discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı
+        kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü
+        yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan
+        veritabanı source_unreachable. plan dosyayı okur, hiçbir şey yazmaz ve sayıları
+        söyler.
 
         Args:
             doc: The drawing it works on.

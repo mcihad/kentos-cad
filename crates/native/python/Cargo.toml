@@ -15,6 +15,7 @@ name = "kentos_python"
 crate-type = ["cdylib"]
 
 [dependencies]
+kentos-postgis = { path = "../postgis" }
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-headless = { path = "../headless" }
 # kentos.services (docs/adr/0208 §15): the map services' core, the project's systems and the transforms.

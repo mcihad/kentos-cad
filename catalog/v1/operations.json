@@ -791,6 +791,14 @@
       "level": "host",
       "note": "Bağlantıların gizli değerleri cihazda."
     },
+    "source.postgis": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.describe",
+        "cad.sources.edit"
+      ],
+      "note": "PostGIS'e bağlan tabloları cad.sources.describe ile listeler, seçilenleri cad.sources.edit link ile bağlar (ADR 0505)."
+    },
     "source.link": {
       "level": "semantic",
       "via": [

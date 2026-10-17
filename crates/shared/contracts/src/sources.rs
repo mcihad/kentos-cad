@@ -19,6 +19,8 @@ pub const MAX_SOURCES: usize = 1000;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum SourceKind {
     Geopackage,
+    /// A PostGIS table (docs/adr/0505): `path` is the database's address without a password.
+    Postgis,
 }
 
 /// A layer bound to a table of a file.
@@ -69,9 +71,22 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
                 s.id
             ));
         }
-        if s.path.trim().is_empty() || !(s.path.starts_with('/') || s.path.get(1..3) == Some(":\\"))
-        {
-            return Some(format!("{at}: dosya yolu mutlak değil (“{}”)", s.path));
+        match s.kind {
+            SourceKind::Geopackage => {
+                if s.path.trim().is_empty()
+                    || !(s.path.starts_with('/') || s.path.get(1..3) == Some(":\\"))
+                {
+                    return Some(format!("{at}: dosya yolu mutlak değil (“{}”)", s.path));
+                }
+            }
+            SourceKind::Postgis => {
+                if !is_database(&s.path) {
+                    return Some(format!("{at}: veritabanı adresi değil (“{}”)", s.path));
+                }
+                if let Some(why) = address_problem(&s.path) {
+                    return Some(format!("{at}: {why}"));
+                }
+            }
         }
         if s.table.trim().is_empty() {
             return Some(format!("{at}: tablosu boş"));
@@ -101,6 +116,45 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
         {
             return Some(format!("{at}: katmanın özeti 64 küçük onaltılı hane değil"));
         }
+    }
+    None
+}
+
+/// Whether a source's address is a database's (`postgresql://…`) rather than a file's path (docs/adr/0505).
+pub fn is_database(address: &str) -> bool {
+    address.starts_with("postgresql://") || address.starts_with("postgres://")
+}
+
+/// What is wrong with a database address, if anything (docs/adr/0505): a password in it (passwords stay on the
+/// device: the environment's `PGPASSWORD` or `~/.pgpass`, never the project), no host or no database.
+pub fn address_problem(address: &str) -> Option<String> {
+    const PASSWORD: &str = "adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun";
+    let rest = address
+        .split_once("://")
+        .map(|(_, r)| r)
+        .unwrap_or_default();
+    let (authority, tail) = rest.split_once('/').unwrap_or((rest, ""));
+    if let Some((user, _)) = authority.rsplit_once('@')
+        && user.contains(':')
+    {
+        return Some(PASSWORD.into());
+    }
+    let host = authority.rsplit_once('@').map_or(authority, |(_, h)| h);
+    if host.trim().is_empty() {
+        return Some("adreste sunucu yok (postgresql://kullanıcı@sunucu:5432/veritabanı)".into());
+    }
+    let (database, query) = tail.split_once('?').unwrap_or((tail, ""));
+    if database.trim().is_empty() {
+        return Some(
+            "adreste veritabanı yok (postgresql://kullanıcı@sunucu:5432/veritabanı)".into(),
+        );
+    }
+    if query.split('&').any(|kv| {
+        kv.split('=')
+            .next()
+            .is_some_and(|k| k.eq_ignore_ascii_case("password"))
+    }) {
+        return Some(PASSWORD.into());
     }
     None
 }

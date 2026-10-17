@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""A bound layer on PostGIS, end to end against a throwaway database (docs/adr/0505, plan/gis.md CBS-04).
+
+    /usr/bin/python3 scripts/fixtures/postgis_cases.py [--screens]
+
+1. Starts postgis/postgis:18-3.6 in docker on a free port (never the developer's database on 5432) and loads QGIS's
+   GeoPackage (fixtures/geopackage/v1/qgis.gpkg) and the WGS 84 one into the schema `kadastro` with GDAL's ogr2ogr,
+   the fids kept as primary keys, as a municipality would load its data.
+2. Runs crates/native/postgis's ignored test with KENTOS_PG_URL (no password in it: PGPASSWORD), which binds
+   kadastro.parsel through cad.sources.edit, edits it and writes it back, binds it again in a fresh drawing, writes
+   from there as another user, and checks the conflict and the reload; then the desktop's PostGIS'e bağlan window
+   lists and binds the same database (with --screens its pictures, .run/shots/postgis-*).
+3. Checks, with psycopg2 and no KentOS code: the tables KentOS described (names, row counts, geometry types, systems,
+   columns) against the catalogue; the objects it took against the rows; and the table after the writes: parcel 1
+   renamed with a new `durum` column then deleted by the second drawing, parcel 2 deleted, the triangle inserted with
+   its lasting id in kadastro.kentos_uids and an area of 50 m².
+4. Stops the container.
+"""
+
+import json
+import os
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+import psycopg2
+from osgeo import gdal
+
+gdal.UseExceptions()
+ROOT = Path(__file__).resolve().parents[2]
+IMAGE = "postgis/postgis:18-3.6"
+PASSWORD = "kentos-gecici"
+
+
+def free_port():
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def wait(port):
+    for _ in range(120):
+        try:
+            c = psycopg2.connect(host="127.0.0.1", port=port, user="postgres", password=PASSWORD, dbname="postgres")
+            c.autocommit = True
+            c.cursor().execute("SELECT postgis_version()")
+            return c
+        except Exception:
+            time.sleep(1)
+    raise SystemExit("geçici PostGIS açılmadı")
+
+
+def load(port):
+    pg = f"PG:host=127.0.0.1 port={port} user=postgres password={PASSWORD} dbname=postgres"
+    for name in ("qgis.gpkg", "wgs84.gpkg"):
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1" / name),
+                             options=gdal.VectorTranslateOptions(
+                                 layerCreationOptions=["SCHEMA=kadastro", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
+
+
+def catalogue(c):
+    cur = c.cursor()
+    cur.execute("SELECT f_table_name, type, srid FROM geometry_columns WHERE f_table_schema = 'kadastro'")
+    geoms = {r[0]: (r[1], r[2]) for r in cur.fetchall()}
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'kadastro' "
+                "AND table_name <> 'kentos_uids'")
+    out = {}
+    for (t,) in cur.fetchall():
+        cur.execute(f'SELECT count(*) FROM kadastro."{t}"')
+        rows = cur.fetchone()[0]
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'kadastro' "
+                    "AND table_name = %s ORDER BY ordinal_position", (t,))
+        cols = [r[0] for r in cur.fetchall() if r[0] not in ("fid", "geom")]
+        g = geoms.get(t)
+        out[f"kadastro.{t}"] = {"rows": rows, "geometry": g[0] if g else None, "srid": g[1] if g else None,
+                                "columns": cols}
+    return out
+
+
+def check(c, seen, before):
+    problems = []
+    described = {t["name"]: t for t in seen["tables"] if t["name"].startswith("kadastro.")}
+    for name, want in before.items():
+        got = described.get(name)
+        if got is None:
+            problems.append(f"{name} listelenmedi")
+            continue
+        if got["rows"] != want["rows"] or got.get("geometry") != want["geometry"] or got.get("srid") != want["srid"]:
+            problems.append(f"{name}: {got['rows']}, {got.get('geometry')}, {got.get('srid')} ≠ {want}")
+        if [col["name"] for col in got["columns"]] != want["columns"]:
+            problems.append(f"{name} sütunları {[col['name'] for col in got['columns']]} ≠ {want['columns']}")
+    if len(seen["objects"]) != before["kadastro.parsel"]["rows"]:
+        problems.append(f"{len(seen['objects'])} nesne, {before['kadastro.parsel']['rows']} satır")
+    cur = c.cursor()
+    cur.execute("SELECT fid, ada, durum, ST_Area(geom) FROM kadastro.parsel ORDER BY fid")
+    rows = cur.fetchall()
+    fids = [r[0] for r in rows]
+    if 1 in fids or 2 in fids or len(rows) != before["kadastro.parsel"]["rows"] - 1:
+        problems.append(f"parsel satırları {fids}")
+    new = [r for r in rows if r[0] not in (1, 2, 3)]
+    if len(new) != 1 or abs(new[0][3] - 50.0) > 1e-9:
+        problems.append(f"eklenen üçgen {new}")
+    else:
+        cur.execute("SELECT uid::text FROM kadastro.kentos_uids WHERE table_name = 'kadastro.parsel' AND pk = %s",
+                    (new[0][0],))
+        uid = [r[0] for r in cur.fetchall()]
+        if uid != [seen["drawn"]]:
+            problems.append(f"üçgenin kalıcı kimliği {uid} ≠ {seen['drawn']}")
+    cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
+                "AND table_name = 'parsel' AND column_name = 'durum'")
+    if [r[0] for r in cur.fetchall()] != ["text"]:
+        problems.append("durum sütunu yok ya da metin değil")
+    return problems
+
+
+def main():
+    port = free_port()
+    name = f"kentos-postgis-{os.getpid()}"
+    subprocess.run(["docker", "run", "-d", "--rm", "--name", name, "-p", f"127.0.0.1:{port}:5432",
+                    "-e", f"POSTGRES_PASSWORD={PASSWORD}", IMAGE], check=True, stdout=subprocess.DEVNULL)
+    print(f"geçici veritabanı: docker {name}, 127.0.0.1:{port} (5432'deki veritabanına dokunulmuyor)")
+    try:
+        c = wait(port)
+        c.cursor().execute("CREATE SCHEMA kadastro")
+        load(port)
+        before = catalogue(c)
+        out = Path(tempfile.mkstemp(suffix=".json")[1])
+        env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
+                   PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), CARGO_BUILD_JOBS="2")
+        test = subprocess.run(["cargo", "test", "-q", "-p", "kentos-postgis", "--test", "all", "--", "--ignored",
+                               "--nocapture"], cwd=ROOT, env=env)
+        if test.returncode != 0:
+            print("Rust testi düştü", file=sys.stderr)
+            return 1
+        # The desktop's window on the same database: listing and binding (reads only).
+        desk = subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "a_real_database_is_listed_and_bound",
+                               "--", "--ignored"], cwd=ROOT, env=env)
+        if desk.returncode != 0:
+            print("masaüstünün PostGIS penceresi düştü", file=sys.stderr)
+            return 1
+        if "--screens" in sys.argv:
+            subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",
+                            "--ignored", "--nocapture"], cwd=ROOT, env=env, check=True)
+        seen = json.loads(out.read_text("utf-8"))
+        problems = check(c, seen, before)
+        if problems:
+            print("; ".join(problems), file=sys.stderr)
+            return 1
+        print(f"PostGIS durumları tutarlı: {len(before)} tablo KentOS'un söylediği gibi; parsel yazıldı, "
+              "kalıcı kimlik kentos_uids'te, çakışma ve geri okuma doğru")
+        return 0
+    finally:
+        subprocess.run(["docker", "stop", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -32,6 +32,15 @@ const NAMESPACE: [u8; 16] = [
     0x6b, 0x1e, 0x4f, 0x0a, 0x93, 0x27, 0x4c, 0x51, 0x8d, 0x36, 0x2f, 0x7a, 0x10, 0xc4, 0x5e, 0x92,
 ];
 
+/// A database row's lasting id when the database keeps none (docs/adr/0505): of the database's name, the table
+/// (`schema.table`) and the primary key.
+pub fn database_row_uid(database: &str, table: &str, key: i64) -> Uuid {
+    Uuid::from_bytes(uuid_v5(
+        &NAMESPACE,
+        format!("pg:{database}/{table}:{key}").as_bytes(),
+    ))
+}
+
 /// A row's lasting id when the file keeps none.
 pub fn row_uid(table: &str, fid: i64) -> Uuid {
     Uuid::from_bytes(uuid_v5(
@@ -421,94 +430,10 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
         }
         let uids = gp.uids(&layer.name).map_err(|e| e.0)?;
         let rows = gp.rows(&layer, &Query::default()).map_err(|e| e.0)?;
-        let mut losses = BTreeSet::new();
-        // An integer column holding a value past the safe range goes as text.
-        let wide: Vec<bool> = (0..layer.columns.len())
-            .map(|i| {
-                layer.columns[i].kind == ColumnKind::Integer
-                    && rows.iter().any(|r| matches!(r.values[i], Value::Integer(v) if v.unsigned_abs() > MAX_INTEGER))
-            })
-            .collect();
-        let mut fields = Vec::new();
-        for (c, w) in layer.columns.iter().zip(&wide) {
-            match field_of(c, *w) {
-                Some(f) => fields.push(f),
-                None => {
-                    losses.insert(format!("“{}” ikili sütunu alınmadı", c.name));
-                }
-            }
-            if *w {
-                losses.insert(format!(
-                    "“{}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı",
-                    c.name
-                ));
-            }
-        }
-        let mut objects = Vec::with_capacity(rows.len());
-        let mut fids = Vec::with_capacity(rows.len());
-        let mut skipped = Vec::new();
-        let mut records = 0;
-        for row in &rows {
-            let mut attrs = serde_json::Map::new();
-            for ((c, v), w) in layer.columns.iter().zip(&row.values).zip(&wide) {
-                if let Some(t) = value_text(v, &c.kind, *w, &mut losses, &c.name) {
-                    attrs.insert(c.name.clone(), J::String(t));
-                }
-            }
-            let mut e = serde_json::Map::new();
-            e.insert("id".into(), json!(0));
-            e.insert("layerId".into(), J::String(layer.name.clone()));
-            e.insert("attrs".into(), J::Object(attrs));
-            let kind = match &row.geometry {
-                None => "record",
-                Some(Err(why)) => {
-                    skipped.push((row.fid, format!("geometrisi okunamadı: {why}")));
-                    continue;
-                }
-                Some(Ok(g)) if g.is_empty() => "record",
-                Some(Ok(g)) => match geometry_json(g, &mut losses) {
-                    Some((kind, fields)) => {
-                        e.extend(fields);
-                        kind
-                    }
-                    None => {
-                        skipped.push((
-                            row.fid,
-                            format!("{} geometrisinin çizimde karşılığı yok", g.type_name()),
-                        ));
-                        continue;
-                    }
-                },
-            };
-            e.insert("kind".into(), J::String(kind.into()));
-            if kind == "record" {
-                records += 1;
-            }
-            let entity: Entity = serde_json::from_value(J::Object(e)).map_err(|why| {
-                format!(
-                    "“{}” tablosunun {} numaralı satırı: {why}",
-                    layer.name, row.fid
-                )
-            })?;
-            let uid = uids
-                .get(&row.fid)
-                .and_then(|u| Uuid::parse_str(u).ok())
-                .unwrap_or_else(|| row_uid(&layer.name, row.fid));
-            objects.push((uid, entity));
-            fids.push(row.fid);
-        }
-        tables.push(TableRead {
-            title: layer.identifier.clone().filter(|i| i != &layer.name),
-            name: layer.name.clone(),
-            srs_id: layer.srs_id,
-            fields,
-            objects,
-            fids,
-            read: rows.len() as u32,
-            records,
-            skipped,
-            losses,
-        });
+        let name = layer.name.clone();
+        tables.push(table_of_rows(&layer, &rows, &uids, &|fid| {
+            row_uid(&name, fid)
+        })?);
     }
     Ok(Read {
         file: path
@@ -519,6 +444,107 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
         sha256: sha256_hex(&bytes),
         tables,
         systems,
+    })
+}
+
+/// A table's rows as the drawing's objects (docs/adr/0502 §3; a PostGIS table's too, docs/adr/0505): each row an
+/// object or a record with its lasting id (`uids`, else `uid_of` its fid), the columns as fields, what does not come
+/// over said.
+pub fn table_of_rows(
+    layer: &gpkg::Layer,
+    rows: &[gpkg::Row],
+    uids: &std::collections::HashMap<i64, String>,
+    uid_of: &dyn Fn(i64) -> Uuid,
+) -> Result<TableRead, String> {
+    let mut losses = BTreeSet::new();
+    // An integer column holding a value past the safe range goes as text.
+    let wide: Vec<bool> = (0..layer.columns.len())
+        .map(|i| {
+            layer.columns[i].kind == ColumnKind::Integer
+                && rows.iter().any(
+                    |r| matches!(r.values[i], Value::Integer(v) if v.unsigned_abs() > MAX_INTEGER),
+                )
+        })
+        .collect();
+    let mut fields = Vec::new();
+    for (c, w) in layer.columns.iter().zip(&wide) {
+        match field_of(c, *w) {
+            Some(f) => fields.push(f),
+            None => {
+                losses.insert(format!("“{}” ikili sütunu alınmadı", c.name));
+            }
+        }
+        if *w {
+            losses.insert(format!(
+                "“{}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı",
+                c.name
+            ));
+        }
+    }
+    let mut objects = Vec::with_capacity(rows.len());
+    let mut fids = Vec::with_capacity(rows.len());
+    let mut skipped = Vec::new();
+    let mut records = 0;
+    for row in rows {
+        let mut attrs = serde_json::Map::new();
+        for ((c, v), w) in layer.columns.iter().zip(&row.values).zip(&wide) {
+            if let Some(t) = value_text(v, &c.kind, *w, &mut losses, &c.name) {
+                attrs.insert(c.name.clone(), J::String(t));
+            }
+        }
+        let mut e = serde_json::Map::new();
+        e.insert("id".into(), json!(0));
+        e.insert("layerId".into(), J::String(layer.name.clone()));
+        e.insert("attrs".into(), J::Object(attrs));
+        let kind = match &row.geometry {
+            None => "record",
+            Some(Err(why)) => {
+                skipped.push((row.fid, format!("geometrisi okunamadı: {why}")));
+                continue;
+            }
+            Some(Ok(g)) if g.is_empty() => "record",
+            Some(Ok(g)) => match geometry_json(g, &mut losses) {
+                Some((kind, fields)) => {
+                    e.extend(fields);
+                    kind
+                }
+                None => {
+                    skipped.push((
+                        row.fid,
+                        format!("{} geometrisinin çizimde karşılığı yok", g.type_name()),
+                    ));
+                    continue;
+                }
+            },
+        };
+        e.insert("kind".into(), J::String(kind.into()));
+        if kind == "record" {
+            records += 1;
+        }
+        let entity: Entity = serde_json::from_value(J::Object(e)).map_err(|why| {
+            format!(
+                "“{}” tablosunun {} numaralı satırı: {why}",
+                layer.name, row.fid
+            )
+        })?;
+        let uid = uids
+            .get(&row.fid)
+            .and_then(|u| Uuid::parse_str(u).ok())
+            .unwrap_or_else(|| uid_of(row.fid));
+        objects.push((uid, entity));
+        fids.push(row.fid);
+    }
+    Ok(TableRead {
+        title: layer.identifier.clone().filter(|i| i != &layer.name),
+        name: layer.name.clone(),
+        srs_id: layer.srs_id,
+        fields,
+        objects,
+        fids,
+        read: rows.len() as u32,
+        records,
+        skipped,
+        losses,
     })
 }
 

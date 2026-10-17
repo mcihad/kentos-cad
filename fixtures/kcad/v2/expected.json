@@ -309,6 +309,7 @@
     { "file": "broken/sources-id-twice.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/sources-revision-short.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/sources-relative-path.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/sources-password.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/forms-in-schema-71.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "records.kcad", "sniff": "kcad", "content": "records.json" },
     { "file": "broken/record-in-schema-71.kcad", "sniff": "kcad", "error": "unknown_kind" },

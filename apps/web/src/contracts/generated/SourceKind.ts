@@ -3,4 +3,4 @@
 /**
  * What a source is.
  */
-export type SourceKind = "geopackage";
+export type SourceKind = "geopackage" | "postgis";

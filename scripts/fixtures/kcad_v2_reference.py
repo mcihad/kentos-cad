@@ -3992,6 +3992,8 @@ def build():
     out["broken/sources-id-twice.kcad"] = sources_broken(lambda s: s[1].update(id="kaynak-1"))
     out["broken/sources-revision-short.kcad"] = sources_broken(lambda s: s[0].update(revision="9f2c"))
     out["broken/sources-relative-path.kcad"] = sources_broken(lambda s: s[0].update(path="veri/kadastro.gpkg"))
+    out["broken/sources-password.kcad"] = sources_broken(
+        lambda s: s[2].update(path="postgresql://cbs:gizli@veri.belediye.local:5432/kent"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))

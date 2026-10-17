@@ -4020,8 +4020,8 @@ class _Schema:
         """Schema 73 (docs/adr/0503): the layers bound to a table of a file; `srid` written only when the table
         declares one; ids and layers once each, an absolute path, a table, the file's SHA-256."""
         def kind(x):
-            if x != "geopackage":
-                self.fail("bad_value", f"“{x}” bilinmeyen kaynak türü (geopackage)")
+            if x not in ("geopackage", "postgis"):
+                self.fail("bad_value", f"“{x}” bilinmeyen kaynak türü (geopackage, postgis)")
             return x
 
         source = self.fields({
@@ -4043,7 +4043,17 @@ class _Schema:
             if not s["id"].strip() or s["id"] in ids:
                 self.fail("bad_value", f"“{s['id']}” kaynak kimliği boş ya da iki kez kullanılmış")
             ids.add(s["id"])
-            if not (s["path"].startswith("/") or s["path"][1:3] == ":\\"):
+            if s["kind"] == "postgis":
+                # docs/adr/0505: a database's address, no password in it.
+                if not s["path"].startswith(("postgresql://", "postgres://")):
+                    self.fail("bad_value", f"“{s['path']}” bir veritabanı adresi değil")
+                rest = s["path"].split("://", 1)[1]
+                authority, _, tail = rest.partition("/")
+                user, at, _ = authority.rpartition("@")
+                if (at and ":" in user) or any(kv.split("=")[0].lower() == "password"
+                                               for kv in tail.partition("?")[2].split("&") if kv):
+                    self.fail("bad_value", "adreste parola var; parola projeye yazılmaz")
+            elif not (s["path"].startswith("/") or s["path"][1:3] == ":\\"):
                 self.fail("bad_value", f"“{s['path']}” mutlak bir yol değil")
             if not s["table"].strip():
                 self.fail("bad_value", "kaynağın tablosu boş")

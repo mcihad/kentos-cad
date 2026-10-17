@@ -3317,6 +3317,94 @@
    ]
   },
   {
+   "name": "PostGIS: veritabanı adresinde parola",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://cbs:gizli@veri.belediye.local/kent"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs:gizli@veri.belediye.local/kent”: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adresin password parametresi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://cbs@veri.belediye.local/kent?sslmode=require&password=gizli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs@veri.belediye.local/kent?sslmode=require&password=gizli”: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adreste sunucu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://cbs@/kent"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs@/kent”: adreste sunucu yok (postgresql://kullanıcı@sunucu:5432/veritabanı).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adreste veritabanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgres://cbs@veri.belediye.local:5432/"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgres://cbs@veri.belediye.local:5432/”: adreste veritabanı yok (postgresql://kullanıcı@sunucu:5432/veritabanı).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "iki bağ sırasıyla",
    "steps": [
     {

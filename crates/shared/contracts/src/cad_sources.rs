@@ -99,8 +99,9 @@ pub struct SourceState {
     pub removed: u32,
 }
 
-/// Input of `cad.sources.describe` v1: a file's tables (`path`), or the project's bound layers' state (none). Refusals:
-/// `invalid_file_path`, `file_not_found`, `import_unreadable`.
+/// Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'
+/// state (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,
+/// `source_unreachable` (docs/adr/0505).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

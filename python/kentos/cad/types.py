@@ -2594,11 +2594,16 @@ SnapKindNameName = Literal["endpoint", "midpoint", "center", "node", "quadrant",
 
 
 class SourceKind(_StrEnum):
-    """What a source is."""
+    """What a source is.
+
+    - ``geopackage``
+    - ``postgis``: A PostGIS table (docs/adr/0505): `path` is the database's address without a password.
+    """
     GEOPACKAGE = "geopackage"
+    POSTGIS = "postgis"
 
 
-SourceKindName = Literal["geopackage"]
+SourceKindName = Literal["geopackage", "postgis"]
 """The names of :class:`SourceKind`, for a plain string."""
 
 
@@ -26264,8 +26269,9 @@ class SourceTable(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SourcesDescribe(_Model):
-    """Input of `cad.sources.describe` v1: a file's tables (`path`), or the project's bound layers' state (none). Refusals:
-    `invalid_file_path`, `file_not_found`, `import_unreadable`.
+    """Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'
+    state (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,
+    `source_unreachable` (docs/adr/0505).
     """
     path: str | None | Unset = UNSET
 

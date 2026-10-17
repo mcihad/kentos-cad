@@ -191,6 +191,9 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "too_many_sources",
         "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
     ),
+    ("cad.sources.describe", "source_unreachable", "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)"),
+    ("cad.sources.edit", "source_unreachable", "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)"),
+    ("cad.sources.sync", "source_unreachable", "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)"),
     (
         "cad.sheets.edit",
         "*",

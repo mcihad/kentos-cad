@@ -308,6 +308,21 @@ def edit_cases():
              step({"edit": {"kind": "relink", "id": "kaynak-2", "path": fx(Q)}},
                   failed("source_not_found", "“kaynak-2” kimlikli bir bağ yok; cad.sources.describe bağları listeler.",
                          "edit.id"))),
+        *[case(f"PostGIS: {n}", step({"edit": {"kind": "link", "path": a, "table": "kadastro.parsel"}},
+                                     bad_address(a, why, "edit.path"))) for n, a, why in BAD_ADDRESSES],
+        case("PostGIS: dosyanın bağı veritabanına yeniden bağlanmaz", s_link,
+             step({"edit": {"kind": "relink", "id": "kaynak-1", "path": PG}},
+                  failed("invalid_address", f"{PG} bağın kaynağıyla aynı türden değil (dosya ya da veritabanı); başka "
+                         "türden bir kaynak için bağı çözüp yeniden bağlayın.", "edit.path"))),
+        case("PostGIS: yeniden bağlamada da adreste parola olmaz", s_link,
+             step({"edit": {"kind": "relink", "id": "kaynak-1", "path": BAD_ADDRESSES[0][1]}},
+                  bad_address(BAD_ADDRESSES[0][1], PASSWORD, "edit.path"))),
+        case("PostGIS: veritabanının bağı veritabanına ulaşmadan çözülür",
+             step({"edit": {"kind": "unlink", "id": "kaynak-1"}}, done({"objects": 0, "revision": "$current"}),
+                  {"revision": "changed", "settings": {"sources": None}}),
+             setup_=setup([layer("bagli")], sources=[{"id": "kaynak-1", "kind": "postgis", "path": PG,
+                                                      "table": "kadastro.parsel", "layer": "bagli", "revision": FAKE,
+                                                      "digest": FAKE, "srid": 5256, "writable": True}])),
         case("iki tablo iki bağ", s_link,
              step({"edit": {"kind": "link", "path": fx(Q), "table": "nokta"}},
                   done({**linked("nokta", start=5)[0], "link": {**nb, "id": "kaynak-2"}},
@@ -330,6 +345,24 @@ def state(b, found=True, changed=False, edited=False, added=0, modified=0, remov
 
 
 FAKE = "f" * 64
+
+
+PG = "postgresql://cbs@veri.belediye.local:5432/kent"
+PASSWORD = "adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun"
+FORM = "(postgresql://kullanıcı@sunucu:5432/veritabanı)"
+# docs/adr/0505: a database's address is refused before anything is reached when it carries a password or lacks a host
+# or a database. Whether a database answers depends on the host's provider (Python registers one, the application's
+# tests do not), so those refusals are tested in sources.rs and kentos-postgis's tests, not here.
+BAD_ADDRESSES = [
+    ("veritabanı adresinde parola", "postgresql://cbs:gizli@veri.belediye.local/kent", PASSWORD),
+    ("adresin password parametresi", "postgresql://cbs@veri.belediye.local/kent?sslmode=require&password=gizli", PASSWORD),
+    ("adreste sunucu yok", "postgresql://cbs@/kent", f"adreste sunucu yok {FORM}"),
+    ("adreste veritabanı yok", "postgres://cbs@veri.belediye.local:5432/", f"adreste veritabanı yok {FORM}"),
+]
+
+
+def bad_address(address, why, at):
+    return failed("invalid_address", f"“{address}”: {why}.", at)
 
 
 def describe_cases():
@@ -396,6 +429,7 @@ def describe_cases():
         case("başka sistemdeki tablo: taşınan nokta farklı", wgs_link(),
              other("cad.entities.transform", {"uids": ["$uidOf:2"], "transform": {"kind": "move", "dx": 10, "dy": 0}}),
              step({}, done({"links": [state(WB, edited=True, modified=1)], "revision": "$current"}))),
+        *[case(f"PostGIS: {n}", step({"path": a}, bad_address(a, why, "path"))) for n, a, why in BAD_ADDRESSES],
         case("iki bağ sırasıyla", s_link, n_link,
              step({}, done({"links": [state(b), state({**nb, "id": "kaynak-2"})], "revision": "$current"}))),
     ]

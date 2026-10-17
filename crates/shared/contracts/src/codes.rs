@@ -1085,6 +1085,10 @@ codes! {
     GEOMETRY_MISMATCH = "geometry_mismatch", Failed, false, "Nesnenin geometrisi tablonun geometri sütununa uymuyor.";
     /// The layer differs from its table; reading would replace it (docs/adr/0503).
     PENDING_CHANGES = "pending_changes", Conflict, true, "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür.";
+    /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
+    INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
+    /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).
+    SOURCE_UNREACHABLE = "source_unreachable", Failed, false, "Veritabanına ulaşılamadı ya da bu ortamda onun sağlayıcısı yok.";
     /// More bound layers than a project keeps (docs/adr/0503).
     TOO_MANY_SOURCES = "too_many_sources", Failed, false, "Bir projede en çok 1000 bağlı katman olur.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).

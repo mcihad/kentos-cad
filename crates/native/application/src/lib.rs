@@ -58,6 +58,7 @@ pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
 pub mod file_import_gpkg;
+pub mod provider;
 pub mod sources;
 pub mod geopackage;
 pub mod blocks_library;

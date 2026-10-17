@@ -27,6 +27,7 @@ use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
 use crate::geopackage as gp;
+use crate::provider;
 
 /// Coordinates of an object and its row agree within this (m): the geometry kernel's tolerance.
 const SAME: f64 = 1e-6;
@@ -138,6 +139,9 @@ struct Stored {
     rows: HashMap<Uuid, (i64, Option<Geometry>, Vec<Value>)>,
     /// The rows as the import reads them, in the table's own system.
     objects: Vec<(Uuid, kentos_contracts::Entity)>,
+    /// The columns as the layer's fields, and what does not come over (linking onto a new layer).
+    fields: Vec<kentos_contracts::LayerField>,
+    losses: BTreeSet<String>,
     writable: bool,
     sha256: String,
 }
@@ -192,6 +196,21 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
         .into_iter()
         .map(|r| (r.fid, r))
         .collect();
+    Ok(Stored {
+        srid: layer
+            .srs_id
+            .and_then(|id| read.systems.get(&id).cloned().flatten())
+            .filter(|(org, _)| org == "EPSG")
+            .and_then(|(_, id)| u32::try_from(id).ok()),
+        writable: matches!(layer.data_type, DataType::Features | DataType::Attributes)
+            && !readonly(path),
+        sha256: read.sha256,
+        ..stored_of(layer, &mut raw, t)
+    })
+}
+
+/// A table's rows by lasting id, as read (`t`) and as stored (`raw`, taken by fid).
+fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::TableRead) -> Stored {
     let mut rows = HashMap::with_capacity(t.fids.len());
     let objects = t.objects.clone();
     for ((uid, _), fid) in t.objects.iter().zip(&t.fids) {
@@ -205,21 +224,151 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
         };
         rows.insert(*uid, (*fid, g, r.values));
     }
-    let srid = layer
-        .srs_id
-        .and_then(|id| read.systems.get(&id).cloned().flatten())
-        .filter(|(org, _)| org == "EPSG")
-        .and_then(|(_, id)| u32::try_from(id).ok());
-    let writable =
-        matches!(layer.data_type, DataType::Features | DataType::Attributes) && !readonly(path);
-    Ok(Stored {
+    Stored {
         layer,
-        srid,
+        srid: None,
         rows,
         objects,
-        writable,
-        sha256: read.sha256,
+        fields: t.fields,
+        losses: t.losses,
+        writable: false,
+        sha256: String::new(),
+    }
+}
+
+// ── Databases (docs/adr/0505) ──────────────────────────────────────────────
+
+/// Where a source is: a GeoPackage file or a database.
+#[derive(Clone, Copy)]
+enum Origin<'a> {
+    File(&'a Path),
+    Database(&'a str),
+}
+
+impl Origin<'_> {
+    fn kind(self) -> SourceKind {
+        match self {
+            Origin::File(_) => SourceKind::Geopackage,
+            Origin::Database(_) => SourceKind::Postgis,
+        }
+    }
+}
+
+/// The source at `address`: a database's address (no password in it) or a GeoPackage's path.
+fn origin<'a>(address: &'a str, at: &str) -> Result<Origin<'a>, Stop> {
+    if provider::is_database(address) {
+        if let Some(why) = provider::address_problem(address) {
+            return Err(refuse(
+                codes::INVALID_ADDRESS,
+                format!("“{address}”: {why}."),
+                at,
+            ));
+        }
+        return Ok(Origin::Database(address));
+    }
+    checked(address, at).map(Origin::File)
+}
+
+/// A bound layer's source, without checking that it is there.
+fn origin_of(link: &SourceLink) -> Origin<'_> {
+    origin_from(link.kind, &link.path)
+}
+
+fn origin_from(kind: SourceKind, path: &str) -> Origin<'_> {
+    match kind {
+        SourceKind::Geopackage => Origin::File(Path::new(path)),
+        SourceKind::Postgis => Origin::Database(path),
+    }
+}
+
+fn database_provider(at: &str) -> Result<&'static dyn provider::TableProvider, Stop> {
+    provider::postgis().ok_or_else(|| {
+        refuse(
+            codes::SOURCE_UNREACHABLE,
+            "Bu ortamda PostGIS sağlayıcısı yok; masaüstü, Python ve MCP onu kaydeder.",
+            at,
+        )
     })
+}
+
+/// Where a refusal points: the address's field and the table's (the same field when one names both).
+#[derive(Clone, Copy)]
+struct At<'a> {
+    address: &'a str,
+    table: &'a str,
+}
+
+const fn at_one(field: &str) -> At<'_> {
+    At {
+        address: field,
+        table: field,
+    }
+}
+
+fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_>) -> Stop {
+    match e {
+        provider::ProviderError::Unreachable(why) => refuse(
+            codes::SOURCE_UNREACHABLE,
+            format!("{address} veritabanına ulaşılamadı: {why}"),
+            at.address,
+        ),
+        provider::ProviderError::NoTable(t) => refuse(
+            codes::TABLE_NOT_FOUND,
+            format!(
+                "“{t}” tablosu veritabanında yok; şema.tablo adıyla verin (cad.sources.describe listeler)."
+            ),
+            at.table,
+        ),
+        provider::ProviderError::Changed => conflict(
+            codes::SOURCE_CHANGED,
+            format!(
+                "{address} tablosu katman onunla son eşleştiğinden beri değişti; hiçbir şey yazılmadı. Önce tablodan okuyun (direction read)."
+            ),
+            at.table,
+        ),
+        provider::ProviderError::Refused(why) => refuse(
+            codes::FILE_UNWRITABLE,
+            format!("{address} veritabanına yazılamadı, hiçbir şey değişmedi: {why}"),
+            at.table,
+        ),
+    }
+}
+
+/// A database's name in its address, for the lasting ids of its rows.
+fn database_name(address: &str) -> &str {
+    let rest = address
+        .split_once("://")
+        .map(|(_, r)| r)
+        .unwrap_or_default();
+    let tail = rest.split_once('/').map(|(_, t)| t).unwrap_or_default();
+    tail.split_once('?').map_or(tail, |(d, _)| d)
+}
+
+fn load_database(address: &str, table: &str, at: At<'_>) -> Result<Stored, Stop> {
+    let p = database_provider(at.address)?;
+    let r = p
+        .read(address, table)
+        .map_err(|e| provider_stop(e, address, at))?;
+    let database = database_name(address).to_owned();
+    let name = r.layer.name.clone();
+    let t = gp::table_of_rows(&r.layer, &r.rows, &r.uids, &|pk| {
+        gp::database_row_uid(&database, &name, pk)
+    })
+    .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, at.table))?;
+    let mut raw: HashMap<i64, gpkg::Row> = r.rows.into_iter().map(|row| (row.fid, row)).collect();
+    Ok(Stored {
+        srid: r.srid,
+        writable: r.writable,
+        sha256: r.revision,
+        ..stored_of(r.layer, &mut raw, t)
+    })
+}
+
+fn load_at(origin: Origin<'_>, table: &str, at: At<'_>) -> Result<Stored, Stop> {
+    match origin {
+        Origin::File(path) => load_or_refuse(path, table, at.table),
+        Origin::Database(address) => load_database(address, table, at),
+    }
 }
 
 fn load_or_refuse(path: &Path, table: &str, at: &str) -> Result<Stored, Stop> {
@@ -525,19 +674,67 @@ fn describe_file(path: &Path) -> Result<Vec<SourceTable>, String> {
     Ok(out)
 }
 
+/// A database's tables as `cad.sources.describe` says them.
+fn describe_database(address: &str) -> Result<Vec<SourceTable>, Stop> {
+    let p = database_provider("path")?;
+    let tables = p
+        .tables(address)
+        .map_err(|e| provider_stop(e, address, at_one("path")))?;
+    Ok(tables
+        .into_iter()
+        .map(|t| SourceTable {
+            columns: t
+                .columns
+                .iter()
+                .map(|c| SourceColumn {
+                    name: c.name.clone(),
+                    declared: c.decl.clone(),
+                    kind: gp::column_kind(c),
+                })
+                .collect(),
+            capabilities: SourceCapabilities {
+                read: true,
+                insert: t.writable,
+                update: t.writable,
+                delete: t.writable,
+                transaction: true,
+                z: t.z,
+                m: t.m,
+                curves: true,
+            },
+            name: t.name,
+            data: t.data,
+            rows: t.rows,
+            geometry: t.geometry,
+            srid: t.srid,
+        })
+        .collect())
+}
+
 fn state_of(doc: &Document, link: &SourceLink) -> SourceState {
-    let path = Path::new(&link.path);
     let edited = layer_digest(doc, &link.layer) != link.digest;
     let mut state = SourceState {
         link: link.clone(),
-        found: path.is_file(),
+        found: false,
         changed: false,
         edited,
         added: 0,
         modified: 0,
         removed: 0,
     };
-    if let (Ok(mut s), Ok(mover)) = (load(path, &link.table), mover_for(doc, link.srid)) {
+    let loaded = match origin_of(link) {
+        Origin::File(path) => {
+            state.found = path.is_file();
+            load(path, &link.table).ok()
+        }
+        // A database is there when it answers.
+        Origin::Database(address) => {
+            let s = load_database(address, &link.table, at_one("")).ok();
+            state.found = s.is_some();
+            s
+        }
+    };
+    if let (Some(mut s), Ok(mover)) = (loaded, mover_for(doc, link.srid)) {
         state.changed = s.sha256 != link.revision;
         s.reachable(mover.as_ref());
         let d = diff(doc, &link.layer, &s, mover.as_ref());
@@ -555,14 +752,16 @@ fn describe_run(
     let revision = doc.revision().to_string();
     match &input.path {
         Some(path) => {
-            let p = checked(path, "path")?;
-            let tables = describe_file(p).map_err(|why| {
-                refuse(
-                    codes::IMPORT_UNREADABLE,
-                    format!("{path} GeoPackage olarak okunamadı: {why}"),
-                    "path",
-                )
-            })?;
+            let tables = match origin(path, "path")? {
+                Origin::File(p) => describe_file(p).map_err(|why| {
+                    refuse(
+                        codes::IMPORT_UNREADABLE,
+                        format!("{path} GeoPackage olarak okunamadı: {why}"),
+                        "path",
+                    )
+                })?,
+                Origin::Database(address) => describe_database(address)?,
+            };
             Ok((
                 SourcesDescribed {
                     tables,
@@ -658,7 +857,7 @@ fn link_table(
     layer: Option<&str>,
     reproject: bool,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
-    let p = checked(path, "edit.path")?;
+    let at = origin(path, "edit.path")?;
     if doc.settings().sources.len() >= MAX_SOURCES {
         return Err(refuse(
             codes::TOO_MANY_SOURCES,
@@ -681,7 +880,14 @@ fn link_table(
             "edit.table",
         ));
     }
-    let mut stored = load_or_refuse(p, table, "edit.table")?;
+    let mut stored = load_at(
+        at,
+        table,
+        At {
+            address: "edit.path",
+            table: "edit.table",
+        },
+    )?;
     let project = doc.settings().srid;
     if let Some(s) = stored.srid.filter(|&s| s != project && !reproject) {
         return Err(refuse(
@@ -729,6 +935,12 @@ fn link_table(
             }
             (id.to_owned(), 0, Vec::new())
         }
+        None if matches!(at, Origin::Database(_)) => {
+            let (layer, objects, layers, w) =
+                link_database_layer(doc, path, &stored, mover.as_ref())?;
+            warnings.extend(w);
+            (layer, objects, layers)
+        }
         None => {
             let input = ImportGpkg {
                 path: path.to_owned(),
@@ -754,7 +966,7 @@ fn link_table(
     };
     let link = SourceLink {
         id: next_id(doc),
-        kind: SourceKind::Geopackage,
+        kind: at.kind(),
         path: path.to_owned(),
         table: table.to_owned(),
         digest: layer_digest(doc, &layer),
@@ -773,6 +985,76 @@ fn link_table(
         },
         warnings,
     ))
+}
+
+/// A database table's rows onto a new layer with the table's columns as fields, its lasting ids kept, one undo step
+/// (“PostGIS: şema.tablo”); the rows moved into the project's system when the table is in another.
+fn link_database_layer(
+    doc: &mut Document,
+    address: &str,
+    stored: &Stored,
+    mover: Option<&Mover>,
+) -> Result<(String, u32, Vec<ImportedLayer>, Vec<CommandWarning>), Stop> {
+    let source = stored.layer.name.clone();
+    let name = source
+        .rsplit_once('.')
+        .map_or(source.as_str(), |(_, t)| t)
+        .to_owned();
+    let objects = stored.in_project(mover);
+    let count = objects.len() as u32;
+    let plan = crate::import_apply::ImportPlan {
+        label: format!("PostGIS: {source}"),
+        layers: vec![(
+            source.clone(),
+            crate::import_apply::LayerTarget::New {
+                name,
+                style: Box::new(kentos_domain::default_style()),
+                visible: true,
+                locked: false,
+                fields: stored.fields.clone(),
+                plot: None,
+                frozen: None,
+            },
+        )],
+        group: None,
+    };
+    if let Some((uid, _)) = objects.iter().find(|(u, _)| doc.slot_of(*u).is_some()) {
+        return Err(refuse(
+            codes::ENTITY_EXISTS,
+            format!(
+                "Tablodaki bir satırın kalıcı kimliği ({uid}) çizimde zaten bir nesnenin: {address} › {source} daha önce alınmış."
+            ),
+            "edit.table",
+        ));
+    }
+    let applied = crate::import_apply::apply_import_with_uids(doc, objects, &plan)
+        .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "edit.table"))?;
+    let layer = applied
+        .targets
+        .iter()
+        .find(|(s, _)| *s == source)
+        .map(|(_, t)| t.clone())
+        .unwrap_or_default();
+    let mut warnings = Vec::new();
+    if !stored.losses.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::IMPORT_LOSSES.into(),
+            message: format!(
+                "{source} tablosunun bazı değerleri olduğu gibi alınamadı: {}.",
+                stored.losses.iter().cloned().collect::<Vec<_>>().join("; ")
+            ),
+            path: Some("edit.table".into()),
+        });
+    }
+    let layers = applied
+        .made
+        .iter()
+        .map(|(id, name)| ImportedLayer {
+            id: id.clone(),
+            name: name.clone(),
+        })
+        .collect();
+    Ok((layer, count, layers, warnings))
 }
 
 fn edit_run(
@@ -813,9 +1095,22 @@ fn edit_run(
                     "edit.id",
                 ));
             };
-            let p = checked(path, "edit.path")?;
-            let sha =
-                file_sha(p).map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "edit.path"))?;
+            let at = origin(path, "edit.path")?;
+            if at.kind() != link.kind {
+                return Err(refuse(
+                    codes::INVALID_ADDRESS,
+                    format!(
+                        "{path} bağın kaynağıyla aynı türden değil (dosya ya da veritabanı); başka türden bir kaynak için bağı çözüp yeniden bağlayın."
+                    ),
+                    "edit.path",
+                ));
+            }
+            let sha = match at {
+                Origin::File(p) => {
+                    file_sha(p).map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "edit.path"))?
+                }
+                Origin::Database(_) => load_at(at, &link.table, at_one("edit.path"))?.sha256,
+            };
             if sha != link.revision {
                 return Err(conflict(
                     codes::SOURCE_CHANGED,
@@ -825,7 +1120,7 @@ fn edit_run(
                     "edit.path",
                 ));
             }
-            load_or_refuse(p, &link.table, "edit.path")?;
+            load_at(at, &link.table, at_one("edit.path"))?;
             link.path = path.clone();
             set_link(doc, Some(link.clone()), None);
             Ok((
@@ -905,8 +1200,11 @@ fn sync_run(
             "layer",
         ));
     }
-    let path = Path::new(&link.path);
-    if !path.is_file() {
+    let address = link.path.clone();
+    let source = origin_from(link.kind, &address);
+    if let Origin::File(path) = source
+        && !path.is_file()
+    {
         return Err(refuse(
             codes::SOURCE_GONE,
             format!(
@@ -916,7 +1214,7 @@ fn sync_run(
             "layer",
         ));
     }
-    let mut stored = load_or_refuse(path, &link.table, "layer")?;
+    let mut stored = load_at(source, &link.table, at_one("layer"))?;
     let mover = mover_for(doc, link.srid).map_err(|why| {
         refuse(
             codes::CRS_MISMATCH,
@@ -994,30 +1292,44 @@ fn sync_run(
                     insert: d.insert,
                     delete: d.delete,
                 };
-                let mut file = GeoPackage::open(path, true).map_err(|e| {
-                    refuse(
-                        codes::FILE_UNWRITABLE,
-                        format!("{} yazmak için açılamadı: {}", link.path, e.0),
-                        "layer",
-                    )
-                })?;
-                file.edit(&stored.layer, &edits).map_err(|e| {
-                    refuse(
-                        codes::FILE_UNWRITABLE,
-                        format!("{} yazılamadı, dosya değişmedi: {}", link.path, e.0),
-                        "layer",
-                    )
-                })?;
-                file.close().map_err(|e| {
-                    refuse(
-                        codes::FILE_UNWRITABLE,
-                        format!("{} kapatılamadı: {}", link.path, e.0),
-                        "layer",
-                    )
-                })?;
+                match source {
+                    Origin::File(path) => {
+                        let mut file = GeoPackage::open(path, true).map_err(|e| {
+                            refuse(
+                                codes::FILE_UNWRITABLE,
+                                format!("{} yazmak için açılamadı: {}", link.path, e.0),
+                                "layer",
+                            )
+                        })?;
+                        file.edit(&stored.layer, &edits).map_err(|e| {
+                            refuse(
+                                codes::FILE_UNWRITABLE,
+                                format!("{} yazılamadı, dosya değişmedi: {}", link.path, e.0),
+                                "layer",
+                            )
+                        })?;
+                        file.close().map_err(|e| {
+                            refuse(
+                                codes::FILE_UNWRITABLE,
+                                format!("{} kapatılamadı: {}", link.path, e.0),
+                                "layer",
+                            )
+                        })?;
+                    }
+                    // In one transaction, after checking under a lock that the table is still at the revision.
+                    Origin::Database(address) => {
+                        let p = database_provider("layer")?;
+                        let (_, revision) = p
+                            .edit(address, &link.table, &link.revision, &edits)
+                            .map_err(|e| provider_stop(e, address, at_one("layer")))?;
+                        link.revision = revision;
+                    }
+                }
             }
-            link.revision =
-                file_sha(path).map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "layer"))?;
+            if let Origin::File(path) = source {
+                link.revision =
+                    file_sha(path).map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "layer"))?;
+            }
             link.digest = layer_digest(doc, &link.layer);
             out.source = link.revision.clone();
             set_link(doc, Some(link), None);

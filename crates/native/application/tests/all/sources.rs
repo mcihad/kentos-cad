@@ -366,3 +366,74 @@ fn a_table_in_another_system_is_written_back_in_its_own() {
     }
     let _ = std::fs::remove_file(&tmp);
 }
+
+// docs/adr/0505: where the host registered no PostGIS provider (as in these tests), a database is not reached: the
+// listing, the link and the sync say so; the layer's state says the database is not there; unlinking needs nothing.
+#[test]
+fn without_a_provider_a_database_is_not_reached() {
+    let pg = "postgresql://cbs@veri.belediye.local:5432/kent";
+    let fake = "0".repeat(64);
+    let setup = json!({
+        "format": "kentos.document", "version": 1, "name": "PostGIS",
+        "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                      "plotScale": 1000, "workspace": "gis",
+                      "sources": [{ "id": "kaynak-1", "kind": "postgis", "path": pg, "table": "kadastro.parsel",
+                                    "layer": "bagli", "revision": fake, "digest": fake, "srid": 5256, "writable": true }] },
+        "origin": { "x": 0.0, "y": 0.0 },
+        "layers": [{ "id": "bagli", "name": "Bağlı", "type": "layer", "visible": true, "locked": false, "expanded": true,
+                     "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
+        "activeLayer": "bagli", "entities": [], "styles": { "items": [], "categories": [] }
+    });
+    let snapshot =
+        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let mut d = Document::from_snapshot(snapshot).expect("setup");
+    let unreachable = |answer: Value, at: &str| {
+        assert_eq!(answer["error"]["code"], "source_unreachable", "{answer}");
+        assert_eq!(answer["error"]["path"], at, "{answer}");
+        assert!(
+            answer["error"]["message"]
+                .as_str()
+                .is_some_and(|m| m.contains("PostGIS sağlayıcısı"))
+        );
+    };
+    unreachable(
+        run(
+            &mut d,
+            "cad.sources.describe",
+            CallOp::Execute,
+            json!({ "path": pg }),
+        ),
+        "path",
+    );
+    unreachable(
+        run(
+            &mut d,
+            "cad.sources.edit",
+            CallOp::Plan,
+            json!({ "edit": { "kind": "link", "path": pg, "table": "kadastro.yol" } }),
+        ),
+        "edit.path",
+    );
+    unreachable(
+        run(
+            &mut d,
+            "cad.sources.sync",
+            CallOp::Plan,
+            json!({ "layer": "bagli", "direction": "read" }),
+        ),
+        "layer",
+    );
+    let s = state(&mut d);
+    assert_eq!(
+        (s["found"].clone(), s["changed"].clone()),
+        (json!(false), json!(false)),
+        "{s}"
+    );
+    ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "unlink", "id": "kaynak-1" } }),
+    ));
+    assert!(d.settings().sources.is_empty());
+}

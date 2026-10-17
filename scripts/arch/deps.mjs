@@ -47,6 +47,10 @@ const GROUPS = [
   // GeoPackage (docs/adr/0502, plan/gis.md CBS-03): its own crate over SQLite (rusqlite, bundled; the owner's choice,
   // 17 Oct 2026). It knows the GeoPackage alone, no KentOS type; the product commands turn its rows into objects.
   { name: 'geopackage', path: 'crates/native/geopackage/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // PostGIS as a bound layer's source (docs/adr/0505, plan/gis.md CBS-04): the product commands' TableProvider over
+  // sqlx with TLS (the owner's choice, 17 Oct 2026), on a runtime of its own. The hosts register it (desktop, Python,
+  // MCP); the product commands stay pure. Listed before `native`.
+  { name: 'postgis', path: 'crates/native/postgis/', targets: [HOST], uses: ['shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'stylelib', path: 'crates/native/style-library/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['shared', 'domain', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native tool session (docs/adr/0021): tools, prompts and typed input over the document;
@@ -78,11 +82,12 @@ const GROUPS = [
   // The Python SDK's extension module (docs/adr/0131): the headless host under CPython. The one
   // native crate that uses pyo3. Listed before `native`.
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  // `postgis` registers the PostGIS provider (docs/adr/0505): its tokio and sqlx come in only through it.
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
@@ -101,7 +106,7 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
 ];
 

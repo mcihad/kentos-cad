@@ -2083,6 +2083,644 @@
    ]
   },
   {
+   "name": "PostGIS: veritabanı adresinde parola",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "postgresql://cbs:gizli@veri.belediye.local/kent",
+       "table": "kadastro.parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs:gizli@veri.belediye.local/kent”: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adresin password parametresi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "postgresql://cbs@veri.belediye.local/kent?sslmode=require&password=gizli",
+       "table": "kadastro.parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs@veri.belediye.local/kent?sslmode=require&password=gizli”: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adreste sunucu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "postgresql://cbs@/kent",
+       "table": "kadastro.parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs@/kent”: adreste sunucu yok (postgresql://kullanıcı@sunucu:5432/veritabanı).",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: adreste veritabanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "postgres://cbs@veri.belediye.local:5432/",
+       "table": "kadastro.parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgres://cbs@veri.belediye.local:5432/”: adreste veritabanı yok (postgresql://kullanıcı@sunucu:5432/veritabanı).",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: dosyanın bağı veritabanına yeniden bağlanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "relink",
+       "id": "kaynak-1",
+       "path": "postgresql://cbs@veri.belediye.local:5432/kent"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "postgresql://cbs@veri.belediye.local:5432/kent bağın kaynağıyla aynı türden değil (dosya ya da veritabanı); başka türden bir kaynak için bağı çözüp yeniden bağlayın.",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: yeniden bağlamada da adreste parola olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "relink",
+       "id": "kaynak-1",
+       "path": "postgresql://cbs:gizli@veri.belediye.local/kent"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "“postgresql://cbs:gizli@veri.belediye.local/kent”: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "edit.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS: veritabanının bağı veritabanına ulaşmadan çözülür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "unlink",
+       "id": "kaynak-1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "sources": null
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "postgis",
+       "path": "postgresql://cbs@veri.belediye.local:5432/kent",
+       "table": "kadastro.parsel",
+       "layer": "bagli",
+       "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
    "name": "iki tablo iki bağ",
    "steps": [
     {

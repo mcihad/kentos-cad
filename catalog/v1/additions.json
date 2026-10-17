@@ -1299,10 +1299,23 @@
       "status": "implemented"
     },
     {
+      "id": "source.postgis",
+      "title": "PostGIS'e bağlan…",
+      "icon": "sourceDatabase",
+      "description": "Bir PostGIS veritabanının tablolarını listeler ve seçilenleri bağlı katman olarak açar: değişiklikler Kaynağa yaz ile tek işlemde veritabanına yazılır. Parola adrese yazılmaz; PGPASSWORD ya da ~/.pgpass'tan okunur.",
+      "aliases": [
+        "POSTGISBAGLA",
+        "PGBAGLA"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
       "id": "source.link",
       "title": "Kaynağa bağla…",
       "icon": "sourceLinked",
-      "description": "Bir GeoPackage tablosunu bağlı katman olarak açar: katman tablonun çalışma kopyası olur, değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir. Dosya projenin sisteminde olmalıdır.",
+      "description": "Bir GeoPackage tablosunu bağlı katman olarak açar: katman tablonun çalışma kopyası olur, değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir. Başka sistemdeki dosya Projenin sistemine çevir ile açılır, kendi sisteminde yazılır.",
       "aliases": [
         "KAYNAKBAGLA",
         "GPKGBAGLA"
@@ -1361,6 +1374,7 @@
     }
   ],
   "icons": {
+    "sourceDatabase": "<ellipse cx=\"8.5\" cy=\"4.6\" rx=\"5.6\" ry=\"2.1\"/><path d=\"M2.9 4.6v9.6c0 1.2 2.5 2.1 5.6 2.1\"/><path d=\"M14.1 4.6v4.2\"/><path d=\"M2.9 9.4c0 1.2 2.5 2.1 5.6 2.1 1.1 0 2.1-.1 3-.3\" stroke-width=\"1.1\"/><path d=\"m12.6 13.8 1.7-1.7a1.9 1.9 0 0 1 2.7 2.7l-1.7 1.7M14.4 18.3l-.6.6a1.9 1.9 0 0 1-2.7-2.7l.6-.6M13.3 16.4l1.9-1.9\" stroke-width=\"1.2\"/>",
     "addressSearch": "<path d=\"M7 15.5S2.8 11.3 2.8 7.2a4.2 4.2 0 0 1 8.4 0c0 4.1-4.2 8.3-4.2 8.3z\"/><circle cx=\"7\" cy=\"7.2\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.8\" cy=\"12.8\" r=\"3.1\"/><path d=\"m16.1 15.1 2.2 2.2\"/>",
     "addressReverse": "<circle cx=\"6.2\" cy=\"13.8\" r=\"2.6\"/><path d=\"M6.2 9.2v1.6M6.2 16.8v1.6M1.6 13.8h1.6M9.2 13.8h1.6\"/><rect x=\"10\" y=\"2.5\" width=\"8\" height=\"6\" rx=\"1.2\"/><path d=\"M12 4.8h4M12 6.6h2.6\" stroke-width=\"1.1\"/><path d=\"M8.6 11.4 11.2 9.2\" stroke-dasharray=\"1.2 1\" stroke-width=\"1.1\"/>",
     "addressGeocode": "<path d=\"M2.5 4h7M2.5 7.5h7M2.5 11h5\" stroke-width=\"1.2\"/><path d=\"M3 15.5h5m-1.8-1.8 1.8 1.8-1.8 1.8\" stroke-width=\"1.2\"/><path d=\"M14.5 17.5s-3.6-3.5-3.6-6.8a3.6 3.6 0 0 1 7.2 0c0 3.3-3.6 6.8-3.6 6.8z\"/><circle cx=\"14.5\" cy=\"10.7\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
@@ -2291,6 +2305,10 @@
         },
         {
           "command": "source.link",
+          "size": "small"
+        },
+        {
+          "command": "source.postgis",
           "size": "small"
         },
         {

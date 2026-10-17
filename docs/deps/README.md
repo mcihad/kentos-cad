@@ -49,8 +49,8 @@ Dış bağımlılık değildir: kod bu depodadır ve kilide dış paket getirmez
 | pollster | 0.4.0 (yalnız test) | Apache-2.0 OR MIT | native (test) | render-wgpu GPU testi | ADR 0019 |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
 | http-body | 1.1.0 | MIT | native | api (akışla indirilen dosyanın gövdesi, yalnız `Frame` türü) | ADR 0031; zaten kilitliydi (axum, hyper), kilide yeni paket girmedi |
-| tokio | 1.53.1 | MIT | native | api, postgres; application (`fs`, `io-util`: dosya projelerinin nesne deposu, ADR 0031); cloud (masaüstü bulut istemcisinin kendi çalışma zamanı, ADR 0040) | ADR 0001 |
-| sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
+| tokio | 1.53.1 | MIT | native | api, postgres; application (`fs`, `io-util`: dosya projelerinin nesne deposu, ADR 0031); cloud (masaüstü bulut istemcisinin kendi çalışma zamanı, ADR 0040); postgis (bağlı katmanın PostGIS sağlayıcısının kendi tek iş parçacıklı çalışma zamanı, ADR 0505) | ADR 0001 |
+| sqlx | 0.9.0, `tls-none`; `kentos-postgis`'te `tls-rustls-ring-native-roots` | MIT OR Apache-2.0 | native | postgres, application, api; postgis (masaüstü, Python ve MCP onun üzerinden; ADR 0505) | ADR 0006, 0007, 0505 (sahibin onayı, 17 Ekim: “sqlx, TLS ile”). TLS'siz yalnız yerel sunucu içindir; kurumun PostGIS'ine bağlantı rustls ve sistemin kök sertifikalarıyla; kilide yeni crate girmedi. Sunucunun üretim TLS'i ayrı iştir (`OPS-03`) |
 | tower | 0.5.3 | MIT | native | api | ADR 0007 |
 | tower-http | 0.7.1 | MIT | native | api | ADR 0007 |
 | uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain, cloud | ADR 0007, 0020 |

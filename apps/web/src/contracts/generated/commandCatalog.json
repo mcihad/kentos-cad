@@ -12334,10 +12334,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -21305,10 +21314,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -34637,10 +34655,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -503927,7 +503954,7 @@
       "id": "cad.sources.describe",
       "version": 1,
       "title": "Kaynakları tanı",
-      "summary": "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz.",
+      "summary": "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz. path bir PostGIS adresiyse (postgresql://kullanıcı@sunucu:5432/veritabanı; parolasız: invalid_address) veritabanının tek tam sayı anahtarlı tablolarını şema.tablo adlarıyla söyler; ulaşılamayan veritabanı source_unreachable, bağlı katmanında found false.",
       "aliases": [
         "kaynaklar"
       ],
@@ -503944,7 +503971,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.describe` v1: a file's tables (`path`), or the project's bound layers' state (none). Refusals:\n`invalid_file_path`, `file_not_found`, `import_unreadable`.",
+        "description": "Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'\nstate (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,\n`source_unreachable` (docs/adr/0505).",
         "properties": {
           "path": {
             "type": [
@@ -504054,10 +504081,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -504341,10 +504377,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -504534,7 +504579,9 @@
         "refusals": [
           "invalid_file_path",
           "file_not_found",
-          "import_unreadable"
+          "import_unreadable",
+          "invalid_address",
+          "source_unreachable"
         ]
       },
       "examples": [
@@ -504554,7 +504601,7 @@
       "id": "cad.sources.edit",
       "version": 1,
       "title": "Kaynağa bağla",
-      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ.",
+      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.",
       "aliases": [
         "kaynakbagla"
       ],
@@ -504678,10 +504725,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -504800,10 +504856,19 @@
           },
           "SourceKind": {
             "description": "What a source is.",
-            "enum": [
-              "geopackage"
-            ],
-            "type": "string"
+            "oneOf": [
+              {
+                "enum": [
+                  "geopackage"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "A PostGIS table (docs/adr/0505): `path` is the database's address without a password.",
+                "type": "string"
+              }
+            ]
           },
           "SourceLink": {
             "additionalProperties": false,
@@ -504908,6 +504973,8 @@
           "file_not_found",
           "import_unreadable",
           "table_not_found",
+          "invalid_address",
+          "source_unreachable",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -504951,7 +505018,7 @@
       "id": "cad.sources.sync",
       "version": 1,
       "title": "Kaynakla eşitle",
-      "summary": "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.",
+      "summary": "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.",
       "aliases": [
         "kaynakesitle"
       ],
@@ -505106,6 +505173,7 @@
           "source_gone",
           "import_unreadable",
           "table_not_found",
+          "source_unreachable",
           "source_readonly",
           "source_changed",
           "geometry_mismatch",
@@ -536933,6 +537001,18 @@
       "kind": "conflict",
       "retryable": true,
       "meaning": "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür."
+    },
+    {
+      "code": "invalid_address",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz."
+    },
+    {
+      "code": "source_unreachable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veritabanına ulaşılamadı ya da bu ortamda onun sağlayıcısı yok."
     },
     {
       "code": "too_many_sources",

@@ -98,7 +98,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-01 — Kaynak gezginine canlı GeoPackage/PostGIS ve servis bağlantıları ekle — P0**
 
-  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): GeoPackage tablosu bağlı katman olarak açılır (`cad.sources.edit`), bağ proje kapatılıp açılınca korunur (`.kcad` şema 73), taşınan dosya yeniden bağlanır (relink), yeri bilinmeyen kaynak nesneleriyle açılır; Katmanlar'da rozet ve Kaynak ▸. Kalan: kaynak gezgininde dosyanın katmanlarını eklemeden önizleme, PostGIS (CBS-04) ve servis katalogları.*
+  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): GeoPackage tablosu bağlı katman olarak açılır (`cad.sources.edit`), bağ proje kapatılıp açılınca korunur (`.kcad` şema 73), taşınan dosya yeniden bağlanır (relink), yeri bilinmeyen kaynak nesneleriyle açılır; Katmanlar'da rozet ve Kaynak ▸. Kalan: kaynak gezgininde dosyanın katmanlarını eklemeden önizleme ve servis katalogları. PostGIS tablosu ADR 0505'le bağlanır.*
 
   **Mevcut:** Kaynaklar paneli klasörleri ve KentOS projelerinden katman kopyalamayı biliyor [K03]. GIS kullanıcısı için verinin nerede olduğu, canlı mı kopya mı olduğu ve neden yazılamadığı aynı yerde anlaşılmalı.
 
@@ -127,6 +127,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/36; ilk sürümde vektör+tablo, sonra raster tile/ilişkili tablo profilleri. QGIS **4.2'de üretilen gerçek GeoPackage** açılıp düzenlenmeli; QGIS'te yeniden açıldığında kimlik, Türkçe alan/değer, null, delik, multipart ve desteklenen Z/M kaybolmamalı. Yazma ortasında iptal/çökme dosyayı yarım şemayla bırakmamalı; ağ paylaşımı çok yazarlı sunucu gibi sunulmamalı.
 
 - [ ] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
+
+  *Kısmen (17 Ekim 2026; [ADR 0505](../docs/adr/0505-postgis-bound-layers.md)): PostGIS tablosu bağlı katman olarak açılır (`cad.sources.*`'ın adresle çalışması), TLS'li sqlx sağlayıcısı `kentos-postgis` ev sahiplerince kaydedilir; sürüm satırların SHA-256'sı (`xmin` değil), yazma kilit altında sürüm denetimiyle tek işlemde, kalıcı kimlikler `kentos_uids`'te; parola projeye yazılmaz; masaüstünde PostGIS'e bağlan. Geçici PostGIS'te ogr2ogr ve psycopg2'yle denetlendi. Kalan: sorguyu kaynağa itmek ve sayfa sayfa ilk harita, view ve SQL katmanı, tetikleyici/outbox izleme, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme senaryosu.*
 
   **Mevcut:** KentOS bulutunun kendi şeması ve sayfalaması mevcut; kurumun var olan `parsel`, `bina`, `hat` tablolarına provider olarak bağlanmak ayrı iş [K04].
 

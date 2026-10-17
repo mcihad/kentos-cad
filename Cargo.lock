@@ -2600,6 +2600,7 @@ dependencies = [
  "kentos-ncz",
  "kentos-plot",
  "kentos-pointcloud",
+ "kentos-postgis",
  "kentos-processing",
  "kentos-project",
  "kentos-render-wgpu",
@@ -2764,6 +2765,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-headless",
+ "kentos-postgis",
  "miniz_oxide 0.9.1",
  "serde_json",
 ]
@@ -2870,6 +2872,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-postgis"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geopackage",
+ "kentos-native-application",
+ "serde_json",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [
@@ -2919,6 +2934,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-headless",
  "kentos-native-application",
+ "kentos-postgis",
  "kentos-processing",
  "kentos-project",
  "kentos-services",
@@ -4923,6 +4939,7 @@ checksum = "0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634"
 dependencies = [
  "aws-lc-rs",
  "once_cell",
+ "ring",
  "rustls-pki-types",
  "rustls-webpki",
  "subtle",
@@ -5590,6 +5607,8 @@ dependencies = [
  "log",
  "memchr",
  "percent-encoding",
+ "rustls",
+ "rustls-native-certs",
  "serde",
  "serde_json",
  "sha2 0.10.9",

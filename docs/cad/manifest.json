@@ -6779,6 +6779,23 @@
    "tests": 0
   },
   {
+   "id": "source.postgis",
+   "kind": "command",
+   "title": "PostGIS'e bağlan…",
+   "level": "semantic",
+   "via": [
+    "cad.sources.describe",
+    "cad.sources.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.describe, kentos.cad.sources.edit",
+   "mcp": "cad.sources.describe, cad.sources.edit",
+   "note": "PostGIS'e bağlan tabloları cad.sources.describe ile listeler, seçilenleri cad.sources.edit link ile bağlar (ADR 0505).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "source.read",
    "kind": "command",
    "title": "Kaynaktan oku",
