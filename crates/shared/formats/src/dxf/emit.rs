@@ -33,6 +33,9 @@ use crate::gis::CLOSING_Z;
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
+use kentos_geometry_core::Vec2 as CoreVec2;
+use kentos_geometry_core::entity::{HatchCurve as CoreCurve, HatchLoop as CoreLoop};
+use kentos_geometry_core::geom::hatch_boundary;
 
 mod notes;
 mod pattern;
@@ -169,8 +172,22 @@ pub struct Out {
     /// the polygons KentOS data names as holes of another (index, owner handle).
     pub handles: HashMap<u64, usize>,
     pub holes: Vec<(usize, u64)>,
+    /// The associative hatches of model space and their boundary objects by handle (docs/adr/0333 §2), tied once
+    /// every object is read ([`Emitter::tie_hatches`]).
+    pub ties: Vec<Tie>,
     /// The attribute definitions of the block being read (docs/adr/0144 §7).
     pub attributes: Vec<AttributeDefinition>,
+}
+
+/// An associative HATCH taken as one hatch (docs/adr/0333 §2): its index among the objects, each path's flags (1
+/// external) and source handles, and its seed points in the drawing.
+#[derive(Debug)]
+pub struct Tie {
+    pub hatch: usize,
+    pub flags: Vec<i64>,
+    pub sources: Vec<Vec<u64>>,
+    pub seeds: Vec<Vec2>,
+    pub line: u32,
 }
 
 impl Out {
@@ -187,6 +204,7 @@ impl Out {
             exhausted: false,
             handles: HashMap::new(),
             holes: Vec::new(),
+            ties: Vec::new(),
             attributes: Vec::new(),
         }
     }
@@ -618,6 +636,7 @@ impl<'l> Emitter<'l> {
             None => oblique,
         };
         kentos_contracts::TextFace {
+            overrides: Vec::new(),
             text_style: id,
             font: Some(font),
             bold,
@@ -887,7 +906,6 @@ impl<'l> Emitter<'l> {
         }
     }
 
-
     /// What an insert hands its BYBLOCK children: its own weight, or its layer's.
     fn insert_weight(&self, e: &Parsed, ctx: &Ctx, layer: &str) -> Option<f64> {
         match e.common.weight {
@@ -1066,6 +1084,27 @@ impl<'l> Emitter<'l> {
         if !gone.contains(&true) {
             return;
         }
+        // The objects after it move up: the handles and the ties follow them (docs/adr/0333 §2).
+        let mut moved = Vec::with_capacity(gone.len());
+        let mut kept = 0usize;
+        for &g in &gone {
+            moved.push((!g).then_some(kept));
+            kept += usize::from(!g);
+        }
+        out.handles.retain(|_, at| match moved[*at] {
+            Some(n) => {
+                *at = n;
+                true
+            }
+            None => false,
+        });
+        out.ties.retain_mut(|t| match moved[t.hatch] {
+            Some(n) => {
+                t.hatch = n;
+                true
+            }
+            None => false,
+        });
         let mut i = 0;
         let (per_layer, report) = (&mut out.per_layer, &mut out.report);
         out.entities.retain(|e| {
@@ -1082,6 +1121,97 @@ impl<'l> Emitter<'l> {
             }
             keep
         });
+    }
+
+    /// Ties each associative hatch of model space to its objects (docs/adr/0333 §2), once every object is read and
+    /// the holes merged: the outer path's one closed object is its closed object, else its objects close its face;
+    /// the other paths' objects are its islands. The ids are stand-ins for the objects' places among the objects
+    /// ([`kentos_contracts::import_placeholder`]); the import puts the objects' ids in their place. A hatch whose
+    /// objects are not all read, or whose seed is not in it, follows nothing and is said.
+    pub fn tie_hatches(&mut self) {
+        let out = &mut self.out;
+        for t in std::mem::take(&mut out.ties) {
+            let at = |h: &u64| out.handles.get(h).copied();
+            let resolved: Option<Vec<Vec<usize>>> =
+                t.sources.iter().map(|s| s.iter().map(at).collect()).collect();
+            let Some(resolved) = resolved else {
+                out.report.note(
+                    "Tarama (HATCH)",
+                    "ilişkili taramanın sınır nesnelerinden biri alınmadı; tarama ilişkisiz alındı",
+                    t.line,
+                );
+                continue;
+            };
+            let Some(Entity::Hatch(h)) = out.entities.get(t.hatch) else {
+                continue;
+            };
+            // The outer path: the external one, else the first.
+            let outer_path = t.flags.iter().position(|f| f & 1 != 0).unwrap_or(0);
+            let id = |i: usize| kentos_contracts::import_placeholder(i as u32);
+            let mine = resolved.get(outer_path).cloned().unwrap_or_default();
+            let closed = |i: usize| match out.entities.get(i) {
+                Some(Entity::Polygon(_) | Entity::Circle(_)) => true,
+                Some(Entity::Polyline(p)) => p.closed,
+                Some(Entity::Ellipse(e)) => (e.t1 - e.t0).abs() >= std::f64::consts::TAU - 1e-9,
+                Some(Entity::Nurbs(n)) => n.closed,
+                _ => false,
+            };
+            let (outer, bounds) = match mine.as_slice() {
+                [one] if closed(*one) => (Some(id(*one)), Vec::new()),
+                many => (None, many.iter().map(|&i| id(i)).collect()),
+            };
+            let mut islands: Vec<kentos_contracts::EntityId> = Vec::new();
+            for (k, list) in resolved.iter().enumerate() {
+                if k == outer_path {
+                    continue;
+                }
+                for &i in list {
+                    let x = id(i);
+                    if Some(x) != outer && !bounds.contains(&x) && !islands.contains(&x) {
+                        islands.push(x);
+                    }
+                }
+            }
+            if outer.is_none() && bounds.is_empty() {
+                continue;
+            }
+            // The seed: the file's that is in the hatch, else its outer ring's middle when that is.
+            let inside = |p: Vec2| {
+                let ring = to_core(&h.ring);
+                ring_contains(&ring, p)
+                    && !h
+                        .holes
+                        .iter()
+                        .flatten()
+                        .any(|hole| ring_contains(&to_core(hole), p))
+            };
+            let middle = {
+                let n = h.ring.len() as f64;
+                v(
+                    h.ring.iter().map(|p| p.x).sum::<f64>() / n,
+                    h.ring.iter().map(|p| p.y).sum::<f64>() / n,
+                )
+            };
+            let Some(seed) = t.seeds.iter().copied().chain(std::iter::once(middle)).find(|p| inside(*p)) else {
+                out.report.note(
+                    "Tarama (HATCH)",
+                    "ilişkili taramanın tohum noktası bölgesinde değil; tarama ilişkisiz alındı",
+                    t.line,
+                );
+                continue;
+            };
+            let assoc = kentos_contracts::HatchAssoc {
+                outer,
+                gap: None,
+                bounds,
+                islands,
+                cutouts: Vec::new(),
+                seed,
+            };
+            if let Some(Entity::Hatch(h)) = out.entities.get_mut(t.hatch) {
+                h.assoc = Some(assoc);
+            }
+        }
     }
 
     fn emit_kind(&mut self, e: &Parsed, ctx: &Ctx) {
@@ -1399,6 +1529,15 @@ impl<'l> Emitter<'l> {
                     match self.table_of(e, ctx, &layer, json, &placed) {
                         Ok(t) => return self.push(Entity::Table(t)),
                         Err(why) => self.note("Tablo", why, e.line),
+                    }
+                }
+                // A KentOS dimension or leader written as its look (docs/adr/0327 §6): its INSERT carries it.
+                if ctx.chain.is_empty()
+                    && let Some(json) = e.meta.as_ref().and_then(|m| m.object.as_deref())
+                {
+                    match self.whole_of(e, ctx, &layer, json, &placed) {
+                        Ok(o) => return self.push(o),
+                        Err(why) => self.note("KentOS nesnesi", why, e.line),
                     }
                 }
                 // A KentOS text along a curve (docs/adr/0196 §5): its INSERT carries it; else its block's letters.
@@ -2054,7 +2193,13 @@ impl<'l> Emitter<'l> {
             style,
         };
         match self.text_frame(ctx, &t, &words, e) {
-            Ok(frame) => self.push_text(&frame, words, false, Paragraph::default(), b),
+            Ok(frame) => {
+                let paragraph = Paragraph {
+                    fields: kept_fields(e, &words),
+                    ..Paragraph::default()
+                };
+                self.push_text(&frame, words, false, paragraph, b)
+            }
             Err(why) => self.skip(&e.name, why, e.line),
         }
     }
@@ -2270,6 +2415,7 @@ impl<'l> Emitter<'l> {
         // The box widens as the baseline does: its height's scale times the widening (1 unturned, unscaled).
         let along = height / f.height * widen;
         self.push(Entity::Text(TextEntity {
+            annotative: None,
             base: b,
             p,
             text,
@@ -2355,8 +2501,23 @@ impl<'l> Emitter<'l> {
             align: Some(justify::attachment(attach)),
             width_factor: content.width_factor.unwrap_or(1.0),
         };
+        // Its layout (docs/adr/0324 §4): KentOS's own data whole (columns too) when the file has it and it holds,
+        // else MTEXT's first paragraph format.
+        let box_width = (width.is_finite() && width > 0.0).then_some(width);
+        let kept = e
+            .meta
+            .as_ref()
+            .and_then(|m| m.layout.as_deref())
+            .and_then(|json| serde_json::from_str::<kentos_contracts::ParagraphLayout>(json).ok())
+            .filter(|l| !l.is_plain() && l.problem(box_width.is_some()).is_none());
+        let layout = kept
+            .or(content.layout)
+            .filter(|l| l.problem(box_width.is_some()).is_none())
+            .map(Box::new);
         let paragraph = Paragraph {
-            box_width: (width.is_finite() && width > 0.0).then_some(width),
+            fields: kept_fields(e, &content.text),
+            layout,
+            box_width,
             line_spacing: (spacing.is_finite() && spacing > 0.0 && spacing != 1.0)
                 .then(|| spacing.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
             runs: content.runs,
@@ -2537,10 +2698,60 @@ impl<'l> Emitter<'l> {
         {
             t.source = None;
         }
-        if t.shape().problem().is_some() || t.face.problem().is_some() {
+        if t.problem().is_some() || t.face.problem().is_some() {
             return Err("KentOS verisindeki tablo geçersiz; çizgi ve yazıları alındı");
         }
         Ok(t)
+    }
+
+    /// A dimension or a leader from its INSERT's KentOS data (docs/adr/0327 §6), as written: its INSERT at the origin,
+    /// unturned and unscaled; one another program moved keeps its block's lines and texts. What it was tied to (a
+    /// dimension's references, a leader's tips and content blocks) is the writing drawing's and is let go.
+    fn whole_of(
+        &self,
+        e: &Parsed,
+        ctx: &Ctx,
+        layer: &str,
+        json: &str,
+        placed: &Placed,
+    ) -> Result<Entity, &'static str> {
+        let still = placed.p[0] == 0.0
+            && placed.p[1] == 0.0
+            && placed.scale[0] == 1.0
+            && placed.scale[1] == 1.0
+            && placed.rotation == 0.0
+            && placed.array.0 * placed.array.1 <= 1
+            && super::extrusion_z(e.common.extrusion) == 1.0;
+        if !still {
+            return Err("başka bir programda taşınmış, dönmüş ya da ölçeklenmiş; bloğunun çizgi ve yazıları alındı");
+        }
+        let broken = "KentOS verisi okunamadı; bloğunun çizgi ve yazıları alındı";
+        let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
+        let map = value.as_object_mut().ok_or(broken)?;
+        map.insert("id".into(), 0.into());
+        map.insert("layerId".into(), layer.into());
+        map.insert(
+            "attrs".into(),
+            serde_json::Value::Object(Default::default()),
+        );
+        let mut o: Entity = serde_json::from_value(value).map_err(|_| broken)?;
+        let b = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
+        match &mut o {
+            Entity::Dimension(d) => {
+                d.refs = None;
+                d.base = b;
+            }
+            Entity::Leader(l) => {
+                l.tip = None;
+                l.blocks = Vec::new();
+                for a in &mut l.arms {
+                    a.tip = None;
+                }
+                l.base = b;
+            }
+            _ => return Err(broken),
+        }
+        Ok(o)
     }
 
     /// A text along a curve from its INSERT's KentOS data (docs/adr/0196 §5):
@@ -2686,7 +2897,8 @@ impl<'l> Emitter<'l> {
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
             // Unequal factors stay one insert (docs/adr/0315 §3); equal ones within a billionth are one.
-            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9).then_some(sy.abs()),
+            y_scale: (sx != 0.0 && (sx.abs() - sy.abs()).abs() > sx.abs() * 1e-9)
+                .then_some(sy.abs()),
             rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
         }));
@@ -2742,6 +2954,8 @@ impl<'l> Emitter<'l> {
             return self.skip("Tarama (HATCH)", "doğrultusu (210) geçersiz", e.line);
         };
         let mut rings: Vec<Vec<Vec2>> = Vec::new();
+        // Each ring's path exact (docs/adr/0328 §1), in drawing coordinates; none where it cannot be.
+        let mut loops: Vec<Option<CoreLoop>> = Vec::new();
         let mut curved = false;
         for path in &h.paths {
             let Boundary {
@@ -2760,21 +2974,38 @@ impl<'l> Emitter<'l> {
             }
             if ring.len() >= 3 && ring.iter().all(|p| finite(*p)) {
                 rings.push(ring);
+                let at = |p: CoreVec2| {
+                    let q = m.apply(Vec2 { x: p.x, y: p.y });
+                    finite(q).then(|| CoreVec2::new(q.x, q.y))
+                };
+                loops.push(path_loop(path).and_then(|l| {
+                    hatch_boundary::mapped(&[l], &at, [m.a, m.b, m.c, m.d])
+                        .and_then(|mut v| v.pop())
+                        .filter(|l| hatch_boundary::problem(std::slice::from_ref(l)).is_none())
+                }));
             }
         }
         if rings.is_empty() {
             return self.skip("Tarama (HATCH)", "sınırı okunamadı ya da alanı yok", e.line);
         }
-        if curved {
+        // Curves are kept exact where every path could be (docs/adr/0328 §1); else drawn in pieces. Straight paths
+        // are their rings: no boundary.
+        let exact = loops.iter().all(Option::is_some)
+            && hatch_boundary::curved(&loops.iter().flatten().cloned().collect::<Vec<_>>());
+        if curved && !exact {
             self.note("Tarama (HATCH)", "sınırdaki yaylar ve eğriler parçalı alındı (72 parça/tur, uygulamanın taramaları gibi)", e.line);
         }
-        if h.assoc {
+        // An associative hatch of model space is tied to its objects once every object is read (docs/adr/0333 §2);
+        // one in a block, or with no source objects, follows nothing.
+        let tied = h.assoc && !self.defining && ctx.chain.is_empty() && h.sources.iter().any(|s| !s.is_empty());
+        if h.assoc && !tied {
             self.note(
                 "Tarama (HATCH)",
                 "ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
                 e.line,
             );
         }
+        let first = self.out.entities.len();
         let mut b = b;
         let mut pattern = self.pattern(m, h, &mut b, e);
         // KentOS data holds a pattern or a gradient exactly; they count while the groups still say it.
@@ -2830,13 +3061,43 @@ impl<'l> Emitter<'l> {
                 .filter(|&j| parent[j] == Some(i) && depth[j] <= max_depth)
                 .map(|j| rings[j].clone())
                 .collect();
+            let boundary = if exact {
+                let mine: Vec<CoreLoop> = std::iter::once(i)
+                    .chain(
+                        (0..rings.len()).filter(|&j| parent[j] == Some(i) && depth[j] <= max_depth),
+                    )
+                    .filter_map(|k| loops[k].clone())
+                    .collect();
+                crate::blocks::contract_boundary(&mine)
+            } else {
+                None
+            };
             self.push(Entity::Hatch(HatchEntity {
                 base: b.clone(),
                 ring: rings[i].clone(),
                 holes: (!holes.is_empty()).then_some(holes),
                 pattern: pattern.clone(),
                 assoc: None,
+                boundary,
+                annotative: None,
             }));
+        }
+        if tied {
+            if self.out.entities.len() == first + 1 {
+                self.out.ties.push(Tie {
+                    hatch: first,
+                    flags: h.path_flags.clone(),
+                    sources: h.sources.clone(),
+                    seeds: h.seeds.iter().map(|p| m.apply(v(p[0], p[1]))).collect(),
+                    line: e.line,
+                });
+            } else {
+                self.note(
+                    "Tarama (HATCH)",
+                    "birden çok bölgeli ilişkili tarama ilişkisiz alındı; sınır nesnelerini izlemez",
+                    e.line,
+                );
+            }
         }
     }
 
@@ -2881,6 +3142,162 @@ fn arc_edge(c: Vec2, r: f64, a0: f64, a1: f64, ccw: bool, prev: Option<Vec2>, ou
     };
     out.push(at(start));
     arc_points(c, r, rad(start), rad(sweep), Some(at(end)), out);
+}
+
+/// A hatch boundary path as its exact loop, in object coordinates (docs/adr/0328 §1): a polyline path's vertices
+/// and bulges; an edge path's lines and arcs as vertices and bulges, its elliptic arcs and splines as curves. None
+/// when an edge does not start where the one before it ended (within a millionth of the path's size), or a spline's
+/// numbers make no curve: the path is then taken in pieces, as before.
+fn path_loop(path: &Path) -> Option<CoreLoop> {
+    let p2 = |p: &[f64; 2]| CoreVec2::new(p[0], p[1]);
+    match path {
+        Path::Poly { pts, bulges } => {
+            let mut pts: Vec<CoreVec2> = pts.iter().map(p2).collect();
+            let mut bulges: Vec<f64> = (0..pts.len()).map(|i| bulges.get(i).copied().unwrap_or(0.0)).collect();
+            if pts.len() > 1 && pts.first() == pts.last() {
+                pts.pop();
+                bulges.pop();
+            }
+            if pts.len() < 2 || !bulges.iter().all(|b| b.is_finite()) {
+                return None;
+            }
+            let any = bulges.iter().any(|b| *b != 0.0);
+            Some(CoreLoop {
+                pts,
+                bulges: any.then_some(bulges),
+                curves: None,
+            })
+        }
+        Path::Edges(edges) => {
+            // How near an edge must start to where the one before ended.
+            let size = edges
+                .iter()
+                .flat_map(|e| match e {
+                    Edge::Line { a, b } => vec![a[0].abs(), a[1].abs(), b[0].abs(), b[1].abs()],
+                    Edge::Arc { c, r, .. } => vec![c[0].abs() + r, c[1].abs() + r],
+                    Edge::Ellipse { c, major, .. } => vec![c[0].abs() + hypot(major[0], major[1]), c[1].abs()],
+                    Edge::Spline { ctrl, .. } => ctrl.iter().flat_map(|p| [p[0].abs(), p[1].abs()]).collect(),
+                })
+                .fold(1.0_f64, f64::max);
+            let tol = 1e-6 + 1e-9 * size;
+            let near = |a: CoreVec2, b: CoreVec2| hypot(a.x - b.x, a.y - b.y) <= tol;
+            let mut pts: Vec<CoreVec2> = Vec::new();
+            let mut bulges: Vec<f64> = Vec::new();
+            let mut curves: Vec<Option<CoreCurve>> = Vec::new();
+            let mut ends: Vec<CoreVec2> = Vec::new();
+            let mut prev: Option<CoreVec2> = None;
+            for edge in edges {
+                let (start, end, bulge, curve) = match edge {
+                    Edge::Line { a, b } => (p2(a), p2(b), 0.0, None),
+                    Edge::Arc { c, r, a0, a1, ccw } => {
+                        let at = |d: f64| {
+                            let (s, co) = sin_cos_deg(d);
+                            CoreVec2::new(c[0] + r * co, c[1] + r * s)
+                        };
+                        // As `arc_edge` reads it.
+                        let (s, e, sweep) = if *ccw {
+                            let span = (a1 - a0).rem_euclid(360.0);
+                            (*a0, *a1, if span == 0.0 { 360.0 } else { span })
+                        } else {
+                            let pv = prev.map(|p| Vec2 { x: p.x, y: p.y });
+                            let to = |x: CoreVec2| Vec2 { x: x.x, y: x.y };
+                            let (s, e) = match pv {
+                                Some(p) if dist(to(at(*a0)), p) < dist(to(at(-a0)), p) => (*a0, *a1),
+                                _ => (-a0, -a1),
+                            };
+                            let span = (s - e).rem_euclid(360.0);
+                            (s, e, -(if span == 0.0 { 360.0 } else { span }))
+                        };
+                        if sweep.abs() >= 360.0 {
+                            // A whole circle: two half arcs.
+                            let (p0, p1) = (at(s), at(s + sweep / 2.0));
+                            let b = if sweep > 0.0 { 1.0 } else { -1.0 };
+                            pts.extend([p0, p1]);
+                            bulges.extend([b, b]);
+                            curves.extend([None, None]);
+                            ends.extend([p1, p0]);
+                            prev = Some(p0);
+                            continue;
+                        }
+                        (at(s), at(e), crate::math::tan(rad(sweep) / 4.0), None)
+                    }
+                    Edge::Ellipse {
+                        c,
+                        major,
+                        ratio,
+                        a0,
+                        a1,
+                        ccw,
+                    } => {
+                        // As `path_points` reads it.
+                        let (a0, a1) = if *ccw { (*a0, *a1) } else { (-*a0, -*a1) };
+                        let param = |a: f64| atan2(sin(rad(a)) / ratio.max(1e-12), cos(rad(a)));
+                        let (t0, mut t1) = (param(a0), param(a1));
+                        if *ccw {
+                            if t1 <= t0 {
+                                t1 += TAU;
+                            }
+                        } else if t1 >= t0 {
+                            t1 -= TAU;
+                        }
+                        let curve = CoreCurve::Ellipse {
+                            c: p2(c),
+                            major: p2(major),
+                            ratio: *ratio,
+                            t0,
+                            t1,
+                        };
+                        let (s, e) = hatch_boundary::curve_ends(&curve)?;
+                        (s, e, 0.0, Some(curve))
+                    }
+                    Edge::Spline {
+                        degree,
+                        knots,
+                        ctrl,
+                        weights,
+                    } => {
+                        let curve = CoreCurve::Nurbs {
+                            degree: *degree,
+                            ctrl: ctrl.iter().map(p2).collect(),
+                            knots: knots.clone(),
+                            weights: (weights.len() == ctrl.len()).then(|| weights.clone()),
+                        };
+                        let (s, e) = hatch_boundary::curve_ends(&curve)?;
+                        (s, e, 0.0, Some(curve))
+                    }
+                };
+                if let Some(p) = prev
+                    && !near(p, start)
+                {
+                    return None;
+                }
+                pts.push(start);
+                bulges.push(if bulge.is_finite() { bulge } else { return None });
+                curves.push(curve);
+                ends.push(end);
+                prev = Some(end);
+            }
+            let (first, last) = (*pts.first()?, *ends.last()?);
+            if !near(last, first) {
+                return None;
+            }
+            // A curve's ends are its loop's points: snap a line's or an arc's start onto the curve's end before it.
+            let n = pts.len();
+            for i in 0..n {
+                let j = (i + 1) % n;
+                if curves[i].is_some() && curves[j].is_none() {
+                    pts[j] = ends[i];
+                }
+            }
+            let any_bulge = bulges.iter().any(|b| *b != 0.0);
+            let any_curve = curves.iter().any(Option::is_some);
+            Some(CoreLoop {
+                pts,
+                bulges: any_bulge.then_some(bulges),
+                curves: any_curve.then_some(curves),
+            })
+        }
+    }
 }
 
 /// A hatch boundary path as points (object coordinates).
@@ -2978,6 +3395,17 @@ fn path_points(path: &Path) -> Boundary {
     }
 }
 
+/// A text's fields from its KENTOS data (docs/adr/0325 §1), when they hold for its letters; none else (the letters
+/// stay, the bindings go).
+fn kept_fields(e: &Parsed, text: &str) -> Vec<kentos_contracts::TextField> {
+    e.meta
+        .as_ref()
+        .and_then(|m| m.fields.as_deref())
+        .and_then(|json| serde_json::from_str::<Vec<kentos_contracts::TextField>>(json).ok())
+        .filter(|f| kentos_contracts::text_fields_problem(f, text).is_none())
+        .unwrap_or_default()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3032,3 +3460,4 @@ mod tests {
         assert_eq!((b.pts.len(), b.curved, b.rough), (6, true, true));
     }
 }
+

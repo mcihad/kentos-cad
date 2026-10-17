@@ -173,6 +173,10 @@ fn positive(what: &str, v: f64) -> Result<(), String> {
 fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
     use Entity::*;
     let base = e.base();
+    // An annotation's scales (docs/adr/0323).
+    if let Some(why) = kentos_contracts::annotative_problem(e) {
+        return Err(why);
+    }
     if (base.layer_id.is_empty() && !in_block) || base.layer_id.len() > 200 {
         return Err("katman kimliği boş ya da çok uzun".into());
     }
@@ -296,6 +300,14 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 check_len("Tarama adası", h.len(), 3)?;
             }
             positive("Tarama aralığı", x.pattern.spacing)?;
+            // Its exact boundary in the contract's form (docs/adr/0328 §1).
+            if let Some(words) = x
+                .boundary
+                .as_deref()
+                .and_then(kentos_contracts::boundary_problem)
+            {
+                return Err(words);
+            }
         }
         // Its block is the project's: the commit checks it is there (docs/adr/0144 §5).
         Insert(x) => {
@@ -331,7 +343,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             if in_block {
                 return Err("Blok tanımında tablo olamaz".into());
             }
-            if let Some((_, why)) = x.shape().problem() {
+            if let Some((_, why)) = x.problem() {
                 return Err(why);
             }
             if let Some((_, why)) = x.face.problem() {
@@ -380,7 +392,7 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
 /// The file's rules for a dimension's style (docs/adr/0147 §3): what a style
 /// needs, and what only a slope has.
 fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> {
-    use kentos_contracts::DimensionStyle::{ArcLength, Jogged, Ordinate, Slope};
+    use kentos_contracts::DimensionStyle::{ArcLength, Elevation, Jogged, Ordinate, Slope};
     match x.style {
         Some(ArcLength | Jogged) if x.c.is_none() => {
             return Err("Yay uzunluğu ve kırıklı yarıçap ölçüsünün merkezi (c) olmalı".into());
@@ -391,10 +403,14 @@ fn dimension_rules(x: &kentos_contracts::DimensionEntity) -> Result<(), String> 
         Some(Ordinate) if x.angle.is_some_and(|a| a != 0.0 && a != 90.0) => {
             return Err("Koordinat ölçüsünün ekseni 0 (Y) ya da 90 (X) olmalı".into());
         }
+        // A level's one elevation (docs/adr/0322).
+        Some(Elevation) if x.za.is_none() || x.zb.is_some() => {
+            return Err("Kot ölçüsünün bir kotu (za) olmalı, zb olmamalı".into());
+        }
         _ => {}
     }
-    if x.style != Some(Slope) && (x.za.is_some() || x.zb.is_some()) {
-        return Err("Kot (za, zb) yalnız eğim ölçüsünde yazılır".into());
+    if !matches!(x.style, Some(Slope | Elevation)) && (x.za.is_some() || x.zb.is_some()) {
+        return Err("Kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır".into());
     }
     Ok(())
 }

@@ -7,13 +7,20 @@
 //! KENTOS_SHOTS_ONLY=blok-dinamik,blok-kitaplik,blok-kitaplik-kategori cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And of docs/adr/0319: the door's parameter grips and a width dragged (blok-tutamac), its values in Öznitelikler
+//! (blok-parametreler) and two doors made plain blocks (blok-sabit):
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=blok-tutamac,blok-parametreler,blok-sabit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
 use crate::files_testing::make_cad;
-use crate::tools_scenes::{E, N, Objects, layer, open_edited, run};
+use crate::tools_scenes::{E, N, Objects, at, hover, layer, open_edited, run};
 use crate::tools_screens::Scene;
 
 const LIBRARY: &str = include_str!("../../../catalog/v1/blocks/kentos-temel.kblok");
@@ -175,10 +182,66 @@ fn category(app: &mut App) {
     )));
 }
 
+/// The view around the first door, its hinge at the origin.
+fn near_the_door(app: &mut App) {
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 0.9,
+            min_y: N - 0.9,
+            max_x: E + 2.1,
+            max_y: N + 1.5,
+        },
+        24.0,
+    );
+}
+
+/// The first door selected: its parameter grips (width, the two flips); its width's grip clicked and taken to 1.13 m,
+/// which its rule makes 1.15, the door drawn so dashed.
+fn grips(app: &mut App) {
+    drawn(app);
+    near_the_door(app);
+    app.selection.set([kentos_domain::Slot(1)]);
+    let grip = at(app, [0.9, 0.0]);
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(grip)));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Pressed(grip)));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Released(grip)));
+    hover(app, [1.13, 0.12]);
+}
+
+/// The wider, left-handed door selected: Öznitelikler's Blok parametreleri.
+fn values(app: &mut App) {
+    drawn(app);
+    app.selection.set([kentos_domain::Slot(2)]);
+    // The layers folded and Genel folded: the geometry and the parameters in view.
+    let upper =
+        kentos_ui::widget::docking::Slot::Docked(kentos_ui::widget::docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Collapsed(
+        upper, true,
+    )));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
+}
+
+/// The second and third doors made plain blocks: the Bloklar panel lists “Kapı (sabit)” and “Kapı (sabit 2)”.
+fn frozen(app: &mut App) {
+    drawn(app);
+    app.selection
+        .set([kentos_domain::Slot(2), kentos_domain::Slot(3)]);
+    run(app, "block.freeze");
+    run(app, "block.panel");
+    let _ = app.update(Message::BlocksPanel(crate::blocks_panel::Event::Search(
+        "kapı".into(),
+    )));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("blok-dinamik", dynamic),
         ("blok-kitaplik", cards),
         ("blok-kitaplik-kategori", category),
+        ("blok-tutamac", grips),
+        ("blok-parametreler", values),
+        ("blok-sabit", frozen),
     ]
 }

@@ -45,6 +45,8 @@ pub(crate) fn input_as(
                 symbol: look.symbol.clone(),
                 label_of: None,
                 label_scale: None,
+                transparency: None,
+                order: None,
             })
             .collect(),
         operation,

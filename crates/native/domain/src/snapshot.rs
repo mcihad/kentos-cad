@@ -181,6 +181,7 @@ impl Document {
             next_slot: u64::from(largest) + 1,
             relocated: Default::default(),
             object_policy: Default::default(),
+            relocated_ends: Default::default(),
             history: History::default(),
             calls: crate::calls::Calls::default(),
             edits: 0,

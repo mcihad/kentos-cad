@@ -40,8 +40,8 @@ yazmaz. Python `kentos.cad.layers.table`, MCP'de araç (yıkıcı: kuralları si
 
 ### 3. Dosya
 
-`tableStyles` `.kcad` şema 60'tadır (formlarla aynı şema), katmanın haritasında opak JSON olarak; grup taşımaz. Şema 59 okuyucusu
-alanı `unknown_field` ile reddeder (`broken/table-styles-in-schema-59.kcad`). Örnek `forms.json`'un Bina katmanı iki kural taşır;
+`tableStyles` `.kcad` şema 72'dedir (formlarla aynı şema), katmanın haritasında opak JSON olarak; grup taşımaz. Şema 59 okuyucusu
+alanı `unknown_field` ile reddeder (`broken/table-styles-in-schema-71.kcad`). Örnek `forms.json`'un Bina katmanı iki kural taşır;
 bağımsız `tools/kcad/kcad.py` ve `kcad_v2_reference.py` aynı kuralla.
 
 ### 4. Masaüstünde

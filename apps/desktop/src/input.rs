@@ -196,6 +196,7 @@ impl App {
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)
+                        && !self.leader_tools_picked(p)
                         && !self.blocks_picked(p)
                         && !self.service_info_picked(p)
                     {
@@ -207,6 +208,7 @@ impl App {
                     if !self.processing_picked_objects(keep)
                         && !self.edgematch_picked_objects(keep)
                         && !self.table_insert_picked(keep)
+                        && !self.text_tools_picked(keep)
                     {
                         let _ = self.builder_picked(keep);
                     }

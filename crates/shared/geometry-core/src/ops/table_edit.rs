@@ -190,7 +190,7 @@ impl Parts {
 
 /// How a range's span along one axis meets `count` lines inserted before
 /// `at`: its new start and length.
-fn grown(start: usize, len: usize, at: usize, count: usize) -> (usize, usize) {
+pub fn grown(start: usize, len: usize, at: usize, count: usize) -> (usize, usize) {
     if start >= at {
         (start + count, len)
     } else if at < start + len {
@@ -202,7 +202,7 @@ fn grown(start: usize, len: usize, at: usize, count: usize) -> (usize, usize) {
 
 /// How a range's span along one axis meets lines `from..from + count`
 /// deleted: its new start and length (0: gone).
-fn shrunk(start: usize, len: usize, from: usize, count: usize) -> (usize, usize) {
+pub fn shrunk(start: usize, len: usize, from: usize, count: usize) -> (usize, usize) {
     let end = start + len;
     let gone = end.min(from + count).saturating_sub(start.max(from));
     let new_start = if start >= from + count {

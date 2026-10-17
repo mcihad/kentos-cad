@@ -118,17 +118,141 @@ pub struct HatchPattern {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub gradient: Option<HatchGradient>,
+    /// Where its lines are anchored in the world (docs/adr/0331 §2; AutoCAD's HPORIGIN): every family goes through
+    /// it as the definition says instead of through the world's origin. Absent: the world's origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub origin: Option<Vec2>,
 }
 
-/// The objects a hatch made inside a closed object follows (docs/adr/0186
-/// §6): the closed object, its islands, the texts and inserts left open, and
-/// the point clicked inside, which picks the region's part.
+/// What a project pattern's numbers are in (docs/adr/0331 §1): a PAT file says no unit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchPatternUnit {
+    /// Millimetres on paper (acadiso.pat's, the library's).
+    #[default]
+    Mm,
+    /// Inches on paper (acad.pat's).
+    Inch,
+    /// The drawing's own lengths, in the project's unit.
+    Drawing,
+}
+
+impl HatchPatternUnit {
+    /// Metres in the drawing per unit of the definition, at 1:`plot_scale` and a project unit of `unit_metres`.
+    pub fn metres(self, plot_scale: f64, unit_metres: f64) -> f64 {
+        match self {
+            HatchPatternUnit::Mm => plot_scale / 1000.0,
+            HatchPatternUnit::Inch => 25.4 * plot_scale / 1000.0,
+            HatchPatternUnit::Drawing => unit_metres,
+        }
+    }
+}
+
+/// A project's own hatch pattern (docs/adr/0331 §1): a PAT file's or a user's, its families as written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HatchPatternDef {
+    /// One of its kind among the project's, letters' case aside; no comma.
+    pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub description: String,
+    #[serde(default)]
+    pub unit: HatchPatternUnit,
+    pub lines: Vec<PatternLine>,
+    /// The file it came from (`kentos.pat`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+}
+
+/// Whether two pattern names are the same one (AutoCAD's: letters' case aside).
+pub fn same_hatch_pattern_name(a: &str, b: &str) -> bool {
+    a.trim().to_lowercase() == b.trim().to_lowercase()
+}
+
+/// What is wrong with a project's patterns, said so a reader can fix it; none: they hold.
+pub fn hatch_patterns_problem(defs: &[HatchPatternDef]) -> Option<String> {
+    for (i, d) in defs.iter().enumerate() {
+        let name = d.name.trim();
+        if name.is_empty() {
+            return Some("bir tarama deseninin adı boş".into());
+        }
+        if name != d.name {
+            return Some(format!(
+                "“{}” tarama deseninin adının başında ya da sonunda boşluk var",
+                d.name
+            ));
+        }
+        if name.contains(',') || name.chars().count() > MAX_PATTERN_NAME {
+            return Some(format!(
+                "“{name}” tarama deseninin adı virgül içeremez ve en çok {MAX_PATTERN_NAME} harf olur"
+            ));
+        }
+        if defs[..i].iter().any(|o| same_hatch_pattern_name(&o.name, name)) {
+            return Some(format!("“{name}” tarama deseni iki kez var"));
+        }
+        let n = d.lines.len();
+        if n == 0 || n > MAX_PATTERN_LINES {
+            return Some(format!(
+                "“{name}” tarama deseninin ailesi en az 1, en çok {MAX_PATTERN_LINES} olur, {n} var"
+            ));
+        }
+        for l in &d.lines {
+            if l.dashes.len() > MAX_PATTERN_DASHES {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinde en çok {MAX_PATTERN_DASHES} kesik olur"
+                ));
+            }
+            if !finite_all(&[l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]])
+                || !finite_all(&l.dashes)
+            {
+                return Some(format!("“{name}” tarama deseninin bir sayısı geçersiz"));
+            }
+            if l.offset[1] == 0.0 {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinde çizgiler arası (dy) 0"
+                ));
+            }
+            if !l.dashes.is_empty() && l.dashes.iter().all(|d| *d == 0.0) {
+                return Some(format!(
+                    "“{name}” tarama deseninin bir ailesinin kesiklerinin hepsi 0"
+                ));
+            }
+        }
+    }
+    None
+}
+
+/// The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
+/// object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
+/// (`bounds`: the objects whose line work bounds it, its islands' too) follows that line work; the point clicked
+/// inside picks the region's part or face. Exactly one of `outer` and `bounds` is given.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchAssoc {
-    pub outer: EntityId,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub outer: Option<EntityId>,
+    /// A face's tie: the gaps its line work was closed across, metres (docs/adr/0329 §3); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: Option<f64>,
+    /// The objects whose line work closes its face (docs/adr/0328 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
+    pub bounds: Vec<EntityId>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
     pub islands: Vec<EntityId>,
@@ -137,6 +261,221 @@ pub struct HatchAssoc {
     pub cutouts: Vec<EntityId>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Vec2,
+}
+
+/// The most loops a hatch's boundary has, edges a loop and control points a NURBS edge.
+pub const MAX_BOUNDARY_LOOPS: usize = 100_000;
+pub const MAX_LOOP_EDGES: usize = 1_000_000;
+pub const MAX_CURVE_POINTS: usize = 100_000;
+/// The highest degree a NURBS edge may have.
+pub const MAX_CURVE_DEGREE: u32 = 10;
+
+/// A boundary edge that is no line or circular arc (docs/adr/0328 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchCurve {
+    /// An ellipse's arc: centre `c`, major semi-axis `major` (from `c`), minor to major `ratio`, from parameter `t0`
+    /// to `t1` (radians): counter-clockwise when `t1` is past `t0`, clockwise when before it; a whole ellipse
+    /// `t1 = t0 ± 2π`.
+    Ellipse {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        c: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        major: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        ratio: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        t0: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        t1: f64,
+    },
+    /// A NURBS curve run whole, from its first knot to its last.
+    Nurbs {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        degree: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        ctrl: Vec<Vec2>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        knots: Vec<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        weights: Option<Vec<f64>>,
+    },
+}
+
+/// One closed loop of a hatch's boundary as its source holds it (docs/adr/0328 §1): edge `i` runs from `pts[i]` to
+/// the next point (the last to the first); it is straight, a circular arc of `bulges[i]` (tan(θ/4), counter-clockwise
+/// positive, as a polygon's), or the curve `curves[i]` (an ellipse's arc or a NURBS curve), whose ends are those
+/// points. A loop of one point is one closed curve.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HatchLoop {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub curves: Option<Vec<Option<HatchCurve>>>,
+}
+
+impl HatchCurve {
+    /// What is wrong with its numbers: finite, a ratio within (0, 1], a sweep within one turn; a NURBS curve's
+    /// degree, knots and positive weights. Whether its ends meet its loop's points is the geometry core's.
+    pub fn problem(&self) -> Option<String> {
+        match self {
+            HatchCurve::Ellipse {
+                c,
+                major,
+                ratio,
+                t0,
+                t1,
+            } => {
+                if ![c.x, c.y, major.x, major.y, *ratio, *t0, *t1]
+                    .iter()
+                    .all(|x| x.is_finite())
+                {
+                    return Some("Elips kenarında sonlu olmayan bir sayı var.".into());
+                }
+                if !(*ratio > 0.0 && *ratio <= 1.0) || (major.x == 0.0 && major.y == 0.0) {
+                    return Some(
+                        "Elips kenarının büyük ekseni sıfır olamaz, oranı 0 ile 1 arasında olmalı."
+                            .into(),
+                    );
+                }
+                let sweep = (t1 - t0).abs();
+                if sweep == 0.0 || sweep > std::f64::consts::TAU * (1.0 + 1e-12) {
+                    return Some(
+                        "Elips kenarının açıklığı sıfır olamaz ve bir turu aşamaz.".into(),
+                    );
+                }
+                None
+            }
+            HatchCurve::Nurbs {
+                degree,
+                ctrl,
+                knots,
+                weights,
+            } => {
+                let n = ctrl.len();
+                if *degree < 1 || *degree > MAX_CURVE_DEGREE {
+                    return Some(format!(
+                        "NURBS kenarının derecesi {degree}; 1 ile {MAX_CURVE_DEGREE} arasında olmalı."
+                    ));
+                }
+                if n <= *degree as usize || n > MAX_CURVE_POINTS {
+                    return Some(format!(
+                        "NURBS kenarının {n} denetim noktası var; dereceden çok, en çok {MAX_CURVE_POINTS} olmalı."
+                    ));
+                }
+                if knots.len() != n + *degree as usize + 1 {
+                    return Some(format!(
+                        "NURBS kenarının {} düğümü var; denetim noktası + derece + 1 = {} olmalı.",
+                        knots.len(),
+                        n + *degree as usize + 1
+                    ));
+                }
+                if !ctrl.iter().all(|p| p.x.is_finite() && p.y.is_finite())
+                    || !knots.iter().all(|k| k.is_finite())
+                    || knots.windows(2).any(|w| w[1] < w[0])
+                    || knots[*degree as usize] >= knots[n]
+                {
+                    return Some("NURBS kenarının noktaları sonlu, düğümleri artan olmalı.".into());
+                }
+                if let Some(w) = weights
+                    && (w.len() != n || !w.iter().all(|x| x.is_finite() && *x > 0.0))
+                {
+                    return Some(
+                        "NURBS kenarının ağırlıkları denetim noktaları kadar ve sıfırdan büyük olmalı."
+                            .into(),
+                    );
+                }
+                None
+            }
+        }
+    }
+}
+
+impl HatchLoop {
+    /// A loop of lines and arcs (a polygon's ring).
+    pub fn of_ring(pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Self {
+        Self {
+            pts,
+            bulges,
+            curves: None,
+        }
+    }
+
+    /// Whether an edge of it is an ellipse's arc or a NURBS curve.
+    pub fn has_curves(&self) -> bool {
+        self.curves.iter().flatten().any(Option::is_some)
+    }
+
+    /// What is wrong with its form: points finite and as many bulges and curves as points, a loop of one point a
+    /// closed curve, of two at least one curved edge, each curve's numbers.
+    pub fn problem(&self) -> Option<String> {
+        let n = self.pts.len();
+        if n == 0 || n > MAX_LOOP_EDGES {
+            return Some(format!(
+                "Tarama sınırının bir halkasında {n} nokta var; en az 1, en çok {MAX_LOOP_EDGES} olmalı."
+            ));
+        }
+        if !self.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite()) {
+            return Some("Tarama sınırında sonlu olmayan bir nokta var.".into());
+        }
+        if let Some(b) = &self.bulges
+            && (b.len() != n || !b.iter().all(|x| x.is_finite()))
+        {
+            return Some("Tarama sınırının bükümleri noktaları kadar ve sonlu olmalı.".into());
+        }
+        if let Some(c) = &self.curves {
+            if c.len() != n {
+                return Some("Tarama sınırının eğrileri noktaları kadar olmalı.".into());
+            }
+            for (i, curve) in c.iter().enumerate() {
+                if let Some(curve) = curve {
+                    if let Some(words) = curve.problem() {
+                        return Some(words);
+                    }
+                    if self.bulges.as_ref().is_some_and(|b| b[i] != 0.0) {
+                        return Some("Tarama sınırının eğri kenarının bükümü 0 olmalı.".into());
+                    }
+                }
+            }
+        }
+        let curved = |i: usize| {
+            self.curves.as_ref().is_some_and(|c| c[i].is_some())
+                || self.bulges.as_ref().is_some_and(|b| b[i] != 0.0)
+        };
+        match n {
+            1 if self.curves.as_ref().is_none_or(|c| c[0].is_none()) => {
+                Some("Tek noktalı halka kapalı bir eğri olmalı.".into())
+            }
+            2 if !(curved(0) || curved(1)) => {
+                Some("İki noktalı halkanın en az bir kenarı eğri olmalı.".into())
+            }
+            _ => None,
+        }
+    }
+}
+
+/// What is wrong with a hatch's boundary: its loops within their bound, each loop's form.
+pub fn boundary_problem(loops: &[HatchLoop]) -> Option<String> {
+    if loops.is_empty() || loops.len() > MAX_BOUNDARY_LOOPS {
+        return Some(format!(
+            "Tarama sınırında {} halka var; en az 1, en çok {MAX_BOUNDARY_LOOPS} olmalı.",
+            loops.len()
+        ));
+    }
+    loops.iter().find_map(HatchLoop::problem)
 }
 
 fn finite_all(xs: &[f64]) -> bool {
@@ -160,6 +499,7 @@ impl HatchPattern {
             scale: None,
             lines: None,
             gradient: None,
+            origin: None,
         }
     }
 
@@ -269,6 +609,20 @@ impl HatchPattern {
                 }
             }
         }
+        if let Some(o) = self.origin {
+            if matches!(kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+                return Some((
+                    "pattern.origin",
+                    "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.".to_owned(),
+                ));
+            }
+            if !(o.x.is_finite() && o.y.is_finite()) {
+                return Some((
+                    "pattern.origin",
+                    "Desenin başlangıç noktası sonlu olmalı.".to_owned(),
+                ));
+            }
+        }
         if kind == HatchPatternType::Gradient {
             let Some(g) = &self.gradient else {
                 return Some((
@@ -291,6 +645,15 @@ impl HatchPattern {
 }
 
 impl HatchAssoc {
+    /// Every object it names: the closed object or the bounds, the islands, the cutouts.
+    pub fn objects(&self) -> impl Iterator<Item = &EntityId> + '_ {
+        self.outer
+            .iter()
+            .chain(&self.bounds)
+            .chain(&self.islands)
+            .chain(&self.cutouts)
+    }
+
     /// What is wrong with it: its seed finite, its lists within their bounds,
     /// no object named twice.
     pub fn problem(&self) -> Option<(&'static str, String)> {
@@ -300,7 +663,22 @@ impl HatchAssoc {
                 "Taramanın tohum noktası sonlu olmalı.".to_owned(),
             ));
         }
-        let n = self.islands.len() + self.cutouts.len();
+        if self.outer.is_some() != self.bounds.is_empty() {
+            return Some((
+                "assoc",
+                "Taramanın ilişkisi ya kapalı nesneyi (outer) ya da sınır nesnelerini (bounds) gösterir; ikisinden biri verilmeli."
+                    .to_owned(),
+            ));
+        }
+        if let Some(g) = self.gap
+            && (self.outer.is_some() || !(g > 0.0 && g <= 1000.0))
+        {
+            return Some((
+                "assoc.gap",
+                "Taramanın boşluk toleransı yalnız yüzün ilişkisinde, 0'dan büyük ve en çok 1000 m olur.".to_owned(),
+            ));
+        }
+        let n = self.islands.len() + self.cutouts.len() + self.bounds.len();
         if n > MAX_ASSOC_OBJECTS {
             return Some((
                 "assoc",
@@ -310,8 +688,13 @@ impl HatchAssoc {
             ));
         }
         let mut seen = std::collections::HashSet::with_capacity(n + 1);
-        seen.insert(self.outer);
-        for id in self.islands.iter().chain(&self.cutouts) {
+        for id in self
+            .outer
+            .iter()
+            .chain(&self.bounds)
+            .chain(&self.islands)
+            .chain(&self.cutouts)
+        {
             if !seen.insert(*id) {
                 return Some((
                     "assoc",
@@ -322,4 +705,20 @@ impl HatchAssoc {
         }
         None
     }
+}
+
+/// An import's stand-in id for its object at `index` among the objects it read (docs/adr/0333 §2): a DXF
+/// associative hatch names its boundary objects so; the import puts the objects' own ids in their place once they are
+/// in the drawing. Its first bytes ("KDXF") are no UUIDv7's.
+pub fn import_placeholder(index: u32) -> EntityId {
+    let mut b = [0u8; 16];
+    b[..4].copy_from_slice(b"KDXF");
+    b[12..].copy_from_slice(&index.to_be_bytes());
+    EntityId(b)
+}
+
+/// The place an import's stand-in id names, if it is one ([`import_placeholder`]).
+pub fn import_placeholder_index(id: &EntityId) -> Option<u32> {
+    (id.0[..4] == *b"KDXF" && id.0[4..12].iter().all(|b| *b == 0))
+        .then(|| u32::from_be_bytes([id.0[12], id.0[13], id.0[14], id.0[15]]))
 }

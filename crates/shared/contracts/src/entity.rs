@@ -395,6 +395,11 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<TextPath>,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 /// The curve a text's letters stand on (docs/adr/0196 §1). Its vertices are
@@ -595,12 +600,149 @@ pub struct Paragraph {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextRun>>", optional))]
     pub runs: Vec<TextRun>,
+    /// Its indents, tab stops and columns (docs/adr/0324 §1); absent: none, a tab every
+    /// `DEFAULT_TAB` heights, one column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layout: Option<Box<ParagraphLayout>>,
+    /// Ranges of its letters bound to a source (docs/adr/0325 §1), in order, not overlapping; absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextField>>", optional))]
+    pub fields: Vec<crate::TextField>,
+}
+
+/// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\p` codes):
+/// every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
+/// `leftIndent`; a tab goes to the next stop past where it is, a stop every `DEFAULT_TAB` heights after the last
+/// given; columns take the lines in turn, each `columns.height` metres tall.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ParagraphLayout {
+    /// A paragraph's first line from the others', heights; below 0 a hanging indent (a list's). Absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub indent: Option<f64>,
+    /// Every line but a paragraph's first from the box's left, heights. Absent: 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub left_indent: Option<f64>,
+    /// The tab stops from the box's left, heights, ascending, each over 0.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub tabs: Vec<f64>,
+    /// Static columns; a text in columns has a box.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<TextColumns>,
+}
+
+/// A multi-line text's static columns (docs/adr/0324 §1): `count` columns of the box's width, `gap` heights
+/// apart, each `height` metres tall; lines past the last column's height go on down in it.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TextColumns {
+    #[cfg_attr(feature = "schema", schemars(range(min = 2, max = 16)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    /// The space between two columns, heights.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub gap: f64,
+    /// A column's height, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+}
+
+/// A tab stop every this many heights past the last given one (MTEXT's own).
+pub const DEFAULT_TAB: f64 = 4.0;
+/// The largest indent, tab stop or column gap, heights.
+pub const MAX_PARAGRAPH_HEIGHTS: f64 = 1000.0;
+/// The most tab stops a text keeps.
+pub const MAX_TABS: usize = 32;
+
+impl ParagraphLayout {
+    /// Nothing set: none at all.
+    pub fn is_plain(&self) -> bool {
+        self.indent.is_none_or(|i| i == 0.0)
+            && self.left_indent.is_none_or(|i| i == 0.0)
+            && self.tabs.is_empty()
+            && self.columns.is_none()
+    }
+
+    /// What is wrong with it for a text with a box or none: the field and the words.
+    pub fn problem(&self, boxed: bool) -> Option<(&'static str, String)> {
+        let fits = |v: f64| v.is_finite() && v.abs() <= MAX_PARAGRAPH_HEIGHTS;
+        let left = self.left_indent.unwrap_or(0.0);
+        if !fits(left) || left < 0.0 {
+            return Some((
+                "layout.leftIndent",
+                format!("Sol girinti 0 ile {MAX_PARAGRAPH_HEIGHTS} yükseklik arasında olmalı; {left} verildi."),
+            ));
+        }
+        let first = self.indent.unwrap_or(0.0);
+        if !fits(first) || left + first < 0.0 {
+            return Some((
+                "layout.indent",
+                format!(
+                    "İlk satırın girintisi sol girintiden fazla geri gidemez (ikisinin toplamı sıfırdan küçük olamaz); {first} verildi."
+                ),
+            ));
+        }
+        if self.indent == Some(0.0) || self.left_indent == Some(0.0) {
+            return Some(("layout", "Sıfır girinti yazılmaz; alanı kaldırın.".to_owned()));
+        }
+        if self.tabs.len() > MAX_TABS {
+            return Some(("layout.tabs", format!("En çok {MAX_TABS} sekme durağı olur; {} verildi.", self.tabs.len())));
+        }
+        let mut last = 0.0;
+        for t in &self.tabs {
+            if !fits(*t) || *t <= last {
+                return Some((
+                    "layout.tabs",
+                    "Sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı.".to_owned(),
+                ));
+            }
+            last = *t;
+        }
+        if let Some(c) = &self.columns {
+            if !boxed {
+                return Some((
+                    "layout.columns",
+                    "Sütunlar kutu genişliği ister: önce yazıya kutu genişliği verin.".to_owned(),
+                ));
+            }
+            if !(2..=16).contains(&c.count) {
+                return Some(("layout.columns.count", format!("Sütun sayısı 2 ile 16 arasında olmalı; {} verildi.", c.count)));
+            }
+            if !fits(c.gap) || c.gap < 0.0 {
+                return Some(("layout.columns.gap", format!("Sütun aralığı sıfır ya da pozitif olmalı; {} verildi.", c.gap)));
+            }
+            if !(c.height.is_finite() && c.height > 0.0) {
+                return Some((
+                    "layout.columns.height",
+                    format!("Sütun yüksekliği sıfırdan büyük olmalı; {} verildi.", c.height),
+                ));
+            }
+        }
+        None
+    }
 }
 
 impl Paragraph {
-    /// No box, no spacing, no formats: a text as it always was.
+    /// No box, no spacing, no formats, no layout: a text as it always was.
     pub fn is_plain(&self) -> bool {
-        self.box_width.is_none() && self.line_spacing.is_none() && self.runs.is_empty()
+        self.box_width.is_none()
+            && self.line_spacing.is_none()
+            && self.runs.is_empty()
+            && self.layout.is_none()
     }
 
     /// What is wrong with these fields for `text` (docs/adr/0182 §1): the
@@ -630,7 +772,18 @@ impl Paragraph {
                 ),
             ));
         }
-        self.runs_problem(text).map(|words| ("runs", words))
+        if let Some(l) = &self.layout {
+            if l.is_plain() {
+                return Some(("layout", "Boş paragraf düzeni yazılmaz; alanı kaldırın.".to_owned()));
+            }
+            if let Some(p) = l.problem(self.box_width.is_some()) {
+                return Some(p);
+            }
+        }
+        if let Some(words) = self.runs_problem(text) {
+            return Some(("runs", words));
+        }
+        crate::text_fields_problem(&self.fields, text).map(|words| ("fields", words))
     }
 
     /// What is wrong with the runs for `text`, as `problem` says it.
@@ -649,6 +802,16 @@ impl Paragraph {
                 return Some(format!(
                     "{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz. Dilime bir biçim verin ya da dilimi çıkarın."
                 ));
+            }
+            // A stacked run (docs/adr/0324 §1): its letters hold the separator, `/`, `#` or `^`.
+            if r.script == Some(TextScript::Stack) {
+                let letters: Vec<char> = text.chars().collect();
+                let inside = &letters[r.start as usize..(r.end as usize).min(letters.len())];
+                if !inside.iter().any(|c| matches!(c, '/' | '#' | '^')) {
+                    return Some(format!(
+                        "{n}. biçim dilimi kesir, ama harflerinde ayıraç yok: pay ile paydayı /, # ya da ^ ile ayırın (1/2)."
+                    ));
+                }
             }
             if r.color.as_deref().is_some_and(str::is_empty) {
                 return Some(format!(
@@ -733,6 +896,9 @@ pub struct TextRun {
 pub enum TextScript {
     Super,
     Sub,
+    /// A stacked fraction (docs/adr/0324 §1): the run's letters before its first `/`, `#` or `^` raised over
+    /// those after it; `/` a horizontal bar, `#` a slanted one beside them, `^` none (a tolerance).
+    Stack,
 }
 
 /// Whether `n` may be a linked text's scale (docs/adr/0175 §4): finite, over 0.
@@ -877,14 +1043,31 @@ pub struct InsertEntity {
     /// Where this insert shows a movable attribute (docs/adr/0317 §1): its tag's text at this point of the
     /// definition's coordinates rather than the definition's. Only a movable attribute's tag; absent: every text where
     /// the definition puts it.
-    #[serde(default, rename = "attributePlaces", skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, Vec2>>", optional, rename = "attributePlaces"))]
+    #[serde(
+        default,
+        rename = "attributePlaces",
+        skip_serializing_if = "BTreeMap::is_empty"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<BTreeMap<String, Vec2>>",
+            optional,
+            rename = "attributePlaces"
+        )
+    )]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub attribute_places: BTreeMap<String, Vec2>,
     /// Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3), by parameter name;
     /// a lookup's is not kept (its row's values are).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, crate::block_dynamic::ParamValue>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<BTreeMap<String, crate::block_dynamic::ParamValue>>",
+            optional
+        )
+    )]
     pub parameters: BTreeMap<String, crate::block_dynamic::ParamValue>,
 }
 
@@ -1116,11 +1299,19 @@ pub enum DimensionStyle {
     Azimuth,
     /// Eğim: the slope between `a` at `za` and `b` at `zb`.
     Slope,
+    /// Merkez işareti (KCAD schema 62, docs/adr/0322): the cross at the centre `a` of the curve through `b`, `height`
+    /// across, turned `angle` degrees from `a`→`b`; its axis lines reach `offset` past the curve.
+    CenterMark,
+    /// Eksen çizgisi (docs/adr/0322): the axis between two straight edges, from `a` to `b` (the middles of their
+    /// matched ends), `offset` past each end.
+    CenterLine,
+    /// Kot (docs/adr/0322): the elevation `za` of the point `a`, its mark on `a` and its value on the shoulder at `b`.
+    Elevation,
 }
 
 impl DimensionStyle {
     /// Every style, in the contract's order (the typed columns number them so).
-    pub const ALL: [DimensionStyle; 10] = [
+    pub const ALL: [DimensionStyle; 13] = [
         DimensionStyle::Aligned,
         DimensionStyle::Linear,
         DimensionStyle::Angular,
@@ -1131,6 +1322,9 @@ impl DimensionStyle {
         DimensionStyle::Jogged,
         DimensionStyle::Azimuth,
         DimensionStyle::Slope,
+        DimensionStyle::CenterMark,
+        DimensionStyle::CenterLine,
+        DimensionStyle::Elevation,
     ];
 
     /// Its name in the contract and the file (`arcLength`).
@@ -1146,6 +1340,9 @@ impl DimensionStyle {
             DimensionStyle::Jogged => "jogged",
             DimensionStyle::Azimuth => "azimuth",
             DimensionStyle::Slope => "slope",
+            DimensionStyle::CenterMark => "centerMark",
+            DimensionStyle::CenterLine => "centerLine",
+            DimensionStyle::Elevation => "elevation",
         }
     }
 
@@ -1163,6 +1360,22 @@ impl DimensionStyle {
                 | DimensionStyle::Jogged
                 | DimensionStyle::Azimuth
                 | DimensionStyle::Slope
+        )
+    }
+
+    /// Whether it came with KCAD schema 62 (docs/adr/0322).
+    pub fn is_schema_62(self) -> bool {
+        matches!(
+            self,
+            DimensionStyle::CenterMark | DimensionStyle::CenterLine | DimensionStyle::Elevation
+        )
+    }
+
+    /// Whether it writes no value (docs/adr/0322): the centre mark and the axis.
+    pub fn is_mark(self) -> bool {
+        matches!(
+            self,
+            DimensionStyle::CenterMark | DimensionStyle::CenterLine
         )
     }
 }
@@ -1218,10 +1431,26 @@ pub struct DimensionEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub refs: Option<Box<crate::DimensionRefs>>,
+    /// Its value moved from its place (docs/adr/0321 §1).
+    #[serde(default, rename = "textShift", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_shift: Option<crate::TextShift>,
+    /// The gaps in its lines where other objects cross them (docs/adr/0321 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::DimensionBreak>>", optional)
+    )]
+    pub breaks: Vec<crate::DimensionBreak>,
     /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: crate::DimensionLook,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1243,6 +1472,17 @@ pub struct HatchEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub assoc: Option<crate::HatchAssoc>,
+    /// Its boundary as its source holds it (docs/adr/0328 §1): the outer loop, then the holes', lines, arcs,
+    /// ellipses' arcs and NURBS curves exact; `ring` and `holes` are drawn from it (arcs and curves as chords). None:
+    /// the ring and holes are all it has.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary: Option<Vec<crate::HatchLoop>>,
+    /// Its scales (docs/adr/0331 §3): an annotative hatch's pattern is drawn at each scale it takes part in as large
+    /// on paper as at its own; absent: one pattern for every scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
 }
 
 /// A leader (docs/adr/0146): an arrowhead at its first vertex, a line
@@ -1288,6 +1528,69 @@ pub struct LeaderEntity {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
+    /// Its scales: drawn at the paper height it was given at every scale it takes part in, hidden
+    /// at others (docs/adr/0323); absent: one height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<Box<crate::Annotative>>,
+    /// Its other arms (docs/adr/0326 §1): each from its own tip through its bends to the leader's last vertex, where
+    /// the landing starts; the arrowhead, the note and the look the first arm's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LeaderArm>>", optional))]
+    pub arms: Vec<LeaderArm>,
+    /// The place on an object its first arm's tip follows (docs/adr/0326 §3); absent: a free tip.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tip: Option<crate::SubRef>,
+    /// Its content blocks (docs/adr/0326 §2): inserts standing in a row at its landing's end, by persistent id; a
+    /// leader with blocks has no note.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::identity::EntityId>>", optional))]
+    pub blocks: Vec<crate::identity::EntityId>,
+    /// The leader style it follows (docs/adr/0326 §4), by its id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub leader_style: Option<String>,
+}
+
+/// A leader's arm after its first (docs/adr/0326 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LeaderArm {
+    /// At least one: its tip first, then its bends; it ends at the leader's last vertex.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<Vec2>,
+    /// The place on an object its tip follows; absent: a free tip.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tip: Option<crate::SubRef>,
+}
+
+/// The most arms a leader has.
+pub const MAX_LEADER_ARMS: usize = 64;
+
+/// What is wrong with a leader's arms, blocks and note together (docs/adr/0326): the field and the refusal's words.
+pub fn leader_problem(l: &LeaderEntity) -> Option<(&'static str, String)> {
+    if l.arms.len() + 1 > MAX_LEADER_ARMS {
+        return Some(("arms", format!("Bir kılavuzun en çok {MAX_LEADER_ARMS} kolu olur; {} verildi.", l.arms.len() + 1)));
+    }
+    if let Some(i) = l.arms.iter().position(|a| a.pts.is_empty()) {
+        return Some(("arms", format!("{}. kolun ucu yok: her kolun en az bir noktası olmalı.", i + 2)));
+    }
+    if l.arms.iter().flat_map(|a| &a.pts).any(|p| !(p.x.is_finite() && p.y.is_finite())) {
+        return Some(("arms", "Kolun noktaları sonlu olmalı.".to_owned()));
+    }
+    if !l.blocks.is_empty() && l.text.is_some() {
+        return Some(("blocks", "Blok içerikli kılavuzun notu olmaz: notu ya da blokları kaldırın.".to_owned()));
+    }
+    let mut seen = std::collections::HashSet::new();
+    if l.blocks.iter().any(|b| !seen.insert(*b)) {
+        return Some(("blocks", "Kılavuzun bir bloğu iki kez verilmiş.".to_owned()));
+    }
+    None
 }
 
 /// The shortest and the longest a leader's arrowhead may be, times its

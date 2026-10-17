@@ -353,7 +353,7 @@ impl App {
         doc.model.set_settings(settings);
         self.topology_rules = None;
         self.dialog = None;
-        self.say(
+        self.announce(
             Level::Info,
             format!("Topoloji kuralları kaydedildi: {} kural.", w.rows.len()),
         );

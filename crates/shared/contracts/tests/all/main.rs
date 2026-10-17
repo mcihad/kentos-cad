@@ -5,6 +5,7 @@
 mod address_rules;
 mod annotation;
 mod annotation_scale;
+mod annotative;
 mod crs;
 mod document;
 mod fields;

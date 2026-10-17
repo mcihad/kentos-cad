@@ -7,17 +7,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, standards, styles, ucs, units, views
+from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
+    "cad.annotations.scales": annotations.scales,
     "cad.arc.create": arc.create,
     "cad.arrays.edit": arrays.edit,
     "cad.attachments.inspect": attachments.inspect,
     "cad.blocks.define": blocks.define,
     "cad.blocks.edit": blocks.edit,
+    "cad.blocks.freeze": blocks.freeze,
     "cad.blocks.insert": blocks.insert,
     "cad.blocks.parameters": blocks.parameters,
+    "cad.blocks.proxy": blocks.proxy,
     "cad.blocks.query": blocks.query,
     "cad.blocks.replace": blocks.replace,
     "cad.changeset.apply": changeset.apply,
@@ -25,6 +28,8 @@ COMMANDS: dict[str, Any] = {
     "cad.curves.construct": curves.construct,
     "cad.curves.edit": curves.edit,
     "cad.dimensions.create": dimensions.create,
+    "cad.dimensions.edit": dimensions.edit,
+    "cad.dimensions.query": dimensions.query,
     "cad.dimensions.reassociate": dimensions.reassociate,
     "cad.domains.edit": domains.edit,
     "cad.domains.export": domains.export,
@@ -57,8 +62,10 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.transform": entities.transform,
     "cad.entities.trim": entities.trim,
     "cad.entities.vertex": entities.vertex,
+    "cad.fields.edit": fields.edit,
     "cad.fields.migrate": fields.migrate,
     "cad.fields.usage": fields.usage,
+    "cad.fonts.report": fonts.report,
     "cad.forms.audit": forms.audit,
     "cad.forms.compare": forms.compare,
     "cad.forms.edit": forms.edit,
@@ -70,6 +77,8 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.test": forms.test,
     "cad.forms.transition": forms.transition,
     "cad.forms.validate": forms.validate,
+    "cad.hatches.edit": hatches.edit,
+    "cad.hatchpatterns.edit": hatchpatterns.edit,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
@@ -87,6 +96,7 @@ COMMANDS: dict[str, Any] = {
     "cad.layers.table": layers.table,
     "cad.layers.time": layers.time,
     "cad.layers.translate": layers.translate,
+    "cad.leaders.edit": leaders.edit,
     "cad.library.edit": library.edit,
     "cad.line.create": line.create,
     "cad.linetypes.edit": linetypes.edit,
@@ -110,6 +120,9 @@ COMMANDS: dict[str, Any] = {
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,
+    "cad.tables.edit": tables.edit,
+    "cad.texts.check": texts.check,
+    "cad.texts.edit": texts.edit,
     "cad.ucs.set": ucs.set,
     "cad.units.change": units.change,
     "cad.views.edit": views.edit,
@@ -142,4 +155,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "forms", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "standards", "styles", "tables", "texts", "ucs", "units", "views",)

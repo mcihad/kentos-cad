@@ -79,11 +79,19 @@ use EffectPart as P;
 use EffectUndo as U;
 
 /// The table (docs/adr/0314 §2), in the order a person meets the changes.
-pub const CHANGE_EFFECTS: [ChangeEffect; 16] = [
+pub const CHANGE_EFFECTS: [ChangeEffect; 18] = [
     ChangeEffect {
         id: "object-look",
         change: "Nesnenin rengi, çizgi tipi, deseni, ölçeği, kalınlığı, saydamlığı ya da sembolü",
         command: Some("cad.entities.set"),
+        undo: U::Step,
+        dirty: true,
+        parts: &[P::Objects],
+    },
+    ChangeEffect {
+        id: "annotative-scales",
+        change: "Açıklamanın ölçekleri: ölçekli yapma, ölçek ekleme ve kaldırma, ölçekteki yer",
+        command: Some("cad.annotations.scales"),
         undo: U::Step,
         dirty: true,
         parts: &[P::Objects],
@@ -148,6 +156,14 @@ pub const CHANGE_EFFECTS: [ChangeEffect; 16] = [
         id: "line-types",
         change: "Çizgi tipleri ve çizgi tipi ölçeği (LTSCALE)",
         command: Some("cad.linetypes.edit"),
+        undo: U::Outside,
+        dirty: true,
+        parts: &[P::Settings],
+    },
+    ChangeEffect {
+        id: "hatch-patterns",
+        change: "Projenin tarama desenleri",
+        command: Some("cad.hatchpatterns.edit"),
         undo: U::Outside,
         dirty: true,
         parts: &[P::Settings],

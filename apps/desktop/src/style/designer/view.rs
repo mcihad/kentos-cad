@@ -8,10 +8,7 @@
 //! over the window that opened it.
 
 use iced::mouse::ScrollDelta;
-use iced::widget::tooltip::Position;
-use iced::widget::{
-    button, column, container, mouse_area, responsive, row, scrollable, space, stack,
-};
+use iced::widget::{column, container, mouse_area, responsive, row, scrollable, space, stack};
 use iced::{Border, Center, Color, Element, Fill, Length, Theme};
 use kentos_native_style::designer::{
     self as model, LayerPath, label as layer_label, texts, type_of,
@@ -21,9 +18,7 @@ use kentos_native_style::preview::Geometry;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{
-    Dialog, Segmented, Tip, horizontal_divider, overlay, tip, vertical_divider,
-};
+use kentos_ui::widget::{Dialog, Segmented, horizontal_divider, overlay, vertical_divider};
 use serde_json::Value;
 
 use super::foot::{footer, question};
@@ -32,7 +27,9 @@ use super::parts::Env;
 use super::{Designer, Event, ev, form};
 use crate::app::{App, Dialog as Under, Message};
 use crate::style::fields::{self, ColorEnv};
+use crate::style::strip;
 use crate::style::thumbs::Look;
+use kentos_ui::icon::Icon;
 
 /// The window's size, the web's pixels at the default text size.
 const WIDTH: f32 = 1320.0;
@@ -150,36 +147,28 @@ impl App {
                 .style(style::text::muted)
                 .into()
         };
-        let zoom_button = |glyph: &str, words: &str, press: Option<Message>| {
-            tip(
-                button(label::body(glyph.to_owned()))
-                    .padding([2, 7])
-                    .style(style::button::ghost)
-                    .on_press_maybe(press),
-                Tip::new(words.to_owned()),
-                Position::Bottom,
-            )
-        };
+        // The scale's controls on the strip (style/strip.rs): −, the scale, +, 1:1.
         let px = d.px_per_mm;
         let zoom = row![
-            zoom_button(
-                "−",
+            strip::icon_button(
+                Icon::ZoomOut,
                 "Uzaklaş (tekerlek aşağı)",
-                (px > model::zoom::MIN).then(|| ev(Event::Zoom(1.0 / model::zoom::STEP)))
+                (px > model::zoom::MIN).then(|| ev(Event::Zoom(1.0 / model::zoom::STEP))),
             ),
-            tip(
-                label::caption(model::zoom_text(px)).style(style::text::muted),
-                Tip::new("Kâğıt milimetresinin ekrandaki boyu"),
-                Position::Bottom,
+            strip::readout(
+                model::zoom_text(px),
+                "Kâğıt milimetresinin ekrandaki boyu",
+                96.0
             ),
-            zoom_button(
-                "+",
+            strip::icon_button(
+                Icon::ZoomIn,
                 "Yakınlaş (tekerlek yukarı)",
-                (px < model::zoom::MAX).then(|| ev(Event::Zoom(model::zoom::STEP)))
+                (px < model::zoom::MAX).then(|| ev(Event::Zoom(model::zoom::STEP))),
             ),
-            zoom_button("1:1", "Gerçek boyut (96 dpi)", Some(ev(Event::RealSize))),
+            strip::divider(),
+            strip::text_button("1:1", "Gerçek boyut (96 dpi)", Some(ev(Event::RealSize))),
         ]
-        .spacing(6)
+        .spacing(2)
         .align_y(Center);
         let bar: Element<'a, Message> = if fits {
             row![chooser, space::horizontal(), zoom]
@@ -224,15 +213,11 @@ impl App {
                 ev(Event::Wheel(dy))
             },
         );
-        container(column![
-            container(bar).padding([8, 12]).width(Fill),
-            horizontal_divider(),
-            stage
-        ])
-        .width(Fill)
-        .height(Fill)
-        .style(style::container::field)
-        .into()
+        container(column![strip::surface(bar), strip::rule(), stage])
+            .width(Fill)
+            .height(Fill)
+            .style(style::container::field)
+            .into()
     }
 
     /// The right: the chosen layer's name (and the layer whose marker it is in) over its form.
@@ -289,6 +274,7 @@ impl App {
             })
             .collect();
         let palette = self.style_palette();
+        let layer_fields = self.symbol_layer_fields();
         let env = Env {
             at: d.selected,
             layer,
@@ -301,6 +287,8 @@ impl App {
             assets: &assets,
             step: d.step,
             effects: kentos_native_style::designer::effects::takes_effects(d.selected),
+            fields: &layer_fields,
+            builder: self.document.is_some(),
         };
         let mut body = column![title, horizontal_divider(), form::form(&env)]
             .spacing(10)
@@ -314,7 +302,7 @@ impl App {
 
 /// The width the preview's bar takes on one line: the samples' segmented
 /// control, the scale's buttons and text, their gaps and the bar's padding.
-fn bar_width(samples: &[Sample], px_per_mm: f64) -> f32 {
+fn bar_width(samples: &[Sample], _px_per_mm: f64) -> f32 {
     let body = typography::body();
     let text = |s: &str| typography::text_width(s, body);
     let segments: f32 = if samples.len() > 1 {
@@ -322,9 +310,10 @@ fn bar_width(samples: &[Sample], px_per_mm: f64) -> f32 {
     } else {
         typography::text_width(texts::ONE_POINT, typography::caption())
     };
-    let buttons = text("−") + text("+") + text("1:1") + 3.0 * 14.0;
-    let scale = typography::text_width(&model::zoom_text(px_per_mm), typography::caption());
-    segments + buttons + scale + 5.0 * 6.0 + 24.0
+    // The strip's −, + (square), the scale's box, a divider and 1:1 (style/strip.rs).
+    let buttons = 2.0 * (kentos_ui::theme::metrics::inline() + 4.0) + text("1:1") + 16.0 + 11.0;
+    let scale = typography::scaled(96.0);
+    segments + buttons + scale + 4.0 * 2.0 + 6.0 + 16.0
 }
 
 /// The symbol's own colours, each once: offered under the colour picker.

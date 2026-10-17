@@ -339,6 +339,12 @@
       ]
     },
     {
+      "name": "nesnenin saydamlığı 0 ile 0,9 arasında olmalı (Tarama'nın, docs/adr/0332 §1): invalid_transparency",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}, {"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}, "transparency": 1.5}]}, "result": {"status": "failed", "error": {"code": "invalid_transparency", "message": "Saydamlık 1.5; 0 ile 0,9 arasında olmalı (%0–90).", "path": "objects[1].transparency"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
       "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; çakışma katmandan önce",
       "steps": [
         {"op": "captureRevision", "as": "r0"},

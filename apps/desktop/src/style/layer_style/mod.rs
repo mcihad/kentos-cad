@@ -239,6 +239,8 @@ pub enum Event {
     Expr(Field, String),
     /// Text put at the end of an expression field (a field, a variable, a function).
     Insert(Field, String),
+    /// Oluşturucu…: the İfade oluşturucu on an expression field.
+    OpenBuilder(Field),
     /// Değerlerden sınıfla.
     Classify,
     AddCategory,
@@ -869,6 +871,7 @@ impl LayerStyleWindow {
             Event::Symbol(at, class, symbol) => self.put_symbol(&at, class, symbol),
             Event::Thematic(e) => self.thematic(e, src),
             Event::Open(_)
+            | Event::OpenBuilder(_)
             | Event::Close
             | Event::Apply
             | Event::Done
@@ -1235,6 +1238,7 @@ impl App {
 
     pub(crate) fn layer_style_event(&mut self, event: Event) -> Task<Message> {
         let event = match event {
+            Event::OpenBuilder(field) => return self.open_builder_for_layer_style(field),
             Event::Open(id) => {
                 self.open_layer_style(id);
                 return Task::none();
@@ -1269,11 +1273,13 @@ impl App {
             Event::Apply => {
                 window.apply(&mut doc.model);
             }
+            // Tamam writes the style and closes the window; the notice says it was written.
             Event::Done => {
                 window.asking = false;
                 if window.apply(&mut doc.model) {
                     self.styles.layer_style = None;
                     self.dialog = None;
+                    self.toast_saved("Katman stili uygulandı", "Ctrl+Z geri alır.");
                 }
             }
             e => {

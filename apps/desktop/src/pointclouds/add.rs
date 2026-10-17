@@ -766,6 +766,8 @@ impl App {
                     label_of: None,
                     label_scale: None,
                     symbol: None,
+                    order: None,
+                    transparency: None,
                 })
                 .collect(),
             operation: Some(CreateOperation::PointCloud),

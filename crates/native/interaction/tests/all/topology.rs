@@ -277,6 +277,7 @@ fn with_a_selection_corrects_only_it_the_rest_and_the_locked_are_supports() {
     let text = add(
         &mut b,
         Entity::Text(TextEntity {
+            annotative: None,
             base: common::base("cizim"),
             p: pt(5.0, 5.0),
             text: "Ada 101".into(),

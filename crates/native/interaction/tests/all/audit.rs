@@ -27,7 +27,7 @@ fn audit_shows_what_it_found_then_repairs_in_one_step() {
     assert!(
         b.log
             .iter()
-            .any(|l| l.text == "Denetle: 5 bozuk nesne (1 kilitli katmanda); Enter ile onarın."),
+            .any(|l| l.text == "Denetle: 6 bozuk nesne (1 kilitli katmanda); Enter ile onarın."),
         "{:?}",
         b.log.iter().map(|l| &l.text).collect::<Vec<_>>()
     );
@@ -39,7 +39,7 @@ fn audit_shows_what_it_found_then_repairs_in_one_step() {
     );
     assert!(
         b.session.prompt().text().starts_with(
-            "Denetle: 5 bozuk nesne (1 kilitli katmanda); 6 kullanılmayan kaynak [Denetle (Enter) / Onar (O): açık"
+            "Denetle: 6 bozuk nesne (1 kilitli katmanda); 6 kullanılmayan kaynak [Denetle (Enter) / Onar (O): açık"
         ),
         "{}",
         b.session.prompt().text()
@@ -52,7 +52,7 @@ fn audit_shows_what_it_found_then_repairs_in_one_step() {
             .any(|s| s.tone == Tone::Danger && s.dash.is_some())
     );
     b.confirm();
-    assert_eq!(b.last_text(), Some("Denetle: 4 nesne onarıldı."));
+    assert_eq!(b.last_text(), Some("Denetle: 5 nesne onarıldı."));
     assert_eq!(b.session.tool_id(), "select");
     let Some(Entity::Text(t)) = b.doc.get(Slot(2)) else {
         panic!("text 2");

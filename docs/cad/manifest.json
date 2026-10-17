@@ -105,6 +105,54 @@
    "tests": 0
   },
   {
+   "id": "annotation.make",
+   "kind": "command",
+   "title": "Ölçekli yap",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun make işlemine verilir; nesne projenin çizim ölçeğinde ölçekli olur (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "annotation.reset",
+   "kind": "command",
+   "title": "Ölçeği sıfırla",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun reset işlemine verilir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "annotation.unmake",
+   "kind": "command",
+   "title": "Ölçekliliği kaldır",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Seçimin kimlikleri komutun unmake işlemine verilir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "attachment.add",
    "kind": "command",
    "title": "Dosya ekle…",
@@ -468,6 +516,22 @@
    "python": "kentos.cad.blocks.edit",
    "mcp": "cad.blocks.edit",
    "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "block.freeze",
+   "kind": "command",
+   "title": "Sabit bloğa çevir",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.freeze"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.freeze",
+   "mcp": "cad.blocks.freeze",
+   "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy.",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -1358,6 +1422,54 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "dimension.break",
+   "kind": "command",
+   "title": "Ölçüyü kır",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": "Seçili ölçüler görünen nesnelerin kestiği yerlerde kırılır (ADR 0321 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "dimension.space",
+   "kind": "command",
+   "title": "Ölçü aralığı",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": "Seçimin ilk ölçüsü temeldir; öbürleri aralıkla dizilir (ADR 0321 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "dimension.unbreak",
+   "kind": "command",
+   "title": "Kırmayı kaldır",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.edit",
+   "mcp": "cad.dimensions.edit",
+   "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "draft.grid",
@@ -2764,6 +2876,22 @@
    "tests": 1
   },
   {
+   "id": "hatchPatterns.manage",
+   "kind": "command",
+   "title": "Tarama desenleri",
+   "level": "semantic",
+   "via": [
+    "cad.hatchpatterns.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.hatchpatterns.edit",
+   "mcp": "cad.hatchpatterns.edit",
+   "note": "Yükleme (birimiyle), silme ve dışa aktarma komuta verilir; desen taramaya cad.entities.hatch ve cad.hatches.edit'in pattern'iyle adıyla verilir (ADR 0331 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "help.about",
    "kind": "command",
    "title": "KentOS CAD hakkında",
@@ -3093,6 +3221,102 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "leader.addArm",
+   "kind": "command",
+   "title": "Kol ekle",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzun kimliği, çizimden seçilen uç ve orada kenetin verdiği yer addArm işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.align",
+   "kind": "command",
+   "title": "Kılavuzları hizala",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzların kimlikleri seçim sırasıyla, pencerenin doğrultusu ve aralığı align işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.blocks",
+   "kind": "command",
+   "title": "Blok içerik",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzun ve yerleştirmelerin kimlikleri blocks işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.collect",
+   "kind": "command",
+   "title": "Kılavuzları topla",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Seçili kılavuzların kimlikleri seçim sırasıyla collect işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.removeArm",
+   "kind": "command",
+   "title": "Kol sil",
+   "level": "semantic",
+   "via": [
+    "cad.leaders.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.leaders.edit",
+   "mcp": "cad.leaders.edit",
+   "note": "Ucu seçilen noktaya en yakın kolun sırası removeArm işlemine verilir (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "leader.styles",
+   "kind": "command",
+   "title": "Kılavuz stilleri",
+   "level": "semantic",
+   "via": [
+    "cad.styles.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.styles.edit",
+   "mcp": "cad.styles.edit",
+   "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "lineTypes.manage",
@@ -6661,17 +6885,33 @@
    "tests": 0
   },
   {
+   "id": "table.blockSchedule",
+   "kind": "command",
+   "title": "Blok çizelgesi tablosu",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Tablo blocks kaynağıyla yazılır; çizelgenin satırlarını belge her adımda kendisi yazar (ADR 0327).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.edit",
    "kind": "command",
    "title": "Tabloyu düzenle",
    "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.tables.edit"
    ],
-   "operation": "table",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.tables.edit",
+   "mcp": "cad.tables.edit",
+   "note": "Pencerenin her değişikliği cad.tables.edit'in bir düzenlemesidir (hücre, formül, satır ve sütun, biçim, alan, boylar); önizleme komutun planı, Kaydet aynı düzenlemeleri tek adımda yazar (ADR 0327).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -6693,17 +6933,33 @@
    "tests": 1
   },
   {
+   "id": "table.link",
+   "kind": "command",
+   "title": "Dosyaya bağla",
+   "level": "semantic",
+   "via": [
+    "cad.tables.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.tables.edit",
+   "mcp": "cad.tables.edit",
+   "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "table.update",
    "kind": "command",
    "title": "Tabloyu güncelle",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.tables.edit"
    ],
-   "operation": "tableUpdate",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.tables.edit",
+   "mcp": "cad.tables.edit",
+   "note": "Seçili ya da kaynağı olan bütün tabloların kimlikleri ve çizimin klasörü refresh işlemine verilir; bağlı olmayan ya da yolunda olmayan dosya sorulup link işlemiyle bağlanır (ADR 0327).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
@@ -6781,20 +7037,132 @@
    "tests": 2
   },
   {
+   "id": "text.check",
+   "kind": "command",
+   "title": "Yazı denetimi",
+   "level": "query",
+   "via": [
+    "cad.texts.check"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere komutun bulgularını gösterir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.combine",
+   "kind": "command",
+   "title": "Yazıları birleştir",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazıların kimlikleri combine işlemine verilir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.fieldInsert",
+   "kind": "command",
+   "title": "Alan ekle",
+   "level": "semantic",
+   "via": [
+    "cad.fields.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.fields.edit",
+   "mcp": "cad.fields.edit",
+   "note": "Pencere yazının, kaynağın (çizimden seçilen nesne ya da proje) ve biçimin kimliklerini ve değerlerini komutun insert işlemine verir; önizleme komutun planıdır (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.fieldsUpdate",
+   "kind": "command",
+   "title": "Alanları yenile",
+   "level": "semantic",
+   "via": [
+    "cad.fields.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.fields.edit",
+   "mcp": "cad.fields.edit",
+   "note": "Seçili yazıların kimlikleri update işlemine verilir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "text.findReplace",
    "kind": "command",
    "title": "Bul ve değiştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "replaceText",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Bul, Değiştir, Büyük küçük harf ve Tam sözcük komutun replace işlemine seçilen satırların kimlikleriyle verilir; Joker açıkken cad.entities.edit'in replaceText'iyle yazar (desen bütün yazıyı alır; ADR 0325).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "text.fonts",
+   "kind": "command",
+   "title": "Yazı tipleri",
+   "level": "query",
+   "via": [
+    "cad.fonts.report"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.number",
+   "kind": "command",
+   "title": "Numarala",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazıların kimlikleri seçim sırasıyla ve pencerenin değerleri number işlemine verilir; önizleme komutun planıdır (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "text.split",
+   "kind": "command",
+   "title": "Satırlara ayır",
+   "level": "semantic",
+   "via": [
+    "cad.texts.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Seçili yazının kimliği split işlemine verilir (ADR 0325).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "time.compare",
@@ -7015,6 +7383,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.annotativePlace",
+   "kind": "command",
+   "title": "Ölçekteki yeri",
+   "level": "semantic",
+   "via": [
+    "cad.annotations.scales"
+   ],
+   "operation": null,
+   "python": "kentos.cad.annotations.scales",
+   "mcp": "cad.annotations.scales",
+   "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.arc",
@@ -7459,6 +7843,22 @@
    "tests": 1
   },
   {
+   "id": "tool.centerMark",
+   "kind": "command",
+   "title": "Merkez işareti",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Tıklanan eğrinin kimliği ve tıklanan yer komutun centerMark ölçüsüne verilir; işaret eğriyi izler (ADR 0322).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.centerline",
    "kind": "tool",
    "title": "Orta hat",
@@ -7772,33 +8172,65 @@
    "id": "tool.dimBaseline",
    "kind": "tool",
    "title": "Baz ölçü",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
-   "operation": "dimensionBaseline",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun baseline ölçüsüne verilir; bir kat dışarıda, ilk noktası temelinkini izler (ADR 0320 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
   },
   {
+   "id": "tool.dimCenterLine",
+   "kind": "command",
+   "title": "Eksen çizgisi",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "İki düz kenarın kimlikleri ve tıklanan yerler komutun centerLine ölçüsüne verilir; ekseni komut hesaplar ve kenarları izler (ADR 0322).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.dimContinue",
    "kind": "tool",
    "title": "Zincir ölçü",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.dimensions.create"
    ],
-   "operation": "dimensionChain",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun continue ölçüsüne verilir; ilk noktası temelinkini izler (ADR 0320 §3).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.dimElevation",
+   "kind": "command",
+   "title": "Kot",
+   "level": "semantic",
+   "via": [
+    "cad.dimensions.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensions.create",
+   "mcp": "cad.dimensions.create",
+   "note": "Noktanın yeri (kenetle oturduğu köşe), yazılan kot ve değerin yeri komutun elevation ölçüsüne verilir; köşeyi ve kotunu izler (ADR 0322).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.dimension",
@@ -7811,7 +8243,7 @@
    "operation": null,
    "python": "kentos.cad.dimensions.create",
    "mcp": "cad.dimensions.create",
-   "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
+   "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Yere oturan nokta nesneye bağlanır; kenarlardan açı, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı kenarlarını ya da eğrisini izler (ADR 0249, 0255, 0320).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 7
@@ -8283,6 +8715,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 4
+  },
+  {
+   "id": "tool.hatchEdit",
+   "kind": "command",
+   "title": "Taramayı düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.hatches.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.hatches.edit",
+   "mcp": "cad.hatches.edit",
+   "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.hatchSelected",

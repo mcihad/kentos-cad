@@ -16,7 +16,7 @@ use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
 
-const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
+const PROMPT: &str = "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): kapalı nesne / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır]";
 
 fn bench() -> Bench {
     let mut b = Bench::on(HATCH);
@@ -130,7 +130,7 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(b.type_text("B"));
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
     b.click(8.0, -3.0);
     let (bx, holes, _, area) = newest(&b);
@@ -140,11 +140,15 @@ fn by_lines_the_face_around_the_click_with_its_island() {
         b.last_text(),
         Some("ANSI31 tarama eklendi: 176.00 m², 1 ada taranmadı")
     );
-    // Line work follows nothing (docs/adr/0186 §4).
+    // Tied to the line work closing its face, its island too (docs/adr/0328 §2).
     let Entity::Hatch(h) = b.newest() else {
         unreachable!()
     };
-    assert!(h.assoc.is_none());
+    let tie = h.assoc.as_ref().expect("tied");
+    assert!(
+        tie.outer.is_none() && !tie.bounds.is_empty() && !tie.islands.is_empty(),
+        "{tie:?}"
+    );
     // Outside every face.
     b.click(0.0, 18.0);
     assert_eq!(
@@ -180,7 +184,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): Çizim]")
+            .ends_with("/ Sınır katmanı (K): Çizim / Boşluk (G): 0]")
     );
     // The closed polyline is on Yapılar: no island now.
     let count = b.doc.entities().count();
@@ -195,7 +199,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): tümü]")
+            .ends_with("/ Sınır katmanı (K): tümü / Boşluk (G): 0]")
     );
     // Esc leaves the picking first, then the tool.
     assert!(b.type_text("K"));
@@ -204,7 +208,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): tümü]")
+            .ends_with("/ Sınır katmanı (K): tümü / Boşluk (G): 0]")
     );
     assert!(!b.run(|s, cx| s.cancel(cx)));
     assert!(!b.session.is_running());
@@ -230,7 +234,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
         b.session
             .prompt()
             .text()
-            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Sınır (B):"),
+            .starts_with("Tarama: taranacak yerin içine tıklayın [Desen (D): Dolu / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B):"),
         "{}",
         b.session.prompt().text()
     );
@@ -248,7 +252,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
     b.start("hatch");
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Ölçek tabanı (E): kâğıtta / Başlangıç (S): dünya / Ölçekli (L): kapalı / Saydamlık (M): %0 / Sıra (O): atama / Özellik al (Z) / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
 }
 

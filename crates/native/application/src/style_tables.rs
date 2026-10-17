@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use crate::geometry::{edit_geometry, shape};
 use crate::{ExecutionContext, edit};
 use kentos_contracts::{
-    DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, TextLook, TextStyleDef,
-    follow_dimension_style, follow_text_style,
+    DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, LeaderStyleDef, TextLook, TextStyleDef,
+    follow_dimension_style, follow_leader_style, follow_text_style,
 };
 use kentos_domain::{Document, Slot};
 
@@ -85,6 +85,44 @@ fn follow(doc: &mut Document, operation: EditOperation, updates: Vec<(Slot, Enti
             said: crate::said_of(other),
         },
     }
+}
+
+/// Saves the leader styles (docs/adr/0326 §4): the table, then the leaders that follow them, in one step “Kılavuz
+/// stili”; those on locked layers left and counted; a removed style's leaders keep their look and follow none.
+pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Saved {
+    let mut settings = doc.settings().clone();
+    let before: HashMap<String, LeaderStyleDef> =
+        settings.leader_styles.iter().map(|s| (s.id.clone(), s.clone())).collect();
+    settings.leader_styles = next;
+    doc.set_settings(settings);
+    let after: HashMap<String, LeaderStyleDef> =
+        doc.settings().leader_styles.iter().map(|s| (s.id.clone(), s.clone())).collect();
+    let scale = doc.settings().plot_scale;
+    let (mut updates, mut locked) = (Vec::new(), 0);
+    for e in doc.entities() {
+        let Entity::Leader(l) = e else { continue };
+        let Some(old) = l.leader_style.as_ref().and_then(|id| before.get(id)) else {
+            continue;
+        };
+        let next = match after.get(&old.id) {
+            None => kentos_contracts::LeaderEntity { leader_style: None, ..l.clone() },
+            Some(now) if now == old => continue,
+            Some(now) => follow_leader_style(old, now, l, scale),
+        };
+        if next == *l {
+            continue;
+        }
+        if doc.layers().is_locked(&l.base.layer_id) {
+            locked += 1;
+            continue;
+        }
+        updates.push((Slot(l.base.id), Entity::Leader(next)));
+    }
+    let changed = updates.len();
+    if changed > 0 {
+        doc.update_many(updates, "Kılavuz stili");
+    }
+    Saved { changed, locked, said: Vec::new() }
 }
 
 /// Saves the text styles: the table, then the texts that follow them (Yazı stili).

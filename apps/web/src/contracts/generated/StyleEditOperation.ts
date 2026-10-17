@@ -3,4 +3,4 @@
 /**
  * What `cad.styles.edit` does.
  */
-export type StyleEditOperation = "create" | "update" | "rename" | "remove";
+export type StyleEditOperation = "create" | "update" | "rename" | "remove" | "export" | "import";

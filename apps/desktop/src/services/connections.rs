@@ -495,7 +495,7 @@ impl App {
         }
         self.connections = None;
         self.dialog = self.after_connections();
-        self.say(
+        self.announce(
             kentos_interaction::Level::Success,
             format!("Bağlantılar kaydedildi ({n}); gizli değerler bu cihazda saklandı."),
         );

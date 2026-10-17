@@ -153,6 +153,10 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
             add(&names, operator_item(o, false, !before_call));
         }
     }
+    // Letters in order only when nothing matched closer: a typo, not a crowd of guesses.
+    if found.iter().any(|(r, _)| *r < LOOSE) {
+        found.retain(|(r, _)| *r < LOOSE);
+    }
     if found.is_empty() {
         return None;
     }
@@ -170,6 +174,9 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
 
 /// How well a name matched what was typed, best first.
 type Rank = u8;
+
+/// The rank of a name whose letters come in order but apart (`yvrl` in `yuvarla`).
+const LOOSE: Rank = 6;
 
 /// The rank of the best of an entry's names (its own first, then its other
 /// names) for a folded prefix, and the other name when that one matched.
@@ -193,6 +200,10 @@ fn rank<'n>(key: &str, names: &[&'n str]) -> Option<(Rank, Option<&'n str>)> {
             Some(4)
         } else if own && key.chars().count() >= 3 && folded.contains(key) {
             Some(5)
+        } else if own && key.chars().count() >= 3 && in_order(key, &folded) {
+            // A word written short or with a letter left out (`yvrl`, `uzunlk`): offered only
+            // when nothing closer is (`complete` drops these then).
+            Some(LOOSE)
         } else {
             None
         };
@@ -203,6 +214,19 @@ fn rank<'n>(key: &str, names: &[&'n str]) -> Option<(Rank, Option<&'n str>)> {
         }
     }
     best
+}
+
+/// Whether the letters of `key` come in `name` in their order, the first one first.
+fn in_order(key: &str, name: &str) -> bool {
+    let mut letters = name.chars();
+    let mut wanted = key.chars();
+    let Some(first) = wanted.next() else {
+        return false;
+    };
+    if letters.next() != Some(first) {
+        return false;
+    }
+    wanted.all(|k| letters.any(|c| c == k))
 }
 
 /// The list's order of kinds at equal rank.
@@ -449,6 +473,13 @@ mod tests {
             (c.items[0].label.as_str(), c.items[0].alias.as_deref()),
             ("yuvarla", Some("round"))
         );
+        // Letters left out still find the name, after every closer match.
+        let c = complete("yvrl", 4, &schema(), false).expect("yuvarla, written short");
+        assert_eq!(c.items[0].label, "yuvarla");
+        let c = complete("tapalan", 7, &schema(), false).expect("a field, written short");
+        assert_eq!(c.items[0].label, "Tapu alanı");
+        assert!(labels("tar", 3, false).starts_with(&["tarih".to_owned()]));
+        assert!(complete("zqx", 3, &schema(), false).is_none());
         // Before an existing "(" only the name is replaced.
         let c = complete("yuv(1)", 2, &schema(), false).expect("before a call");
         assert_eq!(

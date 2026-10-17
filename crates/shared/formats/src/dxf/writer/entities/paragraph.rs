@@ -8,7 +8,7 @@
 //! break, each run a group (`{…}`) with its formats' switches. The exact
 //! turn is KentOS's data when the direction written does not give it back.
 
-use kentos_contracts::{TextAlign, TextEntity, TextRun, TextScript};
+use kentos_contracts::{ParagraphLayout, TextAlign, TextEntity, TextRun, TextScript};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::text::Font;
@@ -17,7 +17,7 @@ use super::super::super::aci;
 use super::super::super::xdata::Meta;
 use super::leader::turn_read_back;
 use super::{Writer, mtext_chunks};
-use crate::blocks::{core_align, core_runs};
+use crate::blocks::{core_align, core_layout, core_runs};
 use crate::geom::v;
 use crate::math::sin_cos_deg;
 
@@ -48,6 +48,8 @@ fn attachment(a: Option<TextAlign>) -> Option<i64> {
 fn letter(c: char, percent: bool, out: &mut String) {
     match c {
         '\n' => out.push_str("\\P"),
+        // A tab (docs/adr/0324 §1): MTEXT's caret code.
+        '\t' => out.push_str("^I"),
         c if c.is_control() => out.push(' '),
         '\\' => out.push_str("\\\\"),
         '{' => out.push_str("\\{"),
@@ -70,10 +72,26 @@ pub(crate) fn paragraph_value(
     text: &str,
     runs: &[TextRun],
     width_factor: Option<f64>,
+    layout: Option<&ParagraphLayout>,
 ) -> (String, bool) {
     let percent = text.contains("%%");
     let letters: Vec<char> = text.chars().collect();
     let mut out = String::with_capacity(text.len() + 16 * runs.len() + 8);
+    // Its indents and tab stops (docs/adr/0324 §4), in its height: MTEXT's paragraph format, for the whole text.
+    if let Some(l) = layout.filter(|l| l.indent.is_some() || l.left_indent.is_some() || !l.tabs.is_empty()) {
+        let mut items: Vec<String> = Vec::new();
+        if let Some(i) = l.indent {
+            items.push(format!("i{i}"));
+        }
+        if let Some(left) = l.left_indent {
+            items.push(format!("l{left}"));
+        }
+        if !l.tabs.is_empty() {
+            let stops: Vec<String> = l.tabs.iter().map(|t| t.to_string()).collect();
+            items.push(format!("t{}", stops.join(",")));
+        }
+        out.push_str(&format!("\\px{};", items.join(",")));
+    }
     if let Some(w) = width_factor.filter(|w| *w != 1.0) {
         out.push_str(&format!("\\W{w};"));
     }
@@ -116,12 +134,35 @@ pub(crate) fn paragraph_value(
         let stackable = !words
             .iter()
             .any(|c| matches!(c, '^' | '/' | '#' | ';' | '\\' | '{' | '}' | '%') || c.is_control());
+        // A stacked fraction (docs/adr/0324 §1): over its first mark, under it; each side held by MTEXT's stack.
+        if r.script == Some(TextScript::Stack)
+            && let Some(at) = words.iter().position(|c| matches!(c, '^' | '/' | '#'))
+            && at > 0
+            && at + 1 < words.len()
+            && !words
+                .iter()
+                .enumerate()
+                .any(|(k, c)| k != at && (matches!(c, '^' | '/' | '#' | ';' | '\\' | '{' | '}' | '%') || c.is_control()))
+        {
+            let upper: String = words[..at].iter().collect();
+            let lower: String = words[at + 1..].iter().collect();
+            out.push_str(&format!("\\S{upper}{}{lower};", words[at]));
+            out.push('}');
+            continue;
+        }
         match r.script {
             Some(s) if stackable => {
                 let w: String = words.iter().collect();
                 match s {
                     TextScript::Super => out.push_str(&format!("\\S{w}^ ;")),
                     TextScript::Sub => out.push_str(&format!("\\S^ {w};")),
+                    // Not held by a stack (checked above): on the line.
+                    TextScript::Stack => {
+                        unstacked = true;
+                        for &c in words {
+                            letter(c, percent, &mut out);
+                        }
+                    }
                 }
             }
             script => {
@@ -162,6 +203,7 @@ impl Writer<'_> {
                     _ => (1, TextAlign::TopLeft),
                 };
                 let runs = core_runs(&t.paragraph.runs).unwrap_or_default();
+                let flow = core_layout(t.paragraph.layout.as_deref());
                 let place = TextPlace {
                     p: CoreVec2::new(t.p.x, t.p.y),
                     text: &t.text,
@@ -172,6 +214,7 @@ impl Writer<'_> {
                     box_width: t.paragraph.box_width,
                     line_spacing: t.paragraph.line_spacing,
                     runs: &runs,
+                    flow: flow.as_deref(),
                     // Measured as the file draws it (Arimo for Arial); bold and slant its own.
                     font: None,
                     bold: t.face.font.is_some() && t.face.bold,
@@ -187,7 +230,23 @@ impl Writer<'_> {
                 (n, v(q.x, q.y))
             }
         };
-        let (value, unstacked) = paragraph_value(&t.text, &t.paragraph.runs, t.width_factor);
+        let (value, unstacked) = paragraph_value(
+            &t.text,
+            &t.paragraph.runs,
+            t.width_factor,
+            t.paragraph.layout.as_deref(),
+        );
+        // Its layout whole in its KentOS data (docs/adr/0324 §4); columns only there, MTEXT shows one.
+        if let Some(l) = &t.paragraph.layout {
+            meta.layout = serde_json::to_string(l).ok();
+            if l.columns.is_some() {
+                self.report.note(
+                    WHAT,
+                    "sütunlar KentOS verisinde yazıldı; başka programlar yazıyı tek sütunda gösterir",
+                    0,
+                );
+            }
+        }
         if unstacked {
             self.report.note(
                 WHAT,
@@ -210,6 +269,10 @@ impl Writer<'_> {
         self.out.str(7, self.styles.text(&t.face));
         if !t.face.is_plain() {
             meta.face = serde_json::to_string(&t.face).ok();
+        }
+        // Its fields in its KENTOS data (docs/adr/0325 §1); MTEXT holds their letters.
+        if !t.paragraph.fields.is_empty() {
+            meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
         }
         let (s, c) = sin_cos_deg(t.rotation);
         self.out.xyz(11, v(c, s));
@@ -246,6 +309,36 @@ mod tests {
     }
 
     #[test]
+    fn a_list_tabs_and_a_fraction_read_back_as_written() {
+        // docs/adr/0324 §4: the indents and tabs as `\px…;`, a tab as `^I`, a fraction as `\S1/2;`.
+        let text = "Liste\n•\tKum\n•\tÇakıl 1/2 ve 3#4";
+        let runs = vec![
+            TextRun {
+                script: Some(TextScript::Stack),
+                ..run(20, 23)
+            },
+            TextRun {
+                script: Some(TextScript::Stack),
+                ..run(27, 30)
+            },
+        ];
+        let layout = ParagraphLayout {
+            indent: Some(-2.0),
+            left_indent: Some(2.0),
+            tabs: vec![2.0, 6.5],
+            columns: None,
+        };
+        let (value, unstacked) = paragraph_value(text, &runs, None, Some(&layout));
+        assert!(!unstacked, "{value}");
+        assert!(value.starts_with("\\pxi-2,l2,t2,6.5;"), "{value}");
+        let back = mtext_content(&caret_decode(&value));
+        assert_eq!(back.text, text);
+        assert_eq!(back.runs, runs);
+        assert_eq!(back.layout, Some(layout));
+        assert!(back.dropped.is_empty(), "{:?}", back.dropped);
+    }
+
+    #[test]
     fn a_paragraph_reads_back_as_written() {
         let text = "Parsel 101\nAlan: 450 m2 {a}\\b^c 100%% H2O";
         let runs = vec![
@@ -272,7 +365,7 @@ mod tests {
                 ..run(39, 40)
             },
         ];
-        let (value, unstacked) = paragraph_value(text, &runs, Some(0.8));
+        let (value, unstacked) = paragraph_value(text, &runs, Some(0.8), None);
         assert!(!unstacked);
         let back = mtext_content(&caret_decode(&value));
         assert_eq!(back.text, text, "{value}");
@@ -287,7 +380,7 @@ mod tests {
             script: Some(TextScript::Super),
             ..run(1, 4)
         }];
-        let (value, unstacked) = paragraph_value("a1/2", &runs, None);
+        let (value, unstacked) = paragraph_value("a1/2", &runs, None, None);
         assert!(unstacked);
         assert_eq!(value, "a{1/2}");
     }

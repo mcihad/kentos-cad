@@ -29,7 +29,9 @@ use kentos_contracts::{Entity, TextAlign, TextEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::store::labels::paragraph_records;
-use kentos_geometry_core::text::paragraph::{Run, Toggle, retext, toggle};
+use kentos_geometry_core::text::paragraph::{
+    LIST_INDENT, ListKind, Run, Toggle, list_lines, retext, toggle,
+};
 use kentos_interaction::{ParagraphField, Vec2};
 use kentos_native_application::geometry::{contract_runs, core_face, core_runs, drawing_font};
 use kentos_ui::theme::{Tokens, typography};
@@ -59,6 +61,8 @@ pub const SYMBOLS: [(char, &str); 9] = [
 pub enum Menu {
     Color,
     Symbol,
+    /// Liste ▾ (docs/adr/0324 §3).
+    List,
 }
 
 /// An open editor.
@@ -79,6 +83,8 @@ pub struct Open {
     /// The content's text as last seen, and its letters' formats.
     pub text: String,
     pub runs: Vec<Run>,
+    /// Its indents, tabs and columns (docs/adr/0324): the preview lays it out with them; the text keeps its own.
+    pub flow: Option<Box<kentos_geometry_core::text::paragraph::Flow>>,
     /// The text being edited; none for Çok satırlı yazı's new text.
     pub editing: Option<Slot>,
     pub menu: Option<Menu>,
@@ -91,6 +97,8 @@ pub enum Event {
     Select(usize, usize),
     Format(Toggle),
     Symbol(char),
+    /// The chosen lines (the cursor's) made a list of a kind, or their marks taken away (docs/adr/0324 §3).
+    List(ListKind),
     Menu(Option<Menu>),
     Keep,
     Drop,
@@ -284,6 +292,7 @@ impl Open {
     pub fn preview(&self, font: kentos_contracts::DrawingFont) -> crate::labels::Preview {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
+            flow: self.flow.as_deref(),
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
             height: self.height,
@@ -321,6 +330,7 @@ impl Open {
     fn lines(&self, font: kentos_contracts::DrawingFont) -> (usize, f64) {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
+            flow: self.flow.as_deref(),
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
             height: self.height,
@@ -336,7 +346,7 @@ impl Open {
             path: None,
         };
         let laid = place.layout(drawing_font(Some(font)));
-        (laid.lines.len(), laid.pitch)
+        (laid.depth, laid.pitch)
     }
 
     /// Where the box's top left is on the drawing: the first line's top at
@@ -344,6 +354,7 @@ impl Open {
     fn top_left(&self, font: kentos_contracts::DrawingFont) -> Vec2 {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
+            flow: self.flow.as_deref(),
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
             height: self.height,
@@ -382,6 +393,7 @@ impl App {
             content: Content::new(),
             text: String::new(),
             runs: Vec::new(),
+            flow: None,
             editing: None,
             menu: None,
         });
@@ -403,6 +415,7 @@ impl App {
             content: Content::with_text(&t.text),
             text: t.text.clone(),
             runs: core_runs(&t.paragraph.runs).unwrap_or_default(),
+            flow: kentos_native_application::geometry::core_layout(t.paragraph.layout.as_deref()),
             editing: Some(slot),
             menu: None,
         });
@@ -454,6 +467,30 @@ impl App {
                 open.menu = None;
                 self.paragraph_focus = true;
             }
+            Event::List(kind) => {
+                let c = open.content.cursor();
+                let at = letter_at(&open.text, c.position.line, c.position.column);
+                let other = c
+                    .selection
+                    .map_or(at, |s| letter_at(&open.text, s.line, s.column));
+                let (text, runs, marked) =
+                    list_lines(&open.text, &open.runs, at.min(other), at.max(other), kind);
+                open.content = Content::with_text(&text);
+                open.text = text;
+                open.runs = runs;
+                // A list hangs its words a tab past its mark; none left, the indents go.
+                let mut flow = open.flow.as_deref().cloned().unwrap_or_default();
+                if marked {
+                    flow.left = LIST_INDENT;
+                    flow.first = -LIST_INDENT;
+                } else if flow.left == LIST_INDENT && flow.first == -LIST_INDENT {
+                    flow.left = 0.0;
+                    flow.first = 0.0;
+                }
+                open.flow = Some(Box::new(flow));
+                open.menu = None;
+                self.paragraph_focus = true;
+            }
             Event::Menu(menu) => {
                 open.menu = if open.menu == menu { None } else { menu };
             }
@@ -472,10 +509,13 @@ impl App {
         match open.editing {
             None => {
                 let runs = contract_runs(Some(open.runs.clone()));
-                let typed = keep.then_some((open.text.as_str(), runs.as_slice()));
+                let layout = kentos_native_application::geometry::contract_layout(open.flow.as_deref());
+                let typed = keep.then_some((open.text.as_str(), runs.as_slice(), layout.as_deref()));
                 self.with_tool(|s, cx| s.paragraph_typed(typed, cx));
             }
             Some(slot) if keep => {
+                let layout = kentos_native_application::geometry::contract_layout(open.flow.as_deref())
+                    .map(|l| *l);
                 let (text, runs) = kentos_interaction::paragraph::trimmed_paragraph(
                     &open.text,
                     &contract_runs(Some(open.runs.clone())),
@@ -485,11 +525,17 @@ impl App {
                 };
                 let changed = match doc.model.get(slot) {
                     Some(Entity::Text(t))
-                        if !text.is_empty() && (text != t.text || runs != t.paragraph.runs) =>
+                        if !text.is_empty()
+                            && (text != t.text
+                                || runs != t.paragraph.runs
+                                || layout != t.paragraph.layout.as_deref().cloned()) =>
                     {
                         let mut t = t.clone();
                         t.text = text;
                         t.paragraph.runs = runs;
+                        // The editor's lists set its indents (docs/adr/0324 §3); an empty layout takes it away
+                        // (none would keep the text's own).
+                        t.paragraph.layout = Some(Box::new(layout.unwrap_or_default()));
                         Some(Entity::Text(t))
                     }
                     _ => None,
@@ -555,6 +601,7 @@ impl App {
             tool("textUnderline", "Altı çizili", Toggle::Underline),
             tool("textSuperscript", "Üst simge (m²)", Toggle::Super),
             tool("textSubscript", "Alt simge (H₂O)", Toggle::Sub),
+            tool("textStack", "Kesir: seçili harfler / # ya da ^ çevresinde üst üste (1/2)", Toggle::Stack),
             tip(
                 menu_button("textColor", Menu::Color),
                 Tip::new("Renk: seçili harflerin rengi"),
@@ -563,6 +610,11 @@ impl App {
             tip(
                 menu_button("textSymbol", Menu::Symbol),
                 Tip::new("Simge: imlecin yerine bir işaret"),
+                iced::widget::tooltip::Position::Top,
+            ),
+            tip(
+                menu_button("textList", Menu::List),
+                Tip::new("Liste: seçili satırlar madde işaretli ya da numaralı"),
                 iced::widget::tooltip::Position::Top,
             ),
         ]
@@ -694,6 +746,31 @@ impl App {
                     iced::widget::tooltip::Position::Bottom,
                 )
             }))
+            .spacing(2)
+            .align_y(Center)
+            .into(),
+            Menu::List => row(
+                [
+                    ("textList", "Madde işaretli", ListKind::Bullets),
+                    ("textNumbered", "Numaralı", ListKind::Numbers),
+                    ("textListOff", "Listeyi kaldır", ListKind::Plain),
+                ]
+                .into_iter()
+                .map(|(icon, name, kind)| {
+                    button(
+                        row![
+                            kentos_ui::icon::icon(crate::icons::from_web(Some(icon))).size(16.0),
+                            label::body(name),
+                        ]
+                        .spacing(4)
+                        .align_y(Center),
+                    )
+                    .padding([3, 7])
+                    .style(style::button::ghost)
+                    .on_press(Message::Paragraph(Event::List(kind)))
+                    .into()
+                }),
+            )
             .spacing(2)
             .align_y(Center)
             .into(),

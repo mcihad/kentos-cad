@@ -311,6 +311,7 @@ mod tests {
     /// A CBS project in grads.
     fn cbs() -> Format {
         Format::of(&kentos_contracts::ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -343,6 +344,7 @@ mod tests {
             variables: Vec::new(),
             address_locators: Vec::new(),
             domains: Vec::new(),
+            hatch_patterns: Vec::new(),
         })
     }
 

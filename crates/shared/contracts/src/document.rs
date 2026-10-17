@@ -82,6 +82,21 @@ pub enum DrawingFont {
     PlexMono,
 }
 
+impl DrawingFont {
+    /// The geometry core's id of the typeface a drawing writes in (none: Barlow).
+    pub fn id_of(font: Option<DrawingFont>) -> &'static str {
+        match font {
+            None | Some(DrawingFont::Barlow) => "barlow",
+            Some(DrawingFont::Arimo) => "arimo",
+            Some(DrawingFont::Overpass) => "overpass",
+            Some(DrawingFont::Quicksand) => "quicksand",
+            Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
+            Some(DrawingFont::CourierPrime) => "courier-prime",
+            Some(DrawingFont::PlexMono) => "plex-mono",
+        }
+    }
+}
+
 /// The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
 /// Geometry stays in metres: the unit is where the user meets the numbers
 /// (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A
@@ -189,6 +204,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::LineTypeDef>>"))]
     pub line_types: Vec<crate::LineTypeDef>,
+    /// The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::HatchPatternDef>>"))]
+    pub hatch_patterns: Vec<crate::HatchPatternDef>,
     /// The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
     /// absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -240,6 +259,10 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::DimensionStyleDef>>", optional)
     )]
     pub dimension_styles: Vec<crate::DimensionStyleDef>,
+    /// The project's named leader styles (docs/adr/0326 §4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional))]
+    pub leader_styles: Vec<crate::LeaderStyleDef>,
     /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

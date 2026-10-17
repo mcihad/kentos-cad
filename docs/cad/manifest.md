@@ -17,23 +17,23 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 57 | 135 | 38 | 44 | 274 |
-| geometry | 19 | 60 | 0 | 8 | 87 |
+| semantic | 84 | 138 | 38 | 44 | 304 |
+| geometry | 16 | 59 | 0 | 8 | 83 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 1 | 23 | 1 | 4 | 29 |
+| query | 3 | 23 | 1 | 4 | 31 |
 | session | 0 | 80 | 48 | 5 | 133 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 77 | 344 | 103 | 211 | 735 |
+| **toplam** | 103 | 346 | 103 | 211 | 763 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 524 satırdan 133'i: geometry 79, none 20, processing 13, query 21.
+CBS'ye özgü olmayan 552 satırdan 131'i: geometry 75, none 20, processing 13, query 23.
 
-### Sonucu çağıran hesaplar (geometry) — 79
+### Sonucu çağıran hesaplar (geometry) — 75
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,8 +45,6 @@ CBS'ye özgü olmayan 524 satırdan 133'i: geometry 79, none 20, processing 13, 
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `raster.georef` | Raster oturt… | shared | cad.entities.edit `rasterGeoref` |  |
-| `table.update` | Tabloyu güncelle | cad | cad.entities.edit `tableUpdate` |  |
-| `text.findReplace` | Bul ve değiştir | shared | cad.entities.edit `replaceText` |  |
 | `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |
@@ -57,8 +55,6 @@ CBS'ye özgü olmayan 524 satırdan 133'i: geometry 79, none 20, processing 13, 
 | `tool.coordinateLabel` | Koordinat yaz | cad | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | cad | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
-| `tool.dimBaseline` | Baz ölçü | cad | cad.entities.create `dimensionBaseline` |  |
-| `tool.dimContinue` | Zincir ölçü | cad | cad.entities.create `dimensionChain` |  |
 | `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
@@ -160,7 +156,7 @@ CBS'ye özgü olmayan 524 satırdan 133'i: geometry 79, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 21
+### Okuma, Python'da yok (query) — 23
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -181,6 +177,8 @@ CBS'ye özgü olmayan 524 satırdan 133'i: geometry 79, none 20, processing 13, 
 | `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |
+| `text.check` | Yazı denetimi | cad | cad.texts.check | Pencere komutun bulgularını gösterir (ADR 0325). |
+| `text.fonts` | Yazı tipleri | cad | cad.fonts.report | Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324). |
 | `tool.measure` | Mesafe ölç | shared | — | İki nokta arası uzunluk: noktalardan hesap; ölçme API'si nesne ister. |
 | `tool.measureAngle` | Açı ölç | shared | — |  |
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |

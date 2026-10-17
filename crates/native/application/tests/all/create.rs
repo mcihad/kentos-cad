@@ -44,6 +44,8 @@ fn points(n: usize) -> EntitiesCreate {
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             })
             .collect(),
         operation: Some(CreateOperation::Divide),
@@ -126,6 +128,8 @@ fn the_geometry_is_written_as_given() {
                 label_of: None,
                 label_scale: None,
                 symbol: None,
+                order: None,
+                transparency: None,
             }],
             operation: None,
             expected_revision: None,

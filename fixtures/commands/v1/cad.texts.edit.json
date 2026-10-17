@@ -1,0 +1,2416 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.texts.edit",
+  "commandVersion": 1,
+  "title": "Yazıları düzenle",
+  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kentsel proje",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "mekan",
+        "name": "Mekanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yazi",
+        "name": "Yazılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "mekan",
+        "attrs": {
+          "Ad": "Salon",
+          "No": "101",
+          "Boş": ""
+        },
+        "label": "S-1",
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400004
+          },
+          {
+            "x": 500000,
+            "y": 4400004
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 2,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400030
+        },
+        "text": "Kat planı: 1. kat",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 3,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400028
+        },
+        "text": "KAT ve kat",
+        "height": 0.25,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 7,
+            "end": 10,
+            "bold": true
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400026
+        },
+        "text": "Katman",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 5,
+        "layerId": "gizli",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400024
+        },
+        "text": "Gizli kat",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 6,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400022
+        },
+        "text": "Kilitli kat",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 7,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4400010
+        },
+        "text": "Ada 101",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 8,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500002,
+          "y": 4400008
+        },
+        "text": "Parsel 5",
+        "height": 0.25,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 7,
+            "end": 8,
+            "color": "#E5484D"
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 9,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 499999,
+          "y": 4400012
+        },
+        "text": "Pafta G-23",
+        "height": 0.25,
+        "rotation": 0,
+        "align": "middleCenter"
+      },
+      {
+        "kind": "text",
+        "id": 10,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399990
+        },
+        "text": "Birinci satır\nİkinci satır\n\nDördüncü",
+        "height": 0.25,
+        "rotation": 0,
+        "runs": [
+          {
+            "start": 14,
+            "end": 20,
+            "italic": true
+          }
+        ]
+      },
+      {
+        "kind": "text",
+        "id": 11,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399980
+        },
+        "text": "K",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 12,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399979
+        },
+        "text": "D",
+        "height": 0.25,
+        "rotation": 0
+      },
+      {
+        "kind": "text",
+        "id": 13,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500000,
+          "y": 4399978
+        },
+        "text": "Tek satır",
+        "height": 0.25,
+        "rotation": 90
+      },
+      {
+        "kind": "text",
+        "id": 14,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4399990
+        },
+        "text": "Sol\nSağ",
+        "height": 0.25,
+        "rotation": 90,
+        "align": "bottomRight"
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": []
+  },
+  "cases": [
+    {
+      "name": "Bul ve değiştir: görünen bütün yazılarda, Türkçe büyük-küçük harf bir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "kat",
+              "with": "blok"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:4"
+              ],
+              "replaced": 5,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_locked",
+                "message": "1 yazı kilitli katmanda olduğu için değişmedi.",
+                "path": "edit.uids"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400030
+                },
+                "text": "blok planı: 1. blok",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "3": {
+                "kind": "text",
+                "id": 3,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400028
+                },
+                "text": "blok ve blok",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 8,
+                    "end": 12,
+                    "bold": true
+                  }
+                ]
+              },
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "blokman",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Bütün sözcük: Katman değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "kat",
+              "with": "blok",
+              "wholeWord": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:2",
+                "$uidOf:3"
+              ],
+              "replaced": 4,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_locked",
+                "message": "1 yazı kilitli katmanda olduğu için değişmedi.",
+                "path": "edit.uids"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "2": {
+                "kind": "text",
+                "id": 2,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400030
+                },
+                "text": "blok planı: 1. blok",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "3": {
+                "kind": "text",
+                "id": 3,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400028
+                },
+                "text": "blok ve blok",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 8,
+                    "end": 12,
+                    "bold": true
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Büyük-küçük harf ayrı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "KAT",
+              "with": "BLOK",
+              "matchCase": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:3"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "3": {
+                "kind": "text",
+                "id": 3,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400028
+                },
+                "text": "BLOK ve kat",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 8,
+                    "end": 11,
+                    "bold": true
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Türkçe İ ve ı: İKİNCİ ikinci'yi bulur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "İKİNCİ",
+              "with": "2.",
+              "uids": [
+                "$uidOf:10"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "10": {
+                "kind": "text",
+                "id": 10,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "text": "Birinci satır\n2. satır\n\nDördüncü",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 14,
+                    "end": 16,
+                    "italic": true
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Biçim dilimi değiştirilenin arkasında kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "ve",
+              "with": "ile",
+              "uids": [
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:3"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "3": {
+                "kind": "text",
+                "id": 3,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400028
+                },
+                "text": "KAT ile kat",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 8,
+                    "end": 11,
+                    "bold": true
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki yazı uyarıyla atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "kilitli",
+              "with": "açık"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "replaced": 0,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_locked",
+                "message": "1 yazı kilitli katmanda olduğu için değişmedi.",
+                "path": "edit.uids"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Verilen yazıların hepsi kilitli: ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "kat",
+              "with": "blok",
+              "uids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "Verilen yazıların hepsi kilitli katmanlarda; hiçbiri değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş kalacak yazı atlanır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "Katman",
+              "with": "",
+              "uids": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "replaced": 0,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "text_left_blank",
+                "message": "1 yazı değiştirince boş kalacağı için olduğu gibi bırakıldı.",
+                "path": "edit.with"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Bulunamayan: adım yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "yok",
+              "with": "var"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "replaced": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmandaki yazı verilince değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "kat",
+              "with": "blok",
+              "uids": [
+                "$uidOf:5"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "5": {
+                "kind": "text",
+                "id": 5,
+                "layerId": "gizli",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400024
+                },
+                "text": "Gizli blok",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Alanın önündeki harfler değişince alan kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "area"
+              },
+              "format": {
+                "decimals": 1,
+                "prefix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "command": "cad.fields.edit",
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "Katman 24.0",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 11,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 1,
+                      "prefix": " "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "Katman",
+              "with": "Kat",
+              "uids": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "Kat 24.0",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 3,
+                    "end": 8,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "area"
+                    },
+                    "format": {
+                      "decimals": 1,
+                      "prefix": " "
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Numarala: K-01, K-02",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "start": 1,
+              "step": 1,
+              "digits": 2,
+              "prefix": "K-",
+              "place": "replace"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "11": {
+                "kind": "text",
+                "id": 11,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399980
+                },
+                "text": "K-01",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "12": {
+                "kind": "text",
+                "id": 12,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399979
+                },
+                "text": "K-02",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Numarala başına, beşer artarak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "start": 10,
+              "step": 5,
+              "suffix": ". ",
+              "place": "prefix"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "7": {
+                "kind": "text",
+                "id": 7,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400010
+                },
+                "text": "10. Ada 101",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "8": {
+                "kind": "text",
+                "id": 8,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500002,
+                  "y": 4400008
+                },
+                "text": "15. Parsel 5",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 11,
+                    "end": 12,
+                    "color": "#E5484D"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Numarala sonuna, eksiye inerek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:4"
+              ],
+              "start": 1,
+              "step": -1,
+              "digits": 3,
+              "prefix": " #",
+              "place": "suffix"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "11": {
+                "kind": "text",
+                "id": 11,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399980
+                },
+                "text": "K #001",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "12": {
+                "kind": "text",
+                "id": 12,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399979
+                },
+                "text": "D #000",
+                "height": 0.25,
+                "rotation": 0
+              },
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "Katman #-001",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yazıları birleştir: yukarıdan aşağıya, en üsttekinin hizasıyla",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "o7",
+          "id": 7
+        },
+        {
+          "op": "captureUid",
+          "as": "o8",
+          "id": 8
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "combine",
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:9"
+              ],
+              "removed": [
+                "$uid:o7",
+                "$uid:o8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "9": {
+                "kind": "text",
+                "id": 9,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 499999.0,
+                  "y": 4400012.125
+                },
+                "text": "Pafta G-23\nAda 101\nParsel 5",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topCenter",
+                "runs": [
+                  {
+                    "start": 26,
+                    "end": 27,
+                    "color": "#E5484D"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: biçimler kayar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "o8",
+          "id": 8
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "combine",
+              "uids": [
+                "$uidOf:8",
+                "$uidOf:7"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:7"
+              ],
+              "removed": [
+                "$uid:o8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "7": {
+                "kind": "text",
+                "id": 7,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4400010.25
+                },
+                "text": "Ada 101\nParsel 5",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topLeft",
+                "runs": [
+                  {
+                    "start": 15,
+                    "end": 16,
+                    "color": "#E5484D"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Birleştir planı: çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "combine",
+              "uids": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "texts": [
+                {
+                  "kind": "text",
+                  "id": 11,
+                  "layerId": "yazi",
+                  "attrs": {},
+                  "p": {
+                    "x": 500000.0,
+                    "y": 4399980.25
+                  },
+                  "text": "K\nD",
+                  "height": 0.25,
+                  "rotation": 0,
+                  "align": "topLeft"
+                }
+              ],
+              "revision": "$current",
+              "removed": [
+                "$uidOf:12"
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satırlara ayır: boş satır atlanır, biçim kendi satırında",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "o10",
+          "id": 10
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:10"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "added": [
+                "$uidOf:15",
+                "$uidOf:16",
+                "$uidOf:17"
+              ],
+              "removed": [
+                "$uid:o10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "15": {
+                "kind": "text",
+                "id": 15,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399990.25
+                },
+                "text": "Birinci satır",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topLeft"
+              },
+              "16": {
+                "kind": "text",
+                "id": 16,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399989.833333333
+                },
+                "text": "İkinci satır",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 0,
+                    "end": 6,
+                    "italic": true
+                  }
+                ],
+                "align": "topLeft"
+              },
+              "17": {
+                "kind": "text",
+                "id": 17,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399989.0
+                },
+                "text": "Dördüncü",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Satırlara ayır: döndürülmüş, sağ alttan hizalı",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "o14",
+          "id": 14
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:14"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "added": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "removed": [
+                "$uid:o14"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              15,
+              16
+            ],
+            "entities": {
+              "15": {
+                "kind": "text",
+                "id": 15,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500009.2833333333,
+                  "y": 4399990.0
+                },
+                "text": "Sol",
+                "height": 0.25,
+                "rotation": 90,
+                "align": "topRight"
+              },
+              "16": {
+                "kind": "text",
+                "id": 16,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500009.7,
+                  "y": 4399990.0
+                },
+                "text": "Sağ",
+                "height": 0.25,
+                "rotation": 90,
+                "align": "topRight"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Satırlara ayır ve geri al",
+      "steps": [
+        {
+          "op": "captureUid",
+          "as": "o10",
+          "id": 10
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:10"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "added": [
+                "$uidOf:15",
+                "$uidOf:16",
+                "$uidOf:17"
+              ],
+              "removed": [
+                "$uid:o10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "15": {
+                "kind": "text",
+                "id": 15,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399990.25
+                },
+                "text": "Birinci satır",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topLeft"
+              },
+              "16": {
+                "kind": "text",
+                "id": 16,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399989.833333333
+                },
+                "text": "İkinci satır",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 0,
+                    "end": 6,
+                    "italic": true
+                  }
+                ],
+                "align": "topLeft"
+              },
+              "17": {
+                "kind": "text",
+                "id": 17,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000.0,
+                  "y": 4399989.0
+                },
+                "text": "Dördüncü",
+                "height": 0.25,
+                "rotation": 0,
+                "align": "topLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Satırlara ayır",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "10": {
+                "kind": "text",
+                "id": 10,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399990
+                },
+                "text": "Birinci satır\nİkinci satır\n\nDördüncü",
+                "height": 0.25,
+                "rotation": 0,
+                "runs": [
+                  {
+                    "start": 14,
+                    "end": 20,
+                    "italic": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş arama",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "",
+              "with": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_text",
+              "message": "Aranan yazı boş. Bulunacak harfleri verin.",
+              "path": "edit.find"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tek yazı birleşmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "combine",
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:7"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Birleştirmek için en az iki yazı gerekir.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tek paragraflı yazı ayrılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:13"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_splittable",
+              "message": "tek paragraflı yazı satırlara ayrılmaz.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numaralanacak yazı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Yazı verilmedi. En az bir yazının kimliğini verin.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Basamak 12'yi aşamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "digits": 13
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_number",
+              "message": "Numaralar ±1000000000000000 içinde, basamak en çok 12 olmalı.",
+              "path": "edit.start"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_text",
+              "message": "Verilen nesne bir yazı değil; bu komut yalnız yazıları değiştirir.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "R-12"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“R-12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "combine",
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ]
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme hazırlanmış düzenleme yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "start": 1,
+              "step": 1,
+              "prefix": "K-",
+              "place": "replace"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "11": {
+                "kind": "text",
+                "id": 11,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4399980
+                },
+                "text": "K-1",
+                "height": 0.25,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "split",
+              "uid": "$uidOf:10"
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kopuk alanlı yazıda değiştirme uyarır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "insert",
+              "uid": "$uidOf:4",
+              "start": 6,
+              "end": 6,
+              "source": {
+                "kind": "object",
+                "uid": "$uidOf:1",
+                "value": "attribute",
+                "name": "Yok"
+              },
+              "format": {
+                "prefix": " "
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Katman####” yazısının 1. alanı okunamadı: adı verilen öznitelik ya da değişken yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "command": "cad.fields.edit",
+          "expect": {
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "Katman####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 6,
+                    "end": 10,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "Yok"
+                    },
+                    "format": {
+                      "prefix": " "
+                    },
+                    "broken": "notNamed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "replace",
+              "find": "Katman",
+              "with": "Kat",
+              "uids": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "replaced": 1,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "field_broken",
+                "message": "“Kat####” yazısının 1. alanı okunamadı: adı verilen öznitelik ya da değişken yok; harfleri ####.",
+                "path": "edit"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "entities": {
+              "4": {
+                "kind": "text",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "p": {
+                  "x": 500000,
+                  "y": 4400026
+                },
+                "text": "Kat####",
+                "height": 0.25,
+                "rotation": 0,
+                "fields": [
+                  {
+                    "start": 3,
+                    "end": 7,
+                    "source": {
+                      "kind": "object",
+                      "uid": "$uidOf:1",
+                      "value": "attribute",
+                      "name": "Yok"
+                    },
+                    "format": {
+                      "prefix": " "
+                    },
+                    "broken": "notNamed"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kilitli yazı numaralanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "number",
+              "uids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki yazı değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

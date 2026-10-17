@@ -27,12 +27,12 @@ tablo (`table`) özellik sınıfının yanında durur. KentOS'ta her nesnenin bi
 
 ### 2. Dosya ve bulut
 
-- `.kcad` şema 60 (formlarla aynı şema: formlar ve kayıt birlikte gelir, bu dal birleşmeden ayrı numara açılmadı):
-  `{"record": {…ortak alanlar}}`, kendi alanı yok; şema 59 okuyucusu `unknown_kind` ile reddeder; blok tanımında
+- `.kcad` şema 72 (formlarla aynı şema: formlar ve kayıt birlikte gelir, bu dal birleşmeden ayrı numara açılmadı):
+  `{"record": {…ortak alanlar}}`, kendi alanı yok; şema 71 okuyucusu `unknown_kind` ile reddeder; blok tanımında
   `bad_value`; kendi alanı `unknown_field`. Örnek `fixtures/kcad/v2/records.{json,kcad}`, bozuklar
-  `broken/record-{in-schema-59,in-block,with-point}.kcad`; bağımsız `tools/kcad/kcad.py` ve `kcad_v2_reference.py` aynı
+  `broken/record-{in-schema-71,in-block,with-point}.kcad`; bağımsız `tools/kcad/kcad.py` ve `kcad_v2_reference.py` aynı
   kuralla.
-- Tipli sütunlarda tür 20, kendi değeri yok; `FORMATS_VERSION` 69.
+- Tipli sütunlarda tür 20, kendi değeri yok; `FORMATS_VERSION` 81.
 - Sunucu: `geom` boş (PostGIS'te `NULL`), kaynak `cad`, tanımı türüyle; göç 0020 nesne türü denetimine `record`'u ve
   ADR 0259'dan beri yazılıp denetimin reddettiği `nurbs`'ü ekler. Blok tanımında kayıt reddedilir.
 
@@ -81,5 +81,5 @@ seçiliyse çalıştırma başlamaz. Ortak durumlar `records-append` ve `half-co
 ## Sonuçlar
 
 - Tablo satırı kendi türüyle gelir; ilişkinin alt katmanı geometrisiz olabilir, “elle çizilmeli” kalkar.
-- Bu dalın şema 60'ı ve `FORMATS_VERSION` 69'u ana daldaki 60–61 ve 70 ile çakışır; birleşmede formlar ve kayıt bir sonraki
+- Bu dalın şema 72'yi ve `FORMATS_VERSION` 81'u ana daldaki 60–61 ve 70 ile çakışır; birleşmede formlar ve kayıt bir sonraki
   boş şemaya ve sürüme taşınır.

@@ -129,6 +129,9 @@ fn titled(app: &mut App, p: [f64; 2], height: f64) {
     }];
     let base = t.base.clone();
     let geometry = EntityGeometry::Table {
+        styles: None,
+        formulas: None,
+        fields: None,
         p: t.p,
         rotation: t.rotation,
         height: t.height,

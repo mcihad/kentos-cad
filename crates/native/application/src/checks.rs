@@ -20,6 +20,8 @@ use crate::codes;
 pub(crate) enum Stop {
     Failed(Box<CommandError>),
     Conflict(Box<CommandError>),
+    /// The job it runs as was asked to stop (docs/adr/0253 §9): nothing written, `cancelled`.
+    Cancelled,
 }
 
 impl Stop {
@@ -31,10 +33,15 @@ impl Stop {
         Stop::Conflict(Box::new(error))
     }
 
-    /// The error it stops with, whichever way.
+    /// The error it stops with, whichever way; a stop asked has none of its own.
     pub(crate) fn into_error(self) -> CommandError {
         match self {
             Stop::Failed(error) | Stop::Conflict(error) => *error,
+            Stop::Cancelled => CommandError {
+                code: "cancelled".into(),
+                message: "İş durduruldu; hiçbir şey yazılmadı.".into(),
+                ..CommandError::default()
+            },
         }
     }
 }
@@ -44,6 +51,7 @@ impl<T> From<Stop> for CommandResult<T> {
         match stop {
             Stop::Failed(error) => CommandResult::Failed { error: *error },
             Stop::Conflict(error) => CommandResult::Conflict { error: *error },
+            Stop::Cancelled => CommandResult::Cancelled,
         }
     }
 }

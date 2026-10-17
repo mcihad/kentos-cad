@@ -333,6 +333,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     let text = add(
         &mut app,
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("cizim"),
             p: Wire { x: E, y: N },
             text: "Ada".to_owned(),
@@ -369,6 +370,9 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     let dim = add(
         &mut app,
         Entity::Dimension(DimensionEntity {
+            annotative: None,
+            text_shift: None,
+            breaks: Vec::new(),
             base: base("cizim"),
             a: Wire { x: E, y: N },
             b: Wire { x: E + 10.0, y: N },
@@ -404,6 +408,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     let hatch = add(
         &mut app,
         Entity::Hatch(HatchEntity {
+            boundary: None,
             base: base("cizim"),
             ring: vec![
                 Wire { x: E, y: N },
@@ -416,6 +421,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             holes: None,
             pattern: HatchPattern::user(HatchPatternType::Lines, 45.0, 3.0),
             assoc: None,
+            annotative: None,
         }),
     );
     let s = Slot(hatch);
@@ -467,6 +473,7 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
         .expect("the parcel's persistent id");
     let text = |label_of: Option<kentos_domain::Uuid>, words: &str| {
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("cizim"),
             p: Wire { x: E, y: N },
             text: words.to_owned(),
@@ -653,6 +660,7 @@ fn what_the_commands_refuse_is_said_and_not_written() {
     let text = add(
         &mut app,
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("cizim"),
             p: Wire { x: E, y: N },
             text: "Park".to_owned(),
@@ -1595,6 +1603,7 @@ fn block_attribute_screens() {
 /// one centred, narrowed and masked.
 fn two_texts(app: &mut App) -> (u32, u32) {
     let text = |p: Wire, text: &str, rotation: f64| TextEntity {
+        annotative: None,
         base: base("cizim"),
         p,
         text: text.to_owned(),
@@ -1815,6 +1824,11 @@ fn width_factor_and_mask_are_written_to_the_texts() {
 /// Two leaders: a filled arrow with its note, an open one masked, on Çizim.
 fn two_leaders(app: &mut App) -> (u32, u32) {
     let leader = |x: f64, text: &str, arrow, mask| kentos_contracts::LeaderEntity {
+        tip: None,
+        leader_style: None,
+        blocks: Vec::new(),
+        arms: Vec::new(),
+        annotative: None,
         base: base("cizim"),
         pts: vec![
             Wire {
@@ -1954,6 +1968,9 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
 /// A dimension of `style` from (E + a, N) to (E + b, N), on Çizim.
 fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
     DimensionEntity {
+        annotative: None,
+        text_shift: None,
+        breaks: Vec::new(),
         base: base("cizim"),
         a: Wire {
             x: E + a[0],
@@ -2101,6 +2118,14 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
         [
             "İlişki",
             "Zemin",
+            // Their options, value's place and breaks (docs/adr/0321).
+            "Sığdırma",
+            "Yuvarlama",
+            "Sıfırlar",
+            "Alternatif birim",
+            "Tolerans",
+            "Değerin yeri",
+            "Kırmalar",
             "Çizgi rengi",
             "Çizgi kalınlığı",
             "Çizgi tipi",

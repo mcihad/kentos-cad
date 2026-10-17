@@ -65,10 +65,10 @@ Formun tek tanımı sözleşmededir (`kentos_contracts::forms`), adı `kentos.fo
 - Eski adı yeni bir alan alırsa, o yeni alan taze bir kimlik alır (ad ve sayı: `Kat-2`).
 - **Formu olmayan çizimde hiçbir alan kimlik almaz.** Böylece dosya eski şemada kalır, eski ortak durumlar değişmez.
 
-### 3. Dosya: `.kcad` şema 60
+### 3. Dosya: `.kcad` şema 72
 
 - Ayarların `forms`'u (sözleşmenin JSON'u, opak değerler gibi, varsayılan alanı yazılmaz) ve alanın `id`'si.
-- Yazıcı 60'ı yalnız formu ya da kimlikli alanı olan çizimde yazar; şema 59 ve öncesinde bu anahtarlar `unknown_field`'dır.
+- Yazıcı 72'yi yalnız formu ya da kimlikli alanı olan çizimde yazar; şema 71 ve öncesinde bu anahtarlar `unknown_field`'dır.
 - Okuyucu formları `forms_problem` ile denetler; özeti içeriğine uymayan yayın `bad_value`'dur.
 - Spesifikasyon `docs/specs/kcad-v2.md` §6.4.13; bağımsız Python okuyucusu ve yazıcısı aynı kuralla.
 - Örnek `fixtures/kcad/v2/forms.kcad`; bozuk örnekler `broken/forms-*`, `broken/field-id-*`.
@@ -206,7 +206,16 @@ formla kaydetme hatası olan formu reddeder. Kaydetme reddetmez: sorunlu taslak 
 
 ## Sonuçlar
 
-- Formsuz çizimler eskisi gibi yazılır (şema 2–59). Formu olan çizim şema 60'tır; eski sürüm onu açmaz, sessizce formunu
+- Formsuz çizimler eskisi gibi yazılır (şema 2–71). Formu olan çizim şema 72'dir; eski sürüm onu açmaz, sessizce formunu
   düşürmez.
 - Evet/hayır ve sayı alanları her ifadede türüyle okunur: daha önce yanlış sonuç veren kurallar artık doğru sonuç verir.
 - Formun kuralları yalnız formda değil, öznitelik yazan her komutta geçerlidir (`enforce` açıkken).
+
+## Ek (17 Ekim 2026): main'le birleşmede numaralar
+
+`forms-core` dalı `main`'le birleşirken `main` `.kcad` şema 60–71'i ölçü, açıklama ve tarama işlerine vermişti (ADR 0320–0331).
+Formların bütün anahtarları (ayarların `forms`, `relations`, `domains`'i; alanın `id`'si ve ekleri; katmanın `tableStyles`, `subtypes`,
+`contingents`, `rules`'u; `record` türü) şema **72**'ye taşındı; yazıcı onu formların bir parçası varken yazar ve şema 71'den önce gelir.
+`FORMATS_VERSION` 81'dir (geometrisiz kayıt), geometri deposunun paketinde kayıt türü 27'dir. Kırık örnekler `*-in-schema-71.kcad`,
+sürüm reddi `broken/schema-version-73.kcad`. `field_not_found` kodu iki işte de aynı anlamdadır (adı verilen katman alanı ya da
+sırası verilen yazı alanı yok) ve tek tanımdır.

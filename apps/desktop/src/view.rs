@@ -79,7 +79,7 @@ impl App {
         // A sheet in front: the sheet mode in place of the drawing and its docks,
         // the tabs under it (sheets.rs, docs/sheet/design.md §11).
         if self.sheets.is_active() {
-            return self.sheet_view();
+            return self.with_toasts(self.sheet_view());
         }
         // The side panels run the body's whole height; the bottom panel and the
         // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
@@ -167,7 +167,7 @@ impl App {
         // changes the layers over the window, not the window's place in the tree,
         // so its widgets keep their state (an open menu, a field, the drawing
         // area's size). The rasters' panel comes and goes by itself (rasters/jobs.rs).
-        iced::widget::Stack::with_children(layers).into()
+        self.with_toasts(iced::widget::Stack::with_children(layers).into())
     }
 
     /// The ribbon; `peek`: the folded ribbon with its tab open (drawn over the drawing).
@@ -691,6 +691,18 @@ impl App {
         ids.iter().map(|id| self.checked(id)).collect()
     }
 
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips.
+    fn param_grip_marks(&self) -> Vec<kentos_geometry_core::block_dynamic::ParamGrip> {
+        if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
+            return Vec::new();
+        }
+        self.spatial
+            .param_grips(self.selection.ids())
+            .into_iter()
+            .map(|(_, g)| g)
+            .collect()
+    }
+
     fn drawing_area(&self) -> Element<'_, Message> {
         match &self.document {
             // The open drawing on KentOS's own wgpu pipeline (viewport.rs, docs/adr/0019),
@@ -710,11 +722,13 @@ impl App {
                     snap_note: self.snap_marker_note(),
                     select: self.session.select_box(),
                     grips,
+                    params: self.param_grip_marks(),
                     hot: self.session.hot_grips(),
                     marked: self.marked_points(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
+                    bonds: self.bond_marks(),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),
@@ -765,6 +779,8 @@ impl App {
                 let lift = if credits.is_empty() { 0.0 } else { crate::services::app::scale_bar_lift() };
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
                 // The text being edited in place is hidden meanwhile (text_field.rs).
+                // The turned texts' pictures in the window's own pixels (label_picture.rs).
+                crate::label_picture::set_device_scale(self.viewport.scale_factor());
                 let labels = crate::labels::layer(
                     &doc.model,
                     doc.session,
@@ -863,6 +879,7 @@ impl App {
             snap_note: None,
             select: None,
             grips,
+            params: self.param_grip_marks(),
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
@@ -870,6 +887,7 @@ impl App {
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
             broken: self.broken_marks(),
+            bonds: self.bond_marks(),
             tracking: None,
             crosshair: None,
             locks: None,
@@ -1746,6 +1764,7 @@ impl App {
             Asking::LayerTranslate => self.layer_translate_view(),
             Asking::DrawingStandard => self.drawing_standard_view(),
             Asking::LineTypes => self.line_types_view(),
+            Asking::HatchPatterns => self.hatch_patterns_view(),
             Asking::StyleImpact => self.style_impact_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
@@ -1777,6 +1796,12 @@ impl App {
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),
+            Asking::FontReport => self.font_report_view(),
+            Asking::FieldInsert => self.field_insert_view(),
+            Asking::TextNumber => self.text_number_view(),
+            Asking::TextCheck => self.text_check_view(),
+            Asking::LeaderAlign => self.leader_align_view(),
+            Asking::LeaderStyles => self.leader_styles_view(),
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterStyle => self.raster_look_view(),

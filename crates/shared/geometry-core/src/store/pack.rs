@@ -202,7 +202,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 24.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 27.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -412,7 +412,9 @@ impl Reader<'_> {
                         bold: bits & RUN_BOLD != 0,
                         italic: bits & RUN_ITALIC != 0,
                         underline: bits & RUN_UNDERLINE != 0,
-                        script: if bits & RUN_SUPER != 0 {
+                        script: if bits & (RUN_SUPER | RUN_SUB) == RUN_SUPER | RUN_SUB {
+                            Some(Script::Stack)
+                        } else if bits & RUN_SUPER != 0 {
                             Some(Script::Super)
                         } else if bits & RUN_SUB != 0 {
                             Some(Script::Sub)
@@ -440,6 +442,7 @@ impl Reader<'_> {
                     bulges: bulges.iter().any(|&b| b != 0.0).then_some(bulges),
                 });
                 Shape::Text {
+                    flow: None,
                     p,
                     text,
                     height,
@@ -546,10 +549,13 @@ impl Reader<'_> {
                             text_color,
                         }
                         .boxed(),
+                        // The page sends no options, moved values or breaks (docs/adr/0321; the web waits, ADR 0228).
+                        more: None,
                     },
                 }
             }
-            12 => {
+            12 | 26 => {
+                let with_origin = kind == 26.0;
                 let ring = self.points()?;
                 let holes = match self.int()? {
                     None => None,
@@ -590,16 +596,22 @@ impl Reader<'_> {
                         })
                     }
                 };
+                // docs/adr/0331 §2: kind 26, a hatch whose pattern has its own origin.
+                let origin = if with_origin { Some(self.pt()?) } else { None };
                 let assoc = match self.string()? {
                     None => None,
+                    // The packed record keeps the closed object's id; a face's line work is not drawn.
                     Some(outer) => Some(HatchAssoc {
-                        outer,
+                        gap: None,
+                        outer: (!outer.is_empty()).then_some(outer),
+                        bounds: None,
                         islands: self.strings()?,
                         cutouts: self.strings()?,
                         seed: self.pt()?,
                     }),
                 };
                 Shape::Hatch {
+                    boundary: None,
                     ring,
                     holes,
                     pattern: HatchPattern {
@@ -610,11 +622,12 @@ impl Reader<'_> {
                         scale: (!scale.is_nan()).then_some(scale),
                         lines,
                         gradient,
+                        origin,
                     },
                     assoc,
                 }
             }
-            15 => {
+            15 | 24 => {
                 let pts = self.points()?;
                 let height = self.num()?;
                 let rotation = self.num()?;
@@ -622,7 +635,20 @@ impl Reader<'_> {
                 let arrow = self.string()?;
                 let mask = self.flag()?.then_some(true);
                 let size = self.num()?;
+                // docs/adr/0326: kind 24, a leader with arms or content blocks: its other arms' points, then how many
+                // content blocks (their ids are the host's). Kind 15 stays the record the web packs.
+                let (mut arms, mut blocks) = (Vec::new(), 0);
+                if kind == 24.0 {
+                    let n = self.count()?;
+                    arms.reserve(n.min(64));
+                    for _ in 0..n {
+                        arms.push(crate::geom::leader::Arm { pts: self.points()? });
+                    }
+                    blocks = self.count()?;
+                }
                 Shape::Leader {
+                    arms: (!arms.is_empty()).then_some(arms),
+                    blocks: (blocks > 0).then(|| vec![String::new(); blocks.min(1024)]),
                     pts,
                     height,
                     rotation,
@@ -671,7 +697,7 @@ impl Reader<'_> {
                 }
             }
             // docs/adr/0410: a record, nothing more.
-            24 => Shape::Record {},
+            27 => Shape::Record {},
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
             // system, the look (its JSON text) and the opacity (NaN none).
             21 => {
@@ -723,8 +749,9 @@ impl Reader<'_> {
             // docs/adr/0184: the corner, turn and height; the rows' heights and the columns'
             // widths; each cell's words, row by row; the merged ranges; the alignments (−1
             // none); the heading flag; the lines (−1 all, else `TABLE_GRIDS`); the frame's
-            // width (NaN none); the face.
-            18 => {
+            // width (NaN none); the face. Kind 25 (docs/adr/0327 §1): a table with cell styles, 18's then the
+            // styles' JSON text.
+            18 | 25 => {
                 let p = self.pt()?;
                 let (rotation, height) = (self.num()?, self.num()?);
                 let rows = self.values()?.unwrap_or_default();
@@ -773,7 +800,15 @@ impl Reader<'_> {
                 let font = self.font()?;
                 let (bold, italic) = (self.flag()?, self.flag()?);
                 let oblique = self.num()?;
+                let styles = if kind == 25.0 {
+                    let text = self.string()?.unwrap_or_default();
+                    let json = crate::api::json::Json::parse(&text)?;
+                    Some(<Vec<crate::entity::CellLook> as crate::api::json::FromJson>::from_json(&json)?)
+                } else {
+                    None
+                };
                 Shape::Table {
+                    styles,
                     p,
                     rotation,
                     height,
@@ -830,6 +865,8 @@ fn run_bits(r: &Run) -> u32 {
         + match r.script {
             Some(Script::Super) => RUN_SUPER,
             Some(Script::Sub) => RUN_SUB,
+            // Both script bits: a stacked fraction (docs/adr/0324 §1).
+            Some(Script::Stack) => RUN_SUPER | RUN_SUB,
             None => 0,
         }
 }
@@ -1022,6 +1059,7 @@ impl Packer {
                 self.put(&[fit_tolerance.unwrap_or(f64::NAN), a.x, a.y, b.x, b.y]);
             }
             Shape::Text {
+                flow: _,
                 p,
                 text,
                 height,
@@ -1153,8 +1191,9 @@ impl Packer {
                 holes,
                 pattern,
                 assoc,
+                ..
             } => {
-                self.put(&[12.0]);
+                self.put(&[if pattern.origin.is_some() { 26.0 } else { 12.0 }]);
                 self.points(ring);
                 self.put(&[count(holes.as_deref())]);
                 for h in holes.iter().flatten() {
@@ -1178,10 +1217,13 @@ impl Packer {
                         self.put(&[shape, inverted, color2]);
                     }
                 }
+                if let Some(o) = pattern.origin {
+                    self.put(&[o.x, o.y]);
+                }
                 match assoc {
                     None => self.put(&[-1.0]),
                     Some(a) => {
-                        let outer = self.string(&a.outer);
+                        let outer = self.string(a.outer.as_deref().unwrap_or_default());
                         self.put(&[outer]);
                         self.strings(a.islands.as_deref());
                         self.strings(a.cutouts.as_deref());
@@ -1230,6 +1272,8 @@ impl Packer {
             }
             // docs/adr/0146: the vertices, height and turn, the note and the arrowhead's name, the mask.
             Shape::Leader {
+                arms,
+                blocks,
                 pts,
                 text,
                 height,
@@ -1238,7 +1282,10 @@ impl Packer {
                 arrow_size,
                 mask,
             } => {
-                self.put(&[15.0]);
+                let list = arms.as_deref().unwrap_or_default();
+                let held = blocks.as_ref().map_or(0, Vec::len);
+                let multi = !list.is_empty() || held > 0;
+                self.put(&[if multi { 24.0 } else { 15.0 }]);
                 self.points(pts);
                 let t = self.maybe_string(text.as_deref());
                 let a = self.maybe_string(arrow.as_deref());
@@ -1250,9 +1297,16 @@ impl Packer {
                     flag(*mask == Some(true)),
                     arrow_size.unwrap_or(f64::NAN),
                 ]);
+                if multi {
+                    self.put(&[list.len() as f64]);
+                    for a in list {
+                        self.points(&a.pts);
+                    }
+                    self.put(&[held as f64]);
+                }
             }
-            // docs/adr/0410, as the reader's kind 24 says.
-            Shape::Record {} => self.put(&[24.0]),
+            // docs/adr/0410, as the reader's kind 27 says.
+            Shape::Record {} => self.put(&[27.0]),
             // docs/adr/0207, as the reader's kind 21 says.
             Shape::PointCloud {
                 bounds,
@@ -1351,9 +1405,11 @@ impl Packer {
                 grid,
                 frame,
                 source: _,
+                styles,
                 face,
             } => {
-                self.put(&[18.0, p.x, p.y, *rotation, *height]);
+                let styled = styles.as_ref().filter(|s| !s.is_empty());
+                self.put(&[if styled.is_some() { 25.0 } else { 18.0 }, p.x, p.y, *rotation, *height]);
                 self.values(Some(rows));
                 self.values(Some(columns));
                 for row in cells {
@@ -1394,6 +1450,11 @@ impl Packer {
                     flag(face.italic),
                     face.oblique.unwrap_or(f64::NAN),
                 ]);
+                if let Some(list) = styled {
+                    let text = crate::api::json::to_string(list);
+                    let w = self.string(&text);
+                    self.put(&[w]);
+                }
             }
         }
     }

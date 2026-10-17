@@ -89,6 +89,11 @@ fn with_leader() -> (Bench, Slot) {
     b.draft.snap = false;
     let at = |x: f64, y: f64| kentos_contracts::Vec2 { x: E + x, y: N + y };
     let leader = Entity::Leader(kentos_contracts::LeaderEntity {
+        tip: None,
+        leader_style: None,
+        blocks: Vec::new(),
+        arms: Vec::new(),
+        annotative: None,
         base: base("cizim"),
         pts: vec![at(0.0, 20.0), at(6.0, 25.0)],
         text: Some("Mevcut bina".into()),

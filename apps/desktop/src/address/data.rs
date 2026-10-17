@@ -470,7 +470,7 @@ impl App {
         }
         self.address.data = None;
         self.dialog = None;
-        self.say(
+        self.announce(
             Level::Info,
             format!("Adres verisi kaydedildi: {} tanım.", now.len()),
         );

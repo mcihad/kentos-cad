@@ -104,6 +104,10 @@ struct Fields {
     box_width: Option<f64>,
     line_spacing: Option<f64>,
     runs: Option<Vec<TextRun>>,
+    /// A multi-line text's indents, tabs and columns (docs/adr/0324).
+    layout: Option<Box<kentos_contracts::ParagraphLayout>>,
+    /// A text's fields (docs/adr/0325).
+    fields: Option<Vec<kentos_contracts::TextField>>,
     /// A text's curve (docs/adr/0196).
     path: Option<kentos_contracts::TextPath>,
     /// A leader's or a dimension's arrowhead by its name (the kind says which).
@@ -138,6 +142,8 @@ struct Fields {
     ring: Option<Vec<Vec2>>,
     pattern: Option<HatchPattern>,
     assoc: Option<HatchAssoc>,
+    /// A hatch's exact boundary (docs/adr/0328 §1).
+    boundary: Option<Vec<kentos_contracts::HatchLoop>>,
     block: Option<BlockId>,
     scale: Option<f64>,
     mirror: Option<bool>,
@@ -338,6 +344,7 @@ impl Fields {
             "xline" => Entity::Xline(construction(base, self.p, self.dir)?),
             "ray" => Entity::Ray(construction(base, self.p, self.dir)?),
             "text" => Entity::Text(TextEntity {
+                annotative: None,
                 base,
                 p: need(self.p, "p")?,
                 text: need(self.text, "text")?,
@@ -350,11 +357,14 @@ impl Fields {
                 label_of: None,
                 label_scale: None,
                 paragraph: Paragraph {
+                    fields: self.fields.unwrap_or_default(),
+                    layout: self.layout,
                     box_width: self.box_width,
                     line_spacing: self.line_spacing,
                     runs: self.runs.unwrap_or_default(),
                 },
                 face: TextFace {
+                    overrides: Vec::new(),
                     text_style: self.text_style,
                     font: self.font,
                     bold: self.bold.unwrap_or(false),
@@ -364,6 +374,9 @@ impl Fields {
                 path: self.path,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
+                annotative: None,
+                text_shift: None,
+                breaks: Vec::new(),
                 base,
                 a: need(self.a, "a")?,
                 b: need(self.b, "b")?,
@@ -378,6 +391,8 @@ impl Fields {
                 zb: self.zb,
                 refs: None,
                 look: DimensionLook {
+                    overrides: Vec::new(),
+                    options: None,
                     dim_style: self.dim_style,
                     arrow: match self.arrow.as_deref() {
                         Some(name) => Some(DimensionArrow::from_name(name).ok_or_else(|| {
@@ -411,6 +426,8 @@ impl Fields {
                 pattern: need(self.pattern, "pattern")?,
                 // Written without it (docs/adr/0186 §6), and said.
                 assoc: self.assoc,
+                boundary: self.boundary,
+                annotative: None,
             }),
             "insert" => Entity::Insert(InsertEntity {
                 parameters: Default::default(),
@@ -424,6 +441,11 @@ impl Fields {
                 mirror: self.mirror.unwrap_or(false),
             }),
             "leader" => Entity::Leader(LeaderEntity {
+                tip: None,
+                leader_style: None,
+                blocks: Vec::new(),
+                arms: Vec::new(),
+                annotative: None,
                 base,
                 pts: need(self.pts, "pts")?,
                 text: self.text,
@@ -442,6 +464,9 @@ impl Fields {
                 mask: self.mask.unwrap_or(false),
             }),
             "table" => Entity::Table(TableEntity {
+                styles: Vec::new(),
+                formulas: Vec::new(),
+                fields: Vec::new(),
                 base,
                 p: need(self.p, "p")?,
                 rotation: need(self.rotation, "rotation")?,
@@ -455,6 +480,7 @@ impl Fields {
                 grid: self.grid,
                 frame: self.frame,
                 face: TextFace {
+                    overrides: Vec::new(),
                     text_style: self.text_style,
                     font: self.font,
                     bold: self.bold.unwrap_or(false),
@@ -541,6 +567,8 @@ impl<'de> Deserialize<'de> for Wire {
                         "boxWidth" => f.box_width = map.next_value()?,
                         "lineSpacing" => f.line_spacing = map.next_value()?,
                         "runs" => f.runs = map.next_value()?,
+                        "layout" => f.layout = map.next_value()?,
+                        "fields" => f.fields = map.next_value()?,
                         "path" => f.path = map.next_value()?,
                         "arrow" => f.arrow = map.next_value()?,
                         "textStyle" => f.text_style = map.next_value()?,
@@ -571,6 +599,7 @@ impl<'de> Deserialize<'de> for Wire {
                         "ring" => f.ring = Some(map.next_value()?),
                         "pattern" => f.pattern = Some(map.next_value()?),
                         "assoc" => f.assoc = map.next_value()?,
+                        "boundary" => f.boundary = map.next_value()?,
                         "block" => f.block = Some(map.next_value()?),
                         "scale" => f.scale = Some(map.next_value()?),
                         "mirror" => f.mirror = map.next_value()?,
@@ -674,6 +703,8 @@ struct Input {
     line_types: Vec<kentos_contracts::LineTypeDef>,
     #[serde(default)]
     line_type_scale: Option<f64>,
+    #[serde(default)]
+    annotations: kentos_contracts::DxfAnnotations,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -686,6 +717,9 @@ impl<'de> Deserialize<'de> for WriteInput {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<WriteInput, D::Error> {
         let i = Input::deserialize(d)?;
         Ok(WriteInput(DxfWriteInput {
+        uids: Default::default(),
+            annotations: i.annotations,
+            notes: Vec::new(),
             entities: i.entities.0,
             layers: i.layers,
             scale: i.scale,

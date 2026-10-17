@@ -14,7 +14,7 @@
 //! back, and its arrowhead when a block of the drawing has the arrow
 //! block's name.
 
-use kentos_contracts::{LeaderArrow, LeaderEntity, Vec2};
+use kentos_contracts::{Entity, LeaderArrow, LeaderEntity, Vec2};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::arrowhead::{ArrowKind, arrowhead};
 use kentos_geometry_core::geom::leader::layout;
@@ -77,6 +77,9 @@ impl Writer<'_> {
         ) else {
             return false;
         };
+        if self.forms.leaders == kentos_contracts::DxfForm::Block {
+            return self.leader_block(l, &laid);
+        }
         let landing = laid.landing.map(|[_, end]| v(end.x, end.y));
         let me = self.begin("LEADER", &l.base);
         let note_handle = note.map(|_| self.handles.take());
@@ -134,11 +137,119 @@ impl Writer<'_> {
             .filter(|t| note_read_back(t).as_deref() != Some(*t))
             .map(str::to_owned);
         meta.note_turn = (turn_read_back(l.rotation) != l.rotation).then_some(l.rotation);
-        self.end(meta);
+        // Its other arms (docs/adr/0326 §1): in its data, and each a LEADER of its own other programs draw.
+        if !l.arms.is_empty() {
+            let arms: Vec<Vec<[f64; 2]>> = l.arms.iter().map(|a| a.pts.iter().map(|p| [p.x, p.y]).collect()).collect();
+            meta.arms = serde_json::to_string(&arms).ok();
+        }
+        let words = super::form_words(WHAT, false, self.forms.metadata);
+        self.report.note(WHAT, &words, 0);
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
         if let (Some(h), Some(text), Some(at), Some(align)) =
             (note_handle, note, laid.note_point, laid.note_align)
         {
             self.leader_note(h, me, l, text, v(at.x, at.y), align);
+        }
+        if let Some(&last) = l.pts.last() {
+            for a in &l.arms {
+                self.leader_arm(l, &a.pts, last);
+            }
+        }
+        if !l.blocks.is_empty() || l.tip.is_some() || l.arms.iter().any(|a| a.tip.is_some()) {
+            self.report.note(
+                WHAT,
+                "blok içeriği ve uçların bağları DXF'e yazılmaz: bloklar kendi yerleştirmeleri olarak gider, uçlar bağsız",
+                0,
+            );
+        }
+        true
+    }
+
+    /// Another arm of `l` (docs/adr/0326 §1): a LEADER from its tip through its bends to `last`, no note, its arrowhead
+    /// drawn as the leader's; KentOS's data says it is an arm.
+    fn leader_arm(&mut self, l: &LeaderEntity, pts: &[Vec2], last: Vec2) {
+        self.begin("LEADER", &l.base);
+        self.out.str(100, "AcDbLeader");
+        self.out.str(3, "Standard");
+        self.out.int(71, i64::from(l.arrow != Some(LeaderArrow::None)));
+        self.out.int(72, 0);
+        self.out.int(73, 3);
+        self.out.int(74, 1);
+        self.out.int(75, 0);
+        self.out.real(40, l.height);
+        self.out.real(41, 0.0);
+        self.out.int(76, (pts.len() + 1) as i64);
+        for p in pts.iter().copied().chain(std::iter::once(last)) {
+            self.out.xyz(10, p);
+            self.grow(p);
+        }
+        let (s, c) = sin_cos_deg(l.rotation);
+        self.out.xyz(211, v(c, s));
+        let mut meta = Self::base_meta(&l.base);
+        meta.arm = true;
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
+    }
+
+    /// A leader's look as a block (docs/adr/0327 §6): each arm's line from where it leaves its arrowhead, its
+    /// arrowheads filled (SOLIDs) or drawn, its note an MTEXT where its layout puts it; an INSERT at the origin places
+    /// it, KentOS's data the leader itself.
+    fn leader_block(&mut self, l: &LeaderEntity, laid: &kentos_geometry_core::geom::leader::LeaderLayout) -> bool {
+        let record = self.handles.take();
+        *self.anonymous += 1;
+        let name = format!("*U{}", *self.anonymous);
+        self.records.push((record, name.clone(), 0));
+        self.block_begin(record, &name);
+        let at = |p: &CoreVec2| v(p.x, p.y);
+        let pts: Vec<CoreVec2> = l.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
+        let mut drawn = vec![(
+            kentos_geometry_core::geom::leader::drawn_path(&pts, laid),
+            laid.head.clone(),
+        )];
+        drawn.extend(kentos_geometry_core::geom::leader::arm_layouts(&crate::blocks::shape(
+            &Entity::Leader(l.clone()),
+        )));
+        for (path, head) in &drawn {
+            let line: Vec<Vec2> = path.iter().map(at).collect();
+            for p in &line {
+                self.grow(*p);
+            }
+            if line.len() >= 2 {
+                self.block_polyline(record, &line, false);
+            }
+            for ring in &head.fills {
+                match ring.len() {
+                    3 => self.block_solid(record, [at(&ring[0]), at(&ring[1]), at(&ring[2])]),
+                    4 => self.block_quad(record, [at(&ring[0]), at(&ring[1]), at(&ring[2]), at(&ring[3])]),
+                    _ => {
+                        let pts: Vec<Vec2> = ring.iter().map(at).collect();
+                        if pts.len() > 2 {
+                            self.block_polyline(record, &pts, true);
+                        }
+                    }
+                }
+            }
+            for hl in &head.lines {
+                let pts: Vec<Vec2> = hl.pts.iter().map(at).collect();
+                self.block_polyline(record, &pts, hl.closed);
+            }
+        }
+        if let (Some(text), Some(p), Some(align)) = (
+            l.text.as_deref().filter(|t| !t.trim().is_empty()),
+            laid.note_point,
+            laid.note_align,
+        ) {
+            // The middle of its left or right at the note's point (MTEXT's 4 and 6).
+            let attach = if align == TextAlign::MiddleRight { 6 } else { 4 };
+            self.block_mtext_attached(record, at(&p), l.height, l.rotation, text, attach, l.mask);
+        }
+        self.block_end(record);
+        self.insert_whole(&l.base, &name, &Entity::Leader(l.clone()), WHAT);
+        if !l.blocks.is_empty() {
+            self.report.note(
+                WHAT,
+                "blok içeriği kılavuzun bloğunda değil, kendi yerleştirmeleri olarak yazıldı",
+                0,
+            );
         }
         true
     }
@@ -225,7 +336,7 @@ impl Writer<'_> {
         at: Vec2,
         align: TextAlign,
     ) {
-        self.head("MTEXT", &l.base, h, Some(leader));
+        self.head("MTEXT", &l.base, h, &[leader]);
         self.out.str(100, "AcDbMText");
         self.out.xyz(10, at);
         self.out.real(40, l.height);

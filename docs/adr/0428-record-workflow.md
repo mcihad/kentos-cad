@@ -47,7 +47,7 @@ durumların çipleri; her adım bir kutu: adı, şu durumlardan (çipler), şu d
 
 ### 5. Dosya
 
-`.kcad` şema 60'ın formunda `workflow`; bağımsız okuyucu `kcad.py` yapıyı denetler (katmana uyumu ön denetimindir).
+`.kcad` şema 72'nin formunda `workflow`; bağımsız okuyucu `kcad.py` yapıyı denetler (katmana uyumu ön denetimindir).
 
 ## Denetimler
 

@@ -329,6 +329,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
             && let Some(p) = texts.get(i)
         {
             add.push(Entity::Text(TextEntity {
+                annotative: None,
                 base: base(&layer.id, None, &attrs),
                 p: *p,
                 text: c.name.clone(),

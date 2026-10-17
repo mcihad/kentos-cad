@@ -136,6 +136,8 @@ pub struct Select {
     hover_grip: Option<GripTag>,
     /// Grips made hot with Shift, waiting for a click on one of them (docs/adr/0280).
     hot: Vec<HotGrip>,
+    /// A dynamic block's parameter grip being moved (docs/adr/0319 §1).
+    param: Option<crate::param_grip::ParamDrag>,
     /// A transform mode's ghosts of the selection, and their point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
@@ -185,6 +187,27 @@ impl Select {
     /// a click or a box starts here.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover_grip = None;
+        // A parameter's grip (docs/adr/0319 §1): a hot one is placed; one under the pointer is taken, a flip's turns.
+        if self.param.as_ref().is_some_and(|g| g.hot) {
+            if let Some(mut g) = self.param.take() {
+                g.follow(p.world, cx);
+                g.commit(cx);
+            }
+            return;
+        }
+        if self.grip.is_none()
+            && !p.shift
+            && let Some((slot, g)) = crate::param_grip::grip_at(p.screen, cx)
+        {
+            self.hot.clear();
+            if g.kind == kentos_geometry_core::block_dynamic::GripKind::Flip {
+                crate::param_grip::flip(slot, &g.name, cx);
+            } else {
+                self.param = Some(crate::param_grip::ParamDrag::start(slot, g, p.screen, cx));
+                cx.selection.set_hover(None);
+            }
+            return;
+        }
         if self.grip.as_ref().is_some_and(|g| g.hot) {
             let at = self.grip_point.unwrap_or(p.world);
             return self.commit(at, cx);
@@ -242,6 +265,10 @@ impl Select {
     /// The pointer moved: a grip follows it, the box grows, or the object
     /// under it is hovered.
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if let Some(g) = self.param.as_mut() {
+            g.follow(p.world, cx);
+            return;
+        }
         if let Some(g) = &self.grip {
             let (point, tracking) = points::constrain(Some(g.modes.anchor()), p, cx);
             self.grip_point = Some(point);
@@ -280,6 +307,17 @@ impl Select {
     /// The left button came up: a dragged grip is placed (a clicked one
     /// turns hot), the box selects, or the click picks.
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if let Some(g) = self.param.as_mut().filter(|g| !g.hot) {
+            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+                if let Some(mut g) = self.param.take() {
+                    g.follow(p.world, cx);
+                    g.commit(cx);
+                }
+            } else {
+                g.hot = true;
+            }
+            return;
+        }
         if let Some(g) = self.grip.as_mut().filter(|g| !g.hot) {
             if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
                 let at = self.grip_point.unwrap_or(p.world);
@@ -373,7 +411,7 @@ impl Select {
     /// Whether a grip is being moved: the select tool then takes points,
     /// Enter and Esc, and snaps (the web's `snaps`).
     pub fn grip_active(&self) -> bool {
-        self.grip.is_some()
+        self.grip.is_some() || self.param.is_some()
     }
 
     /// The grip being moved, drawn larger (the web's `activeGrip`).
@@ -387,6 +425,9 @@ impl Select {
     }
 
     pub fn prompt(&self) -> Prompt {
+        if let Some(g) = &self.param {
+            return g.prompt();
+        }
         match &self.grip {
             Some(g) => g.modes.prompt(),
             None => Prompt::idle(),
@@ -396,6 +437,15 @@ impl Select {
     /// A grip mode's letter or value (docs/adr/0280), else a typed point:
     /// the grip goes there, relative to the base point (`@dY,dX`).
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        // A parameter's grip takes its value, or a point (docs/adr/0319 §1).
+        if let Some(mut g) = self.param.take() {
+            if g.typed(text, cx) {
+                g.commit(cx);
+                return true;
+            }
+            self.param = Some(g);
+            return false;
+        }
         let Some(g) = self.grip.as_mut() else {
             return false;
         };
@@ -423,6 +473,11 @@ impl Select {
     /// A point computed by the point calculator: the grip goes there (the
     /// web's `SelectTool.acceptPoint`). False when no grip moves.
     pub fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        if let Some(mut g) = self.param.take() {
+            g.follow(p, cx);
+            g.commit(cx);
+            return true;
+        }
         if self.grip.is_none() {
             return false;
         }
@@ -433,6 +488,10 @@ impl Select {
     /// Enter, Space or a quick right click: the grip goes where the pointer
     /// is. False when no grip moves (the last command repeats then).
     pub fn confirm(&mut self, cx: &mut Context<'_>) -> bool {
+        if let Some(g) = self.param.take() {
+            g.commit(cx);
+            return true;
+        }
         let Some(g) = &self.grip else {
             return false;
         };
@@ -443,7 +502,8 @@ impl Select {
 
     /// Esc: the grip stays where it was. False when no grip moves.
     pub fn cancel(&mut self) -> bool {
-        let moving = self.grip.is_some() || !self.hot.is_empty();
+        let moving = self.grip.is_some() || self.param.is_some() || !self.hot.is_empty();
+        self.param = None;
         self.end_grip();
         self.hot.clear();
         moving
@@ -672,6 +732,9 @@ impl Select {
     /// While a grip moves: the object as it would be, dashed; a dashed line
     /// from where the grip was; its distance beside the pointer (the web's `draw`).
     pub fn preview(&self, format: &Format) -> Option<Preview> {
+        if let Some(g) = &self.param {
+            return Some(g.preview(format));
+        }
         let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
             // Resting on the grip of a vertex: its elevation and its shared corner (docs/adr/0142, 0160).
             let tag = self.hover_grip?;

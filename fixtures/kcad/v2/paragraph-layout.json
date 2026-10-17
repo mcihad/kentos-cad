@@ -1,0 +1,96 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yazı düzeni",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "text": "Malzeme listesi\n•\tKum\n•\tÇakıl\nOran 1/2",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "topLeft",
+      "boxWidth": 30.0,
+      "runs": [
+        {
+          "start": 35,
+          "end": 38,
+          "script": "stack"
+        }
+      ],
+      "layout": {
+        "indent": -2.0,
+        "leftIndent": 2.0,
+        "tabs": [
+          2.0,
+          6.0
+        ]
+      }
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500040.0,
+        "y": 4400000.0
+      },
+      "text": "Birinci satır\nİkinci satır\nÜçüncü satır\nDördüncü satır",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "topLeft",
+      "boxWidth": 20.0,
+      "layout": {
+        "columns": {
+          "count": 2,
+          "gap": 1.0,
+          "height": 8.5
+        }
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e21",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e22"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

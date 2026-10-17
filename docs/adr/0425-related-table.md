@@ -22,7 +22,7 @@ hisseleri gibi alt kayıtların birkaç alanı birlikte okunur ve toplanır. QGI
   Çizimde göster ve Bağı kopar; ondalık sayı sütunlarının toplamı tablonun altında (alan, pay gibi ölçüler; tam sayı çoğu zaman bir
   numara ya da kattır). Yeni ve Bağla tablonun altında kalır.
 - Tasarımcıda ilişkili kayıtlar öğesinin Görünüm'ü (Liste, Tablo) ve Sütunlar'ın çipleri.
-- `.kcad` şema 60'ta öğenin `view` ve `columns`'ı; bağımsız okuyucu `kcad.py` ve form ikizi (`forms_cases.py`) kuralı yazar.
+- `.kcad` şema 72'de öğenin `view` ve `columns`'ı; bağımsız okuyucu `kcad.py` ve form ikizi (`forms_cases.py`) kuralı yazar.
 
 ## Denetimler
 

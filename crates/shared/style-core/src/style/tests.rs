@@ -737,6 +737,8 @@ fn a_leader_strokes_its_lines_and_fills_its_arrowhead() {
     );
     let leader = |arrow: Option<&str>| Obj {
         shape: Shape::Leader {
+            blocks: None,
+            arms: None,
             pts: vec![v(0.0, 0.0), v(0.0, 4.0)],
             text: Some("Not".into()),
             height: 3.0,
@@ -776,6 +778,8 @@ fn an_object_brought_to_the_front_draws_its_fill_over_the_strokes_behind() {
     );
     let leader = |y: f64| Obj {
         shape: Shape::Leader {
+            blocks: None,
+            arms: None,
             pts: vec![v(0.0, y), v(0.0, y + 4.0)],
             text: None,
             height: 3.0,

@@ -368,7 +368,7 @@ impl App {
                         ),
                     ),
                 };
-                self.say(level, said);
+                self.announce(level, said);
                 true
             }
             CommandResult::Failed { error }

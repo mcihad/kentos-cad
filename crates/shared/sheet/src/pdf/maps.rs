@@ -216,7 +216,8 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
         return;
     };
     let size = t.size * 1000.0;
-    let width = page.fonts.width_em(&t.font, t.weight, t.italic, &t.text) * size;
+    let shape = (t.width_factor.unwrap_or(1.0), t.lean.unwrap_or(0.0));
+    let width = page.fonts.width_em(&t.font, t.weight, t.italic, &t.text) * size * shape.0;
     let along = match t.anchor {
         TextAnchor::LeftBaseline | TextAnchor::LeftMiddle => 0.0,
         TextAnchor::CenterBaseline | TextAnchor::CenterMiddle => -width / 2.0,
@@ -231,12 +232,13 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
     };
     let (s, c) = (libm::sin(turn), libm::cos(turn));
     let start = [p0[0] + along * c - down * s, p0[1] + along * s + down * c];
-    page.text_at(
+    page.text_shaped(
         &t.text,
         (&t.font, t.weight, t.italic),
         mm(t.size),
         start,
         turn,
+        shape,
         &t.color,
         t.halo.as_deref(),
     );

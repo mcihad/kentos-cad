@@ -4,7 +4,7 @@
   "command": "cad.dimensions.create",
   "commandVersion": 1,
   "title": "Ölçü ekle",
-  "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255); do not edit by hand.",
+  "note": "Written by scripts/fixtures/dimension_create_cases.py from Ölçülendirme's definitions (docs/adr/0061, 0147, 0183, 0205, 0249, 0255, 0320, 0322); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -1082,7 +1082,7 @@
       ]
     },
     {
-      "name": "Açı: iki düz kenar, kollar tıklanan yere kadar, yay imlecin bölgesinde",
+      "name": "Açı: iki düz kenar, kollar tıklanan yere kadar, yay imlecin bölgesinde; kenarlara bağlı (edges)",
       "steps": [
         {
           "op": "execute",
@@ -1155,6 +1155,29 @@
                 "c": {
                   "x": 487005,
                   "y": 4420040
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:15",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.9
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:16",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.9166666666666666
+                    }
+                  },
+                  "rule": "edges"
                 }
               }
             },
@@ -1351,7 +1374,267 @@
       ]
     },
     {
-      "name": "Açı: yayın kendi açısı (Yaydan)",
+      "name": "Açı: köşeden, alanın köşeleri yerleriyle; üçü de bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angleVertex",
+              "c": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 3
+                }
+              }
+            },
+            "at": {
+              "x": 487022,
+              "y": 4420002
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487028,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420006
+                },
+                "offset": 2.8284271247461903,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 3
+                    }
+                  },
+                  "c": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: köşeden yerlerle, imleç öbür yanda: kollar ve bağları yer değiştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "angleVertex",
+              "c": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              },
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 3
+                }
+              }
+            },
+            "at": {
+              "x": 487018,
+              "y": 4419998
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420006
+                },
+                "b": {
+                  "x": 487028,
+                  "y": 4420000
+                },
+                "offset": 2.8284271247461903,
+                "height": 1.25,
+                "style": "angular",
+                "c": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 3
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  },
+                  "c": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açı: yayın kendi açısı (Yaydan); yayın iki ucuna bağlı (curve)",
       "steps": [
         {
           "op": "execute",
@@ -1417,6 +1700,29 @@
                 "c": {
                   "x": 487030,
                   "y": 4420030
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 1
+                    }
+                  },
+                  "rule": "curve"
                 }
               }
             },
@@ -1429,7 +1735,7 @@
       ]
     },
     {
-      "name": "Yarıçap: daire, imlecin yönünde",
+      "name": "Yarıçap: daire, imlecin yönünde; dairenin üstündeki noktaya bağlı (curve)",
       "steps": [
         {
           "op": "execute",
@@ -1491,19 +1797,33 @@
                 },
                 "offset": 5,
                 "height": 1.25,
-                "style": "radius"
+                "style": "radius",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:14",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.14758361765043326
+                    }
+                  },
+                  "rule": "curve"
+                }
               }
             },
             "revision": "changed",
             "canUndo": true,
             "canRedo": false,
             "dirty": true
-          }
+          },
+          "within": 1e-12
         }
       ]
     },
     {
-      "name": "Çap: yayın dairesi",
+      "name": "Çap: yayın dairesi; nokta yayın ötesinde, bağı yayın yakın ucunda (curve)",
       "steps": [
         {
           "op": "execute",
@@ -1565,7 +1885,20 @@
                 },
                 "offset": 5,
                 "height": 1.25,
-                "style": "diameter"
+                "style": "diameter",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 1
+                    }
+                  },
+                  "rule": "curve"
+                }
               }
             },
             "revision": "changed",
@@ -1577,7 +1910,7 @@
       ]
     },
     {
-      "name": "Yay uzunluğu: bütün yay, imlecin uzaklığında",
+      "name": "Yay uzunluğu: bütün yay, imlecin uzaklığında; yayın iki ucuna bağlı (curve)",
       "steps": [
         {
           "op": "execute",
@@ -1643,6 +1976,29 @@
                 "c": {
                   "x": 487030,
                   "y": 4420030
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 1
+                    }
+                  },
+                  "rule": "curve"
                 }
               }
             },
@@ -1655,7 +2011,7 @@
       ]
     },
     {
-      "name": "Yay uzunluğu: Kısmi, iki nokta arası, uzaklık yazılmış",
+      "name": "Yay uzunluğu: Kısmi, iki nokta arası, uzaklık yazılmış; iki ucu yayın üstünde bağlı",
       "steps": [
         {
           "op": "execute",
@@ -1732,6 +2088,29 @@
                 "c": {
                   "x": 487030,
                   "y": 4420030
+                },
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "curve"
                 }
               }
             },
@@ -1739,12 +2118,13 @@
             "canUndo": true,
             "canRedo": false,
             "dirty": true
-          }
+          },
+          "within": 1e-12
         }
       ]
     },
     {
-      "name": "Kırıklı yarıçap: gösterilen merkezden, kırığı imleçte",
+      "name": "Kırıklı yarıçap: gösterilen merkezden, kırığı imleçte; dairenin üstündeki noktaya bağlı (curve)",
       "steps": [
         {
           "op": "execute",
@@ -1818,6 +2198,19 @@
                 "c": {
                   "x": 487035,
                   "y": 4420032
+                },
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:14",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
                 }
               }
             },
@@ -2333,6 +2726,1559 @@
       ]
     },
     {
+      "name": "Zincir ölçü: temelin ikinci noktasından alanın köşesine, temelin doğrusunda; ilk noktası temelinkini izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "$uidOf:18",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487099,
+              "y": 4420099
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:19"
+              ],
+              "ids": [
+                19
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "entities": {
+              "19": {
+                "kind": "dimension",
+                "id": 19,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Zincir ölçü",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir ölçü: koordinatla verilen nokta serbest; ilk noktası yine temelin ucuna bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "$uidOf:18",
+              "to": {
+                "kind": "at",
+                "at": {
+                  "x": 487016,
+                  "y": 4420002
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:19"
+              ],
+              "ids": [
+                19
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "entities": {
+              "19": {
+                "kind": "dimension",
+                "id": 19,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487016,
+                  "y": 4420002
+                },
+                "offset": 3,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Zincir ölçü",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Baz ölçü: temelin ilk noktasından, bir kat (değer yüksekliğinin üç katı) dışarıda; ilk noktası temelinkini izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "aligned",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              },
+              "b": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            },
+            "at": {
+              "x": 487006,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "baseline",
+              "base": "$uidOf:18",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:19"
+              ],
+              "ids": [
+                19
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19
+            ],
+            "entities": {
+              "19": {
+                "kind": "dimension",
+                "id": 19,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487028,
+                  "y": 4420000
+                },
+                "offset": 6.75,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Baz ölçü",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: dairenin merkezinde; eğrinin üstündeki noktası doğuda, uzantı değer yüksekliği; eğriye bağlı (curve)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487070,
+              "y": 4420070
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487050,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487055,
+                  "y": 4420030
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:14",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: yayın merkezinde, uzantı yazılmış; yayın başına bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:13",
+                "near": {
+                  "x": 487034,
+                  "y": 4420033
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "offset": 2
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487035,
+                  "y": 4420030
+                },
+                "offset": 2,
+                "height": 1.25,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:13",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: ölçü stiliyle; uzantı stilin değer yüksekliği, uzatma çizgileri yine kesik noktalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487050,
+                  "y": 4420025
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "dimensionStyle": "Mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487050,
+                  "y": 4420030
+                },
+                "b": {
+                  "x": 487055,
+                  "y": 4420030
+                },
+                "offset": 1.75,
+                "height": 1.75,
+                "style": "centerMark",
+                "refs": {
+                  "b": {
+                    "uid": "$uidOf:14",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0
+                    }
+                  },
+                  "rule": "curve"
+                },
+                "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5001",
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: plan; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entities": [
+                {
+                  "kind": "dimension",
+                  "id": 0,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487050,
+                    "y": 4420030
+                  },
+                  "b": {
+                    "x": 487055,
+                    "y": 4420030
+                  },
+                  "offset": 1.25,
+                  "height": 1.25,
+                  "style": "centerMark",
+                  "refs": {
+                    "b": {
+                      "uid": "$uidOf:14",
+                      "place": {
+                        "kind": "along",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 0,
+                        "t": 0
+                      }
+                    },
+                    "rule": "curve"
+                  },
+                  "extLineType": "dashdot"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: iki paralel çizginin ortasında; kenarlarına bağlı (pair)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487009,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:17",
+                "near": {
+                  "x": 487003,
+                  "y": 4420050
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420045
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420045
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:15",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.9
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:17",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.3
+                    }
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: alanın karşı kenarları, ikincisi ters yönde; uzantı yazılmış",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487024,
+                  "y": 4420000
+                }
+              },
+              "second": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487024,
+                  "y": 4420006
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "offset": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4420003
+                },
+                "b": {
+                  "x": 487028,
+                  "y": 4420003
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:12",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 2,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: dik kenarlar arasında da uçların ortalarından",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487005,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:16",
+                "near": {
+                  "x": 487005,
+                  "y": 4420042
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487002.5,
+                  "y": 4420038
+                },
+                "b": {
+                  "x": 487007.5,
+                  "y": 4420044
+                },
+                "offset": 1.25,
+                "height": 1.25,
+                "style": "centerLine",
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:15",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "b": {
+                    "uid": "$uidOf:16",
+                    "place": {
+                      "kind": "along",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0,
+                      "t": 0.5
+                    }
+                  },
+                  "rule": "pair"
+                },
+                "extLineType": "dashdot"
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: nokta nesnesinin kotu; değer imleçte, noktaya bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:10",
+                "place": {
+                  "kind": "node",
+                  "part": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487004,
+              "y": 4420022
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487002,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487004,
+                  "y": 4420022
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 50,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:10",
+                    "place": {
+                      "kind": "node",
+                      "part": 0
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: çizginin başının kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "start"
+                }
+              }
+            },
+            "at": {
+              "x": 486998,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 486998,
+                  "y": 4420003
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 100,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "start"
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: yazılan kot yerin kotunun yerine",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:11",
+                "place": {
+                  "kind": "end"
+                }
+              },
+              "z": 7.5
+            },
+            "at": {
+              "x": 487014,
+              "y": 4420003
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487012,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487014,
+                  "y": 4420003
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": 7.5,
+                "refs": {
+                  "a": {
+                    "uid": "$uidOf:11",
+                    "place": {
+                      "kind": "end"
+                    }
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: koordinatla ve yazılan kotla; bağsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "z": -1.25
+            },
+            "at": {
+              "x": 487043,
+              "y": 4420062
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487040,
+                  "y": 4420060
+                },
+                "b": {
+                  "x": 487043,
+                  "y": 4420062
+                },
+                "offset": 0,
+                "height": 1.25,
+                "style": "elevation",
+                "za": -1.25
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
       "name": "Yeri sonlu değil",
       "steps": [
         {
@@ -2811,7 +4757,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_offset",
-              "message": "Yarıçap, çap ve koordinat ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın.",
+              "message": "Yarıçap, çap, koordinat ve kot ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın.",
               "path": "offset"
             }
           },
@@ -3913,6 +5859,824 @@
               "path": "expectedRevision",
               "revision": "$current"
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir: temelin kimliği geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "Yapı-01",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Yapı-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "measure.base"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir: temel çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "measure.base"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir: temel ölçü değil (çizgi)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "$uidOf:11",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_straight",
+              "message": "Temel ölçü hizalı ya da doğrusal bir ölçü değil: zincir ve baz ölçü yalnız hizalı ya da doğrusal ölçüden sürer.",
+              "path": "measure.base"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zincir ve baz uzaklık almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "continue",
+              "base": "$uidOf:11",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "offset": 2
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Zincir ve baz ölçü uzaklık almaz; yerini temel ölçü verir. offset'i kaldırın.",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Baz: temel yarıçap ölçüsü; zincir ve baz yalnız hizalı ya da doğrusal ölçüden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "radius",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487056,
+              "y": 4420038
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:18"
+              ],
+              "ids": [
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "baseline",
+              "base": "$uidOf:18",
+              "to": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 0
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_straight",
+              "message": "Temel ölçü hizalı ya da doğrusal bir ölçü değil: zincir ve baz ölçü yalnız hizalı ya da doğrusal ölçüden sürer.",
+              "path": "measure.base"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: çizginin merkezi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:11",
+                "near": {
+                  "x": 487006,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesne daire değil: merkez işareti daireye, yaya ya da çoklu çizginin yay parçasına konur.",
+              "path": "measure.of"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işareti: yaysız alanın merkezi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:12",
+                "near": {
+                  "x": 487024,
+                  "y": 4420000
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesne daire değil: merkez işareti daireye, yaya ya da çoklu çizginin yay parçasına konur.",
+              "path": "measure.of"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merkez işaretinin uzantısı eksi olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerMark",
+              "of": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "offset": -1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Merkez işaretinin ve eksen çizgisinin uzantısı eksi olamaz; 0 ya da daha büyük bir uzaklık verin (metre).",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: dairenin düz kenarı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:14",
+                "near": {
+                  "x": 487055,
+                  "y": 4420030
+                }
+              },
+              "second": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487005,
+                  "y": 4420040
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_measurable",
+              "message": "Nesnenin düz kenarı yok: eksen çizgisi iki düz kenar (çizgi ya da çoklu çizginin, alanın düz kenarı) arasında çizilir.",
+              "path": "measure.first"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisi: aynı kenar iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487002,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487008,
+                  "y": 4420040
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_dimension",
+              "message": "Eksen çizgisi oluşmuyor: iki kenar aynı ya da eksenin uzunluğu sıfır. İki ayrı düz kenar gösterin.",
+              "path": "at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksen çizgisinin uzantısı eksi olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "centerLine",
+              "first": {
+                "uid": "$uidOf:15",
+                "near": {
+                  "x": 487002,
+                  "y": 4420040
+                }
+              },
+              "second": {
+                "uid": "$uidOf:17",
+                "near": {
+                  "x": 487008,
+                  "y": 4420050
+                }
+              }
+            },
+            "at": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "layerId": "olcu",
+            "offset": -0.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Merkez işaretinin ve eksen çizgisinin uzantısı eksi olamaz; 0 ya da daha büyük bir uzaklık verin (metre).",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: koordinatın kotu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              }
+            },
+            "at": {
+              "x": 487001,
+              "y": 4420001
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "missing_elevation",
+              "message": "Kot için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın.",
+              "path": "measure.z"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot: alanın köşesinin kotu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "place",
+                "uid": "$uidOf:12",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 1
+                }
+              }
+            },
+            "at": {
+              "x": 487001,
+              "y": 4420001
+            },
+            "layerId": "olcu"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "missing_elevation",
+              "message": "Kot için noktanın kotu yok: kotu metre olarak verin ya da noktayı kotlu bir köşeye bağlayın.",
+              "path": "measure.z"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "z": 1
+            },
+            "at": {
+              "x": 487001,
+              "y": 4420001
+            },
+            "layerId": "olcu"
+          },
+          "nonFinite": {
+            "measure.z": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kot sonlu bir sayı değil (NaN ya da sonsuz). Kotu metre olarak sonlu bir sayıyla verin.",
+              "path": "measure.z"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kot uzaklık almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "measure": {
+              "kind": "elevation",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487040,
+                  "y": 4420060
+                }
+              },
+              "z": 1
+            },
+            "at": {
+              "x": 487001,
+              "y": 4420001
+            },
+            "layerId": "olcu",
+            "offset": 1
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Yarıçap, çap, koordinat ve kot ölçüsü uzaklık almaz; yerini at verir. offset'i kaldırın.",
+              "path": "offset"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
           }
         }
       ]

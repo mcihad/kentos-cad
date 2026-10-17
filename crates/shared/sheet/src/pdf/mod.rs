@@ -223,6 +223,14 @@ pub struct MapText {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub halo: Option<String>,
+    /// The letters' width times this (a text's width factor, docs/adr/0324 §6); absent: 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub width_factor: Option<f64>,
+    /// The letters leaning forward by this tangent (a text's slant); absent: upright.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub lean: Option<f64>,
 }
 
 fn black() -> String {

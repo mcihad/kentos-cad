@@ -55,13 +55,25 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
             let v: Value = serde_json::from_str(&std::fs::read_to_string(&file).expect("reads"))
                 .expect("json");
             let command = v["command"].as_str().expect("command").to_owned();
-            // A step that runs another command (its `command`) reaches that command's codes.
+            // A step that runs another command (its `command`) reaches that command's codes, the ones its catalog
+            // lists; a code it does not list is the file's command's (a hatch's cutout gone by a delete step).
             for case in v["cases"].as_array().into_iter().flatten() {
                 match case["steps"].as_array() {
                     Some(steps) => {
                         for step in steps {
-                            let id = step["command"].as_str().unwrap_or(&command).to_owned();
-                            walk(step, out.entry(id).or_default());
+                            let Some(id) = step["command"].as_str().filter(|id| *id != command) else {
+                                walk(step, out.entry(command.clone()).or_default());
+                                continue;
+                            };
+                            let listed: BTreeSet<String> = capabilities_of(id)
+                                .map(|c| c.refusals.into_iter().chain(c.warnings).collect())
+                                .unwrap_or_default();
+                            let mut got = BTreeSet::new();
+                            walk(step, &mut got);
+                            for code in got {
+                                let owner = if listed.contains(&code) { id } else { &command };
+                                out.entry(owner.to_owned()).or_default().insert(code);
+                            }
                         }
                     }
                     None => walk(case, out.entry(command.clone()).or_default()),
@@ -78,6 +90,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.entities.delete",
         "relation_too_large",
         "on bin alt kayıt gerektirir; ortak durum dosyası için çok büyük, sınır delete.rs'in MOST_FOLLOWED'ıdır ve relation_effects onu sayar (ADR 0440 §1)",
+    ),
+    (
+        "cad.entities.hatch",
+        "hatch_text_cycle",
+        "taramanın kendi bağlı etiketi: durum dosyasının kurulumu kalıcı kimlik taşımaz, yazı taramaya bağlanamaz; kentos-domain'in hatch_texts testinde (ADR 0332)",
+    ),
+    (
+        "cad.entities.hatch",
+        "invalid_region",
+        "1000'den çok ek nokta: durum dosyasında bin noktalık bir girdi yazmaya değmez; ret sınırın kendisidir.",
     ),
     (
         "cad.entities.offset",

@@ -101,6 +101,10 @@ pub struct ExportDxf {
     /// Write over a file that is there.
     #[serde(default)]
     pub overwrite: bool,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotations: Option<crate::DxfAnnotations>,
 }
 
 /// What `file.export.dxf` wrote, or with `plan` would write.

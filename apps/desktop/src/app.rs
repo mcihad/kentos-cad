@@ -176,6 +176,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
+    /// Tarama desenleri (hatch_patterns_window.rs, docs/adr/0331 §1); the window is `App::hatch_patterns_window`.
+    HatchPatterns,
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4); the window is `App::style_impact`.
     StyleImpact,
     /// Alanlar (layer_fields.rs, docs/adr/0199 §3); the window is `App::layer_fields`.
@@ -233,6 +235,15 @@ pub enum Dialog {
     TakeFrom,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
     LayerList,
+    /// Yazı tipleri (font_report.rs, docs/adr/0324 §5).
+    FontReport,
+    /// Alan ekle, Numarala and Yazı denetimi (text_tools.rs, docs/adr/0325 §4); the windows are `App::text_tools`.
+    FieldInsert,
+    TextNumber,
+    TextCheck,
+    /// Hizala and Kılavuz stilleri (leader_tools.rs, docs/adr/0326 §5); the windows are `App::leader_tools`.
+    LeaderAlign,
+    LeaderStyles,
     /// Ölçek yaz… (annotation_scale.rs, docs/adr/0205 §4); the field is `App::plot_scale_field`.
     PlotScale,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
@@ -446,6 +457,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
+    /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
+    HatchPatterns(crate::hatch_patterns_window::Event),
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4).
     StyleImpact(crate::style_impact::Event),
     /// Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
@@ -482,6 +495,9 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
+    FontReport(crate::font_report::Event),
+    TextTools(crate::text_tools::Event),
+    LeaderTools(crate::leader_tools::Event),
     /// Ölçek yaz…'s window (annotation_scale.rs, docs/adr/0205 §4).
     PlotScale(crate::annotation_scale::Event),
     /// Seçilenleri dosyaya kaydet, Başka çizimden al and Dosyadan blok ekle (drawing_exchange.rs).
@@ -612,6 +628,8 @@ pub enum Message {
     /// İkinci sistem: the project's second coordinate system, how geographic
     /// values are written (second_crs.rs, docs/adr/0167 §1).
     SecondCrs(crate::second_crs::Event),
+    /// A notice closed, by its ×, its time or Tümünü kapat (toasts.rs).
+    ToastClosed(kentos_ui::widget::toast::Id),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -691,6 +709,10 @@ pub struct App {
     pub(crate) block_schedule: Option<crate::block_schedule::Window>,
     /// Bul ve değiştir's window, while it is open (find_replace.rs).
     pub(crate) find_replace: Option<crate::find_replace::Window>,
+    /// Alan ekle, Numarala and Yazı denetimi (text_tools.rs, docs/adr/0325 §4).
+    pub(crate) text_tools: crate::text_tools::TextTools,
+    /// Kol ekle, Kol sil, Hizala and Kılavuz stilleri (leader_tools.rs, docs/adr/0326 §5).
+    pub(crate) leader_tools: crate::leader_tools::LeaderTools,
     /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
     pub(crate) text_file_wanted: bool,
     /// Koordinat oku's points whose rasters' values are to be read (docs/adr/0204 §8).
@@ -877,6 +899,8 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
+    /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
+    pub(crate) hatch_patterns_window: Option<crate::hatch_patterns_window::Window>,
     /// Değişikliğin etkisi's window (style_impact.rs, docs/adr/0314 §4).
     pub(crate) style_impact: Option<crate::style_impact::Window>,
     /// Blok düzenleyici, while it is open (block_editor.rs, docs/adr/0316 §1).
@@ -1043,6 +1067,8 @@ pub struct App {
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
     pub(crate) sheet_data_key: Option<u64>,
+    /// The window's notices in its corner (toasts.rs): a save that closed its window, a copy.
+    pub(crate) toasts: kentos_ui::widget::Toasts<Message>,
 }
 
 impl App {
@@ -1108,6 +1134,8 @@ impl App {
             block_card: None,
             block_schedule: None,
             find_replace: None,
+            text_tools: Default::default(),
+            leader_tools: Default::default(),
             text_file_wanted: false,
             raster_values_wanted: Vec::new(),
             rasters: crate::rasters::Windows::default(),
@@ -1174,6 +1202,7 @@ impl App {
             sheet_attributes: std::cell::Cell::new(false),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
+            toasts: kentos_ui::widget::Toasts::new(),
             session: Session::new(),
             spatial: Spatial::new(),
             styles: crate::style::Styles::new(),
@@ -1210,6 +1239,7 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             line_types_window: None,
+            hatch_patterns_window: None,
             style_impact: None,
             block_editor: None,
             layer_filter: None,
@@ -1752,6 +1782,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
+            Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::BlockEditor(event) => return self.block_editor_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
@@ -1775,6 +1806,9 @@ impl App {
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
+            Message::FontReport(event) => return self.font_report_event(event),
+            Message::TextTools(event) => return self.text_tools_event(event),
+            Message::LeaderTools(event) => return self.leader_tools_event(event),
             Message::PlotScale(event) => return self.plot_scale_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
@@ -1944,6 +1978,9 @@ impl App {
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
             Message::SecondCrs(event) => self.second_crs_event(event),
+            Message::ToastClosed(id) => {
+                self.toasts.dismiss(id);
+            }
         }
         Task::none()
     }
@@ -2384,6 +2421,9 @@ impl App {
                 }
             }
             "table.update" => return self.update_tables(),
+            // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
+            "table.link" => return self.link_table(),
+            "table.blockSchedule" => self.place_block_schedule(),
             // Yazı ve ölçü stilleri (docs/adr/0183 §5).
             "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
             "style.dimensionStyles" => {
@@ -2474,6 +2514,14 @@ impl App {
             // The user coordinate system (ucs.rs, docs/adr/0261).
             "ucs.world" => self.ucs_world(),
             "ucs.previous" => self.ucs_previous(),
+            // Ölçekli açıklamalar (annotative.rs, docs/adr/0323 §4).
+            "annotation.make" => self.annotative_selection(kentos_contracts::AnnotativeOperation::Make),
+            "annotation.unmake" => {
+                self.annotative_selection(kentos_contracts::AnnotativeOperation::Unmake)
+            }
+            "annotation.reset" => {
+                self.annotative_selection(kentos_contracts::AnnotativeOperation::Reset)
+            }
             // Sırala (draw_order.rs, docs/adr/0260 §5).
             "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
             "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),
@@ -2527,6 +2575,11 @@ impl App {
             }
             "layer.purge" => self.open_layer_purge(),
             "layer.list" => self.open_layer_list(),
+            "text.fonts" => self.open_font_report(),
+            // Alanlar and the text commands (text_tools.rs, docs/adr/0325 §4).
+            id if self.text_tools_run(id) => {}
+            // Çok kollu kılavuz (leader_tools.rs, docs/adr/0326 §5).
+            id if self.leader_tools_run(id) => {}
             // Katman süzgeci (layer_filters.rs, docs/adr/0211 §4): the active layer's; Katmanlar's menu names its
             // layer (layering.rs).
             "layer.filter" => return self.open_layer_filter(None),
@@ -2578,6 +2631,7 @@ impl App {
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
+            "hatchPatterns.manage" => self.open_hatch_patterns(),
             // Edits, not undo steps (layering.rs).
             "layer.new" => self.new_layer(),
             "layer.newGroup" => self.new_group(),
@@ -2601,6 +2655,24 @@ impl App {
             "block.schedule" => self.open_block_schedule(None),
             // KentOS's own blocks (blocks_files.rs, docs/adr/0318 §4).
             "block.library" => self.blocks_builtin(),
+            // Sabit bloğa çevir (docs/adr/0319 §4).
+            "block.freeze" => self.blocks_freeze(),
+            "dimension.space" => self.dimensions_edit(|uids| {
+                let mut uids = uids.into_iter();
+                let base = uids.next().unwrap_or_default();
+                kentos_contracts::DimensionEdit::Space {
+                    base,
+                    uids: uids.collect(),
+                    spacing: None,
+                }
+            }),
+            "dimension.break" => self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Break {
+                uids,
+                objects: None,
+            }),
+            "dimension.unbreak" => {
+                self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Unbreak { uids })
+            }
             "block.sync" => {
                 if let Some(id) = self.block_at_hand() {
                     self.blocks_sync(id, false);

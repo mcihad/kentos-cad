@@ -53,7 +53,14 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
             ..
         } => bulge_path_edges(pts, bulges.as_deref(), *closed),
         // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
-        Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
+        // Its line and its other arms' (docs/adr/0326 §1).
+        Shape::Leader { .. } => {
+            let mut out = path_edges(&entity_outline(e, 72.0), false);
+            for (path, _) in crate::geom::leader::arm_layouts(e) {
+                out.extend(path_edges(&path, false));
+            }
+            out
+        }
         // The part shown's sides (docs/adr/0192 §4).
         Shape::Image { .. } => path_edges(&crate::geom::image::shown(e), true),
         // Its frame's sides: a raster is picked by its edge (docs/adr/0204 §7).

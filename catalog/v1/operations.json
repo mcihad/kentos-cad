@@ -787,16 +787,16 @@
     "table.edit": {
       "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.tables.edit"
       ],
-      "operation": "table"
+      "note": "Pencerenin her değişikliği cad.tables.edit'in bir düzenlemesidir (hücre, formül, satır ve sütun, biçim, alan, boylar); önizleme komutun planı, Kaydet aynı düzenlemeleri tek adımda yazar (ADR 0327)."
     },
     "table.update": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.tables.edit"
       ],
-      "operation": "tableUpdate"
+      "note": "Seçili ya da kaynağı olan bütün tabloların kimlikleri ve çizimin klasörü refresh işlemine verilir; bağlı olmayan ya da yolunda olmayan dosya sorulup link işlemiyle bağlanır (ADR 0327)."
     },
     "template.apply": {
       "level": "semantic",
@@ -817,11 +817,11 @@
       "level": "host"
     },
     "text.findReplace": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.texts.edit"
       ],
-      "operation": "replaceText"
+      "note": "Bul, Değiştir, Büyük küçük harf ve Tam sözcük komutun replace işlemine seçilen satırların kimlikleriyle verilir; Joker açıkken cad.entities.edit'in replaceText'iyle yazar (desen bütün yazıyı alır; ADR 0325)."
     },
     "topology.check": {
       "level": "query"
@@ -869,6 +869,13 @@
         "cad.dimensions.reassociate"
       ],
       "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249)."
+    },
+    "tool.hatchEdit": {
+      "level": "semantic",
+      "via": [
+        "cad.hatches.edit"
+      ],
+      "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329)."
     },
     "tool.arrayEdit": {
       "level": "semantic",
@@ -1061,6 +1068,13 @@
       ],
       "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3)."
     },
+    "hatchPatterns.manage": {
+      "level": "semantic",
+      "via": [
+        "cad.hatchpatterns.edit"
+      ],
+      "note": "Yükleme (birimiyle), silme ve dışa aktarma komuta verilir; desen taramaya cad.entities.hatch ve cad.hatches.edit'in pattern'iyle adıyla verilir (ADR 0331 §1)."
+    },
     "lineTypes.manage": {
       "level": "semantic",
       "via": [
@@ -1142,6 +1156,188 @@
         "cad.blocks.edit"
       ],
       "note": "import işlemi, name kentos-temel: KentOS'un blok kitaplığı (ADR 0318 §4)."
+    },
+    "block.freeze": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.freeze"
+      ],
+      "note": "Dinamik bloğun yerleştirmeleri düz bloklara (ADR 0319 §4); vekil görünüş cad.blocks.proxy."
+    },
+    "dimension.space": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ],
+      "note": "Seçimin ilk ölçüsü temeldir; öbürleri aralıkla dizilir (ADR 0321 §4)."
+    },
+    "dimension.break": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ],
+      "note": "Seçili ölçüler görünen nesnelerin kestiği yerlerde kırılır (ADR 0321 §4)."
+    },
+    "dimension.unbreak": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.edit"
+      ]
+    },
+    "tool.centerMark": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "Tıklanan eğrinin kimliği ve tıklanan yer komutun centerMark ölçüsüne verilir; işaret eğriyi izler (ADR 0322)."
+    },
+    "tool.dimCenterLine": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "İki düz kenarın kimlikleri ve tıklanan yerler komutun centerLine ölçüsüne verilir; ekseni komut hesaplar ve kenarları izler (ADR 0322)."
+    },
+    "tool.dimElevation": {
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "note": "Noktanın yeri (kenetle oturduğu köşe), yazılan kot ve değerin yeri komutun elevation ölçüsüne verilir; köşeyi ve kotunu izler (ADR 0322)."
+    },
+    "annotation.make": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun make işlemine verilir; nesne projenin çizim ölçeğinde ölçekli olur (ADR 0323)."
+    },
+    "annotation.unmake": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun unmake işlemine verilir (ADR 0323)."
+    },
+    "annotation.reset": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Seçimin kimlikleri komutun reset işlemine verilir (ADR 0323)."
+    },
+    "tool.annotativePlace": {
+      "level": "semantic",
+      "via": [
+        "cad.annotations.scales"
+      ],
+      "note": "Tıklanan nesnenin kimliği, seçilen ölçek ve tıklanan yer (ölçüde çizginin uzaklığı) komutun set işlemine verilir; önizleme o ölçeğin temsilidir (ADR 0323)."
+    },
+    "text.fonts": {
+      "level": "query",
+      "via": [
+        "cad.fonts.report"
+      ],
+      "note": "Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324)."
+    },
+    "text.fieldInsert": {
+      "level": "semantic",
+      "via": [
+        "cad.fields.edit"
+      ],
+      "note": "Pencere yazının, kaynağın (çizimden seçilen nesne ya da proje) ve biçimin kimliklerini ve değerlerini komutun insert işlemine verir; önizleme komutun planıdır (ADR 0325)."
+    },
+    "text.fieldsUpdate": {
+      "level": "semantic",
+      "via": [
+        "cad.fields.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri update işlemine verilir (ADR 0325)."
+    },
+    "text.number": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri seçim sırasıyla ve pencerenin değerleri number işlemine verilir; önizleme komutun planıdır (ADR 0325)."
+    },
+    "text.combine": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazıların kimlikleri combine işlemine verilir (ADR 0325)."
+    },
+    "text.split": {
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "note": "Seçili yazının kimliği split işlemine verilir (ADR 0325)."
+    },
+    "text.check": {
+      "level": "query",
+      "via": [
+        "cad.texts.check"
+      ],
+      "note": "Pencere komutun bulgularını gösterir (ADR 0325)."
+    },
+    "leader.addArm": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzun kimliği, çizimden seçilen uç ve orada kenetin verdiği yer addArm işlemine verilir (ADR 0326)."
+    },
+    "leader.removeArm": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Ucu seçilen noktaya en yakın kolun sırası removeArm işlemine verilir (ADR 0326)."
+    },
+    "leader.align": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzların kimlikleri seçim sırasıyla, pencerenin doğrultusu ve aralığı align işlemine verilir (ADR 0326)."
+    },
+    "leader.collect": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzların kimlikleri seçim sırasıyla collect işlemine verilir (ADR 0326)."
+    },
+    "leader.blocks": {
+      "level": "semantic",
+      "via": [
+        "cad.leaders.edit"
+      ],
+      "note": "Seçili kılavuzun ve yerleştirmelerin kimlikleri blocks işlemine verilir (ADR 0326)."
+    },
+    "leader.styles": {
+      "level": "semantic",
+      "via": [
+        "cad.styles.edit"
+      ],
+      "note": "Pencerenin tablosu cad.styles.edit'in leader türüyle (oluştur, güncelle, sil) yazılır (ADR 0326)."
+    },
+    "table.link": {
+      "level": "semantic",
+      "via": [
+        "cad.tables.edit"
+      ],
+      "note": "Seçili tablonun kimliği, seçilen dosyanın yolu (çizimin klasöründeyse göreli) ve klasör link işlemine verilir (ADR 0327)."
+    },
+    "table.blockSchedule": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Tablo blocks kaynağıyla yazılır; çizelgenin satırlarını belge her adımda kendisi yazar (ADR 0327)."
     },
     "data.forms": {
       "level": "semantic",
@@ -1482,7 +1678,7 @@
         "cad.dimensions.create"
       ],
       "was": "cad.entities.create",
-      "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Hizalı, Doğrusal, Koordinat, Semt ve Eğim'in yere oturan noktası nesneye bağlanır (ADR 0249, 0255).",
+      "note": "Noktalar (kenetle oturduğu yer), tıklanan kenarlar ve yeri komuta verilir; ölçüyü komut kurar. Yere oturan nokta nesneye bağlanır; kenarlardan açı, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı kenarlarını ya da eğrisini izler (ADR 0249, 0255, 0320).",
       "methods": {
         "Hizalı": "semantic",
         "Doğrusal": "semantic",
@@ -1497,12 +1693,20 @@
       }
     },
     "dimContinue": {
-      "level": "geometry",
-      "operation": "dimensionChain"
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun continue ölçüsüne verilir; ilk noktası temelinkini izler (ADR 0320 §3)."
     },
     "dimBaseline": {
-      "level": "geometry",
-      "operation": "dimensionBaseline"
+      "level": "semantic",
+      "via": [
+        "cad.dimensions.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun baseline ölçüsüne verilir; bir kat dışarıda, ilk noktası temelinkini izler (ADR 0320 §3)."
     },
     "quickDimension": {
       "level": "geometry"

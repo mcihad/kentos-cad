@@ -287,23 +287,27 @@ def apply_text(style, text, scale):
 
 
 def follow_text(old, new, text, scale):
+    """A text of `old` after the style became `new`: a field still holding the old value takes the new one; a field
+    the text overrides (docs/adr/0322 §5) keeps its own."""
     out = dict(text)
+    own = set(text.get("overrides", []))
     was, now = face_of(old), face_of(new)
     for key in ("font", "oblique"):
-        if text.get(key) == was.get(key):
+        if key not in own and text.get(key) == was.get(key):
             out.pop(key, None)
             if now.get(key) is not None:
                 out[key] = now[key]
     for key in ("bold", "italic"):
-        if bool(text.get(key)) == bool(was.get(key)):
+        if key not in own and bool(text.get(key)) == bool(was.get(key)):
             out.pop(key, None)
             if now.get(key):
                 out[key] = True
-    if text.get("widthFactor", 1) == old.get("widthFactor", 1):
+    if "widthFactor" not in own and text.get("widthFactor", 1) == old.get("widthFactor", 1):
         out.pop("widthFactor", None)
         if new.get("widthFactor") is not None:
             out["widthFactor"] = new["widthFactor"]
-    if old.get("height") is not None and new.get("height") is not None and text["height"] == height_at(old["height"], scale):
+    if ("height" not in own and old.get("height") is not None and new.get("height") is not None
+            and text["height"] == height_at(old["height"], scale)):
         out["height"] = height_at(new["height"], scale)
     return out
 
@@ -344,15 +348,16 @@ def apply_dimension(style, dim, scale, standard=STANDARD_DIMENSION_MM):
 
 def follow_dimension(old, new, dim, scale):
     out = dict(dim)
+    own = set(dim.get("overrides", []))
     was, now = look_of(old), look_of(new)
     for key in LOOK:
-        if key == "dimStyle":
+        if key == "dimStyle" or key in own:
             continue
         if dim.get(key) == was.get(key):
             out.pop(key, None)
             if now.get(key) is not None:
                 out[key] = now[key]
-    if dim["height"] == height_at(old["height"], scale):
+    if "height" not in own and dim["height"] == height_at(old["height"], scale):
         out["height"] = height_at(new["height"], scale)
     return out
 
@@ -503,6 +508,10 @@ def cases():
         ("Kendi yazı tipi kalır", dict(apply_text(ADA, text, 1000.0), font="plex-mono")),
     ]:
         add(name, "followText", {"old": ADA, "new": ada2, "plotScale": 1000.0, "text": t}, follow_text(ADA, ada2, t, 1000.0))
+    # Overrides (docs/adr/0322 §5): a field named keeps its value though it holds the old style's.
+    add("Geçersiz kılınan yazı tipi eski stilinkiyle aynı olsa da kalır", "followText",
+        {"old": ADA, "new": ada2, "plotScale": 1000.0, "text": dict(apply_text(ADA, text, 1000.0), overrides=["font", "height"])},
+        follow_text(ADA, ada2, dict(apply_text(ADA, text, 1000.0), overrides=["font", "height"]), 1000.0))
     add("Eski stilin yüksekliği yoktu: yükseklik kalır", "followText", {"old": YOL, "new": dict(YOL, height=3.0), "plotScale": 1000.0, "text": apply_text(YOL, {"height": 1.0}, 1000.0)}, follow_text(YOL, dict(YOL, height=3.0), apply_text(YOL, {"height": 1.0}, 1000.0), 1000.0))
     ada_free = {k: v for k, v in ADA.items() if k != "height"}
     add("Yeni stilin yüksekliği yok: yükseklik kalır", "followText", {"old": ADA, "new": ada_free, "plotScale": 1000.0, "text": apply_text(ADA, text, 1000.0)}, follow_text(ADA, ada_free, apply_text(ADA, text, 1000.0), 1000.0))
@@ -524,6 +533,7 @@ def cases():
         ("Hepsi stilin: hepsi yeni", apply_dimension(OLCU, dim, 50.0)),
         ("Kendi oku ve öneki kalır", dict(apply_dimension(OLCU, dim, 50.0), arrow="open", prefix="≈")),
         ("Kendi yüksekliği kalır", dict(apply_dimension(OLCU, dim, 50.0), height=0.2)),
+        ("Geçersiz kılınan ok ve basamak stilinkiyle aynı olsa da kalır", dict(apply_dimension(OLCU, dim, 50.0), overrides=["arrow", "decimals", "height"])),
     ]:
         add(name, "followDimension", {"old": OLCU, "new": olcu2, "plotScale": 50.0, "dimension": d}, follow_dimension(OLCU, olcu2, d, 50.0))
     # The lines follow as the other look fields (docs/adr/0205 §6): the style's change, an own colour kept.

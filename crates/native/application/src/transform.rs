@@ -642,7 +642,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             How::Matrix(m) => {
                 let after = transform_shape_with(&before, m, policy);
                 overflow |= finite_shape(&before) && !finite_shape(&after);
-                with_shape(entity, after)
+                with_shape(entity, after).map(|e| carry_scales(entity, e, m))
             }
             How::Sheet(sheet) => {
                 let zs: Vec<Vec<Option<f64>>> =
@@ -736,7 +736,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             })?;
             let after = transform_shape(&before, &m);
             overflow |= finite_shape(&before) && !finite_shape(&after);
-            let Some(e) = with_shape(entity, after) else {
+            let Some(e) = with_shape(entity, after).map(|e| carry_scales(entity, e, &m)) else {
                 return Err(Stop::failed(checks::error(
                     codes::NOT_FINITE,
                     "Nesne dönüştürülemedi.".into(),
@@ -808,6 +808,51 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
 /// Every number of a shape's geometry is finite (the fields the web's
 /// handler walks: points, radii, angles, bulges, heights, offsets, the
 /// hatch pattern's angle and spacing).
+/// An annotative object's other scales moved with it (docs/adr/0323 §4): their points by the
+/// affine, their directions by the turn its own took, a dimension's offset and value shift by
+/// the affine's length scale. A rubber sheet or a warp keeps them as they were.
+fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
+    use kentos_geometry_core::geom::affine::{apply, determinant};
+    let Some(field) = kentos_contracts::annotative_field(&mut after) else {
+        return after;
+    };
+    let Some(scales) = field.as_mut() else {
+        return after;
+    };
+    if scales.scales.iter().all(kentos_contracts::AnnotativeScale::is_plain) {
+        return after;
+    }
+    let length = determinant(m).abs().sqrt();
+    let turn = |e: &Entity| match e {
+        Entity::Text(t) => Some(t.rotation),
+        Entity::Leader(l) => Some(l.rotation),
+        _ => None,
+    };
+    let mut entries = std::mem::take(&mut scales.scales);
+    for s in &mut entries {
+        if let Some(p) = s.point {
+            let q = apply(m, Vec2::new(p.x, p.y));
+            s.point = Some(kentos_contracts::Vec2 { x: q.x, y: q.y });
+        }
+        if let Some(t) = s.text_shift.as_mut() {
+            t.along *= length;
+            t.across *= length;
+        }
+        s.offset = s.offset.map(|o| o * length);
+    }
+    if let (Some(was), Some(now)) = (turn(before), turn(&after)) {
+        for s in &mut entries {
+            s.rotation = s.rotation.map(|r| (r + now - was).rem_euclid(360.0));
+        }
+    }
+    if let Some(field) = kentos_contracts::annotative_field(&mut after)
+        && let Some(scales) = field.as_mut()
+    {
+        scales.scales = entries;
+    }
+    after
+}
+
 pub(crate) fn finite_shape(s: &Shape) -> bool {
     fn pt(p: &Vec2) -> bool {
         p.x.is_finite() && p.y.is_finite()
@@ -980,6 +1025,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             holes,
             pattern,
             assoc,
+            ..
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))

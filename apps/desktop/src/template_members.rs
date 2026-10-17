@@ -240,6 +240,8 @@ impl App {
                     let height = height_mm * doc.settings().plot_scale / 1000.0;
                     self.template_names.insert(m.id.clone(), next);
                     let g = EntityGeometry::Text {
+                        layout: None,
+                        annotative: None,
                         p: wire(at),
                         text,
                         height,
@@ -313,5 +315,7 @@ fn object(
         label_of: None,
         label_scale: None,
         symbol: m.stamp.symbol.clone(),
+        order: None,
+        transparency: None,
     }
 }

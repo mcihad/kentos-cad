@@ -82,3 +82,24 @@
   - "23.417" ölçü değeri, ölçü çizgisi ve uçları;
   - görünüme kırpılmış sonsuz doğru ve ışın; yazının halesi üstünden geçen çizgiyi keser.
 - `pnpm rust:test:desktop` (454), render ve etkileşim testleri, clippy geçti.
+
+## 17 Ekim eki: eğik yazı kendi pikselinde resim
+
+Sahibin bildirimi (17 Ekim, üç resim): eğik ölçü yazıları pürüzlüydü, çevrelerinde kirli bir halka vardı. Iced'in tuvali döndürülmüş
+yazıyı glif yolu olarak üçgenlere böler, kenarlarını yalnız 4× MSAA ile yumuşatır: harflerin kenarında beş ton kalıyordu (resimlerde
+248, 186, 124, 62, 0), halenin dış kenarının yarı kaplanan pikselleri sahibin makinesinde zeminden açık (255) ve koyu (207, 227)
+çıkıyordu. Bu son etki ekransız resimlerde (NVIDIA ve Intel) çıkmıyor; kesin nedeni sahibin penceresinde ölçülemedi, ama hepsi
+tuvalin MSAA yolunun yarı kaplanan kenarlarında.
+
+- Döndürülmüş, eğik, daraltılmış ya da maskeli yazı (`labels.rs`'in `pictured`'ı) artık `label_picture.rs`'te tiny-skia ile kesin
+  kaplamayla kendi resmine çizilir ve çizim alanının piksel ızgarasına en yakın komşuyla oturtulur. Resme maskesi, halesi, harfleri
+  ve alt çizgisi girer; sırası ve ölçüleri eski yolun aynısıdır.
+- Hale harflerin konturu değil, kaplamalarının 1,5 piksel büyütülmesidir (her pikselin çevresindeki en büyük kaplama). Görünüşü
+  aynıdır, maliyetin dörtte biridir.
+- Resimler gösterdikleriyle ve pikselin içindeki dörtte birlik yerleriyle tutulur (en çok 4 096 resim ve 64 MB). Kaydırma onları
+  yeniden bulur; eski yolda her kayan karede yazılar yeniden üçgenlere bölünüyordu.
+- Iced'in resim boru hattı düz alfa bekler; pikseller ona çevrilir, boş pikseller ilk parçanın rengini alır.
+- Döndürülmüş görünümde (ADR 0285) yazılar yol olarak kalır: resim orada bir kez daha döndürülüp yeniden örneklenirdi.
+- 2 048 pikselden büyük yazı da eski yoldan çizilir.
+- Süre (release, `label_picture::tests::timing`): 14 px'lik 1 300 eğik yazının resmi haleyle 81 ms (yazı başına 62 µs), halesiz
+  57 ms. Bu bir yakınlaştırmada bir kez ödenir; maliyetin çoğu tiny-skia'nın doldurmasıdır.

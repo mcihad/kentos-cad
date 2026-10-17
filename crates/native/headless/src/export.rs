@@ -72,10 +72,27 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
 
 /// The writer's input for `chosen` (from [`by_layer`]).
 pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteInput {
-    let entities: Vec<Entity> = chosen
+    let mut entities: Vec<Entity> = chosen
         .iter()
         .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
         .collect();
+    // A dynamic block's inserts as the plain blocks they draw (docs/adr/0319 §5): DXF has no place for KentOS's
+    // parameters and actions.
+    let (variants, mut notes) =
+        kentos_native_application::block_variants::plain_for_export(doc.blocks(), &mut entities);
+    // Annotative annotations (docs/adr/0323 §5): DXF gets each as its own scale draws it.
+    let scaled = entities
+        .iter()
+        .filter(|e| kentos_contracts::annotative_of(e).is_some())
+        .count();
+    if scaled > 0 {
+        notes.push(kentos_contracts::ReportItem {
+            what: "Ölçekli açıklama".into(),
+            count: u32::try_from(scaled).unwrap_or(u32::MAX),
+            reason: "Kendi ölçeğindeki hâliyle yazıldı; diğer ölçekleri ve oradaki yerleri DXF'e yazılmadı.".into(),
+            lines: Vec::new(),
+        });
+    }
     let settings = doc.settings();
     let format = Format::of(settings);
     // What a dimension without its own text shows (project units): its
@@ -83,16 +100,34 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let mut dimension_values = BTreeMap::new();
     for e in &entities {
         if let Entity::Dimension(d) = e
-            && d.text.as_deref().is_none_or(str::is_empty)
             && let Some(l) = kentos_formats::dxf::dimension_layout(d)
         {
+            // A text written over the value shows it where it says `<>` (docs/adr/0321 §3).
             dimension_values.insert(
                 d.base.id,
-                format.dimension_in(l.prefix, l.unit, l.value, &d.look),
+                format.dimension_value(
+                    l.prefix,
+                    l.unit,
+                    l.value,
+                    &d.look,
+                    d.text.as_deref().filter(|t| !t.is_empty()),
+                ),
             );
         }
     }
+    // The objects' ids: an associative hatch goes out with its boundary objects' handles (docs/adr/0333 §3).
+    let uids = entities
+        .iter()
+        .filter_map(|e| {
+            let id = e.base().id;
+            doc.uid(kentos_domain::Slot(id))
+                .map(|u| (id, kentos_contracts::EntityId(u.into_bytes())))
+        })
+        .collect();
     DxfWriteInput {
+        uids,
+        annotations: Default::default(),
+        notes,
         // The project's line types and their scale (docs/adr/0313 §6).
         line_type_scale: settings.line_type_scale,
         line_types: settings.line_types.clone(),
@@ -106,7 +141,12 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         grads: settings.angle_unit == AngleUnit::Grad,
         dimension_values,
         // The writer takes those the objects place (docs/adr/0144 §5).
-        blocks: doc.blocks().iter().map(|b| (**b).clone()).collect(),
+        blocks: doc
+            .blocks()
+            .iter()
+            .map(|b| (**b).clone())
+            .chain(variants)
+            .collect(),
         // A local project's drawing goes out in its unit (docs/adr/0165 §2).
         unit: (!settings.has_system()).then(|| settings.unit()),
         // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).

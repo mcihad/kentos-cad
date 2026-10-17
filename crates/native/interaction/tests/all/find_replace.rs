@@ -24,6 +24,7 @@ fn scene() -> Bench {
     ] {
         b.doc
             .add(Entity::Text(TextEntity {
+                annotative: None,
                 base: base(layer),
                 p: kentos_contracts::Vec2 { x: E, y: N + y },
                 text: words.to_owned(),

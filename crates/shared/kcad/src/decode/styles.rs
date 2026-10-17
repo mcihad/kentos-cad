@@ -78,11 +78,13 @@ pub(super) fn text_styles(r: &mut Reader<'_>) -> Result<Vec<TextStyleDef>, KcadE
 pub(super) fn dimension_styles(
     r: &mut Reader<'_>,
     lines: bool,
+    options: bool,
 ) -> Result<Vec<DimensionStyleDef>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut height) = (None, None, None);
         let mut style = DimensionStyleDef {
+            options: None,
             id: String::new(),
             name: String::new(),
             height: 0.0,
@@ -143,6 +145,12 @@ pub(super) fn dimension_styles(
                 "extWeight" if lines => style.ext_weight = Some(r.float()?),
                 "dimLineType" if lines => style.dim_line_type = Some(super::line_type_named(r)?),
                 "extLineType" if lines => style.ext_line_type = Some(super::line_type_named(r)?),
+                // Schema 61 (docs/adr/0321).
+                "options" if options => {
+                    let (o, _): (kentos_contracts::DimensionOptions, usize) =
+                        super::objects::json_part(r, "seçenekler")?;
+                    style.options = Some(Box::new(o));
+                }
                 _ => return Err(unknown(r)),
             }
             Ok(())

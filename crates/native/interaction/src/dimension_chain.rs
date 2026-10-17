@@ -11,18 +11,23 @@
 //!   point; the lines stack, one level further out each, a level being three
 //!   times the base's text height.
 //!
-//! Each click writes one dimension through `cad.entities.create` as its own
-//! undo step (“Ekle”), a linear one along the base's direction, in the
-//! base's style and look (AutoCAD's DIMCONTINUEMODE 1, docs/adr/0183 §4); Enter, a
-//! quick right click or Esc ends. An undone dimension takes the run back to
-//! where it was. The dimensions are the shared core's
-//! (`construct::continue_dimension`, `baseline_dimension`).
+//! Each click writes one dimension through `cad.dimensions.create`'s `continue`
+//! or `baseline` (docs/adr/0320 §3) as its own undo step (“Ekle”), a linear one
+//! along the base's direction, in the base's style and look (AutoCAD's
+//! DIMCONTINUEMODE 1, docs/adr/0183 §4), the last one the base of the next;
+//! its first point follows what its base's does, its second the place it
+//! snapped to. Enter, a quick right click or Esc ends. An undone dimension
+//! takes the run back to where it was. The preview is the command's own
+//! computation (`construct::continue_dimension`, `baseline_dimension`).
 
-use kentos_contracts::{DimensionEntity, DimensionStyle, Entity, EntityGeometry};
+use kentos_contracts::{DimensionMeasure, DimensionsCreate, Entity, MeasuredPoint, NewLook};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
+use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::tools::construct::{baseline_dimension, continue_dimension};
-use kentos_native_application::geometry::{contract_look, core_look};
+use kentos_native_application::ExecutionContext;
+use kentos_native_application::dimension_create::{LEVEL_TEXT_HEIGHTS, dimensions_create, straight};
+use kentos_native_application::geometry::contract_look;
 
 use crate::Vec2;
 use crate::edge;
@@ -40,21 +45,16 @@ pub const CONTINUE_ID: &str = "dimContinue";
 /// Baz ölçü's id: its command is `tool.dimBaseline`.
 pub const BASELINE_ID: &str = "dimBaseline";
 
-/// A baseline level is this many times the base's text height.
-const LEVEL_TEXT_HEIGHTS: f64 = 3.0;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
     Continue,
     Baseline,
 }
 
-/// Where the run stands: the base, where the next chain link starts, the next level.
+/// Where the run stands: the base (the dimension the next goes on from) and its persistent id.
 #[derive(Clone, Debug)]
 struct State {
-    base: Option<DimensionGeom>,
-    from: Vec2,
-    level: f64,
+    base: Option<(Uuid, DimensionGeom)>,
     /// What [`crate::tool::Memory::last_dimension`] was.
     last: Option<Uuid>,
 }
@@ -73,30 +73,6 @@ pub struct DimensionChain {
     format: Format,
 }
 
-/// A straight dimension as the core lays it out: aligned (no style) or
-/// linear; none for an angle, a radius or a diameter, or one that does not lay out.
-fn straight(d: &DimensionEntity) -> Option<DimensionGeom> {
-    let style = match d.style {
-        None => None,
-        Some(DimensionStyle::Linear) => Some("linear".to_owned()),
-        Some(_) => return None,
-    };
-    let g = DimensionGeom {
-        a: Vec2::new(d.a.x, d.a.y),
-        b: Vec2::new(d.b.x, d.b.y),
-        offset: d.offset,
-        height: d.height,
-        style,
-        angle: d.angle,
-        c: None,
-        za: None,
-        zb: None,
-        // Its style and look go on to the next ones (docs/adr/0183 §4).
-        look: core_look(&d.look),
-    };
-    layout_dimension(&g).map(|_| g)
-}
-
 /// Objects a click can choose as the base.
 fn takes(e: &Entity, _: &Document) -> bool {
     matches!(e, Entity::Dimension(d) if straight(d).is_some())
@@ -108,8 +84,6 @@ impl DimensionChain {
             kind,
             state: State {
                 base: None,
-                from: Vec2::new(0.0, 0.0),
-                level: 1.0,
                 last: None,
             },
             choosing: true,
@@ -136,20 +110,18 @@ impl DimensionChain {
     }
 
     /// The straight dimension the object at `uid` is, if it is still there.
-    fn dimension_of(uid: Uuid, cx: &Context<'_>) -> Option<DimensionGeom> {
-        match cx.doc.get(cx.doc.slot_of(uid)?)? {
+    fn dimension_of(uid: Uuid, doc: &Document) -> Option<DimensionGeom> {
+        match doc.get(doc.slot_of(uid)?)? {
             Entity::Dimension(d) => straight(d),
             _ => None,
         }
     }
 
-    /// Takes `base` as the run's base: chains start from its end, baselines
-    /// from its first point at the first level.
-    fn rebase(&mut self, base: DimensionGeom) {
+    /// Takes the dimension at `uid` as the run's base: chains go on from its end, baselines from its first point a
+    /// level further out.
+    fn rebase(&mut self, uid: Uuid, base: DimensionGeom) {
         self.state = State {
-            from: base.b,
-            level: 1.0,
-            base: Some(base),
+            base: Some((uid, base)),
             last: self.state.last,
         };
     }
@@ -170,82 +142,98 @@ impl DimensionChain {
         }
     }
 
-    /// The next dimension with the cursor at `p`, or why there is none.
+    /// The next dimension with the cursor at `p` (the command's computation), or why there is none.
     fn next(&self, p: Vec2) -> Option<DimensionGeom> {
-        let base = self.state.base.as_ref()?;
+        let (_, base) = self.state.base.as_ref()?;
         match self.kind {
-            Kind::Continue => continue_dimension(base, self.state.from, p),
-            Kind::Baseline => {
-                baseline_dimension(base, p, self.state.level, LEVEL_TEXT_HEIGHTS * base.height)
-            }
+            Kind::Continue => continue_dimension(base, base.b, p),
+            Kind::Baseline => baseline_dimension(base, p, 1.0, LEVEL_TEXT_HEIGHTS * base.height),
         }
     }
 
     /// Where the cursor's point is measured from: the ordinary anchor of ortho and polar.
     fn anchor(&self) -> Option<Vec2> {
-        let base = self.state.base.as_ref()?;
+        let (_, base) = self.state.base.as_ref()?;
         Some(match self.kind {
-            Kind::Continue => self.state.from,
+            Kind::Continue => base.b,
             Kind::Baseline => base.a,
         })
     }
 
-    /// A click or a computed point: writes the dimension to it.
-    fn point(&mut self, p: Vec2, cx: &mut Context<'_>) {
+    /// The command's input for the next dimension to `p`: the place it snapped to, if any, on the active layer
+    /// (the base's style and look).
+    fn request(&self, p: Vec2, snap: Option<SnapHit>, cx: &Context<'_>) -> Option<DimensionsCreate> {
+        let (uid, _) = self.state.base.as_ref()?;
+        let to = match crate::dimension::snapped_place(snap, p, cx) {
+            Some(r) => MeasuredPoint::Place {
+                uid: Uuid::from_bytes(r.uid.0).to_string(),
+                place: r.place,
+                path: r.path,
+            },
+            None => MeasuredPoint::At { at: wire(p) },
+        };
+        let base = uid.to_string();
+        let measure = match self.kind {
+            Kind::Continue => DimensionMeasure::Continue { base, to },
+            Kind::Baseline => DimensionMeasure::Baseline { base, to },
+        };
+        Some(DimensionsCreate {
+            measure,
+            at: wire(p),
+            offset: None,
+            layer_id: cx.doc.layers().active().to_owned(),
+            dimension_style: None,
+            height: None,
+            mask: None,
+            look: NewLook {
+                color: cx.draft.color_text(),
+                line_weight: cx.draft.line_weight,
+                attrs: cx.template_attrs(None),
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
+            },
+            expected_revision: None,
+        })
+    }
+
+    /// A click or a computed point (with the snap it stood on): writes the dimension to it.
+    fn point(&mut self, p: Vec2, snap: Option<SnapHit>, cx: &mut Context<'_>) {
         self.sync(cx);
         if self.choosing {
             return;
         }
-        let Some(g) = self.next(p) else {
+        let Some(layout) = self.next(p).and_then(|g| layout_dimension(&g)) else {
             cx.say(
                 Level::Warn,
                 "Bu yerde ölçü oluşmuyor; nokta ölçülen noktayla çakışıyor.",
             );
             return;
         };
-        let Some(layout) = layout_dimension(&g) else {
+        let Some(input) = self.request(p, snap, cx) else {
             return;
         };
-        let look = contract_look(g.look.clone());
-        let geometry = EntityGeometry::Dimension {
-            a: wire(g.a),
-            b: wire(g.b),
-            offset: g.offset,
-            height: g.height,
-            text: None,
-            style: Some(DimensionStyle::Linear),
-            angle: g.angle,
-            c: None,
-            mask: false,
-            za: None,
-            zb: None,
-            refs: None,
-            look: look.clone(),
-        };
-        let operation = match self.kind {
-            Kind::Continue => kentos_contracts::CreateOperation::DimensionChain,
-            Kind::Baseline => kentos_contracts::CreateOperation::DimensionBaseline,
-        };
-        let Some(out) = points::write_objects(vec![geometry], Some(operation), cx) else {
+        let result = dimensions_create::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
             return;
         };
-        let uid = out.created.first().and_then(|u| Uuid::parse_str(u).ok());
+        let Some(uid) = out.created.first().and_then(|u| Uuid::parse_str(u).ok()) else {
+            return;
+        };
+        let look = match cx.doc.get(cx.doc.slot_of(uid).unwrap_or(kentos_domain::Slot(u32::MAX))) {
+            Some(Entity::Dimension(d)) => d.look.clone(),
+            _ => Default::default(),
+        };
         let before = self.state.clone();
-        match self.kind {
-            Kind::Continue => {
-                self.state = State {
-                    base: Some(g),
-                    from: p,
-                    level: 1.0,
-                    last: uid,
-                };
-                cx.memory.last_dimension = uid;
-            }
-            Kind::Baseline => self.state.level += 1.0,
+        if let Some(g) = Self::dimension_of(uid, cx.doc) {
+            self.state = State {
+                base: Some((uid, g)),
+                last: Some(uid),
+            };
         }
-        if let Some(uid) = uid {
-            self.steps.push((uid, before));
+        if self.kind == Kind::Continue {
+            cx.memory.last_dimension = Some(uid);
         }
+        self.steps.push((uid, before));
         let value = cx
             .format()
             .dimension_in(layout.prefix, layout.unit, layout.value, &look);
@@ -254,20 +242,18 @@ impl DimensionChain {
 
     /// The base dimension chosen by a click.
     fn choose(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let picked = edge::pick(p, cx, takes)
-            .and_then(|slot| cx.doc.get(slot))
-            .and_then(|e| match e {
-                Entity::Dimension(d) => straight(d),
-                _ => None,
-            });
-        let Some(base) = picked else {
+        let picked = edge::pick(p, cx, takes).and_then(|slot| {
+            let uid = cx.doc.uid(slot)?;
+            Some((uid, Self::dimension_of(uid, cx.doc)?))
+        });
+        let Some((uid, base)) = picked else {
             cx.say(
                 Level::Warn,
                 "Hizalı ya da doğrusal bir ölçüye tıklayın; açı, yarıçap ve çap ölçüleri zincirlenmez.",
             );
             return;
         };
-        self.rebase(base);
+        self.rebase(uid, base);
         self.choosing = false;
         cx.selection.set_hover(None);
     }
@@ -301,7 +287,7 @@ impl Tool for DimensionChain {
         let prompt = match (self.kind, &self.state.base) {
             (Kind::Baseline, Some(base)) => prompt.note(format!(
                 "kat {}",
-                f.length(LEVEL_TEXT_HEIGHTS * base.height)
+                f.length(LEVEL_TEXT_HEIGHTS * base.1.height)
             )),
             _ => prompt,
         };
@@ -326,11 +312,11 @@ impl Tool for DimensionChain {
         let base = cx
             .memory
             .last_dimension
-            .and_then(|uid| Self::dimension_of(uid, cx));
+            .and_then(|uid| Some((uid, Self::dimension_of(uid, cx.doc)?)));
         self.state.last = cx.memory.last_dimension;
         self.choosing = base.is_none();
-        if let Some(base) = base {
-            self.rebase(base);
+        if let Some((uid, base)) = base {
+            self.rebase(uid, base);
         }
         Flow::Stay
     }
@@ -352,7 +338,7 @@ impl Tool for DimensionChain {
         if self.choosing {
             return false;
         }
-        self.point(p, cx);
+        self.point(p, None, cx);
         true
     }
 
@@ -374,7 +360,7 @@ impl Tool for DimensionChain {
             return self.choose(p, cx);
         }
         let (point, _) = constrain(self.anchor(), p, cx);
-        self.point(point, cx);
+        self.point(point, p.snap, cx);
     }
 
     /// S picks another base; anything else is a point, as everywhere.
@@ -391,7 +377,7 @@ impl Tool for DimensionChain {
         let Some(p) = cx.typed_point(text, self.anchor(), self.hover) else {
             return false;
         };
-        self.point(p, cx);
+        self.point(p, None, cx);
         true
     }
 

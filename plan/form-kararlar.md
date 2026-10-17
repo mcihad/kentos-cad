@@ -6,7 +6,7 @@ dönüşür ve maddesi işaretlenir. Önerilerin hepsi geri alınabilir başlang
 
 ## FORM-DEC-04: Formun sahipliği, taşınması ve yerel kopya
 
-Bugün: form projenin ayarıdır (`.kcad` şema 60 `forms`); bulutta veritabanı projesinin ayarlarıyla gider ve gelir; yayın taslağın
+Bugün: form projenin ayarıdır (`.kcad` şema 72 `forms`); bulutta veritabanı projesinin ayarlarıyla gider ve gelir; yayın taslağın
 gövdesini ve özetini tutar (ADR 0401, 0444 §2). Ayrı bir “dağıtım” nesnesi yok.
 
 | Seçenek | Ne demek | Bedeli |

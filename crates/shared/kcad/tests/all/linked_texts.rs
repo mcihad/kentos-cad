@@ -33,6 +33,7 @@ fn schema(file: &[u8]) -> u8 {
 
 fn text(label_of: Option<EntityId>, label_scale: Option<f64>) -> Entity {
     Entity::Text(TextEntity {
+        annotative: None,
         base: EntityBase {
             look: Default::default(),
             id: 0,

@@ -170,6 +170,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
         version: 1,
         name,
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -202,6 +203,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             variables: Vec::new(),
             address_locators: Vec::new(),
             domains: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

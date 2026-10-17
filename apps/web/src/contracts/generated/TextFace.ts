@@ -21,4 +21,8 @@ font?: DrawingFont, bold?: boolean, italic?: boolean,
  * How far its letters lean, degrees, positive with their tops to the
  * right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
  */
-oblique?: number, };
+oblique?: number, 
+/**
+ * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
+ */
+overrides?: Array<string>, };

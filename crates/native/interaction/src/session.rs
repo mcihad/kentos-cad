@@ -150,6 +150,8 @@ pub const TOOLS: &[&str] = &[
     dimension::ID,
     hatch::ID,
     hatch_selected::ID,
+    // Taramayı düzenle (docs/adr/0329 §4).
+    crate::hatch_edit::ID,
     // Blocks (docs/adr/0144).
     block_define::ID,
     block_insert::ID,
@@ -186,6 +188,11 @@ pub const TOOLS: &[&str] = &[
     cloud_query::ID,
     dimension_chain::CONTINUE_ID,
     dimension_chain::BASELINE_ID,
+    // docs/adr/0322: Merkez işareti, Eksen çizgisi and Kot.
+    crate::dimension_marks::CENTER_MARK_ID,
+    crate::dimension_marks::CENTER_LINE_ID,
+    crate::dimension_marks::ELEVATION_ID,
+    crate::annotative::PLACE_ID,
     // docs/adr/0147 §7: Hızlı ölçü.
     quick_dimension::ID,
     // Phase 3: the array along a path (Çit, İki yana and Kaynağı sil are options of existing tools).
@@ -535,6 +542,16 @@ impl Session {
             dimension_chain::BASELINE_ID => {
                 Box::new(crate::dimension_chain::DimensionChain::baseline())
             }
+            crate::dimension_marks::CENTER_MARK_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::center_mark())
+            }
+            crate::dimension_marks::CENTER_LINE_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::center_line())
+            }
+            crate::dimension_marks::ELEVATION_ID => {
+                Box::new(crate::dimension_marks::DimensionMarks::elevation())
+            }
+            crate::annotative::PLACE_ID => Box::new(crate::annotative::AnnotativePlace::new()),
             quick_dimension::ID => Box::new(crate::quick_dimension::QuickDimension::tool()),
             array_path::ID => Box::new(crate::array_path::ArrayPath::tool()),
             station_offset::ID => Box::new(station_offset::StationOffset::new()),
@@ -564,6 +581,7 @@ impl Session {
                 Box::new(crate::dimension_reassociate::DimensionReassociate::new())
             }
             crate::array_edit::ID => Box::new(crate::array_edit::ArrayEdit::new()),
+            crate::hatch_edit::ID => Box::new(crate::hatch_edit::HatchEditor::new()),
             crate::curve_edit::ID => Box::new(crate::curve_edit::CurveEditTool::new()),
             crate::audit::ID => Box::new(crate::audit::Audit::new()),
             crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),
@@ -1443,7 +1461,7 @@ impl Session {
     /// The paragraph editor's answer for the running tool (Çok satırlı yazı, docs/adr/0182 §4).
     pub fn paragraph_typed(
         &mut self,
-        typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
         cx: &mut Context<'_>,
     ) {
         if let Some(tool) = self.tool.as_mut() {

@@ -22,6 +22,8 @@ fn code(kind: AuditKind) -> AuditCode {
     match kind {
         AuditKind::BrokenLink => AuditCode::BrokenLink,
         AuditKind::BrokenHatch => AuditCode::BrokenHatch,
+        AuditKind::MissingCutout => AuditCode::MissingCutout,
+        AuditKind::HatchTextCycle => AuditCode::HatchTextCycle,
         AuditKind::BrokenDimension => AuditCode::BrokenDimension,
         AuditKind::MissingTextStyle => AuditCode::MissingTextStyle,
         AuditKind::MissingDimensionStyle => AuditCode::MissingDimensionStyle,

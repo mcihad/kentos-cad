@@ -101,11 +101,17 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         // Its control points (docs/adr/0259 §2): AutoCAD's control vertex grips.
         Shape::Nurbs { ctrl, .. } => ctrl.clone(),
         // Its vertices, then the middle of each segment, as a polyline's (docs/adr/0146 §4).
-        Shape::Leader { pts, .. } => {
+        // Then its other arms' vertices (docs/adr/0326 §1).
+        Shape::Leader { pts, arms, .. } => {
             let mut out = pts.clone();
             out.extend(pts.windows(2).map(|s| segment_mid(s[0], s[1], 0.0)));
+            out.extend(arms.iter().flatten().flat_map(|a| a.pts.iter().copied()));
             out
         }
+        // An exact boundary's outer corners, not its arcs' and curves' chords (docs/adr/0328 §1).
+        Shape::Hatch {
+            boundary: Some(b), ..
+        } if !b.is_empty() && b[0].pts.len() > 1 => b[0].pts.clone(),
         Shape::Hatch { ring, .. } => ring.clone(),
         Shape::Dimension { .. } => dimension_grips(e).into_iter().map(|(p, _)| p).collect(),
     }
@@ -136,6 +142,9 @@ fn dimension_grips(e: &Shape) -> Vec<(Vec2, DimensionGrip)> {
     };
     match style.as_deref() {
         Some("ordinate") => vec![(*b, B)],
+        // docs/adr/0322: a centre mark's and an axis's points follow their objects; their grip is how far they reach.
+        Some("centerMark" | "centerLine") => vec![(l.handle, Line)],
+        Some("elevation") => vec![(*a, A), (*b, B)],
         Some("arcLength") => vec![(*a, A), (*b, B), (l.handle, Line)],
         Some("jogged") => {
             let mut out = vec![(*b, B), (l.handle, Line)];
@@ -275,6 +284,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
             ..
@@ -289,6 +299,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width: *box_width,
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            flow: flow.clone(),
             face: face.clone(),
             // Its curve is in its frame: it goes with its point (docs/adr/0196 §1).
             path: path.clone(),
@@ -320,6 +331,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         }
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -328,6 +341,35 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             arrow_size,
             mask,
         } => {
+            // An arm's vertex (after the first arm's vertices and mid grips).
+            let first = pts.len() + pts.len().saturating_sub(1);
+            if index >= first {
+                let mut arms = arms.clone().unwrap_or_default();
+                let mut k = index - first;
+                let arm = arms.iter_mut().find(|a| {
+                    if k < a.pts.len() {
+                        true
+                    } else {
+                        k -= a.pts.len();
+                        false
+                    }
+                })?;
+                arm.pts[k] = p;
+                return Some(Entity {
+                    shape: Shape::Leader {
+                        arms: Some(arms),
+                        blocks: blocks.clone(),
+                        pts: pts.clone(),
+                        text: text.clone(),
+                        height: *height,
+                        rotation: *rotation,
+                        arrow: arrow.clone(),
+                        arrow_size: *arrow_size,
+                        mask: *mask,
+                    },
+                    rest: e.rest.clone(),
+                });
+            }
             let pts = match mid_grip_segment(&e.shape, index) {
                 Some(seg) => {
                     let mut out = pts[..seg + 1].to_vec();
@@ -339,6 +381,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 None => return None,
             };
             Shape::Leader {
+                arms: arms.clone(),
+                blocks: blocks.clone(),
                 pts,
                 text: text.clone(),
                 height: *height,
@@ -562,12 +606,33 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             fit_tolerance: None,
             tangents: None,
         },
+        // A grip on an exact boundary moves its corner (docs/adr/0328 §1); the document draws the ring again.
+        Shape::Hatch {
+            pattern,
+            assoc,
+            boundary: Some(b),
+            ..
+        } if !b.is_empty() && b[0].pts.len() > 1 => {
+            let moved = crate::geom::hatch_boundary::moved_point(b, index, p)?;
+            // The ring drawn from it at once: the preview shows the edit.
+            let (ring, drawn_holes) = crate::geom::hatch_boundary::rings(&moved);
+            Shape::Hatch {
+                ring,
+                holes: (!drawn_holes.is_empty()).then_some(drawn_holes),
+                pattern: pattern.clone(),
+                assoc: assoc.clone(),
+                boundary: Some(moved),
+            }
+        }
+        // A grip moves a drawn ring's vertex: the exact boundary no longer holds.
         Shape::Hatch {
             ring,
             holes,
             pattern,
             assoc,
+            ..
         } => Shape::Hatch {
+            boundary: None,
             ring: replace_at(ring, index, p),
             holes: holes.clone(),
             pattern: pattern.clone(),

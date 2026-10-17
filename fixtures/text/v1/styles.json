@@ -1154,6 +1154,50 @@
    }
   },
   {
+   "name": "Geçersiz kılınan yazı tipi eski stilinkiyle aynı olsa da kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "overpass",
+    "bold": false,
+    "height": 4.0,
+    "italic": true,
+    "oblique": -10.0,
+    "widthFactor": 0.9
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true,
+    "overrides": [
+     "font",
+     "height"
+    ]
+   },
+   "expect": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "overrides": [
+     "font",
+     "height"
+    ],
+    "oblique": -10.0,
+    "italic": true,
+    "widthFactor": 0.9
+   }
+  },
+  {
    "name": "Eski stilin yüksekliği yoktu: yükseklik kalır",
    "op": "followText",
    "old": {
@@ -1598,6 +1642,73 @@
     "extOffset": 0.4,
     "extBeyond": 0.7,
     "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "Geçersiz kılınan ok ve basamak stilinkiyle aynı olsa da kalır",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 2.5,
+    "arrow": "dot",
+    "arrowSize": 2.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo",
+    "overrides": [
+     "arrow",
+     "decimals",
+     "height"
+    ]
+   },
+   "expect": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "decimals": 1,
+    "overrides": [
+     "arrow",
+     "decimals",
+     "height"
+    ],
+    "extOffset": 0.4,
+    "extBeyond": 0.7,
     "unit": "mm",
     "suffix": " mm",
     "font": "arimo"

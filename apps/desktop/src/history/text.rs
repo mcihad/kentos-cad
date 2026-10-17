@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 108] = [
+pub(crate) const TITLES: [(&str, &str); 121] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -32,9 +32,19 @@ pub(crate) const TITLES: [(&str, &str); 108] = [
     ("cad.drawing.audit", "Denetle"),
     ("cad.entities.offset", "Nesneleri ötele"),
     ("cad.entities.order", "Çizim sırasını değiştir"),
+    ("cad.annotations.scales", "Açıklamanın ölçekleri"),
     ("cad.nurbs.create", "NURBS eğrisi oluştur"),
     ("cad.dimensions.reassociate", "Ölçüyü yeniden bağla"),
     ("cad.dimensions.create", "Ölçü ekle"),
+    ("cad.dimensions.edit", "Ölçüyü düzenle"),
+    ("cad.dimensions.query", "Ölçüleri oku"),
+    ("cad.fonts.report", "Yazı tiplerini raporla"),
+    ("cad.hatches.edit", "Taramaları düzenle"),
+    ("cad.leaders.edit", "Kılavuzları düzenle"),
+    ("cad.tables.edit", "Tabloları düzenle"),
+    ("cad.fields.edit", "Yazının alanlarını düzenle"),
+    ("cad.texts.edit", "Yazıları düzenle"),
+    ("cad.texts.check", "Yazıları denetle"),
     ("cad.entities.trim", "Nesneleri buda"),
     ("cad.entities.extend", "Nesneleri uzat"),
     ("cad.entities.fillet", "Köşe yuvarla"),
@@ -54,6 +64,8 @@ pub(crate) const TITLES: [(&str, &str); 108] = [
     ("file.import.block", "Dosyadan blok al"),
     ("cad.blocks.replace", "Bloğu başkasıyla değiştir"),
     ("cad.blocks.query", "Blokları say, bul ve çizelgele"),
+    ("cad.blocks.proxy", "Bloğun vekil görünüşü"),
+    ("cad.blocks.freeze", "Sabit bloğa çevir"),
     ("cad.blocks.parameters", "Blok parametreleri"),
     ("cad.blocks.insert", "Blok ekle"),
     ("cad.layers.service", "Servis katmanı"),
@@ -78,6 +90,7 @@ pub(crate) const TITLES: [(&str, &str); 108] = [
     ("cad.layers.find", "Katmanları bul"),
     ("cad.layers.translate", "Katmanları çevir"),
     ("cad.linetypes.edit", "Çizgi tipleri"),
+    ("cad.hatchpatterns.edit", "Tarama desenleri"),
     ("cad.library.edit", "Stil kitaplığı"),
     ("cad.styles.impact", "Stil değişikliğinin etkisi"),
     ("cad.standards.check", "Standardı denetle"),

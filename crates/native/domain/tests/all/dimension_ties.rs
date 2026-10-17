@@ -59,6 +59,7 @@ fn dimension(doc: &Document, wall: Slot) -> Entity {
             a: Some(tie(doc, wall, vertex(0))),
             b: Some(tie(doc, wall, vertex(1))),
             c: None,
+            rule: None,
         }));
     }
     d
@@ -190,6 +191,7 @@ fn door_drawing() -> (Document, Slot, Slot) {
                 t: 0.5,
             })),
             c: None,
+            rule: None,
         }));
     }
     let d = doc.add(d).expect("slot");

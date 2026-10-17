@@ -102,17 +102,24 @@ fn a_new_symbol_is_made_saved_and_shown_in_the_manager() {
     assert_eq!(layers(&app)[2]["width"], json!(0.25));
     de(&mut app, Event::Name("Bahçe alanı".into()));
     de(&mut app, Event::Path("Sembollerim / Alanlar".into()));
+    // Kaydet writes the symbol, closes the window and says where it went.
     de(&mut app, Event::Save);
-    assert_eq!(said(&app), "“Bahçe alanı” kaydedildi.");
-    assert!(!designer(&app).dirty());
-    let Target::Library {
-        id: Some(id),
-        source: Source::User,
-    } = designer(&app).target.clone()
-    else {
-        panic!("saved into Kitaplığım");
-    };
-    let (item, _) = app.styles.library.get(&id).expect("in the library");
+    assert!(app.styles.designer.is_none(), "Kaydet closes the designer");
+    assert_eq!(app.dialog, Some(Dialog::StyleManager));
+    let notice = app
+        .toasts
+        .iter()
+        .last()
+        .map(|(_, t, _)| t.title().to_owned());
+    assert_eq!(notice.as_deref(), Some("“Bahçe alanı” kaydedildi"));
+    let id = app
+        .styles
+        .manager
+        .as_ref()
+        .and_then(|m| m.selected.clone())
+        .expect("the manager shows the saved symbol");
+    let (item, source) = app.styles.library.get(&id).expect("in the library");
+    assert_eq!(source, Source::User);
     assert_eq!(item.name(), "Bahçe alanı");
     assert_eq!(item.path(), ["Sembollerim", "Alanlar"]);
     assert_eq!(
@@ -133,9 +140,11 @@ fn a_new_symbol_is_made_saved_and_shown_in_the_manager() {
             vec!["Sembollerim".to_owned(), "Alanlar".to_owned()]
         )
     );
-    // A second Kaydet updates the same item.
+    // Opened again, a second Kaydet updates the same item.
+    sm(&mut app, ManagerEvent::Edit(id.clone()));
     de(&mut app, Event::Add("patternFill", None));
     de(&mut app, Event::Save);
+    assert!(app.styles.designer.is_none());
     let (item, _) = app.styles.library.get(&id).expect("still there");
     assert_eq!(
         item.symbol().expect("a symbol")["layers"]
@@ -143,7 +152,6 @@ fn a_new_symbol_is_made_saved_and_shown_in_the_manager() {
             .map(Vec::len),
         Some(4)
     );
-    de(&mut app, Event::Close);
     assert_eq!(app.dialog, Some(Dialog::StyleManager));
 }
 
@@ -578,4 +586,102 @@ fn ctrl_z_and_ctrl_y_undo_and_redo_in_the_designer() {
         None,
     );
     assert!(designer(&app).asking);
+}
+
+/// An ƒ value's expression: Ekle ▾ puts fields, variables and functions where the text ends; ε opens
+/// the İfade oluşturucu on it and Tamam writes the text back with the fallback kept.
+#[test]
+fn an_expression_takes_fields_and_the_builder_s_text() {
+    let (mut app, _dir) = with_manager("ifade");
+    sm(&mut app, ManagerEvent::NewSymbol("line"));
+    let at = designer(&app).selected;
+    typed(
+        &mut app,
+        "width",
+        "",
+        Some(set("width", json!({ "expr": "", "fallback": 0.5 }))),
+    );
+    let insert = |app: &mut App, text: &str| {
+        de(
+            app,
+            Event::ExprInsert {
+                at,
+                key: "width".into(),
+                text: text.into(),
+            },
+        )
+    };
+    insert(&mut app, "Uzunluk");
+    insert(&mut app, "*");
+    insert(&mut app, "max(");
+    assert_eq!(
+        layers(&app)[0]["width"],
+        json!({ "expr": "Uzunluk * max(", "fallback": 0.5 })
+    );
+
+    // The layer the symbol is for is the drawing's active layer: its fields are offered.
+    assert_eq!(
+        app.designer_layer().as_deref(),
+        Some(app.document.as_ref().unwrap().model.layers().active())
+    );
+    de(
+        &mut app,
+        Event::OpenBuilder {
+            at,
+            key: "width".into(),
+        },
+    );
+    let b = app.builder.as_mut().expect("the builder is open");
+    assert_eq!(b.source, "Uzunluk * max(");
+    assert!(b.context.starts_with("Çizgi sembolü tasarımcısı"));
+    b.source = "[Uzunluk] / 100".into();
+    b.check.error = None;
+    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
+    assert!(app.builder.is_none());
+    assert_eq!(
+        layers(&app)[0]["width"],
+        json!({ "expr": "[Uzunluk] / 100", "fallback": 0.5 })
+    );
+    // One undo step back to what Ekle ▾ made.
+    de(&mut app, Event::Undo);
+    assert_eq!(layers(&app)[0]["width"]["expr"], json!("Uzunluk * max("));
+}
+
+/// A generator step's number takes its expression the same way, by `step.i.field`.
+#[test]
+fn a_step_s_expression_is_written_in_its_step() {
+    let layer = json!({
+        "type": "geometryGenerator",
+        "steps": [
+            { "kind": "translate", "dx": 1 },
+            { "kind": "circle", "radius": { "expr": "a", "fallback": 2 } }
+        ]
+    });
+    assert_eq!(
+        super::expr_text_at(&layer, "step.1.radius").as_deref(),
+        Some("a")
+    );
+    assert_eq!(super::expr_text_at(&layer, "step.0.dx"), None);
+    assert!(super::expr_patch(&layer, "step.0.dx", "b").is_none());
+    assert!(super::expr_patch(&layer, "step.9.radius", "b").is_none());
+    let patch = super::expr_patch(&layer, "step.1.radius", "[Yarıçap]").expect("a patch");
+    let next = kentos_native_style::designer::apply_patch(&layer, &patch);
+    assert_eq!(
+        next["steps"][1]["radius"],
+        json!({ "expr": "[Yarıçap]", "fallback": 2 })
+    );
+    assert_eq!(next["steps"][0], layer["steps"][0]);
+}
+
+/// An ƒ expression that does not read says why under its line; an empty one draws the fallback.
+#[test]
+fn an_expression_s_problem_is_said_where_it_is() {
+    use crate::style::fields::expression_problem;
+    let fields = [("Yön".to_owned(), 3)];
+    assert_eq!(expression_problem("", &fields), None);
+    assert_eq!(expression_problem("[Yön] + 90", &fields), None);
+    assert_eq!(expression_problem("$alan * 2", &fields), None);
+    let said = expression_problem("[Yön] +", &fields).expect("a missing value");
+    assert!(said.contains("karakterde"), "{said}");
+    assert!(expression_problem("yuvarla(", &fields).is_some());
 }

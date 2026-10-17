@@ -173,11 +173,14 @@ DASH_CASES = [
 
 
 def paints(p):
+    """A pattern's families as paints. Its `origin` (docs/adr/0331 §2), a world point, anchors every family there
+    instead of at the world's origin: the family's own origin goes on from it."""
     kind = p["type"]
+    at = p.get("origin")
     if kind == "lines" and p["spacing"] > 0:
-        return [paint_user(p["angle"], p["spacing"])]
+        return [paint_user(p["angle"], p["spacing"], at)]
     if kind == "cross" and p["spacing"] > 0:
-        return [paint_user(p["angle"], p["spacing"]), paint_user(p["angle"] + 90.0, p["spacing"])]
+        return [paint_user(p["angle"], p["spacing"], at), paint_user(p["angle"] + 90.0, p["spacing"], at)]
     if kind != "pattern":
         return []
     scale = p.get("scale") or 0.0
@@ -194,6 +197,8 @@ def paints(p):
         c, s = math.cos(r), math.sin(r)
         ox, oy = l["origin"][0] * scale, l["origin"][1] * scale
         x, y = ox * math.cos(turn) - oy * math.sin(turn), ox * math.sin(turn) + oy * math.cos(turn)
+        if at is not None:
+            x, y = x + at["x"], y + at["y"]
         offset = -s * x + c * y
         d = runs([d * scale for d in l.get("dashes", [])])
         if d[0] == "never":
@@ -214,8 +219,12 @@ def paints(p):
     return out
 
 
-def paint_user(angle, spacing):
-    return {"angle": angle, "spacing": spacing, "offset": 0.0, "stagger": 0.0, "dashOffset": 0.0}
+def paint_user(angle, spacing, at=None):
+    offset = 0.0
+    if at is not None:
+        r = math.radians(angle)
+        offset = -math.sin(r) * at["x"] + math.cos(r) * at["y"]
+    return {"angle": angle, "spacing": spacing, "offset": offset, "stagger": 0.0, "dashOffset": 0.0}
 
 
 def pattern_of(name, angle=0.0, scale=1.0):
@@ -237,6 +246,11 @@ PAINT_CASES = [
     ("noktalar", pattern_of("DOTS", 0.0, 1.0)),
     ("ISO06: sekiz kesik", pattern_of("ISO06W100", 90.0, 0.2)),
     ("üçgen ızgara", pattern_of("NET3", 0.0, 1.0)),
+    ("çizgili, başlangıç noktasıyla", {"type": "lines", "angle": 30.0, "spacing": 1.5, "origin": {"x": 487003.25, "y": 4420001.5}}),
+    ("çapraz, başlangıç noktasıyla", {"type": "cross", "angle": 0.0, "spacing": 2.0, "origin": {"x": 0.5, "y": -0.75}}),
+    ("ANSI31, başlangıç noktasıyla", dict(pattern_of("ANSI31", 0.0, 0.5), origin={"x": 487001.0, "y": 4420002.0})),
+    ("ANSI36, dönük ve başlangıçlı: kesiklerin evresi de kayar", dict(pattern_of("ANSI36", 20.0, 1.0), origin={"x": 3.5, "y": 1.25})),
+    ("tuğla, başlangıç noktasıyla", dict(pattern_of("BRICK", 0.0, 0.25), origin={"x": -2.0, "y": 7.5})),
     (
         "aralıksız aile ve hep boşluk aile çizilmez; eksi aralık",
         {"type": "pattern", "angle": 0.0, "spacing": 1.0, "name": "Ö", "scale": 1.0, "lines": [fam(0.0, (0.0, 0.0), (1.0, 0.0)), fam(0.0, (0.0, 0.0), (0.0, 1.0), (-1.0,)), fam(30.0, (1.0, 2.0), (0.5, -2.0), (1.0, -1.0))]},

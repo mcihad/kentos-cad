@@ -188,6 +188,11 @@ pub fn book_pdf(
         library: &library,
         origin,
     };
+    // The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
+    // object draws otherwise there.
+    let annotative = doc.has_annotative();
+    let mut scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>> =
+        std::collections::HashMap::new();
     let mut maps: Vec<PdfMap> = Vec::new();
     let mut notes = Vec::new();
     let mut texts_left = false;
@@ -210,8 +215,30 @@ pub fn book_pdf(
                     kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
                 ) || e.base().label.is_some()
             });
+            let at = m.view.scale.max(1);
+            if annotative && !scaled.contains_key(&at) {
+                let copy = doc.at_scale(f64::from(at)).map(|copy| {
+                    let mut spatial = Spatial::new();
+                    spatial.reload(&copy);
+                    (copy, spatial)
+                });
+                scaled.insert(at, copy);
+            }
+            let own;
+            let src = match scaled.get(&at) {
+                Some(Some((copy, spatial))) => {
+                    own = MapSource {
+                        doc: copy,
+                        store: spatial.store(),
+                        library: &library,
+                        origin,
+                    };
+                    &own
+                }
+                _ => &src,
+            };
             match vector_content(
-                &src,
+                src,
                 &m.layers,
                 &m.layer_overrides,
                 m.view.scale,

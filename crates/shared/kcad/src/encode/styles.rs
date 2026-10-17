@@ -131,6 +131,13 @@ impl<'d> Encoder<'d> {
                     f.push((key, Val::Name(super::names::line_type(t))));
                 }
             }
+            // Its options (docs/adr/0321), as their JSON.
+            if let Some(o) = &s.options {
+                f.push((
+                    "options",
+                    Val::Json(serde_json::to_value(o).unwrap_or_default()),
+                ));
+            }
             self.at(Seg::Index(i), |e| e.style_map(f))?;
         }
         self.close();

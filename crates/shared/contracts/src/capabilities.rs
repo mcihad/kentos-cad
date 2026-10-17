@@ -491,14 +491,26 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.copy",
-        refusals: &[&["no_entities", "invalid_uid", "not_finite", "entity_not_found"]],
+        refusals: &[&[
+            "no_entities",
+            "invalid_uid",
+            "not_finite",
+            "entity_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
     Entry {
         id: "cad.entities.paste",
         refusals: &[
-            &["no_entities", "invalid_clip", "not_finite", "empty_name", "not_a_layer", "layer_locked"],
+            &[
+                "no_entities",
+                "invalid_clip",
+                "not_finite",
+                "empty_name",
+                "not_a_layer",
+                "layer_locked",
+            ],
             REVISION,
         ],
         warnings: &["units_differ", "layer_hidden"],
@@ -506,14 +518,29 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.explode",
-        refusals: &[OBJECTS, &["invalid_density", "not_explodable", "slots_exhausted"], REVISION],
+        refusals: &[
+            OBJECTS,
+            &["invalid_density", "not_explodable", "slots_exhausted"],
+            REVISION,
+        ],
         warnings: &["layer_locked", "not_explodable"],
         targets: || {
             vec![target(
                 None,
                 &[
-                    "polyline", "polygon", "circle", "arc", "ellipse", "spline", "nurbs", "dimension", "hatch",
-                    "leader", "table", "insert", "point",
+                    "polyline",
+                    "polygon",
+                    "circle",
+                    "arc",
+                    "ellipse",
+                    "spline",
+                    "nurbs",
+                    "dimension",
+                    "hatch",
+                    "leader",
+                    "table",
+                    "insert",
+                    "point",
                 ],
                 &[],
                 Some("not_explodable"),
@@ -550,7 +577,9 @@ const ENTRIES: &[Entry] = &[
                 &["polyline", "nurbs"],
                 &[],
                 Some("not_a_curve"),
-                Some("Çoklu çizginin düzenlemeleri ile NURBS eğrisininkiler ayrı; öbürünün düzenlemesi edit_not_applicable."),
+                Some(
+                    "Çoklu çizginin düzenlemeleri ile NURBS eğrisininkiler ayrı; öbürünün düzenlemesi edit_not_applicable.",
+                ),
             )]
         },
     },
@@ -621,6 +650,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &[
                 "no_objects",
+                "invalid_transparency",
                 "not_finite",
                 "too_few_corners",
                 "too_few_points",
@@ -782,6 +812,31 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.blocks.proxy",
+        refusals: &[
+            &["no_entities", "invalid_uid"],
+            &["entity_not_found", "not_insert"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.blocks.freeze",
+        refusals: &[
+            &["no_entities", "invalid_uid", "empty_name"],
+            REVISION,
+            &[
+                "entity_not_found",
+                "not_insert",
+                "not_dynamic",
+                "duplicate_block",
+                "layer_locked",
+            ],
+        ],
+        warnings: &["layer_locked"],
+        targets: none,
+    },
+    Entry {
         id: "cad.blocks.replace",
         refusals: &[
             &["no_block", "same_block"],
@@ -866,6 +921,25 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &["unknown_layer"],
         targets: none,
+    },
+    Entry {
+        id: "cad.annotations.scales",
+        refusals: &[
+            OBJECTS,
+            &[
+                "no_scales",
+                "no_scale",
+                "invalid_scale",
+                "no_value",
+                "not_annotative",
+                "own_scale",
+                "scale_not_taken",
+                "invalid_annotative",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_locked", "not_annotative"],
+        targets: || vec![target(None, &["text", "dimension", "leader"], &[], Some("not_annotative"), None)],
     },
     Entry {
         id: "cad.entities.order",
@@ -956,7 +1030,12 @@ const ENTRIES: &[Entry] = &[
         id: "cad.entities.trim",
         refusals: &[
             OBJECTS,
-            &["too_few_points", "not_finite", "not_trimmable", "trim_failed"],
+            &[
+                "too_few_points",
+                "not_finite",
+                "not_trimmable",
+                "trim_failed",
+            ],
             REVISION,
         ],
         warnings: &["trim_failed", "layer_locked"],
@@ -1130,7 +1209,9 @@ const ENTRIES: &[Entry] = &[
                 REVERSE_KINDS,
                 &[],
                 Some("not_reversible"),
-                Some("Yay, daire ve elips hep saat yönünün tersine gider; yönsüz türler gibi atlanır."),
+                Some(
+                    "Yay, daire ve elips hep saat yönünün tersine gider; yönsüz türler gibi atlanır.",
+                ),
             )]
         },
     },
@@ -1220,12 +1301,25 @@ const ENTRIES: &[Entry] = &[
                 "not_enclosed",
                 "not_closed",
                 "pattern_too_dense",
+                "invalid_region",
+                "invalid_gap",
+                "not_annotative",
+                "invalid_transparency",
+                "order_limit",
             ],
             LAYER,
             LOOK,
             REVISION,
         ],
-        warnings: &["not_closed", "layer_hidden"],
+        warnings: &[
+            "not_closed",
+            "layer_hidden",
+            "gaps_closed",
+            "islands_not_nested",
+            "order_other_layer",
+            "cutout_gone",
+            "hatch_text_cycle",
+        ],
         targets: || {
             vec![target(
                 Some("objects"),
@@ -1262,6 +1356,141 @@ const ENTRIES: &[Entry] = &[
         },
     },
     Entry {
+        id: "cad.dimensions.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_finite",
+                "invalid_offset",
+                "empty_text",
+                "invalid_style",
+                "not_a_dimension",
+                "not_straight",
+                "not_parallel",
+            ],
+            REVISION,
+        ],
+        warnings: &["no_crossing"],
+        targets: || {
+            vec![target(
+                None,
+                &["dimension"],
+                &[],
+                Some("not_a_dimension"),
+                None,
+            )]
+        },
+    },
+    Entry {
+        id: "cad.fields.edit",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "layer_locked"],
+            &["not_a_text", "invalid_text_field", "field_not_found"],
+            REVISION,
+        ],
+        warnings: &["field_broken"],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.texts.edit",
+        refusals: &[
+            OBJECTS,
+            &["not_a_text", "empty_text", "too_few_objects", "not_splittable", "invalid_number"],
+            REVISION,
+        ],
+        warnings: &["text_left_blank", "layer_locked", "field_broken"],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.texts.check",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_text"]],
+        warnings: &[],
+        targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.hatches.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_hatch",
+                "layer_not_found",
+                "not_a_layer",
+                "not_closed",
+                "not_enclosed",
+                "island_not_found",
+                "invalid_region",
+                "not_finite",
+                "invalid_gap",
+                "unknown_pattern",
+                "invalid_scale",
+                "not_annotative",
+                "pattern_too_dense",
+                "invalid_color",
+            ],
+            REVISION,
+        ],
+        warnings: &["curves_approximated", "gaps_closed", "islands_not_nested", "layer_hidden"],
+        targets: || vec![target(None, &["hatch"], &[], Some("not_a_hatch"), None)],
+    },
+    Entry {
+        id: "cad.leaders.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_leader",
+                "too_few_objects",
+                "arm_not_found",
+                "invalid_leader",
+                "not_an_insert",
+                "style_not_found",
+                "no_such_place",
+                "not_finite",
+                "empty_text",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["leader"], &[], Some("not_a_leader"), None)],
+    },
+    Entry {
+        id: "cad.tables.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_table",
+                "cell_out_of_range",
+                "invalid_table",
+                "not_finite",
+                "no_source",
+                "source_missing",
+                "source_unreadable",
+            ],
+            REVISION,
+        ],
+        warnings: &["source_missing", "source_unreadable", "source_unlinked"],
+        targets: || vec![target(None, &["table"], &[], Some("not_a_table"), None)],
+    },
+    Entry {
+        id: "cad.fonts.report",
+        refusals: &[&["empty_name", "invalid_name"]],
+        warnings: &["font_substituted"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.dimensions.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_dimension"]],
+        warnings: &[],
+        targets: || {
+            vec![target(
+                None,
+                &["dimension"],
+                &[],
+                Some("not_a_dimension"),
+                None,
+            )]
+        },
+    },
+    Entry {
         id: "cad.dimensions.create",
         refusals: &[
             &[
@@ -1273,6 +1502,7 @@ const ENTRIES: &[Entry] = &[
                 "no_such_place",
                 "piece_gone",
                 "not_measurable",
+                "not_straight",
                 "missing_elevation",
                 "unknown_style",
                 "no_dimension",
@@ -1535,6 +1765,21 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.hatchpatterns.edit",
+        refusals: &[
+            &[
+                "no_pat",
+                "no_definition",
+                "invalid_hatch_pattern",
+                "empty_name",
+                "hatch_pattern_not_found",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.library.edit",
         refusals: &[
             &[
@@ -1620,6 +1865,8 @@ const ENTRIES: &[Entry] = &[
                 "duplicate_style",
                 "empty_name",
                 "invalid_style",
+                "no_library",
+                "invalid_library",
             ],
             REVISION,
         ],
@@ -2060,21 +2307,27 @@ const ENTRIES: &[Entry] = &[
                     TANGENT_KINDS,
                     &[],
                     Some("not_tangent_kind"),
-                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                    Some(
+                        "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır.",
+                    ),
                 ),
                 target(
                     Some("circleTangents"),
                     TANGENT_KINDS,
                     &[],
                     Some("not_tangent_kind"),
-                    Some("Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır."),
+                    Some(
+                        "Doğru ve çoklu çizginin düz kenarı bütün doğrusuyla, yay ve yaylı kenar bütün çemberiyle sayılır.",
+                    ),
                 ),
                 target(
                     Some("arcContinue"),
                     &["line", "polyline", "arc"],
                     &[],
                     Some("not_an_end"),
-                    Some("Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur."),
+                    Some(
+                        "Devam çizginin, çoklu çizginin ya da yayın bitişinden yönüyle, başlangıcından tersine sürer; kapalı çoklu çizginin başlangıcı yoktur.",
+                    ),
                 ),
             ]
         },
@@ -2098,7 +2351,15 @@ const ENTRIES: &[Entry] = &[
             "too_few_points",
         ]],
         warnings: &["neighbour_locked", "neighbour_invalid"],
-        targets: || vec![target(None, &["line", "polyline", "polygon"], &[], None, None)],
+        targets: || {
+            vec![target(
+                None,
+                &["line", "polyline", "polygon"],
+                &[],
+                None,
+                None,
+            )]
+        },
     },
     Entry {
         id: "cad.entities.pick",
@@ -2165,11 +2426,7 @@ const ENTRIES: &[Entry] = &[
             &["invalid_file_path"],
             &["file_not_found", "import_unreadable"],
             REVISION,
-            &[
-                "nothing_to_import",
-                "unknown_block",
-                "block_refused",
-            ],
+            &["nothing_to_import", "unknown_block", "block_refused"],
         ],
         warnings: &["objects_left_out"],
         targets: none,

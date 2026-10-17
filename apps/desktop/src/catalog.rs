@@ -572,6 +572,8 @@ pub const PORTED: &[&str] = &[
     "standards.apply",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).
     "lineTypes.manage",
+    // docs/adr/0331 §1: Tarama desenleri (hatch_patterns_window.rs).
+    "hatchPatterns.manage",
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     "tool.layerMatch",
     "tool.copyToLayer",

@@ -13,6 +13,7 @@ use ts_rs::TS;
 use crate::annotation::{DimensionStyleDef, TextStyleDef};
 use crate::document::{Bounds, DrawingFont, DrawingUnit};
 use crate::entity::{BlockDefinition, Entity, Vec2};
+use crate::identity::EntityId;
 use crate::layer::LineType;
 
 /// Version of this boundary; the WASM module reports the one it was built with.
@@ -165,9 +166,34 @@ use crate::layer::LineType;
 /// 68 (docs/adr/0318): dynamic blocks: `.kcad` document schema 59, a definition's `dynamic` (its parameters and
 ///    actions as their JSON) and an insert's `parameters`; in the typed columns the insert's option bit 3 and the
 ///    values' JSON text. The web's copy stays 53.
-/// 69 (docs/adr/0410): a record without a geometry: `.kcad` document schema 60's `record` kind; in the typed
+/// 69 (docs/adr/0320 §1): a dimension's references' `rule` (`curve`, `edges`): `.kcad` document schema 60; in the
+///    typed columns the references' mask bits 3 and 4. The web's copy stays 53.
+/// 70 (docs/adr/0321): a dimension's and a dimension style's `options` and a dimension's `textShift` and `breaks`:
+///    `.kcad` document schema 61; in the typed columns the dimension's bit 29 and their JSON text. The web's copy
+///    stays 53.
+/// 71 (docs/adr/0322): a dimension's kinds `centerMark`, `centerLine` and `elevation` and its references' rule `pair`:
+///    `.kcad` document schema 62; in the typed columns the kinds 10–12 and both of the mask's rule bits. The web's copy
+///    stays 53.
+/// 72 (docs/adr/0322 §5): a text's and a dimension's `overrides`: `.kcad` document schema 63; in the typed columns
+///    the text's option 14 and its JSON text, the dimension's in its more JSON (bit 29). The web's copy stays 53.
+/// 73 (docs/adr/0323): a text's, a dimension's and a leader's `annotative`: `.kcad` document schema 64; in the typed
+///    columns the text's option 15, the dimension's in its more JSON (bit 29), the leader's bit 2, each its JSON text.
+///    The web's copy stays 53.
+/// 74 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script:
+///    `.kcad` document schema 65; in the typed columns the text's option 16 (its JSON text) and a run's flags 8 and 16
+///    together. The web's copy stays 53.
+/// 75–77 (docs/adr/0325–0327): a text's `fields`, a leader's arms and blocks, a table's cells: `.kcad` document
+///    schemas 66–68, each its JSON text in the typed columns. The web's copy stays 53.
+/// 78 (docs/adr/0328): a hatch's exact `boundary` and a face's tie (`bounds`, no `outer`): `.kcad` document schema
+///    69; in the typed columns the hatch's option bit 6 and one JSON text, a face's tie with an empty outer id. The
+///    web's copy stays 53.
+/// 79 (docs/adr/0329 §3): a face's tie's `gap`: `.kcad` document schema 70; in the typed columns inside the hatch's
+///    option 6 JSON. The web's copy stays 53.
+/// 80 (docs/adr/0331): a pattern's `origin` and a hatch's `annotative`: `.kcad` document schema 71; in the typed
+///    columns inside the hatch's option 6 JSON. The web's copy stays 53.
+/// 81 (docs/adr/0410): a record without a geometry: `.kcad` document schema 72's `record` kind; in the typed
 ///    columns kind 20, with no fields of its own. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 69;
+pub const FORMATS_VERSION: u32 = 81;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -1168,6 +1194,73 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_scale: Option<f64>,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
+    #[serde(default, skip_serializing_if = "DxfAnnotations::is_default")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<DxfAnnotations>", optional))]
+    pub annotations: DxfAnnotations,
+    /// What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
+    /// block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReportItem>>", optional))]
+    pub notes: Vec<ReportItem>,
+    /// The objects' persistent ids by object id (docs/adr/0333 §3): an associative hatch is written with its boundary
+    /// objects' handles (71 1, 97 and 330s) and they with its reactor, when they are written too. Absent: hatches
+    /// are written follows nothing (71 0).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<u32, EntityId>>", optional))]
+    pub uids: BTreeMap<u32, EntityId>,
+}
+
+/// What a dimension or a leader becomes in DXF (docs/adr/0327 §6).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DxfForm {
+    /// Its own DXF entity (DIMENSION; LEADER and MTEXT): another program edits it as one.
+    #[default]
+    Native,
+    /// Its look as an anonymous block's lines, arrowheads and texts, placed by an INSERT: every program shows it as
+    /// KentOS draws it, none edits it as a dimension or a leader.
+    Block,
+}
+
+/// How tables, dimensions and leaders are written in DXF (docs/adr/0327 §6). A table is always its look as a block
+/// (DXF's ACAD_TABLE is not written); KentOS's data, when written, gives each back to KentOS whole.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DxfAnnotations {
+    #[serde(default)]
+    pub dimensions: DxfForm,
+    #[serde(default)]
+    pub leaders: DxfForm,
+    /// KentOS's data on them (the table's cells and styles, the dimension's and the leader's own fields).
+    #[serde(default = "yes")]
+    pub metadata: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+impl Default for DxfAnnotations {
+    fn default() -> Self {
+        DxfAnnotations {
+            dimensions: DxfForm::Native,
+            leaders: DxfForm::Native,
+            metadata: true,
+        }
+    }
+}
+
+impl DxfAnnotations {
+    pub fn is_default(&self) -> bool {
+        *self == DxfAnnotations::default()
+    }
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

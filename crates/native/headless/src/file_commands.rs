@@ -128,7 +128,8 @@ fn dxf(
             },
         ));
     }
-    let dxf_input = crate::export::dxf_input(doc, &grouped);
+    let mut dxf_input = crate::export::dxf_input(doc, &grouped);
+    dxf_input.annotations = input.annotations.unwrap_or_default();
     let layers = u32::try_from(dxf_input.layers.len()).unwrap_or(u32::MAX);
     let (bytes, report) = kentos_formats::dxf::write(&dxf_input);
     let output = DxfExported {

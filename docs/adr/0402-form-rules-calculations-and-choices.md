@@ -56,7 +56,7 @@ ADR 0401'den sonra bizde eksik olanlar, bu ADR'nin konusu:
 
 ## Karar
 
-### 1. Sözleşmenin ekleri (`kentos.forms/1 core`, `.kcad` şema 60'ın içinde)
+### 1. Sözleşmenin ekleri (`kentos.forms/1 core`, `.kcad` şema 72'nin içinde)
 
 Şema 60 bu dalda henüz `main`'e girmedi; ekler aynı şemadadır. Bütün ekler isteğe bağlıdır. Yalnız `true` ya da dolu
 yazılır, eski form aynı baytlarla okunur ve yazılır.

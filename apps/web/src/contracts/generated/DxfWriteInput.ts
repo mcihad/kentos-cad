@@ -2,9 +2,12 @@
 import type { BlockDefinition } from "./BlockDefinition";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { DxfAnnotations } from "./DxfAnnotations";
 import type { DxfWriteLayer } from "./DxfWriteLayer";
 import type { Entity } from "./Entity";
+import type { EntityId } from "./EntityId";
 import type { LineTypeDef } from "./LineTypeDef";
+import type { ReportItem } from "./ReportItem";
 import type { TextStyleDef } from "./TextStyleDef";
 
 /**
@@ -54,4 +57,19 @@ lineTypes?: Array<LineTypeDef>,
 /**
  * The project's line type scale ($LTSCALE); absent: 1.
  */
-lineTypeScale?: number, };
+lineTypeScale?: number, 
+/**
+ * How tables, dimensions and leaders are written (docs/adr/0327 §6); absent: native entities with KentOS's data.
+ */
+annotations?: DxfAnnotations, 
+/**
+ * What the caller made of the drawing for DXF, said in the report beside the writer's own notes: a dynamic
+ * block's inserts written as the plain blocks they draw (docs/adr/0319 §5).
+ */
+notes?: Array<ReportItem>, 
+/**
+ * The objects' persistent ids by object id (docs/adr/0333 §3): an associative hatch is written with its boundary
+ * objects' handles (71 1, 97 and 330s) and they with its reactor, when they are written too. Absent: hatches
+ * are written follows nothing (71 0).
+ */
+uids?: { [key in number]: EntityId }, };

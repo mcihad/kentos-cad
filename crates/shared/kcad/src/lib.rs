@@ -439,15 +439,55 @@ pub const SCHEMA_WITH_BLOCK_CARDS: u32 = 58;
 /// `parameters`, written only when the drawing has one; older readers refuse the file instead of drawing every
 /// insert of a dynamic block at its defaults.
 pub const SCHEMA_WITH_DYNAMIC_BLOCKS: u32 = 59;
-/// Schema 60 (docs/adr/0401 §2, §3): the settings' `forms` (the project's forms, a contract value read
+/// Schema 60 (docs/adr/0320 §1): a dimension's references' `rule` (`curve`, `edges`): how its points no place names
+/// follow, written only when a dimension has one; older readers refuse the file instead of leaving a radius's centre
+/// or an angle's vertex behind.
+pub const SCHEMA_WITH_DIMENSION_RULES: u32 = 60;
+/// Schema 61 (docs/adr/0321): a dimension's and a dimension style's `options` (fit, increment, zeros, feet and inches,
+/// alternate unit, tolerance, break size) and a dimension's `textShift` and `breaks`, written only when one has them;
+/// older readers refuse the file instead of writing the value without its tolerance or drawing a broken line whole.
+pub const SCHEMA_WITH_DIMENSION_OPTIONS: u32 = 61;
+/// Schema 62 (docs/adr/0322): a dimension's kinds `centerMark`, `centerLine` and `elevation` and its references' rule
+/// `pair`, written only when a dimension has one; older readers refuse the file instead of losing the marks.
+pub const SCHEMA_WITH_DIMENSION_MARKS: u32 = 62;
+/// Schema 63 (docs/adr/0322 §5): a text's and a dimension's `overrides`, the fields set apart from their style by
+/// hand, written only when one has them; older readers refuse the file instead of letting a style change take them.
+pub const SCHEMA_WITH_OVERRIDES: u32 = 63;
+/// Schema 64 (docs/adr/0323): a text's, a dimension's and a leader's `annotative` (its scales and what each sets
+/// apart), written only when one has them; older readers refuse the file instead of drawing every scale at one height.
+pub const SCHEMA_WITH_ANNOTATIVE: u32 = 64;
+/// Schema 65 (docs/adr/0324): a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script
+/// (a stacked fraction), written only when a text has one; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_PARAGRAPH_LAYOUT: u32 = 65;
+/// Schema 66 (docs/adr/0325): a text's `fields` (ranges of its letters bound to a source), written only when a text
+/// has one; older readers refuse the file instead of losing the bindings.
+pub const SCHEMA_WITH_TEXT_FIELDS: u32 = 66;
+/// Schema 67 (docs/adr/0326): a leader's `arms`, `tip`, `blocks` and `leaderStyle`, and the settings'
+/// `leaderStyles`, written only when one has them; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_MULTILEADER: u32 = 67;
+/// Schema 68 (docs/adr/0327): a table's `styles`, `formulas`, `fields`, a linked file's `link` and a block
+/// schedule's `schedule`.
+pub const SCHEMA_WITH_TABLE_CELLS: u32 = 68;
+/// Schema 69 (docs/adr/0328): a hatch's exact `boundary` (loops of lines, arcs, ellipses' arcs and NURBS curves)
+/// and a tie's `bounds` (the line work a face follows, `outer` then absent), written only when a hatch has one;
+/// older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_HATCH_BOUNDARIES: u32 = 69;
+/// Schema 70 (docs/adr/0329 §3): a face's tie's `gap` (the gaps its line work was closed across), written only when a
+/// tie has one; older readers refuse the file instead of losing the hatch's way of following.
+pub const SCHEMA_WITH_HATCH_GAPS: u32 = 70;
+/// Schema 71 (docs/adr/0331): the settings' `hatchPatterns` (a project's own patterns), a pattern's `origin` and a
+/// hatch's `annotative`, written only when the drawing has one; older readers refuse the file instead of losing
+/// them or drawing an annotative hatch's pattern at one scale.
+pub const SCHEMA_WITH_HATCH_EXTRAS: u32 = 71;
+/// Schema 72 (docs/adr/0401 §2, §3): the settings' `forms` (the project's forms, a contract value read
 /// whole and checked by `forms_problem`) and a layer field's stable `id`, written only when the drawing
 /// has one; older readers refuse the file instead of losing a form or a binding.
-pub const SCHEMA_WITH_FORMS: u32 = 60;
+pub const SCHEMA_WITH_FORMS: u32 = 72;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 59] = [
+pub const SCHEMAS: [u32; 71] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -506,6 +546,18 @@ pub const SCHEMAS: [u32; 59] = [
     SCHEMA_WITH_BLOCK_EXTRAS,
     SCHEMA_WITH_BLOCK_CARDS,
     SCHEMA_WITH_DYNAMIC_BLOCKS,
+    SCHEMA_WITH_DIMENSION_RULES,
+    SCHEMA_WITH_DIMENSION_OPTIONS,
+    SCHEMA_WITH_DIMENSION_MARKS,
+    SCHEMA_WITH_OVERRIDES,
+    SCHEMA_WITH_ANNOTATIVE,
+    SCHEMA_WITH_PARAGRAPH_LAYOUT,
+    SCHEMA_WITH_TEXT_FIELDS,
+    SCHEMA_WITH_MULTILEADER,
+    SCHEMA_WITH_TABLE_CELLS,
+    SCHEMA_WITH_HATCH_BOUNDARIES,
+    SCHEMA_WITH_HATCH_GAPS,
+    SCHEMA_WITH_HATCH_EXTRAS,
     SCHEMA_WITH_FORMS,
 ];
 

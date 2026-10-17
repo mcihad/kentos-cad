@@ -57,6 +57,9 @@ pub struct SheetMaps {
     scene: RefCell<Option<MapScene>>,
     /// The styled layers at the scales the maps were last drawn at (a few kept).
     styled: RefCell<Vec<Rc<StyledAt>>>,
+    /// The drawing as the maps at a few scales draw it, its annotative objects as each scale says
+    /// (docs/adr/0323 §2); none at a scale where that is the drawing itself.
+    scaled: RefCell<Vec<Rc<Scaled>>>,
     /// Counts the scenes built: the maps are painted again when it changes.
     built: Cell<u64>,
 }
@@ -73,6 +76,14 @@ struct StyledAt {
 
 /// Styled layers kept for this many scales.
 const STYLED_KEPT: usize = 4;
+
+/// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
+/// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
+struct Scaled {
+    /// The drawing (its session and state) and the scale.
+    key: (u64, u64, u32),
+    view: Option<(Document, Spatial)>,
+}
 
 struct MapScene {
     session: u64,
@@ -100,6 +111,7 @@ impl SheetMaps {
             return;
         }
         self.styled.borrow_mut().clear();
+        self.scaled.borrow_mut().clear();
         let paper = palette(Canvas::Paper);
         let origin = scene::scene_origin(doc);
         let fixed = scene::build_fixed(doc, &paper, origin);
@@ -115,6 +127,38 @@ impl SheetMaps {
 }
 
 impl SheetMaps {
+    /// The drawing as the maps at `scale` draw it (docs/adr/0323 §2), from the copies kept; none when
+    /// that is the drawing itself (no annotative object draws otherwise there).
+    fn scaled(&self, drawing: &Document, scale: u32) -> Option<Rc<Scaled>> {
+        let key = (drawing.session, drawing.model.generation(), scale);
+        let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
+        let at = kept.unwrap_or_else(|| {
+            let view = drawing
+                .model
+                .has_annotative()
+                .then(|| drawing.model.at_scale(f64::from(scale.max(1))))
+                .flatten()
+                .map(|model| {
+                    let mut spatial = Spatial::new();
+                    spatial.reload(&model);
+                    let copy = Document {
+                        model,
+                        path: None,
+                        source: crate::document::Source::Local,
+                        session: drawing.session,
+                        legacy: false,
+                    };
+                    (copy, spatial)
+                });
+            let at = Rc::new(Scaled { key, view });
+            let mut kept = self.scaled.borrow_mut();
+            kept.insert(0, Rc::clone(&at));
+            kept.truncate(STYLED_KEPT);
+            at
+        });
+        at.view.is_some().then_some(at)
+    }
+
     /// The shown layers through the style engine at `scale` on the paper's palette, from the
     /// ones kept when nothing they depend on changed. Construction lines are cut to the
     /// drawing's box and a margin (the maps cut them again to their frames).
@@ -404,8 +448,10 @@ impl MapPainter for SheetPainter<'_> {
         if !self.paint_styled(r, frame) && !self.maps.paint_scene(r, frame) {
             return false;
         }
-        if let Some(doc) = self.doc {
-            self.labels(doc, r, frame);
+        let mut keep = None;
+        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        if let Some(doc) = drawing.map(|d| &d.model).or(self.doc) {
+            self.labels(doc, spatial, r, frame);
         }
         true
     }
@@ -425,11 +471,14 @@ impl MapPainter for SheetPainter<'_> {
     /// The map as the drawing's vectors and text (sheet_pdf.rs): the PDF's map content; none
     /// where a layer draws something with no vector form (the map then goes as a picture).
     fn vector(&self, r: &MapRequest<'_>) -> Option<kentos_sheet::pdf::MapContent> {
-        let (drawing, doc) = (self.drawing?, self.doc?);
+        let mut keep = None;
+        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let drawing = drawing?;
+        let doc = &drawing.model;
         r.view.center?;
         let extent = r.extent?;
         let texts = self
-            .label_layout(r)
+            .label_layout(doc, spatial, r)
             .map(|(camera, spots, fence)| {
                 crate::labels::texts_in_map(
                     doc,
@@ -444,7 +493,7 @@ impl MapPainter for SheetPainter<'_> {
             .unwrap_or_default();
         let src = kentos_plot::maps::MapSource {
             doc: &drawing.model,
-            store: self.spatial.store(),
+            store: spatial.store(),
             library: self.library,
             origin: kentos_render_wgpu::scene::scene_origin(drawing),
         };
@@ -483,14 +532,29 @@ pub(crate) fn painter_of<'a>(
     }
 }
 
+/// What a map draws from: the drawing and its geometry store, or their copies at the map's scale.
+type Source<'s> = (Option<&'s Document>, &'s Spatial);
+
 impl SheetPainter<'_> {
+    /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
+    /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
+    fn source<'s>(&'s self, scale: u32, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
+        *keep = self.drawing.and_then(|d| self.maps.scaled(d, scale.max(1)));
+        match keep.as_ref().and_then(|s| s.view.as_ref()) {
+            Some((d, sp)) => (Some(d), sp),
+            None => (self.drawing, self.spatial),
+        }
+    }
+
     /// The map's drawing as its PDF draws it (the styled layers at its scale, what reaches its
     /// box); where a shown layer has something no vector writes (a pattern or picture fill, a
     /// picture or text marker, a soft-edged line), the whole map as the styled shaders draw it,
     /// on the CPU ([`Self::paint_picture`]): what its PDF then embeds. False where it cannot (no
     /// drawing, no place).
     fn paint_styled(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
-        let (Some(drawing), Some(extent)) = (self.drawing, r.extent) else {
+        let mut keep = None;
+        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let (Some(drawing), Some(extent)) = (drawing, r.extent) else {
             return false;
         };
         if r.view.center.is_none() {
@@ -499,7 +563,7 @@ impl SheetPainter<'_> {
         let scale = r.view.scale.max(1);
         let at = self.maps.styled_at(
             drawing,
-            self.spatial.store(),
+            spatial.store(),
             self.library,
             scale,
             (r.layers, r.overrides),
@@ -598,12 +662,14 @@ impl SheetPainter<'_> {
     /// The layers (and what of them) that keep a map from going to a PDF as vectors, as the web's
     /// export window says it (“Yapı (desen dolgusu)”); none when it goes as vectors.
     fn why_no_vectors(&self, r: &MapRequest<'_>) -> Option<String> {
-        let drawing = self.drawing?;
+        let mut keep = None;
+        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let drawing = drawing?;
         let extent = r.extent?;
         let scale = r.view.scale.max(1);
         let at = self.maps.styled_at(
             drawing,
-            self.spatial.store(),
+            spatial.store(),
             self.library,
             scale,
             (r.layers, r.overrides),
@@ -643,13 +709,14 @@ impl SheetPainter<'_> {
     /// middle, the picture's pixels to the frame's); the spots of the layers the map shows.
     fn label_layout(
         &self,
+        doc: &kentos_domain::Document,
+        spatial: &Spatial,
         r: &MapRequest<'_>,
     ) -> Option<(
         Camera,
         Vec<kentos_interaction::LabelSpot>,
         crate::labels::Fence,
     )> {
-        let doc = self.doc?;
         let c = r.view.center?;
         let turn = kentos_sheet_ui::paint::rad(r.view.rotation) as f32;
         let scale = f64::from(r.view.scale.max(1));
@@ -668,7 +735,7 @@ impl SheetPainter<'_> {
             twist: 0.0,
         };
         let view = camera.visible_bounds();
-        let mut spots = self.spatial.labels(
+        let mut spots = spatial.labels(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
@@ -708,8 +775,14 @@ impl SheetPainter<'_> {
 
     /// The drawing's text over the map, as [`label_layout`](Self::label_layout) lays it out; a
     /// text crossing the frame's edge left out.
-    fn labels(&self, doc: &kentos_domain::Document, r: &MapRequest<'_>, frame: &mut Frame) {
-        let Some((camera, spots, fence)) = self.label_layout(r) else {
+    fn labels(
+        &self,
+        doc: &kentos_domain::Document,
+        spatial: &Spatial,
+        r: &MapRequest<'_>,
+        frame: &mut Frame,
+    ) {
+        let Some((camera, spots, fence)) = self.label_layout(doc, spatial, r) else {
             return;
         };
         if spots.is_empty() {

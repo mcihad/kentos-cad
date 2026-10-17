@@ -18,7 +18,7 @@
 
 ### 1. Çok değerli alan (`multiple`)
 
-Değer listesi olan metin alanının ayarı (`LayerField.multiple`, yalnız `true`; `.kcad` şema 60). Değer, seçilen kodların
+Değer listesi olan metin alanının ayarı (`LayerField.multiple`, yalnız `true`; `.kcad` şema 72). Değer, seçilen kodların
 listedeki sırasıyla `; ` ile birleşmiş metnidir (`budama; sulama`): `;` ile ayrılan her parça kırpılır, etiket (Türkçe
 katlanarak) ya da kod olarak tanınır, yinelenen düşer, listenin sırasıyla yazılır; listede olmayan parça reddedilir
 (`check_value`'nun `choice`'u), hiç kod kalmazsa değer boştur (zorunlu alanda `required`). Kodlarında ya da etiketlerinde

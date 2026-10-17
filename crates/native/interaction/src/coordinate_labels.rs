@@ -186,6 +186,8 @@ fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
         }
         for t in &l.texts {
             out.push(EntityGeometry::Text {
+                layout: None,
+                annotative: None,
                 p: wire(t.p),
                 text: t.text.clone(),
                 height: look.options.height,

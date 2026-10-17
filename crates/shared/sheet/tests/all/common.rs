@@ -472,6 +472,8 @@ pub fn map_vector(m: &MapPrim) -> Option<kentos_sheet::pdf::MapContent> {
             italic,
             anchor: TextAnchor::CenterMiddle,
             halo: Some("#ffffff".into()),
+            width_factor: None,
+            lean: None,
         };
     let layer = |id: &str, name: &str| MapLayerContent {
         id: id.into(),

@@ -174,6 +174,9 @@ pub struct MtextContent {
     /// A width switch (`\W`) before its first letter, outside any group: the
     /// text's width factor (KentOS writes it so); none for 1.
     pub width_factor: Option<f64>,
+    /// Its first paragraph format's indents and tab stops (`\p`, docs/adr/0324 §4), in its height; none when it
+    /// has none. A later paragraph's other format is dropped (KentOS's layout is the whole text's).
+    pub layout: Option<kentos_contracts::ParagraphLayout>,
     /// The formatting it dropped, as the report names it, in this order:
     /// height, fraction, font, over- and strike-through line, width, letter
     /// spacing, slant, paragraph format.
@@ -188,6 +191,8 @@ struct Format {
     underline: bool,
     script: Option<TextScript>,
     color: Option<String>,
+    /// A stacked fraction's number, so that two fractions side by side stay two runs.
+    stack: u32,
 }
 
 impl Format {
@@ -210,6 +215,41 @@ const DROPPED: [&str; 8] = [
     "eğiklik açısı",
     "paragraf biçimi",
 ];
+
+/// A paragraph format's (`\p`) indents and tab stops (docs/adr/0324 §4): `i` the first line's indent, `l` the
+/// others', `t` the tab stops (a list to the end), each in the text's height; `x` (the bodies AutoCAD writes),
+/// a right indent (`r`) and an alignment (`q…`) KentOS has not. Also whether it said more than KentOS keeps.
+fn paragraph_format(body: &str) -> (kentos_contracts::ParagraphLayout, bool) {
+    let mut layout = kentos_contracts::ParagraphLayout::default();
+    let mut more = false;
+    // `x` opens the body AutoCAD writes (`\pxi-3,l3;`, `\pxqc;`): a prefix, not an item.
+    let body = body.trim();
+    let body = body.strip_prefix('x').unwrap_or(body);
+    let mut items = body.split(',').peekable();
+    while let Some(item) = items.next() {
+        let item = item.trim();
+        let number = |s: &str| s.trim().parse::<f64>().ok().filter(|v| v.is_finite());
+        match item.chars().next() {
+            None => {}
+            Some('i') => layout.indent = number(&item[1..]).filter(|v| *v != 0.0),
+            Some('l') => layout.left_indent = number(&item[1..]).filter(|v| *v != 0.0),
+            Some('t') => {
+                // The tab stops run to the body's end; AutoCAD writes `t` and its stops, separated by commas.
+                let mut stops: Vec<f64> = number(&item[1..]).into_iter().collect();
+                while let Some(next) = items.peek() {
+                    let Some(v) = number(next) else { break };
+                    stops.push(v);
+                    items.next();
+                }
+                layout.tabs = stops.into_iter().filter(|v| *v > 0.0).collect();
+            }
+            Some('r') => more |= number(&item[1..]).is_some_and(|v| v != 0.0),
+            Some('q') => more |= !matches!(item, "ql"),
+            Some(_) => more = true,
+        }
+    }
+    (layout, more)
+}
 
 /// An MTEXT colour switch's value: `\C` an ACI index (0 and 256, by block
 /// and by layer, the text's own), `\c` a true colour written blue, green,
@@ -242,6 +282,8 @@ pub fn mtext_content(s: &str) -> MtextContent {
     let mut dropped = [false; DROPPED.len()];
     let mut faces: Vec<String> = Vec::new();
     let mut width_factor = None;
+    let mut layout: Option<kentos_contracts::ParagraphLayout> = None;
+    let mut stacks = 0u32;
     let body_end = |from: usize| {
         chars[from.min(chars.len())..]
             .iter()
@@ -289,6 +331,20 @@ pub fn mtext_content(s: &str) -> MtextContent {
                             Some(at) => (&body[..at], &body[at + 1..], body[at..].chars().next()),
                             None => (body.as_str(), "", None),
                         };
+                        // Over and under, both said: a stacked fraction (docs/adr/0324 §1), its mark kept.
+                        if let Some(m) = mark
+                            && !upper.trim().is_empty()
+                            && !lower.trim().is_empty()
+                        {
+                            stacks += 1;
+                            let mut f = cur.clone();
+                            f.script = Some(TextScript::Stack);
+                            f.stack = stacks;
+                            let words = format!("{}{m}{}", upper.trim(), lower.trim());
+                            letters.extend(words.chars().map(|l| (l, f.clone())));
+                            i = after;
+                            continue;
+                        }
                         let raised = mark == Some('^')
                             && lower.trim().is_empty()
                             && !upper.trim().is_empty();
@@ -355,7 +411,20 @@ pub fn mtext_content(s: &str) -> MtextContent {
                         }
                         i = after;
                     }
-                    'H' | 'h' | 'W' | 'w' | 'T' | 't' | 'Q' | 'q' | 'p' => {
+                    // The first paragraph format is the text's layout; a later one that differs is dropped.
+                    'p' => {
+                        let (body, after) = value();
+                        let (read, more) = paragraph_format(&body);
+                        let plain = read == kentos_contracts::ParagraphLayout::default();
+                        match &layout {
+                            None if !plain => layout = Some(read),
+                            None => {}
+                            Some(had) => dropped[7] |= *had != read && !plain,
+                        }
+                        dropped[7] |= more;
+                        i = after;
+                    }
+                    'H' | 'h' | 'W' | 'w' | 'T' | 't' | 'Q' | 'q' => {
                         let (body, after) = value();
                         let at = match k {
                             'H' | 'h' => 0,
@@ -460,7 +529,8 @@ pub fn mtext_content(s: &str) -> MtextContent {
                     && r.italic == f.italic
                     && r.underline == f.underline
                     && r.script == f.script
-                    && r.color == f.color =>
+                    && r.color == f.color
+                    && (f.stack == 0 || kept[r.start as usize].1.stack == f.stack) =>
             {
                 r.end = i + 1;
             }
@@ -479,6 +549,7 @@ pub fn mtext_content(s: &str) -> MtextContent {
         text: kept.into_iter().map(|(c, _)| c).collect(),
         runs,
         width_factor,
+        layout,
         dropped: DROPPED
             .iter()
             .zip(dropped)

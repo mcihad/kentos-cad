@@ -1,0 +1,2814 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.dimensions.edit",
+  "commandVersion": 1,
+  "title": "Ölçüyü düzenle",
+  "note": "Written by scripts/fixtures/dimension_edit_cases.py from docs/adr/0321; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçü düzenleme",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "dimension",
+        "id": 11,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        },
+        "offset": 2,
+        "height": 1.25
+      },
+      {
+        "kind": "dimension",
+        "id": 12,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        },
+        "offset": 3.5,
+        "height": 1.25
+      },
+      {
+        "kind": "dimension",
+        "id": 13,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "offset": -6,
+        "height": 1.25
+      },
+      {
+        "kind": "dimension",
+        "id": 14,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4419999
+        },
+        "b": {
+          "x": 487008,
+          "y": 4419999
+        },
+        "offset": -2.5,
+        "height": 1.25,
+        "style": "linear",
+        "angle": 0
+      },
+      {
+        "kind": "dimension",
+        "id": 15,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487033,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420003
+        },
+        "offset": 2,
+        "height": 1.25,
+        "style": "angular",
+        "c": {
+          "x": 487030,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "dimension",
+        "id": 16,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487020,
+          "y": 4420005
+        },
+        "offset": 1,
+        "height": 1.25
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487005,
+          "y": 4419995
+        },
+        "b": {
+          "x": 487005,
+          "y": 4420010
+        }
+      },
+      {
+        "kind": "dimension",
+        "id": 18,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420020
+        },
+        "b": {
+          "x": 487006,
+          "y": 4420020
+        },
+        "offset": 1.5,
+        "height": 1.25,
+        "text": "<> tip",
+        "textShift": {
+          "along": 1,
+          "across": 0.5
+        },
+        "breaks": [
+          {
+            "line": "first",
+            "t": 0.5
+          }
+        ],
+        "options": {
+          "zeros": "trailing"
+        }
+      },
+      {
+        "kind": "dimension",
+        "id": 19,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420030
+        },
+        "b": {
+          "x": 487004,
+          "y": 4420030
+        },
+        "offset": 1,
+        "height": 1.25
+      },
+      {
+        "kind": "dimension",
+        "id": 20,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487005,
+          "y": 4420040
+        },
+        "offset": 1,
+        "height": 1.25,
+        "text": "5.00"
+      },
+      {
+        "kind": "dimension",
+        "id": 21,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420050
+        },
+        "b": {
+          "x": 487002.5,
+          "y": 4420050
+        },
+        "offset": 1,
+        "height": 1.25,
+        "unit": "mm",
+        "decimals": 0,
+        "options": {
+          "tolerance": {
+            "kind": "symmetric",
+            "upper": 0.001
+          }
+        }
+      },
+      {
+        "kind": "text",
+        "id": 22,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487005,
+          "y": 4420002
+        },
+        "text": "Not",
+        "height": 1,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Aralık 1 m: üstteki iki ölçü, ters çizilmişi de, temelden 1 ve 2 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -4,
+                "height": 1.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü aralığı",
+          "expect": {
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -6,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık verilmemiş: temel değer yüksekliğinin üç katı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 5.75,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -9.5,
+                "height": 1.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü aralığı",
+          "expect": {
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -6,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık 0: ölçüler temelin çizgisine dizilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "spacing": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -2,
+                "height": 1.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü aralığı",
+          "expect": {
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              },
+              "13": {
+                "kind": "dimension",
+                "id": 13,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -6,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık iki yana: alttaki doğrusal ölçü alta, üstteki üste",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:14",
+                "$uidOf:12"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:14",
+                "$uidOf:12"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "14": {
+                "kind": "dimension",
+                "id": 14,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4419999
+                },
+                "b": {
+                  "x": 487008,
+                  "y": 4419999
+                },
+                "offset": 2,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0
+              },
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü aralığı",
+          "expect": {
+            "entities": {
+              "14": {
+                "kind": "dimension",
+                "id": 14,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4419999
+                },
+                "b": {
+                  "x": 487008,
+                  "y": 4419999
+                },
+                "offset": -2.5,
+                "height": 1.25,
+                "style": "linear",
+                "angle": 0
+              },
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Temel listede de: kendisi oynamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:12"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3,
+                "height": 1.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü aralığı",
+          "expect": {
+            "entities": {
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık: plan, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "dimensions": [
+                {
+                  "kind": "dimension",
+                  "id": 12,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  "offset": 3,
+                  "height": 1.25
+                },
+                {
+                  "kind": "dimension",
+                  "id": 13,
+                  "layerId": "olcu",
+                  "attrs": {},
+                  "a": {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  "b": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "offset": -4,
+                  "height": 1.25
+                }
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Aralık zaten öyle: hiçbir ölçü değişmez, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12"
+              ],
+              "spacing": 1.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {},
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık: ölçü temele paralel değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12",
+                "$uidOf:16"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_parallel",
+              "message": "Ölçü temel ölçüye paralel değil; aralık yalnız paralel ölçülerde verilir.",
+              "path": "edit.uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık: açı ölçüsü düz değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:15"
+              ],
+              "spacing": 1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_straight",
+              "message": "Ölçü hizalı ya da doğrusal değil: aralık ve kırma yalnız hizalı ve doğrusal ölçülerde yapılır.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık eksi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12"
+              ],
+              "spacing": -1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_offset",
+              "message": "Aralık -1; 0 ya da büyük olmalı (0 ölçüleri temelin çizgisine dizer).",
+              "path": "edit.spacing"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "space",
+              "base": "$uidOf:11",
+              "uids": [
+                "$uidOf:12"
+              ],
+              "spacing": 1
+            }
+          },
+          "nonFinite": {
+            "edit.spacing": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Aralık sonlu bir sayı değil (NaN ya da sonsuz). Aralığı metre olarak sonlu bir sayıyla verin.",
+              "path": "edit.spacing"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kır: verilen nesnenin kestiği yerde, ölçü çizgisinin ortasında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "break",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "objects": [
+                "$uidOf:17"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25,
+                "breaks": [
+                  {
+                    "line": "dimension",
+                    "t": 0.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçüyü kır",
+          "expect": {
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kır: nesne verilmemiş, görünen bütün nesneler; ölçülen noktaya değen duvar kırmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "break",
+              "uids": [
+                "$uidOf:11"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25,
+                "breaks": [
+                  {
+                    "line": "dimension",
+                    "t": 0.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçüyü kır",
+          "expect": {
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kır: kesen yok, uyarıyla; eski kırması kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "break",
+              "uids": [
+                "$uidOf:18"
+              ],
+              "objects": [
+                "$uidOf:17"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [
+              {
+                "code": "no_crossing",
+                "message": "Ölçünün çizgilerini kesen nesne yok; kırma yapılmadı.",
+                "path": "edit.uids[0]"
+              }
+            ],
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçüyü kır",
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kır: açı ölçüsü düz değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "break",
+              "uids": [
+                "$uidOf:15"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_straight",
+              "message": "Ölçü hizalı ya da doğrusal değil: aralık ve kırma yalnız hizalı ve doğrusal ölçülerde yapılır.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kırmayı kaldır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "$uidOf:18",
+                "$uidOf:11"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kırmayı kaldır",
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazıyı taşı: kendi doğrultusunda 1, dik 0,5",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "moveText",
+              "uid": "$uidOf:11",
+              "along": 1,
+              "across": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25,
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü yazısını taşı",
+          "expect": {
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazıyı yerine döndür: 0 ve 0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "moveText",
+              "uid": "$uidOf:18",
+              "along": 0,
+              "across": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü yazısını taşı",
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazının kayması sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "moveText",
+              "uid": "$uidOf:11",
+              "along": 1,
+              "across": 0
+            }
+          },
+          "nonFinite": {
+            "edit.along": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kayma sonlu bir sayı değil (NaN ya da sonsuz). Kaymayı metre olarak sonlu bir sayıyla verin.",
+              "path": "edit.along"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değeri yaz: <> ölçülen değerdir, iki ölçüye",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "text",
+              "uids": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "text": "<> (tipik)"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25,
+                "text": "<> (tipik)"
+              },
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25,
+                "text": "<> (tipik)"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü değerini yaz",
+          "expect": {
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              },
+              "12": {
+                "kind": "dimension",
+                "id": 12,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 3.5,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçülen değere dön: null",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "text",
+              "uids": [
+                "$uidOf:18"
+              ],
+              "text": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü değerini yaz",
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazılan değer boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "text",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "text": "  "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_text",
+              "message": "Yazılan değer boş; ölçülen değere dönmek için null verin.",
+              "path": "edit.text"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçenekler: sapma toleransı ve mm alternatifi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "options",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "options": {
+                "tolerance": {
+                  "kind": "deviation",
+                  "upper": 0.02,
+                  "lower": 0.01
+                },
+                "alt": {
+                  "unit": "mm",
+                  "decimals": 0
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25,
+                "options": {
+                  "tolerance": {
+                    "kind": "deviation",
+                    "upper": 0.02,
+                    "lower": 0.01
+                  },
+                  "alt": {
+                    "unit": "mm",
+                    "decimals": 0
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü seçenekleri",
+          "expect": {
+            "entities": {
+              "11": {
+                "kind": "dimension",
+                "id": 11,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": 2,
+                "height": 1.25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçenekleri kaldır: null",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "options",
+              "uids": [
+                "$uidOf:18",
+                "$uidOf:12"
+              ],
+              "options": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "warnings": [],
+            "output": {
+              "changed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ölçü seçenekleri",
+          "expect": {
+            "entities": {
+              "18": {
+                "kind": "dimension",
+                "id": 18,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4420020
+                },
+                "b": {
+                  "x": 487006,
+                  "y": 4420020
+                },
+                "offset": 1.5,
+                "height": 1.25,
+                "text": "<> tip",
+                "textShift": {
+                  "along": 1,
+                  "across": 0.5
+                },
+                "breaks": [
+                  {
+                    "line": "first",
+                    "t": 0.5
+                  }
+                ],
+                "options": {
+                  "zeros": "trailing"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçenekler kurala uymuyor: artış sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "options",
+              "uids": [
+                "$uidOf:11"
+              ],
+              "options": {
+                "round": 0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_style",
+              "message": "Ölçünün yuvarlama artışı sıfırdan büyük, en çok 1000000 m olmalı; 0 verildi.",
+              "path": "edit.options"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "$uidOf:18"
+              ]
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçmişte kaldıysa conflict, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "$uidOf:18"
+              ]
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "moveText",
+              "uid": "$uidOf:11",
+              "along": 1,
+              "across": 0
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "Ölçü-01"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“Ölçü-01” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Düzenlenecek ölçü yok. En az bir ölçünün kimliğini verin.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü çizimde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ölçü değil: çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "$uidOf:10"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_dimension",
+              "message": "Verilen nesne bir ölçü değil; bu düzenleme yalnız ölçüleri değiştirir.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki ölçü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "unbreak",
+              "uids": [
+                "$uidOf:19"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

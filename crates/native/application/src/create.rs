@@ -203,6 +203,15 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     for (i, object) in input.objects.iter().enumerate() {
         check_geometry(&object.geometry, "objects", i, "nesnenin")?;
         checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
+        if let Some(x) = object.transparency
+            && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+        {
+            return Err(Stop::failed(error(
+                codes::INVALID_TRANSPARENCY,
+                format!("Saydamlık {x}; 0 ile 0,9 arasında olmalı (%0–90)."),
+                Some(format!("objects[{i}].transparency")),
+            )));
+        }
         check_link(object, i)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -290,7 +299,8 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
 /// Every object's measured points read from the places its live references name (docs/adr/0249 §1,
 /// 0250): an associative dimension is made by its places, its points following from them, so a script
 /// or an agent gives the places and not the coordinates. A reference to an object the drawing lacks is
-/// `entity_not_found`, to a place its object has not `no_such_place`; a broken reference's point is as given.
+/// `entity_not_found`, to a place its object has not `no_such_place`; a broken reference's point is as given, and
+/// so are the points of references under a rule (docs/adr/0320 §1).
 fn placed_points(
     doc: &Document,
     input: &EntitiesCreate,
@@ -303,7 +313,12 @@ fn placed_points(
             refs: Some(refs), ..
         } = &object.geometry
         {
-            for (name, r) in refs.each().filter(|(_, r)| r.live()) {
+            // A rule's points are its own (docs/adr/0320 §1): an angle's arms are not its edges' places, a radius's
+            // point may lie past its arc's end; they are as given.
+            for (name, r) in refs
+                .each()
+                .filter(|(_, r)| r.live() && refs.rule.is_none())
+            {
                 let at = format!("objects[{i}].geometry.refs.{name}");
                 let uid = Uuid::from_bytes(r.uid.0);
                 let Some(e) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
@@ -414,6 +429,8 @@ fn entities(
                 EntityBase {
                     look: kentos_contracts::ObjectLook {
                         line_type: object.line_type,
+                        transparency: object.transparency,
+                        order: object.order.filter(|o| *o != 0),
                         ..Default::default()
                     },
                     id: 0,

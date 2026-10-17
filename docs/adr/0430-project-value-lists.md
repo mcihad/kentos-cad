@@ -56,7 +56,7 @@ alanlar, taşınan kayıt sayısı, değişip değişmediği. Retler sırasıyla
 
 ### 6. Dosya
 
-`.kcad` şema 60'ın ayarlarında `domains` (JSON olarak, `domains_problem` ile), alanda `domain`; bağımsız okuyucu `kcad.py` ve
+`.kcad` şema 72'nin ayarlarında `domains` (JSON olarak, `domains_problem` ile), alanda `domain`; bağımsız okuyucu `kcad.py` ve
 yazıcı `kcad_v2_reference.py`, örnek `domains.kcad` ve beş bozuk dosya.
 
 ## Denetimler

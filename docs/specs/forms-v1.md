@@ -5,7 +5,7 @@ Güncelleme: 17 Ekim 2026. Karar: [ADR 0434](../adr/0434-form-schema.md). Şema:
 
 ## 1. Ne tutulur
 
-Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.kcad` şema 60'ta JSON olarak):
+Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.kcad` şema 72'de JSON olarak):
 
 | Alan | Anlamı |
 |---|---|

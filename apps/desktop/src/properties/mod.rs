@@ -85,6 +85,10 @@ pub enum Event {
     InsertBlock(Slot, BlockId),
     /// Aynalı ▾ of an insert.
     InsertMirror(Slot, bool),
+    /// A dynamic block's insert's value chosen (docs/adr/0319 §3): a flip, a visibility state, a lookup row.
+    Parameter(Slot, String, kentos_contracts::ParamValue),
+    /// Değerler ▾ › Hepsini varsayılana döndür.
+    ParametersReset(Slot),
     /// Kaynak ▾'s Göm of a linked picture: its file read and kept in the
     /// project's library, the picture embedded (docs/adr/0192 §2).
     EmbedImage(Slot),
@@ -105,6 +109,14 @@ pub enum Event {
     DimensionAxis(Vec<Slot>, f64),
     /// İlişki ▾'s Serbest bırak: the dimensions' points let go (docs/adr/0249 §3).
     DimensionFree(Vec<Slot>),
+    /// A dimension edit through `cad.dimensions.edit` (docs/adr/0321 §4): its options, its value home, its breaks off.
+    DimensionEdit(Vec<Slot>, DimensionOp),
+    /// Stile döndür (docs/adr/0322 §5): the objects take their style's values again.
+    RestoreStyle(Vec<Slot>),
+    /// Ölçekli (docs/adr/0323 §4): the annotations made annotative (true) or one height again.
+    Annotative(Vec<Slot>, bool),
+    /// Ayrı değerler › Sıfırla: nothing set apart at their other scales.
+    AnnotativeReset(Vec<Slot>),
     /// A dimension's line's colour (`#RRGGBB`; none: the object's), weight
     /// on paper (mm; none: a hairline) and type (none: continuous): the
     /// dimension line's and its arrowheads', the extension lines', the
@@ -116,6 +128,9 @@ pub enum Event {
     /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
     SelectObject(Slot),
     Unlink(Vec<Slot>),
+    /// A hatch's Sınır ▾: its boundary written again as an area or polylines, the hatch then following it
+    /// (docs/adr/0329 §4).
+    RecreateBoundary(Slot, kentos_contracts::BoundaryForm),
     /// Yazı stili ▾ and Ölçü stili ▾ (docs/adr/0183 §6): the style applied
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
@@ -125,6 +140,8 @@ pub enum Event {
 /// The value a cell edits.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Field {
+    /// Ölçekler (docs/adr/0323 §4): the annotations' other scales, typed.
+    AnnotativeScales(Vec<Slot>),
     /// A point's Y (east) and X (north).
     PointX(Slot),
     PointY(Slot),
@@ -142,6 +159,8 @@ pub enum Field {
     TextAngle(Slot),
     /// An attribute, by its key.
     Attribute(Slot, String),
+    /// A dynamic block's insert's typed value, by its parameter's name (docs/adr/0319 §3).
+    Parameter(Slot, String),
     /// An attribute of several objects, by its key (Ortak öznitelikler, docs/adr/0286).
     Attributes(Vec<Slot>, String),
     /// A line's start or end elevation, or every vertex's of a polyline or an
@@ -157,6 +176,13 @@ pub enum Field {
     /// Texts' box width (emptied or “Kutusuz”: none) and line spacing (docs/adr/0182 §4).
     TextBox(Vec<Slot>),
     TextSpacing(Vec<Slot>),
+    /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §3).
+    TextIndent(Vec<Slot>),
+    TextLeftIndent(Vec<Slot>),
+    TextTabs(Vec<Slot>),
+    TextColumns(Vec<Slot>),
+    TextColumnHeight(Vec<Slot>),
+    TextColumnGap(Vec<Slot>),
     /// An insert's place (Y, X), scale (above zero) and turn (degrees typed).
     InsertX(Slot),
     InsertY(Slot),
@@ -187,6 +213,20 @@ pub enum Field {
     /// Slopes' first and second elevation, metres (docs/adr/0147 §7).
     DimensionZa(Vec<Slot>),
     DimensionZb(Vec<Slot>),
+    /// Dimensions' increment, and their tolerance's upper (true) or lower value, metres (docs/adr/0321 §2).
+    DimensionRound(Vec<Slot>),
+    DimensionTolerance(Vec<Slot>, bool),
+}
+
+/// What Öznitelikler's dimension rows ask of `cad.dimensions.edit` (docs/adr/0321 §4).
+#[derive(Debug, Clone, PartialEq)]
+pub enum DimensionOp {
+    /// The options as they become (none: none).
+    Options(Option<kentos_contracts::DimensionOptions>),
+    /// The value back in its place.
+    Home,
+    /// The lines whole again.
+    Unbreak,
 }
 
 /// Which vertices of an object a Kot cell sets.
@@ -516,6 +556,7 @@ impl App {
                 input.unlink = true;
                 properties::set_properties(model, input)
             }
+            Event::RecreateBoundary(slot, form) => properties::recreate_boundary(model, slot, form),
             // On a hidden layer they vanish from the drawing, still selected: the command's warning says so.
             Event::Layer(ids, layer) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Layer);
@@ -611,6 +652,10 @@ impl App {
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
+            Event::Parameter(slot, name, value) => {
+                properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
+            }
+            Event::ParametersReset(slot) => properties::set_parameters(model, slot, None, None),
             Event::InsertMirror(slot, mirror) => match model.get(slot) {
                 Some(Entity::Insert(i)) => {
                     let mut i = i.clone();
@@ -625,6 +670,23 @@ impl App {
             Event::TextStyle(slots, id) => {
                 properties::apply_text_style(model, &slots, id.as_deref())
             }
+            Event::RestoreStyle(slots) => properties::restore_styles(model, &slots),
+            Event::Annotative(slots, on) => kentos_interaction::annotative::run(
+                model,
+                &slots,
+                if on {
+                    kentos_contracts::AnnotativeOperation::Make
+                } else {
+                    kentos_contracts::AnnotativeOperation::Unmake
+                },
+                Vec::new(),
+            ),
+            Event::AnnotativeReset(slots) => kentos_interaction::annotative::run(
+                model,
+                &slots,
+                kentos_contracts::AnnotativeOperation::Reset,
+                Vec::new(),
+            ),
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
@@ -640,6 +702,18 @@ impl App {
                 })
             }
             Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
+            Event::DimensionEdit(slots, op) => {
+                use kentos_contracts::DimensionEdit as E;
+                properties::edit_dimensions(model, &slots, |uids| match op {
+                    DimensionOp::Options(options) => E::Options { uids, options },
+                    DimensionOp::Unbreak => E::Unbreak { uids },
+                    DimensionOp::Home => E::MoveText {
+                        uid: uids[0].clone(),
+                        along: 0.0,
+                        across: 0.0,
+                    },
+                })
+            }
             Event::DimensionAxis(slots, angle) => {
                 let y = angle == 0.0;
                 properties::change_dimensions(model, &slots, |d| {
@@ -785,6 +859,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
         }
         // A box: emptied, none; a number, the command refuses one not over 0 (docs/adr/0182 §4).
+        Field::AnnotativeScales(slots) => {
+            return match kentos_interaction::annotative::parse_scales(text) {
+                Ok(wanted) => kentos_interaction::annotative::set_scales(model, slots, &wanted),
+                Err(words) => vec![words],
+            };
+        }
         Field::TextBox(slots) => {
             let t = kentos_interaction::js_trim(text);
             if t.is_empty() || t == "Kutusuz" {
@@ -803,6 +883,31 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 properties::set_text_spacing(model, slots, n)
             } else {
                 Vec::new()
+            };
+        }
+        // The layout's numbers (docs/adr/0324 §3): the command refuses one out of range and says why.
+        Field::TextIndent(slots)
+        | Field::TextLeftIndent(slots)
+        | Field::TextColumns(slots)
+        | Field::TextColumnHeight(slots)
+        | Field::TextColumnGap(slots) => {
+            use kentos_interaction::text_layout as layout;
+            let n = web_number(text);
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            return match field {
+                Field::TextIndent(_) => layout::set_indent(model, slots, n),
+                Field::TextLeftIndent(_) => layout::set_left_indent(model, slots, n),
+                Field::TextColumns(_) => layout::set_columns(model, slots, n.max(0.0).min(f64::from(u32::MAX)) as u32),
+                Field::TextColumnHeight(_) => layout::set_column_height(model, slots, n),
+                _ => layout::set_column_gap(model, slots, n),
+            };
+        }
+        Field::TextTabs(slots) => {
+            return match kentos_interaction::text_layout::parse_tabs(text) {
+                Ok(stops) => kentos_interaction::text_layout::set_tabs(model, slots, &stops),
+                Err(words) => vec![words],
             };
         }
         Field::LeaderNote(slots) => {
@@ -825,6 +930,40 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     height: n,
                     ..l.clone()
                 })
+            });
+        }
+        Field::DimensionRound(slots) | Field::DimensionTolerance(slots, _) => {
+            let n = f.to_metres(web_number(text));
+            let empty = kentos_interaction::js_trim(text).is_empty();
+            if !(empty || n.is_finite()) {
+                return Vec::new();
+            }
+            let base = model
+                .get(slots[0])
+                .and_then(|e| match e {
+                    Entity::Dimension(d) => d.look.options.as_deref().cloned(),
+                    _ => None,
+                })
+                .unwrap_or_default();
+            let mut options = base;
+            match field {
+                Field::DimensionRound(_) => options.round = (!empty && n > 0.0).then_some(n),
+                Field::DimensionTolerance(_, upper) => {
+                    let Some(t) = options.tolerance.as_mut() else {
+                        return Vec::new();
+                    };
+                    let v = if empty { 0.0 } else { n };
+                    if *upper {
+                        t.upper = v;
+                    } else {
+                        t.lower = Some(v);
+                    }
+                }
+                _ => {}
+            }
+            let options = (!options.is_empty()).then_some(options);
+            return properties::edit_dimensions(model, slots, |uids| {
+                kentos_contracts::DimensionEdit::Options { uids, options }
             });
         }
         Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
@@ -875,6 +1014,34 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         input.attrs = Some(BTreeMap::from([(key.clone(), Some(text.to_owned()))]));
         return properties::set_properties(model, input);
     }
+    if let Field::Parameter(slot, name) = field {
+        let Some(Entity::Insert(i)) = model.get(*slot) else {
+            return Vec::new();
+        };
+        let Some(p) = model
+            .block(i.block)
+            .and_then(|b| b.dynamic.as_ref())
+            .and_then(|d| d.parameters.iter().find(|p| p.name() == name))
+        else {
+            return Vec::new();
+        };
+        let Some(value) = rows::params::typed(p, text) else {
+            return vec![format!(
+                "“{name}” için {} yazın.",
+                match p {
+                    kentos_contracts::BlockParameter::Angle { .. } => "derece olarak bir açı",
+                    kentos_contracts::BlockParameter::Linear { .. } => "bir sayı",
+                    _ => "“doğu, kuzey” olarak iki sayı",
+                }
+            )];
+        };
+        return properties::set_parameters(
+            model,
+            *slot,
+            Some(BTreeMap::from([(name.clone(), value)])),
+            None,
+        );
+    }
     if let Field::Attribute(slot, key) = field {
         let Some(base) = model.get(*slot).map(Entity::base) else {
             return Vec::new();
@@ -922,14 +1089,24 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::Elevations(_)
         | Field::TextWidth(_)
         | Field::TextBox(_)
+        | Field::AnnotativeScales(_)
         | Field::TextSpacing(_)
+        | Field::TextIndent(_)
+        | Field::TextLeftIndent(_)
+        | Field::TextTabs(_)
+        | Field::TextColumns(_)
+        | Field::TextColumnHeight(_)
+        | Field::TextColumnGap(_)
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)
         | Field::LeaderTurn(_)
         | Field::LeaderArrowSize(_)
         | Field::Attributes(..)
+        | Field::Parameter(..)
         | Field::DimensionZa(_)
-        | Field::DimensionZb(_) => return Vec::new(),
+        | Field::DimensionZb(_)
+        | Field::DimensionRound(_)
+        | Field::DimensionTolerance(..) => return Vec::new(),
     };
     let Some(mut e) = model.get(slot).cloned() else {
         return Vec::new();

@@ -399,7 +399,7 @@ codes! {
 
     // ── Blocks ──────────────────────────────────────────────────────────
     /// An insert's scale that is not above zero (docs/adr/0144).
-    INVALID_SCALE = "invalid_scale", Failed, false, "Yerleştirmenin ölçeği sıfırdan büyük olmalı.";
+    INVALID_SCALE = "invalid_scale", Failed, false, "Ölçek sıfırdan büyük olmalı: yerleştirmenin ya da ölçekli açıklamanın (en çok 1:1 000 000).";
     /// A block the drawing does not define.
     UNKNOWN_BLOCK = "unknown_block", Failed, false, "Adı geçen blok çizimde tanımlı değil.";
     /// A block name empty or only white space.
@@ -692,11 +692,20 @@ codes! {
     /// An object without an edge of the kind a dimension measures.
     NOT_MEASURABLE = "not_measurable", Failed, false, "Nesnede ölçünün aradığı türde kenar yok (düz kenar, uçları olan yay ya da daire).";
     /// Eğim's point with no elevation given or kept.
-    MISSING_ELEVATION = "missing_elevation", Failed, false, "Eğim için noktanın kotu verilmedi ve yerinde kot yok.";
+    MISSING_ELEVATION = "missing_elevation", Failed, false, "Eğim ya da kot için noktanın kotu verilmedi ve yerinde kot yok.";
     /// A distance given to a dimension that takes none (Yarıçap, Çap, Koordinat).
     INVALID_OFFSET = "invalid_offset", Failed, false, "Bu ölçü türü uzaklık almaz; yerini at verir.";
     /// No dimension forms where it is placed.
     NO_DIMENSION = "no_dimension", Failed, false, "Bu yerde ölçü oluşmuyor; ölçülen noktalar çakışıyor, kenarlar paralel ya da yay boş.";
+
+    // ── Dimension edits (docs/adr/0320 §3, 0321) ────────────────────────
+    /// A dimension that is not aligned or linear where only those are taken (a chain's or a baseline's base, spacing,
+    /// breaks).
+    NOT_STRAIGHT = "not_straight", Failed, false, "Yalnız hizalı ya da doğrusal ölçü alınır (zincir ve baz temeli, aralık, kırma).";
+    /// A dimension not parallel to the base Ölçü aralığı spaces from.
+    NOT_PARALLEL = "not_parallel", Failed, false, "Ölçü temel ölçüye paralel değil; aralık yalnız paralel ölçülerde verilir.";
+    /// A dimension no object crosses: it is left without breaks.
+    NO_CROSSING = "no_crossing", Warning, false, "Ölçünün çizgilerini kesen nesne yok; kırma yapılmadı.";
 
     // ── A drawing's unit (docs/adr/0256 §1) ─────────────────────────────
     /// A unit change to the unit it already is.
@@ -735,8 +744,9 @@ codes! {
     INVALID_ACTIONS = "invalid_actions", Failed, false, "Katmanın eylemleri kurallarına uymuyor.";
     /// A layer's information card against its rules.
     INVALID_CARD = "invalid_card", Failed, false, "Katmanın bilgi kartı kurallarına uymuyor.";
-    /// A field a layer's table rule names that the layer does not have (docs/adr/0413 §2).
-    FIELD_NOT_FOUND = "field_not_found", Failed, false, "Katmanda adı verilen alan yok.";
+    /// A field the input names that is not there: a layer's by its name (docs/adr/0413 §2) or a text's by its number
+    /// (docs/adr/0325).
+    FIELD_NOT_FOUND = "field_not_found", Failed, false, "Verilen alan yok: katmanda bu adla ya da yazıda bu sırada alan bulunmuyor.";
     /// A field a form keeps unique left empty in a copy (Kaydı çoğalt, docs/adr/0415 §1).
     UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
     /// A record keeps values its subtype does not allow (docs/adr/0422 §2).
@@ -813,7 +823,7 @@ codes! {
     /// A node moved into itself or a group under it.
     MOVE_INTO_ITSELF = "move_into_itself", Failed, false, "Düğüm kendine ya da altındaki bir gruba taşınıyor.";
     /// Visible or locked without its value.
-    NO_VALUE = "no_value", Failed, false, "Görünürlük ya da kilit değersiz verildi.";
+    NO_VALUE = "no_value", Failed, false, "Değer verilmedi: görünürlük, kilit ya da ölçekli açıklamanın ölçekteki değerleri.";
     /// A layer state's operation without its state.
     NO_STATE = "no_state", Failed, false, "Katman durumu işleminin durumu verilmedi.";
     /// A layer state the project does not have.
@@ -847,9 +857,9 @@ codes! {
     /// Line types loaded without a LIN file's text.
     NO_LIN = "no_lin", Failed, false, "Yüklenecek LIN dosyası verilmedi.";
     /// Block definitions taken in without a file's text (docs/adr/0314 §3).
-    NO_LIBRARY = "no_library", Failed, false, "Alınacak blok dosyası verilmedi.";
+    NO_LIBRARY = "no_library", Failed, false, "Alınacak blok ya da stil dosyası verilmedi.";
     /// A block library file that does not read.
-    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok dosyası okunamadı.";
+    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok ya da stil dosyası okunamadı.";
     /// A library item created without the item.
     NO_ITEM = "no_item", Failed, false, "Eklenecek kitaplık öğesi verilmedi.";
     /// A library import without a .kstil file's text.
@@ -858,6 +868,73 @@ codes! {
     NO_TARGETS = "no_targets", Failed, false, "Sembolün verileceği nesne ya da katman verilmedi.";
     /// A library item against the file's rules.
     INVALID_LIBRARY_ITEM = "invalid_library_item", Failed, false, "Kitaplık öğesi kurallara uymuyor.";
+    /// An object that is not, or cannot be, annotative (docs/adr/0323 §4).
+    NOT_ANNOTATIVE = "not_annotative", FailedOrWarning, false, "Nesne ölçekli değil ya da olamaz (yalnız yazı, ölçü ve kılavuz; eğri boyunca ve bağlı yazı değil): bazılarında uyarı, hiçbirinde ret.";
+    /// An annotative object's own scale named where another is meant.
+    OWN_SCALE = "own_scale", Failed, false, "Bu ölçek nesnenin kendi ölçeği: kaldırılamaz, değerleri nesnenin kendisidir; nesneyi düzenleyin.";
+    /// Scales to add or remove not given.
+    NO_SCALES = "no_scales", Failed, false, "Eklenecek ya da kaldırılacak ölçek verilmedi.";
+    /// A scale's values set without the scale.
+    NO_SCALE = "no_scale", Failed, false, "Değerleri yazılacak ölçek verilmedi.";
+    /// A scale's values set at a scale the object does not take part in.
+    SCALE_NOT_TAKEN = "scale_not_taken", Failed, false, "Nesne bu ölçekte değil: önce ölçeği ekleyin.";
+    /// An annotative object's scales against their rules.
+    INVALID_ANNOTATIVE = "invalid_annotative", Failed, false, "Ölçekli nesnenin ölçekleri kurallarına uymuyor.";
+    /// A typeface KentOS does not have (an SHX line font, Times …), drawn in another (docs/adr/0324 §5).
+    FONT_SUBSTITUTED = "font_substituted", Warning, false, "Yazı tipi KentOS'ta yok; yazılar stilin yazı tipiyle çizilir.";
+    /// An object given as a text that is not one (docs/adr/0325 §3).
+    NOT_A_TEXT = "not_a_text", Failed, false, "Verilen nesne bir yazı değil.";
+    /// A text's field against its rules: its range, source or format.
+    INVALID_TEXT_FIELD = "invalid_text_field", Failed, false, "Yazının alanı kurallarına uymuyor.";
+    /// A field whose value cannot be read, written `####`.
+    FIELD_BROKEN = "field_broken", Warning, false, "Alanın değeri okunamadı; harfleri ####.";
+    /// A text Satırlara ayır cannot split: one paragraph, columns or a curve.
+    NOT_SPLITTABLE = "not_splittable", Failed, false, "Yazı satırlara ayrılamaz: tek paragraf, sütunlu ya da eğri boyunca.";
+    /// A text Bul ve değiştir would leave blank, left as it was.
+    TEXT_LEFT_BLANK = "text_left_blank", Warning, false, "Değiştirince boş kalacak yazı olduğu gibi bırakıldı.";
+    /// An object given as a leader that is not one (docs/adr/0326 §5).
+    NOT_A_LEADER = "not_a_leader", Failed, false, "Verilen nesne bir kılavuz değil.";
+    /// An arm's number a leader does not have.
+    ARM_NOT_FOUND = "arm_not_found", Failed, false, "Kılavuzda bu sırada kol yok.";
+    /// A leader's arms, blocks or note against their rules.
+    INVALID_LEADER = "invalid_leader", Failed, false, "Kılavuzun kolları, blokları ya da notu kurallarına uymuyor.";
+    /// A row, a column or a range outside the table.
+    CELL_OUT_OF_RANGE = "cell_out_of_range", Failed, false, "Satır, sütun ya da aralık tablonun dışında.";
+    /// A table without a source to write it again from.
+    NO_SOURCE = "no_source", Failed, false, "Tablonun kaynağı yok: Tabloyu güncelle çizelgeleri ve dosyaya bağlı tabloları yazar.";
+    /// A linked table's file not where its path says.
+    SOURCE_MISSING = "source_missing", Warning, false, "Tablonun dosyası yolunda yok; tablo olduğu gibi kaldı.";
+    /// A linked table's file that does not read as a table.
+    SOURCE_UNREADABLE = "source_unreadable", Warning, false, "Tablonun dosyası tablo olarak okunamadı; tablo olduğu gibi kaldı.";
+    /// An object given as a hatch that is not one (docs/adr/0329 §4).
+    NOT_A_HATCH = "not_a_hatch", Failed, false, "Verilen nesne bir tarama değil.";
+    /// An island a hatch does not have: an object not among its islands, a hole's place past its holes.
+    ISLAND_NOT_FOUND = "island_not_found", Failed, false, "Taramanın böyle bir adası yok.";
+    /// A region Sınırı yeniden seç cannot take: Çoklu tara's objects, or further points.
+    INVALID_REGION = "invalid_region", Failed, false, "Bölge tek bir noktayla verilmeli.";
+    /// A gap tolerance below 0, not finite or past its bound.
+    INVALID_GAP = "invalid_gap", Failed, false, "Boşluk toleransı 0 ile 1000 m arasında olmalı.";
+    /// Gaps in the line work closed to find the region, each said with its length (docs/adr/0329 §3).
+    GAPS_CLOSED = "gaps_closed", Warning, false, "Çizgi işindeki boşluklar kapatılarak bölge bulundu.";
+    /// İç içe adalar asked in the line work: taken as Dış.
+    ISLANDS_NOT_NESTED = "islands_not_nested", Warning, false, "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı.";
+    CUTOUT_GONE = "cutout_gone", Warning, false, "Taramanın boş bıraktığı yazı silindi; tarama artık orayı da tarar.";
+    HATCH_TEXT_CYCLE = "hatch_text_cycle", Warning, false, "Taramanın kendi bağlı etiketi boş bırakılmaz (döngü): yeri taramadan okunur; etiket taramanın listesinden çıkarıldı.";
+    ORDER_OTHER_LAYER = "order_other_layer", Warning, false, "Tarama sınırından başka katmanda; önünde mi arkasında mı çizileceğini katmanların sırası belirler.";
+    /// A boundary's ellipse or curve written as its chords (an area holds lines and arcs).
+    CURVES_APPROXIMATED = "curves_approximated", Warning, false, "Sınırın elips ya da eğri kenarları 0,1 mm'lik kirişleriyle yazıldı.";
+    /// No PAT text to take in.
+    NO_PAT = "no_pat", Failed, false, "Yüklenecek PAT dosyası verilmedi.";
+    /// A project hatch pattern against its rules, or of a name the project has.
+    INVALID_HATCH_PATTERN = "invalid_hatch_pattern", Failed, false, "Tarama deseni kurallarına uymuyor.";
+    /// A name the project's hatch patterns do not have.
+    HATCH_PATTERN_NOT_FOUND = "hatch_pattern_not_found", Failed, false, "Projede bu adda tarama deseni yok.";
+    /// A table that names a file but is linked to none.
+    SOURCE_UNLINKED = "source_unlinked", Warning, false, "Tablo bir dosyanın adını taşıyor ama ona bağlı değil; Dosyaya bağla ile seçin.";
+    /// An object given as a content block that is not a block insert.
+    NOT_AN_INSERT = "not_an_insert", Failed, false, "Verilen nesne bir blok yerleştirmesi değil.";
+    /// Numarala's start, step or digits out of their bounds.
+    INVALID_NUMBER = "invalid_number", Failed, false, "Numaranın başlangıcı, artışı ya da basamağı sınırlarını aşıyor.";
     /// A .kstil file that does not read.
     INVALID_KSTIL = "invalid_kstil", Failed, false, ".kstil dosyası okunamadı.";
     /// An id the project's library has.

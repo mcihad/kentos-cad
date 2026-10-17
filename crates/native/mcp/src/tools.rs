@@ -499,10 +499,19 @@ fn command_tool(c: &Value) -> Value {
             | "cad.blocks.replace"
             // It writes the inserts' parameter values (docs/adr/0318 §3).
             | "cad.blocks.parameters"
+            | "cad.blocks.freeze"
             // deleteSource deletes the objects it offsets (docs/adr/0246).
             | "cad.entities.offset"
             // It binds or frees a dimension's points (docs/adr/0249 §3).
             | "cad.dimensions.reassociate"
+            | "cad.dimensions.edit"
+            | "cad.fields.edit"
+            | "cad.hatches.edit"
+            | "cad.leaders.edit"
+            | "cad.tables.edit"
+            | "cad.texts.edit"
+            // It takes an object's scales away (docs/adr/0323 §4).
+            | "cad.annotations.scales"
             // They cut, grow or round what is there; a trim takes objects away (docs/adr/0250).
             | "cad.entities.trim"
             | "cad.entities.extend"
@@ -566,6 +575,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.translate"
             | "cad.standards.apply"
             | "cad.linetypes.edit"
+            // Its remove and replace take a project pattern away (docs/adr/0331 §1).
+            | "cad.hatchpatterns.edit"
             | "cad.library.edit"
             | "cad.styles.edit"
             | "cad.settings.set"

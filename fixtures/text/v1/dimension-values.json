@@ -1,0 +1,652 @@
+{
+ "format": "kentos.dimension-value-cases",
+ "version": 1,
+ "title": "Ölçünün yazılan değeri: yuvarlama, sıfırlar, ayak ve inç, tolerans, alternatif birim, elle yazılan",
+ "note": "ADR 0321, 0322. scripts/fixtures/dimension_value_cases.py kurallardan yazar; Format::dimension_value bunu geçer.",
+ "cases": [
+  {
+   "name": "Uzunluk projenin birimi ve basamağıyla",
+   "measured": {
+    "value": 3.24567,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "3.246"
+  },
+  {
+   "name": "Yuvarlama artışı 5 cm: 3,24567 → 3,25",
+   "measured": {
+    "value": 3.24567,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.05
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "3.250"
+  },
+  {
+   "name": "Yuvarlama artışı 0,5 m, yarım uzağa: 3,25 → 3,5",
+   "measured": {
+    "value": 3.25,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.5
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "3.500"
+  },
+  {
+   "name": "Yuvarlama artışı 5 mm, mm biriminde",
+   "measured": {
+    "value": 1.2374,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "unit": "mm",
+    "decimals": 0,
+    "options": {
+     "round": 0.005
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "1235"
+  },
+  {
+   "name": "Sondaki sıfırlar: 2.500 → 2.5",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "zeros": "trailing"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "2.5"
+  },
+  {
+   "name": "Sondaki sıfırlar: tam sayı noktasız",
+   "measured": {
+    "value": 4.0,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "zeros": "trailing"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "4"
+  },
+  {
+   "name": "Baştaki sıfır: 0.450 → .450",
+   "measured": {
+    "value": 0.45,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "zeros": "leading"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": ".450"
+  },
+  {
+   "name": "İkisi: 0.450 → .45",
+   "measured": {
+    "value": 0.45,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "zeros": "both"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": ".45"
+  },
+  {
+   "name": "Eksi koordinatın baştaki sıfırı",
+   "measured": {
+    "value": -0.25,
+    "unit": "coordinate",
+    "prefix": "Y="
+   },
+   "look": {
+    "options": {
+     "zeros": "leading"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "Y=-.250"
+  },
+  {
+   "name": "Simetrik tolerans",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "tolerance": {
+      "kind": "symmetric",
+      "upper": 0.01
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "2.500 ±0.010"
+  },
+  {
+   "name": "Sapma toleransı, kendi basamağıyla",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "tolerance": {
+      "kind": "deviation",
+      "upper": 0.02,
+      "lower": 0.005,
+      "decimals": 4
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "2.500 +0.0200 -0.0050"
+  },
+  {
+   "name": "Sınırlar: en büyük ve en küçük",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "tolerance": {
+      "kind": "limits",
+      "upper": 0.01,
+      "lower": 0.005
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "2.510/2.495"
+  },
+  {
+   "name": "Sınırlar mm'de",
+   "measured": {
+    "value": 1.2,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "unit": "mm",
+    "decimals": 1,
+    "options": {
+     "tolerance": {
+      "kind": "limits",
+      "upper": 0.0002,
+      "lower": 0.0001
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "1200.2/1199.9"
+  },
+  {
+   "name": "Alternatif birim mm, köşeli ayraçta",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "alt": {
+      "unit": "mm",
+      "decimals": 0
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "2.500 [2500]"
+  },
+  {
+   "name": "Alternatif birim inç, yuvarlanmamış değerle",
+   "measured": {
+    "value": 1.0,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.5,
+     "alt": {
+      "unit": "in",
+      "decimals": 2
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "1.000 [39.37]"
+  },
+  {
+   "name": "Ön ek, yarıçap ön eki, tolerans, son ek ve alternatif",
+   "measured": {
+    "value": 0.75,
+    "unit": "length",
+    "prefix": "R "
+   },
+   "look": {
+    "prefix": "~",
+    "suffix": " m",
+    "options": {
+     "tolerance": {
+      "kind": "symmetric",
+      "upper": 0.001
+     },
+     "alt": {
+      "unit": "cm",
+      "decimals": 1
+     }
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "~R 0.750 ±0.001 m [75.0]"
+  },
+  {
+   "name": "İnç projesi: mimari biçim projeden",
+   "measured": {
+    "value": 3.8227,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "in",
+    "lengthDecimals": 4,
+    "lengthStyle": "architectural",
+    "angleUnit": "deg"
+   },
+   "expect": "12'-6 1/2\""
+  },
+  {
+   "name": "Ölçünün kendi biçimi: kesirli inç",
+   "measured": {
+    "value": 3.8227,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "decimals": 3,
+    "options": {
+     "lengthStyle": "fractional"
+    }
+   },
+   "project": {
+    "unit": "in",
+    "lengthDecimals": 4,
+    "lengthStyle": "architectural",
+    "angleUnit": "deg"
+   },
+   "expect": "150 1/2\""
+  },
+  {
+   "name": "Ölçünün kendi biçimi: mühendislik",
+   "measured": {
+    "value": 3.8227,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "decimals": 2,
+    "options": {
+     "lengthStyle": "engineering"
+    }
+   },
+   "project": {
+    "unit": "in",
+    "lengthDecimals": 4,
+    "lengthStyle": "architectural",
+    "angleUnit": "deg"
+   },
+   "expect": "12'-6.50\""
+  },
+  {
+   "name": "Ölçü kendi birimini (mm) adlandırınca projenin mimari biçimi uygulanmaz",
+   "measured": {
+    "value": 3.8227,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "unit": "mm",
+    "decimals": 1
+   },
+   "project": {
+    "unit": "in",
+    "lengthDecimals": 4,
+    "lengthStyle": "architectural",
+    "angleUnit": "deg"
+   },
+   "expect": "3822.7"
+  },
+  {
+   "name": "mm projesi, basamaksız",
+   "measured": {
+    "value": 1.23456,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "mm",
+    "lengthDecimals": 0,
+    "angleUnit": "deg"
+   },
+   "expect": "1235"
+  },
+  {
+   "name": "Açı derecede; artış ve tolerans almaz",
+   "measured": {
+    "value": 1.0471975511965976,
+    "unit": "angle",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.5
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "60.0000°"
+  },
+  {
+   "name": "Eğim yüzde, kendi basamağıyla",
+   "measured": {
+    "value": 12.3456,
+    "unit": "percent",
+    "prefix": "%"
+   },
+   "look": {
+    "decimals": 1
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "%12.3"
+  },
+  {
+   "name": "Kot: artı işaretli, iki basamak",
+   "measured": {
+    "value": 3.2,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "+3.20"
+  },
+  {
+   "name": "Kot: eksi",
+   "measured": {
+    "value": -1.5,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "-1.50"
+  },
+  {
+   "name": "Kot: sıfır ±",
+   "measured": {
+    "value": 0.0,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "±0.00"
+  },
+  {
+   "name": "Kot: gösterilen basamaklarda sıfıra yuvarlanan eksi ± olur",
+   "measured": {
+    "value": -0.004,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "±0.00"
+  },
+  {
+   "name": "Kot: üç basamak, ön ek ve son ek",
+   "measured": {
+    "value": 105.2468,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {
+    "decimals": 3,
+    "prefix": "K ",
+    "suffix": " m"
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "K +105.247 m"
+  },
+  {
+   "name": "Kot: 5 cm artışla yuvarlanır",
+   "measured": {
+    "value": 12.37,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "round": 0.05
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": "+12.35"
+  },
+  {
+   "name": "Kot: mm projesinde de metre",
+   "measured": {
+    "value": 3.2,
+    "unit": "level",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "mm",
+    "lengthDecimals": 0,
+    "angleUnit": "deg"
+   },
+   "expect": "+3.20"
+  },
+  {
+   "name": "Merkez işareti ve eksen çizgisi değer yazmaz",
+   "measured": {
+    "value": 5.0,
+    "unit": "none",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "expect": ""
+  },
+  {
+   "name": "Elle yazılan değer <> ile: ölçülen değer içinde",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "text": "<> (tipik)",
+   "expect": "2.500 (tipik)"
+  },
+  {
+   "name": "Elle yazılan değer <> olmadan: ölçülen gösterilmez",
+   "measured": {
+    "value": 2.5,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "text": "2.600",
+   "expect": "2.600"
+  },
+  {
+   "name": "Elle yazılanda iki <>",
+   "measured": {
+    "value": 1.25,
+    "unit": "length",
+    "prefix": ""
+   },
+   "look": {
+    "options": {
+     "zeros": "trailing"
+    }
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3,
+    "angleUnit": "deg"
+   },
+   "text": "<> + <>",
+   "expect": "1.25 + 1.25"
+  }
+ ]
+}

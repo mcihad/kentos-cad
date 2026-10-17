@@ -865,6 +865,7 @@ impl<'a> Player<'a> {
                         "underline" => Toggle::Underline,
                         "super" => Toggle::Super,
                         "sub" => Toggle::Sub,
+                        "stack" => Toggle::Stack,
                         other => return Err(format!("bilinmeyen biçim {other}")),
                     },
                     other => Toggle::Color(other["color"].as_str().map(str::to_owned)),

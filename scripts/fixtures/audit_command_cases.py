@@ -8,7 +8,8 @@ that carries what the reader lets through (references to an object that is not i
 does not have):
 
 - found, object by object in the drawing's order and for each in this order: a linked text whose object is gone
-  (brokenLink), a hatch one of whose boundary objects is gone (brokenHatch), a dimension's live reference to an object
+  (brokenLink), a hatch one of whose boundary objects is gone (brokenHatch), a hatch leaving open a text that is gone
+  (missingCutout; docs/adr/0332 §2), a dimension's live reference to an object
   that is gone (brokenDimension), a text naming a text style the project lacks (missingTextStyle), a dimension naming
   a dimension style it lacks (missingDimensionStyle);
 - repaired with `fix` (one undo step “Denetle”): the link goes (labelOf, labelScale), the association goes, the
@@ -85,6 +86,9 @@ ENTITIES = [
     dimension(6, -6, dimStyle=MISSING),
     insert(7),
     text(8, p(40, 10), "Kilitli", layer="kilitli", labelOf=GHOST, labelScale=500),
+    {"kind": "hatch", **base(9), "ring": [p(50, 0), p(60, 0), p(60, 10), p(50, 10)],
+     "pattern": {"type": "solid", "angle": 0, "spacing": 1},
+     "assoc": {"outer": GHOST2, "cutouts": [GHOST], "seed": p(55, 5)}},
 ]
 IDS = [e["id"] for e in ENTITIES]
 TREE = [node("cizim", "Çizim"), node("bos", "Boş"), node("eski", "Eski", children=[node("eski-yol", "Eski yol")]),
@@ -122,6 +126,7 @@ def setup(entities=None, text_styles=None, dim_styles=None):
 MESSAGES = {
     "brokenLink": "Bağlı yazının nesnesi çizimde yok; onarım bağı koparır, yazı kalır.",
     "brokenHatch": "İlişkili taramanın sınır nesnelerinden biri çizimde yok; onarım ilişkiyi koparır, tarama kalır.",
+    "missingCutout": "Taramanın boş bıraktığı yazılardan biri çizimde yok; onarım onu listeden çıkarır, tarama yeniden kesilir.",
     "brokenDimension": "İlişkili ölçünün bağlı olduğu nesne çizimde yok; onarım bağı “nesne yok” nedeniyle koparır, "
                        "nokta yerinde kalır.",
     "missingTextStyle": "Yazının stili projede yok; onarım yazıyı Standart'a bağlar, görünüşü kalır.",
@@ -154,8 +159,10 @@ class State:
                 out.append("missingTextStyle")
         if e["kind"] == "hatch" and "assoc" in e:
             a = e["assoc"]
-            if any(x in GONE for x in [a["outer"], *a.get("islands", []), *a.get("cutouts", [])]):
+            if any(x in GONE for x in [a["outer"], *a.get("islands", []), *a.get("bounds", [])]):
                 out.append("brokenHatch")
+            if any(x in GONE for x in a.get("cutouts", [])):
+                out.append("missingCutout")
         if e["kind"] == "dimension":
             if any("broken" not in r and r["uid"] in GONE for r in e.get("refs", {}).values()):
                 out.append("brokenDimension")
@@ -174,6 +181,9 @@ class State:
                 out.pop("textStyle")
             elif f == "brokenHatch":
                 out.pop("assoc")
+            elif f == "missingCutout" and "assoc" in out:
+                # A tie still there would be cut again; here every such hatch's tie is broken too.
+                out["assoc"]["cutouts"] = [x for x in out["assoc"]["cutouts"] if x not in GONE]
             elif f == "brokenDimension":
                 for r in out["refs"].values():
                     if "broken" not in r and r["uid"] in GONE:
@@ -291,8 +301,8 @@ def cases():
     first = step(state, {"fix": True})
     out.append({"name": "Onarım tek adım “Denetle”: geri alınır ve yinelenir", "steps": [
         first,
-        {"op": "undo", "returns": LABEL, "expect": {"ids": IDS, "entities": by_id(State(), 2, 4, 5, 6)}},
-        {"op": "redo", "returns": LABEL, "expect": {"ids": IDS, "entities": by_id(state, 2, 4, 5, 6)}},
+        {"op": "undo", "returns": LABEL, "expect": {"ids": IDS, "entities": by_id(State(), 2, 4, 5, 6, 9)}},
+        {"op": "redo", "returns": LABEL, "expect": {"ids": IDS, "entities": by_id(state, 2, 4, 5, 6, 9)}},
     ]})
 
     state = State()
@@ -305,7 +315,7 @@ def cases():
     out.append(deleted("Yerleştirmesi silinen blok kullanılmayanlara katılır (tanımların sırasıyla)", [7], {}))
     out.append(deleted("Stilini kullanan nesneler silinince stil kullanılmaz olur ve temizlenir", [3, 5],
                        {"purge": ["textStyles", "dimensionStyles"]}, {}))
-    out.append(deleted("Onarılacak nesne kalmayınca onarım bir şey yazmaz; kilitli katmandaki silinmez, söylenir", [2, 4, 5, 6, 8], {"fix": True}))
+    out.append(deleted("Onarılacak nesne kalmayınca onarım bir şey yazmaz; kilitli katmandaki silinmez, söylenir", [2, 4, 5, 6, 8, 9], {"fix": True}))
 
     clean = [line(1), text(2, p(0, 8), "Başlık", textStyle=TS_USED), insert(3), dimension(4, -2, dimStyle=DS_USED)]
     state = State(clean, TEXT_STYLES[:1], DIM_STYLES[:1])

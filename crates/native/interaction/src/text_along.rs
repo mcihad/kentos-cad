@@ -261,6 +261,7 @@ impl TextAlong {
         let (share, _) = split(m.along_align);
         let (p, rotation, path) = piece(curve, at, length, share)?;
         Some(TextEntity {
+            annotative: None,
             base: kentos_contracts::EntityBase {
                 look: Default::default(),
                 id: 0,
@@ -579,6 +580,8 @@ impl Tool for TextAlong {
             && let Some(t) = self.placed(words, at, cx)
         {
             let geometry = kentos_contracts::EntityGeometry::Text {
+                layout: None,
+                annotative: None,
                 p: t.p,
                 text: t.text.clone(),
                 height: t.height,

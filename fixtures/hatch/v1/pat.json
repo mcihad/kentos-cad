@@ -1,0 +1,1352 @@
+{
+  "format": "kentos.hatch-pattern-file-cases",
+  "version": 1,
+  "note": "Written by scripts/fixtures/hatch_pattern_file_cases.py from AutoCAD's PAT documentation and docs/adr/0331; do not edit by hand.",
+  "maxLines": 64,
+  "maxDashes": 16,
+  "pat": [
+    {
+      "name": "ANSI31 gibi tek aile",
+      "text": "*ANSI31, ANSI Iron, Brick, Stone masonry\n45, 0,0, 0,3.175\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "ANSI31",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 45.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  3.175
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "ANSI Iron, Brick, Stone masonry"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Kesikli ve noktalı aileler",
+      "text": "*DASHDOT, Dashes and dots\n0, 0,0, 0,6.35, 6.35,-3.175, 0,-3.175\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "DASHDOT",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  6.35
+                ],
+                "dashes": [
+                  6.35,
+                  -3.175,
+                  0.0,
+                  -3.175
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Dashes and dots"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Birden çok aile ve açıklamasız",
+      "text": "*KARE\n0, 0,0, 0,5\n90, 0,0, 0,5\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "KARE",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  5.0
+                ]
+              },
+              {
+                "angle": 90.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  5.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Yorumlar, boş satırlar ve satır sonu yorumu",
+      "text": ";%TYPE=AutoCAD\n;; KentOS deneme\n\n*TUGLA, Tuğla ; örgü\n0, 0,0, 0,6.35 ; yatay\n90, 0,0, 6.35,6.35, 6.35,-6.35\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "TUGLA",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  6.35
+                ]
+              },
+              {
+                "angle": 90.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  6.35,
+                  6.35
+                ],
+                "dashes": [
+                  6.35,
+                  -6.35
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Tuğla"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "İnç dosyası olduğu gibi tutulur",
+      "text": "*ANSI32, ANSI Steel\n45, 0,0, 0,.375\n45, .176776695,0, 0,.375, 0,-.375\n",
+      "unit": "inch",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "ANSI32",
+            "unit": "inch",
+            "lines": [
+              {
+                "angle": 45.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  0.375
+                ]
+              },
+              {
+                "angle": 45.0,
+                "origin": [
+                  0.176776695,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  0.375
+                ],
+                "dashes": [
+                  0.0,
+                  -0.375
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "ANSI Steel"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Çizim birimli dosya",
+      "text": "*PARKE, Parke\n0, 0,0, .2,.1, .3,-.1\n",
+      "unit": "drawing",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "PARKE",
+            "unit": "drawing",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.2,
+                  0.1
+                ],
+                "dashes": [
+                  0.3,
+                  -0.1
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Parke"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Üstel ve işaretli sayılar",
+      "text": "*US\n+45, 1e-1,-2, 0,2.5E0, 1.5,-.5\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "US",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 45.0,
+                "origin": [
+                  0.1,
+                  -2.0
+                ],
+                "offset": [
+                  0.0,
+                  2.5
+                ],
+                "dashes": [
+                  1.5,
+                  -0.5
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Birden çok desen, sırasıyla",
+      "text": "*A1, Birinci\n0,0,0,0,1\n*B2, İkinci\n45,0,0,0,2\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "A1",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Birinci"
+          },
+          {
+            "name": "B2",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 45.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  2.0
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "İkinci"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "16 kesik sınırda",
+      "text": "*KESIK16\n0,0,0,0,1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "KESIK16",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ],
+                "dashes": [
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0,
+                  1.0,
+                  -1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "17 kesik reddedilir",
+      "text": "*KESIK17\n0,0,0,0,1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“KESIK17”: bir ailenin en çok 16 kesiği olur, 17 var; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "65 aile reddedilir",
+      "text": "*COK\n0,0,0,0,1\n1,0,0,0,1\n2,0,0,0,1\n3,0,0,0,1\n4,0,0,0,1\n5,0,0,0,1\n6,0,0,0,1\n7,0,0,0,1\n8,0,0,0,1\n9,0,0,0,1\n10,0,0,0,1\n11,0,0,0,1\n12,0,0,0,1\n13,0,0,0,1\n14,0,0,0,1\n15,0,0,0,1\n16,0,0,0,1\n17,0,0,0,1\n18,0,0,0,1\n19,0,0,0,1\n20,0,0,0,1\n21,0,0,0,1\n22,0,0,0,1\n23,0,0,0,1\n24,0,0,0,1\n25,0,0,0,1\n26,0,0,0,1\n27,0,0,0,1\n28,0,0,0,1\n29,0,0,0,1\n30,0,0,0,1\n31,0,0,0,1\n32,0,0,0,1\n33,0,0,0,1\n34,0,0,0,1\n35,0,0,0,1\n36,0,0,0,1\n37,0,0,0,1\n38,0,0,0,1\n39,0,0,0,1\n40,0,0,0,1\n41,0,0,0,1\n42,0,0,0,1\n43,0,0,0,1\n44,0,0,0,1\n45,0,0,0,1\n46,0,0,0,1\n47,0,0,0,1\n48,0,0,0,1\n49,0,0,0,1\n50,0,0,0,1\n51,0,0,0,1\n52,0,0,0,1\n53,0,0,0,1\n54,0,0,0,1\n55,0,0,0,1\n56,0,0,0,1\n57,0,0,0,1\n58,0,0,0,1\n59,0,0,0,1\n60,0,0,0,1\n61,0,0,0,1\n62,0,0,0,1\n63,0,0,0,1\n64,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 1,
+            "message": "“COK”: bir desen en çok 64 ailedir, 65 var"
+          }
+        ]
+      }
+    },
+    {
+      "name": "dy 0 reddedilir",
+      "text": "*SIFIR\n0, 0,0, 1,0\n*IYI\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "IYI",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“SIFIR”: çizgiler arası (dy) 0 olamaz; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Eksik sayı",
+      "text": "*EKSIK\n45, 0,0, 0\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“EKSIK”: bir aile en az beş sayıdır (açı, x, y, dx, dy), 4 var; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sayı olmayan değer",
+      "text": "*HARF\n45, 0,0, 0,bir\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“HARF”: “bir” bir sayı değil; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Çok büyük sayı",
+      "text": "*BUYUK\n0, 0,0, 0,2000000\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“BUYUK”: “2000000” çok büyük; en çok 1000000 olur; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ailesiz başlık",
+      "text": "*BOS, Ailesiz\n*DOLU\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "DOLU",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "message": "“BOS” deseninin ailesi yok"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Başlıksız aile",
+      "text": "0,0,0,0,1\n*SONRA\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "SONRA",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "message": "aile bir *AD satırının altında olmalı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Boş ad",
+      "text": "*, adsız\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 1,
+            "message": "desenin adı boş"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Çok uzun ad",
+      "text": "*UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 1,
+            "message": "“UUUUUUUUUUUUUUUU…”: desenin adı en çok 64 harf olur"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Aynı ad iki kez (harf büyüklüğü sayılmaz)",
+      "text": "*Tugla\n0,0,0,0,1\n*TUGLA\n0,0,0,0,2\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "Tugla",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": [
+          {
+            "line": 3,
+            "message": "“TUGLA” dosyada iki kez var; ilki alındı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Türkçe ad ve açıklama",
+      "text": "*ÇİM_ALAN, Çim alan · yeşil\n60, 0,0, 2,4, 1,-3\n120, 0,0, 2,4, 1,-3\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "ÇİM_ALAN",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 60.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  2.0,
+                  4.0
+                ],
+                "dashes": [
+                  1.0,
+                  -3.0
+                ]
+              },
+              {
+                "angle": 120.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  2.0,
+                  4.0
+                ],
+                "dashes": [
+                  1.0,
+                  -3.0
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Çim alan · yeşil"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Pencere satır sonları ve kenar boşlukları",
+      "text": "  *KESIK , Kesikli  \r\n  0 , 0 , 0 , 0 , 1 , 2 , -1  \r\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "KESIK",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ],
+                "dashes": [
+                  2.0,
+                  -1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat",
+            "description": "Kesikli"
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "Kesiklerin hepsi 0 olamaz",
+      "text": "*SIFIRLAR\n0,0,0,0,1,0,0\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [],
+        "problems": [
+          {
+            "line": 2,
+            "message": "“SIFIRLAR”: kesiklerin hepsi 0 olamaz; en az birinin uzunluğu olmalı; desen alınmadı"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bozuk aile bütün deseni düşürür",
+      "text": "*YARIM\n0,0,0,0,1\n90,0,0,0,x\n*SAGLAM\n0,0,0,0,1\n",
+      "unit": "mm",
+      "source": "deneme.pat",
+      "expect": {
+        "patterns": [
+          {
+            "name": "SAGLAM",
+            "unit": "mm",
+            "lines": [
+              {
+                "angle": 0.0,
+                "origin": [
+                  0.0,
+                  0.0
+                ],
+                "offset": [
+                  0.0,
+                  1.0
+                ]
+              }
+            ],
+            "source": "deneme.pat"
+          }
+        ],
+        "problems": [
+          {
+            "line": 3,
+            "message": "“YARIM”: “x” bir sayı değil; desen alınmadı"
+          }
+        ]
+      }
+    }
+  ],
+  "written": [
+    {
+      "name": "ANSI31 gibi tek aile",
+      "patterns": [
+        {
+          "name": "ANSI31",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 45.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                3.175
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "ANSI Iron, Brick, Stone masonry"
+        }
+      ],
+      "pat": "*ANSI31,ANSI Iron, Brick, Stone masonry\n45,0,0,0,3.175\n"
+    },
+    {
+      "name": "Kesikli ve noktalı aileler",
+      "patterns": [
+        {
+          "name": "DASHDOT",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                6.35
+              ],
+              "dashes": [
+                6.35,
+                -3.175,
+                0.0,
+                -3.175
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Dashes and dots"
+        }
+      ],
+      "pat": "*DASHDOT,Dashes and dots\n0,0,0,0,6.35,6.35,-3.175,0,-3.175\n"
+    },
+    {
+      "name": "Birden çok aile ve açıklamasız",
+      "patterns": [
+        {
+          "name": "KARE",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                5.0
+              ]
+            },
+            {
+              "angle": 90.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                5.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*KARE\n0,0,0,0,5\n90,0,0,0,5\n"
+    },
+    {
+      "name": "Yorumlar, boş satırlar ve satır sonu yorumu",
+      "patterns": [
+        {
+          "name": "TUGLA",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                6.35
+              ]
+            },
+            {
+              "angle": 90.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                6.35,
+                6.35
+              ],
+              "dashes": [
+                6.35,
+                -6.35
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Tuğla"
+        }
+      ],
+      "pat": "*TUGLA,Tuğla\n0,0,0,0,6.35\n90,0,0,6.35,6.35,6.35,-6.35\n"
+    },
+    {
+      "name": "İnç dosyası olduğu gibi tutulur",
+      "patterns": [
+        {
+          "name": "ANSI32",
+          "unit": "inch",
+          "lines": [
+            {
+              "angle": 45.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                0.375
+              ]
+            },
+            {
+              "angle": 45.0,
+              "origin": [
+                0.176776695,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                0.375
+              ],
+              "dashes": [
+                0.0,
+                -0.375
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "ANSI Steel"
+        }
+      ],
+      "pat": "*ANSI32,ANSI Steel\n45,0,0,0,.375\n45,.176776695,0,0,.375,0,-.375\n"
+    },
+    {
+      "name": "Çizim birimli dosya",
+      "patterns": [
+        {
+          "name": "PARKE",
+          "unit": "drawing",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.2,
+                0.1
+              ],
+              "dashes": [
+                0.3,
+                -0.1
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Parke"
+        }
+      ],
+      "pat": "*PARKE,Parke\n0,0,0,.2,.1,.3,-.1\n"
+    },
+    {
+      "name": "Üstel ve işaretli sayılar",
+      "patterns": [
+        {
+          "name": "US",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 45.0,
+              "origin": [
+                0.1,
+                -2.0
+              ],
+              "offset": [
+                0.0,
+                2.5
+              ],
+              "dashes": [
+                1.5,
+                -0.5
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*US\n45,.1,-2,0,2.5,1.5,-.5\n"
+    },
+    {
+      "name": "Birden çok desen, sırasıyla",
+      "patterns": [
+        {
+          "name": "A1",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Birinci"
+        },
+        {
+          "name": "B2",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 45.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                2.0
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "İkinci"
+        }
+      ],
+      "pat": "*A1,Birinci\n0,0,0,0,1\n*B2,İkinci\n45,0,0,0,2\n"
+    },
+    {
+      "name": "16 kesik sınırda",
+      "patterns": [
+        {
+          "name": "KESIK16",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ],
+              "dashes": [
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0,
+                1.0,
+                -1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*KESIK16\n0,0,0,0,1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1,1,-1\n"
+    },
+    {
+      "name": "dy 0 reddedilir",
+      "patterns": [
+        {
+          "name": "IYI",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*IYI\n0,0,0,0,1\n"
+    },
+    {
+      "name": "Ailesiz başlık",
+      "patterns": [
+        {
+          "name": "DOLU",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*DOLU\n0,0,0,0,1\n"
+    },
+    {
+      "name": "Başlıksız aile",
+      "patterns": [
+        {
+          "name": "SONRA",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*SONRA\n0,0,0,0,1\n"
+    },
+    {
+      "name": "Aynı ad iki kez (harf büyüklüğü sayılmaz)",
+      "patterns": [
+        {
+          "name": "Tugla",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*Tugla\n0,0,0,0,1\n"
+    },
+    {
+      "name": "Türkçe ad ve açıklama",
+      "patterns": [
+        {
+          "name": "ÇİM_ALAN",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 60.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                2.0,
+                4.0
+              ],
+              "dashes": [
+                1.0,
+                -3.0
+              ]
+            },
+            {
+              "angle": 120.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                2.0,
+                4.0
+              ],
+              "dashes": [
+                1.0,
+                -3.0
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Çim alan · yeşil"
+        }
+      ],
+      "pat": "*ÇİM_ALAN,Çim alan · yeşil\n60,0,0,2,4,1,-3\n120,0,0,2,4,1,-3\n"
+    },
+    {
+      "name": "Pencere satır sonları ve kenar boşlukları",
+      "patterns": [
+        {
+          "name": "KESIK",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ],
+              "dashes": [
+                2.0,
+                -1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat",
+          "description": "Kesikli"
+        }
+      ],
+      "pat": "*KESIK,Kesikli\n0,0,0,0,1,2,-1\n"
+    },
+    {
+      "name": "Bozuk aile bütün deseni düşürür",
+      "patterns": [
+        {
+          "name": "SAGLAM",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.0,
+              "origin": [
+                0.0,
+                0.0
+              ],
+              "offset": [
+                0.0,
+                1.0
+              ]
+            }
+          ],
+          "source": "deneme.pat"
+        }
+      ],
+      "pat": "*SAGLAM\n0,0,0,0,1\n"
+    },
+    {
+      "name": "Küçük ve uzun kesirli sayılar",
+      "patterns": [
+        {
+          "name": "KUCUK",
+          "unit": "mm",
+          "lines": [
+            {
+              "angle": 0.1,
+              "origin": [
+                1e-07,
+                -0.5
+              ],
+              "offset": [
+                0.0,
+                0.3333333333333333
+              ],
+              "dashes": [
+                2.5,
+                -1e-06,
+                0.0
+              ]
+            }
+          ]
+        }
+      ],
+      "pat": "*KUCUK\n.1,.0000001,-.5,0,.3333333333333333,2.5,-.000001,0\n"
+    }
+  ],
+  "scale": [
+    {
+      "name": "Kâğıtta mm, 1:100",
+      "unit": "mm",
+      "plotScale": 100.0,
+      "drawingUnit": "m",
+      "factor": 1.0,
+      "metres": 0.1
+    },
+    {
+      "name": "Kâğıtta mm, 1:500, ölçek 2",
+      "unit": "mm",
+      "plotScale": 500.0,
+      "drawingUnit": "m",
+      "factor": 2.0,
+      "metres": 1.0
+    },
+    {
+      "name": "Kâğıtta inç, 1:100",
+      "unit": "inch",
+      "plotScale": 100.0,
+      "drawingUnit": "m",
+      "factor": 1.0,
+      "metres": 2.54
+    },
+    {
+      "name": "Kâğıtta inç, 1:1, ölçek 0.5",
+      "unit": "inch",
+      "plotScale": 1.0,
+      "drawingUnit": "m",
+      "factor": 0.5,
+      "metres": 0.0127
+    },
+    {
+      "name": "Çizim birimi metre",
+      "unit": "drawing",
+      "plotScale": 100.0,
+      "drawingUnit": "m",
+      "factor": 1.0,
+      "metres": 1.0
+    },
+    {
+      "name": "Çizim birimi milimetre",
+      "unit": "drawing",
+      "plotScale": 100.0,
+      "drawingUnit": "mm",
+      "factor": 1.0,
+      "metres": 0.001
+    },
+    {
+      "name": "Çizim birimi santimetre, ölçek 10",
+      "unit": "drawing",
+      "plotScale": 100.0,
+      "drawingUnit": "cm",
+      "factor": 10.0,
+      "metres": 0.1
+    },
+    {
+      "name": "Çizim birimi inç",
+      "unit": "drawing",
+      "plotScale": 100.0,
+      "drawingUnit": "in",
+      "factor": 1.0,
+      "metres": 0.0254
+    },
+    {
+      "name": "Çizim birimi ayak",
+      "unit": "drawing",
+      "plotScale": 100.0,
+      "drawingUnit": "ft",
+      "factor": 1.0,
+      "metres": 0.3048
+    }
+  ]
+}

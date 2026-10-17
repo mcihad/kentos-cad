@@ -40,7 +40,7 @@
 - `layer_rules_cases.py --check`: `cad.layers.rules` (24), `cad.entities.set` (22), `cad.polygon.create` (21),
   `cad.forms.validate` (21), `cad.forms.submit` (20); kurallar formların bağımsız ikiziyle (forms_cases.py), değerler alanların
   ikiziyle (layer_field_cases.py: hariç uçlar, birim, tekil, değer günleri).
-- `.kcad` şema 60: `layer-rules.kcad` ve yedi bozuk dosya, bağımsız okuyucu ve yazıcı.
+- `.kcad` şema 72: `layer-rules.kcad` ve yedi bozuk dosya, bağımsız okuyucu ve yazıcı.
 - Masaüstü: `a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet`,
   `a_record_changed_meanwhile_is_reloaded_with_what_was_typed_or_written_over`,
   `the_rules_window_writes_through_the_command_in_one_step`; resimler `form-kayit-kurallari`, `form-kural-formda`, `form-cakisma`,

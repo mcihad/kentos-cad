@@ -25,6 +25,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod annotative;
 pub mod arrays;
 pub mod audit;
 mod blocks;
@@ -42,6 +43,7 @@ mod relation_follow;
 pub use relation_follow::RelationEffects;
 pub mod fields;
 mod hash;
+pub mod hatch_boundaries;
 mod hatch_ties;
 mod history;
 mod identity;
@@ -49,11 +51,15 @@ mod integrity;
 pub mod layer_purge;
 pub mod layer_states;
 mod layers;
+pub mod leader_ties;
 mod linked;
 mod patch;
 mod snapshot;
 mod step;
 mod store;
+mod style_overrides;
+pub mod table_cells;
+pub mod text_fields;
 mod units;
 mod domains;
 

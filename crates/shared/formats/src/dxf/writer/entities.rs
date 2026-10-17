@@ -51,7 +51,7 @@ mod leader;
 mod paragraph;
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
-use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
+use crate::math::{PI, TAU, atan, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
 
@@ -306,6 +306,40 @@ pub(super) struct Writer<'a> {
     pub arrows: &'a mut Vec<(kentos_contracts::LeaderArrow, u64)>,
     /// What a block's objects are drawn with now (`block_head`).
     pub pen: Pen,
+    /// How tables, dimensions and leaders are written (docs/adr/0327 §6).
+    pub forms: kentos_contracts::DxfAnnotations,
+    /// The associative hatches and their sources (docs/adr/0333 §3).
+    pub ties: &'a super::hatch_ties::Ties,
+}
+
+/// What the report says of a table, a dimension or a leader as `forms` writes it (docs/adr/0327 §6).
+pub(super) fn form_words(what: &str, block: bool, metadata: bool) -> String {
+    let native = match what {
+        "Ölçü" => "DIMENSION olarak (yerel nesne)",
+        _ => "LEADER ve MTEXT olarak (yerel nesneler)",
+    };
+    let form = if block || what == "Tablo" {
+        "blok görünüşü olarak (adsız blok ve INSERT)"
+    } else {
+        native
+    };
+    let kind = match what {
+        "Tablo" => "tablo",
+        "Ölçü" => "ölçü",
+        _ => "kılavuz",
+    };
+    let back = match (block || what == "Tablo", metadata) {
+        (_, true) => format!("KentOS verisiyle: KentOS {kind} olarak bütün alanlarıyla geri okur"),
+        (true, false) => "KentOS verisi olmadan: KentOS da blok olarak geri okur".to_owned(),
+        (false, false) => format!("KentOS verisi olmadan: KentOS {kind} olarak DXF'in söylediği kadarıyla geri okur"),
+    };
+    let edit = if block || what == "Tablo" {
+        format!("; başka programlar gösterir ama {kind} olarak düzenleyemez")
+    } else {
+        String::new()
+    };
+    let table = if what == "Tablo" { " (DXF'in ACAD_TABLE'ı yazılmaz)" } else { "" };
+    format!("{form}{table} yazıldı, {back}{edit}")
 }
 
 /// What a block's object is drawn with (docs/adr/0205 §6): a colour, a line
@@ -375,19 +409,34 @@ impl Writer<'_> {
 
     /// The entity's head: type, handle, owner, layer and colour. Returns its handle.
     fn begin(&mut self, kind: &str, base: &EntityBase) -> u64 {
-        let h = self.handles.take();
-        self.head(kind, base, h, None);
+        // An associative hatch and its sources took their handles before (docs/adr/0333 §3); a source reacts to its
+        // hatches.
+        let (h, reactors) = if self.defining {
+            (self.handles.take(), Vec::new())
+        } else {
+            (
+                self.ties
+                    .handles
+                    .get(&base.id)
+                    .copied()
+                    .unwrap_or_else(|| self.handles.take()),
+                self.ties.reactors.get(&base.id).cloned().unwrap_or_default(),
+            )
+        };
+        self.head(kind, base, h, &reactors);
         h
     }
 
     /// `begin` with the handle `h` taken before, and the object this one
     /// reacts to, when there is one (a leader's MTEXT its LEADER, docs/adr/0146 §8).
-    fn head(&mut self, kind: &str, base: &EntityBase, h: u64, reactor: Option<u64>) {
+    fn head(&mut self, kind: &str, base: &EntityBase, h: u64, reactors: &[u64]) {
         self.out.str(0, kind);
         self.out.handle(5, h);
-        if let Some(r) = reactor {
+        if !reactors.is_empty() {
             self.out.str(102, "{ACAD_REACTORS");
-            self.out.handle(330, r);
+            for r in reactors {
+                self.out.handle(330, *r);
+            }
             self.out.str(102, "}");
         }
         self.out.handle(330, self.owner);
@@ -1296,6 +1345,10 @@ impl Writer<'_> {
         self.grow(t.p);
         let mut meta = meta;
         meta.face = face_json(&t.face);
+        // Its fields in its KENTOS data (docs/adr/0325 §1); TEXT holds their letters.
+        if !t.paragraph.fields.is_empty() {
+            meta.fields = serde_json::to_string(&t.paragraph.fields).ok();
+        }
         self.end(meta);
         true
     }
@@ -1315,7 +1368,7 @@ impl Writer<'_> {
                 .skip("Tablo", "blok tanımında tablo olamaz; yazılmadı", 0);
             return false;
         }
-        if let Some((_, why)) = t.shape().problem() {
+        if let Some((_, why)) = t.problem() {
             self.report.skip("Tablo", &format!("{why} Yazılmadı."), 0);
             return false;
         }
@@ -1427,12 +1480,9 @@ impl Writer<'_> {
                 0,
             );
         }
-        self.report.note(
-            "Tablo",
-            "DXF'te KentOS tablosu yok: çizgi ve yazılarından bir blok (*U) olarak yazıldı; başka programlar blok olarak gösterir, KentOS tablo olarak geri okur",
-            0,
-        );
-        self.end(meta);
+        let words = form_words("Tablo", true, self.forms.metadata);
+        self.report.note("Tablo", &words, 0);
+        self.end(if self.forms.metadata { meta } else { Meta::default() });
         true
     }
 
@@ -1475,7 +1525,8 @@ impl Writer<'_> {
         };
         let def = dim::definition(d, &l);
         let own = d.text.clone().filter(|t| !t.is_empty());
-        let shown = own.clone().or_else(|| self.values.get(&d.base.id).cloned());
+        // The app's value first: it writes a text's `<>` and the options (docs/adr/0321 §2, §3).
+        let shown = self.values.get(&d.base.id).cloned().or_else(|| own.clone());
         if shown.is_none() && self.defining {
             // The app's values are the drawing's dimensions' (by id); a block's are in its own ids.
             self.report.note(
@@ -1502,8 +1553,15 @@ impl Writer<'_> {
         let text_pen = self.dimension_pen(look.text_color.as_deref(), None, None);
         // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
         let record = self.handles.take();
-        *self.dimensions += 1;
-        let name = format!("*D{}", *self.dimensions);
+        let block_form = self.forms.dimensions == kentos_contracts::DxfForm::Block;
+        // Its look as a block of its own (docs/adr/0327 §6): an anonymous *U an INSERT places, not a *D.
+        let name = if block_form {
+            *self.anonymous += 1;
+            format!("*U{}", *self.anonymous)
+        } else {
+            *self.dimensions += 1;
+            format!("*D{}", *self.dimensions)
+        };
         self.records.push((record, name.clone(), 0));
         self.block_begin(record, &name);
         let arc = match l.pick.first() {
@@ -1562,6 +1620,10 @@ impl Writer<'_> {
         }
         self.pen = Pen::default();
         self.block_end(record);
+        if block_form {
+            self.insert_whole(&d.base, &name, &Entity::Dimension(d.clone()), "Ölçü");
+            return true;
+        }
 
         // The DIMENSION (an ARC_DIMENSION, a LARGE_RADIAL_DIMENSION): its common groups, then its kind's.
         self.begin(def.entity, &d.base);
@@ -1573,8 +1635,14 @@ impl Writer<'_> {
         self.out.int(70, def.kind | dim::OWN_BLOCK | east);
         self.out.int(71, 5);
         self.out.real(42, l.value);
-        self.out
-            .str(1, &own.as_deref().map(dim::mtext_value).unwrap_or_default());
+        // A mark writes no value: a space is AutoCAD's “no text” (docs/adr/0322).
+        let none = d.style.is_some_and(DimensionStyle::is_mark);
+        self.out.str(
+            1,
+            &own.as_deref()
+                .map(dim::mtext_value)
+                .unwrap_or_else(|| if none { " ".into() } else { String::new() }),
+        );
         self.out
             .str(3, self.styles.dimension(d.look.dim_style.as_ref()));
         self.dimension_kind(&def);
@@ -1609,8 +1677,16 @@ impl Writer<'_> {
                 0,
             );
         }
+        if d.style.is_some_and(DimensionStyle::is_schema_62) {
+            self.report.note(
+                "Ölçü",
+                "merkez işareti, eksen çizgisi ve kot DXF'te hizalı ölçü olarak, kendi çizgileriyle yazıldı; başka programlar çizgilerini gösterir, KentOS geri okur ama bağlarını okumaz",
+                0,
+            );
+        }
         let mut m = Self::base_meta(&d.base);
         let slope = d.style == Some(DimensionStyle::Slope);
+        let level = d.style == Some(DimensionStyle::Elevation);
         m.dimension = Some(DimMeta {
             style: dim::style_name(d.style).unwrap_or("").to_string(),
             offset: d.offset,
@@ -1619,7 +1695,7 @@ impl Writer<'_> {
             text: own.filter(|t| dim::mtext_value(t) != *t),
             center: (def.entity == "DIMENSION" && def.kind == dim::DIAMETER)
                 .then_some((d.a.x, d.a.y)),
-            za: d.za.filter(|_| slope),
+            za: d.za.filter(|_| slope || level),
             zb: d.zb.filter(|_| slope),
         });
         // The value over the drawing's background (also DIMTFILL in its overrides).
@@ -1628,8 +1704,47 @@ impl Writer<'_> {
         if !d.look.is_plain() {
             m.look = serde_json::to_string(&d.look).ok();
         }
-        self.end(m);
+        let words = form_words("Ölçü", false, self.forms.metadata);
+        self.report.note("Ölçü", &words, 0);
+        self.end(if self.forms.metadata { m } else { Meta::default() });
         true
+    }
+
+    /// An INSERT at the origin of the anonymous block `name` that draws `whole` (a dimension's or a leader's look,
+    /// docs/adr/0327 §6); KentOS's data, when written, is the object itself, which KentOS reads back.
+    pub(super) fn insert_whole(
+        &mut self,
+        base: &kentos_contracts::EntityBase,
+        name: &str,
+        whole: &Entity,
+        what: &str,
+    ) {
+        self.begin("INSERT", base);
+        self.out.str(100, "AcDbBlockReference");
+        self.out.str(2, name);
+        self.out.xyz(10, v(0.0, 0.0));
+        let mut meta = Meta::default();
+        if self.forms.metadata {
+            meta = Self::base_meta(base);
+            meta.object = serde_json::to_string(whole).ok();
+            let bare = Meta {
+                label: None,
+                attrs: Default::default(),
+                symbol: None,
+                ..meta.clone()
+            };
+            if xdata::size(&xdata::groups(&bare)) > xdata::MAX_BYTES {
+                meta.object = None;
+                self.report.note(
+                    what,
+                    "AutoCAD'in nesne başına genişletilmiş veri sınırını (16 KB) aştığı için KentOS verisi yazılmadı; KentOS blok olarak geri okur",
+                    0,
+                );
+            }
+        }
+        let words = form_words(what, true, self.forms.metadata);
+        self.report.note(what, &words, 0);
+        self.end(meta);
     }
 
     /// The groups of a dimension's kind (its subclass and points).
@@ -1855,6 +1970,37 @@ impl Writer<'_> {
         mask: bool,
         style: &str,
     ) {
+        // Middle centre.
+        self.block_mtext_at(record, middle, height, rotation, text, 5, mask, style);
+    }
+
+    /// A leader's note in its block (docs/adr/0327 §6): attached at `attach` (MTEXT's 71), in Standard.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn block_mtext_attached(
+        &mut self,
+        record: u64,
+        at: Vec2,
+        height: f64,
+        rotation: f64,
+        text: &str,
+        attach: i64,
+        mask: bool,
+    ) {
+        self.block_mtext_at(record, at, height, rotation, text, attach, mask, "Standard");
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn block_mtext_at(
+        &mut self,
+        record: u64,
+        middle: Vec2,
+        height: f64,
+        rotation: f64,
+        text: &str,
+        attach: i64,
+        mask: bool,
+        style: &str,
+    ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
         let o = &mut *self.blocks;
@@ -1862,8 +2008,8 @@ impl Writer<'_> {
         o.xyz(10, middle);
         o.real(40, height);
         o.real(41, 0.0);
-        // Middle centre, left to right.
-        o.int(71, 5);
+        // Where it hangs from its point, left to right.
+        o.int(71, attach);
         o.int(72, 1);
         mtext_chunks(o, &dim::mtext_value(text));
         // The value's typeface (docs/adr/0183 §7): a face record's, else Standard.
@@ -1914,12 +2060,31 @@ impl Writer<'_> {
         };
         self.out.str(2, name);
         self.out.int(70, i64::from(fill));
-        self.out.int(71, 0);
-        self.out.int(91, 1 + holes.len() as i64);
-        // Outer boundary (external polyline), then the islands (polylines).
-        self.boundary(&h.ring, 3);
-        for hole in &holes {
-            self.boundary(hole, 2);
+        // Associative when its objects are written too (docs/adr/0333 §3): each path with its sources.
+        let sources = if self.defining {
+            None
+        } else {
+            self.ties.sources.get(&h.base.id).cloned()
+        };
+        self.out.int(71, i64::from(sources.is_some()));
+        let of = |k: usize| sources.as_ref().and_then(|s| s.get(k)).cloned().unwrap_or_default();
+        // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
+        // arcs and curves an edge path; else the drawn ring and holes.
+        match h.boundary.as_deref().filter(|b| !b.is_empty()) {
+            Some(loops) => {
+                self.out.int(91, loops.len() as i64);
+                for (k, l) in loops.iter().enumerate() {
+                    self.exact_boundary(l, k == 0, &of(k));
+                }
+            }
+            None => {
+                self.out.int(91, 1 + holes.len() as i64);
+                // Outer boundary (external polyline), then the islands (polylines).
+                self.boundary(&h.ring, 3, &of(0));
+                for (k, hole) in holes.iter().enumerate() {
+                    self.boundary(hole, 2, &of(k + 1));
+                }
+            }
         }
         self.out.int(75, 0);
         // A pattern of the library is AutoCAD's predefined one of that name; another is custom.
@@ -1998,7 +2163,14 @@ impl Writer<'_> {
             }
             HatchPatternType::Gradient => {}
         }
-        self.out.int(98, 0);
+        // The seed point of an associative hatch (docs/adr/0333 §3): where its region is picked again.
+        match (&sources, &h.assoc) {
+            (Some(_), Some(a)) => {
+                self.out.int(98, 1);
+                self.out.xy(10, a.seed);
+            }
+            _ => self.out.int(98, 0),
+        }
         if let (HatchPatternType::Gradient, Some(g)) = (kind, &p.gradient) {
             self.gradient(&h.base, p.angle, g);
             m.hatch = serde_json::to_string(p).ok();
@@ -2056,7 +2228,109 @@ impl Writer<'_> {
         self.out.str(470, name);
     }
 
-    fn boundary(&mut self, ring: &[Vec2], flags: i64) {
+    /// One loop of a hatch's exact boundary: a polyline path (72 bulges) of lines and arcs, else an edge path whose
+    /// edges are lines (1), circular arcs (2: a clockwise one's angles negated, 73 = 0), ellipses' arcs (3: angles of
+    /// the parameters, negated when clockwise) and splines (4, AC1021: no fit data).
+    fn exact_boundary(&mut self, l: &kentos_contracts::HatchLoop, outer: bool, sources: &[u64]) {
+        let n = l.pts.len();
+        let bulge = |i: usize| l.bulges.as_ref().map_or(0.0, |b| b[i]);
+        if !l.has_curves() {
+            self.out.int(92, if outer { 3 } else { 2 });
+            let arcs = (0..n).any(|i| bulge(i) != 0.0);
+            self.out.int(72, i64::from(arcs));
+            self.out.int(73, 1);
+            self.out.int(93, n as i64);
+            for (i, p) in l.pts.iter().enumerate() {
+                self.out.xy(10, *p);
+                if arcs {
+                    self.out.real(42, bulge(i));
+                }
+            }
+            self.sources(sources);
+            return;
+        }
+        self.out.int(92, i64::from(outer));
+        self.out.int(93, n as i64);
+        let curve = |i: usize| l.curves.as_ref().and_then(|c| c[i].as_ref());
+        for i in 0..n {
+            let (a, b) = (l.pts[i], l.pts[(i + 1) % n]);
+            match curve(i) {
+                Some(kentos_contracts::HatchCurve::Ellipse {
+                    c,
+                    major,
+                    ratio,
+                    t0,
+                    t1,
+                }) => {
+                    let ccw = t1 > t0;
+                    let angle = |t: f64| {
+                        let d = deg(atan2(ratio * sin(t), cos(t)));
+                        if ccw { d } else { -d }
+                    };
+                    self.out.int(72, 3);
+                    self.out.xy(10, *c);
+                    self.out.xy(11, *major);
+                    self.out.real(40, *ratio);
+                    self.out.real(50, angle(*t0));
+                    self.out.real(51, angle(*t1));
+                    self.out.int(73, i64::from(ccw));
+                }
+                Some(kentos_contracts::HatchCurve::Nurbs {
+                    degree,
+                    ctrl,
+                    knots,
+                    weights,
+                }) => {
+                    self.out.int(72, 4);
+                    self.out.int(94, i64::from(*degree));
+                    self.out.int(73, i64::from(weights.is_some()));
+                    self.out.int(74, 0);
+                    self.out.int(95, knots.len() as i64);
+                    self.out.int(96, ctrl.len() as i64);
+                    for k in knots {
+                        self.out.real(40, *k);
+                    }
+                    for (j, p) in ctrl.iter().enumerate() {
+                        self.out.xy(10, *p);
+                        if let Some(w) = weights {
+                            self.out.real(42, w[j]);
+                        }
+                    }
+                }
+                None => {
+                    let bl = bulge(i);
+                    let (dx, dy) = (b.x - a.x, b.y - a.y);
+                    let chord = hypot(dx, dy);
+                    if bl == 0.0 || chord == 0.0 {
+                        self.out.int(72, 1);
+                        self.out.xy(10, a);
+                        self.out.xy(11, b);
+                        continue;
+                    }
+                    // The bulge's circle (geometry core's bulge_arc).
+                    let k = (1.0 - bl * bl) / (4.0 * bl);
+                    let c = Vec2 {
+                        x: (a.x + b.x) / 2.0 - dy * k,
+                        y: (a.y + b.y) / 2.0 + dx * k,
+                    };
+                    let r = chord * (1.0 + bl * bl) / (4.0 * bl.abs());
+                    let start = deg(atan2(a.y - c.y, a.x - c.x));
+                    let sweep = deg(4.0 * atan(bl));
+                    let ccw = sweep > 0.0;
+                    let sign = if ccw { 1.0 } else { -1.0 };
+                    self.out.int(72, 2);
+                    self.out.xy(10, c);
+                    self.out.real(40, r);
+                    self.out.real(50, sign * start);
+                    self.out.real(51, sign * (start + sweep));
+                    self.out.int(73, i64::from(ccw));
+                }
+            }
+        }
+        self.sources(sources);
+    }
+
+    fn boundary(&mut self, ring: &[Vec2], flags: i64, sources: &[u64]) {
         self.out.int(92, flags);
         self.out.int(72, 0);
         self.out.int(73, 1);
@@ -2064,7 +2338,15 @@ impl Writer<'_> {
         for p in ring {
             self.out.xy(10, *p);
         }
-        self.out.int(97, 0);
+        self.sources(sources);
+    }
+
+    /// A path's source objects (97 and a 330 each; docs/adr/0333 §3).
+    fn sources(&mut self, sources: &[u64]) {
+        self.out.int(97, sources.len() as i64);
+        for h in sources {
+            self.out.handle(330, *h);
+        }
     }
 }
 

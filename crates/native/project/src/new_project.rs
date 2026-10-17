@@ -55,6 +55,7 @@ pub struct NewProject {
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
 pub fn default_settings(srid: u32) -> ProjectSettings {
     ProjectSettings {
+        leader_styles: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
         length_style: None,
@@ -87,6 +88,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         variables: Vec::new(),
         address_locators: Vec::new(),
         domains: Vec::new(),
+        hatch_patterns: Vec::new(),
     }
 }
 

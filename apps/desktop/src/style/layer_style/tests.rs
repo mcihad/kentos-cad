@@ -345,3 +345,32 @@ fn arrows_step_through_the_kinds() {
     ls(&mut app, Event::Step(false));
     assert_eq!(window(&app).kind, Kind::Displacement);
 }
+
+/// Oluşturucu… beside an expression: the İfade oluşturucu over the window's layer, its fields
+/// offered; Tamam writes the field, Vazgeç leaves it.
+#[test]
+fn an_expression_is_written_with_the_builder() {
+    let mut app = app_with_drawing();
+    ls(&mut app, Event::Open(Some("parsel".into())));
+    ls(&mut app, Event::Kind(Kind::Categorized));
+    ls(&mut app, Event::OpenBuilder(Field::Categories));
+    let b = app.builder.as_mut().expect("the builder is open");
+    assert_eq!(b.source, "Ada");
+    assert_eq!(b.context, "Katman stili · İfade");
+    assert!(b.schema.fields.iter().any(|f| f.name == "Ada"));
+    assert!(!b.objects.is_empty(), "the layer's objects to preview on");
+    b.source = "büyük(Ada)".into();
+    b.check.error = None;
+    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
+    assert!(app.builder.is_none());
+    assert_eq!(window(&app).categorized.expr, "büyük(Ada)");
+    assert_eq!(app.dialog, Some(Dialog::LayerStyle));
+    // A rule's condition, behind its ƒ.
+    ls(&mut app, Event::Kind(Kind::Rules));
+    ls(&mut app, Event::OpenBuilder(Field::Rule(vec![0])));
+    let b = app.builder.as_mut().expect("the builder is open");
+    b.source = "$alan > 400".into();
+    b.check.error = None;
+    let _ = app.update(Message::Builder(crate::expression::Event::Ok));
+    assert_eq!(window(&app).expr_text(&Field::Rule(vec![0])), "$alan > 400");
+}

@@ -1,0 +1,2499 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.fonts.report",
+  "commandVersion": 1,
+  "title": "Yazı tiplerini raporla",
+  "note": "Written by scripts/fixtures/font_report_cases.py from docs/adr/0324 §5; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yazı tipleri",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "textStyles": [
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+          "name": "Ada no",
+          "font": "arimo"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+          "name": "Yol adı",
+          "font": "arimo",
+          "fontFile": "arial.ttf"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+          "name": "Pafta",
+          "font": "barlow",
+          "fontFile": "romans.shx"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+          "name": "Başlık",
+          "font": "overpass",
+          "fontFile": "times.ttf"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+          "name": "Not",
+          "font": "barlow",
+          "fontFile": "Barlow-Bold.ttf"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+          "name": "Kot",
+          "font": "overpass",
+          "fontFile": "arialbd.ttf"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+          "name": "Çince",
+          "font": "quicksand",
+          "fontFile": "gbcbig.shx"
+        },
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+          "name": "Liste",
+          "font": "courier-prime",
+          "fontFile": "couri.ttf"
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "yazi",
+        "name": "Yazı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {
+        "kind": "text",
+        "id": 1,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4400000
+        },
+        "text": "101",
+        "height": 2.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+        "font": "arimo"
+      },
+      {
+        "kind": "text",
+        "id": 2,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500020,
+          "y": 4400000
+        },
+        "text": "102",
+        "height": 2.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+        "font": "arimo"
+      },
+      {
+        "kind": "text",
+        "id": 3,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500030,
+          "y": 4400000
+        },
+        "text": "Atatürk Cd.",
+        "height": 2.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+        "font": "arimo"
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500040,
+          "y": 4400000
+        },
+        "text": "G-23-b",
+        "height": 2.5,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+        "font": "barlow"
+      },
+      {
+        "kind": "text",
+        "id": 5,
+        "layerId": "yazi",
+        "attrs": {},
+        "p": {
+          "x": 500050,
+          "y": 4400000
+        },
+        "text": "Plan notu",
+        "height": 2.5,
+        "rotation": 0
+      },
+      {
+        "kind": "dimension",
+        "id": 6,
+        "layerId": "yazi",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4399990
+        },
+        "b": {
+          "x": 500006,
+          "y": 4399990
+        },
+        "offset": -1,
+        "height": 2.5,
+        "font": "overpass"
+      },
+      {
+        "kind": "dimension",
+        "id": 7,
+        "layerId": "yazi",
+        "attrs": {},
+        "a": {
+          "x": 500000,
+          "y": 4399990
+        },
+        "b": {
+          "x": 500006,
+          "y": 4399990
+        },
+        "offset": -1,
+        "height": 2.5
+      },
+      {
+        "kind": "leader",
+        "id": 8,
+        "layerId": "yazi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4399980
+          },
+          {
+            "x": 500004,
+            "y": 4399984
+          }
+        ],
+        "text": "Not",
+        "height": 2.5,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": []
+  },
+  "cases": [
+    {
+      "name": "Boş çizim: projenin yazı tipi, stil ve yazı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stiller ve yazılar: dosyasız stil kendi, Arial ikizi, SHX ve Times yerine stilin yazı tipi, uyarılarla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 2
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+                  "name": "Yol adı",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+                  "name": "Başlık",
+                  "file": "times.ttf",
+                  "face": "overpass",
+                  "how": "missing",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+                  "name": "Not",
+                  "file": "Barlow-Bold.ttf",
+                  "face": "barlow",
+                  "how": "own",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+                  "name": "Kot",
+                  "file": "arialbd.ttf",
+                  "face": "overpass",
+                  "how": "equivalent",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+                  "name": "Çince",
+                  "file": "gbcbig.shx",
+                  "face": "quicksand",
+                  "how": "shx",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+                  "name": "Liste",
+                  "file": "couri.ttf",
+                  "face": "courier-prime",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [
+                "barlow",
+                "arimo",
+                "overpass"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "path": "styles[2]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "path": "styles[3]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Kot” stili arialbd.ttf yazı tipini adlandırıyor (stil başka bir yazı tipine çevrilmiş); yazıları Overpass ile çizilir.",
+                "path": "styles[5]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "path": "styles[6]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosyasız stil kendi yazı tipidir, uyarısız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+              "name": "Ada no",
+              "font": "arimo"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "101",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+            "font": "arimo"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 1
+                }
+              ],
+              "names": [],
+              "faces": [
+                "arimo"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "arial.ttf Arimo'yla çizilir: eşdeğer, uyarısız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+              "name": "Yol adı",
+              "font": "arimo",
+              "fontFile": "arial.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+                  "name": "Yol adı",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHX çizgi yazı tipi okunmaz: stilin yazı tipiyle, uyarıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+              "name": "Pafta",
+              "font": "barlow",
+              "fontFile": "romans.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Big font da SHX'tir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+              "name": "Çince",
+              "font": "quicksand",
+              "fontFile": "gbcbig.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+                  "name": "Çince",
+                  "file": "gbcbig.shx",
+                  "face": "quicksand",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Times KentOS'ta yok: stilin yazı tipiyle, uyarıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+              "name": "Başlık",
+              "font": "overpass",
+              "fontFile": "times.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+                  "name": "Başlık",
+                  "file": "times.ttf",
+                  "face": "overpass",
+                  "how": "missing",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Barlow-Bold.ttf Barlow'un kendisidir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+              "name": "Not",
+              "font": "barlow",
+              "fontFile": "Barlow-Bold.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+                  "name": "Not",
+                  "file": "Barlow-Bold.ttf",
+                  "face": "barlow",
+                  "how": "own",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Arial adlandırıp Overpass'a çevrilmiş stil uyarılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+              "name": "Kot",
+              "font": "overpass",
+              "fontFile": "arialbd.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+                  "name": "Kot",
+                  "file": "arialbd.ttf",
+                  "face": "overpass",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Kot” stili arialbd.ttf yazı tipini adlandırıyor (stil başka bir yazı tipine çevrilmiş); yazıları Overpass ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "couri.ttf Courier Prime'ın ikizidir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+              "name": "Liste",
+              "font": "courier-prime",
+              "fontFile": "couri.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+                  "name": "Liste",
+                  "file": "couri.ttf",
+                  "face": "courier-prime",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stili kullanan yazılar sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+              "name": "Ada no",
+              "font": "arimo"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+              "name": "Pafta",
+              "font": "barlow",
+              "fontFile": "romans.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "a",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+            "font": "arimo"
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "b",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+            "font": "barlow"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500030,
+              "y": 4400000
+            },
+            "text": "c",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+            "font": "barlow"
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "d",
+            "height": 2.5,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 2
+                }
+              ],
+              "names": [],
+              "faces": [
+                "barlow",
+                "arimo"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "path": "styles[1]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı tipleri: yazıların, ölçülerin, kılavuzların; sözleşmenin sırasıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "a",
+            "height": 2.5,
+            "rotation": 0,
+            "font": "plex-mono"
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399990
+            },
+            "b": {
+              "x": 500006,
+              "y": 4399990
+            },
+            "offset": -1,
+            "height": 2.5,
+            "font": "quicksand"
+          },
+          {
+            "kind": "leader",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4399980
+              },
+              {
+                "x": 500004,
+                "y": 4399984
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400000
+            },
+            "text": "b",
+            "height": 2.5,
+            "rotation": 0,
+            "font": "arimo"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [],
+              "faces": [
+                "barlow",
+                "arimo",
+                "quicksand",
+                "plex-mono"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projenin yazı tipi Overpass: kendi yazı tipi olmayanlar onunla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "overpass",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "a",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "dimension",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399990
+            },
+            "b": {
+              "x": 500006,
+              "y": 4399990
+            },
+            "offset": -1,
+            "height": 2.5
+          },
+          {
+            "kind": "leader",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4399980
+              },
+              {
+                "x": 500004,
+                "y": 4399984
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "overpass",
+              "styles": [],
+              "names": [],
+              "faces": [
+                "overpass"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adlar aynı kuralla çözülür",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "arial.ttf",
+              "Helvetica Neue",
+              "Liberation Sans",
+              "cour.ttf",
+              "Courier New",
+              "Courier Prime",
+              "romans.shx",
+              "GBCBIG.SHX",
+              "times.ttf",
+              "Calibri",
+              "IBM Plex Mono",
+              "plexmono-regular.ttf",
+              "Quicksand-Bold.ttf",
+              "ArchitectsDaughter",
+              "OVERPASS",
+              "Barlow Condensed",
+              "arimo.ttf",
+              "Verdana"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "Helvetica Neue",
+                  "face": "arimo",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "Liberation Sans",
+                  "face": "arimo",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "cour.ttf",
+                  "face": "courier-prime",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "Courier New",
+                  "face": "courier-prime",
+                  "how": "equivalent"
+                },
+                {
+                  "name": "Courier Prime",
+                  "face": "courier-prime",
+                  "how": "own"
+                },
+                {
+                  "name": "romans.shx",
+                  "how": "shx"
+                },
+                {
+                  "name": "GBCBIG.SHX",
+                  "how": "shx"
+                },
+                {
+                  "name": "times.ttf",
+                  "how": "missing"
+                },
+                {
+                  "name": "Calibri",
+                  "how": "missing"
+                },
+                {
+                  "name": "IBM Plex Mono",
+                  "face": "plex-mono",
+                  "how": "own"
+                },
+                {
+                  "name": "plexmono-regular.ttf",
+                  "face": "plex-mono",
+                  "how": "own"
+                },
+                {
+                  "name": "Quicksand-Bold.ttf",
+                  "face": "quicksand",
+                  "how": "own"
+                },
+                {
+                  "name": "ArchitectsDaughter",
+                  "face": "architects-daughter",
+                  "how": "own"
+                },
+                {
+                  "name": "OVERPASS",
+                  "face": "overpass",
+                  "how": "own"
+                },
+                {
+                  "name": "Barlow Condensed",
+                  "face": "barlow",
+                  "how": "own"
+                },
+                {
+                  "name": "arimo.ttf",
+                  "face": "arimo",
+                  "how": "own"
+                },
+                {
+                  "name": "Verdana",
+                  "how": "missing"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir ad: romans.shx",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "romans.shx"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "romans.shx",
+                  "how": "shx"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Büyük harf ve boşluk önemsiz: IBM Plex Mono",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "  ibm plex mono  "
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "  ibm plex mono  ",
+                  "face": "plex-mono",
+                  "how": "own"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen ad eksik sayılır, yüzü verilmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "Segoe UI"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "Segoe UI",
+                  "how": "missing"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan execute ile aynıdır",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "names": [
+              "arial.ttf"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 2
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+                  "name": "Yol adı",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+                  "name": "Başlık",
+                  "file": "times.ttf",
+                  "face": "overpass",
+                  "how": "missing",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+                  "name": "Not",
+                  "file": "Barlow-Bold.ttf",
+                  "face": "barlow",
+                  "how": "own",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+                  "name": "Kot",
+                  "file": "arialbd.ttf",
+                  "face": "overpass",
+                  "how": "equivalent",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+                  "name": "Çince",
+                  "file": "gbcbig.shx",
+                  "face": "quicksand",
+                  "how": "shx",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+                  "name": "Liste",
+                  "file": "couri.ttf",
+                  "face": "courier-prime",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [
+                {
+                  "name": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent"
+                }
+              ],
+              "faces": [
+                "barlow",
+                "arimo",
+                "overpass"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "path": "styles[2]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "path": "styles[3]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Kot” stili arialbd.ttf yazı tipini adlandırıyor (stil başka bir yazı tipine çevrilmiş); yazıları Overpass ile çizilir.",
+                "path": "styles[5]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "path": "styles[6]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stiller ve adlar birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "times.ttf",
+              "Arial"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 2
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+                  "name": "Yol adı",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 1
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+                  "name": "Başlık",
+                  "file": "times.ttf",
+                  "face": "overpass",
+                  "how": "missing",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0505",
+                  "name": "Not",
+                  "file": "Barlow-Bold.ttf",
+                  "face": "barlow",
+                  "how": "own",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0506",
+                  "name": "Kot",
+                  "file": "arialbd.ttf",
+                  "face": "overpass",
+                  "how": "equivalent",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0507",
+                  "name": "Çince",
+                  "file": "gbcbig.shx",
+                  "face": "quicksand",
+                  "how": "shx",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0508",
+                  "name": "Liste",
+                  "file": "couri.ttf",
+                  "face": "courier-prime",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [
+                {
+                  "name": "times.ttf",
+                  "how": "missing"
+                },
+                {
+                  "name": "Arial",
+                  "face": "arimo",
+                  "how": "equivalent"
+                }
+              ],
+              "faces": [
+                "barlow",
+                "arimo",
+                "overpass"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "path": "styles[2]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "path": "styles[3]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Kot” stili arialbd.ttf yazı tipini adlandırıyor (stil başka bir yazı tipine çevrilmiş); yazıları Overpass ile çizilir.",
+                "path": "styles[5]"
+              },
+              {
+                "code": "font_substituted",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "path": "styles[6]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız kılavuz: projenin yazı tipi",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "leader",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4399980
+              },
+              {
+                "x": 500004,
+                "y": 4399984
+              }
+            ],
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [],
+              "faces": [
+                "barlow"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              ""
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "1. yazı tipi adı boş. Bir dosya ya da aile adı yazın (arial.ttf, romans.shx).",
+              "path": "names[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız boşluklu ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "   "
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "1. yazı tipi adı boş. Bir dosya ya da aile adı yazın (arial.ttf, romans.shx).",
+              "path": "names[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci ad boş: yeri söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "arial.ttf",
+              ""
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_name",
+              "message": "2. yazı tipi adı boş. Bir dosya ya da aile adı yazın (arial.ttf, romans.shx).",
+              "path": "names[1]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "80 karakterden uzun ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_name",
+              "message": "1. yazı tipi adı 80 karakterden uzun. Kısaltın.",
+              "path": "names[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tam 80 karakter kabul edilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": []
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [],
+              "names": [
+                {
+                  "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "how": "missing"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

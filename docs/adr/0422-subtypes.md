@@ -52,8 +52,8 @@ yazılmaz. Retler: `invalid_revision`, `revision_conflict`, `layer_not_found`, `
 
 ### 4. Dosya
 
-`.kcad` şema 60'ın katman düğümünde `subtypes` (JSON'u olduğu gibi, alanlarla birlikte denetlenir). Bağımsız okuyucu `kcad.py`
-kuralı ayrıca yazar; örnek `forms.json`'da, kırık örnekler `subtypes-in-schema-59`, `subtypes-unfit`, `subtypes-sorter-many`.
+`.kcad` şema 72'nin katman düğümünde `subtypes` (JSON'u olduğu gibi, alanlarla birlikte denetlenir). Bağımsız okuyucu `kcad.py`
+kuralı ayrıca yazar; örnek `forms.json`'da, kırık örnekler `subtypes-in-schema-71`, `subtypes-unfit`, `subtypes-sorter-many`.
 
 ### 5. Masaüstü
 

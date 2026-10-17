@@ -38,8 +38,8 @@ gösterim biçimiyle gösterir ve zaman sırasıyla sıralar; dışa aktarmada m
 
 ### 4. Dosya
 
-İki tür `.kcad` şema 60'tadır (formlarla aynı şema); şema 59 okuyucusu alanın türünü `bad_value` ile reddeder
-(`broken/field-datetime-in-schema-59.kcad`). Örnek `forms.json`'un `Tespit` ve `Vardiya` alanları; bağımsız `tools/kcad/kcad.py`
+İki tür `.kcad` şema 72'dedir (formlarla aynı şema); şema 71 okuyucusu alanın türünü `bad_value` ile reddeder
+(`broken/field-datetime-in-schema-71.kcad`). Örnek `forms.json`'un `Tespit` ve `Vardiya` alanları; bağımsız `tools/kcad/kcad.py`
 ve `kcad_v2_reference.py` aynı kuralla.
 
 ## Denetimler

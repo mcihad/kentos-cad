@@ -1,0 +1,209 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Merkez işareti, eksen çizgisi ve kot",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "circle",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "c": {
+        "x": 500020.0,
+        "y": 4400020.0
+      },
+      "r": 5.0
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500040.0,
+        "y": 4400010.0
+      },
+      "b": {
+        "x": 500060.0,
+        "y": 4400010.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500060.0,
+        "y": 4400016.0
+      },
+      "b": {
+        "x": 500040.0,
+        "y": 4400016.0
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500070.0,
+          "y": 4400010.0
+        },
+        {
+          "x": 500080.0,
+          "y": 4400010.0
+        }
+      ],
+      "zs": [
+        105.25,
+        null
+      ]
+    },
+    {
+      "kind": "dimension",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500020.0,
+        "y": 4400020.0
+      },
+      "b": {
+        "x": 500025.0,
+        "y": 4400020.0
+      },
+      "offset": 2.5,
+      "height": 2.5,
+      "style": "centerMark",
+      "extLineType": "dashdot",
+      "refs": {
+        "b": {
+          "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e41",
+          "place": {
+            "kind": "along",
+            "part": 0,
+            "ring": 0,
+            "index": 0,
+            "t": 0.0
+          }
+        },
+        "rule": "curve"
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 6,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500040.0,
+        "y": 4400013.0
+      },
+      "b": {
+        "x": 500060.0,
+        "y": 4400013.0
+      },
+      "offset": 2.5,
+      "height": 2.5,
+      "style": "centerLine",
+      "extLineType": "dashdot",
+      "refs": {
+        "a": {
+          "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e42",
+          "place": {
+            "kind": "along",
+            "part": 0,
+            "ring": 0,
+            "index": 0,
+            "t": 0.5
+          }
+        },
+        "b": {
+          "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e43",
+          "place": {
+            "kind": "along",
+            "part": 0,
+            "ring": 0,
+            "index": 0,
+            "t": 0.5
+          }
+        },
+        "rule": "pair"
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 7,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500070.0,
+        "y": 4400010.0
+      },
+      "b": {
+        "x": 500072.0,
+        "y": 4400014.0
+      },
+      "offset": 0.0,
+      "height": 2.5,
+      "style": "elevation",
+      "za": 105.25,
+      "refs": {
+        "a": {
+          "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e44",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+          }
+        }
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e41",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e42",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e43",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e44",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e45",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e46",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e47"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

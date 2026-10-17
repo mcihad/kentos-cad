@@ -8,6 +8,8 @@ mod exchange;
 mod external;
 mod field_ids;
 mod fixtures;
+mod hatch_boundaries;
+mod hatch_texts;
 mod identity;
 mod layer_fields;
 mod layer_rules;

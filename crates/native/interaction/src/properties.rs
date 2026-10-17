@@ -36,6 +36,57 @@ pub fn set_properties(doc: &mut Document, input: EntitiesSetProperties) -> Vec<S
     said(set::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A dynamic block's insert's values (docs/adr/0319 §3): `values` set, or `reset` the names given (none: all),
+/// through `cad.blocks.parameters`, one undo step “Blok parametreleri”; what to say: the command's refusal (an
+/// unknown or computed parameter, a value its rule refuses, a locked layer).
+pub fn set_parameters(
+    doc: &mut Document,
+    slot: Slot,
+    values: Option<std::collections::BTreeMap<String, kentos_contracts::ParamValue>>,
+    reset: Option<Vec<String>>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let operation = if values.is_some() {
+        kentos_contracts::ParametersOperation::Set
+    } else {
+        kentos_contracts::ParametersOperation::Reset
+    };
+    let input = kentos_contracts::BlocksParameters {
+        operation,
+        uids: vec![uid.to_string()],
+        values,
+        names: reset,
+        expected_revision: None,
+    };
+    said(kentos_native_application::block_params::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
+}
+
+/// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
+/// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
+pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_contracts::BoundaryForm) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::HatchesEdit {
+        edit: kentos_contracts::HatchEdit::Recreate {
+            uid: uid.to_string(),
+            form: Some(form),
+            layer_id: None,
+            associative: Some(true),
+        },
+        expected_revision: None,
+    };
+    said(kentos_native_application::hatches_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
+}
+
 /// The object at `slot` given `entity`'s geometry in its place, as the step
 /// “Değiştir” (its layer, colour, attributes, label and symbol stay); what
 /// to say: the command's refusal (a locked layer, an empty text).
@@ -152,7 +203,7 @@ pub fn replace_texts(doc: &mut Document, words: &[(Slot, String)]) -> Vec<String
 /// The texts in `slots` changed by `change`, those it changes, in one step
 /// “Değiştir” (Öznitelikler's Hiza, Genişlik çarpanı and Zemin, docs/adr/0145
 /// §6); what to say: the command's refusal.
-fn change_texts(
+pub(crate) fn change_texts(
     doc: &mut Document,
     slots: &[Slot],
     change: impl Fn(&TextEntity, Font) -> Option<TextEntity>,
@@ -466,7 +517,87 @@ pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str
     set_geometries(doc, &changes)
 }
 
-fn said<T>(result: CommandResult<T>) -> Vec<String> {
+/// Stile döndür (docs/adr/0322 §5): the texts and dimensions in `slots` that set fields of their style apart take its
+/// values again, their overrides cleared, in one step “Değiştir”; those without overrides left out.
+pub fn restore_styles(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
+    let settings = doc.settings();
+    let scale = settings.plot_scale;
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| match doc.get(slot)? {
+            Entity::Text(t) if !t.face.overrides.is_empty() => {
+                let style = t
+                    .face
+                    .text_style
+                    .as_ref()
+                    .and_then(|id| settings.text_styles.iter().find(|s| &s.id == id))?;
+                let look = kentos_contracts::apply_text_style(
+                    Some(style),
+                    &kentos_contracts::TextLook {
+                        face: t.face.clone(),
+                        width_factor: t.width_factor,
+                        height: t.height,
+                    },
+                    scale,
+                );
+                let mut t = t.clone();
+                t.face = look.face;
+                t.width_factor = look.width_factor;
+                t.height = look.height;
+                Some((slot, Entity::Text(t)))
+            }
+            Entity::Dimension(d) if !d.look.overrides.is_empty() => {
+                let style = d
+                    .look
+                    .dim_style
+                    .as_ref()
+                    .and_then(|id| settings.dimension_styles.iter().find(|s| &s.id == id))?;
+                let mut d = d.clone();
+                d.look = style.look();
+                d.height = style.height_at(scale);
+                Some((slot, Entity::Dimension(d)))
+            }
+            _ => None,
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// The Turkish names of a text's or a dimension's overrides (docs/adr/0322 §5), in their order.
+pub fn override_names(overrides: &[String]) -> Vec<&'static str> {
+    overrides
+        .iter()
+        .map(|n| match n.as_str() {
+            "font" => "Yazı tipi",
+            "bold" => "Kalın",
+            "italic" => "İtalik",
+            "oblique" => "Eğiklik",
+            "widthFactor" => "Genişlik",
+            "height" => "Yükseklik",
+            "arrow" => "Uçlar",
+            "arrowSize" => "Uç boyu",
+            "extOffset" => "Uzatma boşluğu",
+            "extBeyond" => "Uzatma aşması",
+            "textGap" => "Değerin yüksekliği",
+            "textPlace" => "Değerin yeri",
+            "decimals" => "Basamak",
+            "unit" => "Birim",
+            "prefix" => "Önek",
+            "suffix" => "Sonek",
+            "dimLineColor" => "Çizgi rengi",
+            "dimLineWeight" => "Çizgi kalınlığı",
+            "dimLineType" => "Çizgi tipi",
+            "extColor" => "Uzatma rengi",
+            "extWeight" => "Uzatma kalınlığı",
+            "extLineType" => "Uzatma tipi",
+            "textColor" => "Değer rengi",
+            "options" => "Seçenekler",
+            _ => "?",
+        })
+        .collect()
+}
+
+pub(crate) fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {
             warnings.into_iter().map(|w| w.message).collect()
@@ -519,4 +650,32 @@ pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
     }
     doc.end_group(group);
     out
+}
+
+/// One `cad.dimensions.edit` on the dimensions at `slots` (docs/adr/0321 §4): Öznitelikler's options, written value,
+/// moved value and breaks, and the ribbon's Ölçü aralığı, Ölçüyü kır and Kırmayı kaldır. `make` builds the edit from
+/// the dimensions' persistent ids (the first the base for spacing). What to say.
+pub fn edit_dimensions(
+    doc: &mut Document,
+    slots: &[Slot],
+    make: impl FnOnce(Vec<String>) -> kentos_contracts::DimensionEdit,
+) -> Vec<String> {
+    use kentos_contracts::DimensionsEdit;
+    use kentos_native_application::dimensions_edit;
+    let uids: Vec<String> = slots
+        .iter()
+        .filter(|s| matches!(doc.get(**s), Some(Entity::Dimension(_))))
+        .filter_map(|s| doc.uid(*s).map(|u| u.to_string()))
+        .collect();
+    if uids.is_empty() {
+        return vec!["Seçimde ölçü yok; önce ölçüleri seçin.".into()];
+    }
+    let input = DimensionsEdit {
+        edit: make(uids),
+        expected_revision: None,
+    };
+    said(dimensions_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }

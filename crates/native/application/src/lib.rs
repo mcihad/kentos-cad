@@ -39,6 +39,7 @@
 pub mod address_define;
 pub mod addresses;
 pub mod annotation_follow;
+pub mod annotations_scales;
 pub mod arc;
 pub mod array;
 mod array_assoc;
@@ -49,6 +50,9 @@ pub mod blocks_define;
 pub mod blocks_edit;
 pub mod blocks_insert;
 pub mod block_params;
+pub mod block_variants;
+pub mod blocks_freeze;
+pub mod blocks_proxy;
 pub mod blocks_query;
 pub mod blocks_replace;
 pub mod blocks_sync;
@@ -70,6 +74,17 @@ pub mod curves_edit_cmd;
 pub mod delete;
 mod dimension;
 pub mod dimension_create;
+pub mod dimensions_edit;
+pub mod dimensions_query;
+pub mod fields_edit;
+pub mod hatches_edit;
+mod hatch_notes;
+pub mod leaders_edit;
+pub mod fonts_report;
+pub mod texts_check;
+pub mod table_schedule;
+pub mod tables_edit;
+pub mod texts_edit;
 pub mod dimensions_reassociate;
 pub mod divide;
 mod edge_commands;
@@ -142,6 +157,7 @@ pub mod layers_states;
 pub mod layers_time;
 pub mod layers_translate;
 pub mod line;
+pub mod hatch_patterns_edit;
 pub mod line_types_edit;
 pub mod match_props;
 pub mod network_define;
@@ -341,6 +357,44 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::CAD_RELATIONS_EDIT,
         kentos_contracts::CAD_RELATIONS_EDIT_VERSION,
     ),
+    // Taramanın sınırı, adaları ve ilişkisi ([`hatches_edit`], docs/adr/0329 §4).
+    (
+        kentos_contracts::CAD_HATCHES_EDIT,
+        kentos_contracts::CAD_HATCHES_EDIT_VERSION,
+    ),
+    // Çok kollu kılavuz ([`leaders_edit`], docs/adr/0326 §5).
+    (
+        kentos_contracts::CAD_LEADERS_EDIT,
+        kentos_contracts::CAD_LEADERS_EDIT_VERSION,
+    ),
+    // Tablonun hücreleri, formülleri, alanları ve dosyası ([`tables_edit`], docs/adr/0327).
+    (
+        kentos_contracts::CAD_TABLES_EDIT,
+        kentos_contracts::CAD_TABLES_EDIT_VERSION,
+    ),
+    // Alanlar and the text commands ([`fields_edit`], [`texts_edit`], [`texts_check`], docs/adr/0325 §3).
+    (
+        kentos_contracts::CAD_FIELDS_EDIT,
+        kentos_contracts::CAD_FIELDS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TEXTS_EDIT,
+        kentos_contracts::CAD_TEXTS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TEXTS_CHECK,
+        kentos_contracts::CAD_TEXTS_CHECK_VERSION,
+    ),
+    // Yazı tipleri ([`fonts_report`], docs/adr/0324 §5).
+    (
+        kentos_contracts::CAD_FONTS_REPORT,
+        kentos_contracts::CAD_FONTS_REPORT_VERSION,
+    ),
+    // Ölçekli açıklamalar ([`annotations_scales`], docs/adr/0323 §4).
+    (
+        kentos_contracts::CAD_ANNOTATIONS_SCALES,
+        kentos_contracts::CAD_ANNOTATIONS_SCALES_VERSION,
+    ),
     // Öne getir and Arkaya gönder ([`entities_order`], docs/adr/0260 §5).
     (
         kentos_contracts::CAD_ENTITIES_ORDER,
@@ -468,6 +522,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_DIMENSIONS_CREATE,
         kentos_contracts::CAD_DIMENSIONS_CREATE_VERSION,
+    ),
+    // A dimension's spacing, breaks, moved value, written value and options ([`dimensions_edit`], docs/adr/0321 §4).
+    (
+        kentos_contracts::CAD_DIMENSIONS_EDIT,
+        kentos_contracts::CAD_DIMENSIONS_EDIT_VERSION,
+    ),
+    // What dimensions measure and show ([`dimensions_query`], docs/adr/0321 §3).
+    (
+        kentos_contracts::CAD_DIMENSIONS_QUERY,
+        kentos_contracts::CAD_DIMENSIONS_QUERY_VERSION,
     ),
     // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250).
     (
@@ -600,6 +664,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::CAD_LINE_TYPES_EDIT,
         kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
     ),
+    // The project's own hatch patterns ([`hatch_patterns_edit`], docs/adr/0331 §1).
+    (
+        kentos_contracts::CAD_HATCH_PATTERNS_EDIT,
+        kentos_contracts::CAD_HATCH_PATTERNS_EDIT_VERSION,
+    ),
     // Blocks from a drawing file ([`file_import_block`], docs/adr/0316 §3).
     (
         kentos_contracts::FILE_IMPORT_BLOCK,
@@ -624,6 +693,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_BLOCKS_PARAMETERS,
         kentos_contracts::CAD_BLOCKS_PARAMETERS_VERSION,
+    ),
+    // What an insert draws, and a dynamic block's inserts made plain ([`block_variants`], docs/adr/0319 §4).
+    (
+        kentos_contracts::CAD_BLOCKS_PROXY,
+        kentos_contracts::CAD_BLOCKS_PROXY_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_BLOCKS_FREEZE,
+        kentos_contracts::CAD_BLOCKS_FREEZE_VERSION,
     ),
     // The project's style library and a change's reach ([`library_edit`], [`styles_impact`], docs/adr/0314).
     (

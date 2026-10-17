@@ -46,7 +46,7 @@ nesnesinin ve silinenlerin değerlerinden (o önce) birleştirir. Böylece bu ar
 
 ### 3. Dosya ve pencere
 
-`split` ve `merge` `.kcad` şema 60'ta (`broken/field-split-in-schema-59.kcad`); Alanlar penceresinde seçili alan için **Nesne
+`split` ve `merge` `.kcad` şema 72'de (`broken/field-split-in-schema-71.kcad`); Alanlar penceresinde seçili alan için **Nesne
 bölününce** ve **Nesneler birleşince** (yalnız alanın türüne uyan seçenekler).
 
 ## Denetimler

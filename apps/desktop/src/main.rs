@@ -6,6 +6,10 @@
 
 #[cfg(test)]
 mod acceptance_tests;
+#[cfg(test)]
+mod annotative_sheet_tests;
+#[cfg(test)]
+mod text_outputs_tests;
 mod address;
 #[cfg(test)]
 mod address_scenes;
@@ -14,6 +18,7 @@ mod alias_profile;
 #[cfg(test)]
 mod alias_profile_scenes;
 mod annotation_scale;
+mod annotative;
 mod annotation_styles;
 mod app;
 mod app_menu;
@@ -31,11 +36,17 @@ mod attribute_table;
 mod attribute_values;
 #[cfg(test)]
 mod audit_scenes;
+#[cfg(test)]
+mod block_attr_scenes;
 mod block_attributes;
-mod blocks;
 mod block_card;
+#[cfg(test)]
+mod block_dynamic_scenes;
 mod block_editor;
+#[cfg(test)]
+mod block_scenes;
 mod block_schedule;
+mod blocks;
 mod blocks_files;
 mod blocks_panel;
 mod bottom;
@@ -65,6 +76,22 @@ mod curve_edit_scenes;
 mod curve_scenes;
 mod data_compare;
 #[cfg(test)]
+mod dimension_follow_scenes;
+#[cfg(test)]
+mod dimension_mark_scenes;
+#[cfg(test)]
+mod annotative_scenes;
+#[cfg(test)]
+mod paragraph_layout_scenes;
+#[cfg(test)]
+mod text_field_scenes;
+#[cfg(test)]
+mod multileader_scenes;
+#[cfg(test)]
+mod table_cells_scenes;
+#[cfg(test)]
+mod dimension_option_scenes;
+#[cfg(test)]
 mod dimension_scenes;
 #[cfg(test)]
 mod divide_scenes;
@@ -91,6 +118,12 @@ mod find_replace;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
+#[cfg(test)]
+mod hatch_boundary_scenes;
+#[cfg(test)]
+mod hatch_pattern_scenes;
+#[cfg(test)]
+mod hatch_look_scenes;
 mod history;
 #[cfg(test)]
 mod history_scenes;
@@ -103,12 +136,6 @@ mod image_scenes;
 #[cfg(test)]
 mod impact_scenes;
 #[cfg(test)]
-mod block_attr_scenes;
-#[cfg(test)]
-mod block_dynamic_scenes;
-#[cfg(test)]
-mod block_scenes;
-#[cfg(test)]
 mod imperial_scenes;
 mod info_card;
 mod input;
@@ -116,6 +143,7 @@ mod input;
 mod input_scenes;
 mod keys;
 mod keytips;
+mod label_picture;
 #[cfg(test)]
 mod label_scenes;
 mod labelling;
@@ -125,6 +153,9 @@ mod layer_fields;
 mod layer_filters;
 mod layer_info;
 mod layer_list;
+mod font_report;
+mod text_tools;
+mod leader_tools;
 mod layer_merge;
 mod layer_purge;
 mod layer_snap;
@@ -144,6 +175,7 @@ mod leader_scenes;
 mod lengthen_scenes;
 #[cfg(test)]
 mod line_type_scenes;
+mod hatch_patterns_window;
 mod line_types_window;
 mod locks;
 mod log_plan;
@@ -238,6 +270,8 @@ mod standard_scenes;
 #[cfg(test)]
 mod stretch_scenes;
 mod style_impact;
+#[cfg(test)]
+mod style_override_scenes;
 mod sub_object;
 #[cfg(test)]
 mod subref_scenes;
@@ -310,6 +344,7 @@ mod text_field;
 mod text_file;
 #[cfg(test)]
 mod text_scenes;
+mod toasts;
 #[cfg(test)]
 mod tools_scenes;
 #[cfg(test)]

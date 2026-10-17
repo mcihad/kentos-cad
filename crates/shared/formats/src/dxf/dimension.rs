@@ -108,8 +108,38 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
         c: d.c.map(core),
         za: d.za,
         zb: d.zb,
-        look: look_of(&d.look),
+        look: kentos_geometry_core::geom::dimension::Look {
+            more: more_of(d),
+            ..look_of(&d.look)
+        },
     })
+}
+
+/// A dimension's options, moved value and breaks as the core lays them out (docs/adr/0321 §1).
+pub fn more_of(
+    d: &DimensionEntity,
+) -> Option<Box<kentos_geometry_core::geom::dimension::look::LookMore>> {
+    use kentos_contracts::BreakLine;
+    kentos_geometry_core::geom::dimension::look::LookMore {
+        options: d.look.options.as_deref().and_then(|o| {
+            let text = serde_json::to_string(o).ok()?;
+            kentos_geometry_core::api::json::Json::parse(&text).ok()
+        }),
+        shift: d.text_shift.map(|s| (s.along, s.across)),
+        breaks: d
+            .breaks
+            .iter()
+            .map(|b| {
+                let line = match b.line {
+                    BreakLine::Dimension => 0,
+                    BreakLine::First => 1,
+                    BreakLine::Second => 2,
+                };
+                (line, b.t)
+            })
+            .collect(),
+    }
+    .boxed()
 }
 
 /// A dimension's look as the core lays it out (the arrowheads, sizes and the
@@ -117,6 +147,7 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
 pub fn look_of(l: &kentos_contracts::DimensionLook) -> kentos_geometry_core::geom::dimension::Look {
     use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
     Look {
+        more: None,
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
         arrow_size: l.arrow_size,
@@ -221,8 +252,15 @@ pub fn definition(d: &DimensionEntity, l: &DimensionLayout) -> Definition {
             p15: Some(d.b),
             ..plain
         },
-        // No DXF kind: an aligned one that its block draws, KentOS's data giving it back.
-        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => plain,
+        // No DXF kind: an aligned one that its block draws, KentOS's data giving it back (the marks of
+        // docs/adr/0322 too).
+        Some(
+            DimensionStyle::Azimuth
+            | DimensionStyle::Slope
+            | DimensionStyle::CenterMark
+            | DimensionStyle::CenterLine
+            | DimensionStyle::Elevation,
+        ) => plain,
     }
 }
 
@@ -285,7 +323,13 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         }
         Some(DimensionStyle::ArcLength) => (g.p13?, g.p14?, Some(g.p15?), None),
         Some(DimensionStyle::Jogged) => (g.p10?, g.p15?, Some(g.p13?), None),
-        Some(DimensionStyle::Azimuth | DimensionStyle::Slope) => (g.p13?, g.p14?, None, None),
+        Some(
+            DimensionStyle::Azimuth
+            | DimensionStyle::Slope
+            | DimensionStyle::CenterMark
+            | DimensionStyle::CenterLine
+            | DimensionStyle::Elevation,
+        ) => (g.p13?, g.p14?, None, None),
     };
     // The text as KentOS had it, while group 1 still says it; else what group 1 says now.
     let text = match &k.text {
@@ -294,7 +338,11 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         _ => Some(mtext_lines(&caret_decode(&g.text)).join("\n")),
     };
     let slope = style == Some(DimensionStyle::Slope);
+    let level = style == Some(DimensionStyle::Elevation);
     let d = DimensionEntity {
+        annotative: None,
+        text_shift: None,
+        breaks: Vec::new(),
         base,
         a,
         b,
@@ -305,7 +353,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         angle,
         c,
         mask,
-        za: k.za.filter(|_| slope),
+        za: k.za.filter(|_| slope || level),
         zb: k.zb.filter(|_| slope),
         refs: None,
         look: Default::default(),
@@ -343,6 +391,9 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
                 angle: Option<f64>,
                 c: Option<Vec2>| {
         DimensionEntity {
+            annotative: None,
+            text_shift: None,
+            breaks: Vec::new(),
             base: base.clone(),
             a,
             b,

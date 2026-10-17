@@ -60,19 +60,55 @@ pub(crate) struct Store {
     ties: HashMap<Uuid, BTreeSet<Slot>>,
     /// The dimensions with a broken reference (docs/adr/0249 §3): what the drawing marks.
     broken: BTreeSet<Slot>,
+    /// The texts whose fields read an object, by that object's persistent id (docs/adr/0325 §2).
+    fielded: HashMap<Uuid, BTreeSet<Slot>>,
+    /// The texts with a project's or a layer's field: written again at every step.
+    always: BTreeSet<Slot>,
+    /// Every text with fields.
+    with_fields: BTreeSet<Slot>,
+    /// The tables with fields, formulas or a block schedule (docs/adr/0327): worked out before a step is recorded.
+    computed: BTreeSet<Slot>,
 }
 
-/// The objects a hatch's region follows: its closed object, islands and
-/// cutouts (docs/adr/0186 §6); the objects an associative dimension's points
+/// Whether a table has cells the document works out (docs/adr/0327).
+fn computed_table(stored: &Stored) -> bool {
+    matches!(&*stored.entity, Entity::Table(t)
+        if !t.fields.is_empty()
+            || !t.formulas.is_empty()
+            || matches!(t.source, Some(kentos_contracts::TableSource::Blocks { .. })))
+}
+
+/// The objects a text's fields read, and whether one reads the project or a layer's name (docs/adr/0325 §2).
+fn fields_of(stored: &Stored) -> Option<(Vec<Uuid>, bool)> {
+    let Entity::Text(t) = &*stored.entity else {
+        return None;
+    };
+    if t.paragraph.fields.is_empty() {
+        return None;
+    }
+    let mut of = Vec::new();
+    let mut always = false;
+    for f in &t.paragraph.fields {
+        match &f.source {
+            kentos_contracts::FieldSource::Object { uid, value, .. } => {
+                of.push(Uuid::from_bytes(uid.0));
+                always |= *value == kentos_contracts::ObjectValue::Layer;
+            }
+            kentos_contracts::FieldSource::Project { .. } => always = true,
+        }
+    }
+    of.sort_unstable();
+    of.dedup();
+    Some((of, always))
+}
+
+/// The objects a hatch's region follows: its closed object or its face's
+/// line work, islands and cutouts (docs/adr/0186 §6, 0328 §3); the objects an associative dimension's points
 /// follow while their references hold (docs/adr/0249 §3).
 fn ties_of(stored: &Stored) -> Vec<Uuid> {
     match &*stored.entity {
         Entity::Hatch(h) => h.assoc.as_ref().map_or_else(Vec::new, |a| {
-            std::iter::once(&a.outer)
-                .chain(&a.islands)
-                .chain(&a.cutouts)
-                .map(|id| Uuid::from_bytes(id.0))
-                .collect()
+            a.objects().map(|id| Uuid::from_bytes(id.0)).collect()
         }),
         Entity::Dimension(d) => d.refs.as_ref().map_or_else(Vec::new, |r| {
             let mut of: Vec<Uuid> = r
@@ -83,6 +119,19 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
             of.dedup();
             of
         }),
+        // A leader's tips while they follow their places, and its content blocks (docs/adr/0326 §2, §3).
+        Entity::Leader(l) => {
+            let mut of: Vec<Uuid> = std::iter::once(l.tip.as_ref())
+                .chain(l.arms.iter().map(|a| a.tip.as_ref()))
+                .flatten()
+                .filter(|t| t.live())
+                .map(|t| Uuid::from_bytes(t.uid.0))
+                .chain(l.blocks.iter().map(|b| Uuid::from_bytes(b.0)))
+                .collect();
+            of.sort_unstable();
+            of.dedup();
+            of
+        }
         _ => Vec::new(),
     }
 }
@@ -145,7 +194,49 @@ impl Store {
         all.into_iter().collect()
     }
 
+    /// The texts whose fields read the object with persistent id `of`, in slot order.
+    pub fn fielded_from(&self, of: Uuid) -> impl Iterator<Item = Slot> + '_ {
+        self.fielded.get(&of).into_iter().flatten().copied()
+    }
+
+    /// The texts with a project's or a layer's field, in slot order.
+    pub fn always_fielded_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.always.iter().copied()
+    }
+
+    /// Whether any text has fields.
+    pub fn has_fields(&self) -> bool {
+        !self.with_fields.is_empty()
+    }
+
+    /// How many texts have fields.
+    pub fn fielded_count(&self) -> usize {
+        self.with_fields.len()
+    }
+
+    /// Whether any table has worked out cells.
+    pub fn has_computed_tables(&self) -> bool {
+        !self.computed.is_empty()
+    }
+
+    /// The tables with worked out cells, in slot order.
+    pub fn computed_table_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.computed.iter().copied()
+    }
+
     fn link(&mut self, stored: &Stored) {
+        if computed_table(stored) {
+            self.computed.insert(stored.slot());
+        }
+        if let Some((of, always)) = fields_of(stored) {
+            for uid in of {
+                self.fielded.entry(uid).or_default().insert(stored.slot());
+            }
+            if always {
+                self.always.insert(stored.slot());
+            }
+            self.with_fields.insert(stored.slot());
+        }
         if let Some(of) = link_of(stored) {
             self.links.entry(of).or_default().insert(stored.slot());
         }
@@ -158,6 +249,19 @@ impl Store {
     }
 
     fn unlink(&mut self, stored: &Stored) {
+        self.computed.remove(&stored.slot());
+        if let Some((of, _)) = fields_of(stored) {
+            for uid in of {
+                if let Some(texts) = self.fielded.get_mut(&uid) {
+                    texts.remove(&stored.slot());
+                    if texts.is_empty() {
+                        self.fielded.remove(&uid);
+                    }
+                }
+            }
+            self.always.remove(&stored.slot());
+            self.with_fields.remove(&stored.slot());
+        }
         if let Some(of) = link_of(stored)
             && let Some(texts) = self.links.get_mut(&of)
         {

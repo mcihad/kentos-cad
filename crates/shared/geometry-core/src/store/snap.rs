@@ -1067,9 +1067,15 @@ fn shape_snaps(
                 for q in &pts {
                     ch.consider(SnapKind::Endpoint, *q, id);
                 }
-                // A leader's landing ends where its note begins (docs/adr/0146 §4).
+                // A leader's landing ends where its note begins (docs/adr/0146 §4); its other arms' vertices
+                // (docs/adr/0326 §1).
                 if let Some([_, end]) = leader::layout_of(s).and_then(|l| l.landing) {
                     ch.consider(SnapKind::Endpoint, end, id);
+                }
+                if let Shape::Leader { arms: Some(arms), .. } = s {
+                    for q in arms.iter().flat_map(|a| &a.pts) {
+                        ch.consider(SnapKind::Endpoint, *q, id);
+                    }
                 }
                 // A polygon's vertices include its holes', as the TypeScript walked them.
                 let n = if crate::entity::is_closed_path(s) {

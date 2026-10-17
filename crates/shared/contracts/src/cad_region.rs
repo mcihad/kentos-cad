@@ -126,9 +126,31 @@ pub enum HatchWay {
     #[default]
     Object,
     /// Çizgiler (AutoCAD's): the face the boundaries' line work closes
-    /// around the point, closed groups inside it its islands; it follows nothing.
+    /// around the point, closed groups inside it its islands; with İlişkili it
+    /// follows that line work (docs/adr/0328 §3).
     Lines,
 }
+
+/// How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum IslandStyle {
+    /// Dış: the islands are left open, whatever lies inside them too.
+    #[default]
+    Outer,
+    /// İç içe (Normal): the islands are left open, the closed objects inside them hatched again, those inside these
+    /// open again, by turns (kapalı nesne and Çoklu tara; in the line work as Outer, said).
+    Normal,
+    /// Yok say: the islands are hatched over.
+    Ignore,
+}
+
+/// The most further points a region takes, and the widest gap it closes (m).
+pub const MAX_HATCH_POINTS: usize = 1000;
+pub const MAX_HATCH_GAP: f64 = 1000.0;
 
 /// Where Tarama hatches.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -166,10 +188,27 @@ pub enum HatchRegion {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         texts: Option<bool>,
-        /// İlişkili (`object` only): the hatch follows its objects; absent: true.
+        /// İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
+        /// docs/adr/0328 §3); absent: true.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
+        /// Further points, each a region of its own found as `at`'s; a region two points find is hatched once
+        /// (docs/adr/0329 §2).
+        #[serde(default, rename = "alsoAt", skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec2>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        also_at: Vec<Vec2>,
+        /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
+        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        island_style: Option<IslandStyle>,
+        /// `lines`: gaps in the line work up to this many metres are closed, each dangling end bridged to the
+        /// nearest line work (docs/adr/0329 §3); absent: 0.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        gap: Option<f64>,
     },
     /// Çoklu tara: each closed object (each part of a multi-part area)
     /// hatched by itself, from a point inside it.
@@ -188,7 +227,34 @@ pub enum HatchRegion {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
+        /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
+        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        island_style: Option<IslandStyle>,
     },
+}
+
+impl HatchRegion {
+    /// How its islands are taken: `islandStyle`, else Adalar (on: outer, off: ignore).
+    pub fn islands_taken(&self) -> IslandStyle {
+        let (style, on) = match self {
+            HatchRegion::Point {
+                island_style,
+                islands,
+                ..
+            }
+            | HatchRegion::Objects {
+                island_style,
+                islands,
+                ..
+            } => (*island_style, *islands),
+        };
+        style.unwrap_or(if on.unwrap_or(true) {
+            IslandStyle::Outer
+        } else {
+            IslandStyle::Ignore
+        })
+    }
 }
 
 /// The pattern by its name, as Tarama's Desen lists it, and its options.
@@ -220,6 +286,71 @@ pub struct HatchPatternSpec {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub inverted: Option<bool>,
+    /// What Ölçek is of (docs/adr/0331 §3): on paper at the project's plot scale, or of the definition's own unit in
+    /// the drawing; absent: paper.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<ScaleBasis>,
+    /// Where the pattern is anchored (docs/adr/0331 §2); absent: the world's origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub origin: Option<HatchOrigin>,
+    /// Ölçekli: the hatch annotative at the project's plot scale (docs/adr/0331 §3); paper basis only; absent: false.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotative: Option<bool>,
+}
+
+/// What a pattern's Ölçek is of (docs/adr/0331 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ScaleBasis {
+    /// Kâğıtta: the definition's units on paper, at the project's plot scale.
+    #[default]
+    Paper,
+    /// Çizimde: the definition's units in the drawing (a millimetre pattern's millimetre a millimetre of the world).
+    World,
+}
+
+/// A region's corner, or its middle (docs/adr/0331 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BoxCorner {
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight,
+    Center,
+}
+
+/// Where a pattern's lines are anchored (docs/adr/0331 §2; AutoCAD's hatch origin).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchOrigin {
+    /// The world's origin: neighbouring hatches line up.
+    World,
+    /// A point.
+    Point {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+    },
+    /// A corner of each region's box; with `across`, of the box of every region the command hatches, so that they
+    /// line up with each other (Nesneler boyunca hizala).
+    Corner {
+        corner: BoxCorner,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        across: bool,
+    },
 }
 
 /// Input of `cad.entities.hatch` v1: the regions of `region` hatched with
@@ -256,6 +387,18 @@ pub struct EntitiesHatch {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub look: NewLook,
+    /// The hatches' own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0332 §1; AutoCAD's
+    /// HPTRANSPARENCY): a solid's, a gradient's and a pattern's lines alike. Absent: their layer's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub transparency: Option<f64>,
+    /// Where the hatches are drawn among their layer's objects (docs/adr/0332 §1; AutoCAD's HPDRAWORDER). Absent:
+    /// `none`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub draw_order: Option<HatchDrawOrder>,
     /// The document revision the input was prepared against, as decimal
     /// text. When given and the document is no longer at it, nothing is
     /// written and the answer is `conflict`.
@@ -263,6 +406,27 @@ pub struct EntitiesHatch {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// Where a new hatch is drawn among the objects of its layer (docs/adr/0332 §1): the draw order is the layer's own
+/// (docs/adr/0260 §4); across layers the layers' order decides.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum HatchDrawOrder {
+    /// Atama: as a new object, over what its layer had.
+    #[default]
+    None,
+    /// Arkaya: under every object of its layer.
+    Back,
+    /// Öne: over every object of its layer.
+    Front,
+    /// Sınırın arkasında: just under its boundary's objects on its layer.
+    BehindBoundary,
+    /// Sınırın önünde: just over its boundary's objects on its layer.
+    AboveBoundary,
 }
 
 #[cfg(test)]

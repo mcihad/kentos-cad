@@ -196,8 +196,66 @@ SCHEMA_WITH_BLOCK_CARDS = 58
 # Schema 59: a block definition's `dynamic` part (parameters and actions, as their JSON) and an insert's `parameters`
 # (docs/adr/0318).
 SCHEMA_WITH_DYNAMIC_BLOCKS = 59
-# Schema 60: the settings' `forms` (the project's forms) and a layer field's stable `id` (docs/adr/0401).
-SCHEMA_WITH_FORMS = 60
+# Schema 60: schema 59 and a dimension's references' `rule` (`curve` or `edges`): how its points no place names follow
+# (docs/adr/0320 §1).
+SCHEMA_WITH_DIMENSION_RULES = 60
+# Schema 61: schema 60, a dimension's and a dimension style's `options` and a dimension's `textShift` and `breaks`
+# (docs/adr/0321).
+SCHEMA_WITH_DIMENSION_OPTIONS = 61
+# Schema 62: schema 61, a dimension's kinds `centerMark`, `centerLine`, `elevation` and its references' rule `pair`
+# (docs/adr/0322).
+SCHEMA_WITH_DIMENSION_MARKS = 62
+# Schema 63: schema 62, a text's and a dimension's `overrides`: the fields set apart from their style (docs/adr/0322 §5).
+SCHEMA_WITH_OVERRIDES = 63
+# Schema 64: schema 63, a text's, a dimension's and a leader's `annotative`: its scales (docs/adr/0323).
+SCHEMA_WITH_ANNOTATIVE = 64
+# Schema 65: schema 64, a multi-line text's `layout` (indents, tab stops, columns) and a run's `stack` script (docs/adr/0324).
+SCHEMA_WITH_PARAGRAPH_LAYOUT = 65
+# Schema 66: schema 65, a text's `fields`: ranges of its letters bound to a source (docs/adr/0325).
+SCHEMA_WITH_TEXT_FIELDS = 66
+FIELD_OBJECT_VALUES = ("area", "perimeter", "length", "layer", "label", "attribute", "text", "x", "y")
+FIELD_PROJECT_VALUES = ("name", "scale", "unit", "crs", "variable", "blockCount")
+FIELD_UNITS = ("mm", "cm", "m", "km", "m2", "donum", "ha")
+FIELD_BROKEN = ("removed", "noValue", "notNamed", "cycle")
+MAX_FIELDS = 256
+# Schema 67: schema 66, a leader's `arms`, `tip`, `blocks`, `leaderStyle` and the settings' `leaderStyles` (docs/adr/0326).
+SCHEMA_WITH_MULTILEADER = 67
+MAX_LEADER_ARMS = 64
+# Schema 68: schema 67, a table's `styles`, `formulas`, `fields`, its linked file's `link` and a block schedule's
+# `schedule` (docs/adr/0327).
+SCHEMA_WITH_TABLE_CELLS = 68
+# Schema 69: schema 68, a hatch's exact `boundary` (loops of lines, arcs, ellipses' arcs and NURBS curves) and a tie's
+# `bounds` (the line work a face follows; `outer` then absent) (docs/adr/0328).
+SCHEMA_WITH_HATCH_BOUNDARIES = 69
+# Schema 70: schema 69 and a face's tie's `gap` (docs/adr/0329 §3).
+SCHEMA_WITH_HATCH_GAPS = 70
+# Schema 71: schema 70, the settings' `hatchPatterns` (a project's own patterns), a pattern's `origin` and a hatch's
+# `annotative` (docs/adr/0331).
+SCHEMA_WITH_HATCH_EXTRAS = 71
+MAX_HATCH_GAP = 1000.0
+MAX_BOUNDARY_LOOPS = 100_000
+MAX_LOOP_EDGES = 1_000_000
+MAX_CURVE_POINTS = 100_000
+MAX_CURVE_DEGREE = 10
+MAX_CELL_STYLES = 1000
+MAX_FORMULAS = 10_000
+MAX_CELL_FIELDS = 1000
+MAX_FORMULA_LETTERS = 1000
+MAX_CELL_DECIMALS = 10
+COLOUR = re.compile(r"#[0-9A-Fa-f]{6}")
+SHA256_HEX = re.compile(r"[0-9A-Fa-f]{64}")
+UUID_TEXT = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+# A layout's numbers in the text's height, at most this much; at most this many tab stops (docs/adr/0324 §1).
+MAX_PARAGRAPH_HEIGHTS = 1000.0
+MAX_TABS = 32
+MAX_ANNOTATIVE_SCALES = 32
+MAX_ANNOTATIVE_SCALE = 1.0e6
+TEXT_OVERRIDES = ("font", "bold", "italic", "oblique", "widthFactor", "height")
+DIMENSION_OVERRIDES = ("arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix",
+                       "font", "dimLineColor", "dimLineWeight", "dimLineType", "extColor", "extWeight", "extLineType", "textColor",
+                       "options", "height")
+# Schema 72: schema 71, the settings' `forms` (the project's forms) and a layer field's stable `id` (docs/adr/0401).
+SCHEMA_WITH_FORMS = 72
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -359,7 +417,8 @@ REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
-DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
+                    "centerMark", "centerLine", "elevation")
 # A leader's arrowheads (spec §6.6); the filled arrow is the field's absence, no value. Schema 30 added AutoCAD's others
 # (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
@@ -379,7 +438,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_FORMS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2372,6 +2431,18 @@ class _Schema:
         self.block_extras = version >= SCHEMA_WITH_BLOCK_EXTRAS
         self.block_cards = version >= SCHEMA_WITH_BLOCK_CARDS
         self.dynamic_blocks = version >= SCHEMA_WITH_DYNAMIC_BLOCKS
+        self.dim_rules = version >= SCHEMA_WITH_DIMENSION_RULES
+        self.dim_options = version >= SCHEMA_WITH_DIMENSION_OPTIONS
+        self.dim_marks = version >= SCHEMA_WITH_DIMENSION_MARKS
+        self.overrides = version >= SCHEMA_WITH_OVERRIDES
+        self.annotative = version >= SCHEMA_WITH_ANNOTATIVE
+        self.paragraph_layout = version >= SCHEMA_WITH_PARAGRAPH_LAYOUT
+        self.text_fields = version >= SCHEMA_WITH_TEXT_FIELDS
+        self.multileader = version >= SCHEMA_WITH_MULTILEADER
+        self.table_cells = version >= SCHEMA_WITH_TABLE_CELLS
+        self.hatch_boundaries = version >= SCHEMA_WITH_HATCH_BOUNDARIES
+        self.hatch_gaps = version >= SCHEMA_WITH_HATCH_GAPS
+        self.hatch_extras = version >= SCHEMA_WITH_HATCH_EXTRAS
         self.forms = version >= SCHEMA_WITH_FORMS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
@@ -2686,6 +2757,7 @@ class _Schema:
                 **({"survey": (self.survey, False)} if self.survey_fields else {}),
                 **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
                 **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
+                **({"leaderStyles": (self.leader_styles, False)} if self.multileader else {}),
                 **({"topology": (self.topology_, False)} if self.topology else {}),
                 **({"annotation": (self.annotation_, False)} if self.annotation else {}),
                 **({"connections": (self.connections_, False)} if self.services else {}),
@@ -2698,6 +2770,7 @@ class _Schema:
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
                 **({"forms": (self.forms_, False), "relations": (self.relations_, False),
                     "domains": (self.domains_, False)} if self.forms else {}),
+                **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -2887,6 +2960,8 @@ class _Schema:
                     "prefix": (self.text, False),
                     "suffix": (self.text, False),
                     "font": (self.enum(DRAWING_FONTS), False),
+                    # Schema 61 (docs/adr/0321): its options.
+                    **({"options": (self.dimension_options, False)} if self.dim_options else {}),
                     # Schema 30 (docs/adr/0205 §6): its lines.
                     **(
                         {
@@ -4087,6 +4162,38 @@ class _Schema:
             self.fail("bad_value", "çizgi tipi ölçeği 0'dan büyük ve en çok 1000 olmalı; 1 yazılmaz")
         return v
 
+    def hatch_patterns_(self, v):
+        """The project's own hatch patterns (schema 71, docs/adr/0331 §1): a name trimmed, not empty, without a comma, at
+        most 64 letters, once (case aside); 1 to 64 families, each at most 16 dashes not all 0, its numbers finite and
+        at most 10⁶ in size, its lines' distance not 0; the unit mm, inch or drawing; an empty list is not written."""
+        family = self.fields({"angle": (self.float, True), "origin": (self.pair, True), "offset": (self.pair, True),
+                              "dashes": (self.array(self.float), False)})
+        read = self.fields({"name": (self.text, True), "description": (self.text, False), "unit": (self.enum(("mm", "inch", "drawing")), True),
+                            "lines": (self.array(family), True), "source": (self.text, False)})
+        all_ = self.array(read)(v)
+        if not all_:
+            self.fail("bad_value", "boş liste yazılmaz; tarama deseni yoksa alan hiç yazılmaz")
+        seen = set()
+        fits = lambda x: math.isfinite(x) and abs(x) <= MAX_PATTERN_SIZE  # noqa: E731
+        for d in all_:
+            name = d["name"]
+            if not name or name != name.strip() or "," in name or len(name) > MAX_PATTERN_NAME:
+                self.fail("bad_value", f"“{name}” bir tarama deseni adı olamaz")
+            if name.lower() in seen:
+                self.fail("bad_value", f"“{name}” tarama deseni iki kez var")
+            seen.add(name.lower())
+            if "description" in d and not d["description"]:
+                self.fail("bad_value", "boş açıklama yazılmaz")
+            if not 1 <= len(d["lines"]) <= MAX_PATTERN_LINES:
+                self.fail("bad_value", f"“{name}” tarama deseninin ailesi en az 1, en çok {MAX_PATTERN_LINES} olur")
+            for l in d["lines"]:
+                dashes = l.get("dashes", [])
+                if len(dashes) > MAX_PATTERN_DASHES or not all(fits(x) for x in [l["angle"], *l["origin"], *l["offset"], *dashes]):
+                    self.fail("bad_value", f"“{name}” tarama deseninin bir ailesi geçersiz")
+                if l["offset"][1] == 0.0 or (dashes and all(x == 0.0 for x in dashes)):
+                    self.fail("bad_value", f"“{name}” tarama deseninin bir ailesi çizmiyor")
+        return all_
+
     def line_types_(self, v):
         """The project's line types (schema 56, docs/adr/0313 §1): a name trimmed, not empty, once (case aside); at most
         12 elements, a text or a shape of length 0, the first that draws not a gap; the unit paper or drawing; an empty
@@ -4279,11 +4386,32 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
+            if kind == "text" and "layout" in fields:
+                self.path.append("layout")
+                self.layout_rules(fields["layout"], "boxWidth" in fields)
+                self.path.pop()
+            # A leader with content blocks has no note (docs/adr/0326 §2).
+            if kind == "leader" and "blocks" in fields and "text" in fields:
+                self.path.append("blocks")
+                self.fail("bad_value", "blok içerikli kılavuzun notu olmaz")
+            if kind == "text" and "fields" in fields:
+                self.path.append("fields")
+                self.text_fields_rules(fields["text"], fields["fields"])
+                self.path.pop()
+            # A text along a curve or linked to an object is not annotative (docs/adr/0323 §1).
+            if kind == "text" and "annotative" in fields and ("path" in fields or "labelOf" in fields):
+                self.path.append("annotative")
+                self.fail("bad_value", "eğri boyunca ve nesneye bağlı yazı ölçekli olamaz")
+            # A solid or gradient hatch has no pattern to scale (docs/adr/0331 §3).
+            if kind == "hatch" and "annotative" in fields and fields["pattern"]["type"] in ("solid", "gradient"):
+                self.path.append("annotative")
+                self.fail("bad_value", "dolu ve degrade tarama ölçekli olamaz")
             if kind == "text" and "path" in fields:
                 self.path.append("path")
                 self.text_path_rules(fields)
                 self.path.pop()
             if kind == "table":
+                self.table_sources(fields)
                 self.table_rules(fields)
             if kind == "image":
                 self.image_rules(fields)
@@ -4558,7 +4686,7 @@ class _Schema:
                 "bold": (self.true_flag, False),
                 "italic": (self.true_flag, False),
                 "underline": (self.true_flag, False),
-                "script": (self.enum(("super", "sub")), False),
+                "script": (self.enum(("super", "sub", "stack") if self.paragraph_layout else ("super", "sub")), False),
                 "color": (self.text, False),
             }
         )
@@ -4576,6 +4704,8 @@ class _Schema:
                 self.fail("bad_value", f"{n}. biçim dilimi {r['start']}–{r['end']}; yazının {letters} harfi içinde, başı sonundan önce olmalı")
             if not any(k in r for k in keys):
                 self.fail("bad_value", f"{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz")
+            if r.get("script") == "stack" and not any(c in "/#^" for c in text[r["start"]:r["end"]]):
+                self.fail("bad_value", f"{n}. biçim dilimi kesir, ama harflerinde ayıraç (/, # ya da ^) yok")
             if r.get("color") == "":
                 self.fail("bad_value", f"{n}. biçim diliminin rengi boş")
             if before is not None:
@@ -4584,6 +4714,98 @@ class _Schema:
                 if r["start"] == before["end"] and all(r.get(k) == before.get(k) for k in keys):
                     self.fail("bad_value", f"{n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir")
             before = r
+
+    def layout_of(self, v):
+        """A text's indents, tab stops and columns (docs/adr/0324 §1), in its height (a column's height in metres)."""
+        def columns(c):
+            return self.fields({"count": (self.uint(32), True), "gap": (self.float, True), "height": (self.float, True)})(c)
+
+        floats = lambda a: [self.float(x) for x in self.array(lambda x: x)(a)]  # noqa: E731
+        return self.fields({"indent": (self.float, False), "leftIndent": (self.float, False), "tabs": (floats, False), "columns": (columns, False)})(v)
+
+    def text_fields_of(self, v):
+        """A text's fields (docs/adr/0325 §1): ranges of its letters bound to an object's or the project's value."""
+        def uid(u):
+            if type(u) is not str or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", u):
+                self.fail("bad_value", "nesnenin kimliği küçük harfli, tireli bir UUID olmalı")
+            return u
+
+        def source(src):
+            if type(src) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            if src.get("kind") == "object":
+                return self.fields({"kind": (self.text, True), "uid": (uid, True), "value": (self.enum(FIELD_OBJECT_VALUES), True), "name": (self.text, False)})(src)
+            if src.get("kind") == "project":
+                return self.fields({"kind": (self.text, True), "value": (self.enum(FIELD_PROJECT_VALUES), True), "name": (self.text, False)})(src)
+            self.fail("bad_value", f"alanın kaynağı {src.get('kind')!r}: object ya da project olmalı")
+
+        fmt = self.fields({"decimals": (self.uint(8), False), "unit": (self.enum(FIELD_UNITS), False), "comma": (self.true_flag, False), "prefix": (self.text, False), "suffix": (self.text, False)})
+        one = self.fields({"start": (self.uint(32), True), "end": (self.uint(32), True), "source": (source, True), "format": (fmt, False), "broken": (self.enum(FIELD_BROKEN), False)})
+        return self.array(one)(v)
+
+    def text_fields_rules(self, text, fields):
+        """The fields as the contract allows them (`text_fields_problem`): some, in the letters, in order, apart, the
+        names they need, a format that sets something, a unit of their value's kind, a broken one's letters ####."""
+        letters = len(text)
+        if not fields:
+            self.fail("bad_value", "boş alan listesi yazılmaz")
+        if len(fields) > MAX_FIELDS:
+            self.fail("bad_value", f"bir yazıda en çok {MAX_FIELDS} alan olur")
+        last = 0
+        for i, f in enumerate(fields):
+            n = i + 1
+            if f["start"] >= f["end"] or f["end"] > letters or (i > 0 and f["start"] < last):
+                self.fail("bad_value", f"{n}. alan {f['start']}–{f['end']}: yazının {letters} harfi içinde, sırayla ve ayrı olmalı")
+            last = f["end"]
+            src = f["source"]
+            if self.field_source_problem(src):
+                self.fail("bad_value", f"{n}. alan: {self.field_source_problem(src)}")
+            fm = f.get("format")
+            if fm is not None:
+                if fm.get("decimals", 0) > 10:
+                    self.fail("bad_value", f"{n}. alan: basamak en çok 10 olur")
+                if not fm:
+                    self.fail("bad_value", f"{n}. alan: boş biçim yazılmaz")
+                unit = fm.get("unit")
+                if unit is not None:
+                    if src["kind"] == "project":
+                        self.fail("bad_value", f"{n}. alan: projenin değeri birimle yazılmaz")
+                    number = src["value"] in ("area", "perimeter", "length", "x", "y")
+                    if not number or (unit in ("m2", "donum", "ha")) != (src["value"] == "area"):
+                        self.fail("bad_value", f"{n}. alan: {src['value']} değeri {unit} biriminde yazılamaz")
+            if "broken" in f and text[f["start"]:f["end"]] != "####":
+                self.fail("bad_value", f"{n}. alan kopuk: harfleri #### olmalı")
+
+    def layout_rules(self, layout, boxed):
+        """The layout as the contract allows it (`ParagraphLayout::problem`): not empty, in range, columns in a box."""
+        fits = lambda x: math.isfinite(x) and abs(x) <= MAX_PARAGRAPH_HEIGHTS  # noqa: E731
+        if not (layout.get("indent") or layout.get("leftIndent") or layout.get("tabs") or "columns" in layout):
+            self.fail("bad_value", "boş yazı düzeni yazılmaz; düzensiz yazıda alan yoktur")
+        left, first = layout.get("leftIndent", 0.0), layout.get("indent", 0.0)
+        if not fits(left) or left < 0.0:
+            self.fail("bad_value", f"sol girinti {left}: 0 ile {MAX_PARAGRAPH_HEIGHTS:g} yükseklik arasında olmalı")
+        if not fits(first) or left + first < 0.0:
+            self.fail("bad_value", f"ilk satırın girintisi {first}: sol girintiden fazla geri gidemez")
+        if layout.get("indent") == 0.0 or layout.get("leftIndent") == 0.0:
+            self.fail("bad_value", "sıfır girinti yazılmaz")
+        tabs = layout.get("tabs", [])
+        if len(tabs) > MAX_TABS:
+            self.fail("bad_value", f"en çok {MAX_TABS} sekme durağı olur")
+        last = 0.0
+        for t in tabs:
+            if not fits(t) or t <= last:
+                self.fail("bad_value", "sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı")
+            last = t
+        c = layout.get("columns")
+        if c is not None:
+            if not boxed:
+                self.fail("bad_value", "sütunlar kutu genişliği ister")
+            if not 2 <= c["count"] <= 16:
+                self.fail("bad_value", f"sütun sayısı {c['count']}: 2 ile 16 arasında olmalı")
+            if not fits(c["gap"]) or c["gap"] < 0.0:
+                self.fail("bad_value", f"sütun aralığı {c['gap']}: sıfır ya da pozitif olmalı")
+            if not (math.isfinite(c["height"]) and c["height"] > 0.0):
+                self.fail("bad_value", f"sütun yüksekliği {c['height']}: sıfırdan büyük olmalı")
 
     def label_scale(self, v):
         x = self.float(v)
@@ -4596,19 +4818,131 @@ class _Schema:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz ölçüde alan yoktur")
         return True
 
+    def annotative_of(self, kind):
+        """An annotation's scales (docs/adr/0323): its own scale, the others ascending, each with what its kind sets apart."""
+        values = {"dimension": ("offset", "textShift"), "hatch": ()}.get(kind, ("point", "rotation"))
+
+        def scale(v):
+            x = self.float(v)
+            if not (math.isfinite(x) and 0.0 < x <= MAX_ANNOTATIVE_SCALE):
+                self.fail("bad_value", f"ölçek {x} olamaz: sıfırdan büyük, en çok {MAX_ANNOTATIVE_SCALE:g}")
+            return x
+
+        def entry(v):
+            # A point as JSON writes it: {x, y} (the scales are their JSON, as the writer writes them).
+            xy = self.fields({"x": (self.float, True), "y": (self.float, True)})
+            table = {"scale": (scale, True), "point": (xy, False), "rotation": (self.float, False),
+                     "offset": (self.float, False), "textShift": (self.text_shift, False)}
+            e = self.fields(table)(v)
+            for key in e:
+                if key != "scale" and key not in values:
+                    self.path.append(key)
+                    self.fail("bad_value", f"{key} bu nesnenin ölçeğinde olmaz")
+            for key in ("rotation", "offset"):
+                if key in e and not math.isfinite(e[key]):
+                    self.path.append(key)
+                    self.fail("bad_value", "sonlu bir sayı olmalı")
+            return e
+
+        def read(v):
+            a = self.fields({"at": (scale, True), "scales": (self.array(entry), False)})(v)
+            scales = a.get("scales")
+            if scales is not None:
+                if not scales:
+                    self.fail("bad_value", "boş ölçek listesi yazılmaz")
+                if len(scales) > MAX_ANNOTATIVE_SCALES:
+                    self.fail("bad_value", f"kendi ölçeğinden başka en çok {MAX_ANNOTATIVE_SCALES} ölçek olur")
+                last = None
+                for e in scales:
+                    if abs(e["scale"] - a["at"]) <= 1e-9 * max(e["scale"], a["at"]):
+                        self.fail("bad_value", "nesnenin kendi ölçeği öbür ölçeklerde yinelenmez")
+                    if last is not None and (e["scale"] <= last or abs(e["scale"] - last) <= 1e-9 * e["scale"]):
+                        self.fail("bad_value", "ölçekler küçükten büyüğe ve birer kez yazılır")
+                    last = e["scale"]
+            return a
+
+        return read
+
+    def overrides_of(self, names):
+        """A text's or a dimension's overrides (docs/adr/0322 §5): not empty, each one of the kind's names, once."""
+        def read(v):
+            o = self.array(self.text)(v)
+            if not o:
+                self.fail("bad_value", "boş geçersiz kılma listesi yazılmaz")
+            for i, n in enumerate(o):
+                if n not in names:
+                    self.fail("bad_value", f"“{n}” stilin bir alanı değil")
+                if n in o[:i]:
+                    self.fail("bad_value", f"“{n}” geçersiz kılınanlarda iki kez var")
+            return o
+        return read
+
+    def dimension_options(self, v):
+        """A dimension's options (docs/adr/0321 §1, §2): none empty; an increment over 0, a break size over 0 and at most
+        100, a tolerance's values 0 or more (a symmetric one has no lower), at most 8 decimals; lengths at most 10⁶ m."""
+        o = self.fields({
+            "fit": (self.enum(("auto", "outside")), False),
+            "round": (self.float, False),
+            "zeros": (self.enum(("leading", "trailing", "both")), False),
+            "lengthStyle": (self.enum(("decimal", "architectural", "engineering", "fractional")), False),
+            "alt": (self.fields({"unit": (self.enum(("mm", "cm", "m", "in", "ft")), True), "decimals": (self.uint(32), False)}), False),
+            "tolerance": (self.fields({"kind": (self.enum(("symmetric", "deviation", "limits")), True), "upper": (self.float, True),
+                                       "lower": (self.float, False), "decimals": (self.uint(32), False)}), False),
+            "breakSize": (self.float, False),
+        })(v)
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        holds = lambda x, positive: math.isfinite(x) and abs(x) <= 1e6 and (x > 0 if positive else x >= 0)  # noqa: E731
+        if not o:
+            bad("Ölçünün seçenekleri boş: hiçbiri yoksa alan yazılmaz.")
+        if "round" in o and not holds(o["round"], True):
+            bad("yuvarlama artışı sıfırdan büyük, en çok 10⁶ m olmalı")
+        if "breakSize" in o and not (math.isfinite(o["breakSize"]) and 0 < o["breakSize"] <= 100):
+            bad("kırma genişliği sıfırdan büyük, en çok 100 olmalı")
+        if o.get("alt", {}).get("decimals", 0) > 8:
+            bad("alternatif birimin basamağı en çok 8")
+        t = o.get("tolerance")
+        if t is not None:
+            if not holds(t["upper"], False) or ("lower" in t and not holds(t["lower"], False)):
+                bad("toleransın değerleri 0 ya da büyük olmalı")
+            if t["kind"] == "symmetric" and "lower" in t:
+                bad("simetrik toleransın alt değeri yoktur")
+            if t.get("decimals", 0) > 8:
+                bad("toleransın basamağı en çok 8")
+        return o
+
+    def text_shift(self, v):
+        s = self.fields({"along": (self.float, True), "across": (self.float, True)})(v)
+        if not all(math.isfinite(x) and abs(x) <= 1e6 for x in s.values()):
+            self.fail("bad_value", "değerin kayması sonlu ve en çok 10⁶ m olmalı")
+        return s
+
+    def dimension_breaks(self, v):
+        b = self.array(self.fields({"line": (self.enum(("dimension", "first", "second")), True), "t": (self.float, True)}))(v)
+        if not b:
+            self.fail("bad_value", "boş kırma listesi yazılmaz")
+        if len(b) > 64:
+            self.fail("bad_value", f"ölçünün {len(b)} kırması var; en çok 64")
+        if any(not 0.0 <= x["t"] <= 1.0 for x in b):
+            self.fail("bad_value", "kırmanın yeri (t) 0 ile 1 arasında olmalı")
+        return b
+
     def dimension_rules(self, d):
         """What a dimension's style needs, and what only a slope has (docs/adr/0147)."""
         style = d.get("style")
-        needs = ["c"] if style in ("arcLength", "jogged") else ["za", "zb"] if style == "slope" else []
+        needs = ["c"] if style in ("arcLength", "jogged") else ["za", "zb"] if style == "slope" else ["za"] if style == "elevation" else []
         for key in needs:
             if key not in d:
                 self.path.append(key)
                 self.fail("missing_field", "zorunlu alan yok")
-        if style != "slope":
+        # A level's one elevation (docs/adr/0322).
+        if style == "elevation" and "zb" in d:
+            self.path.append("zb")
+            self.fail("bad_value", "kot ölçüsünün yalnız bir kotu (za) olur")
+        if style not in ("slope", "elevation"):
             for key in ("za", "zb"):
                 if key in d:
                     self.path.append(key)
-                    self.fail("bad_value", "kot (za, zb) yalnız eğim ölçüsünde yazılır")
+                    self.fail("bad_value", "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır")
         if style == "ordinate" and "angle" in d and d["angle"] not in (0.0, 90.0):
             self.path.append("angle")
             self.fail("bad_value", f"koordinat ölçüsünün ekseni {d['angle']}; 0 (Y) ya da 90 (X) olmalı")
@@ -4971,6 +5305,147 @@ class _Schema:
         if o is not None and not (MIN_CLOUD_OPACITY <= o <= MAX_CLOUD_OPACITY):
             self.fail("bad_value", f"Nokta bulutunun donukluğu 0.1 ile 1 arasında olmalı; {o} verildi.")
 
+    def field_source_problem(self, src):
+        """A field's source's names as the contract wants them (`FieldSource::problem`): an attribute's, a variable's
+        and a block count's name, no other."""
+        needs = src["value"] in ("attribute", "variable", "blockCount")
+        named = bool(src.get("name", "").strip())
+        if needs and not named:
+            return "ad öznitelik, değişken ve blok sayısı alanında zorunlu"
+        if named and not needs:
+            return "ad yalnız öznitelik, değişken ve blok sayısı alanında verilir"
+        return None
+
+    # A table's cells beyond their words (schema 68, docs/adr/0327).
+
+    def cell_styles(self, v):
+        one = self.fields({**{k: (self.uint(32), True) for k in ("row", "col", "rows", "cols")},
+                           "align": (self.enum(("left", "center", "right")), False), "bold": (self.bool, False),
+                           "color": (self.text, False), "fill": (self.text, False), "decimals": (self.uint(32), False)})
+        styles = self.array(one)(v)
+        if not styles:
+            self.fail("bad_value", "boş biçim listesi yazılmaz")
+        return styles
+
+    def cell_formulas(self, v):
+        formulas = self.array(self.fields({"row": (self.uint(32), True), "col": (self.uint(32), True), "formula": (self.text, True)}))(v)
+        if not formulas:
+            self.fail("bad_value", "boş formül listesi yazılmaz")
+        return formulas
+
+    def cell_fields(self, v):
+        def source(src):
+            if type(src) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            if src.get("kind") == "object":
+                return self.fields({"kind": (self.text, True), "uid": (self.uid_text, True), "value": (self.enum(FIELD_OBJECT_VALUES), True), "name": (self.text, False)})(src)
+            if src.get("kind") == "project":
+                return self.fields({"kind": (self.text, True), "value": (self.enum(FIELD_PROJECT_VALUES), True), "name": (self.text, False)})(src)
+            self.fail("bad_value", f"alanın kaynağı {src.get('kind')!r}: object ya da project olmalı")
+
+        fmt = self.fields({"decimals": (self.uint(8), False), "unit": (self.enum(FIELD_UNITS), False), "comma": (self.true_flag, False), "prefix": (self.text, False), "suffix": (self.text, False)})
+        one = self.fields({"row": (self.uint(32), True), "col": (self.uint(32), True), "source": (source, True), "format": (fmt, False), "broken": (self.enum(FIELD_BROKEN), False)})
+        fields = self.array(one)(v)
+        if not fields:
+            self.fail("bad_value", "boş alan listesi yazılmaz")
+        return fields
+
+    def uid_text(self, u):
+        if type(u) is not str or not UUID_TEXT.fullmatch(u):
+            self.fail("bad_value", "nesnenin kimliği küçük harfli, tireli bir UUID olmalı")
+        return u
+
+    def table_link(self, v):
+        copy_ = lambda rs: [[self.text(w) for w in self.array(lambda x: x)(r)] for r in self.array(lambda x: x)(rs)]  # noqa: E731
+        d = self.fields({"path": (self.text, False), "digest": (self.text, False), "copy": (copy_, False),
+                         "overrides": (self.enum(("keep", "replace")), False)})(v)
+        if d.get("overrides") == "keep":
+            self.path.append("overrides")
+            self.fail("bad_value", "keep yazılmaz; bağın varsayılanıdır")
+        if not d:
+            self.fail("bad_value", "boş bağ yazılmaz")
+        return d
+
+    def table_schedule(self, v):
+        d = self.fields({"kind": (self.enum(("blocks",)), True), "names": (self.array(self.text), False), "by": (self.text, False)})(v)
+        if "names" in d and not d["names"]:
+            self.path.append("names")
+            self.fail("bad_value", "boş ad listesi yazılmaz")
+        return d
+
+    def table_sources(self, t):
+        """A table's schedule is its source; a link joins its file source (docs/adr/0327 §4–§5)."""
+        if "schedule" in t:
+            if "source" in t:
+                self.path.append("schedule")
+                self.fail("bad_value", "çizelge yalnız blok çizelgesidir ve kaynakla birlikte yazılmaz")
+            t["source"] = t.pop("schedule")
+        if "link" in t:
+            link = t.pop("link")
+            src = t.get("source")
+            if src is None or src["kind"] != "file":
+                self.path.append("link")
+                self.fail("bad_value", "bağ yalnız dosyadan gelen tablonun kaynağıyla yazılır")
+            src.update(link)
+
+    def cells_rules(self, t, n, m, refuse):
+        """The contract's `cells_problem_of` (kentos_contracts::table_cells), in its order."""
+        merges = t.get("merges", [])
+
+        def hidden(r, c):
+            return any(g["row"] <= r < g["row"] + g["rows"] and g["col"] <= c < g["col"] + g["cols"] and (g["row"], g["col"]) != (r, c) for g in merges)
+
+        styles = t.get("styles", [])
+        if len(styles) > MAX_CELL_STYLES:
+            refuse("styles", f"bir tabloda en çok {MAX_CELL_STYLES} biçim olur")
+        for k, st in enumerate(styles):
+            if st["rows"] == 0 or st["cols"] == 0 or st["row"] + st["rows"] > n or st["col"] + st["cols"] > m:
+                refuse("styles", f"{k + 1}. biçimin aralığı tablonun içinde olmalı")
+            for what in ("color", "fill"):
+                if what in st and not COLOUR.fullmatch(st[what]):
+                    refuse("styles", f"{k + 1}. biçimin rengi “{st[what]}”; #rrggbb olmalı")
+            if st.get("decimals", 0) > MAX_CELL_DECIMALS:
+                refuse("styles", f"{k + 1}. biçimin basamağı en çok {MAX_CELL_DECIMALS} olur")
+            if not any(x in st for x in ("align", "bold", "color", "fill", "decimals")):
+                refuse("styles", f"{k + 1}. biçim hiçbir şey vermiyor")
+        formulas = t.get("formulas", [])
+        if len(formulas) > MAX_FORMULAS:
+            refuse("formulas", f"bir tabloda en çok {MAX_FORMULAS} formül olur")
+        seen = set()
+        for f in formulas:
+            r, c, words = f["row"], f["col"], f["formula"]
+            if not (r < n and c < m):
+                refuse("formulas", "formülün hücresi tablonun içinde olmalı")
+            if hidden(r, c):
+                refuse("formulas", "formülün hücresi birleşik bir alanın içinde")
+            if not (words.startswith("=") and len(words.encode("utf-8")) > 1) or len(words) > MAX_FORMULA_LETTERS or any(unicodedata.category(x) == "Cc" for x in words):
+                refuse("formulas", "formül “=” ile başlayan, tek satırlık bir yazıdır")
+            if (r, c) in seen:
+                refuse("formulas", "bir hücreye iki formül verildi")
+            seen.add((r, c))
+        fields = t.get("fields", [])
+        if len(fields) > MAX_CELL_FIELDS:
+            refuse("fields", f"bir tabloda en çok {MAX_CELL_FIELDS} alan olur")
+        fielded = set()
+        for f in fields:
+            r, c = f["row"], f["col"]
+            if not (r < n and c < m) or hidden(r, c):
+                refuse("fields", "alanın hücresi tablonun içinde ve birleşik alanın sol üst hücresi olmalı")
+            if (r, c) in seen:
+                refuse("fields", "bir hücre hem formül hem alan olamaz")
+            if (r, c) in fielded:
+                refuse("fields", "bir hücreye iki alan verildi")
+            fielded.add((r, c))
+            why = self.field_source_problem(f["source"])
+            if why:
+                refuse("fields", why)
+            fm = f.get("format")
+            if fm is not None:
+                if fm.get("decimals", 0) > 10:
+                    refuse("fields", "alanın basamağı en çok 10 olur")
+                if not fm:
+                    refuse("fields", "boş biçim yazılmaz")
+
     def table_rules(self, t):
         """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
         def refuse(field, words):
@@ -5017,7 +5492,16 @@ class _Schema:
             refuse("aligns", "her sütunun hizası verilmeli")
         src = t.get("source")
         if src is not None:
-            if src["kind"] == "file":
+            if src["kind"] == "blocks":
+                if any(not x.strip() for x in src.get("names", [])) or ("by" in src and not src["by"].strip()):
+                    refuse("source", "blok çizelgesinin blok ve öznitelik adları boş olamaz")
+            elif src["kind"] == "file":
+                if "path" in src and (not src["path"].strip() or any(unicodedata.category(c) == "Cc" for c in src["path"])):
+                    refuse("source", "tablonun bağlı dosyasının yolu boş olamaz")
+                if "digest" in src and not SHA256_HEX.fullmatch(src["digest"]):
+                    refuse("source", "bağlı dosyanın özeti 64 onaltılık rakamlık bir SHA-256 olmalı")
+                if "copy" in src and (len(src["copy"]) > MAX_TABLE_ROWS or any(len(r) > MAX_TABLE_COLUMNS or any(any(unicodedata.category(c) == "Cc" for c in w) or len(w) > MAX_CELL_LETTERS for w in r) for r in src["copy"])):
+                    refuse("source", "dosyanın gömülü kopyası bir tablonun sınırlarını aşıyor")
                 name = src["name"]
                 if not name.strip() or any(unicodedata.category(c) == "Cc" for c in name):
                     refuse("source", "kaynak dosyanın adı boş olamaz")
@@ -5025,6 +5509,7 @@ class _Schema:
                     refuse("source", "kaynak sayfanın adı boş olamaz")
             elif not 0 < len(src["objects"]) <= MAX_SOURCE_OBJECTS:
                 refuse("source", f"tablonun kaynağı {len(src['objects'])} nesne gösteriyor")
+        self.cells_rules(t, n, m, refuse)
 
     # Hatches (docs/adr/0186).
 
@@ -5039,8 +5524,16 @@ class _Schema:
                     "gradient": (self.hatch_gradient, False),
                 }
             )
+        if self.hatch_extras:
+            # Schema 71 (docs/adr/0331 §2): where its lines are anchored; only lines' and a pattern's.
+            table["origin"] = (self.point, False)
         p = self.fields(table)(v)
         self.pattern_rules(p)
+        if "origin" in p:
+            if p["type"] in ("solid", "gradient"):
+                self.fail("bad_value", "dolu ve degrade taramanın başlangıç noktası olmaz")
+            if not all(math.isfinite(p["origin"][k]) for k in ("x", "y")):
+                self.fail("bad_value", "desenin başlangıç noktası sonlu olmalı")
         return p
 
     def pair(self, v):
@@ -5069,13 +5562,95 @@ class _Schema:
         return self.array(self.id16)(v)
 
     def hatch_assoc(self, v):
-        a = self.fields({"outer": (self.id16, True), "islands": (self.assoc_ids, False), "cutouts": (self.assoc_ids, False), "seed": (self.point, True)})(v)
-        named = [a["outer"], *a.get("islands", []), *a.get("cutouts", [])]
-        if len(named) - 1 > MAX_ASSOC_OBJECTS:
-            self.fail("bad_value", f"taramanın ilişkisi {len(named) - 1} nesne gösteriyor; en çok {MAX_ASSOC_OBJECTS} olmalı")
+        # Schema 69 (docs/adr/0328 §3): a face's tie names its line work (`bounds`) and no closed object.
+        table = {"outer": (self.id16, not self.hatch_boundaries), "islands": (self.assoc_ids, False), "cutouts": (self.assoc_ids, False), "seed": (self.point, True)}
+        if self.hatch_boundaries:
+            table["bounds"] = (self.assoc_ids, False)
+        if self.hatch_gaps:
+            table["gap"] = (self.float, False)
+        a = self.fields(table)(v)
+        if "gap" in a and ("outer" in a or not 0.0 < a["gap"] <= MAX_HATCH_GAP):
+            self.fail("bad_value", "taramanın boşluk toleransı yalnız yüzün ilişkisinde, 0'dan büyük ve en çok 1000 m olur")
+        if ("outer" in a) == ("bounds" in a):
+            self.fail("bad_value", "taramanın ilişkisi ya kapalı nesneyi (outer) ya da sınır nesnelerini (bounds) gösterir")
+        named = [*([a["outer"]] if "outer" in a else []), *a.get("bounds", []), *a.get("islands", []), *a.get("cutouts", [])]
+        if len(named) - ("outer" in a) > MAX_ASSOC_OBJECTS:
+            self.fail("bad_value", f"taramanın ilişkisi {len(named)} nesne gösteriyor; en çok {MAX_ASSOC_OBJECTS} olmalı")
         if len(set(named)) != len(named):
             self.fail("bad_value", "taramanın ilişkisi bir nesneyi iki kez gösteriyor")
         return a
+
+    # A hatch's exact boundary (schema 69, docs/adr/0328 §1): the contract's form (kentos_contracts::boundary_problem),
+    # in its order; whether a curve ends at its loop's points is the geometry's, not the file's.
+
+    def xy(self, v):
+        return self.fields({"x": (self.float, True), "y": (self.float, True)})(v)
+
+    def hatch_curve(self, v):
+        if type(v) is not dict:
+            self.fail("wrong_type", "harita olmalı")
+        if v.get("kind") == "ellipse":
+            c = self.fields({"kind": (self.text, True), "c": (self.xy, True), "major": (self.xy, True), "ratio": (self.float, True), "t0": (self.float, True), "t1": (self.float, True)})(v)
+            nums = [c["c"]["x"], c["c"]["y"], c["major"]["x"], c["major"]["y"], c["ratio"], c["t0"], c["t1"]]
+            if not all(math.isfinite(x) for x in nums):
+                self.fail("bad_value", "elips kenarında sonlu olmayan bir sayı var")
+            if not 0.0 < c["ratio"] <= 1.0 or (c["major"]["x"] == 0.0 and c["major"]["y"] == 0.0):
+                self.fail("bad_value", "elips kenarının büyük ekseni sıfır olamaz, oranı 0 ile 1 arasında olmalı")
+            sweep = abs(c["t1"] - c["t0"])
+            if sweep == 0.0 or sweep > 2 * math.pi * (1 + 1e-12):
+                self.fail("bad_value", "elips kenarının açıklığı sıfır olamaz ve bir turu aşamaz")
+            return c
+        if v.get("kind") == "nurbs":
+            c = self.fields({"kind": (self.text, True), "degree": (self.uint(32), True), "ctrl": (self.array(self.xy), True), "knots": (self.array(self.float), True), "weights": (self.array(self.float), False)})(v)
+            p, ctrl, knots = c["degree"], c["ctrl"], c["knots"]
+            n = len(ctrl)
+            if not 1 <= p <= MAX_CURVE_DEGREE:
+                self.fail("bad_value", f"NURBS kenarının derecesi {p}; 1 ile {MAX_CURVE_DEGREE} arasında olmalı")
+            if n <= p or n > MAX_CURVE_POINTS:
+                self.fail("bad_value", f"NURBS kenarının {n} denetim noktası var")
+            if len(knots) != n + p + 1:
+                self.fail("bad_value", f"NURBS kenarının {len(knots)} düğümü var; {n + p + 1} olmalı")
+            if (not all(math.isfinite(q["x"]) and math.isfinite(q["y"]) for q in ctrl) or not all(math.isfinite(k) for k in knots)
+                    or any(b < a for a, b in zip(knots, knots[1:])) or knots[p] >= knots[n]):
+                self.fail("bad_value", "NURBS kenarının noktaları sonlu, düğümleri artan olmalı")
+            if "weights" in c and (len(c["weights"]) != n or not all(math.isfinite(w) and w > 0 for w in c["weights"])):
+                self.fail("bad_value", "NURBS kenarının ağırlıkları denetim noktaları kadar ve sıfırdan büyük olmalı")
+            return c
+        self.fail("bad_value", f"eğri kenarı “{v.get('kind')}” bilinmiyor (ellipse, nurbs)")
+
+    def hatch_loop(self, v):
+        def curve_or_null(c):
+            return None if c is None else self.hatch_curve(c)
+        lp = self.fields({"pts": (self.array(self.xy), True), "bulges": (self.array(self.float), False), "curves": (self.array(curve_or_null), False)})(v)
+        pts, n = lp["pts"], len(lp["pts"])
+        if n == 0 or n > MAX_LOOP_EDGES:
+            self.fail("bad_value", f"tarama sınırının bir halkasında {n} nokta var")
+        if not all(math.isfinite(q["x"]) and math.isfinite(q["y"]) for q in pts):
+            self.fail("bad_value", "tarama sınırında sonlu olmayan bir nokta var")
+        bulges = lp.get("bulges")
+        if bulges is not None and (len(bulges) != n or not all(math.isfinite(b) for b in bulges)):
+            self.fail("bad_value", "tarama sınırının bükümleri noktaları kadar ve sonlu olmalı")
+        curves = lp.get("curves")
+        if curves is not None:
+            if len(curves) != n:
+                self.fail("bad_value", "tarama sınırının eğrileri noktaları kadar olmalı")
+            for i, c in enumerate(curves):
+                if c is not None and bulges is not None and bulges[i] != 0.0:
+                    self.fail("bad_value", "tarama sınırının eğri kenarının bükümü 0 olmalı")
+
+        def curved(i):
+            return (curves is not None and curves[i] is not None) or (bulges is not None and bulges[i] != 0.0)
+        if n == 1 and not (curves is not None and curves[0] is not None):
+            self.fail("bad_value", "tek noktalı halka kapalı bir eğri olmalı")
+        if n == 2 and not (curved(0) or curved(1)):
+            self.fail("bad_value", "iki noktalı halkanın en az bir kenarı eğri olmalı")
+        return lp
+
+    def hatch_boundary(self, v):
+        loops = self.array(self.hatch_loop)(v)
+        if not loops or len(loops) > MAX_BOUNDARY_LOOPS:
+            self.fail("bad_value", f"tarama sınırında {len(loops)} halka var; en az 1 olmalı")
+        return loops
 
     def sub_place(self, v):
         """A place on an object (docs/adr/0249 §1): its `kind`, then the numbers that kind has, each at most
@@ -5128,8 +5703,13 @@ class _Schema:
     def dimension_refs(self, v):
         """What a dimension's points follow (docs/adr/0249 §4): `a`, `b`, `c`; references none of its points has
         are not written."""
-        refs = self.fields({"a": (self.subref, False), "b": (self.subref, False), "c": (self.subref, False)})(v)
-        if not refs:
+        table = {"a": (self.subref, False), "b": (self.subref, False), "c": (self.subref, False)}
+        if self.dim_rules:
+            # Schema 60 (docs/adr/0320 §1): how the points no place names follow.
+            # Schema 62 (docs/adr/0322): the axis's pair.
+            table["rule"] = (self.enum(("curve", "edges", "pair") if self.dim_marks else ("curve", "edges")), False)
+        refs = self.fields(table)(v)
+        if not any(k in refs for k in "abc"):
             self.fail("bad_value", "Ölçünün başvuruları boş: hiç başvuru yoksa alan yazılmaz.")
         return refs
 
@@ -5173,6 +5753,59 @@ class _Schema:
             c = g["color2"]
             if not (len(c) == 7 and c[0] == "#" and all(x in "0123456789abcdefABCDEF" for x in c[1:])):
                 self.fail("bad_value", f"degradenin ikinci rengi “{c}”; #RRGGBB biçiminde olmalı")
+
+    def json_point(self, v):
+        """A point as its JSON writes it: {x, y}."""
+        return self.fields({"x": (self.float, True), "y": (self.float, True)})(v)
+
+    def json_subref(self, v):
+        """A place on an object as its JSON writes it (docs/adr/0249, 0326 §3): the object's id as text."""
+        def uid(u):
+            if type(u) is not str or not UUID_TEXT.fullmatch(u):
+                self.fail("bad_value", "başvurunun nesnesi küçük harfli, tireli bir UUID olmalı")
+            return u
+
+        def place(p):
+            if type(p) is not dict or "kind" not in p:
+                self.fail("bad_value", "başvurunun yeri bir harita olmalı")
+            return p
+
+        return self.fields({"uid": (uid, True), "place": (place, True), "path": (self.array(self.uint(32)), False),
+                            "broken": (self.text, False)})(v)
+
+    def leader_arms(self, v):
+        """A leader's other arms (docs/adr/0326 §1): some, each with its tip and bends, at most 63."""
+        arms = self.array(self.fields({"pts": (self.array(self.json_point), True), "tip": (self.json_subref, False)}))(v)
+        if not arms:
+            self.fail("bad_value", "boş kol listesi yazılmaz")
+        if len(arms) + 1 > MAX_LEADER_ARMS:
+            self.fail("bad_value", f"bir kılavuzun en çok {MAX_LEADER_ARMS} kolu olur")
+        for i, a in enumerate(arms):
+            if not a["pts"]:
+                self.fail("bad_value", f"{i + 2}. kolun ucu yok: her kolun en az bir noktası olmalı")
+        return arms
+
+    def leader_blocks(self, v):
+        """A leader's content blocks: some inserts' ids, each once."""
+        ids = self.array(self.text)(v)
+        if not ids:
+            self.fail("bad_value", "boş blok listesi yazılmaz")
+        if len(set(ids)) != len(ids):
+            self.fail("bad_value", "kılavuzun bir bloğu iki kez verilmiş")
+        for u in ids:
+            if not UUID_TEXT.fullmatch(u):
+                self.fail("bad_value", "bloğun kimliği küçük harfli, tireli bir UUID olmalı")
+        return ids
+
+    def leader_styles(self, v):
+        """The project's leader styles (docs/adr/0326 §4): the note's paper height over 0 and at most 1000 mm."""
+        styles = self.array(self.fields({"id": (self.text, True), "name": (self.text, True), "height": (self.float, True),
+                                         "arrow": (self.enum(LEADER_ARROWS_30), False), "arrowSize": (self.leader_arrow_size, False),
+                                         "mask": (self.true_flag, False)}))(v)
+        for st in styles:
+            if not 0 < st["height"] <= 1000:
+                self.fail("bad_value", f"“{st['name']}” kılavuz stilinin not yüksekliği {st['height']:g} mm; sıfırdan büyük, en çok 1000 olmalı")
+        return styles
 
     def leader_points(self, v):
         pts = self.array(self.point)(v)
@@ -5577,6 +6210,12 @@ ENTITY_KINDS = {
         ),
         # Schema 25 (docs/adr/0196 §1): the curve its letters stand on.
         **({"path": (s.text_path, False)} if s.text_paths else {}),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
+        **({"overrides": (s.overrides_of(TEXT_OVERRIDES), False)} if s.overrides else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("text"), False)} if s.annotative else {}),
+        **({"layout": (s.layout_of, False)} if s.paragraph_layout else {}),
+        **({"fields": (s.text_fields_of, False)} if s.text_fields else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {
@@ -5585,7 +6224,7 @@ ENTITY_KINDS = {
         "c": (s.point, False),
         "text": (s.text, False),
         "angle": (s.float, False),
-        "style": (s.enum(DIMENSION_STYLES if s.dimensions else DIMENSION_STYLES[:5]), False),
+        "style": (s.enum(DIMENSION_STYLES if s.dim_marks else DIMENSION_STYLES[:10] if s.dimensions else DIMENSION_STYLES[:5]), False),
         "height": (s.float, True),
         "offset": (s.float, True),
         **({"mask": (s.dimension_mask, False), "za": (s.float, False), "zb": (s.float, False)} if s.dimensions else {}),
@@ -5625,6 +6264,13 @@ ENTITY_KINDS = {
         # Schema 43 (docs/adr/0249 §4): what its points follow, only in the drawing (a block definition's objects have
         # no persistent ids to name).
         **({"refs": (s.dimension_refs, False)} if s.dim_refs and s.inside is None else {}),
+        # Schema 61 (docs/adr/0321): its options, its moved value and its breaks.
+        **({"options": (s.dimension_options, False), "textShift": (s.text_shift, False), "breaks": (s.dimension_breaks, False)}
+           if s.dim_options else {}),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style.
+        **({"overrides": (s.overrides_of(DIMENSION_OVERRIDES), False)} if s.overrides else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("dimension"), False)} if s.annotative else {}),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the
     # drawing (a block definition's objects have no persistent ids to name).
@@ -5633,6 +6279,10 @@ ENTITY_KINDS = {
         "holes": (s.array(s.array(s.point)), False),
         "pattern": (s.hatch_pattern, True),
         **({"assoc": (s.hatch_assoc, False)} if s.hatches and s.inside is None else {}),
+        # Schema 69 (docs/adr/0328 §1): its exact boundary.
+        **({"boundary": (s.hatch_boundary, False)} if s.hatch_boundaries else {}),
+        # Schema 71 (docs/adr/0331 §3): its scales; a pattern with lines only.
+        **({"annotative": (s.annotative_of("hatch"), False)} if s.hatch_extras else {}),
     },
     # Schema 6 (docs/adr/0144): `mirror` only when true.
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
@@ -5659,6 +6309,9 @@ ENTITY_KINDS = {
         "italic": (s.face_flag, False),
         "oblique": (s.oblique, False),
         "source": (s.table_source, False),
+        # Schema 68 (docs/adr/0327): the cells' styles, formulas and fields, a linked file's data, a block schedule.
+        **({"styles": (s.cell_styles, False), "formulas": (s.cell_formulas, False), "fields": (s.cell_fields, False),
+            "link": (s.table_link, False), "schedule": (s.table_schedule, False)} if s.table_cells else {}),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, its one source, its clip and opacity; `mirror` only when true; only in
     # the drawing.
@@ -5713,6 +6366,11 @@ ENTITY_KINDS = {
         "arrow": (s.enum(LEADER_ARROWS_30 if s.annotation else LEADER_ARROWS), False),
         "mask": (s.mask, False),
         **({"arrowSize": (s.leader_arrow_size, False)} if s.annotation else {}),
+        # Schema 64 (docs/adr/0323): its scales.
+        **({"annotative": (s.annotative_of("leader"), False)} if s.annotative else {}),
+        # Schema 67 (docs/adr/0326): its arms, tip, content blocks and style.
+        **({"arms": (s.leader_arms, False), "tip": (s.json_subref, False), "blocks": (s.leader_blocks, False),
+            "leaderStyle": (s.text, False)} if s.multileader else {}),
     },
 }
 
@@ -5829,8 +6487,6 @@ def main(argv):
     return status
 
 
-if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
 
 
 # Dynamic blocks (docs/adr/0318): the definition's rules and a value's, written from the ADR.
@@ -5999,3 +6655,7 @@ def values_problem(d, values):
         if value_problem(p, v):
             return f"“{name}” uymuyor"
     return None
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -22,7 +22,7 @@ kendi başına söylüyor.
 
 ## Karar
 
-### 1. Proje ilişkisi (`relations`, proje ayarı, `.kcad` şema 60 içinde)
+### 1. Proje ilişkisi (`relations`, proje ayarı, `.kcad` şema 72 içinde)
 
 ```json
 { "id": "bina-sayac", "name": "Binanın sayaçları", "parent": "bina", "child": "sayac", "field": "bina",

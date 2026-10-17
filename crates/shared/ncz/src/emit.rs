@@ -491,6 +491,7 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Text(TextEntity {
+                        annotative: None,
                         base: b,
                         p: v(c),
                         text: e.label.clone(),
@@ -832,6 +833,7 @@ impl Emitter {
                         self.push_smart(
                             layer,
                             Entity::Text(TextEntity {
+                                annotative: None,
                                 base,
                                 p,
                                 text: line.clone(),

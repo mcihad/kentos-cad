@@ -39,12 +39,12 @@
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | nurbs | degree, n, m, curve flags (1 weights, 2 closed, 4 periodic, 8 fit, 16 fit tolerance, 32 start tangent, 64 end tangent), k if fit | ctrl (2n), knots (m), weights (n) if any, fit (2k) if any, fit tolerance if any, start and end tangents (2 each) if any | |
 //! | xline, ray | | p, dir | |
-//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any |
-//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs, then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
-//! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer, islands (i) and cutouts (k) ids (UUID text) if tied |
+//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`); k if curved; b if its curve bends | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any, the curve's pts (2k) if curved, its bulges (b) if it bends | text, label's object if linked, each run's colour if it has one, text style if any, its overrides as a JSON list if any (option 14), its scales as JSON if any (option 15) |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any; line flags if lines, then the dimension line's type and the extension lines' type if any (their places in `LINE_TYPES`); refs' mask if refs (bits 0–2 a, b, c; 3 the curve rule, 4 the edges rule, 3 and 4 the pair rule), then per reference its place's kind (`PLACE_KINDS`), its numbers and broken (0 or 1); its options, moved value, breaks, overrides and scales as one JSON text if more (bit 29) | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any; the dimension line's and the extension lines' weights if any | text if any, dimension style if any, prefix if any, suffix if any; the dimension line's, the extension lines' and the value's colours if any; per reference its object's id (UUID text) and why it broke if it did |
+//! | hatch | n, pattern type; h if holes, then k per hole; f if families, then per family its dash count; gradient's shape and inverted (0 or 1) if any; i, k if tied | ring (2n), pattern angle, spacing, per hole: pts (2k); scale if any; per family: angle, origin, offset, dashes; seed if tied | name if any, gradient's second colour if any, tie's outer (empty for a face's tie), islands (i) and cutouts (k) ids (UUID text) if tied, then schema 69's boundary and the tie's bounds as one JSON object if any (docs/adr/0328) |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
-//! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any |
-//! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
+//! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any, its scales as JSON if any (option 4) |
+//! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet, then schema 68's styles, formulas, fields, link and block schedule as one JSON object if any (docs/adr/0327) |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | record | | | |
@@ -58,16 +58,17 @@
 //! (docs/adr/0258; a polygon has neither, the columns carry them anyway so
 //! that the encoder refuses them with their place); text: align, width factor, mask (no value; docs/adr/0145), link
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
-//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
+//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 8 and 16 stacked (docs/adr/0324), 32 colour),
 //! text style, font, bold (no value), italic (no value), oblique
-//! (docs/adr/0183), curve, its bulges (docs/adr/0196); dimension: text, style, angle, c, mask (no value), za, zb
+//! (docs/adr/0183), curve, its bulges (docs/adr/0196), overrides (docs/adr/0322), scales (docs/adr/0323), layout
+//! (docs/adr/0324), fields (docs/adr/0325); dimension: text, style, angle, c, mask (no value), za, zb
 //! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
 //! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
 //! (docs/adr/0183), and bit 27 (`LINES`) for its line fields (docs/adr/0205
 //! §6): a line flags int follows (`LINE_*`: 1 dimension line colour, 2 its
 //! weight, 4 its type, 8 extension lines' colour, 16 their weight, 32 their
 //! type, 64 the value's colour), and bit 28 (`REFS`) for its references (docs/adr/0249 §4);
-//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3), moved attributes (a count, then each tag and point, docs/adr/0317 §1); leader: text, arrow, mask (no value;
+//! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186), boundary or bounds (docs/adr/0328); insert: mirror, y factor (a float after the turn, docs/adr/0315 §3), moved attributes (a count, then each tag and point, docs/adr/0317 §1); leader: text, arrow, mask (no value;
 //! docs/adr/0146), arrow size (docs/adr/0205 §7); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
 //! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
@@ -271,6 +272,9 @@ const TEXT_COLOR: u32 = 64;
 /// the kind's numbers (an `along` place's `t` a float), the path's length and numbers when it has one
 /// (docs/adr/0263 §3) and whether it broke (0 or 1); its object's id (UUID text) and, when it broke, why.
 const REFS: u32 = 1 << 28;
+/// A dimension's options, moved value and breaks follow (docs/adr/0321): one text, their JSON
+/// (`{"options": …, "textShift": …, "breaks": […]}`, only those it has).
+const MORE: u32 = 1 << 29;
 /// A reference's place kinds, numbered as the columns hold them, and how many numbers each has.
 const PLACE_KINDS: [(&str, usize); 7] = [
     ("node", 1),
@@ -320,6 +324,8 @@ fn run_flags(r: &TextRun) -> u32 {
     bits |= match r.script {
         Some(TextScript::Super) => RUN_SUPER,
         Some(TextScript::Sub) => RUN_SUB,
+        // Both script bits: a stacked fraction (docs/adr/0324 §1).
+        Some(TextScript::Stack) => RUN_SCRIPT,
         None => 0,
     };
     if r.color.is_some() {
@@ -334,7 +340,7 @@ const PART_ELEVATIONS: u32 = 2;
 const PART_HOLES: u32 = 4;
 const PART_MEASURES: u32 = 8;
 
-const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
+const DIMENSION_STYLES: [DimensionStyle; 13] = DimensionStyle::ALL;
 const HATCH_PATTERNS: [HatchPatternType; 5] = [
     HatchPatternType::Solid,
     HatchPatternType::Lines,
@@ -822,6 +828,7 @@ impl Packer {
                 self.point(dir);
             }
             Entity::Text(TextEntity {
+                annotative,
                 base: _,
                 p,
                 text,
@@ -908,8 +915,31 @@ impl Packer {
                         self.numbers(b);
                     }
                 }
+                // Its overrides (docs/adr/0322 §5), as a JSON list of their names.
+                if !face.overrides.is_empty() {
+                    flags |= OPT[14];
+                    self.text(&serde_json::to_string(&face.overrides).unwrap_or_default());
+                }
+                // Its scales (docs/adr/0323), as their JSON.
+                if let Some(a) = annotative {
+                    flags |= OPT[15];
+                    self.text(&serde_json::to_string(a).unwrap_or_default());
+                }
+                // Its indents, tabs and columns (docs/adr/0324 §1), as their JSON.
+                if let Some(l) = &paragraph.layout {
+                    flags |= OPT[16];
+                    self.text(&serde_json::to_string(l).unwrap_or_default());
+                }
+                // Its fields (docs/adr/0325 §1), as their JSON.
+                if !paragraph.fields.is_empty() {
+                    flags |= OPT[17];
+                    self.text(&serde_json::to_string(&paragraph.fields).unwrap_or_default());
+                }
             }
             Entity::Dimension(DimensionEntity {
+                annotative,
+                text_shift,
+                breaks,
                 base: _,
                 a,
                 b,
@@ -1046,7 +1076,14 @@ impl Packer {
                         .enumerate()
                         .filter(|(_, r)| r.is_some())
                         .fold(0, |m, (i, _)| m | 1 << i);
-                    self.int(mask);
+                    // The rule in bits 3 and 4 (docs/adr/0320 §1): the curve's 3, the edges' 4, the pair's both (docs/adr/0322).
+                    let rule = match refs.rule {
+                        None => 0,
+                        Some(kentos_contracts::DimensionRule::Curve) => 1 << 3,
+                        Some(kentos_contracts::DimensionRule::Edges) => 1 << 4,
+                        Some(kentos_contracts::DimensionRule::Pair) => 3 << 3,
+                    };
+                    self.int(mask | rule);
                     for (_, r) in refs.each() {
                         let (kind, numbers) = match r.place {
                             SubPlace::Node { part } => (0, [part, 0, 0]),
@@ -1080,6 +1117,46 @@ impl Packer {
                         }
                     }
                 }
+                if look.options.is_some()
+                    || text_shift.is_some()
+                    || !breaks.is_empty()
+                    || !look.overrides.is_empty()
+                    || annotative.is_some()
+                {
+                    flags |= MORE;
+                    let mut more = serde_json::Map::new();
+                    if let Some(a) = annotative {
+                        more.insert(
+                            "annotative".into(),
+                            serde_json::to_value(a).unwrap_or_default(),
+                        );
+                    }
+                    if !look.overrides.is_empty() {
+                        more.insert(
+                            "overrides".into(),
+                            serde_json::to_value(&look.overrides).unwrap_or_default(),
+                        );
+                    }
+                    if let Some(o) = &look.options {
+                        more.insert(
+                            "options".into(),
+                            serde_json::to_value(o).unwrap_or_default(),
+                        );
+                    }
+                    if let Some(t) = text_shift {
+                        more.insert(
+                            "textShift".into(),
+                            serde_json::to_value(t).unwrap_or_default(),
+                        );
+                    }
+                    if !breaks.is_empty() {
+                        more.insert(
+                            "breaks".into(),
+                            serde_json::to_value(breaks).unwrap_or_default(),
+                        );
+                    }
+                    self.text(&serde_json::Value::Object(more).to_string());
+                }
             }
             Entity::Hatch(HatchEntity {
                 base: _,
@@ -1087,6 +1164,8 @@ impl Packer {
                 holes,
                 pattern,
                 assoc,
+                boundary,
+                annotative,
             }) => {
                 let HatchPattern {
                     kind,
@@ -1096,6 +1175,7 @@ impl Packer {
                     scale,
                     lines,
                     gradient,
+                    origin,
                 } = pattern;
                 self.points(ring);
                 let at = HATCH_PATTERNS.iter().position(|x| x == kind).unwrap_or(0);
@@ -1146,11 +1226,37 @@ impl Packer {
                     flags |= OPT[5];
                     self.int(count(a.islands.len()));
                     self.int(count(a.cutouts.len()));
-                    self.text(&a.outer.to_text());
+                    // A face's tie names no closed object (docs/adr/0328 §3): its id empty, its bounds below.
+                    self.text(&a.outer.map(|o| o.to_text()).unwrap_or_default());
                     for id in a.islands.iter().chain(&a.cutouts) {
                         self.text(&id.to_text());
                     }
                     self.out.floats.extend([a.seed.x, a.seed.y]);
+                }
+                // Schema 69's exact boundary and a face's bounds (docs/adr/0328): one JSON object.
+                let bounds = assoc.as_ref().map_or(&[][..], |a| &a.bounds[..]);
+                let gap = assoc.as_ref().and_then(|a| a.gap);
+                if boundary.is_some() || !bounds.is_empty() || gap.is_some() || origin.is_some() || annotative.is_some()
+                {
+                    flags |= OPT[6];
+                    let mut more = serde_json::Map::new();
+                    // Schema 71 (docs/adr/0331): the pattern's own origin and the hatch's scales.
+                    if let Some(o) = origin {
+                        more.insert("origin".into(), serde_json::to_value(o).unwrap_or_default());
+                    }
+                    if let Some(a) = annotative {
+                        more.insert("annotative".into(), serde_json::to_value(a).unwrap_or_default());
+                    }
+                    if let Some(b) = boundary {
+                        more.insert("boundary".into(), serde_json::to_value(b).unwrap_or_default());
+                    }
+                    if !bounds.is_empty() {
+                        more.insert("bounds".into(), serde_json::to_value(bounds).unwrap_or_default());
+                    }
+                    if let Some(g) = gap {
+                        more.insert("gap".into(), serde_json::json!(g));
+                    }
+                    self.text(&serde_json::Value::Object(more).to_string());
                 }
             }
             Entity::Insert(InsertEntity {
@@ -1430,6 +1536,11 @@ impl Packer {
                 }
             }
             Entity::Leader(LeaderEntity {
+                tip,
+                leader_style,
+                arms,
+                blocks,
+                annotative,
                 base: _,
                 pts,
                 text,
@@ -1457,8 +1568,21 @@ impl Packer {
                     flags |= OPT[3];
                     self.float(*s);
                 }
+                // Its scales (docs/adr/0323), as their JSON.
+                if let Some(a) = annotative {
+                    flags |= OPT[4];
+                    self.text(&serde_json::to_string(a).unwrap_or_default());
+                }
+                // Its arms, tip, blocks and style (docs/adr/0326), as one JSON object of those it has.
+                if !arms.is_empty() || tip.is_some() || !blocks.is_empty() || leader_style.is_some() {
+                    flags |= OPT[5];
+                    self.text(&multileader_json(arms, tip.as_ref(), blocks, leader_style.as_deref()));
+                }
             }
             Entity::Table(TableEntity {
+                styles,
+                formulas,
+                fields,
                 base: _,
                 p,
                 rotation,
@@ -1534,10 +1658,10 @@ impl Packer {
                     flags |= OPT[10];
                     self.float(*f);
                 }
-                if let Some(source) = source {
+                if let Some(source) = source.as_ref().filter(|s| !matches!(s, TableSource::Blocks { .. })) {
                     flags |= OPT[9];
                     match source {
-                        TableSource::File { name, sheet } => {
+                        TableSource::File { name, sheet, .. } => {
                             self.int(3);
                             self.int(u32::from(sheet.is_some()));
                             self.text(name);
@@ -1558,6 +1682,11 @@ impl Packer {
                             }
                         }
                     }
+                }
+                // Schema 68's styles, formulas, fields, linked file and block schedule (docs/adr/0327): one JSON object.
+                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref()) {
+                    flags |= OPT[11];
+                    self.text(&j);
                 }
             }
         }
@@ -1988,18 +2117,23 @@ fn allowed(kind: u8) -> u32 {
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
-        10 => OPT[..14].iter().fold(0, |m, b| m | b),
-        14 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // Schema 63's overrides (docs/adr/0322 §5), schema 64's scales (docs/adr/0323), schema 65's layout
+        // (docs/adr/0324), schema 66's fields (docs/adr/0325).
+        10 => OPT[..18].iter().fold(0, |m, b| m | b),
+        // Schema 67's arms, tip, blocks and style (docs/adr/0326).
+        14 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5],
         // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look,
         // schema 30's lines (docs/adr/0205 §6).
-        11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS,
-        // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186).
-        12 => OPT[..6].iter().fold(0, |m, b| m | b),
+        11 => OPT.iter().fold(0, |m, b| m | b) | LINES | REFS | MORE,
+        // A hatch: holes, schema 23's name, scale, families, gradient and tie (docs/adr/0186), schema 69's boundary
+        // and bounds (docs/adr/0328).
+        12 => OPT[..7].iter().fold(0, |m, b| m | b),
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
         // parameter values (docs/adr/0318 §3).
         13 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
-        15 => OPT[..11].iter().fold(0, |m, b| m | b),
+        // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184); schema 68's cells
+        // (docs/adr/0327).
+        15 => OPT[..12].iter().fold(0, |m, b| m | b),
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
         // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207), dataset (docs/adr/0243).
@@ -2213,6 +2347,7 @@ fn geometry(
                         script: match bits & RUN_SCRIPT {
                             RUN_SUPER => Some(TextScript::Super),
                             RUN_SUB => Some(TextScript::Sub),
+                            RUN_SCRIPT => Some(TextScript::Stack),
                             _ => None,
                         },
                         color,
@@ -2240,7 +2375,32 @@ fn geometry(
             } else {
                 None
             };
+            let overrides: Vec<String> = if has(14) {
+                let t = c.text(|| place("overrides"))?;
+                serde_json::from_str(&t).map_err(|_| broken("yazının geçersiz kılınanları"))?
+            } else {
+                Vec::new()
+            };
+            let annotative: Option<Box<kentos_contracts::Annotative>> = if has(15) {
+                let t = c.text(|| place("annotative"))?;
+                Some(serde_json::from_str(&t).map_err(|_| broken("yazının ölçekleri"))?)
+            } else {
+                None
+            };
+            let layout: Option<Box<kentos_contracts::ParagraphLayout>> = if has(16) {
+                let t = c.text(|| place("layout"))?;
+                Some(serde_json::from_str(&t).map_err(|_| broken("yazının düzeni"))?)
+            } else {
+                None
+            };
+            let fields: Vec<kentos_contracts::TextField> = if has(17) {
+                let t = c.text(|| place("fields"))?;
+                serde_json::from_str(&t).map_err(|_| broken("yazının alanları"))?
+            } else {
+                Vec::new()
+            };
             Entity::Text(TextEntity {
+                annotative,
                 base,
                 p,
                 text,
@@ -2252,11 +2412,14 @@ fn geometry(
                 label_of,
                 label_scale,
                 paragraph: Paragraph {
+                    fields,
+                    layout,
                     box_width,
                     line_spacing,
                     runs,
                 },
                 face: TextFace {
+                    overrides,
                     text_style,
                     font,
                     bold: has(9),
@@ -2381,9 +2544,15 @@ fn geometry(
             // What its points follow (docs/adr/0249 §4).
             let refs = if flags & REFS != 0 {
                 let mask = c.int()?;
-                if mask & !7 != 0 {
+                if mask & !31 != 0 {
                     return Err(broken(&format!("ölçünün başvuru maskesi {mask}")));
                 }
+                let rule = match mask & 24 {
+                    8 => Some(kentos_contracts::DimensionRule::Curve),
+                    16 => Some(kentos_contracts::DimensionRule::Edges),
+                    24 => Some(kentos_contracts::DimensionRule::Pair),
+                    _ => None,
+                };
                 let mut slots = [None, None, None];
                 for (i, slot) in slots.iter_mut().enumerate() {
                     if mask & 1 << i == 0 {
@@ -2449,11 +2618,50 @@ fn geometry(
                     a: ra,
                     b: rb,
                     c: rc,
+                    rule,
                 })
             } else {
                 None
             };
+            // Its options, moved value and breaks (docs/adr/0321).
+            let mut more: serde_json::Map<String, serde_json::Value> = if flags & MORE != 0 {
+                let t = c.text(|| place("options"))?;
+                match serde_json::from_str(&t) {
+                    Ok(serde_json::Value::Object(m)) => m,
+                    _ => return Err(broken("ölçünün seçenekleri")),
+                }
+            } else {
+                serde_json::Map::new()
+            };
+            let mut part = |key: &str| more.remove(key);
+            let options: Option<Box<kentos_contracts::DimensionOptions>> = match part("options") {
+                Some(v) => {
+                    Some(serde_json::from_value(v).map_err(|_| broken("ölçünün seçenekleri"))?)
+                }
+                None => None,
+            };
+            let text_shift: Option<kentos_contracts::TextShift> = match part("textShift") {
+                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("değerin kayması"))?),
+                None => None,
+            };
+            let breaks: Vec<kentos_contracts::DimensionBreak> = match part("breaks") {
+                Some(v) => serde_json::from_value(v).map_err(|_| broken("ölçünün kırmaları"))?,
+                None => Vec::new(),
+            };
+            let overrides: Vec<String> = match part("overrides") {
+                Some(v) => {
+                    serde_json::from_value(v).map_err(|_| broken("ölçünün geçersiz kılınanları"))?
+                }
+                None => Vec::new(),
+            };
+            let annotative: Option<Box<kentos_contracts::Annotative>> = match part("annotative") {
+                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("ölçünün ölçekleri"))?),
+                None => None,
+            };
             Entity::Dimension(DimensionEntity {
+                annotative,
+                text_shift,
+                breaks,
                 base,
                 a,
                 b,
@@ -2468,6 +2676,8 @@ fn geometry(
                 zb,
                 refs: refs.map(Box::new),
                 look: DimensionLook {
+                    overrides,
+                    options,
                     dim_style,
                     arrow,
                     arrow_size,
@@ -2564,12 +2774,21 @@ fn geometry(
                 if i.saturating_add(k) > c.cols.text_lengths.len() {
                     return Err(broken("taramanın nesne sayısı metinlerden fazla"));
                 }
+                let outer = {
+                    let t = c.text(|| place("assoc/outer"))?;
+                    if t.is_empty() {
+                        None
+                    } else {
+                        Some(EntityId::parse(&t).ok_or_else(|| {
+                            broken(&format!("taramanın nesnesinin kimliği “{t}”"))
+                        })?)
+                    }
+                };
                 let mut id = |what: &str| -> Result<EntityId, KcadError> {
                     let t = c.text(|| place(what))?;
                     EntityId::parse(&t)
                         .ok_or_else(|| broken(&format!("taramanın nesnesinin kimliği “{t}”")))
                 };
-                let outer = id("assoc/outer")?;
                 let islands = (0..i)
                     .map(|_| id("assoc/islands"))
                     .collect::<Result<Vec<_>, _>>()?;
@@ -2577,11 +2796,47 @@ fn geometry(
                     .map(|_| id("assoc/cutouts"))
                     .collect::<Result<Vec<_>, _>>()?;
                 Some(HatchAssoc {
+                    gap: None,
                     outer,
+                    bounds: Vec::new(),
                     islands,
                     cutouts,
                     seed: c.point()?,
                 })
+            } else {
+                None
+            };
+            let mut assoc = assoc;
+            let (mut origin, mut hatch_annotative) = (None, None);
+            let boundary = if has(6) {
+                #[derive(serde::Deserialize)]
+                struct More {
+                    #[serde(default)]
+                    boundary: Option<Vec<kentos_contracts::HatchLoop>>,
+                    #[serde(default)]
+                    bounds: Vec<EntityId>,
+                    #[serde(default)]
+                    gap: Option<f64>,
+                    #[serde(default)]
+                    origin: Option<kentos_contracts::Vec2>,
+                    #[serde(default)]
+                    annotative: Option<Box<kentos_contracts::Annotative>>,
+                }
+                let t = c.text(|| place("boundary"))?;
+                let more: More = serde_json::from_str(&t)
+                    .map_err(|e| broken(&format!("taramanın sınırı okunamadı: {e}")))?;
+                if !more.bounds.is_empty() || more.gap.is_some() {
+                    match &mut assoc {
+                        Some(a) => {
+                            a.bounds = more.bounds;
+                            a.gap = more.gap;
+                        }
+                        None => return Err(broken("ilişkisi olmayan taramanın sınır nesneleri")),
+                    }
+                }
+                origin = more.origin;
+                hatch_annotative = more.annotative;
+                more.boundary
             } else {
                 None
             };
@@ -2597,8 +2852,11 @@ fn geometry(
                     scale,
                     lines,
                     gradient,
+                    origin,
                 },
                 assoc,
+                boundary,
+                annotative: hatch_annotative,
             })
         }
         15 => {
@@ -2681,7 +2939,7 @@ fn geometry(
             };
             let oblique = if has(8) { Some(c.float()?) } else { None };
             let frame = if has(10) { Some(c.float()?) } else { None };
-            let source = if has(9) {
+            let mut source = if has(9) {
                 match c.int()? {
                     3 => {
                         let sheet = match c.int()? {
@@ -2695,7 +2953,14 @@ fn geometry(
                         } else {
                             None
                         };
-                        Some(TableSource::File { name, sheet })
+                        Some(TableSource::File {
+                            path: None,
+                            copy: None,
+                            digest: None,
+                            overrides: Default::default(),
+                            name,
+                            sheet,
+                        })
                     }
                     kind @ 0..=2 => {
                         let k = c.usize()?;
@@ -2721,7 +2986,33 @@ fn geometry(
             } else {
                 None
             };
+            let more: TableCells = if has(11) {
+                let t = c.text(|| place("styles"))?;
+                serde_json::from_str(&t).map_err(|_| broken("tablonun hücre verisi"))?
+            } else {
+                TableCells::default()
+            };
+            if let Some(schedule) = more.schedule {
+                source = Some(schedule);
+            }
+            if let Some(l) = more.link
+                && let Some(TableSource::File {
+                    path,
+                    digest,
+                    copy,
+                    overrides,
+                    ..
+                }) = &mut source
+            {
+                *path = l.path;
+                *digest = l.digest;
+                *copy = l.copy;
+                *overrides = l.overrides;
+            }
             Entity::Table(TableEntity {
+                styles: more.styles,
+                formulas: more.formulas,
+                fields: more.fields,
                 base,
                 p,
                 rotation,
@@ -2735,6 +3026,7 @@ fn geometry(
                 grid,
                 frame,
                 face: TextFace {
+                    overrides: Vec::new(),
                     text_style,
                     font,
                     bold: has(6),
@@ -3087,7 +3379,8 @@ fn geometry(
             let parameters = if has(3) {
                 let text = c.text(|| place("parameters"))?;
                 let values: std::collections::BTreeMap<String, kentos_contracts::ParamValue> =
-                    serde_json::from_str(&text).map_err(|_| broken("parametre değerleri okunamadı"))?;
+                    serde_json::from_str(&text)
+                        .map_err(|_| broken("parametre değerleri okunamadı"))?;
                 if values.is_empty() {
                     return Err(broken("boş parametre değerleri"));
                 }
@@ -3126,7 +3419,24 @@ fn geometry(
                 None
             };
             let arrow_size = if has(3) { Some(c.float()?) } else { None };
+            let annotative: Option<Box<kentos_contracts::Annotative>> = if has(4) {
+                let t = c.text(|| place("annotative"))?;
+                Some(serde_json::from_str(&t).map_err(|_| broken("kılavuzun ölçekleri"))?)
+            } else {
+                None
+            };
+            let more: Multileader = if has(5) {
+                let t = c.text(|| place("arms"))?;
+                serde_json::from_str(&t).map_err(|_| broken("kılavuzun kolları"))?
+            } else {
+                Multileader::default()
+            };
             Entity::Leader(LeaderEntity {
+                tip: more.tip,
+                leader_style: more.leader_style,
+                blocks: more.blocks,
+                arms: more.arms,
+                annotative,
                 base,
                 pts,
                 text,
@@ -3138,6 +3448,99 @@ fn geometry(
             })
         }
     })
+}
+
+/// A leader's schema 67 fields (docs/adr/0326) as the columns carry them: one JSON object.
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Multileader {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    arms: Vec<kentos_contracts::LeaderArm>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tip: Option<kentos_contracts::SubRef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    blocks: Vec<kentos_contracts::EntityId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    leader_style: Option<String>,
+}
+
+fn multileader_json(
+    arms: &[kentos_contracts::LeaderArm],
+    tip: Option<&kentos_contracts::SubRef>,
+    blocks: &[kentos_contracts::EntityId],
+    style: Option<&str>,
+) -> String {
+    serde_json::to_string(&Multileader {
+        arms: arms.to_vec(),
+        tip: tip.cloned(),
+        blocks: blocks.to_vec(),
+        leader_style: style.map(str::to_owned),
+    })
+    .unwrap_or_default()
+}
+
+/// A table's schema 68 fields (docs/adr/0327) as the columns carry them: one JSON object.
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TableCells {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    styles: Vec<kentos_contracts::CellStyle>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    formulas: Vec<kentos_contracts::CellFormula>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    fields: Vec<kentos_contracts::CellField>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    link: Option<TableLink>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    schedule: Option<TableSource>,
+}
+
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TableLink {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    copy: Option<Vec<Vec<String>>>,
+    #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
+    overrides: kentos_contracts::SourceOverrides,
+}
+
+fn table_cells_json(
+    styles: &[kentos_contracts::CellStyle],
+    formulas: &[kentos_contracts::CellFormula],
+    fields: &[kentos_contracts::CellField],
+    source: Option<&TableSource>,
+) -> Option<String> {
+    let link = match source {
+        Some(TableSource::File {
+            path,
+            digest,
+            copy,
+            overrides,
+            ..
+        }) if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() => Some(TableLink {
+            path: path.clone(),
+            digest: digest.clone(),
+            copy: copy.clone(),
+            overrides: *overrides,
+        }),
+        _ => None,
+    };
+    let schedule = source.filter(|s| matches!(s, TableSource::Blocks { .. })).cloned();
+    if styles.is_empty() && formulas.is_empty() && fields.is_empty() && link.is_none() && schedule.is_none() {
+        return None;
+    }
+    serde_json::to_string(&TableCells {
+        styles: styles.to_vec(),
+        formulas: formulas.to_vec(),
+        fields: fields.to_vec(),
+        link,
+        schedule,
+    })
+    .ok()
 }
 
 // ── Comparing ───────────────────────────────────────────────────────────
@@ -3309,14 +3712,17 @@ mod tests {
                 zb: None,
             }),
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: Some(vec![vec![Vec2 { x: 1.0, y: 1.0 }; 3]]),
                 pattern: HatchPattern::user(HatchPatternType::Cross, 45.0, 2.0),
                 assoc: None,
+                annotative: None,
             }),
             // A pattern of families, tied to its objects (docs/adr/0186).
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: None,
@@ -3340,13 +3746,17 @@ mod tests {
                     ..HatchPattern::user(HatchPatternType::Pattern, 30.0, 1.0)
                 },
                 assoc: Some(HatchAssoc {
-                    outer: id(1),
+                    gap: None,
+                    outer: Some(id(1)),
+                    bounds: Vec::new(),
                     islands: vec![id(2)],
                     cutouts: Vec::new(),
                     seed: Vec2 { x: 1.0, y: 0.5 },
                 }),
+                annotative: None,
             }),
             Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: base("b"),
                 ring: vec![Vec2 { x: 0.0, y: 0.0 }; 3],
                 holes: None,
@@ -3359,6 +3769,7 @@ mod tests {
                     ..HatchPattern::user(HatchPatternType::Gradient, 90.0, 1.0)
                 },
                 assoc: None,
+                annotative: None,
             }),
         ];
         let cols = pack(entities.clone(), vec![id(1), id(2), id(3), id(4)]);

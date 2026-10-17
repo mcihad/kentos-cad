@@ -48,8 +48,11 @@ MAGIC = b"\x89KCAD\r\n\x1a\n"
 # A text's alignments (spec §6.6, docs/adr/0145); the left of the baseline is the field's absence.
 TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", "bottomRight", "middleLeft", "middleCenter", "middleRight", "topLeft", "topCenter", "topRight")
 # A dimension's kinds (spec §6.6); schema 9 added the last five (docs/adr/0147).
-DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope")
-SCHEMA_9_STYLES = DIMENSION_STYLES[5:]
+DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordinate", "arcLength", "jogged", "azimuth", "slope",
+                    "centerMark", "centerLine", "elevation")
+SCHEMA_9_STYLES = DIMENSION_STYLES[5:10]
+# Schema 62 (docs/adr/0322): the centre mark, the axis and the level.
+SCHEMA_62_STYLES = DIMENSION_STYLES[10:]
 # A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence. Schema 30 added AutoCAD's
 # others (docs/adr/0205 §7).
 LEADER_ARROWS = ("open", "dot", "none")
@@ -306,6 +309,8 @@ def settings(s):
                 "layerStates": (layer_states, False),
                 "textStyles": (text_styles, False),
                 "dimensionStyles": (dimension_styles, False),
+                # Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+                "leaderStyles": (opaque, False),
                 "topology": (topology, False),
                 "annotation": (annotation, False),
                 # Schema 32 (docs/adr/0208 §2): the project's connections to map services, without their secrets.
@@ -326,12 +331,14 @@ def settings(s):
                 # Schema 56 (docs/adr/0313 §1): the project's line types with patterns and its line type scale.
                 "lineTypes": (line_types, False),
                 "lineTypeScale": (line_type_scale, False),
-                # Schema 60 (docs/adr/0401 §3): the project's forms, as their JSON.
+                # Schema 72 (docs/adr/0401 §3): the project's forms, as their JSON.
                 "forms": (opaque, False),
-                # Schema 60 (docs/adr/0405 §1): the project's relations, as their JSON.
+                # Schema 72 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
-                # Schema 60 (docs/adr/0430): the project's value lists, as their JSON.
+                # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
                 "domains": (opaque, False),
+                # Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+                "hatchPatterns": (opaque, False),
             },
             "settings",
         )
@@ -526,6 +533,8 @@ def dimension_styles(styles):
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
         **LINE_FIELDS,
+        # Schema 61 (docs/adr/0321): its options, as their JSON.
+        "options": (opaque, False),
     }
     return array([cmap(fields(st, table, "dimensionStyle")) for st in styles])
 
@@ -794,13 +803,13 @@ FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "tim
 def layer_field(f):
     """A layer's field (schema 26, docs/adr/0199 §1): its name and kind, then what it has; `required` only when true."""
     assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
-    # Schema 60 (docs/adr/0418): a retired value.
-    # Schema 60 (docs/adr/0438 §5): a value's description and days.
+    # Schema 72 (docs/adr/0418): a retired value.
+    # Schema 72 (docs/adr/0438 §5): a value's description and days.
     choice = lambda c: cmap(fields(c, {"code": (text, True), "label": (text, True), "retired": (boolean, False),
                                        "description": (text, False), "from": (text, False), "until": (text, False)},
                                    "değer"))
     table = {
-        # Schema 60 (docs/adr/0401 §2): the field's stable id, when it has one.
+        # Schema 72 (docs/adr/0401 §2): the field's stable id, when it has one.
         "id": (text, False),
         "name": (text, True),
         "alias": (text, False),
@@ -812,14 +821,14 @@ def layer_field(f):
         "values": (lambda vs: array([choice(c) for c in vs]), False),
         "required": (boolean, False),
         "default": (text, False),
-        # Schema 60 (docs/adr/0408 §1): several codes of the list.
+        # Schema 72 (docs/adr/0408 §1): several codes of the list.
         "multiple": (boolean, False),
-        # Schema 60 (docs/adr/0419): the split and merge policies.
+        # Schema 72 (docs/adr/0419): the split and merge policies.
         "split": (enum(("copy", "clear", "default", "ratio")), False),
         "merge": (enum(("first", "clear", "sum", "min", "max")), False),
-        # Schema 60 (docs/adr/0430): the value list it links.
+        # Schema 72 (docs/adr/0430): the value list it links.
         "domain": (text, False),
-        # Schema 60 (docs/adr/0438 §3, §4): unique, the range's left-out ends and the unit; flags only when true.
+        # Schema 72 (docs/adr/0438 §3, §4): unique, the range's left-out ends and the unit; flags only when true.
         "unique": (boolean, False),
         "minExclusive": (boolean, False),
         "maxExclusive": (boolean, False),
@@ -1179,13 +1188,13 @@ def layer_entries(n):
                 "plot": (lambda b: boolean(b) if b is False else None, False),
                 # Schema 55 (docs/adr/0311 §1): a layer or group frozen; only `true` is written.
                 "frozen": (lambda b: boolean(b) if b is True else None, False),
-                # Schema 60 (docs/adr/0413 §3): the attribute table's rules, as their JSON.
+                # Schema 72 (docs/adr/0413 §3): the attribute table's rules, as their JSON.
                 "tableStyles": (opaque, False),
-                # Schema 60 (docs/adr/0422 §4): the subtypes, as their JSON.
+                # Schema 72 (docs/adr/0422 §4): the subtypes, as their JSON.
                 "subtypes": (opaque, False),
-                # Schema 60 (docs/adr/0423 §4): the value groups, as their JSON.
+                # Schema 72 (docs/adr/0423 §4): the value groups, as their JSON.
                 "contingents": (opaque, False),
-                # Schema 60 (docs/adr/0438 §1): the record rules, as their JSON.
+                # Schema 72 (docs/adr/0438 §1): the record rules, as their JSON.
                 "rules": (opaque, False),
                 "type": (enum(("group", "layer")), True),
                 "visible": (boolean, True),
@@ -1234,7 +1243,7 @@ def point_part(pp):
 def text_run(r):
     """A multi-line text's run (schema 20, docs/adr/0182): its range, a flag only when true, its script and colour."""
     flag = (lambda b: boolean(b) if b is True else None, False)
-    table = {"start": (uint, True), "end": (uint, True), "bold": flag, "italic": flag, "underline": flag, "script": (enum(("super", "sub")), False), "color": (text, False)}
+    table = {"start": (uint, True), "end": (uint, True), "bold": flag, "italic": flag, "underline": flag, "script": (enum(("super", "sub", "stack")), False), "color": (text, False)}
     return cmap(fields(r, table, "run"))
 
 
@@ -1313,6 +1322,24 @@ def table_shape(e):
     assert len(e.get("aligns", e["columns"])) == m, "her sütunun hizası"
     if "frame" in e:
         assert 0 < 2 * e["frame"] < min(sum(e["columns"]), sum(e["rows"])), "çerçeve tablonun içinde"
+
+
+def table_parts(e):
+    """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
+    `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
+    src = e.get("source")
+    if src is None or src["kind"] not in ("blocks", "file"):
+        return e
+    e = dict(e)
+    if src["kind"] == "blocks":
+        assert src.get("names", [None]), "boş ad listesi yazılmaz"
+        e["schedule"] = e.pop("source")
+        return e
+    link = {k: src[k] for k in ("path", "digest", "copy", "overrides") if k in src and not (k == "overrides" and src[k] == "keep")}
+    if link:
+        e["source"] = {k: src[k] for k in ("kind", "name", "sheet") if k in src}
+        e["link"] = link
+    return e
 
 
 def image_shape(e):
@@ -1441,6 +1468,14 @@ KINDS = {
         "oblique": (f64, False),
         # Schema 25 (docs/adr/0196 §1): the curve its letters stand on, in its frame; bulges only when an edge bends.
         "path": (lambda c: cmap(fields(c, {"pts": (points, True), "bulges": (lambda b: array([f64(x) for x in b]), False)}, "eğri")), False),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
+        "overrides": (lambda o: opaque(o) if o else None, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
+        # Schema 65 (docs/adr/0324 §1): its indents, tab stops and columns, as their JSON.
+        "layout": (opaque, False),
+        # Schema 66 (docs/adr/0325 §1): its fields, as their JSON.
+        "fields": (opaque, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -1473,6 +1508,14 @@ KINDS = {
         **LINE_FIELDS,
         # Schema 43 (docs/adr/0249 §4): what its points follow; only in the drawing.
         "refs": (lambda r: dimension_refs(r), False),
+        # Schema 61 (docs/adr/0321): its options, its moved value and its breaks, as their JSON.
+        "options": (opaque, False),
+        "textShift": (opaque, False),
+        "breaks": (lambda b: opaque(b) if b else None, False),
+        # Schema 63 (docs/adr/0322 §5): the fields set apart from its style, by name.
+        "overrides": (lambda o: opaque(o) if o else None, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
     # Schema 23 (docs/adr/0186): a pattern's name, scale and families, a gradient; the objects it follows, only in the drawing.
     "hatch": {
@@ -1480,6 +1523,10 @@ KINDS = {
         "holes": (lambda h: array([points(r) for r in h]), False),
         "pattern": (lambda p: hatch_pattern(p), True),
         "assoc": (lambda a: hatch_assoc(a), False),
+        # Schema 69 (docs/adr/0328 §1): its exact boundary, as its JSON.
+        "boundary": (opaque, False),
+        # Schema 71 (docs/adr/0331 §3): its scales, as their JSON.
+        "annotative": (opaque, False),
     },
     # Schema 6 (docs/adr/0144): the definition's id; `mirror` only when true.
     "insert": {"block": (lambda u: blob(uid_bytes(u)), True), "p": (point, True), "scale": (f64, True), "rotation": (f64, True), "mirror": (lambda b: boolean(b) if b is True else None, False),
@@ -1509,6 +1556,13 @@ KINDS = {
         "italic": (lambda b: boolean(b) if b is True else None, False),
         "oblique": (f64, False),
         "source": (table_source, False),
+        # Schema 68 (docs/adr/0327): the cells' styles, formulas and fields, a linked file's data and a block schedule,
+        # as their JSON.
+        "styles": (opaque, False),
+        "formulas": (opaque, False),
+        "fields": (opaque, False),
+        "link": (opaque, False),
+        "schedule": (opaque, False),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, one source, its clip in its own fractions, its opacity; `mirror`
     # only when true; only in the drawing.
@@ -1551,7 +1605,7 @@ KINDS = {
         "style": (cloud_style, True),
         "opacity": (f64, False),
     },
-    # Schema 60 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
+    # Schema 72 (docs/adr/0410 §2): a record without a geometry, only in the drawing; no fields of its own.
     "record": {},
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
@@ -1563,6 +1617,13 @@ KINDS = {
         "arrow": (enum(LEADER_ARROWS + LEADER_ARROWS_30), False),
         "mask": (lambda b: boolean(b) if b is True else None, False),
         "arrowSize": (leader_arrow_size, False),
+        # Schema 64 (docs/adr/0323): its scales, as their JSON.
+        "annotative": (opaque, False),
+        # Schema 67 (docs/adr/0326): its arms, tip and content blocks as their JSON, its style's id.
+        "arms": (opaque, False),
+        "tip": (opaque, False),
+        "blocks": (opaque, False),
+        "leaderStyle": (text, False),
     },
 }
 
@@ -1591,6 +1652,8 @@ def hatch_pattern(p):
         "scale": (f64, False),
         "lines": (lambda ls: array([pattern_line(l) for l in ls]), False),
         "gradient": (hatch_gradient, False),
+        # Schema 71 (docs/adr/0331 §2): where its lines are anchored.
+        "origin": (point, False),
     }
     return cmap(fields(p, table, "pattern"))
 
@@ -1598,8 +1661,11 @@ def hatch_pattern(p):
 def hatch_assoc(a):
     """What a hatch's region follows (schema 23, docs/adr/0186 §6): objects by persistent id, empty lists not written; the seed."""
     ids = lambda us: array([blob(uid_bytes(u)) for u in us])
-    assert a.get("islands", [None]) and a.get("cutouts", [None]), "boş liste yazılmaz"
-    return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), True), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
+    assert a.get("islands", [None]) and a.get("cutouts", [None]) and a.get("bounds", [None]), "boş liste yazılmaz"
+    # Schema 69 (docs/adr/0328 §3): a face's tie names its line work (`bounds`) and no closed object; the reader holds
+    # it to one of the two (broken/hatch-assoc-outer-and-bounds.kcad).
+    # Schema 70 (docs/adr/0329 §3): the gap a face's line work was closed across.
+    return cmap(fields(a, {"gap": (f64, False), "outer": (lambda u: blob(uid_bytes(u)), False), "bounds": (ids, False), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
 
 
 # A reference's places and the numbers each has (docs/adr/0249 §1); the codes of a broken one.
@@ -1626,9 +1692,11 @@ def subref(r):
 
 
 def dimension_refs(refs):
-    """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field."""
-    assert refs, "boş başvurular yazılmaz"
-    return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False)}, "refs"))
+    """What a dimension's points follow (schema 43, docs/adr/0249 §4): `a`, `b`, `c`; none, no field. Their `rule`
+    (schema 60, docs/adr/0320 §1): `curve` or `edges`; `pair` (schema 62, docs/adr/0322)."""
+    assert any(k in refs for k in "abc"), "boş başvurular yazılmaz"
+    assert refs.get("rule", "curve") in ("curve", "edges", "pair"), refs
+    return cmap(fields(refs, {"a": (subref, False), "b": (subref, False), "c": (subref, False), "rule": (text, False)}, "refs"))
 
 
 LOOK_PARTS = ("color", "lineType", "lineWeight", "transparency")
@@ -1685,6 +1753,7 @@ def entity(e, uid, index):
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
+        e = table_parts(e)
     if kind == "image":
         assert uid is not None, "blok tanımında resim olamaz"
         image_shape(e)
@@ -1992,7 +2061,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
-    # Schema 60 (docs/adr/0401): a form of the project, or a layer field's stable id.
+    # Schema 72 (docs/adr/0401): a form of the project, or a layer field's stable id.
     def keyed(nodes):
         return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
                        or any(c.get("retired") for c in f.get("values", [])) or "split" in f or "merge" in f
@@ -2002,7 +2071,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
                        for f in n.get("fields", []))
                    or keyed(n.get("children", [])) for n in nodes)
 
-    # A record without a geometry is schema 60's too (docs/adr/0410 §2).
+    # A record without a geometry is schema 72's too (docs/adr/0410 §2).
     def styled(nodes):
         return any(n.get("tableStyles") or n.get("subtypes") or n.get("contingents") or n.get("rules")
                    or styled(n.get("children", []))
@@ -2011,6 +2080,58 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     if (settings or {}).get("forms") or (settings or {}).get("relations") or (settings or {}).get("domains") or keyed(layers) or styled(layers) or any(
         e["kind"] == "record" for e in entities
     ):
+        return 72
+    # Schema 71 (docs/adr/0331): the project's hatch patterns, a pattern's own origin, an annotative hatch.
+    def extras(es):
+        return any(e["kind"] == "hatch" and ("origin" in e["pattern"] or "annotative" in e) for e in es)
+    if (settings or {}).get("hatchPatterns") or extras(entities) or any(extras(b["entities"]) for b in blocks or []):
+        return 71
+    # Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
+    if any(e["kind"] == "hatch" and "gap" in e.get("assoc", {}) for e in entities):
+        return 70
+    # Schema 69 (docs/adr/0328): a hatch's exact boundary or a face's tie.
+    def bounded(es):
+        return any(e["kind"] == "hatch" and ("boundary" in e or "bounds" in e.get("assoc", {})) for e in es)
+    if bounded(entities) or any(bounded(b["entities"]) for b in blocks or []):
+        return 69
+    # Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
+    def tabled(es):
+        def linked(src):
+            return src["kind"] == "blocks" or (src["kind"] == "file" and (any(k in src for k in ("path", "digest", "copy")) or src.get("overrides", "keep") != "keep"))
+        return any(e["kind"] == "table" and (any(k in e for k in ("styles", "formulas", "fields")) or ("source" in e and linked(e["source"]))) for e in es)
+    if tabled(entities):
+        return 68
+    # Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the leader styles.
+    multi = lambda es: any(e["kind"] == "leader" and any(k in e for k in ("arms", "tip", "blocks", "leaderStyle")) for e in es)  # noqa: E731
+    if multi(entities) or any(multi(b["entities"]) for b in blocks or []) or (settings or {}).get("leaderStyles"):
+        return 67
+    # Schema 66 (docs/adr/0325): a text's fields.
+    fielded = lambda es: any(e["kind"] == "text" and "fields" in e for e in es)  # noqa: E731
+    if fielded(entities) or any(fielded(b["entities"]) for b in blocks or []):
+        return 66
+    # Schema 65 (docs/adr/0324): a text's layout or a stacked fraction.
+    laid = lambda es: any(e["kind"] == "text" and ("layout" in e or any(r.get("script") == "stack" for r in e.get("runs", []))) for e in es)  # noqa: E731
+    if laid(entities) or any(laid(b["entities"]) for b in blocks or []):
+        return 65
+    # Schema 64 (docs/adr/0323): an annotative text, dimension or leader.
+    scaled = lambda es: any(e["kind"] in ("text", "dimension", "leader") and "annotative" in e for e in es)  # noqa: E731
+    if scaled(entities) or any(scaled(b["entities"]) for b in blocks or []):
+        return 64
+    # Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides.
+    overridden = lambda es: any(e["kind"] in ("text", "dimension") and e.get("overrides") for e in es)  # noqa: E731
+    if overridden(entities) or any(overridden(b["entities"]) for b in blocks or []):
+        return 63
+    # Schema 62 (docs/adr/0322): a centre mark, an axis or a level, or the pair rule.
+    marked = lambda es: any(e["kind"] == "dimension" and (e.get("style") in SCHEMA_62_STYLES or e.get("refs", {}).get("rule") == "pair") for e in es)  # noqa: E731
+    if marked(entities) or any(marked(b["entities"]) for b in blocks or []):
+        return 62
+    # Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks, or a dimension style's options.
+    optioned = lambda es: any(e["kind"] == "dimension" and any(k in e for k in ("options", "textShift", "breaks")) for e in es)  # noqa: E731
+    if (optioned(entities) or any(optioned(b["entities"]) for b in blocks or [])
+            or any("options" in st for st in (settings or {}).get("dimensionStyles", []))):
+        return 61
+    # Schema 60 (docs/adr/0320 §1): a dimension's references' rule.
+    if any(e["kind"] == "dimension" and "rule" in e.get("refs", {}) for e in entities):
         return 60
     # Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values.
     valued = lambda es: any(e["kind"] == "insert" and "parameters" in e for e in es)  # noqa: E731
@@ -2364,7 +2485,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-61.kcad"] = container(root(cmap(parts), version=uint(61)))
+    files["schema-version-73.kcad"] = container(root(cmap(parts), version=uint(73)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2555,6 +2676,40 @@ def broken(minimal_content, minimal_file):
     files["paragraph-run-touching-same.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(True)), run_of(2, 4, bold=boolean(True))])))
     files["paragraph-run-formatless.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2)])))
     files["paragraph-run-bold-false.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(False))])))
+    # A layout and a stacked fraction are schema 65's (docs/adr/0324): in schema 64 an unknown field and an unknown
+    # script; not empty, a left indent not below 0, the first line not left of the box, tabs ascending, columns in a
+    # box and 2 to 16 of them, a stack around a mark.
+    files["text-layout-in-schema-64.kcad"] = in_schema(64, text_of(layout=cmap({"leftIndent": f64(2.0)})))
+    files["text-stack-in-schema-64.kcad"] = in_schema(64, cmap({"text": cmap({**common, "p": point(one["p"]), "text": text("1/2"), "height": f64(2.5), "rotation": f64(0.0), "runs": array([run_of(0, 3, script=text("stack"))])})}))
+    files["text-layout-empty.kcad"] = in_schema(65, text_of(layout=cmap({})))
+    files["text-layout-left-negative.kcad"] = in_schema(65, text_of(layout=cmap({"leftIndent": f64(-1.0)})))
+    files["text-layout-hangs-out.kcad"] = in_schema(65, text_of(layout=cmap({"indent": f64(-3.0), "leftIndent": f64(2.0)})))
+    files["text-layout-tabs-descending.kcad"] = in_schema(65, text_of(layout=cmap({"tabs": array([f64(6.0), f64(2.0)])})))
+    files["text-layout-columns-boxless.kcad"] = in_schema(65, text_of(layout=cmap({"columns": cmap({"count": uint(2), "gap": f64(1.0), "height": f64(10.0)})})))
+    files["text-layout-columns-one.kcad"] = in_schema(65, text_of(boxWidth=f64(20.0), layout=cmap({"columns": cmap({"count": uint(1), "gap": f64(1.0), "height": f64(10.0)})})))
+    files["text-stack-without-mark.kcad"] = in_schema(65, text_of(runs=array([run_of(0, 2, script=text("stack"))])))
+    # Fields are schema 66's (docs/adr/0325 §1): in schema 65 an unknown field; not empty, in the letters, in order,
+    # an attribute's name, a broken field's letters ####, a known source.
+    src = cmap({"kind": text("project"), "value": text("scale")})
+    fld = lambda s, e, source=src, **more: cmap({"start": uint(s), "end": uint(e), "source": source, **more})  # noqa: E731
+    files["text-fields-in-schema-65.kcad"] = in_schema(65, text_of(fields=array([fld(0, 2)])))
+    files["text-fields-empty.kcad"] = in_schema(66, text_of(fields=array([])))
+    files["text-field-out-of-text.kcad"] = in_schema(66, text_of(fields=array([fld(0, 99)])))
+    files["text-fields-overlapping.kcad"] = in_schema(66, text_of(fields=array([fld(0, 3), fld(2, 4)])))
+    files["text-field-attribute-nameless.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("object"), "uid": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"), "value": text("attribute")}))])))
+    files["text-field-broken-letters.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, broken=text("removed"))])))
+    # A leader's arms, tip, blocks and style and the leader styles are schema 67's (docs/adr/0326): in schema 66 unknown
+    # fields; not empty, an arm with its tip, blocks without a note, a style's height over 0.
+    lead = lambda **extra: cmap({"leader": cmap({**common, "pts": array([point({"x": 1.0, "y": 1.0}), point({"x": 3.0, "y": 3.0})]),  # noqa: E731
+                                                 "height": f64(2.5), "rotation": f64(0.0), **extra})})
+    arm = lambda *pts: cmap({"pts": array([cmap({"x": f64(x), "y": f64(y)}) for x, y in pts])})  # noqa: E731
+    files["leader-arms-in-schema-66.kcad"] = in_schema(66, lead(arms=array([arm((0.0, 2.0))])))
+    files["leader-arms-empty.kcad"] = in_schema(67, lead(arms=array([])))
+    files["leader-arm-tipless.kcad"] = in_schema(67, lead(arms=array([arm()])))
+    files["leader-blocks-with-note.kcad"] = in_schema(67, lead(text=text("Not"), blocks=array([text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001")])))
+    files["leader-style-height-zero.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]),
+        "leaderStyles": array([cmap({"id": text("s"), "name": text("Not"), "height": f64(0.0)})])})}), version=uint(67)))
+    files["text-field-source-unknown.kcad"] = in_schema(66, text_of(fields=array([fld(0, 2, source=cmap({"kind": text("sheet"), "value": text("name")}))])))
     files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
     files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
     files["paragraph-run-unknown-field.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, size=f64(2.0))])))
@@ -2681,6 +2836,37 @@ def broken(minimal_content, minimal_file):
     files["dimension-refs-along-t-above-one.kcad"] = in_schema(51, dimension_of(cmap({"a": along(1.5)})))
     files["dimension-refs-path-empty.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([]))})))
     files["dimension-refs-path-deep.kcad"] = in_schema(51, dimension_of(cmap({"a": corner(0, path=array([uint(0)] * 17))})))
+    # A rule is schema 60's (docs/adr/0320 §1): in schema 59 an unknown field; its name one of two.
+    files["dimension-rule-in-schema-59.kcad"] = in_schema(59, dimension_of(cmap({"a": corner(0), "rule": text("curve")})))
+    files["dimension-rule-unknown.kcad"] = in_schema(60, dimension_of(cmap({"a": corner(0), "rule": text("arc")})))
+    # Options, a moved value and breaks are schema 61's (docs/adr/0321): in schema 60 unknown fields; options not empty,
+    # an increment over 0, a symmetric tolerance without a lower value; a break's t within [0, 1]; no field unknown.
+    plain = lambda **extra: cmap({"dimension": cmap({**common, **dim_body, **extra})})  # noqa: E731
+    files["dimension-options-in-schema-60.kcad"] = in_schema(60, plain(options=cmap({"zeros": text("both")})))
+    files["dimension-options-empty.kcad"] = in_schema(61, plain(options=cmap({})))
+    files["dimension-options-round-zero.kcad"] = in_schema(61, plain(options=cmap({"round": f64(0.0)})))
+    files["dimension-options-symmetric-lower.kcad"] = in_schema(61, plain(options=cmap({"tolerance": cmap({"kind": text("symmetric"), "upper": f64(0.01), "lower": f64(0.01)})})))
+    files["dimension-options-unknown-field.kcad"] = in_schema(61, plain(options=cmap({"fit": text("auto"), "color": text("#FF0000")})))
+    files["dimension-breaks-t-above-one.kcad"] = in_schema(61, plain(breaks=array([cmap({"line": text("first"), "t": f64(1.5)})])))
+    # The marks and the pair rule are schema 62's (docs/adr/0322): in schema 61 an unknown kind and rule; a level has
+    # its one elevation.
+    files["dimension-center-mark-in-schema-61.kcad"] = in_schema(61, plain(style=text("centerMark")))
+    files["dimension-rule-pair-in-schema-61.kcad"] = in_schema(61, dimension_of(cmap({"a": corner(0), "b": corner(1), "rule": text("pair")})))
+    files["dimension-elevation-without-z.kcad"] = in_schema(62, plain(style=text("elevation")))
+    files["dimension-elevation-with-zb.kcad"] = in_schema(62, plain(style=text("elevation"), za=f64(1.0), zb=f64(2.0)))
+    # Overrides are schema 63's (docs/adr/0322 §5): in schema 62 an unknown field; not empty, the kind's names, each once.
+    files["dimension-overrides-in-schema-62.kcad"] = in_schema(62, plain(overrides=array([text("decimals")])))
+    files["dimension-overrides-empty.kcad"] = in_schema(63, plain(overrides=array([])))
+    files["dimension-overrides-unknown.kcad"] = in_schema(63, plain(overrides=array([text("bold")])))
+    files["dimension-overrides-twice.kcad"] = in_schema(63, plain(overrides=array([text("arrow"), text("arrow")])))
+    # Scales are schema 64's (docs/adr/0323): in schema 63 an unknown field; a scale over 0, the own scale not repeated,
+    # ascending, a dimension's scale without a point, a text along a curve not annotative.
+    files["annotative-in-schema-63.kcad"] = in_schema(63, plain(annotative=cmap({"at": f64(100.0)})))
+    files["annotative-scale-zero.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(0.0)})))
+    files["annotative-own-repeated.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(100.0)})])})))
+    files["annotative-not-ascending.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(200.0)}), cmap({"scale": f64(50.0)})])})))
+    files["annotative-dimension-point.kcad"] = in_schema(64, plain(annotative=cmap({"at": f64(100.0), "scales": array([cmap({"scale": f64(50.0), "point": cmap({"x": f64(1.0), "y": f64(2.0)})})])})))
+    files["dimension-text-shift-in-schema-60.kcad"] = in_schema(60, plain(textShift=cmap({"along": f64(1.0), "across": f64(0.0)})))
     files["dimension-refs-in-block.kcad"] = with_blocks([block(1, "Ölçü", [cmap({"dimension": cmap({"attrs": cmap({}), "layerId": text("0"), **dim_body, "refs": cmap({"a": corner(0)})})})])], version=43)
     # A closed and a wide polyline are schema 46's (docs/adr/0258): in schema 45 unknown fields; an area has neither;
     # `closed` only true; widths one pair of two numbers for each vertex, not below 0, the last pair 0 on an open
@@ -2861,8 +3047,8 @@ def broken(minimal_content, minimal_file):
         return cmap({"pointcloud": cmap({k: v for k, v in body.items() if v is not None})})
 
     # A record without a geometry (docs/adr/0410 §2): not in a block, no field of its own.
-    files["record-in-block.kcad"] = with_blocks([block(1, "Kayıt", [cmap({"record": cmap({"attrs": cmap({}), "layerId": text("0")})})])], version=60)
-    files["record-with-point.kcad"] = in_schema(60, cmap({"record": cmap({**common, "p": point(one["p"])})}))
+    files["record-in-block.kcad"] = with_blocks([block(1, "Kayıt", [cmap({"record": cmap({"attrs": cmap({}), "layerId": text("0")})})])], version=72)
+    files["record-with-point.kcad"] = in_schema(72, cmap({"record": cmap({**common, "p": point(one["p"])})}))
     files["pointcloud-in-schema-30.kcad"] = in_schema(30, cloud_of())
     files["pointcloud-in-block.kcad"] = with_blocks([block(1, "Bulut", [cmap({"pointcloud": cmap({"attrs": cmap({}), "layerId": text("0"), "sources": array([cloud_file()]), "bounds": cloud_bounds, "count": uint(71212), "srid": uint(5256), "style": cmap({"render": text("rgb"), "size": f64(2.0)})})})])], version=31)
     files["pointcloud-no-files.kcad"] = in_schema(31, cloud_of(sources=[], count=uint(0)))
@@ -3640,6 +3826,99 @@ def build():
     out["compose.kcad"] = container(document(load("compose.json")))
     out["addresses.kcad"] = container(document(load("addresses.json")))
     out["dimension-refs.kcad"] = container(document(load("dimension-refs.json")))
+    out["dimension-rules.kcad"] = container(document(load("dimension-rules.json")))
+    out["dimension-options.kcad"] = container(document(load("dimension-options.json")))
+    out["dimension-marks.kcad"] = container(document(load("dimension-marks.json")))
+    out["overrides.kcad"] = container(document(load("overrides.json")))
+    out["annotative.kcad"] = container(document(load("annotative.json")))
+    out["paragraph-layout.kcad"] = container(document(load("paragraph-layout.json")))
+    out["text-fields.kcad"] = container(document(load("text-fields.json")))
+    out["multileader.kcad"] = container(document(load("multileader.json")))
+    # A table's cells' styles, formulas and fields, a linked file and a block schedule are schema 68's (docs/adr/0327):
+    # in schema 67 an unknown field; empty lists, a bad colour, a formula over a field, a link without a file source,
+    # a schedule beside a source and a bad digest refused.
+    out["table-cells.kcad"] = container(document(load("table-cells.json")))
+    payload = document(load("table-cells.json"))
+    assert payload.count(b"\x67version\x18\x44") == 1
+    out["broken/table-cells-in-schema-67.kcad"] = container(payload.replace(b"\x67version\x18\x44", b"\x67version\x18\x43"))
+
+    def cells_broken(change):
+        d = load("table-cells.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/table-styles-empty.kcad"] = cells_broken(lambda d: d["entities"][2].update(styles=[]))
+    out["broken/table-style-colour.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"][0].update(fill="mavi"))
+    out["broken/table-style-outside.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"][2].update(rows=4))
+    out["broken/table-style-nothing.kcad"] = cells_broken(lambda d: d["entities"][2]["styles"].append({"row": 1, "col": 0, "rows": 1, "cols": 1}))
+    out["broken/table-formula-not-formula.kcad"] = cells_broken(lambda d: d["entities"][2]["formulas"][0].update(formula="TOPLA(B3:B4)"))
+    out["broken/table-formula-in-merge.kcad"] = cells_broken(lambda d: d["entities"][2]["formulas"].append({"row": 0, "col": 1, "formula": "=1"}))
+    out["broken/table-field-on-formula.kcad"] = cells_broken(lambda d: d["entities"][2]["fields"][0].update(col=1))
+    out["broken/table-field-unnamed.kcad"] = cells_broken(lambda d: d["entities"][2]["fields"][0]["source"].pop("name"))
+    out["broken/table-link-digest.kcad"] = cells_broken(lambda d: d["entities"][3]["source"].update(digest="abc"))
+    out["broken/table-link-not-file.kcad"] = cells_broken(lambda d: d["entities"][2].update(link={"path": "alanlar.csv"}))
+    out["broken/table-schedule-and-source.kcad"] = cells_broken(lambda d: d["entities"][2].update(schedule={"kind": "blocks"}))
+    out["broken/table-schedule-name-empty.kcad"] = cells_broken(lambda d: d["entities"][4]["source"].update(names=[" "]))
+    # A hatch's exact boundary and a face's tie are schema 69's (docs/adr/0328): in schema 68 an unknown field; an
+    # empty boundary, a loop of one point without a curve, curves not as many as points, a NURBS curve's knots, a tie
+    # with both a closed object and bounds refused.
+    out["hatch-boundaries.kcad"] = container(document(load("hatch-boundaries.json")))
+    payload = document(load("hatch-boundaries.json"))
+    assert payload.count(b"\x67version\x18\x45") == 1
+    out["broken/hatch-boundary-in-schema-68.kcad"] = container(payload.replace(b"\x67version\x18\x45", b"\x67version\x18\x44"))
+
+    def boundary_broken(change):
+        d = load("hatch-boundaries.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-boundary-empty.kcad"] = boundary_broken(lambda d: d["entities"][2].update(boundary=[]))
+    out["broken/hatch-boundary-point.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0].update(pts=d["entities"][8]["boundary"][0]["pts"][:1], curves=[None]))
+    out["broken/hatch-boundary-curves.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0]["curves"].append(None))
+    out["broken/hatch-boundary-knots.kcad"] = boundary_broken(lambda d: d["entities"][8]["boundary"][0]["curves"][1].update(knots=[0.0, 0.0, 1.0, 1.0, 1.0]))
+    out["broken/hatch-boundary-ratio.kcad"] = boundary_broken(lambda d: d["entities"][2]["boundary"][1]["curves"][0].update(ratio=1.5))
+
+    def tied_twice(d):
+        d["entities"][7]["assoc"]["outer"] = d["uids"][0]
+    out["broken/hatch-assoc-outer-and-bounds.kcad"] = boundary_broken(tied_twice)
+    # A face's tie's gap is schema 70's (docs/adr/0329 §3): in schema 69 an unknown field; beside a closed object, or
+    # 0, refused.
+    out["hatch-gaps.kcad"] = container(document(load("hatch-gaps.json")))
+    payload = document(load("hatch-gaps.json"))
+    assert payload.count(b"\x67version\x18\x46") == 1
+    out["broken/hatch-gap-in-schema-69.kcad"] = container(payload.replace(b"\x67version\x18\x46", b"\x67version\x18\x45"))
+
+    def gap_broken(change):
+        d = load("hatch-gaps.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-gap-zero.kcad"] = gap_broken(lambda d: d["entities"][4]["assoc"].update(gap=0.0))
+
+    def gap_with_outer(d):
+        a = d["entities"][4]["assoc"]
+        a.pop("bounds")
+        a["outer"] = d["uids"][0]
+    out["broken/hatch-gap-with-outer.kcad"] = gap_broken(gap_with_outer)
+    # A pattern's origin, an annotative hatch and the project's patterns are schema 71's (docs/adr/0331): in schema
+    # 70 unknown fields; a solid hatch's origin or scales, an empty list of patterns, a pattern named twice, refused.
+    out["hatch-extras.kcad"] = container(document(load("hatch-extras.json")))
+    payload = document(load("hatch-extras.json"))
+    assert payload.count(b"\x67version\x18\x47") == 1
+    out["broken/hatch-extras-in-schema-70.kcad"] = container(payload.replace(b"\x67version\x18\x47", b"\x67version\x18\x46"))
+
+    def extras_broken(change):
+        d = load("hatch-extras.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-origin-solid.kcad"] = extras_broken(
+        lambda d: d["entities"][2].update(pattern={"type": "solid", "angle": 0.0, "spacing": 1.0, "origin": {"x": 500000.0, "y": 4400000.0}}))
+    out["broken/hatch-annotative-solid.kcad"] = extras_broken(
+        lambda d: d["entities"][2]["pattern"].update(type="solid"))
+    out["broken/hatch-patterns-empty.kcad"] = extras_broken(lambda d: d["settings"].update(hatchPatterns=[]))
+    out["broken/hatch-patterns-twice.kcad"] = extras_broken(
+        lambda d: d["settings"]["hatchPatterns"].append({**d["settings"]["hatchPatterns"][0], "name": "tugla"}))
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))
@@ -3691,18 +3970,18 @@ def build():
     out["broken/parameters-empty.kcad"] = dynamic_broken(lambda d: d["entities"][0].update(parameters={}))
     out["broken/parameters-not-dynamic.kcad"] = dynamic_broken(lambda d: d["blocks"][0].pop("dynamic"))
     out["forms.kcad"] = container(document(load("forms.json")))
-    # A record without a geometry (docs/adr/0410 §2): schema 60's; in schema 59 an unknown kind.
+    # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))
-    assert records_payload.count(b"\x67version\x18\x3c") == 1, "a record alone is schema 60"
-    out["broken/record-in-schema-59.kcad"] = container(records_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert records_payload.count(b"\x67version\x18\x48") == 1, "a record alone is schema 72"
+    out["broken/record-in-schema-71.kcad"] = container(records_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
 
-    # The forms and a field's id are schema 60's (docs/adr/0401): in schema 59 an unknown field; an empty list, a
+    # The forms and a field's id are schema 72's (docs/adr/0401): in schema 71 an unknown field; an empty list, a
     # release whose body was changed after its digest, enforcing without a release, an unknown key, a tab in a group,
     # two fields with one key refused.
     payload = document(load("forms.json"))
-    assert payload.count(b"\x67version\x18\x3c") == 1
-    out["broken/forms-in-schema-59.kcad"] = container(payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert payload.count(b"\x67version\x18\x48") == 1
+    out["broken/forms-in-schema-71.kcad"] = container(payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
 
     def forms_broken(change):
         d = copy.deepcopy(load("forms.json"))
@@ -3715,11 +3994,11 @@ def build():
     keyed = copy.deepcopy(load("forms.json"))
     keyed_only(keyed)
     keyed_payload = document(keyed)
-    assert keyed_payload.count(b"\x67version\x18\x3c") == 1, "a field's id alone is schema 60"
-    out["broken/field-id-in-schema-59.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
-    # A date and time field alone is schema 60's (docs/adr/0412 §4).
+    assert keyed_payload.count(b"\x67version\x18\x48") == 1, "a field's id alone is schema 72"
+    out["broken/field-id-in-schema-71.kcad"] = container(keyed_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
+    # A date and time field alone is schema 72's (docs/adr/0412 §4).
     def unretired(d):
-        """The sample without its retired value and its policies: another rule of schema 60 alone."""
+        """The sample without its retired value and its policies: another rule of schema 72 alone."""
         d["layers"][0]["fields"] = [f for f in d["layers"][0]["fields"] if "split" not in f and "merge" not in f]
         for f in d["layers"][0]["fields"]:
             if "values" in f:
@@ -3733,9 +4012,9 @@ def build():
     timed["layers"][0].pop("contingents")
     unretired(timed)
     timed_payload = document(timed)
-    assert timed_payload.count(b"\x67version\x18\x3c") == 1, "a date and time field alone is schema 60"
-    out["broken/field-datetime-in-schema-59.kcad"] = container(timed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
-    # A retired value alone is schema 60's (docs/adr/0418).
+    assert timed_payload.count(b"\x67version\x18\x48") == 1, "a date and time field alone is schema 72"
+    out["broken/field-datetime-in-schema-71.kcad"] = container(timed_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
+    # A retired value alone is schema 72's (docs/adr/0418).
     aged = copy.deepcopy(load("forms.json"))
     aged["settings"].pop("forms")
     aged["layers"][0].pop("tableStyles")
@@ -3745,9 +4024,9 @@ def build():
                                    if f["kind"] not in ("datetime", "time") and not f.get("multiple")]
     aged["layers"][0]["fields"] = [f for f in aged["layers"][0]["fields"] if "split" not in f and "merge" not in f]
     aged_payload = document(aged)
-    assert aged_payload.count(b"\x67version\x18\x3c") == 1, "a retired value alone is schema 60"
-    out["broken/value-retired-in-schema-59.kcad"] = container(aged_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
-    # A field's split and merge policies alone are schema 60's (docs/adr/0419).
+    assert aged_payload.count(b"\x67version\x18\x48") == 1, "a retired value alone is schema 72"
+    out["broken/value-retired-in-schema-71.kcad"] = container(aged_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
+    # A field's split and merge policies alone are schema 72's (docs/adr/0419).
     shared = copy.deepcopy(load("forms.json"))
     shared["settings"].pop("forms")
     shared["layers"][0].pop("tableStyles")
@@ -3759,10 +4038,10 @@ def build():
         if "values" in f:
             f["values"] = [c for c in f["values"] if not c.get("retired")]
     shared_payload = document(shared)
-    assert shared_payload.count(b"\x67version\x18\x3c") == 1, "the policies alone are schema 60"
-    out["broken/field-split-in-schema-59.kcad"] = container(shared_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert shared_payload.count(b"\x67version\x18\x48") == 1, "the policies alone are schema 72"
+    out["broken/field-split-in-schema-71.kcad"] = container(shared_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
 
-    # A layer's table rules alone are schema 60's (docs/adr/0413 §3).
+    # A layer's table rules alone are schema 72's (docs/adr/0413 §3).
     styled = copy.deepcopy(load("forms.json"))
     styled["settings"].pop("forms")
     styled["layers"][0]["fields"] = [{k: v for k, v in f.items() if k != "id"} for f in styled["layers"][0]["fields"]
@@ -3771,9 +4050,9 @@ def build():
     styled["layers"][0].pop("subtypes")
     styled["layers"][0].pop("contingents")
     styled_payload = document(styled)
-    assert styled_payload.count(b"\x67version\x18\x3c") == 1, "a table's rules alone are schema 60"
-    out["broken/table-styles-in-schema-59.kcad"] = container(styled_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
-    # A layer's subtypes alone are schema 60's (docs/adr/0422 §4).
+    assert styled_payload.count(b"\x67version\x18\x48") == 1, "a table's rules alone are schema 72"
+    out["broken/table-styles-in-schema-71.kcad"] = container(styled_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
+    # A layer's subtypes alone are schema 72's (docs/adr/0422 §4).
     kinds = copy.deepcopy(load("forms.json"))
     kinds["settings"].pop("forms")
     kinds["layers"][0].pop("tableStyles")
@@ -3787,17 +4066,17 @@ def build():
         if f["name"] == "Kullanım":
             f["default"] = "konut"
     kinds_payload = document(kinds)
-    assert kinds_payload.count(b"\x67version\x18\x3c") == 1, "the subtypes alone are schema 60"
-    out["broken/subtypes-in-schema-59.kcad"] = container(kinds_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
-    # A layer's value groups alone are schema 60's (docs/adr/0423 §4).
+    assert kinds_payload.count(b"\x67version\x18\x48") == 1, "the subtypes alone are schema 72"
+    out["broken/subtypes-in-schema-71.kcad"] = container(kinds_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
+    # A layer's value groups alone are schema 72's (docs/adr/0423 §4).
     grouped = copy.deepcopy(kinds)
     grouped["layers"][0].pop("subtypes")
     grouped["layers"][0]["contingents"] = [{"name": "Durum ve sınıf", "fields": ["Durum", "Sınıf"],
                                             "rows": [{"cells": [{"kind": "code", "code": "iyi"}, {"kind": "any"}]}]}]
     grouped_payload = document(grouped)
-    assert grouped_payload.count(b"\x67version\x18\x3c") == 1, "the value groups alone are schema 60"
-    out["broken/contingents-in-schema-59.kcad"] = container(
-        grouped_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert grouped_payload.count(b"\x67version\x18\x48") == 1, "the value groups alone are schema 72"
+    out["broken/contingents-in-schema-71.kcad"] = container(
+        grouped_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
     out["broken/contingents-unfit.kcad"] = forms_broken(
         lambda d: d["layers"][0]["contingents"][0]["rows"].append({"cells": [{"kind": "code", "code": "yok"}, {"kind": "any"}]}))
     out["broken/contingents-empty-row-list.kcad"] = forms_broken(lambda d: d["layers"][0]["contingents"][0].update(rows=[]))
@@ -3813,7 +4092,7 @@ def build():
     out["broken/field-id-twice.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][2].update(id="kat-sayisi"))
     # docs/adr/0408 §1, 0409 §1: several values only on a text field.
     out["broken/field-multiple-number.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][1].update(multiple=True))
-    # The project's value lists and a field's link are schema 60's (docs/adr/0430): in schema 59 an unknown field; an
+    # The project's value lists and a field's link are schema 72's (docs/adr/0430): in schema 71 an unknown field; an
     # empty list, a list both coded and ranged, two lists of one id refused.
     out["domains.kcad"] = container(document(load("domains.json")))
     listed = copy.deepcopy(load("domains.json"))
@@ -3823,8 +4102,8 @@ def build():
         if "values" in f:
             f["values"] = [c for c in f["values"] if not c.get("retired")]
     listed_payload = document(listed)
-    assert listed_payload.count(b"\x67version\x18\x3c") == 1, "the value lists alone are schema 60"
-    out["broken/domains-in-schema-59.kcad"] = container(listed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert listed_payload.count(b"\x67version\x18\x48") == 1, "the value lists alone are schema 72"
+    out["broken/domains-in-schema-71.kcad"] = container(listed_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
 
     def domains_broken(change):
         d = copy.deepcopy(load("domains.json"))
@@ -3836,7 +4115,7 @@ def build():
     out["broken/domains-id-twice.kcad"] = domains_broken(lambda d: d["settings"]["domains"][1].update(id="durum"))
     out["broken/domains-unknown-key.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(color="#FF0000"))
     # A layer's record rules and its fields' unique, left-out ends, unit and values' descriptions and days are schema
-    # 60's (docs/adr/0438): in schema 59 unknown; an empty rule list, a rule on a field the layer lacks, a rule twice,
+    # 72's (docs/adr/0438): in schema 71 unknown; an empty rule list, a rule on a field the layer lacks, a rule twice,
     # `unique: false` and a day that is no date refused.
     out["layer-rules.kcad"] = container(document(load("layer-rules.json")))
 
@@ -3854,9 +4133,9 @@ def build():
             for k in ("description", "from", "until"):
                 c.pop(k, None)
     rules_payload = document(plain_rules)
-    assert rules_payload.count(b"\x67version\x18\x3c") == 1, "the rules alone are schema 60"
-    out["broken/layer-rules-in-schema-59.kcad"] = container(
-        rules_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+    assert rules_payload.count(b"\x67version\x18\x48") == 1, "the rules alone are schema 72"
+    out["broken/layer-rules-in-schema-71.kcad"] = container(
+        rules_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
     out["broken/layer-rules-empty.kcad"] = rules_broken(lambda d: d["layers"][0].update(rules=[]))
     out["broken/layer-rules-unknown-field.kcad"] = rules_broken(
         lambda d: d["layers"][0]["rules"][0].update(fields=["Yok"]))

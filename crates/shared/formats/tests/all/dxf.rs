@@ -1971,10 +1971,13 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
         ]
     );
     assert_eq!(size(&vana.entities[1]), Some(5.0));
-    assert!(said(
-        "Çoklu kılavuz (MULTILEADER)",
-        "öbür 1 ok çizgisi alınmadı"
-    ));
+    // Its second leader line is its arm (docs/adr/0326 §1).
+    assert_eq!(
+        e.iter()
+            .filter(|x| matches!(x, Entity::Leader(l) if l.arms.len() == 1))
+            .count(),
+        1
+    );
     assert!(said("Çoklu kılavuz (MULTILEADER)", "blok içeriği alınmadı"));
     assert!(said("Çoklu kılavuz (MULTILEADER)", "eğri ok çizgisi"));
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
@@ -2167,13 +2170,19 @@ fn an_mtext_is_one_text_with_its_lines_and_formats() {
         (
             "Büyük Tımes Üst çizik eğik aralık ortalı 11/2",
             Some(TextAlign::MiddleCenter),
-            0
+            1
         )
+    );
+    // `\S1/2;` is a stacked fraction (docs/adr/0324 §4): its three letters one run.
+    let stack = &t.paragraph.runs[0];
+    assert_eq!(
+        (stack.start, stack.end, stack.script),
+        (42, 45, Some(TextScript::Stack))
     );
     assert_eq!(
         noted(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
         Some(
-            "biçimlendirmesinden kaldırılan: yükseklik, kesir, yazı tipi, üst ve üstü çizili çizgi, harf aralığı, eğiklik açısı, paragraf biçimi"
+            "biçimlendirmesinden kaldırılan: yükseklik, yazı tipi, üst ve üstü çizili çizgi, harf aralığı, eğiklik açısı, paragraf biçimi"
         )
     );
     let t = text(2);
@@ -2536,4 +2545,31 @@ fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
             (None, true)
         ]
     );
+}
+
+/// An associative hatch of model space is tied to the objects its paths name (97, 330s) by their places in the
+/// import, its closed polyline the outer object and its circle an island, the file's seed kept (docs/adr/0333 §2).
+#[test]
+fn an_associative_hatch_is_tied_to_its_objects() {
+    let r = read("dxf-hatch/in/assoc-polyline.dxf");
+    let place = |e: &Entity| r.entities.iter().position(|x| std::ptr::eq(x, e)).map(|i| i as u32);
+    let ring = r.entities.iter().find(|e| matches!(e, Entity::Polyline(_) | Entity::Polygon(_)));
+    let circle = r.entities.iter().find(|e| matches!(e, Entity::Circle(_)));
+    let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
+        panic!("a hatch: {:?}", r.report);
+    };
+    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
+    assert_eq!(a.outer.as_ref().and_then(kentos_contracts::import_placeholder_index), ring.and_then(place));
+    assert_eq!(
+        a.islands.iter().map(kentos_contracts::import_placeholder_index).collect::<Vec<_>>(),
+        vec![circle.and_then(place)]
+    );
+    assert!(near(a.seed, Vec2 { x: 1.0, y: 1.0 }));
+    // Lines closing a face are its bounds.
+    let r = read("dxf-hatch/in/assoc-lines.dxf");
+    let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
+        panic!("a hatch");
+    };
+    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
+    assert_eq!((a.outer, a.bounds.len()), (None, 4));
 }

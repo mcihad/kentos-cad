@@ -26,7 +26,7 @@ Değer listesinin öğesinin `retired`'ı (yalnız `true` yazılır):
 
 ### 2. Dosya
 
-`retired` `.kcad` şema 60'tadır; şema 59 okuyucusu `unknown_field` der (`broken/value-retired-in-schema-59.kcad`). Örnek
+`retired` `.kcad` şema 72'dedir; şema 71 okuyucusu `unknown_field` der (`broken/value-retired-in-schema-71.kcad`). Örnek
 `forms.json`'un Durum alanında kalkmış bir değer.
 
 ### 3. Masaüstünde

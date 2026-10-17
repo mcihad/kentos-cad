@@ -53,4 +53,14 @@ labelOf?: string,
  * The scale's denominator (1:N) the linked label is written at:
  * finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
  */
-labelScale?: number, };
+labelScale?: number, 
+/**
+ * Its own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0260 §2): Tarama's
+ * (docs/adr/0332 §1). Absent: its layer's.
+ */
+transparency?: number, 
+/**
+ * Its place in its layer's draw order (`ObjectLook.order`, docs/adr/0260 §4): Tarama's Sıra (docs/adr/0332 §1).
+ * Absent: 0, drawn by its slot after the objects before it.
+ */
+order?: number, };

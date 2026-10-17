@@ -85,6 +85,12 @@ pub struct Hatch {
     pub double: bool,
     pub lines: Vec<PatternLine>,
     pub paths: Vec<Path>,
+    /// Each path's flags (92: 1 external, 16 outermost) and source objects' handles (97, 330s), as `paths`
+    /// (docs/adr/0333 §2).
+    pub path_flags: Vec<i64>,
+    pub sources: Vec<Vec<u64>>,
+    /// The seed points (98, 10/20): where the region was picked.
+    pub seeds: Vec<[f64; 2]>,
     /// 450: a gradient, its name (470), angle in radians (460), shift
     /// (461), one colour with a tint (452) and colours (463, 63, 421).
     pub gradient: bool,
@@ -233,7 +239,7 @@ fn edge(c: &mut Cursor, fit_data: bool) -> Result<Edge, String> {
     }
 }
 
-fn path(c: &mut Cursor, fit_data: bool) -> Result<Path, String> {
+fn path(c: &mut Cursor, fit_data: bool) -> Result<(Path, i64, Vec<u64>), String> {
     let flags = c.int(92)?;
     let p = if flags & 2 != 0 {
         let has_bulge = c.int(72)? != 0;
@@ -259,16 +265,19 @@ fn path(c: &mut Cursor, fit_data: bool) -> Result<Path, String> {
         }
         Path::Edges(edges)
     };
-    // Source objects of an associative hatch: their count and handles.
+    // Source objects of an associative hatch: their count and handles (docs/adr/0333 §2).
+    let mut sources = Vec::new();
     if c.peek() == Some(97) {
         let n = c.count(97)?;
         for _ in 0..n {
-            if c.peek() == Some(330) {
-                c.take(330)?;
+            if c.peek() == Some(330)
+                && let Ok(h) = u64::from_str_radix(c.take(330)?.text().trim(), 16)
+            {
+                sources.push(h);
             }
         }
     }
-    Ok(p)
+    Ok((p, flags, sources))
 }
 
 /// A HATCH's groups (common groups included; they are skipped).
@@ -285,6 +294,9 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
         double: false,
         lines: Vec::new(),
         paths: Vec::new(),
+        path_flags: Vec::new(),
+        sources: Vec::new(),
+        seeds: Vec::new(),
         gradient: false,
         gradient_name: String::new(),
         gradient_angle: 0.0,
@@ -312,7 +324,10 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
             91 => {
                 let n = c.count(91)?;
                 for _ in 0..n {
-                    h.paths.push(path(&mut c, fit_data)?);
+                    let (p, flags, sources) = path(&mut c, fit_data)?;
+                    h.paths.push(p);
+                    h.path_flags.push(flags);
+                    h.sources.push(sources);
                 }
             }
             75 => h.style = c.int(75)?,
@@ -372,7 +387,8 @@ pub fn parse_hatch(list: &[Pair<'_>], fit_data: bool) -> Result<Hatch, String> {
             98 => {
                 let n = c.count(98)?;
                 for _ in 0..n {
-                    c.xy(10)?;
+                    let at = c.xy(10)?;
+                    h.seeds.push(at);
                 }
             }
             _ => c.at += 1,

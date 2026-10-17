@@ -72,6 +72,8 @@ pub struct Hatch {
     plot_scale: f64,
     /// What the session remembered, as of the last call.
     memory: Memory,
+    /// The project's own patterns' names, as of the last call (docs/adr/0331 §1).
+    user: Vec<String>,
     /// The UCS's turn, degrees (docs/adr/0261 §4).
     turn: f64,
 }
@@ -90,6 +92,7 @@ impl Hatch {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
+        self.user = options::user_names(cx);
         self.turn = cx.ucs_degrees();
         self.plot_scale = cx.doc.settings().plot_scale;
         self.boundary_name = self.boundary.as_deref().map(|id| {
@@ -127,8 +130,11 @@ impl Hatch {
                 islands: Some(m.hatch_islands),
                 texts: Some(m.hatch_texts),
                 associative: Some(m.hatch_assoc),
+                also_at: Vec::new(),
+                island_style: options::island_style(&m),
+                gap: (m.hatch_by_lines && m.hatch_gap > 0.0).then_some(m.hatch_gap),
             },
-            pattern: options::spec(&m),
+            pattern: options::spec(&m, &self.user),
             layer_id: cx.doc.layers().active().to_owned(),
             look: NewLook {
                 color: cx.draft.color_text(),
@@ -138,6 +144,8 @@ impl Hatch {
                 symbol: cx.template_symbol(),
             },
             expected_revision: None,
+            draw_order: options::look_of(&m).1,
+            transparency: options::look_of(&m).0,
         }
     }
 
@@ -153,14 +161,18 @@ impl Hatch {
     fn hover_at(&mut self, p: Vec2, cx: &Context<'_>) {
         self.hover = self.region(p, cx).map(|r| r.area);
         self.hover_lines.clear();
-        let (Some(area), Some(pattern)) = (
+        // The pattern as the command makes it (docs/adr/0331): a project pattern by name, the basis, the origin.
+        let spec = options::spec(&self.turned(), &self.user);
+        let (Some(area), Some(mut pattern)) = (
             &self.hover,
-            options::pattern(&self.turned(), self.plot_scale),
+            kentos_native_application::region::spec_pattern(&spec, cx.doc.settings()),
         ) else {
             return;
         };
         let ring = ring_points(&area.outer);
         let holes: Vec<Vec<Vec2>> = area.holes.iter().map(ring_points).collect();
+        let own = kentos_native_application::region::box_of([ring.as_slice()]);
+        pattern.origin = kentos_native_application::region::origin_of(spec.origin.as_ref(), own, own);
         let pieces = pattern_pieces(&ring, &holes, &core_pattern(&pattern), PREVIEW_PIECES);
         if !pieces.capped {
             self.hover_lines = pieces.segments;
@@ -254,7 +266,7 @@ impl Tool for Hatch {
         }
         let m = self.memory;
         let prompt =
-            options::with_pattern_options(Prompt::new(LABEL, "taranacak yerin içine tıklayın"), &m)
+            options::with_pattern_options(Prompt::new(LABEL, "taranacak yerin içine tıklayın"), &m, &self.user)
                 .option_with(
                     "Sınır",
                     "B",
@@ -264,13 +276,15 @@ impl Tool for Hatch {
                         "kapalı nesne"
                     },
                 );
-        let prompt = options::with_region_options(prompt, &m, !m.hatch_by_lines);
+        let prompt = options::with_region_options(prompt, &m, true);
         if m.hatch_by_lines {
             let layer = self
                 .boundary_name
                 .clone()
                 .unwrap_or_else(|| "tümü".to_owned());
-            return prompt.option_with("Sınır katmanı", "K", layer);
+            return prompt
+                .option_with("Sınır katmanı", "K", layer)
+                .option_with("Boşluk", "G", crate::format::js_number(m.hatch_gap));
         }
         prompt
     }
@@ -319,6 +333,12 @@ impl Tool for Hatch {
             self.see(cx);
             return;
         }
+        // Başlangıç's point or Özellik al's hatch (docs/adr/0331 §2).
+        if options::clicked(&mut self.asking, p.world, p.raw, cx) {
+            self.see(cx);
+            self.changed();
+            return;
+        }
         self.asking = None;
         self.fill(p.raw, cx);
     }
@@ -336,6 +356,11 @@ impl Tool for Hatch {
                 self.picking_layer = false;
                 self.changed()
             }
+            // Boşluk, in the line work (docs/adr/0329 §3).
+            "G" if cx.memory.hatch_by_lines => {
+                self.asking = Some(Asking::Gap);
+                self.changed()
+            }
             "K" if cx.memory.hatch_by_lines || self.picking_layer => {
                 if self.picking_layer || self.boundary.is_some() {
                     self.boundary = None;
@@ -346,9 +371,7 @@ impl Tool for Hatch {
                 cx.selection.set_hover(None);
                 self.changed()
             }
-            k if options::option(k, !cx.memory.hatch_by_lines, &mut self.asking, cx) => {
-                self.changed()
-            }
+            k if options::option(k, true, &mut self.asking, cx) => self.changed(),
             _ if options::typed_choice(text, cx) => self.changed(),
             _ => false,
         };
@@ -357,7 +380,7 @@ impl Tool for Hatch {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        options::choices_of(key, &self.memory)
+        options::choices_of(key, &self.memory, &self.user)
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {

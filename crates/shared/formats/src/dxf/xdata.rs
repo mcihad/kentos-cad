@@ -111,6 +111,20 @@ pub struct Meta {
     /// A text along a curve's own fields as the contract's JSON (docs/adr/0196
     /// §5): its INSERT draws its letters, KentOS reads the text back.
     pub along: Option<String>,
+    /// A multi-line text's indents, tab stops and columns as the contract's JSON (docs/adr/0324 §4): MTEXT's
+    /// `\p` holds the indents and tabs, not the columns KentOS lays out.
+    pub layout: Option<String>,
+    /// A text's fields as the contract's JSON (docs/adr/0325 §1): other programs read their letters, the values last
+    /// written; KentOS reads the bindings back.
+    pub fields: Option<String>,
+    /// A leader's other arms as their points' JSON (docs/adr/0326 §1); each is also a LEADER of its own, which a
+    /// reader of KentOS's data leaves out (`arm`).
+    pub arms: Option<String>,
+    /// The LEADER is another arm of a leader written before it.
+    pub arm: bool,
+    /// The INSERT draws a KentOS object as a block (a dimension's or a leader's look, docs/adr/0327 §6): the object
+    /// as the contract's JSON, which KentOS reads back.
+    pub object: Option<String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -257,6 +271,15 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     if meta.line {
         item("line", &mut out, |_| {});
     }
+    if meta.arm {
+        item("arm", &mut out, |_| {});
+    }
+    if let Some(a) = &meta.object {
+        item("object", &mut out, |o| string(a, o));
+    }
+    if let Some(a) = &meta.arms {
+        item("arms", &mut out, |o| string(a, o));
+    }
     if let Some((a0, a1)) = meta.arc {
         item("arc", &mut out, |o| {
             o.push((1040, dxf_real(a0)));
@@ -301,6 +324,12 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(t) = &meta.table {
         item("table", &mut out, |o| string(t, o));
+    }
+    if let Some(l) = &meta.layout {
+        item("layout", &mut out, |o| string(l, o));
+    }
+    if let Some(f) = &meta.fields {
+        item("fields", &mut out, |o| string(f, o));
     }
     if let Some(c) = &meta.along {
         item("along", &mut out, |o| string(c, o));
@@ -515,6 +544,9 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "turn" => m.turn = real(a).or(m.turn),
             "z" => m.z = true,
             "line" => m.line = true,
+            "arm" => m.arm = true,
+            "arms" => m.arms = text(a).or(m.arms),
+            "object" => m.object = text(a).or(m.object),
             "noz" => m.no_z = text(a).map(|t| mask_decode(&t)).unwrap_or_default(),
             "mask" => m.mask = true,
             "arrow" => m.arrow = text(a).or(m.arrow),
@@ -523,6 +555,8 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "look" => m.look = text(a).or(m.look),
             "table" => m.table = text(a).or(m.table),
             "along" => m.along = text(a).or(m.along),
+            "layout" => m.layout = text(a).or(m.layout),
+            "fields" => m.fields = text(a).or(m.fields),
             "hatch" => m.hatch = text(a).or(m.hatch),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "arrowsize" => m.arrow_size = real(a).or(m.arrow_size),
@@ -574,6 +608,11 @@ mod tests {
         attrs.insert("Not".to_string(), "iki\nsatır ^ ve ^J".to_string());
         attrs.insert("Uzun".to_string(), "ğ".repeat(400));
         let meta = Meta {
+            layout: None,
+            fields: Some("[]".into()),
+            arms: Some("[[[1,2]]]".into()),
+            arm: true,
+            object: Some("{\"kind\":\"leader\"}".into()),
             label: Some("attr".into()),
             attrs,
             symbol: Some("mpyy.konut".into()),

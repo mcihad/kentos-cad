@@ -130,6 +130,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
         version: 1,
         name: "parcalar".into(),
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -162,6 +163,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             variables: Vec::new(),
             address_locators: Vec::new(),
             domains: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,
@@ -535,4 +537,61 @@ fn a_block_s_pieces_take_the_insert_s_line_type_and_transparency() {
         "and its layer's opacity: {}",
         set(1)
     );
+}
+
+/// A solid, a gradient and a lined hatch with their own transparency are drawn that much seen: their fill takes the
+/// opacity like a line (docs/adr/0332 §1).
+#[test]
+fn a_hatch_s_fill_takes_its_transparency() {
+    let library = kentos_native_style::system::library();
+    let mut doc = drawing(1, None);
+    let ring = json!([{ "x": 486_500.0, "y": 4_420_500.0 }, { "x": 486_510.0, "y": 4_420_500.0 },
+                      { "x": 486_510.0, "y": 4_420_510.0 }, { "x": 486_500.0, "y": 4_420_510.0 }]);
+    for pattern in [
+        json!({ "type": "solid", "angle": 0, "spacing": 1 }),
+        json!({ "type": "gradient", "angle": 0, "spacing": 1,
+                "gradient": { "shape": "linear", "inverted": false, "color2": "#FFFFFF" } }),
+        json!({ "type": "lines", "angle": 45, "spacing": 1 }),
+    ] {
+        let hatch: Entity = serde_json::from_value(json!({
+            "kind": "hatch", "id": 0, "layerId": "yol", "attrs": {}, "ring": ring, "holes": [],
+            "pattern": pattern, "transparency": 0.4
+        }))
+        .expect("a hatch");
+        doc.model.add(hatch).expect("hatched");
+    }
+    let mut spatial = Spatial::of(&doc.model);
+    spatial.sync(&doc.model);
+    let look = look(&doc);
+    let names = |id: &str| id.to_owned();
+    let node = doc.model.layers().get("yol").expect("yol").clone();
+    let styles: std::collections::HashMap<String, LayerStyle> =
+        [("yol".to_owned(), node.style.clone())].into_iter().collect();
+    let opts = BuildOptions {
+        line_types: None,
+        layer_styles: Some(&styles),
+        origin: look.origin,
+        plot_scale: look.symbol_scale,
+        screen: look.screen,
+        hairlines: look.hairlines,
+        clip: Some(construction_clip(&VIEW)),
+        library: &library,
+        layer_name: &names,
+        view: Default::default(),
+        frame: None,
+        reading_unit: look.reading_unit,
+    };
+    let entities: Vec<&Entity> = doc
+        .model
+        .by_layer("yol")
+        .filter(|e| matches!(e, Entity::Hatch(_)))
+        .collect();
+    assert_eq!(entities.len(), 3);
+    let call =
+        kentos_native_style::program::layer_call(&node.style, &entities, &opts, spatial.store());
+    let program: Value = serde_json::from_str(&call.program).expect("a program");
+    for (i, kind) in ["solid", "gradient", "lines"].iter().enumerate() {
+        let set = program["sets"][call.objects[4 * i + 2] as usize].to_string();
+        assert!(set.contains("\"opacity\":0.6"), "the {kind} hatch is 60 % seen: {set}");
+    }
 }

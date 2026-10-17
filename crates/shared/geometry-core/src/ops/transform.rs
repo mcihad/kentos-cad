@@ -408,6 +408,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             holes,
             pattern,
             assoc,
+            boundary,
         } => {
             let pattern = match pattern.kind.as_str() {
                 // A pattern or a gradient turns with `m`, grows with its length scale and
@@ -429,7 +430,14 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                     pattern
                 }
             };
+            // Its own origin goes with it (docs/adr/0331 §2); one at the world's stays there.
+            let mut pattern = pattern;
+            pattern.origin = pattern.origin.map(|o| apply(m, o));
             Shape::Hatch {
+                // The exact boundary goes along (docs/adr/0328 §1): arcs, ellipses and curves by `m`.
+                boundary: boundary.as_ref().and_then(|b| {
+                    crate::geom::hatch_boundary::mapped(b, &|p| Some(apply(m, p)), [m[0], m[1], m[2], m[3]])
+                }),
                 ring: ring.iter().map(|&p| apply(m, p)).collect(),
                 holes: holes.as_ref().map(|hs| {
                     hs.iter()
@@ -492,6 +500,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path: None,
         } => {
@@ -507,6 +516,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width: box_width.map(|w| w * s),
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
             face: face.clone(),
             path: None,
         }
@@ -524,6 +534,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path: Some(curve),
         } => {
@@ -546,12 +557,15 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 box_width: box_width.map(|w| w * s),
                 line_spacing: *line_spacing,
                 runs: runs.clone(),
+                flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
                 face: face.clone(),
                 path: Some(placed.curve),
             }
         }
         // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -560,6 +574,12 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             arrow_size,
             mask,
         } => Shape::Leader {
+            arms: arms.as_ref().map(|list| {
+                list.iter()
+                    .map(|a| crate::geom::leader::Arm { pts: a.pts.iter().map(|&p| apply(m, p)).collect() })
+                    .collect()
+            }),
+            blocks: blocks.clone(),
             pts: pts.iter().map(|&p| apply(m, p)).collect(),
             text: text.clone(),
             height: height * s,
@@ -584,6 +604,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             grid,
             frame,
             source,
+            styles,
             face,
         } => {
             // Mirrored, the table's new top left is the image of its top right when its baseline turns back,
@@ -612,6 +633,7 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 grid: grid.clone(),
                 frame: frame.map(|f| f * s),
                 source: source.clone(),
+                styles: styles.clone(),
                 face: face.clone(),
             }
         }

@@ -1,49 +1,39 @@
-//! Tabloyu güncelle (docs/adr/0184 §6; the web's `app/tables.ts`
-//! `updateTables`): each table rewritten from its source in one step: a
-//! schedule from its objects still in the drawing, a file's from the file
-//! chosen again (one question for each file); its look and the sizes given by
-//! hand kept (`ops::table_edit::refresh`). A table on a locked layer is left
-//! and said, one already up to date is not written.
+//! Tabloyu güncelle and Dosyaya bağla (docs/adr/0184 §6, docs/adr/0327 §4–§5): `cad.tables.edit`'s `refresh` over the
+//! selected tables with a source (every one with none selected): a schedule from its objects, a linked file from its
+//! path (from the drawing's folder when relative), cells changed by hand kept as the table's rule says; a block
+//! schedule is the document's at every step. A table naming a file it is not linked to, or whose file is not where its
+//! path says, asks for the file, which links it (`link`). A table on a locked layer is left and said.
 
-use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use iced::Task;
 use kentos_contracts::{
-    CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, TableEntity, TableFileRead,
-    TableSource,
+    CommandResult, Entity, TableRefresh, TableSource, TablesEdit, TablesEdited, TablesOperation,
 };
-use kentos_domain::Slot;
-use kentos_geometry_core::ops::table::{Cells, ScheduleKind};
-use kentos_geometry_core::ops::table_edit::refresh;
+use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
-use kentos_native_application::geometry::{drawing_font, edit_geometry, entity_of, shape};
-use kentos_native_application::{ExecutionContext, edit};
+use kentos_native_application::{ExecutionContext, tables_edit};
 
 use crate::app::{App, Message};
 
-/// A run of Tabloyu güncelle waiting for its files.
+/// The tables still to ask a file for: each's persistent id and the file's name it keeps.
 #[derive(Clone, Debug, Default)]
 pub struct Run {
-    /// The tables, in the drawing's order.
-    tables: Vec<Slot>,
-    /// The files still to ask for, by the name their tables keep.
-    asking: Vec<String>,
-    /// The files read (none: not chosen).
-    books: BTreeMap<String, Option<TableFileRead>>,
+    asking: Vec<(Uuid, String)>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// A file chosen for `name` (none: the picker cancelled).
-    FileRead(String, Option<Vec<u8>>),
+    /// A file chosen for the table (none: the picker cancelled).
+    Picked(Uuid, Option<PathBuf>),
 }
 
 fn msg(event: Event) -> Message {
     Message::TableUpdate(event)
 }
 
-/// Asks for the file a table keeps the name of.
-fn ask(name: String) -> Task<Message> {
+/// Asks for the file the table `uid` keeps the name of.
+fn ask(uid: Uuid, name: String) -> Task<Message> {
     Task::perform(
         async move {
             let file = rfd::AsyncFileDialog::new()
@@ -54,23 +44,18 @@ fn ask(name: String) -> Task<Message> {
                 )
                 .pick_file()
                 .await;
-            let bytes = match file {
-                Some(f) => Some(f.read().await),
-                None => None,
-            };
-            (name, bytes)
+            (uid, file.map(|f| f.path().to_path_buf()))
         },
-        |(name, bytes)| msg(Event::FileRead(name, bytes)),
+        |(uid, path)| msg(Event::Picked(uid, path)),
     )
 }
 
-/// Same cells, alignments and sizes: nothing to write.
-fn same(a: &TableEntity, b: &TableEntity) -> bool {
-    a.cells == b.cells
-        && a.rows == b.rows
-        && a.columns == b.columns
-        && a.aligns == b.aligns
-        && a.merges == b.merges
+/// The path a linked table keeps: from the drawing's folder when the file is in it, else as chosen.
+pub fn kept_path(file: &Path, base: Option<&Path>) -> String {
+    match base.and_then(|b| file.strip_prefix(b).ok()) {
+        Some(rel) => rel.to_string_lossy().into_owned(),
+        None => file.to_string_lossy().into_owned(),
+    }
 }
 
 impl App {
@@ -96,13 +81,36 @@ impl App {
             .collect()
     }
 
+    pub(crate) fn run_tables(&mut self, operation: TablesOperation) -> Option<TablesEdited> {
+        let doc = self.document.as_mut()?;
+        let input = TablesEdit {
+            operation,
+            expected_revision: None,
+        };
+        match tables_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, warnings } => {
+                for w in warnings {
+                    self.warn(w.message);
+                }
+                Some(output)
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+                None
+            }
+            _ => None,
+        }
+    }
+
     /// Tabloyu güncelle (`table.update`).
     pub(crate) fn update_tables(&mut self) -> Task<Message> {
         let all = self.sourced_tables();
         if all.is_empty() {
             self.say(
                 Level::Info,
-                "Kaynağı olan tablo yok: Tabloyu güncelle çizelgeleri ve dosyadan gelen tabloları yeniden yazar.",
+                "Kaynağı olan tablo yok: Tabloyu güncelle çizelgeleri ve dosyaya bağlı tabloları yeniden yazar.",
             );
             return Task::none();
         }
@@ -110,195 +118,140 @@ impl App {
             return Task::none();
         };
         let model = &doc.model;
-        let locked: Vec<Slot> = all
+        let (locked, open): (Vec<Slot>, Vec<Slot>) = all.into_iter().partition(|s| {
+            model
+                .get(*s)
+                .is_some_and(|e| model.layers().is_locked(&e.base().layer_id))
+        });
+        let uids: Vec<String> = open
             .iter()
-            .copied()
-            .filter(|s| {
-                model
-                    .get(*s)
-                    .is_some_and(|e| model.layers().is_locked(&e.base().layer_id))
+            .filter_map(|s| model.uid(*s).map(|u| u.to_string()))
+            .collect();
+        let names: Vec<(Uuid, String)> = open
+            .iter()
+            .filter_map(|s| match (model.uid(*s), model.get(*s)) {
+                (Some(u), Some(Entity::Table(t))) => match &t.source {
+                    Some(TableSource::File { name, .. }) => Some((u, name.clone())),
+                    _ => None,
+                },
+                _ => None,
             })
             .collect();
-        let tables: Vec<Slot> = all.into_iter().filter(|s| !locked.contains(s)).collect();
-        let mut asking: Vec<String> = Vec::new();
-        for s in &tables {
-            if let Some(Entity::Table(TableEntity {
-                source: Some(TableSource::File { name, .. }),
-                ..
-            })) = model.get(*s)
-                && !asking.contains(name)
-            {
-                asking.push(name.clone());
-            }
-        }
         if !locked.is_empty() {
             self.warn(format!(
                 "{} tablo kilitli katmanda: güncellenmedi.",
                 locked.len()
             ));
         }
-        let mut run = Run {
-            tables,
-            asking,
-            books: BTreeMap::new(),
+        if uids.is_empty() {
+            return Task::none();
+        }
+        let base = self
+            .drawing_folder()
+            .map(|p| p.to_string_lossy().into_owned());
+        let Some(out) = self.run_tables(TablesOperation::Refresh { uids, base }) else {
+            return Task::none();
         };
-        let next = run.asking.first().cloned();
-        match next {
-            Some(name) => {
-                run.asking.remove(0);
-                self.say(
-                    Level::Info,
-                    format!("“{name}” dosyasını seçin: tablo ondan yeniden yazılır."),
-                );
-                self.table_update = Some(run);
-                ask(name)
-            }
+        let count = |s: TableRefresh| out.report.iter().filter(|r| r.status == s).count();
+        let (updated, same, live) = (
+            count(TableRefresh::Updated),
+            count(TableRefresh::Unchanged),
+            count(TableRefresh::Live),
+        );
+        let kept: u32 = out.report.iter().map(|r| r.kept).sum();
+        let mut words = Vec::new();
+        if updated > 0 {
+            words.push(format!("{updated} tablo güncellendi"));
+        }
+        if kept > 0 {
+            words.push(format!("elle değişen {kept} hücre korundu"));
+        }
+        if same > 0 {
+            words.push(format!("{same} tablo güncel"));
+        }
+        if live > 0 {
+            words.push(format!(
+                "{live} blok çizelgesi çizimle kendiliğinden güncel"
+            ));
+        }
+        if !words.is_empty() {
+            self.say(Level::Success, format!("{}.", words.join(", ")));
+        }
+        // The tables whose file is to be chosen: not linked, or not where their path says.
+        let asking: Vec<(Uuid, String)> = out
+            .report
+            .iter()
+            .filter(|r| matches!(r.status, TableRefresh::Unlinked | TableRefresh::Missing))
+            .filter_map(|r| {
+                let u = Uuid::parse_str(&r.uid).ok()?;
+                names.iter().find(|(v, _)| *v == u).cloned()
+            })
+            .collect();
+        self.ask_next(Run { asking })
+    }
+
+    /// Dosyaya bağla (`table.link`): the selected table asks for its file.
+    pub(crate) fn link_table(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let found = self
+            .selection
+            .ids()
+            .iter()
+            .find_map(|s| match doc.model.get(*s) {
+                Some(Entity::Table(t)) => {
+                    let name = match &t.source {
+                        Some(TableSource::File { name, .. }) => name.clone(),
+                        _ => "tablo".to_owned(),
+                    };
+                    doc.model.uid(*s).map(|u| (u, name))
+                }
+                _ => None,
+            });
+        match found {
+            Some(one) => self.ask_next(Run { asking: vec![one] }),
             None => {
-                self.finish_update(run);
+                self.say(Level::Info, "Dosyaya bağlanacak tabloyu seçin.");
                 Task::none()
             }
         }
     }
 
-    pub(crate) fn table_update_event(&mut self, event: Event) -> Task<Message> {
-        let Event::FileRead(name, bytes) = event;
-        let Some(mut run) = self.table_update.take() else {
+    fn ask_next(&mut self, mut run: Run) -> Task<Message> {
+        if run.asking.is_empty() {
+            self.table_update = None;
             return Task::none();
-        };
-        run.books
-            .insert(name, bytes.map(|b| kentos_formats::table_file::read(&b)));
-        if let Some(next) = run.asking.first().cloned() {
-            run.asking.remove(0);
-            self.say(
-                Level::Info,
-                format!("“{next}” dosyasını seçin: tablo ondan yeniden yazılır."),
-            );
-            self.table_update = Some(run);
-            return ask(next);
         }
-        self.finish_update(run);
-        Task::none()
+        let (uid, name) = run.asking.remove(0);
+        self.say(
+            Level::Info,
+            format!("“{name}” dosyasını seçin: tablo ona bağlanır ve ondan yazılır."),
+        );
+        self.table_update = Some(run);
+        ask(uid, name)
     }
 
-    /// The tables' new cells, written in one step “Tabloyu güncelle”.
-    fn finish_update(&mut self, run: Run) {
-        let format = self.format();
-        let Some(doc) = &self.document else {
-            return;
-        };
-        let model = &doc.model;
-        let font = drawing_font(model.settings().drawing_font);
-        let mut said: Vec<(Level, String)> = Vec::new();
-        let mut changes = Vec::new();
-        for slot in &run.tables {
-            let Some(Entity::Table(t)) = model.get(*slot) else {
-                continue;
-            };
-            let Some(source) = &t.source else {
-                continue;
-            };
-            let cells: Cells = match source {
-                TableSource::File { name, sheet } => {
-                    let Some(Some(book)) = run.books.get(name) else {
-                        continue;
-                    };
-                    if let Some(p) = &book.problem {
-                        said.push((Level::Warn, format!("“{name}”: {p}")));
-                        continue;
-                    }
-                    let found = match sheet {
-                        None => book.sheets.first(),
-                        Some(want) => book.sheets.iter().find(|s| s.name.as_ref() == Some(want)),
-                    };
-                    let Some(found) = found else {
-                        said.push((
-                            Level::Warn,
-                            format!(
-                                "Dosyada “{}” sayfası yok: tablo güncellenmedi.",
-                                sheet.clone().unwrap_or_default()
-                            ),
-                        ));
-                        continue;
-                    };
-                    kentos_interaction::table::sheet_cells(found, t.header)
-                }
-                schedule => {
-                    let kind = match schedule {
-                        TableSource::Coordinates { .. } => ScheduleKind::Coordinates,
-                        TableSource::Areas { .. } => ScheduleKind::Areas,
-                        _ => ScheduleKind::Attributes,
-                    };
-                    let objects: Vec<Slot> = schedule
-                        .objects()
-                        .iter()
-                        .filter_map(|id| model.slot_of(kentos_domain::Uuid::from_bytes(id.0)))
-                        .collect();
-                    let missing = schedule.objects().len() - objects.len();
-                    if missing > 0 {
-                        said.push((
-                            Level::Warn,
-                            format!("Çizelgenin {missing} nesnesi çizimde yok: tablo kalanlardan yazıldı."),
-                        ));
-                    }
-                    kentos_interaction::table::schedule(model, kind, &objects, &format)
-                }
-            };
-            if let Some(p) = &cells.problem {
-                said.push((Level::Warn, p.clone()));
-                continue;
-            }
-            let Some(next) = refresh(
-                &shape(&Entity::Table(t.clone())),
-                &cells.cells,
-                &cells.aligns,
-                font,
-            )
-            .and_then(edit_geometry) else {
-                continue;
-            };
-            let Entity::Table(fresh) = entity_of(&next, t.base.clone()) else {
-                continue;
-            };
-            if same(t, &fresh) {
-                continue;
-            }
-            let Some(uid) = model.uid(*slot) else {
-                continue;
-            };
-            changes.push(EntityEdit::Update {
+    pub(crate) fn table_update_event(&mut self, event: Event) -> Task<Message> {
+        let Event::Picked(uid, path) = event;
+        let run = self.table_update.take().unwrap_or_default();
+        if let Some(file) = path {
+            let base = self.drawing_folder();
+            let kept = kept_path(&file, base.as_deref());
+            let operation = TablesOperation::Link {
                 uid: uid.to_string(),
-                geometry: next,
-            });
-        }
-        for (level, text) in said {
-            self.say(level, text);
-        }
-        if changes.is_empty() {
-            if !run.tables.is_empty() {
-                self.say(Level::Info, "Tablolar güncel.");
+                path: kept.clone(),
+                sheet: None,
+                base: base.map(|b| b.to_string_lossy().into_owned()),
+                overrides: None,
+            };
+            if self.run_tables(operation).is_some() {
+                self.say(
+                    Level::Success,
+                    format!("Tablo “{kept}” dosyasına bağlandı ve ondan yazıldı."),
+                );
             }
-            return;
         }
-        let n = changes.len();
-        let input = EntitiesEdit {
-            operation: EditOperation::TableUpdate,
-            changes,
-            expected_revision: None,
-        };
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-            CommandResult::Completed { warnings, .. } => {
-                for w in warnings {
-                    self.warn(w.message);
-                }
-                self.say(Level::Success, format!("{n} tablo güncellendi."));
-            }
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => self.warn(error.message),
-            _ => {}
-        }
+        self.ask_next(run)
     }
 }

@@ -359,6 +359,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.layer_states.is_empty())
             + usize::from(!s.text_styles.is_empty())
             + usize::from(!s.dimension_styles.is_empty())
+            + usize::from(!s.leader_styles.is_empty())
             + usize::from(s.topology.is_some())
             + usize::from(has_heights(s))
             + usize::from(!s.connections.is_empty())
@@ -372,6 +373,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.line_types.is_empty())
+            + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
@@ -395,7 +397,7 @@ impl<'d> Encoder<'d> {
             self.key("survey");
             self.at(Seg::Name("survey"), |e| e.survey(v))?;
         }
-        // Schema 60 (docs/adr/0430): the project's value lists, written whole and checked.
+        // Schema 72 (docs/adr/0430): the project's value lists, written whole and checked.
         if !s.domains.is_empty() {
             self.key("domains");
             self.at(Seg::Name("domains"), |e| {
@@ -518,6 +520,26 @@ impl<'d> Encoder<'d> {
         }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
+        // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+        if !s.leader_styles.is_empty() {
+            self.key("leaderStyles");
+            self.at(Seg::Name("leaderStyles"), |e| {
+                if let Some((field, words)) = s.leader_styles.iter().find_map(kentos_contracts::LeaderStyleDef::problem) {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(&s.leader_styles).unwrap_or_default())
+            })?;
+        }
+        // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+        if !s.hatch_patterns.is_empty() {
+            self.key("hatchPatterns");
+            self.at(Seg::Name("hatchPatterns"), |e| {
+                if let Some(problem) = kentos_contracts::hatch_patterns_problem(&s.hatch_patterns) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                e.json(&serde_json::to_value(&s.hatch_patterns).unwrap_or_default())
+            })?;
+        }
         if let Some(scale) = s.line_type_scale {
             self.key("lineTypeScale");
             self.at(Seg::Name("lineTypeScale"), |e| {
@@ -1014,7 +1036,7 @@ impl<'d> Encoder<'d> {
             LayerNodeType::Group => "group",
             LayerNodeType::Layer => "layer",
         });
-        // Schema 60 (docs/adr/0438 §1): the record rules, as their JSON, fitting the fields.
+        // Schema 72 (docs/adr/0438 §1): the record rules, as their JSON, fitting the fields.
         if !n.rules.is_empty() {
             self.key("rules");
             self.at(Seg::Name("rules"), |e| {
@@ -1083,7 +1105,7 @@ impl<'d> Encoder<'d> {
             self.key("scenario");
             self.at(Seg::Name("scenario"), |e| e.scenario(n.kind, scenario))?;
         }
-        // Schema 60 (docs/adr/0422 §4): the subtypes, as their JSON, on a layer whose fields they fit.
+        // Schema 72 (docs/adr/0422 §4): the subtypes, as their JSON, on a layer whose fields they fit.
         if let Some(subtypes) = &n.subtypes {
             self.key("subtypes");
             self.at(Seg::Name("subtypes"), |e| {
@@ -1098,7 +1120,7 @@ impl<'d> Encoder<'d> {
                 e.plain(&value)
             })?;
         }
-        // Schema 60 (docs/adr/0423 §4): the value combinations, as their JSON, fitting the fields.
+        // Schema 72 (docs/adr/0423 §4): the value combinations, as their JSON, fitting the fields.
         if !n.contingents.is_empty() {
             self.key("contingents");
             self.at(Seg::Name("contingents"), |e| {
@@ -1115,7 +1137,7 @@ impl<'d> Encoder<'d> {
                 e.plain(&value)
             })?;
         }
-        // Schema 60 (docs/adr/0413 §3): the table's rules, as their JSON, on a layer.
+        // Schema 72 (docs/adr/0413 §3): the table's rules, as their JSON, on a layer.
         if !n.table_styles.is_empty() {
             self.key("tableStyles");
             self.at(Seg::Name("tableStyles"), |e| {
@@ -1230,7 +1252,7 @@ impl<'d> Encoder<'d> {
         self.w.text(f.kind.name());
         self.key("name");
         self.at(Seg::Name("name"), |e| e.text(&f.name))?;
-        // Schema 60 (docs/adr/0438 §4): the unit, in the keys' canonical order.
+        // Schema 72 (docs/adr/0438 §4): the unit, in the keys' canonical order.
         if let Some(unit) = &f.unit {
             self.key("unit");
             self.at(Seg::Name("unit"), |e| e.text(unit))?;
@@ -1239,7 +1261,7 @@ impl<'d> Encoder<'d> {
             self.key("alias");
             self.at(Seg::Name("alias"), |e| e.text(alias))?;
         }
-        // Schema 60 (docs/adr/0419): the merge and split policies, in the keys' canonical order.
+        // Schema 72 (docs/adr/0419): the merge and split policies, in the keys' canonical order.
         if let Some(merge) = f.merge {
             self.key("merge");
             self.w.text(merge_name(merge));
@@ -1252,7 +1274,7 @@ impl<'d> Encoder<'d> {
             self.key("split");
             self.w.text(split_name(split));
         }
-        // Schema 60 (docs/adr/0430): the value list it links.
+        // Schema 72 (docs/adr/0430): the value list it links.
         if let Some(domain) = &f.domain {
             self.key("domain");
             self.at(Seg::Name("domain"), |e| e.text(domain))?;
@@ -1261,7 +1283,7 @@ impl<'d> Encoder<'d> {
             self.key("length");
             self.w.uint(u64::from(length));
         }
-        // Schema 60 (docs/adr/0438 §3).
+        // Schema 72 (docs/adr/0438 §3).
         if f.unique {
             self.key("unique");
             self.w.bool(true);
@@ -1612,7 +1634,7 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 60 (docs/adr/0401, 0408, 0410, 0412, 0413, 0418): a form of the project, a layer field's
+    // Schema 72 (docs/adr/0401, 0408, 0410, 0412, 0413, 0418): a form of the project, a layer field's
     // stable id, its several values, a retired value or its date-and-time or time kind, a layer's
     // table rules, or a record without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
@@ -1651,20 +1673,153 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     {
         return crate::SCHEMA_WITH_FORMS;
     }
+    // Schema 71 (docs/adr/0331): the project's hatch patterns, a pattern's own origin, an annotative hatch.
+    if !doc.settings.hatch_patterns.is_empty()
+        || doc.entities.iter().any(|e| {
+            matches!(e, Entity::Hatch(h) if h.pattern.origin.is_some() || h.annotative.is_some())
+        })
+        || doc.blocks.iter().any(|b| {
+            b.entities.iter().any(|e| {
+                matches!(e, Entity::Hatch(h) if h.pattern.origin.is_some() || h.annotative.is_some())
+            })
+        })
+    {
+        return crate::SCHEMA_WITH_HATCH_EXTRAS;
+    }
+    // Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
+    if doc.entities.iter().any(|e| {
+        matches!(e, Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| a.gap.is_some()))
+    }) {
+        return crate::SCHEMA_WITH_HATCH_GAPS;
+    }
+    // Schema 69 (docs/adr/0328): a hatch's exact boundary or a tie to a face's line work.
+    let bounded = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Hatch(h)
+                if h.boundary.is_some() || h.assoc.as_ref().is_some_and(|a| !a.bounds.is_empty()))
+        })
+    };
+    if bounded(&doc.entities) || doc.blocks.iter().any(|b| bounded(&b.entities)) {
+        return crate::SCHEMA_WITH_HATCH_BOUNDARIES;
+    }
+    // Schema 68 (docs/adr/0327): a table's styles, formulas, fields, linked file or block schedule.
+    let tabled = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Table(t)
+                if !t.styles.is_empty()
+                    || !t.formulas.is_empty()
+                    || !t.fields.is_empty()
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { .. }))
+                    || matches!(&t.source, Some(kentos_contracts::TableSource::File { path, digest, copy, overrides, .. })
+                        if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep()))
+        })
+    };
+    if tabled(&doc.entities) {
+        return crate::SCHEMA_WITH_TABLE_CELLS;
+    }
+    // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks or style, or the project's leader styles.
+    let multi = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Leader(l)
+                if !l.arms.is_empty() || l.tip.is_some() || !l.blocks.is_empty() || l.leader_style.is_some())
+        })
+    };
+    if multi(&doc.entities)
+        || doc.blocks.iter().any(|b| multi(&b.entities))
+        || !doc.settings.leader_styles.is_empty()
+    {
+        return crate::SCHEMA_WITH_MULTILEADER;
+    }
+    // Schema 66 (docs/adr/0325): a text's fields (of the drawing or of a block).
+    let fielded = |list: &[Entity]| {
+        list.iter().any(|e| matches!(e, Entity::Text(t) if !t.paragraph.fields.is_empty()))
+    };
+    if fielded(&doc.entities) || doc.blocks.iter().any(|b| fielded(&b.entities)) {
+        return crate::SCHEMA_WITH_TEXT_FIELDS;
+    }
+    // Schema 65 (docs/adr/0324): a text's layout or a stacked fraction (of the drawing or of a block).
+    let laid = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Text(t) => {
+                t.paragraph.layout.is_some()
+                    || t.paragraph.runs.iter().any(|r| r.script == Some(kentos_contracts::TextScript::Stack))
+            }
+            _ => false,
+        })
+    };
+    if laid(&doc.entities) || doc.blocks.iter().any(|b| laid(&b.entities)) {
+        return crate::SCHEMA_WITH_PARAGRAPH_LAYOUT;
+    }
+    // Schema 64 (docs/adr/0323): an annotative text, dimension or leader (of the drawing or of a block).
+    let scaled = |list: &[Entity]| list.iter().any(|e| kentos_contracts::annotative_of(e).is_some());
+    if scaled(&doc.entities) || doc.blocks.iter().any(|b| scaled(&b.entities)) {
+        return crate::SCHEMA_WITH_ANNOTATIVE;
+    }
+    // Schema 63 (docs/adr/0322 §5): a text's or a dimension's overrides (of the drawing or of a block).
+    let overridden = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Text(t) => !t.face.overrides.is_empty(),
+            Entity::Dimension(d) => !d.look.overrides.is_empty(),
+            _ => false,
+        })
+    };
+    if overridden(&doc.entities) || doc.blocks.iter().any(|b| overridden(&b.entities)) {
+        return crate::SCHEMA_WITH_OVERRIDES;
+    }
+    // Schema 62 (docs/adr/0322): a centre mark, an axis or a level (of the drawing or of a block), or a pair rule.
+    let marked = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Dimension(d)
+                if d.style.is_some_and(DimensionStyle::is_schema_62)
+                    || d.refs.as_ref().is_some_and(|r| r.rule == Some(kentos_contracts::DimensionRule::Pair)))
+        })
+    };
+    if marked(&doc.entities) || doc.blocks.iter().any(|b| marked(&b.entities)) {
+        return crate::SCHEMA_WITH_DIMENSION_MARKS;
+    }
+    // Schema 61 (docs/adr/0321): a dimension's options, moved value or breaks (of the drawing or of a block), or a
+    // dimension style's options.
+    let optioned = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Dimension(d)
+                if d.look.options.is_some() || d.text_shift.is_some() || !d.breaks.is_empty())
+        })
+    };
+    if optioned(&doc.entities)
+        || doc.blocks.iter().any(|b| optioned(&b.entities))
+        || doc
+            .settings
+            .dimension_styles
+            .iter()
+            .any(|s| s.options.is_some())
+    {
+        return crate::SCHEMA_WITH_DIMENSION_OPTIONS;
+    }
+    // Schema 60 (docs/adr/0320 §1): a dimension's references' rule (in the drawing only: a block's dimensions keep none).
+    if doc.entities.iter().any(
+        |e| matches!(e, Entity::Dimension(d) if d.refs.as_ref().is_some_and(|r| r.rule.is_some())),
+    ) {
+        return crate::SCHEMA_WITH_DIMENSION_RULES;
+    }
     // Schema 59 (docs/adr/0318): a block's dynamic part or an insert's parameter values, of the drawing or of a block.
     let valued = |list: &[Entity]| {
         list.iter()
             .any(|e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.parameters.is_empty()))
     };
-    if valued(&doc.entities) || doc.blocks.iter().any(|b| b.dynamic.is_some() || valued(&b.entities)) {
+    if valued(&doc.entities)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.dynamic.is_some() || valued(&b.entities))
+    {
         return crate::SCHEMA_WITH_DYNAMIC_BLOCKS;
     }
     // Schema 58 (docs/adr/0317 §1, §4): an attribute definition's option, an insert's moved attribute (of the drawing
     // or of a block definition) or a block's card.
     let placed = |list: &[Entity]| {
-        list.iter().any(|e| {
-            matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty())
-        })
+        list.iter().any(
+            |e| matches!(e, kentos_contracts::Entity::Insert(i) if !i.attribute_places.is_empty()),
+        )
     };
     if placed(&doc.entities)
         || doc.blocks.iter().any(|b| {

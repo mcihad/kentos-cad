@@ -75,6 +75,8 @@ pub(super) enum Val<'d> {
     Int(i64),
     /// A block's object's parts that follow its layer (docs/adr/0260 §1).
     LookParts(&'d [kentos_contracts::LookPart]),
+    /// A contract's part written as its JSON (a dimension's options, moved value and breaks, docs/adr/0321).
+    Json(serde_json::Value),
     /// An area's mask (docs/adr/0310): `{ frame }`.
     Wipeout(kentos_contracts::Wipeout),
     /// A text's curve (§6.6, docs/adr/0196): its vertices and bulges.
@@ -493,6 +495,14 @@ impl<'d> Encoder<'d> {
                 if !para.runs.is_empty() {
                     f.push(("runs", Val::Runs(&para.runs)));
                 }
+                // Schema 65 (docs/adr/0324 §1): its indents, tabs and columns, as their JSON.
+                if let Some(l) = &para.layout {
+                    f.push(("layout", Val::Json(serde_json::to_value(l).unwrap_or_default())));
+                }
+                // Schema 66 (docs/adr/0325 §1): its fields, as their JSON.
+                if !para.fields.is_empty() {
+                    f.push(("fields", Val::Json(serde_json::to_value(&para.fields).unwrap_or_default())));
+                }
                 // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
                 // drawing's texts (a block definition's objects have no persistent ids to name).
                 if e.label_of.is_some() || e.label_scale.is_some() {
@@ -563,6 +573,10 @@ impl<'d> Encoder<'d> {
                 if let Some(o) = face.oblique {
                     f.push(("oblique", Val::Float(o)));
                 }
+                // Its overrides (docs/adr/0322 §5), as their JSON.
+                if !face.overrides.is_empty() {
+                    f.push(("overrides", Val::Json(serde_json::json!(face.overrides))));
+                }
                 // The curve its letters stand on (docs/adr/0196 §1): a text of one line, not linked.
                 // A number that is not finite meets the float's own refusal (`non_finite`).
                 if let Some(path) = &e.path {
@@ -603,9 +617,18 @@ impl<'d> Encoder<'d> {
                     let words = format!("zorunlu alan yok ({field})");
                     return refuse(self, Code::MissingField, field, &words);
                 }
-                if !slope && (e.za.is_some() || e.zb.is_some()) {
+                // A level's one elevation (docs/adr/0322).
+                let level = e.style == Some(DimensionStyle::Elevation);
+                if level && e.za.is_none() {
+                    return refuse(self, Code::MissingField, "za", "zorunlu alan yok (za)");
+                }
+                if level && e.zb.is_some() {
+                    let words = "kot ölçüsünün yalnız bir kotu (za) olur";
+                    return refuse(self, Code::BadValue, "zb", words);
+                }
+                if !slope && !level && (e.za.is_some() || e.zb.is_some()) {
                     let field = if e.za.is_some() { "za" } else { "zb" };
-                    let words = "kot (za, zb) yalnız eğim ölçüsünde yazılır";
+                    let words = "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır";
                     return refuse(self, Code::BadValue, field, words);
                 }
                 if e.style == Some(DimensionStyle::Ordinate)
@@ -672,6 +695,26 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(id) = &look.dim_style {
                     f.push(("dimStyle", Val::Text(id)));
+                }
+                // Its options, moved value and breaks (docs/adr/0321), as their JSON.
+                let json = |v: serde_json::Result<serde_json::Value>| v.unwrap_or_default();
+                if let Some(o) = &look.options {
+                    f.push(("options", Val::Json(json(serde_json::to_value(o)))));
+                }
+                if !look.overrides.is_empty() {
+                    f.push(("overrides", Val::Json(serde_json::json!(look.overrides))));
+                }
+                if let Some(s) = &e.text_shift {
+                    if let Some(words) = s.problem() {
+                        return refuse(self, Code::BadValue, "textShift", &words);
+                    }
+                    f.push(("textShift", Val::Json(json(serde_json::to_value(s)))));
+                }
+                if !e.breaks.is_empty() {
+                    if let Some(words) = kentos_contracts::breaks_problem(&e.breaks) {
+                        return refuse(self, Code::BadValue, "breaks", &words);
+                    }
+                    f.push(("breaks", Val::Json(json(serde_json::to_value(&e.breaks)))));
                 }
                 if let Some(a) = look.arrow {
                     f.push(("arrow", Val::Name(a.name())));
@@ -749,6 +792,13 @@ impl<'d> Encoder<'d> {
                     return refuse(self, "pattern", &words);
                 }
                 f.push(("pattern", Val::Pattern(&e.pattern)));
+                // Its exact boundary (docs/adr/0328 §1), as its JSON, within the contract's form.
+                if let Some(b) = &e.boundary {
+                    if let Some(words) = kentos_contracts::boundary_problem(b) {
+                        return refuse(self, "boundary", &words);
+                    }
+                    f.push(("boundary", Val::Json(serde_json::to_value(b).unwrap_or_default())));
+                }
                 // What its region follows (§6): only the drawing's hatches (a block
                 // definition's objects have no persistent ids to name).
                 if let Some(a) = &e.assoc {
@@ -807,7 +857,7 @@ impl<'d> Encoder<'d> {
                     return refuse(self, "rows", "blok tanımında tablo olamaz");
                 }
                 // A size that is not finite meets the float's own refusal (`non_finite`), with its place.
-                if let Some((field, words)) = e.shape().problem() {
+                if let Some((field, words)) = e.problem() {
                     let finite = match field {
                         "height" => e.height.is_finite(),
                         "rows" => e.rows.iter().all(|x| x.is_finite()),
@@ -869,7 +919,49 @@ impl<'d> Encoder<'d> {
                             "tablonun kaynağındaki nesnenin kimliği boş olamaz",
                         );
                     }
-                    f.push(("source", Val::Source(source)));
+                    match source {
+                        // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON.
+                        TableSource::Blocks { .. } => {
+                            f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
+                        }
+                        TableSource::File {
+                            path,
+                            digest,
+                            copy,
+                            overrides,
+                            ..
+                        } => {
+                            f.push(("source", Val::Source(source)));
+                            // Schema 68 (docs/adr/0327 §5): a linked file's path, digest, copy and rule, as their JSON.
+                            if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() {
+                                let mut link = serde_json::Map::new();
+                                if let Some(p) = path {
+                                    link.insert("path".into(), serde_json::json!(p));
+                                }
+                                if let Some(d) = digest {
+                                    link.insert("digest".into(), serde_json::json!(d));
+                                }
+                                if let Some(c) = copy {
+                                    link.insert("copy".into(), serde_json::json!(c));
+                                }
+                                if !overrides.is_keep() {
+                                    link.insert("overrides".into(), serde_json::json!(overrides));
+                                }
+                                f.push(("link", Val::Json(serde_json::Value::Object(link))));
+                            }
+                        }
+                        _ => f.push(("source", Val::Source(source))),
+                    }
+                }
+                // Schema 68 (docs/adr/0327 §1–§3): the cells' styles, formulas and fields, as their JSON.
+                if !e.styles.is_empty() {
+                    f.push(("styles", Val::Json(serde_json::to_value(&e.styles).unwrap_or_default())));
+                }
+                if !e.formulas.is_empty() {
+                    f.push(("formulas", Val::Json(serde_json::to_value(&e.formulas).unwrap_or_default())));
+                }
+                if !e.fields.is_empty() {
+                    f.push(("fields", Val::Json(serde_json::to_value(&e.fields).unwrap_or_default())));
                 }
             }
             Entity::Image(e) => {
@@ -1094,7 +1186,32 @@ impl<'d> Encoder<'d> {
                 if e.mask {
                     f.push(("mask", Val::Bool(true)));
                 }
+                // Schema 67 (docs/adr/0326): its arms, tip, content blocks and style, as their JSON.
+                if let Some((field, words)) = kentos_contracts::leader_problem(e) {
+                    return refuse(self, field, &words);
+                }
+                if !e.arms.is_empty() {
+                    f.push(("arms", Val::Json(serde_json::to_value(&e.arms).unwrap_or_default())));
+                }
+                if let Some(t) = &e.tip {
+                    f.push(("tip", Val::Json(serde_json::to_value(t).unwrap_or_default())));
+                }
+                if !e.blocks.is_empty() {
+                    f.push(("blocks", Val::Json(serde_json::to_value(&e.blocks).unwrap_or_default())));
+                }
+                if let Some(s) = &e.leader_style {
+                    f.push(("leaderStyle", Val::Text(s)));
+                }
             }
+        }
+        // An annotation's scales (docs/adr/0323), as their JSON.
+        if let Some(a) = kentos_contracts::annotative_of(entity) {
+            if let Some(words) = kentos_contracts::annotative_problem(entity) {
+                self.path.push(Seg::Name(kind));
+                self.path.push(Seg::Name("annotative"));
+                return Err(self.fail(Code::BadValue, &words));
+            }
+            f.push(("annotative", Val::Json(serde_json::to_value(a).unwrap_or_default())));
         }
         f.sort_by(|a, b| key_order(a.0, b.0));
         self.open(1, true)?;
@@ -1198,6 +1315,7 @@ impl<'d> Encoder<'d> {
                 self.w.uint(n);
                 Ok(())
             }
+            Val::Json(v) => self.json(&v),
             Val::Int(n) => {
                 self.w.int(n);
                 Ok(())
@@ -1406,6 +1524,7 @@ impl<'d> Encoder<'d> {
                             e.w.text(match s {
                                 TextScript::Super => "super",
                                 TextScript::Sub => "sub",
+                                TextScript::Stack => "stack",
                             });
                         }
                         if r.underline {
@@ -1466,7 +1585,7 @@ impl<'d> Encoder<'d> {
             }
             Val::Source(source) => {
                 match source {
-                    TableSource::File { name, sheet } => {
+                    TableSource::File { name, sheet, .. } => {
                         self.open(2 + usize::from(sheet.is_some()), true)?;
                         // kind (4), name (4), sheet (5).
                         self.key("kind");
@@ -1707,9 +1826,10 @@ impl<'d> Encoder<'d> {
                     + usize::from(p.name.is_some())
                     + usize::from(p.scale.is_some())
                     + usize::from(p.lines.is_some())
-                    + usize::from(p.gradient.is_some());
+                    + usize::from(p.gradient.is_some())
+                    + usize::from(p.origin.is_some());
                 self.open(n, true)?;
-                // name (4), type (4), angle (5), lines (5), scale (5), spacing (7), gradient (8).
+                // name (4), type (4), angle (5), lines (5), scale (5), origin (6), spacing (7), gradient (8).
                 if let Some(name) = &p.name {
                     self.key("name");
                     self.at(Seg::Name("name"), |e| e.text(name))?;
@@ -1732,6 +1852,10 @@ impl<'d> Encoder<'d> {
                 if let Some(scale) = p.scale {
                     self.key("scale");
                     self.at(Seg::Name("scale"), |e| e.float(scale))?;
+                }
+                if let Some(o) = &p.origin {
+                    self.key("origin");
+                    self.at(Seg::Name("origin"), |e| e.point(o))?;
                 }
                 self.key("spacing");
                 self.at(Seg::Name("spacing"), |e| e.float(p.spacing))?;
@@ -1756,24 +1880,39 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Refs(refs) => {
-                // a (1), b (1), c (1): each a reference.
-                self.open(refs.each().count(), true)?;
+                // a (1), b (1), c (1): each a reference; rule (4): its name (schema 60).
+                self.open(refs.each().count() + usize::from(refs.rule.is_some()), true)?;
                 for (key, r) in refs.each() {
                     self.key(key);
                     self.at(Seg::Name(key), |e| e.subref(r))?;
+                }
+                if let Some(rule) = refs.rule {
+                    self.key("rule");
+                    self.w.text(rule.name());
                 }
                 self.close();
                 Ok(())
             }
             Val::Assoc(a) => {
-                let n = 2 + usize::from(!a.cutouts.is_empty()) + usize::from(!a.islands.is_empty());
+                let n = 1
+                    + usize::from(a.gap.is_some())
+                    + usize::from(a.outer.is_some())
+                    + usize::from(!a.bounds.is_empty())
+                    + usize::from(!a.cutouts.is_empty())
+                    + usize::from(!a.islands.is_empty());
                 self.open(n, true)?;
-                // seed (4), outer (5), cutouts (7), islands (7).
+                // gap (3, docs/adr/0329 §3), seed (4), outer (5), bounds (6, docs/adr/0328 §3), cutouts (7), islands (7).
+                if let Some(g) = a.gap {
+                    self.key("gap");
+                    self.at(Seg::Name("gap"), |e| e.float(g))?;
+                }
                 self.key("seed");
                 self.at(Seg::Name("seed"), |e| e.point(&a.seed))?;
-                self.key("outer");
-                self.at(Seg::Name("outer"), |e| e.id(&a.outer.0))?;
-                for (key, ids) in [("cutouts", &a.cutouts), ("islands", &a.islands)] {
+                if let Some(outer) = &a.outer {
+                    self.key("outer");
+                    self.at(Seg::Name("outer"), |e| e.id(&outer.0))?;
+                }
+                for (key, ids) in [("bounds", &a.bounds), ("cutouts", &a.cutouts), ("islands", &a.islands)] {
                     if ids.is_empty() {
                         continue;
                     }

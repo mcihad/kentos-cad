@@ -70,6 +70,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
         version: 2,
         name: "Ölçüm".into(),
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -102,6 +103,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             variables: Vec::new(),
             address_locators: Vec::new(),
             domains: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

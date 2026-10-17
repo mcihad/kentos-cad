@@ -30,6 +30,17 @@ fn ed_mut(app: &mut App) -> &mut SvgEditor {
     app.styles.svg_editor.as_mut().expect("the editor is open")
 }
 
+/// The user drawing in the library whose name `is`, once the editor that saved it is closed.
+fn user_drawing(app: &App, is: impl Fn(&str) -> bool) -> String {
+    app.styles
+        .library
+        .items(Some(Source::User))
+        .into_iter()
+        .find(|(i, _)| i.format() == Some("svg") && is(i.name()))
+        .map(|(i, _)| i.id().to_owned())
+        .expect("the saved drawing in Kitaplığım")
+}
+
 /// An app with Kitaplığım in a scratch folder and the editor open on a new drawing, sized 600 × 500.
 fn open(name: &str) -> (App, std::path::PathBuf) {
     let mut app = app_with_drawing();
@@ -443,10 +454,16 @@ fn kaydet_writes_the_drawing_to_kitapligim_and_a_system_drawing_as_a_copy() {
         e.place([20.0, 20.0], [80.0, 80.0], false);
     }
     send(&mut app, Event::Name("Daire".into()));
+    // Kaydet writes the drawing, closes the editor and says where it went.
     send(&mut app, Event::Save);
-    let e = ed(&app);
-    assert!(!e.dirty());
-    let id = e.original.as_ref().expect("saved").id.clone();
+    assert!(app.styles.svg_editor.is_none(), "Kaydet closes the editor");
+    let notice = app
+        .toasts
+        .iter()
+        .last()
+        .map(|(_, t, _)| t.title().to_owned());
+    assert_eq!(notice.as_deref(), Some("“Daire” kaydedildi"));
+    let id = user_drawing(&app, |name| name == "Daire");
     let (item, source) = app.styles.library.get(&id).expect("in the library");
     assert_eq!(source, Source::User);
     assert_eq!(item.kind(), ItemKind::Asset);
@@ -466,7 +483,6 @@ fn kaydet_writes_the_drawing_to_kitapligim_and_a_system_drawing_as_a_copy() {
         .find(|(i, _)| i.format() == Some("svg"))
         .map(|(i, _)| i.id().to_owned())
         .expect("a system drawing");
-    app.styles.svg_editor = None;
     app.open_svg_editor(Opening {
         id: Some(system.clone()),
         path: None,
@@ -477,7 +493,8 @@ fn kaydet_writes_the_drawing_to_kitapligim_and_a_system_drawing_as_a_copy() {
     assert!(!e.original.as_ref().expect("the original").editable);
     ed_mut(&mut app).action(Action::FlipH);
     send(&mut app, Event::Save);
-    let saved = ed(&app).original.as_ref().expect("saved").id.clone();
+    assert!(app.styles.svg_editor.is_none());
+    let saved = user_drawing(&app, |name| name.ends_with("(kopya)"));
     assert_ne!(saved, system);
     assert_eq!(
         app.styles.library.get(&saved).map(|(_, s)| s),
@@ -788,18 +805,22 @@ fn stil_yoneticisi_and_the_designer_open_the_editor_and_get_its_drawing() {
         e.set_tool(ToolId::Rect);
         e.place([10.0, 10.0], [30.0, 30.0], false);
     }
+    // Kaydet closes the editor, back to the manager, which shows the drawing.
     send(&mut app, Event::Save);
-    let id = ed(&app).original.as_ref().expect("saved").id.clone();
-    send(&mut app, Event::Close);
     assert_eq!(
         app.dialog,
         Some(Dialog::StyleManager),
         "back to the manager"
     );
+    let id = app
+        .styles
+        .manager
+        .as_ref()
+        .and_then(|m| m.selected.clone())
+        .expect("the saved drawing is shown");
     assert_eq!(
-        app.styles.manager.as_ref().and_then(|m| m.selected.clone()),
-        Some(id.clone()),
-        "the saved drawing is shown"
+        app.styles.library.get(&id).map(|(i, _)| i.format()),
+        Some(Some("svg"))
     );
     // The designer's image field: Yeni çizim… and Kaydet give the field the drawing.
     let _ = app.update(Message::StyleManager(Box::new(
@@ -818,11 +839,14 @@ fn stil_yoneticisi_and_the_designer_open_the_editor_and_get_its_drawing() {
         e.place([20.0, 20.0], [80.0, 80.0], false);
     }
     send(&mut app, Event::Save);
-    let drawing = ed(&app).original.as_ref().expect("saved").id.clone();
-    send(&mut app, Event::Close);
     assert_eq!(app.dialog, Some(Dialog::SymbolDesigner));
     let d = app.styles.designer.as_ref().expect("the designer");
     let layer =
         kentos_native_style::designer::layer_at(&d.draft.symbol, d.selected).expect("the layer");
-    assert_eq!(layer["asset"], serde_json::Value::from(drawing));
+    let drawing = layer["asset"].as_str().expect("the field took the drawing");
+    assert_ne!(drawing, id);
+    assert_eq!(
+        app.styles.library.get(drawing).map(|(i, _)| i.format()),
+        Some(Some("svg"))
+    );
 }

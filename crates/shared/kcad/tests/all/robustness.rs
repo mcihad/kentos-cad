@@ -451,6 +451,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 r: rng.float(),
             }),
             4 => Entity::Text(TextEntity {
+                annotative: None,
                 base: b,
                 p: point(rng),
                 text: rng.text(),
@@ -466,11 +467,13 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 path: None,
             }),
             _ => Entity::Hatch(HatchEntity {
+                boundary: None,
                 base: b,
                 ring: points(rng, 3),
                 holes: rng.chance(50).then(|| vec![points(rng, 3)]),
                 pattern: HatchPattern::user(HatchPatternType::Cross, rng.float(), rng.float()),
                 assoc: None,
+                annotative: None,
             }),
         });
     }
@@ -480,6 +483,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
         version: 2,
         name: rng.text(),
         settings: ProjectSettings {
+            leader_styles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
@@ -514,6 +518,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             variables: Vec::new(),
             address_locators: Vec::new(),
             domains: Vec::new(),
+            hatch_patterns: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

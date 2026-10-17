@@ -15,7 +15,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_domain::Slot;
 use kentos_geometry_core::text::edit::Find;
 use kentos_interaction::Level;
-use kentos_interaction::find_replace::{Blocked, Match, Query, matches, write};
+use kentos_interaction::find_replace::{Blocked, Match, Query, matches, write_query};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::tree_view::{Check, check_box};
@@ -174,7 +174,7 @@ impl App {
             .cloned()
             .collect();
         let blocked = w.matches.iter().filter(|m| m.blocked.is_some()).count();
-        let (n, said) = write(&mut doc.model, &picked);
+        let (n, said) = write_query(&mut doc.model, &picked, &w.query());
         w.unchecked.clear();
         for text in said {
             self.warn(text);

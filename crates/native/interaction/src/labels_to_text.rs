@@ -225,6 +225,8 @@ impl LabelsToText {
             label_of: None,
             label_scale: None,
             symbol: None,
+            order: None,
+            transparency: None,
         };
         let mut objects: Vec<NewObject> = r
             .texts
@@ -238,6 +240,8 @@ impl LabelsToText {
                     label_of,
                     label_scale,
                     ..bare(EntityGeometry::Text {
+                        layout: None,
+                        annotative: None,
                         p: v(t.p),
                         text: t.text.clone(),
                         height: t.height,

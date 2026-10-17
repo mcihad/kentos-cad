@@ -437,6 +437,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut survey = None;
     let mut layer_states = Vec::new();
     let (mut line_types, mut line_type_scale) = (Vec::new(), None);
+    let mut hatch_patterns = Vec::new();
     let mut topology = None;
     let mut annotation = None;
     let mut connections = Vec::new();
@@ -450,6 +451,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut relations = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
+    let mut leader_styles = Vec::new();
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -472,7 +474,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 )?)
             }
             "plotScale" => plot_scale = Some(r.float()?),
-            // Schema 60 (docs/adr/0401 §3): the project's forms, read whole and checked.
+            // Schema 72 (docs/adr/0401 §3): the project's forms, read whole and checked.
             "forms" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -506,7 +508,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 forms = list;
             }
-            // Schema 60 (docs/adr/0430): the project's value lists, read whole and checked.
+            // Schema 72 (docs/adr/0430): the project's value lists, read whole and checked.
             "domains" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -539,7 +541,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 domains = list;
             }
-            // Schema 60 (docs/adr/0405 §1): the project's relations, read whole and checked.
+            // Schema 72 (docs/adr/0405 §1): the project's relations, read whole and checked.
             "relations" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -591,6 +593,30 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 line_types = types;
+            }
+            // Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
+            "hatchPatterns" if has.hatch_extras => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let defs: Vec<kentos_contracts::HatchPatternDef> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        r.fail_at(
+                            Code::BadValue,
+                            at,
+                            &format!("tarama desenleri okunamadı: {e}"),
+                        )
+                    })?;
+                if defs.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; tarama deseni yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::hatch_patterns_problem(&defs) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                hatch_patterns = defs;
             }
             "lineTypeScale" if has.patterns => {
                 let at = r.position();
@@ -682,8 +708,20 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
             "namedViews" if has.views => named_views = views::named_views(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
+            // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+            "leaderStyles" if has.multileader => {
+                let (l, at): (Vec<kentos_contracts::LeaderStyleDef>, usize) =
+                    objects::json_part(r, "kılavuz stilleri")?;
+                if let Some((field, words)) =
+                    l.iter().find_map(kentos_contracts::LeaderStyleDef::problem)
+                {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                leader_styles = l;
+            }
             "dimensionStyles" if has.styles => {
-                dimension_styles = styles::dimension_styles(r, has.annotation)?
+                dimension_styles =
+                    styles::dimension_styles(r, has.annotation, has.dimension_options)?
             }
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
@@ -741,6 +779,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     Ok(ProjectSettings {
         line_type_scale,
         line_types,
+        hatch_patterns,
         srid,
         length_decimals: required(r, length_decimals, "lengthDecimals")?,
         area_decimals: required(r, area_decimals, "areaDecimals")?,
@@ -758,6 +797,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         layer_states,
         text_styles,
         dimension_styles,
+        leader_styles,
         topology,
         annotation,
         connections,
@@ -1085,7 +1125,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "card" if has.attachments => card = Some(info::info_card(r)?),
             "actions" if has.attachments => actions = Some(info::layer_actions(r)?),
             "compose" if has.compose => compose = Some(compose::layer_compose(r)?),
-            // Schema 60 (docs/adr/0413 §3): the table's rules, read whole and checked.
+            // Schema 72 (docs/adr/0413 §3): the table's rules, read whole and checked.
             "tableStyles" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1118,7 +1158,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 table_styles = list;
             }
-            // Schema 60 (docs/adr/0422 §4): the subtypes, read whole; checked with the fields below.
+            // Schema 72 (docs/adr/0422 §4): the subtypes, read whole; checked with the fields below.
             "subtypes" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1141,7 +1181,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 subtypes = Some((at, read));
             }
-            // Schema 60 (docs/adr/0423 §4): the value combinations, read whole; checked below.
+            // Schema 72 (docs/adr/0423 §4): the value combinations, read whole; checked below.
             "contingents" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1171,7 +1211,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 }
                 contingents = Some((at, read));
             }
-            // Schema 60 (docs/adr/0438 §1): the record rules, read whole; checked below.
+            // Schema 72 (docs/adr/0438 §1): the record rules, read whole; checked below.
             "rules" if has.forms => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1423,7 +1463,7 @@ fn layer_fields(r: &mut Reader<'_>, ids: bool) -> Result<Vec<LayerField>, KcadEr
     }
 }
 
-/// A layer's field; `ids`: schema 60's stable `id` is read (docs/adr/0401 §2).
+/// A layer's field; `ids`: schema 72's stable `id` is read (docs/adr/0401 §2).
 fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     let mut id = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
@@ -1438,7 +1478,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "id" if ids => id = Some(text(r)?),
             "max" => max = Some(text(r)?),
             "min" => min = Some(text(r)?),
-            // A date and time and a time of day are schema 60's (docs/adr/0412 §4).
+            // A date and time and a time of day are schema 72's (docs/adr/0412 §4).
             "kind" => {
                 let kinds: Vec<(&str, LayerFieldKind)> = LayerFieldKind::ALL
                     .into_iter()
@@ -1457,14 +1497,14 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "default" => default = Some(text(r)?),
             "required" => must = Some(r.bool()?),
             "multiple" if ids => many = Some(r.bool()?),
-            // Schema 60 (docs/adr/0430): the value list it links.
+            // Schema 72 (docs/adr/0430): the value list it links.
             "domain" if ids => domain = Some(text(r)?),
-            // Schema 60 (docs/adr/0438 §3, §4): unique, the range's left-out ends, the unit.
+            // Schema 72 (docs/adr/0438 §3, §4): unique, the range's left-out ends, the unit.
             "unique" if ids => unique = Some(r.bool()?),
             "minExclusive" if ids => min_out = Some(r.bool()?),
             "maxExclusive" if ids => max_out = Some(r.bool()?),
             "unit" if ids => unit = Some(text(r)?),
-            // Schema 60 (docs/adr/0419): the split and merge policies.
+            // Schema 72 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
                     kentos_contracts::SplitPolicy::ALL
@@ -1520,7 +1560,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     })
 }
 
-/// A value of a field's list; `later`: schema 60's `retired` is read (docs/adr/0418).
+/// A value of a field's list; `later`: schema 72's `retired` is read (docs/adr/0418).
 fn field_choice(r: &mut Reader<'_>, later: bool) -> Result<FieldChoice, KcadError> {
     let (mut code, mut label, mut retired) = (None, None, None);
     let (mut description, mut from, mut until) = (None, None, None);
@@ -1529,7 +1569,7 @@ fn field_choice(r: &mut Reader<'_>, later: bool) -> Result<FieldChoice, KcadErro
             "code" => code = Some(text(r)?),
             "label" => label = Some(text(r)?),
             "retired" if later => retired = Some(r.bool()?),
-            // Schema 60 (docs/adr/0438 §5): what it means and its days.
+            // Schema 72 (docs/adr/0438 §5): what it means and its days.
             "description" if later => description = Some(text(r)?),
             "from" if later => from = Some(text(r)?),
             "until" if later => until = Some(text(r)?),

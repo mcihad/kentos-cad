@@ -1,0 +1,130 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ölçekli açıklamalar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "text": "SALON",
+      "height": 0.25,
+      "rotation": 0.0,
+      "annotative": {
+        "at": 100.0,
+        "scales": [
+          {
+            "scale": 50.0,
+            "point": {
+              "x": 500000.5,
+              "y": 4400000.25
+            }
+          },
+          {
+            "scale": 200.0
+          }
+        ]
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400010.0
+      },
+      "b": {
+        "x": 500004.0,
+        "y": 4400010.0
+      },
+      "offset": 0.5,
+      "height": 0.25,
+      "annotative": {
+        "at": 100.0,
+        "scales": [
+          {
+            "scale": 50.0,
+            "offset": 0.3,
+            "textShift": {
+              "along": 0.4,
+              "across": 0.0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "leader",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500002.0,
+          "y": 4400002.0
+        },
+        {
+          "x": 500003.0,
+          "y": 4400003.0
+        }
+      ],
+      "text": "Kapı",
+      "height": 0.25,
+      "rotation": 0.0,
+      "annotative": {
+        "at": 100.0,
+        "scales": [
+          {
+            "scale": 50.0,
+            "rotation": 15.0
+          }
+        ]
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4a61",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4a62",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4a63"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

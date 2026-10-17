@@ -357,6 +357,7 @@ fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
     let text = b
         .doc
         .add(Entity::Text(TextEntity {
+            annotative: None,
             base: common::base("cizim"),
             p: pt(10.0, 7.5),
             text: "101".into(),

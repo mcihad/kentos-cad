@@ -20,6 +20,7 @@ use kentos_geometry_core::entity::{
     Attrs, HatchAssoc as CoreAssoc, HatchPattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::geom::dimension::look::LookMore;
 use kentos_geometry_core::geom::dimension::{Arrow, Look, LookLines};
 use kentos_geometry_core::geom::hatch_pattern::{
     Gradient as CoreGradient, PatternLine as CoreLine,
@@ -42,6 +43,7 @@ pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
                 script: r.script.map(|s| match s {
                     kentos_contracts::TextScript::Super => Script::Super,
                     kentos_contracts::TextScript::Sub => Script::Sub,
+                    kentos_contracts::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
@@ -62,72 +64,84 @@ pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
             script: r.script.map(|s| match s {
                 Script::Super => kentos_contracts::TextScript::Super,
                 Script::Sub => kentos_contracts::TextScript::Sub,
+                Script::Stack => kentos_contracts::TextScript::Stack,
             }),
             color: r.color,
         })
         .collect()
 }
 
-/// A table's source as the core carries it, unread (docs/adr/0184 §5): the
-/// contract's JSON (`kind`, then `objects` or `name` and `sheet`).
+/// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
+pub fn core_layout(
+    l: Option<&kentos_contracts::ParagraphLayout>,
+) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
+    l.map(|l| {
+        Box::new(kentos_geometry_core::text::paragraph::Flow {
+            first: l.indent.unwrap_or(0.0),
+            left: l.left_indent.unwrap_or(0.0),
+            tabs: l.tabs.clone(),
+            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
+}
+
+/// The core's layout as the contract writes it: an indent of 0 is left out.
+pub fn contract_layout(
+    f: Option<&kentos_geometry_core::text::paragraph::Flow>,
+) -> Option<Box<kentos_contracts::ParagraphLayout>> {
+    f.map(|f| {
+        Box::new(kentos_contracts::ParagraphLayout {
+            indent: (f.first != 0.0).then_some(f.first),
+            left_indent: (f.left != 0.0).then_some(f.left),
+            tabs: f.tabs.clone(),
+            columns: f.columns.map(|c| kentos_contracts::TextColumns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
+}
+
+/// A table's source as the core carries it, unread (docs/adr/0184 §5, docs/adr/0327 §4–§5): the contract's JSON
+/// (`kind`, then `objects`, a file's `name`, `sheet` and link, or a block schedule's `names` and `by`).
 pub fn core_source(source: Option<&TableSource>) -> Option<Json> {
-    let source = source?;
-    let mut fields = vec![("kind".to_owned(), Json::Str(source.kind().to_owned()))];
-    match source {
-        TableSource::File { name, sheet } => {
-            fields.push(("name".to_owned(), Json::Str(name.clone())));
-            if let Some(s) = sheet {
-                fields.push(("sheet".to_owned(), Json::Str(s.clone())));
-            }
-        }
-        _ => fields.push((
-            "objects".to_owned(),
-            Json::Arr(
-                source
-                    .objects()
-                    .iter()
-                    .map(|id| Json::Str(id.to_text()))
-                    .collect(),
-            ),
-        )),
-    }
-    Some(Json::Obj(fields))
+    Json::parse(&serde_json::to_string(source?).ok()?).ok()
 }
 
 /// The source the core carried, as the contract writes it; none for one it cannot read.
 pub fn contract_source(source: Option<Json>) -> Option<TableSource> {
-    let source = source?;
-    let text = |k: &str| match source.get(k) {
-        Json::Str(s) => Some(s.clone()),
-        _ => None,
-    };
-    if text("kind")? == "file" {
-        return Some(TableSource::File {
-            name: text("name")?,
-            sheet: text("sheet"),
-        });
-    }
-    let Json::Arr(ids) = source.get("objects") else {
-        return None;
-    };
-    let objects = ids
-        .iter()
-        .map(|id| match id {
-            Json::Str(s) => kentos_contracts::EntityId::parse(s),
-            _ => None,
-        })
-        .collect::<Option<Vec<_>>>()?;
-    Some(match text("kind")?.as_str() {
-        "coordinates" => TableSource::Coordinates { objects },
-        "areas" => TableSource::Areas { objects },
-        "attributes" => TableSource::Attributes { objects },
-        _ => return None,
+    serde_json::from_str(&kentos_geometry_core::api::json::to_string(&source?)).ok()
+}
+
+/// A table's cell styles as the core takes them (docs/adr/0327 §1).
+pub fn core_looks(styles: &[kentos_contracts::CellStyle]) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
+    (!styles.is_empty()).then(|| {
+        styles
+            .iter()
+            .map(|s| kentos_geometry_core::entity::CellLook {
+                row: s.range.row as usize,
+                col: s.range.col as usize,
+                rows: s.range.rows as usize,
+                cols: s.range.cols as usize,
+                align: s.align.map(|a| a.name().to_owned()),
+                bold: s.bold,
+                color: s.color.clone(),
+                fill: s.fill.clone(),
+                decimals: s.decimals.map(|d| d as usize),
+            })
+            .collect()
     })
 }
 
 /// A table as the core takes it (docs/adr/0184 §1).
 pub fn core_table(t: &TableEntity) -> Shape {
     Shape::Table {
+        styles: core_looks(&t.styles),
         p: v(&t.p),
         rotation: t.rotation,
         height: t.height,
@@ -189,6 +203,7 @@ pub fn core_face(f: &kentos_contracts::TextFace) -> Face {
 /// The core's face as the contract writes it.
 pub fn contract_face(f: Face) -> kentos_contracts::TextFace {
     kentos_contracts::TextFace {
+        overrides: Vec::new(),
         text_style: f.style,
         font: f.font.and_then(|c| DrawingFont::from_id(c.id())),
         bold: f.bold,
@@ -222,14 +237,87 @@ pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
             text_color: l.text_color.clone(),
         }
         .boxed(),
+        more: LookMore {
+            options: l.options.as_deref().and_then(|o| {
+                let text = serde_json::to_string(o).ok()?;
+                kentos_geometry_core::api::json::Json::parse(&text).ok()
+            }),
+            shift: None,
+            breaks: Vec::new(),
+        }
+        .boxed(),
     }
+}
+
+/// A dimension's look as the core reads it, with its own moved value and breaks (docs/adr/0321 §1).
+pub fn core_dimension_look(d: &kentos_contracts::DimensionEntity) -> Look {
+    let mut look = core_look(&d.look);
+    with_place(&mut look, d.text_shift, &d.breaks);
+    look
+}
+
+/// `look` with a moved value and breaks.
+pub fn with_place(
+    look: &mut Look,
+    shift: Option<kentos_contracts::TextShift>,
+    breaks: &[kentos_contracts::DimensionBreak],
+) {
+    let mut more = look.more.take().map(|m| *m).unwrap_or_default();
+    more.shift = shift.map(|s| (s.along, s.across));
+    more.breaks = breaks
+        .iter()
+        .map(|b| {
+            let line = match b.line {
+                kentos_contracts::BreakLine::Dimension => 0,
+                kentos_contracts::BreakLine::First => 1,
+                kentos_contracts::BreakLine::Second => 2,
+            };
+            (line, b.t)
+        })
+        .collect();
+    look.more = more.boxed();
+}
+
+/// The moved value and the breaks a core look carries (docs/adr/0321 §1).
+pub fn place_of(
+    look: &Look,
+) -> (
+    Option<kentos_contracts::TextShift>,
+    Vec<kentos_contracts::DimensionBreak>,
+) {
+    let Some(m) = look.more.as_deref() else {
+        return (None, Vec::new());
+    };
+    let shift = m
+        .shift
+        .map(|(along, across)| kentos_contracts::TextShift { along, across });
+    let breaks = m
+        .breaks
+        .iter()
+        .map(|&(line, t)| kentos_contracts::DimensionBreak {
+            line: match line {
+                0 => kentos_contracts::BreakLine::Dimension,
+                1 => kentos_contracts::BreakLine::First,
+                _ => kentos_contracts::BreakLine::Second,
+            },
+            t,
+        })
+        .collect();
+    (shift, breaks)
 }
 
 /// The core's look as the contract writes it.
 pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
     let lines = l.lines.map(|b| *b).unwrap_or_default();
+    let options = l
+        .more
+        .as_deref()
+        .and_then(|m| m.options.as_ref())
+        .and_then(|o| serde_json::from_str(&kentos_geometry_core::api::json::to_string(o)).ok())
+        .map(Box::new);
     kentos_contracts::DimensionLook {
+        overrides: Vec::new(),
         dim_style: l.style,
         arrow: l
             .arrow
@@ -246,6 +334,8 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
             "mm" => Some(DrawingUnit::Mm),
             "cm" => Some(DrawingUnit::Cm),
             "m" => Some(DrawingUnit::M),
+            "in" => Some(DrawingUnit::In),
+            "ft" => Some(DrawingUnit::Ft),
             _ => None,
         }),
         prefix: l.prefix,
@@ -264,6 +354,7 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
             .as_deref()
             .and_then(kentos_contracts::LineType::from_name),
         text_color: lines.text_color,
+        options,
     }
 }
 
@@ -364,6 +455,7 @@ pub fn core_pattern(p: &ContractPattern) -> HatchPattern {
             inverted: g.inverted.then_some(true),
             color2: g.color2.clone(),
         }),
+        origin: p.origin.as_ref().map(v),
     }
 }
 
@@ -393,6 +485,7 @@ pub fn contract_pattern(p: HatchPattern) -> Option<ContractPattern> {
             }),
             None => None,
         },
+        origin: p.origin.map(|o| Point { x: o.x, y: o.y }),
     })
 }
 
@@ -402,7 +495,9 @@ pub fn core_assoc(a: &HatchAssoc) -> CoreAssoc {
         (!list.is_empty()).then(|| list.iter().map(EntityId::to_text).collect())
     };
     CoreAssoc {
-        outer: a.outer.to_text(),
+        gap: a.gap,
+        outer: a.outer.map(|o| o.to_text()),
+        bounds: ids(&a.bounds),
         islands: ids(&a.islands),
         cutouts: ids(&a.cutouts),
         seed: v(&a.seed),
@@ -418,7 +513,12 @@ pub fn contract_assoc(a: CoreAssoc) -> Option<HatchAssoc> {
             .collect()
     };
     Some(HatchAssoc {
-        outer: EntityId::parse(&a.outer)?,
+        gap: a.gap,
+        outer: match &a.outer {
+            Some(o) => Some(EntityId::parse(o)?),
+            None => None,
+        },
+        bounds: ids(a.bounds)?,
         islands: ids(a.islands)?,
         cutouts: ids(a.cutouts)?,
         seed: Point {
@@ -449,15 +549,7 @@ fn pattern_of(name: &str) -> Option<HatchPatternType> {
 /// project's `drawingFont`; Barlow without one): what text boxes, the
 /// geometry store and a polar array's middle are measured in.
 pub fn drawing_font(font: Option<DrawingFont>) -> Font {
-    Font::from_id(match font {
-        None | Some(DrawingFont::Barlow) => "barlow",
-        Some(DrawingFont::Arimo) => "arimo",
-        Some(DrawingFont::Overpass) => "overpass",
-        Some(DrawingFont::Quicksand) => "quicksand",
-        Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
-        Some(DrawingFont::CourierPrime) => "courier-prime",
-        Some(DrawingFont::PlexMono) => "plex-mono",
-    })
+    Font::from_id(DrawingFont::id_of(font))
 }
 
 /// A picture's fields as the geometry core takes them (docs/adr/0192).
@@ -645,6 +737,12 @@ pub fn shape(entity: &Entity) -> Shape {
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         Entity::Leader(l) => Shape::Leader {
+            blocks: (!l.blocks.is_empty()).then(|| {
+                l.blocks.iter().map(|b| kentos_domain::Uuid::from_bytes(b.0).to_string()).collect()
+            }),
+            arms: (!l.arms.is_empty()).then(|| {
+                l.arms.iter().map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) }).collect()
+            }),
             pts: points(&l.pts),
             text: l.text.clone(),
             height: l.height,
@@ -707,6 +805,7 @@ pub fn shape(entity: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
             path: t.path.as_ref().map(core_curve),
         },
@@ -722,7 +821,7 @@ pub fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
-            look: core_look(&d.look),
+            look: core_dimension_look(d),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -732,6 +831,10 @@ pub fn shape(entity: &Entity) -> Shape {
                 .map(|hs| hs.iter().map(|r| points(r)).collect()),
             pattern: core_pattern(&h.pattern),
             assoc: h.assoc.as_ref().map(core_assoc),
+            boundary: h
+                .boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::core_boundary),
         },
         // Its attributes too: what its block's attribute texts show (docs/adr/0144 §7).
         Entity::Insert(i) => Shape::Insert {
@@ -752,7 +855,10 @@ pub fn shape(entity: &Entity) -> Shape {
             // And where it moved them (docs/adr/0317 §1).
             places: (!i.attribute_places.is_empty()).then(|| {
                 kentos_geometry_core::entity::Places(
-                    i.attribute_places.iter().map(|(k, p)| (k.clone(), v(p))).collect(),
+                    i.attribute_places
+                        .iter()
+                        .map(|(k, p)| (k.clone(), v(p)))
+                        .collect(),
                 )
             }),
         },
@@ -1042,6 +1148,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 box_width,
                 line_spacing,
                 runs,
+                flow,
                 face: _,
                 path,
             },
@@ -1055,6 +1162,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.width_factor = width_factor;
             e.mask = mask == Some(true);
             e.paragraph = kentos_contracts::Paragraph {
+                // Its fields stay; the document shifts them with its letters (docs/adr/0325 §2).
+                fields: std::mem::take(&mut e.paragraph.fields),
+                layout: contract_layout(flow.as_deref()),
                 box_width,
                 line_spacing,
                 runs: contract_runs(runs),
@@ -1097,6 +1207,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 holes,
                 pattern,
                 assoc,
+                boundary,
             },
         ) => {
             // The core carries the pattern's type through; it turns, scales and reflects
@@ -1107,10 +1218,16 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 e.pattern = p;
             }
             e.assoc = assoc.and_then(contract_assoc);
+            // The exact boundary the core carried (docs/adr/0328 §1); none when it dropped it.
+            e.boundary = boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::contract_boundary);
         }
         (
             Entity::Leader(e),
             Shape::Leader {
+                arms,
+                blocks: _,
                 pts,
                 text,
                 height,
@@ -1121,6 +1238,14 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             },
         ) => {
             // The arrowhead is the object's own: the core carries its name and size through unchanged.
+            // Its arms' points; each arm keeps what its tip follows (docs/adr/0326 §1).
+            let tips: Vec<Option<kentos_contracts::SubRef>> = e.arms.iter().map(|a| a.tip.clone()).collect();
+            e.arms = arms
+                .unwrap_or_default()
+                .into_iter()
+                .enumerate()
+                .map(|(i, a)| kentos_contracts::LeaderArm { pts: back(a.pts), tip: tips.get(i).cloned().flatten() })
+                .collect();
             e.pts = back(pts);
             e.text = text;
             e.height = height;
@@ -1130,6 +1255,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (
             Entity::Table(e),
             Shape::Table {
+                styles: _,
                 p: at,
                 rotation,
                 height,
@@ -1327,6 +1453,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         EntityGeometry::Ray { p, dir } => Entity::Ray(ConstructionEntity { base, p, dir }),
         // A width factor of 1 is no width factor (docs/adr/0145): one spelling.
         EntityGeometry::Text {
+            annotative,
             p,
             text,
             height,
@@ -1337,9 +1464,11 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             box_width,
             line_spacing,
             runs,
+            layout,
             face,
             path,
         } => Entity::Text(TextEntity {
+            annotative,
             base,
             p,
             text,
@@ -1353,7 +1482,10 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             label_of: None,
             label_scale: None,
             // A spacing of 1 is no spacing (docs/adr/0182): one spelling.
+            // An empty layout is no layout: one spelling.
             paragraph: kentos_contracts::Paragraph {
+                fields: Vec::new(),
+                layout: layout.filter(|l| !l.is_plain()),
                 box_width,
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
                 runs,
@@ -1361,6 +1493,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
         }),
         EntityGeometry::Dimension {
+            annotative,
+            text_shift,
+            breaks,
             a,
             b,
             offset,
@@ -1375,6 +1510,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             refs,
             look,
         } => Entity::Dimension(DimensionEntity {
+            annotative,
+            text_shift,
+            breaks,
             base,
             a,
             b,
@@ -1395,13 +1533,24 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             holes,
             pattern,
             assoc,
-        } => Entity::Hatch(HatchEntity {
-            base,
-            ring,
-            holes,
-            pattern,
-            assoc,
-        }),
+            boundary,
+            annotative,
+        } => {
+            // A boundary draws the ring (docs/adr/0328 §1).
+            let (ring, holes) = match boundary.as_deref().and_then(kentos_domain::hatch_boundaries::drawn) {
+                Some(drawn) => drawn,
+                None => (ring, holes),
+            };
+            Entity::Hatch(HatchEntity {
+                base,
+                ring,
+                holes,
+                pattern,
+                assoc,
+                boundary,
+                annotative,
+            })
+        }
         EntityGeometry::Insert {
             block,
             p,
@@ -1422,6 +1571,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mirror,
         }),
         EntityGeometry::Leader {
+            arms,
+            annotative,
             pts,
             text,
             height,
@@ -1430,6 +1581,15 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms: arms
+                .unwrap_or_default()
+                .into_iter()
+                .map(|pts| kentos_contracts::LeaderArm { pts, tip: None })
+                .collect(),
+            annotative,
             base,
             pts,
             text,
@@ -1440,6 +1600,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
         }),
         EntityGeometry::Table {
+            styles,
+            formulas,
+            fields,
             p,
             rotation,
             height,
@@ -1454,6 +1617,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             source,
         } => Entity::Table(TableEntity {
+            styles: styles.unwrap_or_default(),
+            formulas: formulas.unwrap_or_default(),
+            fields: fields.unwrap_or_default(),
             base,
             p,
             rotation,
@@ -1481,6 +1647,22 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
 /// geometry fields, float64 bit for bit; a polyline's holes are left out.
 /// None for a dimension style, a hatch pattern or a block id the contract
 /// does not know (the core carries them as names).
+/// `geometry` of `entity` with the object's scales (docs/adr/0323 §4): a core shape has none.
+pub fn edit_geometry_of(entity: &Entity, shape: Shape) -> Option<EntityGeometry> {
+    let mut g = edit_geometry(shape)?;
+    if let (
+        Some(scales),
+        EntityGeometry::Text { annotative, .. }
+        | EntityGeometry::Dimension { annotative, .. }
+        | EntityGeometry::Leader { annotative, .. }
+        | EntityGeometry::Hatch { annotative, .. },
+    ) = (kentos_contracts::annotative_of(entity), &mut g)
+    {
+        *annotative = Some(Box::new(scales.clone()));
+    }
+    Some(g)
+}
+
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
         Shape::Point { p: at, z, parts } => EntityGeometry::Point {
@@ -1589,9 +1771,12 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
         } => EntityGeometry::Text {
+            annotative: None,
+            layout: contract_layout(flow.as_deref()),
             p: p(at),
             text,
             height,
@@ -1618,31 +1803,41 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             za,
             zb,
             look,
-        } => EntityGeometry::Dimension {
-            a: p(a),
-            b: p(b),
-            offset,
-            height,
-            text,
-            style: match style {
-                Some(name) => Some(style_of(&name)?),
-                None => None,
-            },
-            angle,
-            c: c.map(p),
-            mask: mask == Some(true),
-            za,
-            zb,
-            // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
-            refs: None,
-            look: contract_look(look),
-        },
+        } => {
+            let (text_shift, breaks) = place_of(&look);
+            EntityGeometry::Dimension {
+                annotative: None,
+                text_shift,
+                breaks,
+                a: p(a),
+                b: p(b),
+                offset,
+                height,
+                text,
+                style: match style {
+                    Some(name) => Some(style_of(&name)?),
+                    None => None,
+                },
+                angle,
+                c: c.map(p),
+                mask: mask == Some(true),
+                za,
+                zb,
+                // A tool's computed dimension follows nothing until the tool says what (docs/adr/0249 §3).
+                refs: None,
+                look: contract_look(look),
+            }
+        }
         Shape::Hatch {
             ring,
             holes,
             pattern,
             assoc,
+            boundary,
         } => EntityGeometry::Hatch {
+            boundary: boundary
+                .as_deref()
+                .and_then(kentos_formats::blocks::contract_boundary),
             ring: back(ring),
             holes: holes.map(|hs| hs.into_iter().map(back).collect()),
             pattern: contract_pattern(pattern)?,
@@ -1650,9 +1845,12 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
                 Some(a) => Some(contract_assoc(a)?),
                 None => None,
             },
+            annotative: None,
         },
         // An arrowhead the contract does not name is none of a leader's (docs/adr/0146 §1).
         Shape::Leader {
+            arms,
+            blocks: _,
             pts,
             text,
             height,
@@ -1661,6 +1859,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             arrow_size,
             mask,
         } => EntityGeometry::Leader {
+            arms: arms.map(|list| list.into_iter().map(|a| back(a.pts)).collect()),
+            annotative: None,
             pts: back(pts),
             text,
             height,
@@ -1691,6 +1891,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         },
         // A table's alignment or lines the contract does not name are none of its (docs/adr/0184 §1).
         Shape::Table {
+            styles: _,
             p: at,
             rotation,
             height,
@@ -1705,6 +1906,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             source,
             face,
         } => EntityGeometry::Table {
+            styles: None,
+            formulas: None,
+            fields: None,
             p: p(at),
             rotation,
             height,
@@ -1739,6 +1943,16 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         // A record has no geometry to edit (docs/adr/0410).
         Shape::Record {} => return None,
     })
+}
+
+/// A text's laid out lines (docs/adr/0182 §2), each one's first letter and the one past its last: what Satırlara
+/// ayır reads its paragraphs' lines from (docs/adr/0325 §3).
+pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_contracts::TextEntity) -> Vec<(usize, usize)> {
+    let s = shape(&Entity::Text(t.clone()));
+    let font = drawing_font(doc.settings().drawing_font);
+    kentos_geometry_core::entity::TextPlace::of(&s)
+        .map(|p| p.layout(font).lines.iter().map(|l| (l.start, l.end)).collect())
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -1823,6 +2037,7 @@ mod tests {
             holes: None,
             pattern: HatchPattern::user("dots", 0.0, 1.0),
             assoc: None,
+            boundary: None,
         };
         assert_eq!(edit_geometry(odd), None);
     }

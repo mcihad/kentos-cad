@@ -166,6 +166,19 @@ pub struct NewObject {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub label_scale: Option<f64>,
+    /// Its own transparency, 0 (opaque) to 0.9 (`ObjectLook.transparency`, docs/adr/0260 §2): Tarama's
+    /// (docs/adr/0332 §1). Absent: its layer's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 0.9)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub transparency: Option<f64>,
+    /// Its place in its layer's draw order (`ObjectLook.order`, docs/adr/0260 §4): Tarama's Sıra (docs/adr/0332 §1).
+    /// Absent: 0, drawn by its slot after the objects before it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub order: Option<i32>,
 }
 
 /// Input of `cad.entities.create` v1: new objects on a named layer, written

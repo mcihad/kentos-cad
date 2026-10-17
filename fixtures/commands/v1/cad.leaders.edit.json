@@ -1,0 +1,3504 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.leaders.edit",
+  "commandVersion": 1,
+  "title": "Kılavuzları düzenle",
+  "note": "Written by scripts/fixtures/leader_command_cases.py from docs/adr/0326; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kılavuzlar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500,
+      "workspace": "cad",
+      "leaderStyles": [
+        {
+          "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3c01",
+          "name": "Not",
+          "height": 2.5,
+          "arrow": "dot",
+          "arrowSize": 1.5,
+          "mask": true
+        }
+      ]
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "mekan",
+        "name": "Mekanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilavuz",
+        "name": "Kılavuzlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "kilavuz",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "mekan",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500000,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400000
+          },
+          {
+            "x": 500006,
+            "y": 4400004
+          },
+          {
+            "x": 500000,
+            "y": 4400004
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "mekan",
+        "attrs": {},
+        "p": {
+          "x": 500010,
+          "y": 4400002
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "mekan",
+        "attrs": {},
+        "a": {
+          "x": 500020,
+          "y": 4400000
+        },
+        "b": {
+          "x": 500024,
+          "y": 4400003
+        }
+      },
+      {
+        "kind": "leader",
+        "id": 4,
+        "layerId": "kilavuz",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500002,
+            "y": 4400002
+          },
+          {
+            "x": 500005,
+            "y": 4400006
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0,
+        "text": "Salon"
+      },
+      {
+        "kind": "leader",
+        "id": 5,
+        "layerId": "kilavuz",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500010,
+            "y": 4400002
+          },
+          {
+            "x": 500012,
+            "y": 4400008
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0,
+        "text": "Nokta"
+      },
+      {
+        "kind": "leader",
+        "id": 6,
+        "layerId": "kilavuz",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500020,
+            "y": 4400000
+          },
+          {
+            "x": 500022,
+            "y": 4400005
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0,
+        "text": "Hat"
+      },
+      {
+        "kind": "leader",
+        "id": 7,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500030,
+            "y": 4400010
+          },
+          {
+            "x": 500032,
+            "y": 4400012
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0,
+        "text": "Kilitli"
+      },
+      {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "kilavuz",
+        "attrs": {
+          "NO": "1"
+        },
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+        "p": {
+          "x": 500030,
+          "y": 4400000
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "insert",
+        "id": 9,
+        "layerId": "kilavuz",
+        "attrs": {
+          "NO": "2"
+        },
+        "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+        "p": {
+          "x": 500035,
+          "y": 4400000
+        },
+        "scale": 1,
+        "rotation": 0
+      },
+      {
+        "kind": "leader",
+        "id": 10,
+        "layerId": "kilavuz",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500030,
+            "y": 4399995
+          },
+          {
+            "x": 500033,
+            "y": 4399998
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0
+      },
+      {
+        "kind": "leader",
+        "id": 11,
+        "layerId": "kilavuz",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 500040,
+            "y": 4399995
+          },
+          {
+            "x": 500043,
+            "y": 4399998
+          }
+        ],
+        "height": 0.5,
+        "rotation": 0
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+        "name": "Balon",
+        "base": {
+          "x": 0,
+          "y": 0
+        },
+        "entities": [
+          {
+            "kind": "circle",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "c": {
+              "x": 0,
+              "y": 0
+            },
+            "r": 0.5
+          }
+        ],
+        "attributes": [
+          {
+            "tag": "NO",
+            "p": {
+              "x": 0,
+              "y": 0
+            },
+            "height": 0.4,
+            "rotation": 0
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Kol ekle: ucu tek nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500004,
+                  "y": 4400001
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500004,
+                        "y": 4400001
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kol ekle: ucu ve kırığıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500001,
+                  "y": 4400003
+                },
+                {
+                  "x": 500003,
+                  "y": 4400005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500001,
+                        "y": 4400003
+                      },
+                      {
+                        "x": 500003,
+                        "y": 4400005
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kol ekle: ucu odanın köşesine bağlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500000,
+                  "y": 4400000
+                }
+              ],
+              "tip": {
+                "uid": "$uidOf:1",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 2
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500006,
+                        "y": 4400004
+                      }
+                    ],
+                    "tip": {
+                      "uid": "$uidOf:1",
+                      "place": {
+                        "kind": "vertex",
+                        "part": 0,
+                        "ring": 0,
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kol sil: ek kol",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500004,
+                  "y": 4400001
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500004,
+                        "y": 4400001
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "removeArm",
+              "uid": "$uidOf:4",
+              "arm": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kol sil: ilk kol, ek kol ilk olur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500004,
+                  "y": 4400001
+                },
+                {
+                  "x": 500004,
+                  "y": 4400004
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500004,
+                        "y": 4400001
+                      },
+                      {
+                        "x": 500004,
+                        "y": 4400004
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "removeArm",
+              "uid": "$uidOf:4",
+              "arm": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500004,
+                    "y": 4400001
+                  },
+                  {
+                    "x": 500004,
+                    "y": 4400004
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Tek kol kalkmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "removeArm",
+              "uid": "$uidOf:4",
+              "arm": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_leader",
+              "message": "Kılavuzun tek kolu kalkmaz; kılavuzu silin.",
+              "path": "edit.arm"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kol",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "removeArm",
+              "uid": "$uidOf:4",
+              "arm": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "arm_not_found",
+              "message": "Kılavuzun 1 kolu var; 3. sıradaki yok (sıra 0'dan başlar).",
+              "path": "edit.arm"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hizala: yatay, izdüşümüyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:5",
+                "$uidOf:6"
+              ],
+              "angle": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5",
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012.0,
+                    "y": 4400006.0
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Nokta"
+              },
+              "6": {
+                "kind": "leader",
+                "id": 6,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500022.0,
+                    "y": 4400006.0
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Hat"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Hizala: dikey, 3 m aralıkla, önde ve arkada sırayla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:4",
+                "$uidOf:6"
+              ],
+              "angle": 90,
+              "spacing": 3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4",
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012.0,
+                    "y": 4400005.0
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon"
+              },
+              "6": {
+                "kind": "leader",
+                "id": 6,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500020,
+                    "y": 4400000
+                  },
+                  {
+                    "x": 500012.0,
+                    "y": 4400002.0
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Hat"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Hizalamak için iki kılavuz gerekir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:4"
+              ],
+              "angle": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Bu düzenleme en az 2 kılavuz ister.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultu sonlu olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ],
+              "angle": 0
+            }
+          },
+          "nonFinite": {
+            "edit.angle": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Doğrultu sonlu bir sayı değil (NaN ya da sonsuz). Doğrultuyu derece olarak sonlu bir sayıyla verin.",
+              "path": "edit.angle"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aralık sıfırdan büyük olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "align",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ],
+              "angle": 0,
+              "spacing": -1
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_leader",
+              "message": "Aralık -1; sıfırdan büyük olmalı.",
+              "path": "edit.spacing"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not: yaz ve kaldır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:4",
+              "text": "Salon 24 m²\nZemin: parke"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon 24 m²\nZemin: parke"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:4",
+              "text": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Boş not",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:4",
+              "text": "  "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_text",
+              "message": "Not boş; notu kaldırmak için null verin.",
+              "path": "edit.text"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blok içerik: balon kolun ucunda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:10",
+              "blocks": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "leader",
+                "id": 10,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500033,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500034.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Blok içerik: iki balon yan yana, not kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:4",
+              "blocks": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8",
+                  "$uidOf:9"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500006.5,
+                  "y": 4400006.0
+                },
+                "scale": 1,
+                "rotation": 0
+              },
+              "9": {
+                "kind": "insert",
+                "id": 9,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "2"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500007.5,
+                  "y": 4400006.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Blok içerik yerleştirme olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:10",
+              "blocks": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_insert",
+              "message": "Verilen nesne bir blok yerleştirmesi değil; kılavuzun içeriği bloktur.",
+              "path": "edit.blocks[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topla: iki balonlu kılavuz birinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:10",
+              "blocks": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "leader",
+                "id": 10,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500033,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500034.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:11",
+              "blocks": [
+                "$uidOf:9"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "11": {
+                "kind": "leader",
+                "id": 11,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500040,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500043,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:9"
+                ]
+              },
+              "9": {
+                "kind": "insert",
+                "id": 9,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "2"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500044.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "captureUid",
+          "as": "o11",
+          "id": 11
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "collect",
+              "uids": [
+                "$uidOf:10",
+                "$uid:o11"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "removed": [
+                "$uid:o11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "leader",
+                "id": 10,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500033,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8",
+                  "$uidOf:9"
+                ],
+                "arms": [
+                  {
+                    "pts": [
+                      {
+                        "x": 500040,
+                        "y": 4399995
+                      }
+                    ]
+                  }
+                ]
+              },
+              "9": {
+                "kind": "insert",
+                "id": 9,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "2"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500035.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Notlu kılavuz toplanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "collect",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_leader",
+              "message": "Yalnız blok içerikli kılavuzlar toplanır; notlu kılavuz toplanmaz.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Görünüş: açık ok, boy, yükseklik, zemin",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "look",
+              "uids": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ],
+              "arrow": "open",
+              "arrowSize": 2,
+              "height": 1,
+              "mask": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 1,
+                "rotation": 0,
+                "text": "Salon",
+                "arrow": "open",
+                "arrowSize": 2,
+                "mask": true
+              },
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012,
+                    "y": 4400008
+                  }
+                ],
+                "height": 1,
+                "rotation": 0,
+                "text": "Nokta",
+                "arrow": "open",
+                "arrowSize": 2,
+                "mask": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Görünüş: dolu oka dön",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "look",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "arrow": "dot"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon",
+                "arrow": "dot"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "look",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "arrow": "filled"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Salon"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen ok başı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "look",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "arrow": "kalp"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_leader",
+              "message": "“kalp” bir ok başı değil (filled, open, dot, none …).",
+              "path": "edit.arrow"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stil: değerleri yazılır ve izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "style",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3c01"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 1.25,
+                "rotation": 0,
+                "text": "Salon",
+                "arrow": "dot",
+                "arrowSize": 1.5,
+                "mask": true,
+                "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3c01"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "style",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "style": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 1.25,
+                "rotation": 0,
+                "text": "Salon",
+                "arrow": "dot",
+                "arrowSize": 1.5,
+                "mask": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Olmayan stil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "style",
+              "uids": [
+                "$uidOf:4"
+              ],
+              "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli kılavuz stili projede yok.",
+              "path": "edit.style"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağla: uç noktaya gider, nokta taşınınca izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "bind",
+              "uid": "$uidOf:5",
+              "arm": 0,
+              "tip": {
+                "uid": "$uidOf:2",
+                "place": {
+                  "kind": "node",
+                  "part": 0
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012,
+                    "y": 4400008
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Nokta",
+                "tip": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "node",
+                    "part": 0
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 1,
+              "dy": -1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:2"
+              ],
+              "created": [],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500011,
+                    "y": 4400001
+                  },
+                  {
+                    "x": 500012,
+                    "y": 4400008
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Nokta",
+                "tip": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "node",
+                    "part": 0
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Bağla: nokta silinince uç kopar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "bind",
+              "uid": "$uidOf:5",
+              "arm": 0,
+              "tip": {
+                "uid": "$uidOf:2",
+                "place": {
+                  "kind": "node",
+                  "part": 0
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012,
+                    "y": 4400008
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Nokta",
+                "tip": {
+                  "uid": "$uidOf:2",
+                  "place": {
+                    "kind": "node",
+                    "part": 0
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "captureUid",
+          "as": "o2",
+          "id": 2
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:o2"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "5": {
+                "kind": "leader",
+                "id": 5,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500010,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500012,
+                    "y": 4400008
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Nokta",
+                "tip": {
+                  "uid": "$uid:o2",
+                  "place": {
+                    "kind": "node",
+                    "part": 0
+                  },
+                  "broken": "object_gone"
+                }
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Bağı çöz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "bind",
+              "uid": "$uidOf:6",
+              "arm": 0,
+              "tip": {
+                "uid": "$uidOf:3",
+                "place": {
+                  "kind": "end"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "6": {
+                "kind": "leader",
+                "id": 6,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500024,
+                    "y": 4400003
+                  },
+                  {
+                    "x": 500022,
+                    "y": 4400005
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Hat",
+                "tip": {
+                  "uid": "$uidOf:3",
+                  "place": {
+                    "kind": "end"
+                  }
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "bind",
+              "uid": "$uidOf:6",
+              "arm": 0,
+              "tip": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "6": {
+                "kind": "leader",
+                "id": 6,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500024,
+                    "y": 4400003
+                  },
+                  {
+                    "x": 500022,
+                    "y": 4400005
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Hat"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Nesnede olmayan yer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "bind",
+              "uid": "$uidOf:4",
+              "arm": 0,
+              "tip": {
+                "uid": "$uidOf:1",
+                "place": {
+                  "kind": "vertex",
+                  "part": 0,
+                  "ring": 0,
+                  "index": 9
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_such_place",
+              "message": "Nesnenin böyle bir yeri yok: köşe, uç ya da merkez nesnede olmalı.",
+              "path": "edit.tip.place"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blokları olan kılavuz silinince blokları da gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:10",
+              "blocks": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "leader",
+                "id": 10,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500033,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500034.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "captureUid",
+          "as": "o10",
+          "id": 10
+        },
+        {
+          "op": "captureUid",
+          "as": "o8",
+          "id": 8
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:o10"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              11
+            ],
+            "entities": {},
+            "canUndo": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Balon silinince kılavuzun listesinden düşer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:4",
+              "blocks": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8",
+                  "$uidOf:9"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500006.5,
+                  "y": 4400006.0
+                },
+                "scale": 1,
+                "rotation": 0
+              },
+              "9": {
+                "kind": "insert",
+                "id": 9,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "2"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500007.5,
+                  "y": 4400006.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "captureUid",
+          "as": "o8",
+          "id": 8
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "removed": [
+                "$uid:o8"
+              ],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:9"
+                ]
+              },
+              "9": {
+                "kind": "insert",
+                "id": 9,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "2"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500006.5,
+                  "y": 4400006.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz taşınınca balonu gelir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "blocks",
+              "uid": "$uidOf:10",
+              "blocks": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "leader",
+                "id": 10,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500030,
+                    "y": 4399995
+                  },
+                  {
+                    "x": 500033,
+                    "y": 4399998
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "blocks": [
+                  "$uidOf:8"
+                ]
+              },
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500034.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 2,
+              "dy": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:10"
+              ],
+              "created": [],
+              "locked": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "8": {
+                "kind": "insert",
+                "id": 8,
+                "layerId": "kilavuz",
+                "attrs": {
+                  "NO": "1"
+                },
+                "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3b01",
+                "p": {
+                  "x": 500036.5,
+                  "y": 4399998.0
+                },
+                "scale": 1,
+                "rotation": 0
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Planla: çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "addArm",
+              "uid": "$uidOf:4",
+              "pts": [
+                {
+                  "x": 500004,
+                  "y": 4400001
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "leaders": [
+                {
+                  "kind": "leader",
+                  "id": 4,
+                  "layerId": "kilavuz",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 500002,
+                      "y": 4400002
+                    },
+                    {
+                      "x": 500005,
+                      "y": 4400006
+                    }
+                  ],
+                  "height": 0.5,
+                  "rotation": 0,
+                  "text": "Salon",
+                  "arms": [
+                    {
+                      "pts": [
+                        {
+                          "x": 500004,
+                          "y": 4400001
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki kılavuz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:7",
+              "text": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki kılavuz değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:1",
+              "text": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_leader",
+              "message": "Verilen nesne bir kılavuz değil; bu komut yalnız kılavuzları değiştirir.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "K-1",
+              "text": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“K-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff",
+              "text": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kılavuz verilmedi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "look",
+              "uids": [],
+              "mask": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Kılavuz verilmedi. En az bir kılavuzun kimliğini verin.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:4",
+              "text": "x"
+            },
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski sürüme hazırlanmış düzenleme yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "old"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:4",
+              "text": "Yeni"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "4": {
+                "kind": "leader",
+                "id": 4,
+                "layerId": "kilavuz",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 500002,
+                    "y": 4400002
+                  },
+                  {
+                    "x": 500005,
+                    "y": 4400006
+                  }
+                ],
+                "height": 0.5,
+                "rotation": 0,
+                "text": "Yeni"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "content",
+              "uid": "$uidOf:5",
+              "text": "x"
+            },
+            "expectedRevision": "$old"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

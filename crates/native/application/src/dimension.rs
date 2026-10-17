@@ -36,7 +36,17 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
             at(field),
         )))
     };
-    if *style != Some(DimensionStyle::Slope) && (za.is_some() || zb.is_some()) {
+    if *style == Some(DimensionStyle::Elevation) && zb.is_some() {
+        return refuse(
+            "Kot ölçüsünün yalnız bir kotu (za) olur. zb'yi kaldırın.".into(),
+            ".zb",
+        );
+    }
+    if !matches!(
+        *style,
+        Some(DimensionStyle::Slope | DimensionStyle::Elevation)
+    ) && (za.is_some() || zb.is_some())
+    {
         return refuse(
             "Kot yalnız eğim ölçüsünde olur. Kotları (za, zb) kaldırın ya da ölçünün biçimini eğim yapın.".into(),
             if za.is_some() { ".za" } else { ".zb" },
@@ -117,6 +127,14 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
         DimensionFault::SlopeNoElevations => (
             "Eğim ölçüsünün iki ucunun da kotu verilmeli. Eksik kotu (za ya da zb) metre olarak verin.".into(),
             if za.is_none() { ".za" } else { ".zb" },
+        ),
+        DimensionFault::MarkNoRadius => (
+            "Merkez işaretinin eğrideki noktası (b) merkezde (a); yarıçap sıfır. Noktayı eğrinin üstünde verin.".into(),
+            ".b",
+        ),
+        DimensionFault::LevelNoElevation => (
+            "Kot ölçüsünün kotu (za) verilmeli. Noktanın kotunu metre olarak verin.".into(),
+            ".za",
         ),
     };
     refuse(message, field)

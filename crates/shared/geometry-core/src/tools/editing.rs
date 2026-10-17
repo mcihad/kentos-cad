@@ -974,6 +974,7 @@ mod tests {
             Some(Vec2::new(487011.25, 4420006.25))
         );
         let text = Shape::Text {
+            flow: None,
             p: Vec2::new(0.0, 0.0),
             text: "Ada 101".into(),
             height: 2.0,

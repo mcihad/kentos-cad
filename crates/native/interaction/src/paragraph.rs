@@ -98,6 +98,7 @@ fn core_runs(runs: &[TextRun]) -> Vec<Run> {
             script: r.script.map(|s| match s {
                 TextScript::Super => Script::Super,
                 TextScript::Sub => Script::Sub,
+                TextScript::Stack => Script::Stack,
             }),
             color: r.color.clone(),
         })
@@ -116,6 +117,7 @@ fn contract_runs(runs: Vec<Run>) -> Vec<TextRun> {
             script: r.script.map(|s| match s {
                 Script::Super => TextScript::Super,
                 Script::Sub => TextScript::Sub,
+                Script::Stack => TextScript::Stack,
             }),
             color: r.color,
         })
@@ -356,15 +358,21 @@ impl Tool for ParagraphText {
     }
 
     /// The editor's answer: the text and its formats to add, or none (Vazgeç).
-    fn paragraph_typed(&mut self, typed: Option<(&str, &[TextRun])>, cx: &mut Context<'_>) {
+    fn paragraph_typed(
+        &mut self,
+        typed: Option<(&str, &[TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
+        cx: &mut Context<'_>,
+    ) {
         if self.stage != Stage::Typing {
             return;
         }
-        if let (Some((at, width)), Some((text, runs))) = (self.at, typed) {
+        if let (Some((at, width)), Some((text, runs, layout))) = (self.at, typed) {
             let (text, runs) = trimmed_paragraph(text, runs);
             if !text.is_empty() {
                 let m = *cx.memory;
                 let geometry = EntityGeometry::Text {
+                    layout: layout.filter(|l| !l.is_plain()).map(|l| Box::new(l.clone())),
+                    annotative: None,
                     p: points::wire(at),
                     text: text.clone(),
                     height: cx.annotation_height(AnnotationKind::Text),

@@ -1,0 +1,293 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.annotations.scales",
+  "commandVersion": 1,
+  "title": "Ölçekli açıklamalar",
+  "note": "ADR 0323: ölçekli yazı, ölçü ve kılavuz; kural ve beklenenler scripts/fixtures/annotative_cases.py'de KentOS kodu olmadan yazılmıştır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçekli açıklamalar",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 100, "workspace": "cad", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yazi", "name": "Yazı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}
+    ],
+    "activeLayer": "yazi",
+    "entities": [
+      {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0},
+      {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.25},
+      {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.25, "rotation": 0},
+      {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420020}, "text": "DERE", "height": 0.25, "rotation": 0, "path": {"pts": [{"x": 5, "y": 0}]}},
+      {"kind": "line", "id": 5, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487010, "y": 4420030}},
+      {"kind": "text", "id": 6, "layerId": "kilitli", "attrs": {}, "p": {"x": 487000, "y": 4420040}, "text": "ARŞİV", "height": 0.25, "rotation": 0},
+      {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}},
+      {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.3}]}},
+      {"kind": "hatch", "id": 9, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "pattern", "angle": 0, "spacing": 1, "name": "ANSI31", "scale": 0.1, "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 3.175]}]}},
+      {"kind": "hatch", "id": 10, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "solid", "angle": 0, "spacing": 1}},
+      {"kind": "hatch", "id": 11, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "lines", "angle": 45, "spacing": 0.2}, "annotative": {"at": 100, "scales": [{"scale": 50}]}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "Ölçekli yap: yazı projenin çizim ölçeğinde (1:100) kendi geometrisiyle ölçekli olur; tek adımda geri alınır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap ölçeklerle: kendi ölçeği (100) ve yinelenen 50 bir kez, ölçekler küçükten büyüğe",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1"], "scales": [200, 50, 100, 50]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}, {"scale": 200}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}, {"scale": 200}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap ölçü ve kılavuzda",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:2", "$uidOf:3"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"2": {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100}}, "3": {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"2": {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.25}, "3": {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.25, "rotation": 0}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"2": {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100}}, "3": {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: çizgi ölçekli olamaz; başka nesne kalmayınca ret",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:5"]}, "result": {"status": "failed", "error": {"code": "not_annotative", "message": "Yalnız yazı, ölçü, kılavuz ve tarama ölçekli olur.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: desenli tarama ölçekli olur (docs/adr/0331 §3)",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:9"], "scales": [50]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:9"], "ids": [9], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"9": {"kind": "hatch", "id": 9, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "pattern", "angle": 0, "spacing": 1, "name": "ANSI31", "scale": 0.1, "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 3.175]}]}, "annotative": {"at": 100, "scales": [{"scale": 50}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"9": {"kind": "hatch", "id": 9, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "pattern", "angle": 0, "spacing": 1, "name": "ANSI31", "scale": 0.1, "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 3.175]}]}}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"9": {"kind": "hatch", "id": 9, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "pattern", "angle": 0, "spacing": 1, "name": "ANSI31", "scale": 0.1, "lines": [{"angle": 45, "origin": [0, 0], "offset": [0, 3.175]}]}, "annotative": {"at": 100, "scales": [{"scale": 50}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: dolu taramanın deseni yok; ret",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:10"]}, "result": {"status": "failed", "error": {"code": "not_annotative", "message": "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: eğri boyunca yazı ölçekli olamaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:4"]}, "result": {"status": "failed", "error": {"code": "not_annotative", "message": "Eğri boyunca yazı ölçekli olamaz: harfleri eğrisinin üstündedir.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: yazı ve çizgi birlikte; çizgi uyarıyla atlanır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1", "$uidOf:5"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": [{"code": "not_annotative", "message": "1 nesne ölçekli olmadığı ya da olamadığı için atlandı (yalnız yazı, ölçü ve kılavuz; eğri boyunca ve bağlı yazı değil).", "path": "uids"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: kilitli katmandaki tek nesne reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:6"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap: kilitli katmandaki uyarıyla atlanır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1", "$uidOf:6"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekli yap ölçekli nesnede yalnız ölçekleri ekler; ayrı değerler kalır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:7"], "scales": [500]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}, {"scale": 500}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekli yap", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
+        {"op": "redo", "returns": "Ölçekli yap", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}, {"scale": 500}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekliliği kaldır: tek yükseklik, nesnenin kendisi; diğer ölçekler gider",
+      "steps": [
+        {"op": "execute", "input": {"operation": "unmake", "uids": ["$uidOf:7"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekliliği kaldır", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
+        {"op": "redo", "returns": "Ölçekliliği kaldır", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "Ölçekliliği kaldır: ölçekli olmayan yazı reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "unmake", "uids": ["$uidOf:1"]}, "result": {"status": "failed", "error": {"code": "not_annotative", "message": "Nesne ölçekli değil; önce Ölçekli yap'ı kullanın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek ekle: 1:200 de; 1:50'nin yeri kalır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "add", "uids": ["$uidOf:7"], "scales": [200, 50]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}, {"scale": 200}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçek ekle", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
+        {"op": "redo", "returns": "Ölçek ekle", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}, {"scale": 200}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçek ekle ölçeksiz: no_scales",
+      "steps": [
+        {"op": "execute", "input": {"operation": "add", "uids": ["$uidOf:7"]}, "result": {"status": "failed", "error": {"code": "no_scales", "message": "Ölçek ekle için ölçek verilmedi: scales'e 1:N ölçeklerinin N'lerini yazın (50, 100 gibi).", "path": "scales"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek ekle: sıfır ölçek",
+      "steps": [
+        {"op": "execute", "input": {"operation": "add", "uids": ["$uidOf:7"], "scales": [0]}, "result": {"status": "failed", "error": {"code": "invalid_scale", "message": "Ölçek 0 olamaz: sıfırdan büyük, en çok 1 000 000 olmalı (1:N'nin N'si).", "path": "scales[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek ekle: 1:2 000 000 çok büyük",
+      "steps": [
+        {"op": "execute", "input": {"operation": "add", "uids": ["$uidOf:7"], "scales": [50, 2000000]}, "result": {"status": "failed", "error": {"code": "invalid_scale", "message": "Ölçek 2000000 olamaz: sıfırdan büyük, en çok 1 000 000 olmalı (1:N'nin N'si).", "path": "scales[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek ekle: ölçekli olmayan yazı reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "add", "uids": ["$uidOf:1"], "scales": [50]}, "result": {"status": "failed", "error": {"code": "not_annotative", "message": "Nesne ölçekli değil; önce Ölçekli yap'ı kullanın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek kaldır: 1:50 gider, yeri de",
+      "steps": [
+        {"op": "execute", "input": {"operation": "remove", "uids": ["$uidOf:7"], "scales": [50]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçek kaldır", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
+        {"op": "redo", "returns": "Ölçek kaldır", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}}}}
+      ]
+    },
+    {
+      "name": "Ölçek kaldır: kendi ölçeği kaldırılamaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "remove", "uids": ["$uidOf:7"], "scales": [50, 100]}, "result": {"status": "failed", "error": {"code": "own_scale", "message": "1:100 nesnenin kendi ölçeği; kaldırılamaz. Nesnenin kendisini başka ölçekte istiyorsanız projenin çizim ölçeğini değiştirin ya da Ölçekliliği kaldır'ı kullanın.", "path": "scales[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçek kaldır: katılmadığı ölçek bir şey değiştirmez",
+      "steps": [
+        {"op": "execute", "input": {"operation": "remove", "uids": ["$uidOf:7"], "scales": [500]}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri: 1:50'de yazının yeri ve doğrultusu",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:7"], "scale": 50, "point": {"x": 487012, "y": 4420001}, "rotation": 30}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487012, "y": 4420001}, "rotation": 30}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekteki yeri", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}},
+        {"op": "redo", "returns": "Ölçekteki yeri", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487012, "y": 4420001}, "rotation": 30}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri: 1:50'de ölçünün çizgisi ve değeri",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:8"], "scale": 50, "offset": 0.4, "textShift": {"along": 0.5, "across": 0}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:8"], "ids": [8], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.4, "textShift": {"along": 0.5, "across": 0}}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçekteki yeri", "expect": {"entities": {"8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.3}]}}}}},
+        {"op": "redo", "returns": "Ölçekteki yeri", "expect": {"entities": {"8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.4, "textShift": {"along": 0.5, "across": 0}}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri: ölçünün yeri (point) olmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:8"], "scale": 50, "point": {"x": 487000, "y": 4420000}}, "result": {"status": "failed", "error": {"code": "invalid_annotative", "message": "Ölçünün ölçeği yalnız çizgisinin uzaklığını (offset) ve değerinin yerini (textShift) değiştirir.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri: katılmadığı ölçek",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:7"], "scale": 200, "rotation": 10}, "result": {"status": "failed", "error": {"code": "scale_not_taken", "message": "Nesne 1:200 ölçeğinde değil: önce Ölçek ekle ile ekleyin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri: kendi ölçeği nesnenin kendisidir",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:7"], "scale": 100, "rotation": 10}, "result": {"status": "failed", "error": {"code": "own_scale", "message": "1:100 nesnenin kendi ölçeği: oradaki yeri nesnenin kendisidir. Nesneyi taşıyın ya da döndürün.", "path": "scale"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri ölçeksiz: no_scale",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:7"], "rotation": 10}, "result": {"status": "failed", "error": {"code": "no_scale", "message": "Değerleri yazılacak ölçek verilmedi: scale'e o ölçeğin N'sini yazın (1:50 için 50).", "path": "scale"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçekteki yeri değersiz: no_value",
+      "steps": [
+        {"op": "execute", "input": {"operation": "set", "uids": ["$uidOf:7"], "scale": 50}, "result": {"status": "failed", "error": {"code": "no_value", "message": "Ölçekteki yeri için değer verilmedi: yazının ve kılavuzun point ya da rotation'ı, ölçünün offset ya da textShift'i.", "path": "point"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Ölçeği sıfırla: bütün diğer ölçeklerde ayrı değer kalmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:7", "$uidOf:8"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7", "$uidOf:8"], "ids": [7, 8], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50}]}}}, "canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Ölçeği sıfırla", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50, "offset": 0.3}]}}}}},
+        {"op": "redo", "returns": "Ölçeği sıfırla", "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.5, "height": 0.25, "annotative": {"at": 100, "scales": [{"scale": 50}]}}}}}
+      ]
+    },
+    {
+      "name": "Ölçeği sıfırla yalnız 1:200: 1:50'nin yeri kalır",
+      "steps": [
+        {"op": "execute", "input": {"operation": "reset", "uids": ["$uidOf:7"], "scales": [200]}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010, "y": 4420000}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487010.5, "y": 4420000.25}}]}}}}}
+      ]
+    },
+    {
+      "name": "Kimliksiz: no_entities",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": []}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Ölçekleri değişecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
+      ]
+    },
+    {
+      "name": "Kimlik UUID değil: invalid_uid",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["yazi-1"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“yazi-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
+      ]
+    },
+    {
+      "name": "Çizimde olmayan nesne: entity_not_found",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
+      ]
+    },
+    {
+      "name": "Beklenen sürüm sayı değil: invalid_revision",
+      "steps": [
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1"], "expectedRevision": "07"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
+      ]
+    },
+    {
+      "name": "Çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:2"]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"operation": "make", "uids": ["$uidOf:1"], "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Plan: yazacağını verir, yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"operation": "make", "uids": ["$uidOf:1"], "scales": [50]}, "result": {"status": "completed", "output": {"changed": [{"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50}]}}], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.25, "rotation": 0}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Çizim ölçeği 1:100'den 1:50'ye: ölçekli yazı ve ölçünün kendisi 1:50 temsili olur, 1:100 diğer ölçeklerine geçer; diğerleri yüksekliği izler",
+      "note": "Yazı 7'nin 1:50 yeri kendi yeri olur, eski yeri 1:100'ün yeridir; ölçü 8'in 1:50 uzaklığı (0,3) kendisinin, 1:100'ün uzaklığı 0,5.",
+      "steps": [
+        {"op": "execute", "command": "cad.settings.set", "input": {"plotScale": 50}, "result": {"status": "completed", "output": {"changed": ["plotScale"], "followed": 7, "locked": 1, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "entities": {"1": {"kind": "text", "id": 1, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420000}, "text": "SALON", "height": 0.125, "rotation": 0}, "2": {"kind": "dimension", "id": 2, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420010}, "b": {"x": 487004, "y": 4420010}, "offset": 0.5, "height": 0.125}, "3": {"kind": "leader", "id": 3, "layerId": "yazi", "attrs": {}, "pts": [{"x": 487002, "y": 4420002}, {"x": 487003, "y": 4420003}], "text": "Kapı", "height": 0.125, "rotation": 0}, "4": {"kind": "text", "id": 4, "layerId": "yazi", "attrs": {}, "p": {"x": 487000, "y": 4420020}, "text": "DERE", "height": 0.125, "rotation": 0, "path": {"pts": [{"x": 5, "y": 0}]}}, "7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487010.5, "y": 4420000.25}, "text": "MUTFAK", "height": 0.125, "rotation": 0, "annotative": {"at": 50, "scales": [{"scale": 100, "point": {"x": 487010, "y": 4420000}}]}}, "8": {"kind": "dimension", "id": 8, "layerId": "yazi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487004, "y": 4420050}, "offset": 0.3, "height": 0.125, "annotative": {"at": 50, "scales": [{"scale": 100, "offset": 0.5}]}}, "11": {"kind": "hatch", "id": 11, "layerId": "yazi", "attrs": {}, "ring": [{"x": 487020, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420008}, {"x": 487020, "y": 4420008}], "pattern": {"type": "lines", "angle": 45, "spacing": 0.1}, "annotative": {"at": 50, "scales": [{"scale": 100}]}}}, "settings": {"plotScale": 50}}}
+      ]
+    },
+    {
+      "name": "Taşı: ölçekli yazının 1:50 yeri de taşınır",
+      "steps": [
+        {"op": "execute", "command": "cad.entities.transform", "input": {"uids": ["$uidOf:7"], "transform": {"kind": "move", "dx": 10, "dy": -5}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"7": {"kind": "text", "id": 7, "layerId": "yazi", "attrs": {}, "p": {"x": 487020, "y": 4419995}, "text": "MUTFAK", "height": 0.25, "rotation": 0, "annotative": {"at": 100, "scales": [{"scale": 50, "point": {"x": 487020.5, "y": 4419995.25}}]}}}}}
+      ]
+    }
+  ]
+}

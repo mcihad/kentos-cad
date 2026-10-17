@@ -81,6 +81,7 @@ fn uid(i: usize) -> Uuid {
 
 fn opened(n: usize) -> Opened {
     let settings = ProjectSettings {
+        leader_styles: Vec::new(),
         line_type_scale: None,
         line_types: Vec::new(),
         length_style: None,
@@ -113,6 +114,7 @@ fn opened(n: usize) -> Opened {
         variables: Vec::new(),
         address_locators: Vec::new(),
         domains: Vec::new(),
+        hatch_patterns: Vec::new(),
     };
     let layers = vec![LayerNode {
         table_styles: Vec::new(),

@@ -1,0 +1,5304 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.tables.edit",
+ "commandVersion": 1,
+ "title": "Tablonun hücreleri, formülleri, alanları ve dosyası",
+ "note": "Written by scripts/fixtures/table_command_cases.py from docs/adr/0327; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Tablolar",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "plan",
+    "name": "Plan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tablo",
+    "name": "Tablolar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapılar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "tablo",
+  "entities": [
+   {
+    "kind": "table",
+    "id": 1,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400020
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "Oda",
+      "Alan",
+      "Kat"
+     ],
+     [
+      "Salon",
+      "24.5",
+      "1"
+     ],
+     [
+      "Mutfak",
+      "12.25",
+      "1"
+     ],
+     [
+      "Toplam",
+      "",
+      ""
+     ]
+    ],
+    "header": true,
+    "aligns": [
+     "left",
+     "right",
+     "right"
+    ]
+   },
+   {
+    "kind": "table",
+    "id": 2,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400040
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "A",
+      "B"
+     ],
+     [
+      "1",
+      "2"
+     ]
+    ],
+    "header": true
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "plan",
+    "attrs": {},
+    "label": "Salon",
+    "pts": [
+     {
+      "x": 500000,
+      "y": 4400000
+     },
+     {
+      "x": 500005,
+      "y": 4400000
+     },
+     {
+      "x": 500005,
+      "y": 4400004
+     },
+     {
+      "x": 500000,
+      "y": 4400004
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "plan",
+    "attrs": {},
+    "a": {
+     "x": 500010,
+     "y": 4400000
+    },
+    "b": {
+     "x": 500014,
+     "y": 4400000
+    }
+   },
+   {
+    "kind": "insert",
+    "id": 5,
+    "layerId": "kapi",
+    "attrs": {
+     "TUR": "İç"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+    "p": {
+     "x": 500000,
+     "y": 4399990
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {
+     "TUR": "İç"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+    "p": {
+     "x": 500002,
+     "y": 4399990
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {
+     "TUR": "Dış"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+    "p": {
+     "x": 500004,
+     "y": 4399990
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+    "p": {
+     "x": 500006,
+     "y": 4399990
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "table",
+    "id": 9,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400180
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "Blok",
+      "TUR",
+      "Adet"
+     ],
+     [
+      "Kapı",
+      "Dış",
+      "1"
+     ],
+     [
+      "Kapı",
+      "İç",
+      "2"
+     ],
+     [
+      "Pencere",
+      "",
+      "1"
+     ],
+     [
+      "Toplam",
+      "",
+      "4"
+     ]
+    ],
+    "header": true,
+    "source": {
+     "kind": "blocks",
+     "by": "TUR"
+    }
+   },
+   {
+    "kind": "table",
+    "id": 10,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400200
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "Oda",
+      "Alan",
+      "Kat"
+     ],
+     [
+      "Salon (büyük)",
+      "25",
+      "1"
+     ],
+     [
+      "Mutfak",
+      "12.5",
+      "1"
+     ]
+    ],
+    "header": true,
+    "aligns": [
+     "left",
+     "right",
+     "right"
+    ],
+    "source": {
+     "kind": "file",
+     "name": "odalar.csv",
+     "path": "odalar.csv",
+     "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "copy": [
+      [
+       "Oda",
+       "Alan",
+       "Kat"
+      ],
+      [
+       "Salon",
+       "24.5",
+       "1"
+      ],
+      [
+       "Mutfak",
+       "12.25",
+       "1"
+      ]
+     ]
+    }
+   },
+   {
+    "kind": "table",
+    "id": 11,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400220
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5
+    ],
+    "cells": [
+     [
+      "A"
+     ],
+     [
+      "1"
+     ]
+    ],
+    "header": true,
+    "source": {
+     "kind": "file",
+     "name": "yok.csv",
+     "path": "yok.csv"
+    }
+   },
+   {
+    "kind": "table",
+    "id": 12,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400240
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5
+    ],
+    "cells": [
+     [
+      "A"
+     ],
+     [
+      "1"
+     ]
+    ],
+    "header": true,
+    "source": {
+     "kind": "file",
+     "name": "eski.csv"
+    }
+   },
+   {
+    "kind": "table",
+    "id": 13,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400260
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5
+    ],
+    "cells": [
+     [
+      "Ad"
+     ],
+     [
+      "x"
+     ]
+    ]
+   },
+   {
+    "kind": "table",
+    "id": 14,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400280
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "Oda",
+      "Alan",
+      "Kat"
+     ],
+     [
+      "Salon",
+      "26.5",
+      "1"
+     ],
+     [
+      "Mutfak",
+      "12.25",
+      "1"
+     ],
+     [
+      "Banyo",
+      "6.0",
+      "1"
+     ]
+    ],
+    "header": true,
+    "aligns": [
+     "left",
+     "right",
+     "right"
+    ],
+    "source": {
+     "kind": "file",
+     "name": "odalar.csv",
+     "path": "odalar.csv",
+     "digest": "6fae3d4c644028d9620cde63aaee68303f565a57f1c8332c675aa08f9e4f39a0",
+     "copy": [
+      [
+       "Oda",
+       "Alan",
+       "Kat"
+      ],
+      [
+       "Salon",
+       "26.5",
+       "1"
+      ],
+      [
+       "Mutfak",
+       "12.25",
+       "1"
+      ],
+      [
+       "Banyo",
+       "6.0",
+       "1"
+      ]
+     ]
+    }
+   },
+   {
+    "kind": "table",
+    "id": 15,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400300
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5
+    ],
+    "cells": [
+     [
+      "Ad"
+     ],
+     [
+      "x"
+     ]
+    ]
+   },
+   {
+    "kind": "table",
+    "id": 16,
+    "layerId": "tablo",
+    "attrs": {},
+    "p": {
+     "x": 500000,
+     "y": 4400320
+    },
+    "rotation": 0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.5,
+     1.5,
+     1.5
+    ],
+    "cells": [
+     [
+      "Oda",
+      "Alan",
+      "Kat"
+     ],
+     [
+      "Salon (büyük)",
+      "25",
+      "1"
+     ],
+     [
+      "Mutfak",
+      "12.5",
+      "1"
+     ]
+    ],
+    "header": true,
+    "aligns": [
+     "left",
+     "right",
+     "right"
+    ],
+    "source": {
+     "kind": "file",
+     "name": "odalar.csv",
+     "path": "odalar.csv",
+     "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+     "copy": [
+      [
+       "Oda",
+       "Alan",
+       "Kat"
+      ],
+      [
+       "Salon",
+       "24.5",
+       "1"
+      ],
+      [
+       "Mutfak",
+       "12.25",
+       "1"
+      ]
+     ],
+     "overrides": "replace"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d01",
+    "name": "Kapı",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 0.9,
+       "y": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3d02",
+    "name": "Pencere",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 0
+      },
+      "b": {
+       "x": 1.2,
+       "y": 0
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Hücreye yazı: tek satır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "Zemin"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          "Zemin"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül: iki hücrenin toplamı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=B2+B3"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "36.75",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=B2+B3"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül: TOPLA aralıkla, biçimin iki basamağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "style",
+         "row": 3,
+         "col": 1,
+         "rows": 1,
+         "cols": 1,
+         "decimals": 2
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=TOPLA(B2:B3)"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "36.75",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "styles": [
+         {
+          "row": 3,
+          "col": 1,
+          "rows": 1,
+          "cols": 1,
+          "decimals": 2
+         }
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=TOPLA(B2:B3)"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül: Türkçe ve İngilizce adlar, noktalı virgül",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=ORTALAMA(B2;B3)"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=max(C2:C3)*mİn(C2:C3)+SAY(B2:C3)"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "18.375",
+          "5"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=ORTALAMA(B2;B3)"
+         },
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=max(C2:C3)*mİn(C2:C3)+SAY(B2:C3)"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül: YUVARLA yarım uzağa, sonuç 15 anlamlı basamak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=YUVARLA(2.675;2)"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=0.1+0.2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "2.68",
+          "0.3"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=YUVARLA(2.675;2)"
+         },
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=0.1+0.2"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül hataları: sıfıra bölme, yazıyla işlem, okunamayan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 0,
+         "words": "=B2/0"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=A2+1"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=TOPLA("
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "#SAYI/0!",
+          "#DEĞER!",
+          "#AD?"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 0,
+          "formula": "=B2/0"
+         },
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=A2+1"
+         },
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=TOPLA("
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Formül: dışarıdaki başvuru ve döngü",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 0,
+         "words": "=Z99"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=C4"
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=B4"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "#BAŞV!",
+          "#DÖNGÜ!",
+          "#DÖNGÜ!"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 0,
+          "formula": "=Z99"
+         },
+         {
+          "row": 3,
+          "col": 1,
+          "formula": "=C4"
+         },
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=B4"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Satır ekle: formülün başvuruları ve biçim kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=TOPLA(B2:B3)"
+        },
+        {
+         "kind": "style",
+         "row": 3,
+         "col": 0,
+         "rows": 1,
+         "cols": 3,
+         "bold": true
+        },
+        {
+         "kind": "insertRows",
+         "at": 2,
+         "count": 1
+        },
+        {
+         "kind": "setCell",
+         "row": 2,
+         "col": 1,
+         "words": "3.25"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "",
+          "3.25",
+          ""
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "40",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 4,
+          "col": 1,
+          "formula": "=TOPLA(B2:B4)"
+         }
+        ],
+        "styles": [
+         {
+          "row": 4,
+          "col": 0,
+          "rows": 1,
+          "cols": 3,
+          "bold": true
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Satır sil: silinen hücreye başvuru #BAŞV!, aralık daralır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=TOPLA(B2:B3)+B2"
+        },
+        {
+         "kind": "deleteRows",
+         "from": 1,
+         "count": 1
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "#BAŞV!",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 2,
+          "col": 1,
+          "formula": "=TOPLA(B2:B2)+#BAŞV!"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Sütun ekle ve sil: başvurular sütunlarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=$B$2*TOPLA(B2:B3)"
+        },
+        {
+         "kind": "insertColumns",
+         "at": 1,
+         "count": 1
+        },
+        {
+         "kind": "deleteColumns",
+         "from": 0,
+         "count": 1
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "",
+          "24.5",
+          "1"
+         ],
+         [
+          "",
+          "12.25",
+          "1"
+         ],
+         [
+          "",
+          "",
+          "900.375"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=$B$2*TOPLA(B2:B3)"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Biçim: kalın, renk, dolgu ve hiza; Sığdır kalını ölçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "style",
+         "row": 1,
+         "col": 0,
+         "rows": 2,
+         "cols": 3,
+         "bold": true,
+         "color": "#1f4e79",
+         "fill": "#eef2f7",
+         "align": "center"
+        },
+        {
+         "kind": "fit",
+         "from": 0,
+         "count": 3
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         1.06625,
+         0.8145,
+         0.629
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "styles": [
+         {
+          "row": 1,
+          "col": 0,
+          "rows": 2,
+          "cols": 3,
+          "align": "center",
+          "bold": true,
+          "color": "#1f4e79",
+          "fill": "#eef2f7"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Biçimi temizle: değen biçimler gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "style",
+         "row": 1,
+         "col": 0,
+         "rows": 1,
+         "cols": 3,
+         "bold": true
+        },
+        {
+         "kind": "style",
+         "row": 3,
+         "col": 0,
+         "rows": 1,
+         "cols": 1,
+         "fill": "#ffeecc"
+        },
+        {
+         "kind": "clearStyle",
+         "row": 1,
+         "col": 1,
+         "rows": 1,
+         "cols": 1
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "styles": [
+         {
+          "row": 3,
+          "col": 0,
+          "rows": 1,
+          "cols": 1,
+          "fill": "#ffeecc"
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Birleştir: aralığın formülü gider; Ayır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "=B2"
+        },
+        {
+         "kind": "merge",
+         "row": 3,
+         "col": 0,
+         "rows": 1,
+         "cols": 2
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 1,
+         "words": "Genel"
+        },
+        {
+         "kind": "unmerge",
+         "row": 3,
+         "col": 0
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Genel",
+          "",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Satır yüksekliği ve sütun genişliği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "rowHeight",
+         "from": 0,
+         "count": 2,
+         "height": 0.75
+        },
+        {
+         "kind": "columnWidth",
+         "from": 2,
+         "count": 1,
+         "width": 2.25
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.75,
+         0.75,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         2.25
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Pencerenin düzenlemeleri: sütun hizası, başlık, çizgiler, çerçeve, yazıya sığdır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "columnAlign",
+         "from": 0,
+         "count": 2,
+         "align": "center"
+        },
+        {
+         "kind": "header",
+         "on": false
+        },
+        {
+         "kind": "grid",
+         "grid": "rows"
+        },
+        {
+         "kind": "frame",
+         "width": 0.05
+        },
+        {
+         "kind": "setCell",
+         "row": 1,
+         "col": 0,
+         "words": "Salon ve yemek odası"
+        },
+        {
+         "kind": "fit",
+         "from": 0,
+         "count": 1,
+         "grow": true
+        },
+        {
+         "kind": "fit",
+         "from": 1,
+         "count": 2,
+         "rows": true
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.57075,
+         0.8095,
+         0.6255
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon ve yemek odası",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          ""
+         ]
+        ],
+        "aligns": [
+         "center",
+         "center",
+         "right"
+        ],
+        "grid": "rows",
+        "frame": 0.05
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Kaynağı bırak düzenlemesi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:10",
+       "edits": [
+        {
+         "kind": "unlink"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "10": {
+        "kind": "table",
+        "id": 10,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400200
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon (büyük)",
+          "25",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.5",
+          "1"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Alan: nesnenin alanı projenin basamağıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "field",
+         "row": 1,
+         "col": 1,
+         "source": {
+          "kind": "object",
+          "uid": "$uidOf:3",
+          "value": "area"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "20.00",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "fields": [
+         {
+          "row": 1,
+          "col": 1,
+          "source": {
+           "kind": "object",
+           "uid": "$uidOf:3",
+           "value": "area"
+          }
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Alan: blok sayısı ve formülle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "field",
+         "row": 3,
+         "col": 1,
+         "source": {
+          "kind": "project",
+          "value": "blockCount",
+          "name": "Kapı"
+         }
+        },
+        {
+         "kind": "setCell",
+         "row": 3,
+         "col": 2,
+         "words": "=B4*2"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "3",
+          "6"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "formulas": [
+         {
+          "row": 3,
+          "col": 2,
+          "formula": "=B4*2"
+         }
+        ],
+        "fields": [
+         {
+          "row": 3,
+          "col": 1,
+          "source": {
+           "kind": "project",
+           "value": "blockCount",
+           "name": "Kapı"
+          }
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Alanı bırak: yazısı kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "field",
+         "row": 3,
+         "col": 1,
+         "source": {
+          "kind": "project",
+          "value": "blockCount",
+          "name": "Kapı"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "3",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "fields": [
+         {
+          "row": 3,
+          "col": 1,
+          "source": {
+           "kind": "project",
+           "value": "blockCount",
+           "name": "Kapı"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "unfield",
+         "row": 3,
+         "col": 1
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "3",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Kapı silinince alan ve blok çizelgesi aynı adımda izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "field",
+         "row": 3,
+         "col": 1,
+         "source": {
+          "kind": "project",
+          "value": "blockCount",
+          "name": "Kapı"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "3",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "fields": [
+         {
+          "row": 3,
+          "col": 1,
+          "source": {
+           "kind": "project",
+           "value": "blockCount",
+           "name": "Kapı"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "2",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "fields": [
+         {
+          "row": 3,
+          "col": 1,
+          "source": {
+           "kind": "project",
+           "value": "blockCount",
+           "name": "Kapı"
+          }
+         }
+        ]
+       },
+       "9": {
+        "kind": "table",
+        "id": 9,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400180
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Blok",
+          "TUR",
+          "Adet"
+         ],
+         [
+          "Kapı",
+          "İç",
+          "2"
+         ],
+         [
+          "Pencere",
+          "",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          "3"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "by": "TUR"
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400020
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "24.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Toplam",
+          "3",
+          ""
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "fields": [
+         {
+          "row": 3,
+          "col": 1,
+          "source": {
+           "kind": "project",
+           "value": "blockCount",
+           "name": "Kapı"
+          }
+         }
+        ]
+       },
+       "9": {
+        "kind": "table",
+        "id": 9,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400180
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Blok",
+          "TUR",
+          "Adet"
+         ],
+         [
+          "Kapı",
+          "Dış",
+          "1"
+         ],
+         [
+          "Kapı",
+          "İç",
+          "2"
+         ],
+         [
+          "Pencere",
+          "",
+          "1"
+         ],
+         [
+          "Toplam",
+          "",
+          "4"
+         ]
+        ],
+        "header": true,
+        "source": {
+         "kind": "blocks",
+         "by": "TUR"
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: bağlı dosya, elle değişen hücreler korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:10"
+       ],
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:10",
+         "status": "updated",
+         "kept": 2,
+         "replaced": 1
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "10": {
+        "kind": "table",
+        "id": 10,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400200
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon (büyük)",
+          "26.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.5",
+          "1"
+         ],
+         [
+          "Banyo",
+          "6.0",
+          "1"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "source": {
+         "kind": "file",
+         "name": "odalar.csv",
+         "path": "odalar.csv",
+         "digest": "6fae3d4c644028d9620cde63aaee68303f565a57f1c8332c675aa08f9e4f39a0",
+         "copy": [
+          [
+           "Oda",
+           "Alan",
+           "Kat"
+          ],
+          [
+           "Salon",
+           "26.5",
+           "1"
+          ],
+          [
+           "Mutfak",
+           "12.25",
+           "1"
+          ],
+          [
+           "Banyo",
+           "6.0",
+           "1"
+          ]
+         ]
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: dosyanınki yazılır (replace)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:16"
+       ],
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:16"
+       ],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:16",
+         "status": "updated",
+         "kept": 0,
+         "replaced": 3
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "16": {
+        "kind": "table",
+        "id": 16,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400320
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "26.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Banyo",
+          "6.0",
+          "1"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "source": {
+         "kind": "file",
+         "name": "odalar.csv",
+         "path": "odalar.csv",
+         "digest": "6fae3d4c644028d9620cde63aaee68303f565a57f1c8332c675aa08f9e4f39a0",
+         "copy": [
+          [
+           "Oda",
+           "Alan",
+           "Kat"
+          ],
+          [
+           "Salon",
+           "26.5",
+           "1"
+          ],
+          [
+           "Mutfak",
+           "12.25",
+           "1"
+          ],
+          [
+           "Banyo",
+           "6.0",
+           "1"
+          ]
+         ],
+         "overrides": "replace"
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: aynı baytlar yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:14"
+       ],
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:14",
+         "status": "unchanged",
+         "kept": 0,
+         "replaced": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "14": {
+        "kind": "table",
+        "id": 14,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400280
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon",
+          "26.5",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.25",
+          "1"
+         ],
+         [
+          "Banyo",
+          "6.0",
+          "1"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "source": {
+         "kind": "file",
+         "name": "odalar.csv",
+         "path": "odalar.csv",
+         "digest": "6fae3d4c644028d9620cde63aaee68303f565a57f1c8332c675aa08f9e4f39a0",
+         "copy": [
+          [
+           "Oda",
+           "Alan",
+           "Kat"
+          ],
+          [
+           "Salon",
+           "26.5",
+           "1"
+          ],
+          [
+           "Mutfak",
+           "12.25",
+           "1"
+          ],
+          [
+           "Banyo",
+           "6.0",
+           "1"
+          ]
+         ]
+        }
+       }
+      },
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: yolunda olmayan dosya ve bağsız tablo söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:11",
+        "$uidOf:12"
+       ],
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:11",
+         "status": "missing",
+         "kept": 0,
+         "replaced": 0
+        },
+        {
+         "uid": "$uidOf:12",
+         "status": "unlinked",
+         "kept": 0,
+         "replaced": 0
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_missing",
+        "message": "“yok.csv” dosyası yolunda yok; tablo olduğu gibi kaldı. Dosyaya bağla ile yeniden seçin."
+       },
+       {
+        "code": "source_unlinked",
+        "message": "“eski.csv” tablosu dosyasına bağlı değil; Dosyaya bağla ile dosyayı seçin."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelle: alan çizelgesi nesnesinden, blok çizelgesi canlı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "tablo",
+      "operation": "table",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 500000,
+          "y": 4400340
+         },
+         "rotation": 0,
+         "height": 0.25,
+         "rows": [
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.5,
+          1.5,
+          1.5
+         ],
+         "cells": [
+          [
+           "Ad",
+           "Alan (m²)",
+           "Çevre (m)"
+          ],
+          [
+           "Salon",
+           "19.00",
+           "17.000"
+          ]
+         ],
+         "header": true,
+         "aligns": [
+          "left",
+          "right",
+          "right"
+         ],
+         "source": {
+          "kind": "areas",
+          "objects": [
+           "$uidOf:3"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:17",
+        "$uidOf:9"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:17"
+       ],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:17",
+         "status": "updated",
+         "kept": 0,
+         "replaced": 0
+        },
+        {
+         "uid": "$uidOf:9",
+         "status": "live",
+         "kept": 0,
+         "replaced": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "entities": {
+       "17": {
+        "kind": "table",
+        "id": 17,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400340
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Ad",
+          "Alan (m²)",
+          "Çevre (m)"
+         ],
+         [
+          "Salon",
+          "20.00",
+          "18.000"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ],
+        "source": {
+         "kind": "areas",
+         "objects": [
+          "$uidOf:3"
+         ]
+        }
+       }
+      },
+      "canUndo": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Dosyaya bağla: hücreler dosyadan, yol ve özet saklanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "link",
+       "uid": "$uidOf:15",
+       "path": "malzeme.csv",
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:15"
+       ],
+       "revision": "$current",
+       "report": [
+        {
+         "uid": "$uidOf:15",
+         "status": "updated",
+         "kept": 0,
+         "replaced": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "15": {
+        "kind": "table",
+        "id": 15,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400300
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         0.772,
+         1.37875
+        ],
+        "cells": [
+         [
+          "Malzeme",
+          "Adet",
+          "Birim fiyat"
+         ],
+         [
+          "Kapı",
+          "12",
+          "1450"
+         ],
+         [
+          "Pencere",
+          "18",
+          "2200"
+         ]
+        ],
+        "source": {
+         "kind": "file",
+         "name": "malzeme.csv",
+         "path": "malzeme.csv",
+         "digest": "d1d6704a0cf999784c1edff8632a702bcb3baf69c4ecefbc4f894e17846aac4f",
+         "copy": [
+          [
+           "Malzeme",
+           "Adet",
+           "Birim fiyat"
+          ],
+          [
+           "Kapı",
+           "12",
+           "1450"
+          ],
+          [
+           "Pencere",
+           "18",
+           "2200"
+          ]
+         ]
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Kaynağı bırak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "unlink",
+       "uids": [
+        "$uidOf:10",
+        "$uidOf:15"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "entities": {
+       "10": {
+        "kind": "table",
+        "id": 10,
+        "layerId": "tablo",
+        "attrs": {},
+        "p": {
+         "x": 500000,
+         "y": 4400200
+        },
+        "rotation": 0,
+        "height": 0.25,
+        "rows": [
+         0.5,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.5,
+         1.5,
+         1.5
+        ],
+        "cells": [
+         [
+          "Oda",
+          "Alan",
+          "Kat"
+         ],
+         [
+          "Salon (büyük)",
+          "25",
+          "1"
+         ],
+         [
+          "Mutfak",
+          "12.5",
+          "1"
+         ]
+        ],
+        "header": true,
+        "aligns": [
+         "left",
+         "right",
+         "right"
+        ]
+       }
+      },
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kimlik değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "T-1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“T-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+       "path": "operation.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: nesne yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "operation.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:4",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_table",
+       "message": "Verilen nesne bir tablo değil; bu komut yalnız tabloları değiştirir.",
+       "path": "operation.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:2",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; üzerindeki tablo değişmez. Kilidi Katmanlar panelinden açın.",
+       "path": "operation.uid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: düzenleme yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "Düzenleme verilmedi; en az bir düzenleme verin.",
+       "path": "operation.edits"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: hücre tablonun dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 9,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cell_out_of_range",
+       "message": "10. satır, 1. sütun tablonun dışında; tablonun 4 satırı, 3 sütunu var.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: aralık tablonun dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "style",
+         "row": 2,
+         "col": 2,
+         "rows": 1,
+         "cols": 2,
+         "bold": true
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cell_out_of_range",
+       "message": "3. satır, 3. sütundan 1 × 2 aralık tablonun içinde olmalı; tablonun 4 satırı, 3 sütunu var.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: renk #rrggbb değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "style",
+         "row": 0,
+         "col": 0,
+         "rows": 1,
+         "cols": 1,
+         "fill": "kırmızı"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "1. biçimin Dolgu “kırmızı”; #rrggbb olmalı.",
+       "path": "operation.styles"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: satır yüksekliği sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "rowHeight",
+         "from": 0,
+         "count": 1,
+         "height": 0
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "Satır yüksekliği 0; sıfırdan büyük ve en çok 1000000 m olmalı.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sonlu olmayan genişlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "columnWidth",
+         "from": 0,
+         "count": 1,
+         "width": 1
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "Sütun genişliği sonlu bir sayı olmalı.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "operation.edits[0].width": "NaN"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bütün satırlar silinemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "deleteRows",
+         "from": 0,
+         "count": 4
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_table",
+       "message": "Tablonun bütün satırları silinemez; en az biri kalır.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: alanın nesnesi yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "field",
+         "row": 1,
+         "col": 1,
+         "source": {
+          "kind": "object",
+          "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff",
+          "value": "area"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "Alanın nesnesi “0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” çizimde yok.",
+       "path": "operation.edits[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kaynağı olmayan tablo güncellenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": [
+        "$uidOf:1"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_source",
+       "message": "Tablonun kaynağı yok: Tabloyu güncelle çizelgeleri ve dosyaya bağlı tabloları yazar.",
+       "path": "operation.uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bağlanacak dosya yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "link",
+       "uid": "$uidOf:15",
+       "path": "yok.csv",
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_missing",
+       "message": "“yok.csv” dosyası okunamadı: yolu doğru mu, dosya var mı?",
+       "path": "operation.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo olarak okunamayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "link",
+       "uid": "$uidOf:15",
+       "path": "eski.xls",
+       "base": "$fixture:commands/v1/tables"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreadable",
+       "message": "“eski.xls”: Eski Excel biçimi (.xls) okunmuyor. Dosyayı Excel'de XLSX ya da CSV olarak kaydedip seçin.",
+       "path": "operation.path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tablo verilmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "refresh",
+       "uids": []
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "Tablo verilmedi. En az bir tablonun kimliğini verin.",
+       "path": "operation.uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: beklenen sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "unlink",
+       "uids": [
+        "$uidOf:10"
+       ]
+      },
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: beklenen sürüm geçti",
+   "steps": [
+    {
+     "op": "captureRevision",
+     "as": "old"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "x"
+        }
+       ]
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "edit",
+       "uid": "$uidOf:1",
+       "edits": [
+        {
+         "kind": "setCell",
+         "row": 0,
+         "col": 0,
+         "words": "y"
+        }
+       ]
+      },
+      "expectedRevision": "$old"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

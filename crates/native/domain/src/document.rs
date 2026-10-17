@@ -58,6 +58,8 @@ pub struct Document {
     /// What a step may do to the objects (docs/adr/0411 §5): a Veri girişi's cloud project changes
     /// existing records' attributes alone. Not the file's: the host sets it from the account's role.
     pub(crate) object_policy: ObjectPolicy,
+    /// Of those, the objects whose ends a point on none of the objects follows by its place (Buda, docs/adr/0320 §2).
+    pub(crate) relocated_ends: std::collections::BTreeSet<Uuid>,
     pub(crate) history: History,
     /// The journal of what was written and the ledger of requests executed
     /// (calls.rs, docs/adr/0253 §3, §6).
@@ -146,6 +148,13 @@ impl Document {
     /// Yönü çevir the object itself. Forgotten when the step ends.
     pub fn relocate_ties(&mut self, of: Uuid, onto: Vec<Uuid>) {
         self.relocated.insert(of, onto);
+    }
+
+    /// [`Self::relocate_ties`] for Buda (docs/adr/0320 §2): a point on none of `onto` that was the object's start,
+    /// end or vertex follows that place on `of` as it is now (the end the cut moved), rather than breaking.
+    pub fn relocate_ties_keeping_ends(&mut self, of: Uuid, onto: Vec<Uuid>) {
+        self.relocated.insert(of, onto);
+        self.relocated_ends.insert(of);
     }
 
     // ── Objects ──────────────────────────────────────────────────────────
@@ -243,6 +252,7 @@ impl Document {
             next_slot: self.next_slot,
             relocated: Default::default(),
             object_policy: self.object_policy,
+            relocated_ends: Default::default(),
             history: History::default(),
             // A copy starts its own journal; the ledger it keeps, so a call
             // on the copy (a plan, a job) knows the requests already executed.

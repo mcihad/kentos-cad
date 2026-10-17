@@ -184,7 +184,9 @@ where
         },
     );
     let answer = match result {
-        Ok(((output, warnings), report)) => {
+        Ok(((output, mut warnings), report)) => {
+            // What the step did to the texts its hatches leave open (docs/adr/0332 §2).
+            warnings.extend(crate::hatch_notes::notes(cx.doc, &report));
             if let Some(o) = &mut outcome {
                 o.call = report.call;
                 o.summary.stamps.revision = Some(cx.doc.revision().to_string());

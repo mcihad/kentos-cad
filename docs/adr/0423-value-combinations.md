@@ -42,8 +42,8 @@ Retler: `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer
 
 ### 4. Dosya
 
-`.kcad` şema 60'ın katman düğümünde `contingents` (JSON'u olduğu gibi; alanlar ve alt türlerle denetlenir). Bağımsız okuyucu
-`kcad.py` kuralı ayrıca yazar; örnek `forms.json`'da, kırık örnekler `contingents-in-schema-59`, `contingents-unfit`,
+`.kcad` şema 72'nin katman düğümünde `contingents` (JSON'u olduğu gibi; alanlar ve alt türlerle denetlenir). Bağımsız okuyucu
+`kcad.py` kuralı ayrıca yazar; örnek `forms.json`'da, kırık örnekler `contingents-in-schema-71`, `contingents-unfit`,
 `contingents-empty-row-list`.
 
 ### 5. Masaüstü

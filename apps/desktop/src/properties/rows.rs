@@ -20,6 +20,7 @@ use super::{Event, Field, Spot};
 pub(crate) mod attachments;
 pub(crate) mod cloud;
 mod dimension;
+pub(crate) mod params;
 pub(crate) mod raster;
 
 use crate::app::Message;
@@ -1202,6 +1203,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     DimensionStyle::Jogged => "Kırıklı yarıçap",
                     DimensionStyle::Azimuth => "Semt",
                     DimensionStyle::Slope => "Eğim",
+                    DimensionStyle::CenterMark => "Merkez işareti",
+                    DimensionStyle::CenterLine => "Eksen çizgisi",
+                    DimensionStyle::Elevation => "Kot",
                 },
             ));
             // What it measured, by its unit (docs/adr/0147 §2).
@@ -1219,6 +1223,18 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 ),
                 Some(l) if l.unit == "percent" => {
                     geo.push(Row::figure("Ölçülen eğim", f.percent(l.value)).unit("%"))
+                }
+                // docs/adr/0322: a mark's curve or axis, a level's elevation.
+                Some(l) if l.unit == "none" => geo.push(metres(
+                    if style == DimensionStyle::CenterMark {
+                        "Eğrinin yarıçapı"
+                    } else {
+                        "Eksenin uzunluğu"
+                    },
+                    l.value,
+                )),
+                Some(l) if l.unit == "level" => {
+                    geo.push(metres("Kot", l.value).editor(number(Field::DimensionZa(vec![slot]))))
                 }
                 Some(l) if l.unit == "coordinate" => geo.push(metres(
                     if l.prefix == "Y=" {
@@ -1241,14 +1257,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             if style == DimensionStyle::Aligned {
                 geo.push(bearing(v(d.a), v(d.b)));
             }
-            // An ordinate has no offset; a jogged radius's is where its jog is.
-            if style != DimensionStyle::Ordinate {
+            // An ordinate and a level have no offset; a jogged radius's is where its jog is.
+            if !matches!(style, DimensionStyle::Ordinate | DimensionStyle::Elevation) {
                 geo.push(
                     metres(
                         match style {
                             DimensionStyle::Angular => "Yay yarıçapı",
                             DimensionStyle::Radius | DimensionStyle::Diameter => "Dışa uzantı",
                             DimensionStyle::Jogged => "Kırık uzaklığı",
+                            DimensionStyle::CenterMark | DimensionStyle::CenterLine => "Uzantı",
                             _ => "Ötelenme",
                         },
                         d.offset,
@@ -1264,6 +1281,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &ids,
                 locked,
             ));
+            geo.extend(override_rows(&[&d.look.overrides], &ids, locked));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend([
                 metres("Yazı yüksekliği", d.height).editor(number(Field::DimensionHeight(slot))),
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
@@ -1285,6 +1304,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 doc.model.settings().plot_scale,
                 &f,
             ));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
         Entity::Text(t) => {
@@ -1296,6 +1316,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 &ids,
                 locked,
             ));
+            geo.extend(override_rows(&[&t.face.overrides], &ids, locked));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.extend([
                 // A multi-line text's lines and formats are its editor's (a double click,
                 // docs/adr/0182 §4): here they only show, ⏎ its breaks.
@@ -1313,6 +1335,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(text_rows(&[t], &ids, locked));
             // Bağlı nesne (docs/adr/0175 §4).
             geo.extend(link_rows(&doc.model, &[t], &ids, locked));
+            // Alanlar (docs/adr/0325 §4).
+            geo.extend(text_field_rows(&doc.model, t, slot, locked));
             // Along a curve, its curve's length (docs/adr/0196 §4).
             if let Some(path) = &t.path {
                 let curve = kentos_native_application::geometry::core_curve(path);
@@ -1463,6 +1487,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));
+            // Its style, arms, tips and content blocks (docs/adr/0326).
+            geo.extend(multileader_rows(&doc.model, &[l], &ids, locked));
+            geo.extend(scale_rows(&[e], &ids, locked));
             geo.push(Row::figure("Köşe sayısı", l.pts.len().to_string()));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
         }
@@ -1500,6 +1527,17 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             .unwrap_or_default(),
         _ => Vec::new(),
     };
+    // A dynamic block's parameters (docs/adr/0319 §3).
+    if let Entity::Insert(i) = e {
+        let rows = params::rows(doc, slot, i, locked);
+        if !rows.is_empty() {
+            sections.push(Section {
+                id: "blockParams",
+                title: "Blok parametreleri".into(),
+                rows,
+            });
+        }
+    }
     if !tags.is_empty() {
         sections.push(Section {
             id: "blockAttrs",
@@ -1726,11 +1764,132 @@ fn field_rows(
     rows
 }
 
+/// Ölçekli, Kendi ölçeği, Diğer ölçekler and Ayrı değerler (docs/adr/0323 §4): whether the texts, dimensions or
+/// leaders are annotative, the scale their own geometry is drawn at, their other scales (one that sets something
+/// apart with an asterisk; typed to add or remove) and Sıfırla; none when none of them can be (a text along a curve,
+/// a linked text).
+fn scale_rows(objects: &[&Entity], slots: &[Slot], locked: bool) -> Vec<Row> {
+    use kentos_contracts::{annotative_of, why_not_annotative};
+    if objects.iter().all(|e| why_not_annotative(e).is_some()) {
+        return Vec::new();
+    }
+    let on = objects.iter().filter(|e| annotative_of(e).is_some()).count();
+    let state = match on {
+        0 => "Hayır",
+        n if n == objects.len() => "Evet",
+        _ => "Çeşitli",
+    };
+    let pick = |label: &str, value: bool| Choice::Pick {
+        label: label.to_owned(),
+        swatch: None,
+        icon: None,
+        wide: false,
+        chosen: state == label,
+        enabled: true,
+        message: Message::Properties(Event::Annotative(slots.to_vec(), value)),
+    };
+    let editor = Editor::Select {
+        text: state.to_owned(),
+        swatch: None,
+        icon: None,
+        items: vec![pick("Evet", true), pick("Hayır", false)],
+    };
+    let mut rows = vec![Row::text("Ölçekli", state).editor((!locked).then_some(editor))];
+    if on != objects.len() {
+        return rows;
+    }
+    let common = |texts: Vec<String>| {
+        if texts.iter().all(|t| *t == texts[0]) {
+            texts[0].clone()
+        } else {
+            "Çeşitli".to_owned()
+        }
+    };
+    let own = common(
+        objects
+            .iter()
+            .filter_map(|e| annotative_of(e))
+            .map(|a| kentos_interaction::annotative::ratio(a.at))
+            .collect(),
+    );
+    let others = common(
+        objects
+            .iter()
+            .filter_map(|e| kentos_interaction::annotative::others_text(e))
+            .collect(),
+    );
+    rows.push(Row::text("Kendi ölçeği", own));
+    rows.push(
+        Row::text("Diğer ölçekler", others)
+            .editor((!locked).then_some(Editor::Text(Field::AnnotativeScales(slots.to_vec())))),
+    );
+    let apart: Vec<String> = objects
+        .iter()
+        .filter_map(|e| annotative_of(e))
+        .flat_map(|a| a.scales.iter().filter(|s| !s.is_plain()).map(|s| s.scale))
+        .fold(Vec::<f64>::new(), |mut all, s| {
+            if !all.contains(&s) {
+                all.push(s);
+            }
+            all
+        })
+        .into_iter()
+        .map(kentos_interaction::annotative::ratio)
+        .collect();
+    if !apart.is_empty() {
+        let text = apart.join(", ");
+        let editor = Editor::Select {
+            text: text.clone(),
+            swatch: None,
+            icon: None,
+            items: vec![Choice::Pick {
+                label: "Sıfırla".to_owned(),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: false,
+                enabled: true,
+                message: Message::Properties(Event::AnnotativeReset(slots.to_vec())),
+            }],
+        };
+        rows.push(Row::text("Ayrı değerler", text).editor((!locked).then_some(editor)));
+    }
+    rows
+}
+
 /// Öznitelikler's Yazı stili or Ölçü stili row (docs/adr/0183 §6), a CAD
 /// project's: the style the objects follow by name (a link to a style the
 /// project no longer has shows Standart), or “Çeşitli”; choosing one applies
 /// it to them in one step “Değiştir”. On a locked layer it only shows. The
 /// web's `ui/properties/styleRows.ts`.
+/// Stilden ayrılan (docs/adr/0322 §5): the style fields the objects set apart by hand, common or “Çeşitli”, and
+/// Stile döndür; none when no object sets one apart.
+fn override_rows(lists: &[&[String]], slots: &[Slot], locked: bool) -> Vec<Row> {
+    if lists.iter().all(|l| l.is_empty()) {
+        return Vec::new();
+    }
+    let text = if lists.iter().all(|l| *l == lists[0]) {
+        kentos_interaction::properties::override_names(lists[0]).join(", ")
+    } else {
+        "Çeşitli".to_owned()
+    };
+    let editor = Editor::Select {
+        text: text.clone(),
+        swatch: None,
+        icon: None,
+        items: vec![Choice::Pick {
+            label: "Stile döndür".to_owned(),
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: false,
+            enabled: true,
+            message: Message::Properties(Event::RestoreStyle(slots.to_vec())),
+        }],
+    };
+    vec![Row::text("Stilden ayrılan", text).editor((!locked).then_some(editor))]
+}
+
 fn style_rows(
     settings: &kentos_contracts::ProjectSettings,
     text: bool,
@@ -1876,13 +2035,51 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
         Some(value) => Row::figure("Satır aralığı", value),
         None => Row::text("Satır aralığı", MIXED),
     };
-    vec![
+    // Its indents, tab stops and columns (docs/adr/0324 §3), the indents and gap in its height.
+    let layout = |t: &kentos_contracts::TextEntity| t.paragraph.layout.as_deref().cloned().unwrap_or_default();
+    let heights = |label: &'static str, value: Option<String>| match value {
+        Some(v) => Row::figure(label, v).unit("× yükseklik"),
+        None => Row::text(label, MIXED),
+    };
+    let number = |v: f64| crate::crs::js_number(fixed_number(v, 3));
+    let indent_row = heights("Girinti", common(&|t| number(layout(t).indent.unwrap_or(0.0))));
+    let left_row = heights("Sol girinti", common(&|t| number(layout(t).left_indent.unwrap_or(0.0))));
+    let tabs_row = Row::text(
+        "Sekmeler",
+        common(&|t| kentos_interaction::text_layout::tabs_text(&layout(t).tabs)).unwrap_or_else(|| MIXED.to_owned()),
+    );
+    let columns = common(&|t| layout(t).columns.map_or(1, |c| c.count).to_string());
+    let columns_row = match &columns {
+        Some(n) => Row::figure("Sütunlar", n.clone()),
+        None => Row::text("Sütunlar", MIXED),
+    };
+    let mut rows = vec![
         Row::text("Hiza", align_text).editor(edit(aligns)),
         factor_row.editor(edit(Editor::Number(Field::TextWidth(slots.to_vec())))),
         box_row.editor(edit(Editor::Number(Field::TextBox(slots.to_vec())))),
         spacing_row.editor(edit(Editor::Number(Field::TextSpacing(slots.to_vec())))),
-        Row::text("Zemin", mask_text).editor(edit(masks)),
-    ]
+        indent_row.editor(edit(Editor::Number(Field::TextIndent(slots.to_vec())))),
+        left_row.editor(edit(Editor::Number(Field::TextLeftIndent(slots.to_vec())))),
+        tabs_row.editor(edit(Editor::Text(Field::TextTabs(slots.to_vec())))),
+        columns_row.editor(edit(Editor::Number(Field::TextColumns(slots.to_vec())))),
+    ];
+    // In columns: their height, metres, and the gap between them.
+    if columns.as_deref().is_some_and(|n| n != "1") {
+        let tall = common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.height)));
+        rows.push(
+            match tall {
+                Some(v) => Row::figure("Sütun yüksekliği", v).unit("m"),
+                None => Row::text("Sütun yüksekliği", MIXED),
+            }
+            .editor(edit(Editor::Number(Field::TextColumnHeight(slots.to_vec())))),
+        );
+        rows.push(
+            heights("Sütun aralığı", common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.gap))))
+                .editor(edit(Editor::Number(Field::TextColumnGap(slots.to_vec())))),
+        );
+    }
+    rows.push(Row::text("Zemin", mask_text).editor(edit(masks)));
+    rows
 }
 
 /// A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows (docs/adr/0146 §7),
@@ -1946,6 +2143,135 @@ fn link_rows(
         items,
     });
     vec![Row::text("Bağlı nesne", value).editor(editor)]
+}
+
+/// A text's fields (docs/adr/0325 §4): each its source and value, or why it is broken; its menu selects the source
+/// object and takes the field out (its letters stay as text).
+fn text_field_rows(model: &kentos_domain::Document, t: &kentos_contracts::TextEntity, slot: Slot, locked: bool) -> Vec<Row> {
+    use kentos_contracts::FieldSource;
+    t.paragraph
+        .fields
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let object = f
+                .source
+                .object()
+                .and_then(|id| model.slot_of(kentos_domain::Uuid::from_bytes(id.0)))
+                .and_then(|s| Some((s, model.get(s)?)));
+            let named = |what: &str, name: &Option<String>| match name {
+                Some(n) => format!("{what} “{n}”"),
+                None => what.to_owned(),
+            };
+            let source = match &f.source {
+                FieldSource::Object { value, name, .. } => {
+                    let of = object.map_or("silinmiş nesne", |(_, e)| kind_title(e.kind()));
+                    format!("{of}: {}", named(value.label(), name))
+                }
+                FieldSource::Project { value, name } => format!("Proje: {}", named(value.label(), name)),
+            };
+            let letters: String = t.text.chars().skip(f.start as usize).take((f.end - f.start) as usize).collect();
+            // The value first (what the row has room for), the source in the menu's title.
+            let value = match f.broken {
+                Some(b) => format!("Kopuk: {}", b.words()),
+                None => letters,
+            };
+            let action = |label: &str, message: Message| Choice::Pick {
+                label: label.to_owned(),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: false,
+                enabled: true,
+                message,
+            };
+            // The source, as a title the menu does not act on.
+            let mut items = vec![Choice::Pick {
+                label: source,
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: true,
+                enabled: false,
+                message: Message::TextTools(crate::text_tools::Event::Close),
+            }];
+            if let Some((s, _)) = object {
+                items.push(action("Kaynağı seç", Message::Properties(Event::SelectObject(s))));
+            }
+            if !locked {
+                items.push(action("Alanı kaldır", Message::TextTools(crate::text_tools::Event::Remove(slot, i as u32))));
+            }
+            let editor = (!items.is_empty()).then(|| Editor::Select { text: value.clone(), swatch: None, icon: None, items });
+            let mut row = Row::text(format!("Alan {}", i + 1), value).editor(editor);
+            row.warn = f.broken.is_some();
+            row
+        })
+        .collect()
+}
+
+/// A leader's style, arms, tips and content blocks (docs/adr/0326): Kılavuz stili (a menu of the project's leader
+/// styles, Yok first), and for one leader its arm count, each bound tip with Bağı çöz, its content blocks' count.
+fn multileader_rows(
+    model: &kentos_domain::Document,
+    leaders: &[&kentos_contracts::LeaderEntity],
+    slots: &[Slot],
+    locked: bool,
+) -> Vec<Row> {
+    use crate::leader_tools::Event as L;
+    let styles = &model.settings().leader_styles;
+    let mut rows = Vec::new();
+    let common = leaders.first().map(|l| l.leader_style.clone()).filter(|s| leaders.iter().all(|l| &l.leader_style == s));
+    let name_of = |id: &Option<String>| match id {
+        Some(id) => styles.iter().find(|s| &s.id == id).map_or("Silinmiş stil".to_owned(), |s| s.name.clone()),
+        None => "Yok".to_owned(),
+    };
+    let value = common.as_ref().map_or_else(|| "Çeşitli".to_owned(), name_of);
+    if !styles.is_empty() || leaders.iter().any(|l| l.leader_style.is_some()) {
+        let pick = |label: String, id: Option<String>| Choice::Pick {
+            label,
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: common.as_ref() == Some(&id),
+            enabled: !locked,
+            message: Message::LeaderTools(L::Style(slots.to_vec(), id)),
+        };
+        let mut items = vec![pick("Yok".to_owned(), None)];
+        items.extend(styles.iter().map(|s| pick(s.name.clone(), Some(s.id.clone()))));
+        rows.push(Row::text("Kılavuz stili", value.clone()).editor(Some(Editor::Select { text: value, swatch: None, icon: None, items })));
+    }
+    let [l] = leaders else {
+        return rows;
+    };
+    let slot = Slot(l.base.id);
+    rows.push(Row::figure("Kollar", (l.arms.len() + 1).to_string()));
+    let tips = std::iter::once(l.tip.as_ref()).chain(l.arms.iter().map(|a| a.tip.as_ref()));
+    for (k, t) in tips.enumerate() {
+        let Some(t) = t else { continue };
+        let of = model.slot_of(kentos_domain::Uuid::from_bytes(t.uid.0)).and_then(|s| model.get(s));
+        let what = match (&t.broken, of) {
+            (Some(why), _) => format!("Kopuk: {why}"),
+            (None, Some(e)) => format!("Bağlı: {}", kind_title(e.kind())),
+            (None, None) => "Kopuk".to_owned(),
+        };
+        let items = vec![Choice::Pick {
+            label: "Bağı çöz".to_owned(),
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen: false,
+            enabled: !locked,
+            message: Message::LeaderTools(L::Unbind(slot, k as u32)),
+        }];
+        let label = if k == 0 { "Ucu".to_owned() } else { format!("{}. kolun ucu", k + 1) };
+        let mut row = Row::text(label, what.clone()).editor(Some(Editor::Select { text: what, swatch: None, icon: None, items }));
+        row.warn = t.broken.is_some();
+        rows.push(row);
+    }
+    if !l.blocks.is_empty() {
+        rows.push(Row::figure("Blok içerik", l.blocks.len().to_string()));
+    }
+    rows
 }
 
 /// A hatch's rows (docs/adr/0186 §7): Desen (every choice with its icon,
@@ -2086,7 +2412,7 @@ fn hatch_rows(
         ]);
     }
     let tie = match &h.assoc {
-        Some(a) => format!("Evet ({} nesne)", 1 + a.islands.len() + a.cutouts.len()),
+        Some(a) => format!("Evet ({} nesne)", a.objects().count()),
         None => "Hayır".to_owned(),
     };
     let untie = (h.assoc.is_some() && !locked).then(|| Editor::Select {
@@ -2101,6 +2427,36 @@ fn hatch_rows(
         )],
     });
     rows.push(Row::text("İlişkili", tie).editor(untie));
+    // Sınır ▾ (docs/adr/0329 §4): exact when it holds an arc or a curve; written again as objects.
+    let exact = if h.boundary.is_some() { "Kesin" } else { "Çizilen halka" };
+    let recreate = (!locked).then(|| Editor::Select {
+        text: exact.to_owned(),
+        swatch: None,
+        icon: Some("hatchRecreate"),
+        items: vec![
+            pick(
+                "Sınırı yeniden oluştur: alan".to_owned(),
+                None,
+                false,
+                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Area),
+            ),
+            pick(
+                "Sınırı yeniden oluştur: çoklu çizgi".to_owned(),
+                None,
+                false,
+                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Polyline),
+            ),
+        ],
+    });
+    rows.push(Row::text("Sınır", exact).editor(recreate));
+    // Where its lines are anchored (docs/adr/0331 §2): the world's origin or its own point.
+    if !matches!(p.kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+        let origin = p.origin.map_or_else(
+            || "Dünya başlangıcı".to_owned(),
+            |o| f.point(kentos_geometry_core::Vec2::new(o.x, o.y)),
+        );
+        rows.push(Row::text("Başlangıç", origin));
+    }
     rows
 }
 
@@ -2327,6 +2683,32 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     if let Some(attrs) = shared_attributes(objects, &ids, all_locked) {
         sections.push(attrs);
     }
+    // Ölçekli açıklamalar (docs/adr/0323 §4): the selection's texts, dimensions and leaders together.
+    let scaled: Vec<&Entity> = objects
+        .iter()
+        .copied()
+        .filter(|e| {
+            matches!(
+                e,
+                Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_) | Entity::Hatch(_)
+            )
+        })
+        .collect();
+    if !scaled.is_empty() {
+        let slots: Vec<Slot> = scaled
+            .iter()
+            .filter(|e| open.contains(&e.base().id))
+            .map(|e| Slot(e.base().id))
+            .collect();
+        let rows = scale_rows(&scaled, &slots, slots.is_empty());
+        if !rows.is_empty() {
+            sections.push(Section {
+                id: "scales",
+                title: "Ölçekli açıklama".into(),
+                rows,
+            });
+        }
+    }
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or Çeşitli (docs/adr/0145 §6).
     let texts: Vec<&kentos_contracts::TextEntity> = objects
         .iter()
@@ -2359,6 +2741,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                     &slots,
                     any_locked,
                 ),
+                override_rows(
+                    &texts
+                        .iter()
+                        .map(|t| t.face.overrides.as_slice())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
                 text_rows(&texts, &slots, any_locked),
                 link_rows(&doc.model, &texts, &slots, any_locked),
             ]
@@ -2386,7 +2776,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             } else {
                 format!("Kılavuzlar ({})", leaders.len()).into()
             },
-            rows: leader_rows(&leaders, &slots, any_locked, &f),
+            rows: [leader_rows(&leaders, &slots, any_locked, &f), multileader_rows(&doc.model, &leaders, &slots, any_locked)].concat(),
         });
     }
     // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
@@ -2417,6 +2807,14 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                     &dims
                         .iter()
                         .map(|d| d.look.dim_style.as_ref())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
+                override_rows(
+                    &dims
+                        .iter()
+                        .map(|d| d.look.overrides.as_slice())
                         .collect::<Vec<_>>(),
                     &slots,
                     any_locked,

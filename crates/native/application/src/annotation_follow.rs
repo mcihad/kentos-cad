@@ -3,11 +3,12 @@
 //! texts, leaders, dimensions and tables still at the old height take the
 //! new one (`follow_annotation_scale`, the shared rule) in one undo step
 //! “Yazı yüksekliklerini uydur” (`cad.entities.edit`'s `annotationScale`);
-//! what was changed by hand stays; those on a locked layer are not written
+//! what was changed by hand stays; an annotative one takes the new scale as its own
+//! (docs/adr/0323 §3); those on a locked layer are not written
 //! and are counted. The setting itself is an edit of the project, not an
 //! undo step.
 
-use crate::geometry::{edit_geometry, shape};
+use crate::geometry::{edit_geometry_of, shape};
 use crate::{ExecutionContext, edit};
 use kentos_contracts::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, ScaleChange, follow_annotation_scale,
@@ -48,7 +49,7 @@ pub fn follow_annotation_change(doc: &mut Document, change: &ScaleChange) -> Fol
             locked += 1;
             continue;
         }
-        let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry(shape(&next))) else {
+        let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry_of(&next, shape(&next))) else {
             continue;
         };
         changes.push(EntityEdit::Update {

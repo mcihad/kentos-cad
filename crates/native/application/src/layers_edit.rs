@@ -58,6 +58,8 @@ pub fn new_object(e: &Entity) -> Option<NewObject> {
         label: e.base().label.clone(),
         label_of: None,
         label_scale: None,
+        transparency: None,
+        order: None,
         symbol: e.base().symbol.clone(),
     })
 }

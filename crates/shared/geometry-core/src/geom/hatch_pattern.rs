@@ -389,11 +389,23 @@ fn user_family(angle: f64, spacing: f64) -> FamilyPaint {
 /// A pattern's families as hatch paints (docs/adr/0186 §3), in metres and
 /// turned; none for a solid or a gradient, nor for a pattern without a scale.
 pub fn paints(p: &HatchPattern) -> Vec<FamilyPaint> {
+    let at = p.origin;
+    let anchored = |f: FamilyPaint| match at {
+        // docs/adr/0331 §2: the line through the pattern's origin instead of the world's.
+        Some(o) => {
+            let r = f.angle * PI / 180.0;
+            FamilyPaint {
+                offset: -sin(r) * o.x + cos(r) * o.y,
+                ..f
+            }
+        }
+        None => f,
+    };
     match p.kind.as_str() {
-        "lines" if p.spacing > 0.0 => vec![user_family(p.angle, p.spacing)],
+        "lines" if p.spacing > 0.0 => vec![anchored(user_family(p.angle, p.spacing))],
         "cross" if p.spacing > 0.0 => vec![
-            user_family(p.angle, p.spacing),
-            user_family(p.angle + 90.0, p.spacing),
+            anchored(user_family(p.angle, p.spacing)),
+            anchored(user_family(p.angle + 90.0, p.spacing)),
         ],
         "pattern" => {
             let scale = p.scale.unwrap_or(0.0);
@@ -413,6 +425,11 @@ pub fn paints(p: &HatchPattern) -> Vec<FamilyPaint> {
                 let (c, s) = (cos(r), sin(r));
                 let (ox, oy) = (l.origin[0] * scale, l.origin[1] * scale);
                 let o = Vec2::new(ox * tc - oy * ts, ox * ts + oy * tc);
+                // Its families go on from the pattern's origin (docs/adr/0331 §2).
+                let o = match at {
+                    Some(a) => Vec2::new(o.x + a.x, o.y + a.y),
+                    None => o,
+                };
                 let offset = -s * o.x + c * o.y;
                 let scaled: Vec<f64> = l
                     .dashes

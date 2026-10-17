@@ -8,6 +8,8 @@ use kentos_geometry_core::ops::transform::transform_shape;
 
 fn leader(pts: &[(f64, f64)], rotation: f64) -> Shape {
     Shape::Leader {
+        blocks: None,
+        arms: None,
         pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
         text: Some("Mevcut bina".into()),
         height: 2.5,
@@ -196,6 +198,8 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
     use kentos_geometry_core::ops::explode::explode_entity;
     use kentos_geometry_core::text::{Font, TextAlign};
     let filled = Shape::Leader {
+        blocks: None,
+        arms: None,
         pts: vec![Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0)],
         text: Some("Mevcut bina".into()),
         height: 2.0,
@@ -228,6 +232,8 @@ fn it_explodes_into_a_polyline_its_arrowhead_and_its_note() {
     );
     // An open arrowhead: its sides a polyline of their own; no note, no text.
     let open = Shape::Leader {
+        blocks: None,
+        arms: None,
         pts: vec![Vec2::new(0.0, 0.0), Vec2::new(4.0, 3.0)],
         text: None,
         height: 2.0,

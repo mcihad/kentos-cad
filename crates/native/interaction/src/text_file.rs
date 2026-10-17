@@ -193,6 +193,8 @@ impl PlaceTextFile {
             .map(|(i, line)| {
                 let step = SPACING * height * i as f64;
                 EntityGeometry::Text {
+                    layout: None,
+                    annotative: None,
                     p: points::wire(Vec2::new(p.x + down.x * step, p.y + down.y * step)),
                     text: line.clone(),
                     height,

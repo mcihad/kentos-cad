@@ -180,6 +180,8 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         })?,
         // Its vertices in the window move; the landing and the note follow the last (docs/adr/0146 §4).
         Shape::Leader {
+            arms,
+            blocks,
             pts,
             text,
             height,
@@ -187,7 +189,13 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             arrow,
             arrow_size,
             mask,
-        } => any(pts).then(|| Shape::Leader {
+        } => (any(pts) || arms.iter().flatten().any(|a| any(&a.pts))).then(|| Shape::Leader {
+            arms: arms.as_ref().map(|list| {
+                list.iter()
+                    .map(|a| crate::geom::leader::Arm { pts: a.pts.iter().map(|&p| mv(p)).collect() })
+                    .collect()
+            }),
+            blocks: blocks.clone(),
             pts: pts.iter().map(|&p| mv(p)).collect(),
             text: text.clone(),
             height: *height,
@@ -239,11 +247,18 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             holes,
             pattern,
             assoc,
+            boundary,
         } => {
             if !any(ring) && !holes.iter().flatten().any(|h| any(h)) {
                 return None;
             }
+            // The exact boundary moves its points in the window too (docs/adr/0328 §1); a curve whose ends part drops it.
+            let inside_r = |p: Vec2| inside(p, r);
+            let boundary = boundary.as_ref().and_then(|b| {
+                crate::geom::hatch_boundary::stretched(b, &inside_r, Vec2::new(dx, dy))
+            });
             Shape::Hatch {
+                boundary,
                 ring: ring.iter().map(|&p| mv(p)).collect(),
                 holes: holes.as_ref().map(|hs| {
                     hs.iter()

@@ -4,9 +4,12 @@
 //! set (`changeset.rs`), the headless host, Python and MCP reach a command
 //! through here, so they all run the same handler the tools run.
 
+use crate::{
+    block_params, blocks_freeze, blocks_proxy, blocks_query, blocks_replace, file_import_block,
+};
 use kentos_contracts::{
-    AddressesDefine, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
-    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsReassociate,
+    AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
+    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate, FieldsEdit, HatchesEdit, LeadersEdit, TablesEdit, FontsReport, TextsCheck, TextsEdit,
     DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
@@ -14,34 +17,34 @@ use kentos_contracts::{
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
     FieldsUsage, ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable,
     LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
-    LayersTranslate, LibraryEdit, LineCreate, LineTypesEdit, NetworkDefine, NurbsCreate,
+    LayersTranslate, LibraryEdit, LineCreate, LineTypesEdit, HatchPatternsEdit, NetworkDefine, NurbsCreate,
     PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AttachmentsInspect, SchemaDescribe, BlocksInsert, BlocksParameters, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{AttachmentsInspect, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
-    attachments_inspect, schema_describe, block_params, blocks_query, blocks_replace, domains_edit, domains_export, fields_migrate, file_import_block, forms_export,
+    attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
 };
 use serde_json::Value;
 
+use crate::blocks_insert;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, arrays_edit, blocks_define,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
-    dimensions_create, dimensions_reassociate, divide, drawing_audit, edit, entities_boundary,
+    dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
     entities_select, entities_trim, entities_vertex, file_import, labels_pin, layers_compose,
     fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table,
     layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line,
-    line_types_edit, network_define, nurbs, offset, point, points_construct, polygon,
+    hatch_patterns_edit, line_types_edit, network_define, nurbs, offset, point, points_construct, polygon,
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
-use crate::blocks_insert;
 use crate::{
     forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
@@ -118,6 +121,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),
             kentos_contracts::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
+            kentos_contracts::CAD_ANNOTATIONS_SCALES => $then!(annotations_scales, AnnotationsScales),
             kentos_contracts::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
             kentos_contracts::CAD_UCS_SET => $then!(ucs_set, UcsSet),
             kentos_contracts::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
@@ -164,6 +168,15 @@ macro_rules! by_command {
                 $then!(dimensions_reassociate, DimensionsReassociate)
             }
             kentos_contracts::CAD_DIMENSIONS_CREATE => $then!(dimensions_create, DimensionsCreate),
+            kentos_contracts::CAD_DIMENSIONS_EDIT => $then!(dimensions_edit, DimensionsEdit),
+            kentos_contracts::CAD_DIMENSIONS_QUERY => $then!(dimensions_query, DimensionsQuery),
+            kentos_contracts::CAD_FONTS_REPORT => $then!(fonts_report, FontsReport),
+            kentos_contracts::CAD_FIELDS_EDIT => $then!(fields_edit, FieldsEdit),
+            kentos_contracts::CAD_LEADERS_EDIT => $then!(leaders_edit, LeadersEdit),
+            kentos_contracts::CAD_HATCHES_EDIT => $then!(hatches_edit, HatchesEdit),
+            kentos_contracts::CAD_TABLES_EDIT => $then!(tables_edit, TablesEdit),
+            kentos_contracts::CAD_TEXTS_EDIT => $then!(texts_edit, TextsEdit),
+            kentos_contracts::CAD_TEXTS_CHECK => $then!(texts_check, TextsCheck),
             kentos_contracts::CAD_ADDRESSES_DEFINE => $then!(address_define, AddressesDefine),
             kentos_contracts::CAD_LAYERS_TIME => $then!(layers_time, LayersTime),
             kentos_contracts::CAD_SCENARIOS_EDIT => $then!(scenarios_edit, ScenariosEdit),
@@ -188,12 +201,15 @@ macro_rules! by_command {
             kentos_contracts::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
             kentos_contracts::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_contracts::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
+            kentos_contracts::CAD_HATCH_PATTERNS_EDIT => $then!(hatch_patterns_edit, HatchPatternsEdit),
             kentos_contracts::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
             kentos_contracts::CAD_STYLES_IMPACT => $then!(styles_impact, StylesImpact),
             kentos_contracts::CAD_BLOCKS_INSERT => $then!(blocks_insert, BlocksInsert),
             kentos_contracts::CAD_BLOCKS_REPLACE => $then!(blocks_replace, BlocksReplace),
             kentos_contracts::CAD_BLOCKS_QUERY => $then!(blocks_query, BlocksQuery),
             kentos_contracts::CAD_BLOCKS_PARAMETERS => $then!(block_params, BlocksParameters),
+            kentos_contracts::CAD_BLOCKS_PROXY => $then!(blocks_proxy, BlocksProxy),
+            kentos_contracts::CAD_BLOCKS_FREEZE => $then!(blocks_freeze, BlocksFreeze),
             kentos_contracts::FILE_IMPORT_BLOCK => $then!(file_import_block, ImportBlock),
             kentos_contracts::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),

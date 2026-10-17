@@ -6,7 +6,7 @@
 //! its values.
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, button, column, container, row};
+use iced::widget::{Column, button, container, row};
 use iced::{Border, Center, Color, Element, Fill, Theme};
 use kentos_native_style::designer::effects::{
     EFFECT_TYPES, effect_label, effect_of, put_effect, set_effect,
@@ -25,8 +25,10 @@ use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 use serde_json::{Value, json};
 
 use super::numbers;
-use super::parts::{Env, edit, glyph, number_control, number_row, plain_color, unit_of};
-use super::{Edit, Event, ev, field_id};
+use super::parts::{
+    Env, edit, expression_block, glyph, number_control, number_row, plain_color, unit_of,
+};
+use super::{Edit, Event, ev};
 use crate::app::Message;
 use crate::style::fields;
 
@@ -271,11 +273,10 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
         let back = fallback_value.clone().unwrap_or_else(|| js_value(fallback));
         let with_line = with.clone();
         let line_key = key.clone();
-        let line = fields::text(
-            field_id(&format!("{key}:expr")),
+        expression_block(
+            env,
+            &key,
             text,
-            "\"Alan\" ya da ifade",
-            true,
             move |t| {
                 let mut e = json!({ "expr": t });
                 if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
@@ -283,18 +284,8 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
                 }
                 edit(at, &line_key, None, Some(with_line(e)))
             },
-        );
-        column![
-            row![
-                line,
-                fields::fx(true, edit(at, &key, None, Some(with(back))))
-            ]
-            .spacing(6)
-            .align_y(Center),
-            fields::hint("İfade boş sonuç verirse sabit değer kullanılır.")
-        ]
-        .spacing(4)
-        .into()
+            fields::fx(true, edit(at, &key, None, Some(with(back)))),
+        )
     } else {
         let current = v
             .cloned()

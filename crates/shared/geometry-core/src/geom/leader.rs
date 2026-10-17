@@ -12,6 +12,14 @@ use crate::op;
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
+/// A leader's arm after its first (docs/adr/0326 §1): its tip first, then its bends; it ends at the leader's last vertex.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct Arm {
+    pub pts: Vec<Vec2>,
+}
+
+crate::json_struct!(Arm { pts });
+
 /// The landing's length.
 const LANDING: f64 = 2.0;
 /// The gap between the landing's end and the note.
@@ -118,19 +126,43 @@ pub fn layout_of(s: &Shape) -> Option<LeaderLayout> {
         rotation,
         arrow,
         arrow_size,
+        blocks,
         ..
     } = s
     else {
         return None;
     };
-    layout(
+    // A leader with content blocks has a landing as a noted one (docs/adr/0326 §2).
+    let content = text.is_some() || blocks.as_ref().is_some_and(|b| !b.is_empty());
+    layout(pts, *height, *rotation, arrow.as_deref(), *arrow_size, content)
+}
+
+/// Its other arms as drawn (docs/adr/0326 §1): each arm's line (from where it leaves its arrowhead, through its bends
+/// to the leader's last vertex) and its arrowhead, by the first arm's rule with the arm's points and that vertex.
+pub fn arm_layouts(s: &Shape) -> Vec<(Vec<Vec2>, Arrowhead)> {
+    let Shape::Leader {
         pts,
-        *height,
-        *rotation,
-        arrow.as_deref(),
-        *arrow_size,
-        text.is_some(),
-    )
+        height,
+        rotation,
+        arrow,
+        arrow_size,
+        arms: Some(arms),
+        ..
+    } = s
+    else {
+        return Vec::new();
+    };
+    let Some(&last) = pts.last() else {
+        return Vec::new();
+    };
+    arms.iter()
+        .filter_map(|a| {
+            let mut all = a.pts.clone();
+            all.push(last);
+            let l = layout(&all, *height, *rotation, arrow.as_deref(), *arrow_size, false)?;
+            Some((drawn_path(&all, &l), l.head))
+        })
+        .collect()
 }
 
 /// Its note as a text stands (docs/adr/0146 §2): at the note's point,

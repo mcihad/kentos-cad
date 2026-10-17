@@ -51,8 +51,11 @@ fn drawing() -> Document {
         panic!("a hatch")
     };
     let tied = Entity::Hatch(kentos_domain::contracts::HatchEntity {
+        boundary: None,
         assoc: Some(HatchAssoc {
-            outer: id(&doc, 1),
+            gap: None,
+            outer: Some(id(&doc, 1)),
+            bounds: Vec::new(),
             islands: Vec::new(),
             cutouts: Vec::new(),
             seed: Vec2 { x: 5.0, y: 5.0 },

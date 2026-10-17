@@ -1678,8 +1678,8 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_DRAWING_AUDIT_VERSION,
             title: "Denetle".into(),
             summary: "Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in AUDIT ve PURGE'ü). \
-                      Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). \
-                      fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. \
+                      Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan tarama (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle; döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). \
+                      fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar ve tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. \
                       Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. \
                       Retler: invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -1718,7 +1718,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Kalıcı kimlikleriyle verilen nesnelerin paralel kopyalarını yapar; kopyalar ve kaynakların silinmesi tek geri alma adımındadır, adı “Ötele”. \
                       Girdi sonucun geometrisi değil, istenen öteleme: distance ile mesafe (metre, sıfırdan büyük) ve side noktası (çizgide ve yolda noktaya en yakın kenarın o yanı, daire, yay ve elipste nokta dışarıdaysa büyür, içerideyse küçülür) ya da through ile kopyanın geçeceği nokta (Noktadan geç: mesafe noktanın nesneye uzaklığıdır). \
                       bothSides (İki yana) öbür yana da aynı mesafede bir kopya yapar; deleteSource (Kaynağı sil) kopyası yapılan kaynakları aynı adımda siler; layerId kopyaların katmanıdır, verilmezse her kopya kaynağının katmanına gider. \
-                      Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir; öbür türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. \
+                      Çizgi, çoklu çizgi (yaylarıyla, çok parçalısı parça parça), kapalı alan, daire, yay, elips ve yardımcı çizgi ile ışın ötelenir; diğer türler not_offsettable ile reddedilir. Kopyayı ortak geometri çekirdeği hesaplar: Ötele aracı, Python ve ajan aynı nesneyi aynı mesafeyle öteleyince aynı kopyayı bulur. \
                       Kopya kaynağının katmanını, rengini ve çizgi kalınlığını alır; özniteliklerini, etiketini, simgesini ve eklerini almaz; köşeler kaynağın köşelerinin kotunu ve ölçüsünü (M) taşır. \
                       Yapılamayan kopya (merkezini geçen daire, içe dönen yay) offset_failed uyarısıyla atlanır; hiçbir kopya yapılamazsa hiçbir şey yazılmaz. Kilitli katmandaki nesne ötelenmez: hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Plan yazmadan kopyaları gösterir; planın sürümüyle yazma planı yazar. \
@@ -1815,6 +1815,59 @@ pub fn catalog() -> CommandCatalog {
                         "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"],
                         "to": "front",
                         "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // Ölçekli açıklamalar (docs/adr/0323 §4), held together by
+        // fixtures/commands/v1/cad.annotations.scales.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_ANNOTATIONS_SCALES.into(),
+            version: crate::CAD_ANNOTATIONS_SCALES_VERSION,
+            title: "Açıklamanın ölçekleri".into(),
+            summary: "Kalıcı kimlikleriyle verilen yazı, ölçü ve kılavuzları ölçekli yapar ve ölçeklerini düzenler; tek geri alma adımıdır. \
+                      Ölçekli nesne katıldığı her ölçekte kâğıtta aynı yükseklikte çizilir: kendi geometrisi annotative.at ölçeğindeki (yapıldığında projenin çizim ölçeği) temsilidir, diğer ölçeklerde ölçek/at kadar büyür, \
+                      o ölçeğin ayrı değerleriyle (yazının ve notun yeri ve doğrultusu, ölçünün çizgisinin uzaklığı ve değerinin yeri); katılmadığı ölçekte çizilmez. Paftanın haritası her nesneyi kendi ölçeğinde çizer. \
+                      make (Ölçekli yap; scales eklenir), unmake (tek yükseklik, nesnenin kendisi), add ve remove (scales; kendi ölçeği kaldırılmaz: own_scale), \
+                      set (scale ölçeğinde point, rotation; ölçüde offset, textShift), reset (scales ya da bütün diğer ölçeklerde ayrı değer kalmaz). \
+                      Ölçekli olmayan ya da olamayan nesne (eğri boyunca yazı, bağlı yazı, diğer türler) not_annotative uyarısıyla atlanır, hiçbiri kalmazsa ret; kilitli katmandakiler layer_locked uyarısıyla atlanır. \
+                      Çizim ölçeği değişince ölçekli nesnenin kendi geometrisi yeni ölçeğin temsili olur, eski ölçeği diğer ölçeklerine geçer; ölçekli olmayan nesneler eskisi gibi izler. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AnnotationsScales>(),
+            output: schema::<crate::AnnotationsScaled>(),
+            plan: Some(schema::<crate::AnnotationsScalesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir yazıyı 1:100'de ve 1:50'de aynı kâğıt yüksekliğinde çizdirmek".into(),
+                    input: json!({
+                        "operation": "make",
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "scales": [50.0]
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "ids": [12],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "1:50 paftasında yazının yerini ayırmak".into(),
+                    input: json!({
+                        "operation": "set",
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "scale": 50.0,
+                        "point": { "x": 500012.5, "y": 4400020.0 }
                     }),
                     output: None,
                 },
@@ -1943,7 +1996,7 @@ pub fn catalog() -> CommandCatalog {
                       Ölçülen noktalar koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik ve yer: node, start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin kimliği ve tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar, yay ya da daire ölçülür. \
                       Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). \
                       at ölçü çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği, Standart'ta projenin Ölçü yüksekliği. \
-                      Hizalı, Doğrusal, Koordinat, Semt ve Eğim'de yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü). Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
+                      Yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü); kenarlardan açı kenarlarını, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı eğrisini izler (refs.rule). continue (Zincir ölçü) ve baseline (Baz ölçü) base ölçüden to noktasına sürer: ilk noktası temelinkini izler, stili ve görünüşü temelindir, at okunmaz. Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
                       Ölçü oluşmuyorsa (noktalar çakışıyor, kenarlar paralel, yay boş) no_dimension; nesnede aranan türde kenar yoksa not_measurable. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -1983,6 +2036,356 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // A dimension's spacing, breaks, moved value, written value and options (docs/adr/0321 §4), held together by
+        // fixtures/commands/v1/cad.dimensions.edit.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_EDIT.into(),
+            version: crate::CAD_DIMENSIONS_EDIT_VERSION,
+            title: "Ölçüyü düzenle".into(),
+            summary: "Ölçülerde tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      space (Ölçü aralığı, DIMSPACE): base ölçüye paralel hizalı ve doğrusal ölçülerin çizgileri temelinkinden spacing kadar aralıkla dizilir (her yanda uzaklık sırasıyla; yoksa temel değer yüksekliğinin üç katı, 0 temelin çizgisine). \
+                      break (Ölçüyü kır, DIMBREAK): hizalı ve doğrusal ölçülerin ölçü ve uzatma çizgileri objects'in (yoksa görünen, ölçü ve yazı olmayan bütün nesnelerin) kestiği yerlerden boşlukla kırılır; kesen yoksa no_crossing uyarısı. unbreak kırmaları kaldırır. \
+                      moveText değeri kendi doğrultusunda (along) ve ona dik (across) kaydırır; 0 ve 0 yerine döndürür. text değerin yerine yazılanı koyar (<> ölçülen değerdir); null ölçülen değere döndürür. options sığdırma, yuvarlama, sıfırlar, ayak-inç biçimi, alternatif birim, tolerans ve kırma genişliğini yazar; null kaldırır. \
+                      Değişmeyen ölçü sayılmaz; hiçbiri değişmezse hiçbir şey yazılmaz. Kilitli katmandaki ölçü reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsEdit>(),
+            output: schema::<crate::DimensionsEdited>(),
+            plan: Some(schema::<crate::DimensionsEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç ölçüyü temel ölçüden 2,5 m aralıkla diz".into(),
+                    input: json!({
+                        "edit": {
+                            "kind": "space",
+                            "base": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                            "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                            "spacing": 2.5
+                        }
+                    }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Ölçünün değerine simetrik tolerans ve mm alternatifi".into(),
+                    input: json!({
+                        "edit": {
+                            "kind": "options",
+                            "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                            "options": { "tolerance": { "kind": "symmetric", "upper": 0.01 }, "alt": { "unit": "mm", "decimals": 0 } }
+                        }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // What dimensions measure and show (docs/adr/0321 §3), held together by
+        // fixtures/commands/v1/cad.dimensions.query.json; the desktop's alone while the web is paused.
+        CommandDescriptor {
+            id: crate::CAD_DIMENSIONS_QUERY.into(),
+            version: crate::CAD_DIMENSIONS_QUERY_VERSION,
+            title: "Ölçüleri oku".into(),
+            summary: "Ölçülerin (uids, yoksa çizimin bütün ölçüleri) ne ölçtüğünü ve ne gösterdiğini okur; hiçbir şey yazmaz. \
+                      Her ölçü için: kind, geometrinin ölçtüğü değer (measured, unit: length metre, angle radyan, percent yüzde, coordinate metre), gösterilen yazı (shown: seçenekleriyle; elle yazılan değerde <> ölçülendir), \
+                      overridden (elle yazılan değer <> içermiyor: gösterilen ölçülen değil) ve bond (free, partial, bound, broken: noktaları neyi izliyor). \
+                      Çizimin boyutlarını okuyan program measured'ı okur: elle yazılan değer geometrinin ölçüsü değildir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DimensionsQuery>(),
+            output: schema::<crate::DimensionsRead>(),
+            plan: Some(schema::<crate::DimensionsRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin bütün ölçüleri".into(),
+                input: json!({}),
+                output: Some(json!({ "dimensions": [{
+                    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "kind": "aligned", "measured": 4.5, "unit": "length",
+                    "shown": "4.500", "overridden": false, "bond": "bound"
+                }], "revision": "12" })),
+            }],
+        },
+        // Yazı tipleri (docs/adr/0324 §5), held together by fixtures/commands/v1/cad.fonts.report.json.
+        CommandDescriptor {
+            id: crate::CAD_FONTS_REPORT.into(),
+            version: crate::CAD_FONTS_REPORT_VERSION,
+            title: "Yazı tiplerini raporla".into(),
+            summary: "Çizimin yazı stillerinin adlandırdığı yazı tiplerini ve KentOS'un hangi yazı tipiyle çizdiğini söyler; hiçbir şey yazmaz. \
+                      KentOS yalnız kendi yedi yazı tipiyle çizer, ölçer ve PDF'e alt küme olarak gömer: Barlow, Arimo, Overpass, Quicksand, Architects Daughter, Courier Prime, IBM Plex Mono. \
+                      Her stil için: adı, adlandırdığı dosya (DXF'in STYLE'ı), çizildiği yazı tipi ve nasıl (own: kendi yazı tipi; equivalent: ölçüleri aynı ikizi, Arial, Helvetica ve Liberation Sans için Arimo, Courier için Courier Prime; \
+                      shx: AutoCAD'in SHX çizgi yazı tipi, okunmaz; missing: KentOS'ta yok), stili kullanan yazı sayısı. shx ve missing stilin kendi yazı tipiyle çizilir ve her biri font_substituted uyarısıdır: değişim sessiz değildir. \
+                      names verilirse her ad aynı kuralla çözülür (face yoksa projenin yazı tipi). faces çizimin yazılarının, ölçülerinin ve kılavuzlarının çizildiği yazı tipleridir: paftanın PDF'i bunların alt kümelerini gömer."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FontsReport>(),
+            output: schema::<crate::FontsReported>(),
+            plan: Some(schema::<crate::FontsReported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir SHX yazı tipinin nasıl çizileceği".into(),
+                input: json!({ "names": ["romans.shx", "arial.ttf"] }),
+                output: Some(json!({
+                    "project": "barlow", "styles": [],
+                    "names": [{ "name": "romans.shx", "how": "shx" }, { "name": "arial.ttf", "face": "arimo", "how": "equivalent" }],
+                    "faces": [], "revision": "3"
+                })),
+            }],
+        },
+        // Taramanın sınırı, adaları ve ilişkisi (docs/adr/0329 §4), held together by fixtures/commands/v1/cad.hatches.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_HATCHES_EDIT.into(),
+            version: crate::CAD_HATCHES_EDIT_VERSION,
+            title: "Taramaları düzenle".into(),
+            summary: "Taramalarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      recreate (Sınırı yeniden oluştur) taramanın sınırını layerId'ye (yoksa taramanın katmanı) nesne olarak yazar: form area tek alan (delikleri taramanınkiler; yaylar kesin, elips ve eğri kenarları 0,1 mm'lik kirişlerle, curves_approximated uyarısıyla), \
+                      form polyline her halkayı ayrı nesne (doğru ve yaylardan kapalı çoklu çizgi, tam elips elips, tam kapalı eğri NURBS); associative (varsayılan açık) tarama sonra bu nesneleri izler. \
+                      reselect (Sınırı yeniden seç) bölgeyi cad.entities.hatch'in point bölgesiyle yeniden bulur (desen, katman ve görünüş kalır). \
+                      addIslands (Ada ekle) kapalı nesneleri ada yapar: ilişkili tarama onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın bölgesinden alanları çıkarılır. \
+                      removeIslands (Ada çıkar) ilişkili taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla (holes, 0 ilki) kaldırır. \
+                      untie (İlişkiyi kopar) taramalar bir şeyi izlemez. \
+                      pattern (Deseni değiştir) taramaların desenini cad.entities.hatch'in pattern'iyle değiştirir (bölge, bağ ve görünüş kalır; origin köşesi her taramanın kutusunun, across ile hepsininkinin; origin verilmezse her biri kendininkini korur; annotative verilmezse ölçekleri kalır). \
+                      align (Hizala) taramaların çizgilerini reference'ınkileri sürdürecek biçimde başlangıcını, aynı desendeyseler açısını ve ölçeğini de alır. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HatchesEdit>(),
+            output: schema::<crate::HatchesEdited>(),
+            plan: Some(schema::<crate::HatchesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taramanın sınırını alan olarak yeniden oluştur ve taramayı ona bağla".into(),
+                    input: json!({ "edit": { "kind": "recreate", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "form": "area" } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                                         "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Kolonu taramaya ada olarak ekle".into(),
+                    input: json!({ "edit": { "kind": "addIslands", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                                             "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "13" })),
+                },
+            ],
+        },
+        // Çok kollu kılavuz (docs/adr/0326 §5), held together by fixtures/commands/v1/cad.leaders.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_LEADERS_EDIT.into(),
+            version: crate::CAD_LEADERS_EDIT_VERSION,
+            title: "Kılavuzları düzenle".into(),
+            summary: "Kılavuzlarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. Kılavuzun ilk kolu pts'idir (ucu ilk köşe, ortak kolun başı son köşe); \
+                      ek kolları arms (her biri ucundan kırıklarından geçerek son köşeye), blok içeriği blocks (notun yerinde, ortak kolun ucunda sırayla duran yerleştirmeler; notsuz), \
+                      uçların bağı tip (ilişkili ölçünün başvurusu gibi: nesne değişince uç yerin gittiği yere gider, silinince kopar). \
+                      addArm ucu pts[0] olan kol ekler (tip verilirse uç yerin noktasına); removeArm arm'ı (0 ilk kol) kaldırır, ilk kol kalkınca ilk ek kol ilk kol olur, tek kol kalkmaz; \
+                      align (MLEADERALIGN) ilkini yerinde bırakır, diğerlerinin son köşelerini ilkinin son köşesinden angle doğrultusundaki doğruya izdüşümüyle, spacing verilirse önde ve arkada sırayla eşit aralıkla indirir; \
+                      collect (MLEADERCOLLECT) blok içerikli kılavuzları ilkinde toplar (diğerlerinin kolları ek kol, blokları ilkinin ardına; diğerleri silinir, blokları kalır); \
+                      content notu yazar ya da kaldırır; blocks içerik bloklarını yazar (not kalkar); look ok başını (filled ya da LeaderArrow adı), ok boyunu, yüksekliği, zemini; \
+                      style bir kılavuz stilini izletir (değerleri yazılır) ya da bırakır; bind arm'ın ucunu bir yere bağlar ya da serbest bırakır. \
+                      Kilitli katmandaki kılavuz reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LeadersEdit>(),
+            output: schema::<crate::LeadersEdited>(),
+            plan: Some(schema::<crate::LeadersPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kılavuza ikinci boruyu gösteren bir kol ekle".into(),
+                    input: json!({ "edit": { "kind": "addArm", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                                             "pts": [{ "x": 487012.5, "y": 4420003.0 }] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Üç notu yatay bir hizaya, 3 m aralıkla diz".into(),
+                    input: json!({ "edit": { "kind": "align",
+                                             "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                                             "angle": 0, "spacing": 3 } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "13" })),
+                },
+            ],
+        },
+        // Tablonun hücreleri, formülleri, alanları ve dosyası (docs/adr/0327), held together by
+        // fixtures/commands/v1/cad.tables.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_TABLES_EDIT.into(),
+            version: crate::CAD_TABLES_EDIT_VERSION,
+            title: "Tabloları düzenle".into(),
+            summary: "Tablolarda tek bir işlem yapar; tek geri alma adımı. edit (Tabloyu düzenle) edits'i sırayla uygular: setCell hücrenin yazısı                       (= ile başlayan yazı formüldür, hücrenin yazısı sonucu: A1 başvuruları, A1:C3 aralıkları, + - * / ^, TOPLA/SUM, ORTALAMA/AVERAGE, MİN/MIN, MAK/MAX, SAY/COUNT,                       YUVARLA/ROUND, MUTLAK/ABS; argümanlar , ya da ; ile; hatalar #AD? #BAŞV! #DEĞER! #SAYI/0! #SAYI! #DÖNGÜ!), insertRows, deleteRows, insertColumns,                       deleteColumns (birleşik alanlar, biçimler, formüllerin başvuruları ve alanlar kayar; silinen hücreye başvuru #BAŞV!), merge, unmerge,                       style (aralığa hiza, kalın, yazı rengi, dolgu, formül ve alan değerinin basamağı; sonraki öncekinin üstüne), clearStyle,                       field (hücreyi bir kaynağa bağlar: nesnenin alanı, uzunluğu …, projenin değişkeni ya da blockCount adlı bloğun yerleştirme sayısı; değer her adımda yazılır),                       unfield, rowHeight, columnWidth, fit (sütunları yazılarına sığdırır). refresh (Tabloyu güncelle) çizelgeyi nesnelerinden, bağlı tabloyu dosyasının yolundan                       (göreliyse base'den) yeniden yazar: aynı baytlar (SHA-256 özeti) yazılmaz, yolunda olmayan dosya source_missing; elle değiştirilen hücre, dosyadaki                       karşılığı değişmedikçe korunur (overrides keep) ya da dosyanınki yazılır (replace); blok çizelgesi çizimin her adımında kendiliğinden yazılır.                       link (Dosyaya bağla) tabloyu dosyanın sayfasından yazar ve ona bağlar; unlink kaynağı bırakır. Kilitli katmandaki tablo reddedilir.                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TablesEdit>(),
+            output: schema::<crate::TablesEdited>(),
+            plan: Some(schema::<crate::TablesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Son satıra alanların toplamını yaz ve kalın yap".into(),
+                    input: json!({ "operation": { "kind": "edit", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "edits": [
+                        { "kind": "setCell", "row": 4, "col": 2, "words": "=TOPLA(C2:C4)" },
+                        { "kind": "style", "row": 4, "col": 0, "rows": 1, "cols": 3, "bold": true, "fill": "#eef2f7" }
+                    ] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Bağlı tabloları dosyalarından güncelle".into(),
+                    input: json!({ "operation": { "kind": "refresh", "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "base": "/home/proje" } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                                         "report": [{ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "status": "updated", "kept": 1, "replaced": 0 }],
+                                         "revision": "13" })),
+                },
+            ],
+        },
+        // Alanlar (docs/adr/0325 §1–§3), held together by fixtures/commands/v1/cad.fields.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_EDIT.into(),
+            version: crate::CAD_FIELDS_EDIT_VERSION,
+            title: "Yazının alanlarını düzenle".into(),
+            summary: "Yazının alanlarında tek bir düzenleme yapar; tek geri alma adımı. Alan, yazının harflerinden bir aralığın bir kaynağa bağlanmasıdır; \
+                      harfleri kaynağın son yazılan değeridir ve kaynak değişince çizim aynı adımda yeniden yazar (sonraki biçim dilimleri ve alanlar kayar). \
+                      Kaynak: object (uid'li nesnenin area alanı, perimeter çevresi, length uzunluğu, layer katmanının adı, label etiketi, attribute name adlı özniteliği, \
+                      text yazının harfleri, x ve y yeri) ya da project (name proje adı, scale çizim ölçeği 1:500, unit çizim birimi, crs koordinat sistemi, variable name adlı değişkeni). \
+                      format: decimals (yoksa projenin basamağı), unit (mm, cm, m, km uzunlukta; m2, donum, ha alanda; yoksa çizim birimi ve projenin alan birimi), comma ondalık virgül, prefix, suffix. \
+                      insert uid'li yazının start–end harflerinin yerine alan koyar (eşitse o harfe ekler), değeri hemen yazılır; remove index'inci alanı kaldırır (harfleri yazı olarak kalır); \
+                      format biçimini yazar (null projeninki); update uids'in (boşsa bütün alanlı yazıların) alanlarını yeniden yazar. \
+                      Değeri okunamayan alanın harfleri #### olur, nedeni broken'da (removed nesne silindi, noValue değeri yok, notNamed öznitelik ya da değişken yok, cycle yazılar birbirini okuyor) ve field_broken uyarısıdır. \
+                      Kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FieldsEdit>(),
+            output: schema::<crate::FieldsEdited>(),
+            plan: Some(schema::<crate::TextsPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mahal etiketine odanın alanını iki basamakla yaz".into(),
+                input: json!({
+                    "edit": {
+                        "kind": "insert", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "start": 6, "end": 6,
+                        "source": { "kind": "object", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "value": "area" },
+                        "format": { "decimals": 2, "suffix": " m²" }
+                    }
+                }),
+                output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "12" })),
+            }],
+        },
+        // Yazının komutları (docs/adr/0325 §3), held together by fixtures/commands/v1/cad.texts.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_TEXTS_EDIT.into(),
+            version: crate::CAD_TEXTS_EDIT_VERSION,
+            title: "Yazıları düzenle".into(),
+            summary: "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; \
+                      biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. \
+                      number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. \
+                      combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. \
+                      split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. \
+                      combine, split ve number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TextsEdit>(),
+            output: schema::<crate::TextsEdited>(),
+            plan: Some(schema::<crate::TextsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün yazılarda “Kat” sözcüğünü “Blok” yap".into(),
+                    input: json!({ "edit": { "kind": "replace", "find": "Kat", "with": "Blok", "wholeWord": true } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "replaced": 1, "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Üç kapı etiketini K-01'den numarala".into(),
+                    input: json!({ "edit": {
+                        "kind": "number",
+                        "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"],
+                        "start": 1, "step": 1, "digits": 2, "prefix": "K-"
+                    } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"], "revision": "13" })),
+                },
+            ],
+        },
+        // Yazı denetimi (docs/adr/0325 §3), held together by fixtures/commands/v1/cad.texts.check.json.
+        CommandDescriptor {
+            id: crate::CAD_TEXTS_CHECK.into(),
+            version: crate::CAD_TEXTS_CHECK_VERSION,
+            title: "Yazıları denetle".into(),
+            summary: "Yazıların biçim sorunlarını bulur; hiçbir şey yazmaz. doubleSpace: satırın içinde art arda iki ya da daha çok boşluk; \
+                      repeatedWord: art arda iki kez yazılmış sözcük (“ve ve”, büyük-küçük harf Türkçe kuralıyla bir; sayılar değil); \
+                      unbalanced: kapanmayan ya da açılmayan parantez ((), [], {}), açılmayan “ ” ve tek kalan \"; brokenField: değeri okunamayan alan. \
+                      Sözlükle yazım denetimi yoktur. uids boşsa görünen bütün yazılar okunur; bulgular çizimin sırasıyla, her yazınınki yerine göre."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TextsCheck>(),
+            output: schema::<crate::TextsChecked>(),
+            plan: Some(schema::<crate::TextsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün yazıları denetle".into(),
+                input: json!({}),
+                output: Some(json!({ "findings": [{
+                    "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "kind": "repeatedWord", "start": 6, "end": 8,
+                    "words": "“ve” art arda iki kez yazılmış."
+                }], "texts": 4, "revision": "12" })),
+            }],
         },
         // Buda, Uzat, Köşe yuvarla and Pah by their meaning (docs/adr/0250), held together by
         // fixtures/commands/v1/cad.entities.{trim,extend,fillet,chamfer}.json; the desktop's alone while the web is paused.
@@ -2380,9 +2783,12 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ENTITIES_HATCH_VERSION,
             title: "Tara".into(),
             summary: "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. \
-                      region point: at'yi çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; bir şeye bağlanmaz. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
+                      region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
                       region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. \
-                      pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
+                      pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler; projenin kendi desenleri önce, cad.hatchpatterns.edit), scale (basis paper, varsayılan: kâğıtta, çizim ölçeğiyle çarpılır; basis world: desenin birimi çizimde), angle (derece), secondColor ve inverted (degrade), \
+                      origin (desenin başlangıcı: world dünya başlangıcı, point bir nokta, corner her bölgenin kutusunun köşesi ya da ortası, across ile bütün bölgelerin kutusunun; yalnız çizgili ve desenli), annotative (ölçekli: çizim ölçeğinde, paftanın her ölçeğinde kâğıtta aynı büyüklükte; basis world ile ya da dolu ve degradede not_annotative). \
+                      transparency (0–0,9) taramaların kendi saydamlığı; drawOrder katmanın içindeki sıra: none (yeni nesne gibi), back, front, behindBoundary ve aboveBoundary (sınırının kapalı nesnesi ve adalarının hemen altı ya da üstü; sınır başka katmandaysa sıra yazılmaz, order_other_layer); sınıra gelen sıra order_limit. \
+                      Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa ya da bütün bölgeler birlikte 200 000'den çok çizgi verirse pattern_too_dense; bölge yoksa not_enclosed. İş olarak çalışırken noktalar ve bölgeler arasında durdurulabilir (cancelled). \
                       Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
@@ -2769,6 +3175,63 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // An insert's drawn objects (docs/adr/0319 §4), held together by fixtures/commands/v1/cad.blocks.proxy.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_PROXY.into(),
+            version: crate::CAD_BLOCKS_PROXY_VERSION,
+            title: "Bloğun vekil görünüşü".into(),
+            summary: "Yerleştirmelerin çizdiği nesneleri düz nesneler olarak verir: dinamik bir bloğun yerleştirmesinde tanımın nesneleri parametrelerin değerleriyle (eylemler sırayla, dizinin kopyaları yerel kimlikleriyle sonda, görünürlük durumunun gizledikleri yok), düz bir bloğunkinde tanımın kendisi. \
+                      Nesneler tanımın koordinatlarındadır; iç içe yerleştirme yerleştirme kalır. default yerleştirmenin tanımı olduğu gibi çizip çizmediğini, values bütün değerleri söyler. \
+                      Dinamik bloğu bilmeyen okuyucu (DXF) ve Sabit bloğa çevir bunu alır. Hiçbir şey yazılmaz."
+                .into(),
+            aliases: vec!["blokvekil".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksProxy>(),
+            output: schema::<crate::BlocksProxied>(),
+            plan: Some(schema::<crate::BlocksProxied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Genişletilmiş kapının çizdiği nesneler".into(),
+                input: json!({ "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"] }),
+                output: None,
+            }],
+        },
+        // A dynamic block's inserts made plain (docs/adr/0319 §4), held together by
+        // fixtures/commands/v1/cad.blocks.freeze.json.
+        CommandDescriptor {
+            id: crate::CAD_BLOCKS_FREEZE.into(),
+            version: crate::CAD_BLOCKS_FREEZE_VERSION,
+            title: "Sabit bloğa çevir".into(),
+            summary: "Dinamik bir bloğun yerleştirmelerini çizdikleriyle aynı düz bloklara geçirir; tek geri alma adımı, adı Sabit bloğa çevir. \
+                      Aynı blok ve aynı değerler tek yeni blok olur: nesneleri cad.blocks.proxy'ninkiler, taban noktası, birimi, öznitelik tanımları, açıklaması ve kartı kaynağınki, dinamik parçası yok. \
+                      Yeni bloğun adı name (sonrakilere 2, 3 …) ya da kaynağın adı ve (sabit), alınmış adlar atlanarak. \
+                      Yerleştirme yerini, ölçeğini, dönüşünü, katmanını, görünüşünü ve özniteliklerinin değerlerini korur, parametreleri kalkar. Kilitli katmandaki yerleştirme atlanır. \
+                      Bağımsız geometriye çevirmek için Patlat (cad.entities.explode) aynı görünüşü nesnelere açar."
+                .into(),
+            aliases: vec!["bloksabitle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BlocksFreeze>(),
+            output: schema::<crate::BlocksFrozen>(),
+            plan: Some(schema::<crate::BlocksFrozen>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Geniş kapıyı sabit bloğa çevir".into(),
+                input: json!({ "uids": ["01925f3e-7c1c-7b22-8d33-4c5e6f708193"], "name": "Kapı 100" }),
+                output: None,
+            }],
         },
         // A dynamic block's inserts' parameters (docs/adr/0318 §3), held together by
         // fixtures/commands/v1/cad.blocks.parameters.json.
@@ -3831,6 +4294,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Tarama desenleri (docs/adr/0331 §1), held together by fixtures/commands/v1/cad.hatchpatterns.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_HATCH_PATTERNS_EDIT.into(),
+            version: crate::CAD_HATCH_PATTERNS_EDIT_VERSION,
+            title: "Tarama desenleri".into(),
+            summary: "Projenin kendi tarama desenlerini değiştirir (AutoCAD'in PAT dosyaları): load bir PAT dosyasının metnindeki (pat; source dosyanın adı, her desenin kaynağı; unit sayıların birimi: mm ya da inch kâğıtta, drawing çizimde, yoksa mm) desenleri alır, names verilmişse yalnız onları; \
+                      projede aynı adlı desen (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla söylenir ve o desen alınmaz. add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı, başlangıç, öteleme, kesikler) ekler, replace ile aynı adlıyı değiştirir. \
+                      remove adı verilen deseni siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez. export desenleri (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi değiştirmez. \
+                      Projenin desenleri kitaplığınkilerden önce aranır: cad.entities.hatch'in pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["hatchpattern".into(), "pat".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HatchPatternsEdit>(),
+            output: schema::<crate::HatchPatternsEdited>(),
+            plan: Some(schema::<crate::HatchPatternsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir PAT dosyasının desenlerini al".into(),
+                    input: json!({ "operation": "load", "pat": "*TUGLA, Tuğla\n0, 0,0, 0,6.35\n90, 0,0, 6.35,6.35, 6.35,-6.35\n", "source": "ofis.pat", "unit": "mm" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin desenlerini PAT olarak ver".into(),
+                    input: json!({ "operation": "export" }),
+                    output: None,
+                },
+            ],
+        },
         // Projenin stil kitaplığı (docs/adr/0314 §3), held together by fixtures/commands/v1/cad.library.edit.json.
         CommandDescriptor {
             id: crate::CAD_LIBRARY_EDIT.into(),
@@ -3966,7 +4465,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Yazı ve ölçü stilleri".into(),
             summary: "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), \
                       update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; \
-                      remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
+                      remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; \
+                      import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
                       Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -3990,6 +4490,11 @@ pub fn catalog() -> CommandCatalog {
                         "operation": "create",
                         "text": { "id": "", "name": "Ada no", "font": "arimo", "bold": true, "height": 3.5 }
                     }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yazı stillerini dosyaya ver".into(),
+                    input: json!({ "kind": "text", "operation": "export" }),
                     output: None,
                 },
                 CommandExample {
@@ -5530,7 +6035,8 @@ mod tests {
                         serde_json::from_value::<crate::ArraysEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_EXPLODE => {
-                        serde_json::from_value::<crate::EntitiesExplode>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::EntitiesExplode>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_CURVES_EDIT => {
                         serde_json::from_value::<crate::CurvesEdit>(e.input.clone()).map(|_| ())
@@ -5539,7 +6045,8 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesMatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_CLEANUP => {
-                        serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::EntitiesCleanup>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_DRAWING_AUDIT => {
                         serde_json::from_value::<crate::DrawingAudit>(e.input.clone()).map(|_| ())
@@ -5556,6 +6063,9 @@ mod tests {
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ANNOTATIONS_SCALES => {
+                        serde_json::from_value::<crate::AnnotationsScales>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_OFFSET => {
                         serde_json::from_value::<crate::EntitiesOffset>(e.input.clone()).map(|_| ())
                     }
@@ -5566,6 +6076,34 @@ mod tests {
                     crate::CAD_DIMENSIONS_CREATE => {
                         serde_json::from_value::<crate::DimensionsCreate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_DIMENSIONS_EDIT => {
+                        serde_json::from_value::<crate::DimensionsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_DIMENSIONS_QUERY => {
+                        serde_json::from_value::<crate::DimensionsQuery>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_FIELDS_EDIT => {
+                        serde_json::from_value::<crate::FieldsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TABLES_EDIT => {
+                        serde_json::from_value::<crate::TablesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LEADERS_EDIT => {
+                        serde_json::from_value::<crate::LeadersEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_HATCHES_EDIT => {
+                        serde_json::from_value::<crate::HatchesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TEXTS_EDIT => {
+                        serde_json::from_value::<crate::TextsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TEXTS_CHECK => {
+                        serde_json::from_value::<crate::TextsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FONTS_REPORT => {
+                        serde_json::from_value::<crate::FontsReport>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
                         serde_json::from_value::<crate::EntitiesTrim>(e.input.clone()).map(|_| ())
@@ -5628,7 +6166,14 @@ mod tests {
                         serde_json::from_value::<crate::BlocksQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_BLOCKS_PARAMETERS => {
-                        serde_json::from_value::<crate::BlocksParameters>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::BlocksParameters>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_PROXY => {
+                        serde_json::from_value::<crate::BlocksProxy>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_BLOCKS_FREEZE => {
+                        serde_json::from_value::<crate::BlocksFreeze>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_BLOCK => {
                         serde_json::from_value::<crate::ImportBlock>(e.input.clone()).map(|_| ())
@@ -5698,13 +6243,17 @@ mod tests {
                         serde_json::from_value::<crate::FieldsUsage>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_TRANSLATE => {
-                        serde_json::from_value::<crate::LayersTranslate>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::LayersTranslate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_STANDARDS_CHECK => {
                         serde_json::from_value::<crate::StandardsCheck>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LINE_TYPES_EDIT => {
                         serde_json::from_value::<crate::LineTypesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_HATCH_PATTERNS_EDIT => {
+                        serde_json::from_value::<crate::HatchPatternsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LIBRARY_EDIT => {
                         serde_json::from_value::<crate::LibraryEdit>(e.input.clone()).map(|_| ())
@@ -5814,15 +6363,13 @@ mod tests {
                             .map(|_| ())
                     }
                     crate::CAD_ENTITIES_VERTEX => {
-                        serde_json::from_value::<crate::EntitiesVertex>(e.input.clone())
-                            .map(|_| ())
+                        serde_json::from_value::<crate::EntitiesVertex>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_SELECT => {
-                        serde_json::from_value::<crate::EntitiesSelect>(e.input.clone())
-                            .map(|_| ())
+                        serde_json::from_value::<crate::EntitiesSelect>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTS_CONSTRUCT => {
                         serde_json::from_value::<crate::PointsConstruct>(e.input.clone())
@@ -5881,12 +6428,46 @@ mod tests {
                             serde_json::from_value::<crate::EntitiesOrdered>(output.clone())
                                 .map(|_| ())
                         }
+                        crate::CAD_FIELDS_EDIT => {
+                            serde_json::from_value::<crate::FieldsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_LEADERS_EDIT => {
+                            serde_json::from_value::<crate::LeadersEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_HATCHES_EDIT => {
+                            serde_json::from_value::<crate::HatchesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TABLES_EDIT => {
+                            serde_json::from_value::<crate::TablesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TEXTS_EDIT => {
+                            serde_json::from_value::<crate::TextsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_TEXTS_CHECK => {
+                            serde_json::from_value::<crate::TextsChecked>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_FONTS_REPORT => {
+                            serde_json::from_value::<crate::FontsReported>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ANNOTATIONS_SCALES => {
+                            serde_json::from_value::<crate::AnnotationsScaled>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::CAD_ENTITIES_OFFSET => {
                             serde_json::from_value::<crate::EntitiesOffsetMade>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_DIMENSIONS_REASSOCIATE => {
                             serde_json::from_value::<crate::DimensionsReassociated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_EDIT => {
+                            serde_json::from_value::<crate::DimensionsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DIMENSIONS_QUERY => {
+                            serde_json::from_value::<crate::DimensionsRead>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {
@@ -6018,8 +6599,7 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_LAYERS_FIND => {
-                            serde_json::from_value::<crate::LayersFound>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::LayersFound>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FIELDS_USAGE => {
                             serde_json::from_value::<crate::FieldsUsed>(output.clone())
@@ -6037,13 +6617,16 @@ mod tests {
                             serde_json::from_value::<crate::LineTypesEdited>(output.clone())
                                 .map(|_| ())
                         }
+                        crate::CAD_HATCH_PATTERNS_EDIT => {
+                            serde_json::from_value::<crate::HatchPatternsEdited>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::CAD_LIBRARY_EDIT => {
                             serde_json::from_value::<crate::LibraryEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STYLES_IMPACT => {
-                            serde_json::from_value::<crate::StyleImpact>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::StyleImpact>(output.clone()).map(|_| ())
                         }
                         crate::CAD_BLOCKS_INSERT => {
                             serde_json::from_value::<crate::BlockInserted>(output.clone())
@@ -6059,6 +6642,14 @@ mod tests {
                         }
                         crate::CAD_BLOCKS_PARAMETERS => {
                             serde_json::from_value::<crate::BlocksParametersOut>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_PROXY => {
+                            serde_json::from_value::<crate::BlocksProxied>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_BLOCKS_FREEZE => {
+                            serde_json::from_value::<crate::BlocksFrozen>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_STANDARDS_APPLY => {
@@ -6077,8 +6668,7 @@ mod tests {
                             serde_json::from_value::<crate::UcsChanged>(output.clone()).map(|_| ())
                         }
                         crate::CAD_VIEWS_EDIT => {
-                            serde_json::from_value::<crate::ViewsEdited>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::ViewsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_FORMS_EDIT => {
                             serde_json::from_value::<crate::FormsEdited>(output.clone())

@@ -197,11 +197,171 @@ pub fn region(
     cutouts: &[Vec<Vec2>],
     seed: Vec2,
 ) -> Option<Region> {
+    region_cut(outer, islands, cutouts, seed).map(|(a, cut)| region_of(&a, &cut))
+}
+
+/// `region`'s part as an area, arcs exact, and the cut that left it.
+pub fn region_cut(
+    outer: &Shape,
+    islands: &[Shape],
+    cutouts: &[Vec<Vec2>],
+    seed: Vec2,
+) -> Option<(Area, Cut)> {
     let parts = areas_of_entity(outer);
     let base = pick(&parts, seed)?;
     let islands: Vec<Vec<Area>> = islands.iter().map(areas_of_entity).collect();
     let cut = cut_base(base, &islands, cutouts);
-    pick(&cut.parts, seed).map(|a| region_of(a, &cut))
+    let k = pick_index(&cut.parts, seed)?;
+    Some((cut.parts[k].clone(), cut))
+}
+
+/// How near a face's edge must run along an object's for the object to bound it (m).
+const BOUND_TOL: f64 = 1e-6;
+
+/// The middles of an area's edges (an arc's on the arc).
+fn edge_middles(a: &Area) -> Vec<Vec2> {
+    std::iter::once(&a.outer)
+        .chain(&a.holes)
+        .flat_map(|r| {
+            let n = r.pts.len();
+            (0..n).map(move |i| {
+                let b = r.bulges.as_ref().map_or(0.0, |b| b[i]);
+                crate::geom::bulge::segment_mid(r.pts[i], r.pts[(i + 1) % n], b)
+            })
+        })
+        .collect()
+}
+
+/// Which of `shapes` bound `rings` (docs/adr/0328 §3): those along whose
+/// edges one of the rings' edges runs (its middle on one of theirs).
+pub fn bounding(rings: &Area, shapes: &[Shape]) -> Vec<usize> {
+    let middles = edge_middles(rings);
+    shapes
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| {
+            let edges = crate::ops::edges::entity_edges(s);
+            middles.iter().any(|m| {
+                edges
+                    .iter()
+                    .any(|e| crate::geom::intersect::closest_on_edge(e, *m).d <= BOUND_TOL)
+            })
+        })
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// A gap closed to find a region (docs/adr/0329 §3): from a dangling end to
+/// the nearest point of the other line work, and its length.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Bridge {
+    pub a: Vec2,
+    pub b: Vec2,
+    pub length: f64,
+}
+
+/// An open object's free ends: a line's, an arc's, an open polyline's
+/// (each part's), an open fit-point curve's; none for anything closed.
+fn free_ends(s: &Shape) -> Vec<Vec2> {
+    match s {
+        Shape::Line { a, b } => vec![*a, *b],
+        Shape::Arc { c, r, a0, a1 } => {
+            let g = crate::geom::arc::ArcGeom {
+                c: *c,
+                r: *r,
+                a0: *a0,
+                a1: *a1,
+            };
+            vec![crate::geom::arc::arc_start(&g), crate::geom::arc::arc_end(&g)]
+        }
+        Shape::Polyline { closed: false, .. } => crate::entity::area_parts(s)
+            .iter()
+            .filter_map(|p| match p {
+                Shape::Polyline { pts, .. } if pts.len() >= 2 => Some([pts[0], pts[pts.len() - 1]]),
+                _ => None,
+            })
+            .flatten()
+            .collect(),
+        Shape::Spline { pts, closed: false } if pts.len() >= 2 => vec![pts[0], pts[pts.len() - 1]],
+        _ => Vec::new(),
+    }
+}
+
+/// The bridges that close the line work's gaps up to `gap` metres
+/// (docs/adr/0329 §3): each free end that no other object's line work
+/// touches (within 1 µm) goes to the nearest point of the other objects'
+/// line work within `gap`; two ends bridged to each other are one bridge.
+/// In the objects' order, each object's ends in theirs.
+pub fn bridges(lines: &[Shape], gap: f64) -> Vec<Bridge> {
+    if !(gap > 0.0) {
+        return Vec::new();
+    }
+    let edges: Vec<Vec<crate::geom::intersect::Edge>> =
+        lines.iter().map(crate::ops::edges::entity_edges).collect();
+    let mut out: Vec<Bridge> = Vec::new();
+    for (i, s) in lines.iter().enumerate() {
+        for p in free_ends(s) {
+            let mut best: Option<(f64, Vec2)> = None;
+            for (j, es) in edges.iter().enumerate() {
+                if j == i {
+                    continue;
+                }
+                for e in es {
+                    let c = crate::geom::intersect::closest_on_edge(e, p);
+                    if best.is_none_or(|(d, _)| c.d < d) {
+                        best = Some((c.d, c.p));
+                    }
+                }
+            }
+            let Some((d, q)) = best else { continue };
+            // Touching already, or too far.
+            if d <= BOUND_TOL || d > gap {
+                continue;
+            }
+            let same = |b: &Bridge| {
+                let near = |u: Vec2, v: Vec2| crate::geometry::dist(u, v) <= BOUND_TOL;
+                (near(b.a, q) && near(b.b, p)) || (near(b.a, p) && near(b.b, q))
+            };
+            if !out.iter().any(same) {
+                out.push(Bridge {
+                    a: p,
+                    b: q,
+                    length: d,
+                });
+            }
+        }
+    }
+    out
+}
+
+/// A face's region (docs/adr/0328 §3): the face the line work of `bounds`
+/// and `islands` closes around `seed`, its gaps up to `gap` bridged (the
+/// islands' closed groups its holes), less the `cutouts`' boxes; the part
+/// that holds the seed. None when the line work closes nothing around it.
+pub fn face_region(
+    bounds: &[Shape],
+    islands: &[Shape],
+    cutouts: &[Vec<Vec2>],
+    seed: Vec2,
+    gap: f64,
+) -> Option<Area> {
+    let shapes: Vec<Shape> = bounds.iter().chain(islands).cloned().collect();
+    // The gaps the hatch was found across closed again (docs/adr/0329 §3).
+    let bridged = bridges(&shapes, gap)
+        .into_iter()
+        .map(|b| Shape::Line { a: b.a, b: b.b });
+    let lines: Vec<Entity> = shapes
+        .into_iter()
+        .chain(bridged)
+        .map(Entity::new)
+        .collect();
+    let index = crate::geom::region::FaceIndex::new(&[crate::ops::areas::line_source(&lines)]);
+    let face = index.at(seed, !islands.is_empty())?;
+    if cutouts.is_empty() {
+        return Some(face);
+    }
+    let cut = cut_base(&face, &[], cutouts);
+    pick(&cut.parts, seed).cloned()
 }
 
 /// `region` of objects as the documents hold them: the cutouts' boxes from

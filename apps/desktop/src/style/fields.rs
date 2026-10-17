@@ -368,3 +368,153 @@ pub fn color<'a, M: Clone + 'a>(
         .width(Fill)
         .into()
 }
+
+// ── Expressions ───────────────────────────────────────────────────────
+
+/// An expression field of a style window (the symbol designer's ƒ values, a generator step's
+/// numbers): its line in mono, and under it the aids: Alanlar ▾ that puts in the layer's fields
+/// (with how many objects have each), the variables and the functions where the text ends, and
+/// İfade… that opens the İfade oluşturucu on the text (as İşlemler's ε). `fields` empty: the menu
+/// says the layer has none. The line and the aids come apart so the caller lays the ƒ switch
+/// beside the line.
+pub fn expression<'a, M: Clone + 'a>(
+    id: Id,
+    value: &str,
+    placeholder: &str,
+    fields: &[(String, usize)],
+    on_input: impl Fn(String) -> M + 'a,
+    insert: impl Fn(String) -> M + 'a,
+    open: Option<M>,
+) -> (Element<'a, M>, Element<'a, M>) {
+    let problem = expression_problem(value, fields);
+    let line: Element<'a, M> = input(Some(id), placeholder, value, true, problem.is_some())
+        .on_input(on_input)
+        .into();
+    let aids = expression_aids(fields, insert, open);
+    let aids: Element<'a, M> = match problem {
+        Some(words) => column![
+            row![
+                icon(Icon::Warning).size(13.0).tone(Tone::Danger),
+                label::caption(words).style(style::text::danger)
+            ]
+            .spacing(6)
+            .align_y(Center),
+            aids
+        ]
+        .spacing(4)
+        .into(),
+        None => aids,
+    };
+    (line, aids)
+}
+
+/// An expression's aids, under its line: Ekle ▾ (the layer's fields with how many objects have
+/// each, the variables and the functions, put where the text ends) and Oluşturucu… for the İfade
+/// oluşturucu when `open` is given.
+pub fn expression_aids<'a, M: Clone + 'a>(
+    fields: &[(String, usize)],
+    insert: impl Fn(String) -> M + 'a,
+    open: Option<M>,
+) -> Element<'a, M> {
+    use kentos_processing::expression::{FUNCTIONS, VARIABLES};
+    let insert = Rc::new(insert);
+    let fields = fields.to_vec();
+    let menu = move || {
+        let put = insert.clone();
+        let mut m = Menu::new().header("Katmanın alanları");
+        if fields.is_empty() {
+            m = m.item("Katmanın nesnelerinde öznitelik yok", None);
+        }
+        for (f, n) in &fields {
+            m = m
+                .item(
+                    f.clone(),
+                    Some(put(kentos_native_style::tally::field_token(f))),
+                )
+                .shortcut(format!("{n} nesne"));
+        }
+        let vars = VARIABLES.iter().fold(Menu::new(), |m, v| {
+            m.item(format!("${}", v.name), Some(put(format!("${}", v.name))))
+                .detail(v.description)
+        });
+        let funcs = FUNCTIONS.iter().fold(Menu::new(), |m, f| {
+            m.item(f.signature, Some(put(format!("{}(", f.name))))
+                .detail(f.description)
+        });
+        m.separator()
+            .submenu("Değişkenler", vars)
+            .submenu("İşlevler", funcs)
+    };
+    let aid_face = |glyph: &str, words: &str, chevron: bool| -> Element<'a, M> {
+        let mut r = row![
+            icon(crate::icons::from_web(Some(glyph)))
+                .size(13.0)
+                .tone(Tone::Muted),
+            label::caption(words.to_owned()).wrapping(iced::widget::text::Wrapping::None)
+        ]
+        .spacing(4)
+        .align_y(Center);
+        if chevron {
+            r = r.push(icon(Icon::ChevronDown).size(10.0).tone(Tone::Muted));
+        }
+        container(r)
+            .padding([0, 6])
+            .center_y(typography::scaled(22.0))
+            .into()
+    };
+    let mut aids = row![tip(
+        MenuButton::new(aid_face("layerFields", "Ekle", true), menu),
+        Tip::new("Ekle")
+            .body("Katmanın alanları, değişkenler ve işlevler; yazının sonuna eklenir."),
+        Position::Top,
+    )]
+    .spacing(2)
+    .align_y(Center);
+    if let Some(open) = open {
+        aids = aids.push(tip(
+            button(aid_face("expression", "Oluşturucu…", false))
+                .padding(0)
+                .style(style::button::flat)
+                .on_press(open),
+            Tip::new("İfade oluşturucu").body(
+                "Renkli düzenleyici, tamamlama, alanların değerleri, nesne nesne önizleme ve Akış.",
+            ),
+            Position::Top,
+        ));
+    }
+    aids.into()
+}
+
+/// What is wrong with an expression as the language reads it (its fields as text attributes);
+/// None when it reads, or when it is empty (the fallback is drawn then).
+pub fn expression_problem(text: &str, fields: &[(String, usize)]) -> Option<String> {
+    use kentos_expression::{FieldDef, FieldSource, FieldType, Schema};
+    if text.trim().is_empty() {
+        return None;
+    }
+    let schema = Schema {
+        fields: fields
+            .iter()
+            .map(|(name, _)| FieldDef {
+                name: name.clone(),
+                ty: FieldType::Text,
+                source: FieldSource::Attribute,
+                description: String::new(),
+            })
+            .collect(),
+        ..Schema::default()
+    };
+    kentos_expression::editor::check(text, &schema)
+        .error
+        .map(|e| e.text())
+}
+
+/// Puts `text` where an expression ends, with a space when the last word needs one.
+pub fn appended(before: &str, text: &str) -> String {
+    let pad = if before.is_empty() || before.ends_with([' ', '(', ',']) {
+        ""
+    } else {
+        " "
+    };
+    format!("{before}{pad}{text}")
+}

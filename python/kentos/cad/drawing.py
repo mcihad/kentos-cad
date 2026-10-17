@@ -25,16 +25,18 @@ class _DrawingAudit(LocalCommand[DrawingAudit, DrawingAudited, DrawingAudited]):
     """``cad.drawing.audit`` v1. Denetle: Çizimin bozuk ilişkilerini ve kayıp tanımlarını
     bulur, istenirse onarır; kullanılmayan adlı kaynakları raporlar, istenirse stilleri
     temizler (AutoCAD'in AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı
-    (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan
-    canlı ölçü bağı (brokenDimension), projede olmayan yazı ya da ölçü stili
-    (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri alma adımıdır,
-    “Denetle”: bağ kopar, ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil
-    Standart olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır.
-    Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen bloklar
-    (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin adını
-    anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri siler,
-    bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse ve
-    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    (brokenLink), sınır nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı
+    yazısı çizimde olmayan tarama (missingCutout) ve kendi bağlı etiketini boş bırakan
+    tarama (hatchTextCycle; döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension),
+    projede olmayan yazı ya da ölçü stili (missingTextStyle, missingDimensionStyle). fix
+    ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı
+    taramanın listesinden çıkar ve tarama yeniden kesilir, ölçü bağı “nesne yok”
+    nedeniyle kopar, stil Standart olur, görünüş kalır; kilitli katmandaki nesne
+    onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar ve gruplar, yerleştirilmeyen
+    bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli olmayanlar), hiçbir nesnenin
+    adını anmadığı yazı ve ölçü stilleri; purge (textStyles, dimensionStyles) stilleri
+    siler, bu bir proje ayarıdır. Retler: invalid_revision; expectedRevision verilmişse
+    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.drawing.audit"
@@ -59,14 +61,16 @@ class _DrawingAudit(LocalCommand[DrawingAudit, DrawingAudited, DrawingAudited]):
         """Denetle: Çizimin bozuk ilişkilerini ve kayıp tanımlarını bulur, istenirse onarır;
         kullanılmayan adlı kaynakları raporlar, istenirse stilleri temizler (AutoCAD'in
         AUDIT ve PURGE'ü). Bulunanlar: nesnesi olmayan bağlı yazı (brokenLink), sınır
-        nesnesi olmayan ilişkili tarama (brokenHatch), nesnesi olmayan canlı ölçü bağı
-        (brokenDimension), projede olmayan yazı ya da ölçü stili (missingTextStyle,
-        missingDimensionStyle). fix ile onarım tek geri alma adımıdır, “Denetle”: bağ kopar,
-        ilişki kalkar, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart olur, görünüş
-        kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar: boş katmanlar
-        ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün bulduğu, kilitli
-        olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri; purge
-        (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler:
+        nesnesi olmayan ilişkili tarama (brokenHatch), boş bıraktığı yazısı çizimde olmayan
+        tarama (missingCutout) ve kendi bağlı etiketini boş bırakan tarama (hatchTextCycle;
+        döngü), nesnesi olmayan canlı ölçü bağı (brokenDimension), projede olmayan yazı ya
+        da ölçü stili (missingTextStyle, missingDimensionStyle). fix ile onarım tek geri
+        alma adımıdır, “Denetle”: bağ kopar, ilişki kalkar, yazı taramanın listesinden çıkar
+        ve tarama yeniden kesilir, ölçü bağı “nesne yok” nedeniyle kopar, stil Standart
+        olur, görünüş kalır; kilitli katmandaki nesne onarılmaz, uyarılır. Kullanılmayanlar:
+        boş katmanlar ve gruplar, yerleştirilmeyen bloklar (cad.layers.edit'in purge'ünün
+        bulduğu, kilitli olmayanlar), hiçbir nesnenin adını anmadığı yazı ve ölçü stilleri;
+        purge (textStyles, dimensionStyles) stilleri siler, bu bir proje ayarıdır. Retler:
         invalid_revision; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
         yazılmaz, sonuç conflict olur.
 

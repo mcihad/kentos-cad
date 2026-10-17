@@ -78,7 +78,7 @@ enum Kind {
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
-const DIMENSION_STYLES: [DimensionStyle; 10] = DimensionStyle::ALL;
+const DIMENSION_STYLES: [DimensionStyle; 13] = DimensionStyle::ALL;
 
 const KINDS: &[(&str, Kind)] = &[
     ("point", Kind::Point),
@@ -216,7 +216,30 @@ pub(super) struct Features {
     pub(super) block_cards: bool,
     /// Schema 59: a block definition's `dynamic` and an insert's `parameters` (docs/adr/0318).
     pub(super) dynamic_blocks: bool,
-    /// Schema 60: the settings' `forms` and a layer field's `id` (docs/adr/0401).
+    /// Schema 60: a dimension's references' `rule` (docs/adr/0320 §1).
+    dimension_rules: bool,
+    /// Schema 61: a dimension's `options`, `textShift` and `breaks` (docs/adr/0321).
+    pub(super) dimension_options: bool,
+    /// Schema 62: a dimension's kinds `centerMark`, `centerLine`, `elevation` and the rule `pair` (docs/adr/0322).
+    dimension_marks: bool,
+    /// Schema 63: a text's and a dimension's `overrides` (docs/adr/0322 §5).
+    overrides: bool,
+    /// Schema 64: a text's, a dimension's and a leader's `annotative` (docs/adr/0323).
+    annotative: bool,
+    /// Schema 65: a text's `layout` and a run's `stack` script (docs/adr/0324).
+    paragraph_layout: bool,
+    /// Schema 66: a text's `fields` (docs/adr/0325).
+    text_fields: bool,
+    /// Schema 67: a leader's `arms`, `tip`, `blocks` and `leaderStyle` (docs/adr/0326).
+    pub(super) multileader: bool,
+    /// Schema 68: a table's `styles`, `formulas`, `fields`, `link` and `schedule` (docs/adr/0327).
+    pub(super) table_cells: bool,
+    /// Schema 69: a hatch's `boundary` and its tie's `bounds` (docs/adr/0328).
+    pub(super) hatch_boundaries: bool,
+    /// Schema 70: a face's tie's `gap` (docs/adr/0329 §3).
+    pub(super) hatch_gaps: bool,
+    pub(super) hatch_extras: bool,
+    /// Schema 72: the settings' `forms` and a layer field's `id` (docs/adr/0401).
     pub(super) forms: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
@@ -292,6 +315,18 @@ impl Features {
             block_extras: schema >= crate::SCHEMA_WITH_BLOCK_EXTRAS,
             block_cards: schema >= crate::SCHEMA_WITH_BLOCK_CARDS,
             dynamic_blocks: schema >= crate::SCHEMA_WITH_DYNAMIC_BLOCKS,
+            dimension_rules: schema >= crate::SCHEMA_WITH_DIMENSION_RULES,
+            dimension_options: schema >= crate::SCHEMA_WITH_DIMENSION_OPTIONS,
+            dimension_marks: schema >= crate::SCHEMA_WITH_DIMENSION_MARKS,
+            overrides: schema >= crate::SCHEMA_WITH_OVERRIDES,
+            annotative: schema >= crate::SCHEMA_WITH_ANNOTATIVE,
+            paragraph_layout: schema >= crate::SCHEMA_WITH_PARAGRAPH_LAYOUT,
+            text_fields: schema >= crate::SCHEMA_WITH_TEXT_FIELDS,
+            multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
+            table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
+            hatch_boundaries: schema >= crate::SCHEMA_WITH_HATCH_BOUNDARIES,
+            hatch_gaps: schema >= crate::SCHEMA_WITH_HATCH_GAPS,
+            hatch_extras: schema >= crate::SCHEMA_WITH_HATCH_EXTRAS,
             forms: schema >= crate::SCHEMA_WITH_FORMS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
@@ -361,9 +396,13 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
                     || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
                     || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
+                    || (has.paragraph_layout && key == "layout")
+                    || (has.text_fields && key == "fields")
                     || (has.styles
                         && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
                     || (has.text_paths && key == "path")
+                    || (has.overrides && key == "overrides")
+                    || (has.annotative && key == "annotative")
             }
             Kind::Dimension => {
                 matches!(
@@ -399,11 +438,16 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                         ))
                     // What its points follow names objects: only the drawing's dimensions (docs/adr/0249 §4).
                     || (has.dimension_refs && has.uids && key == "refs")
+                    || (has.dimension_options && matches!(key, "options" | "textShift" | "breaks"))
+                    || (has.overrides && key == "overrides")
+                    || (has.annotative && key == "annotative")
             }
             // A hatch's tie names objects: only the drawing's hatches (docs/adr/0186 §6).
             Kind::Hatch => {
                 matches!(key, "ring" | "holes" | "pattern")
                     || (has.hatches && has.uids && key == "assoc")
+                    || (has.hatch_boundaries && key == "boundary")
+                    || (has.hatch_extras && key == "annotative")
             }
             Kind::Insert => {
                 matches!(key, "block" | "p" | "scale" | "rotation" | "mirror")
@@ -416,26 +460,31 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     key,
                     "pts" | "text" | "height" | "rotation" | "arrow" | "mask"
                 ) || (has.annotation && key == "arrowSize")
+                    || (has.annotative && key == "annotative")
+                    || (has.multileader && matches!(key, "arms" | "tip" | "blocks" | "leaderStyle"))
             }
-            Kind::Table => matches!(
-                key,
-                "p" | "rotation"
-                    | "height"
-                    | "rows"
-                    | "columns"
-                    | "cells"
-                    | "merges"
-                    | "aligns"
-                    | "header"
-                    | "grid"
-                    | "frame"
-                    | "source"
-                    | "textStyle"
-                    | "font"
-                    | "bold"
-                    | "italic"
-                    | "oblique"
-            ),
+            Kind::Table => {
+                matches!(
+                    key,
+                    "p" | "rotation"
+                        | "height"
+                        | "rows"
+                        | "columns"
+                        | "cells"
+                        | "merges"
+                        | "aligns"
+                        | "header"
+                        | "grid"
+                        | "frame"
+                        | "source"
+                        | "textStyle"
+                        | "font"
+                        | "bold"
+                        | "italic"
+                        | "oblique"
+                ) || (has.table_cells
+                    && matches!(key, "styles" | "formulas" | "fields" | "link" | "schedule"))
+            }
             Kind::Image => matches!(
                 key,
                 "p" | "width"
@@ -497,6 +546,8 @@ struct CloudRead {
 
 #[derive(Default)]
 struct Fields {
+    /// An annotation's scales (docs/adr/0323).
+    annotative: Option<Box<kentos_contracts::Annotative>>,
     raster: RasterRead,
     cloud: CloudRead,
     url: Option<String>,
@@ -566,8 +617,13 @@ struct Fields {
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
     assoc: Option<HatchAssoc>,
+    /// A hatch's exact boundary (schema 69, docs/adr/0328 §1).
+    hatch_boundary: Option<Vec<kentos_contracts::HatchLoop>>,
     /// A dimension's references (docs/adr/0249 §4).
     refs: Option<DimensionRefs>,
+    /// A dimension's moved value and breaks (docs/adr/0321).
+    text_shift: Option<kentos_contracts::TextShift>,
+    breaks: Vec<kentos_contracts::DimensionBreak>,
     block: Option<BlockId>,
     /// Where the insert's `block` is in the payload (for an unknown block).
     block_at: usize,
@@ -605,6 +661,14 @@ struct Fields {
     face_at: usize,
     look: DimensionLook,
     runs_at: usize,
+    layout_at: usize,
+    fields_at: usize,
+    /// A leader's schema 67 fields (docs/adr/0326) and where they began.
+    leader_arms: Vec<kentos_contracts::LeaderArm>,
+    leader_tip: Option<kentos_contracts::SubRef>,
+    leader_blocks: Vec<kentos_contracts::EntityId>,
+    leader_style: Option<String>,
+    leader_at: usize,
     /// A table's own fields (docs/adr/0184), and where each is (for a refusal).
     rows: Option<Vec<f64>>,
     columns: Option<Vec<f64>>,
@@ -616,6 +680,25 @@ struct Fields {
     frame: Option<f64>,
     source: Option<TableSource>,
     table_at: TablePlaces,
+    /// Schema 68 (docs/adr/0327): a table's cells' styles, formulas and fields, a linked file's data.
+    table_styles: Vec<kentos_contracts::CellStyle>,
+    table_formulas: Vec<kentos_contracts::CellFormula>,
+    table_fields: Vec<kentos_contracts::CellField>,
+    table_link: Option<Link>,
+}
+
+/// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Link {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    copy: Option<Vec<Vec<String>>>,
+    #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
+    overrides: kentos_contracts::SourceOverrides,
 }
 
 /// Where a table's fields are in the payload, for a refusal of its shape.
@@ -682,12 +765,8 @@ pub(super) fn objects(
         }
         // A moved attribute only of a movable tag (docs/adr/0317 §1).
         if let Entity::Insert(insert) = &entity
-            && let Err(fault) = kentos_contracts::blocks::places(
-                blocks,
-                std::slice::from_ref(&entity),
-                None,
-                index,
-            )
+            && let Err(fault) =
+                kentos_contracts::blocks::places(blocks, std::slice::from_ref(&entity), None, index)
         {
             let tag = match &fault {
                 kentos_contracts::blocks::BlockFault::BadPlace { tag, .. } => tag.clone(),
@@ -1078,16 +1157,176 @@ pub(super) fn object(
             "style" => {
                 // Schema 9's kinds after the first five (docs/adr/0147).
                 let styles = DIMENSION_STYLES.map(|s| (s.name(), s));
-                let known = if has.dimensions {
+                // Schema 62's three after them (docs/adr/0322).
+                let known = if has.dimension_marks {
                     &styles[..]
+                } else if has.dimensions {
+                    &styles[..10]
                 } else {
                     &styles[..5]
                 };
                 f.style = Some(named(r, known)?)
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
-            "assoc" => f.assoc = Some(hatch_assoc(r)?),
-            "refs" => f.refs = Some(dimension_refs(r, has.subref_extras)?),
+            "assoc" => f.assoc = Some(hatch_assoc(r, has.hatch_boundaries, has.hatch_gaps)?),
+            "boundary" if kind == Kind::Hatch => {
+                let (b, at): (Vec<kentos_contracts::HatchLoop>, usize) = json_part(r, "taramanın sınırı")?;
+                if let Some(words) = kentos_contracts::boundary_problem(&b) {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.hatch_boundary = Some(b);
+            }
+            "refs" => {
+                f.refs = Some(dimension_refs(
+                    r,
+                    has.subref_extras,
+                    has.dimension_rules,
+                    has.dimension_marks,
+                )?)
+            }
+            // Schema 65 (docs/adr/0324 §1): a text's indents, tabs and columns, as their JSON; checked with its box.
+            "layout" => {
+                let (l, at): (kentos_contracts::ParagraphLayout, usize) = json_part(r, "yazının düzeni")?;
+                f.layout_at = at;
+                f.paragraph.layout = Some(Box::new(l));
+            }
+            // Schema 67 (docs/adr/0326): a leader's arms, tip, blocks and style; checked together.
+            "arms" if kind == Kind::Leader => {
+                let (l, at): (Vec<kentos_contracts::LeaderArm>, usize) = json_part(r, "kılavuzun kolları")?;
+                if l.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kol listesi yazılmaz"));
+                }
+                f.leader_at = at;
+                f.leader_arms = l;
+            }
+            "tip" if kind == Kind::Leader => {
+                let (t, at): (kentos_contracts::SubRef, usize) = json_part(r, "kılavuzun ucu")?;
+                f.leader_at = at;
+                f.leader_tip = Some(t);
+            }
+            "blocks" if kind == Kind::Leader => {
+                let (b, at): (Vec<kentos_contracts::EntityId>, usize) = json_part(r, "kılavuzun blokları")?;
+                if b.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş blok listesi yazılmaz"));
+                }
+                f.leader_at = at;
+                f.leader_blocks = b;
+            }
+            "leaderStyle" if kind == Kind::Leader => f.leader_style = Some(text(r)?),
+            // Schema 68 (docs/adr/0327): a table's styles, formulas, fields and sources, as their JSON; checked with
+            // the table.
+            "styles" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellStyle>, usize) = json_part(r, "tablonun biçimleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş biçim listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_styles = v;
+            }
+            "formulas" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellFormula>, usize) = json_part(r, "tablonun formülleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş formül listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_formulas = v;
+            }
+            "fields" if kind == Kind::Table => {
+                let (v, at): (Vec<kentos_contracts::CellField>, usize) = json_part(r, "tablonun alanları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş alan listesi yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_fields = v;
+            }
+            "link" if kind == Kind::Table => {
+                let (v, at): (Link, usize) = json_part(r, "tablonun bağlı dosyası")?;
+                if v.path.is_none() && v.digest.is_none() && v.copy.is_none() && v.overrides.is_keep() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş bağ yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.table_link = Some(v);
+            }
+            "schedule" if kind == Kind::Table => {
+                let (v, at): (TableSource, usize) = json_part(r, "tablonun blok çizelgesi")?;
+                if !matches!(v, TableSource::Blocks { .. }) || f.source.is_some() {
+                    return Err(r.fail_at(Code::BadValue, at, "çizelge yalnız blok çizelgesidir ve kaynakla birlikte yazılmaz"));
+                }
+                f.table_at.source = at;
+                f.source = Some(v);
+            }
+            // Schema 66 (docs/adr/0325 §1): a text's fields, as their JSON; checked with its letters.
+            "fields" => {
+                let (l, at): (Vec<kentos_contracts::TextField>, usize) = json_part(r, "yazının alanları")?;
+                f.fields_at = at;
+                if l.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş alan listesi yazılmaz; alanı olmayan yazıda alan yoktur"));
+                }
+                f.paragraph.fields = l;
+            }
+            // Schema 64 (docs/adr/0323): the scales, as their JSON; the whole object's rule is checked once it is read.
+            "annotative" => {
+                let (a, _): (kentos_contracts::Annotative, usize) = json_part(r, "ölçekler")?;
+                f.annotative = Some(Box::new(a));
+            }
+            // Schema 63 (docs/adr/0322 §5): the fields set apart from the style, by name, as their JSON.
+            "overrides" => {
+                let (o, at): (Vec<String>, usize) = json_part(r, "geçersiz kılınanlar")?;
+                if o.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş geçersiz kılma listesi yazılmaz",
+                    ));
+                }
+                let problem = if kind == Kind::Text {
+                    TextFace {
+                        overrides: o.clone(),
+                        font: Some(kentos_contracts::DrawingFont::Barlow),
+                        ..TextFace::default()
+                    }
+                    .problem()
+                } else {
+                    DimensionLook {
+                        overrides: o.clone(),
+                        ..DimensionLook::default()
+                    }
+                    .problem()
+                };
+                if let Some((_, words)) = problem {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.face.overrides.clone_from(&o);
+                f.look.overrides = o;
+            }
+            // Schema 61 (docs/adr/0321): as their JSON, as the writer writes them.
+            "options" => {
+                let (o, at): (kentos_contracts::DimensionOptions, usize) =
+                    json_part(r, "seçenekler")?;
+                if let Some(words) = o.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.look.options = Some(Box::new(o));
+            }
+            "textShift" => {
+                let (s, at): (kentos_contracts::TextShift, usize) =
+                    json_part(r, "değerin kayması")?;
+                if let Some(words) = s.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.text_shift = Some(s);
+            }
+            "breaks" => {
+                let (b, at): (Vec<kentos_contracts::DimensionBreak>, usize) =
+                    json_part(r, "kırmalar")?;
+                if b.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kırma listesi yazılmaz"));
+                }
+                if let Some(words) = kentos_contracts::breaks_problem(&b) {
+                    return Err(r.fail_at(Code::BadValue, at, &words));
+                }
+                f.breaks = b;
+            }
             "block" => {
                 f.block_at = r.position();
                 f.block = Some(BlockId(id16(r)?));
@@ -1181,7 +1420,7 @@ pub(super) fn object(
             }
             "runs" => {
                 f.runs_at = r.position();
-                f.paragraph.runs = list(r, |r, _| text_run(r))?;
+                f.paragraph.runs = list(r, |r, _| text_run(r, has.paragraph_layout))?;
                 // The writer leaves an empty list out: one spelling (§6.6).
                 if f.paragraph.runs.is_empty() {
                     return Err(r.fail_at(
@@ -1421,6 +1660,10 @@ pub(super) fn object(
     {
         return Err(r.fail(Code::BadValue, &why));
     }
+    // An annotation's scales (docs/adr/0323).
+    if let Some(why) = kentos_contracts::annotative_problem(&entity) {
+        return Err(r.fail(Code::BadValue, &why));
+    }
     let uid = if has.uids {
         Some(required(r, f.uid, "uid")?)
     } else {
@@ -1592,6 +1835,23 @@ fn build(
             if let Some(words) = f.paragraph.runs_problem(&text) {
                 return Err(r.fail_at(Code::BadValue, f.runs_at, &words));
             }
+            // Its layout: in its height's range, columns only in a box; one spelling, no empty layout (docs/adr/0324 §1).
+            if let Some(l) = &f.paragraph.layout {
+                if l.is_plain() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        f.layout_at,
+                        "boş yazı düzeni yazılmaz; düzensiz yazıda alan yoktur",
+                    ));
+                }
+                if let Some((_, words)) = l.problem(f.paragraph.box_width.is_some()) {
+                    return Err(r.fail_at(Code::BadValue, f.layout_at, &words));
+                }
+            }
+            // Its fields: in its letters, in order, their sources and formats right (docs/adr/0325 §1).
+            if let Some(words) = kentos_contracts::text_fields_problem(&f.paragraph.fields, &text) {
+                return Err(r.fail_at(Code::BadValue, f.fields_at, &words));
+            }
             // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
             if let Some((_, words)) = f.face.problem() {
                 return Err(r.fail_at(Code::BadValue, f.face_at, &words));
@@ -1608,6 +1868,7 @@ fn build(
                 return Err(r.fail_at(Code::BadValue, f.path_at, &words));
             }
             Entity::Text(TextEntity {
+                annotative: f.annotative.take(),
                 base,
                 p: required(r, f.p, "p")?,
                 text,
@@ -1639,6 +1900,17 @@ fn build(
                     Some(required(r, f.za, "za")?),
                     Some(required(r, f.zb, "zb")?),
                 )
+            } else if style == Some(DimensionStyle::Elevation) {
+                // A level's one elevation (docs/adr/0322).
+                if f.zb.is_some() {
+                    return Err(field_fail(
+                        r,
+                        "zb",
+                        f.zb_at,
+                        "kot ölçüsünün yalnız bir kotu (za) olur",
+                    ));
+                }
+                (Some(required(r, f.za, "za")?), None)
             } else if f.za.is_some() || f.zb.is_some() {
                 let (key, at) = if f.za.is_some() {
                     ("za", f.za_at)
@@ -1649,7 +1921,7 @@ fn build(
                     r,
                     key,
                     at,
-                    "kot (za, zb) yalnız eğim ölçüsünde yazılır",
+                    "kot (za, zb) yalnız eğim ve kot ölçüsünde yazılır",
                 ));
             } else {
                 (None, None)
@@ -1667,6 +1939,9 @@ fn build(
                 ));
             }
             Entity::Dimension(DimensionEntity {
+                annotative: f.annotative.take(),
+                text_shift: f.text_shift.take(),
+                breaks: std::mem::take(&mut f.breaks),
                 base,
                 a: required(r, f.a, "a")?,
                 b: required(r, f.b, "b")?,
@@ -1689,6 +1964,8 @@ fn build(
             holes: f.loops.take(),
             pattern: required(r, f.pattern.take(), "pattern")?,
             assoc: f.assoc.take(),
+            boundary: f.hatch_boundary.take(),
+            annotative: f.annotative.take(),
         }),
         Kind::Insert => {
             let scale = required(r, f.scale, "scale")?;
@@ -1696,25 +1973,27 @@ fn build(
             if let Some((y, at)) = f.y_scale
                 && y == scale
             {
-                return Err(r.fail_at(
-                    Code::BadValue,
-                    at,
-                    "y ölçeği x ölçeğine eşitse yazılmaz",
-                ));
+                return Err(r.fail_at(Code::BadValue, at, "y ölçeği x ölçeğine eşitse yazılmaz"));
             }
             Entity::Insert(InsertEntity {
-            parameters: f.parameters.take().unwrap_or_default(),
-            attribute_places: f.attribute_places.take().unwrap_or_default(),
-            base,
-            block: required(r, f.block, "block")?,
-            p: required(r, f.p, "p")?,
-            scale,
-            y_scale: f.y_scale.map(|(y, _)| y),
-            rotation: required(r, f.rotation, "rotation")?,
-            mirror: f.mirror.unwrap_or(false),
-        })
+                parameters: f.parameters.take().unwrap_or_default(),
+                attribute_places: f.attribute_places.take().unwrap_or_default(),
+                base,
+                block: required(r, f.block, "block")?,
+                p: required(r, f.p, "p")?,
+                scale,
+                y_scale: f.y_scale.map(|(y, _)| y),
+                rotation: required(r, f.rotation, "rotation")?,
+                mirror: f.mirror.unwrap_or(false),
+            })
         }
-        Kind::Leader => Entity::Leader(LeaderEntity {
+        Kind::Leader => {
+            let leader = LeaderEntity {
+            tip: f.leader_tip.take(),
+            leader_style: f.leader_style.take(),
+            blocks: std::mem::take(&mut f.leader_blocks),
+            arms: std::mem::take(&mut f.leader_arms),
+            annotative: f.annotative.take(),
             base,
             pts: required(r, f.pts.take(), "pts")?,
             text: f.text.take(),
@@ -1723,13 +2002,45 @@ fn build(
             arrow: f.arrow,
             arrow_size: f.arrow_size,
             mask: f.mask.unwrap_or(false),
-        }),
+            };
+            if let Some((_, words)) = kentos_contracts::leader_problem(&leader) {
+                return Err(r.fail_at(Code::BadValue, f.leader_at, &words));
+            }
+            Entity::Leader(leader)
+        }
         Kind::Table => {
             // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
             if let Some((_, words)) = f.face.problem() {
                 return Err(r.fail_at(Code::BadValue, f.face_at, &words));
             }
+            let mut source = f.source.take();
+            if let Some(link) = f.table_link.take() {
+                match &mut source {
+                    Some(TableSource::File {
+                        path,
+                        digest,
+                        copy,
+                        overrides,
+                        ..
+                    }) => {
+                        *path = link.path;
+                        *digest = link.digest;
+                        *copy = link.copy;
+                        *overrides = link.overrides;
+                    }
+                    _ => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            f.table_at.source,
+                            "bağ yalnız dosyadan gelen tablonun kaynağıyla yazılır",
+                        ));
+                    }
+                }
+            }
             let table = TableEntity {
+                styles: std::mem::take(&mut f.table_styles),
+                formulas: std::mem::take(&mut f.table_formulas),
+                fields: std::mem::take(&mut f.table_fields),
                 base,
                 p: required(r, f.p, "p")?,
                 rotation: required(r, f.rotation, "rotation")?,
@@ -1743,10 +2054,10 @@ fn build(
                 grid: f.grid,
                 frame: f.frame,
                 face: std::mem::take(&mut f.face),
-                source: f.source.take(),
+                source,
             };
             // Its rows, columns, cells and ranges hold together (docs/adr/0184 §1).
-            if let Some((field, words)) = table.shape().problem() {
+            if let Some((field, words)) = table.problem() {
                 return Err(field_fail(r, field, f.table_at.of(field), &words));
             }
             Entity::Table(table)
@@ -2164,6 +2475,10 @@ fn table_source(r: &mut Reader<'_>) -> Result<TableSource, KcadError> {
             ));
         }
         return Ok(TableSource::File {
+            path: None,
+            overrides: Default::default(),
+            digest: None,
+            copy: None,
             name: required(r, name, "name")?,
             sheet,
         });
@@ -2376,6 +2691,7 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
     let at = r.position();
     let (mut kind, mut angle, mut spacing) = (None, None, None);
     let (mut name, mut scale, mut lines, mut gradient) = (None, None, None, None);
+    let mut origin = None;
     map(r, |r, key| {
         match key {
             "type" => {
@@ -2390,6 +2706,8 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
             "scale" if has.hatches => scale = Some(r.float()?),
             "lines" if has.hatches => lines = Some(list(r, |r, _| pattern_line(r))?),
             "gradient" if has.hatches => gradient = Some(hatch_gradient(r)?),
+            // Schema 71 (docs/adr/0331 §2).
+            "origin" if has.hatch_extras => origin = Some(point(r)?),
             _ => return Err(unknown(r)),
         }
         Ok(())
@@ -2402,8 +2720,9 @@ fn pattern(r: &mut Reader<'_>, has: Features) -> Result<HatchPattern, KcadError>
         scale,
         lines,
         gradient,
+        origin,
     };
-    if p.has_definition()
+    if (p.has_definition() || p.origin.is_some())
         && let Some((_, words)) = p.problem()
     {
         return Err(r.fail_at(Code::BadValue, at, &words));
@@ -2501,14 +2820,19 @@ fn wipeout(r: &mut Reader<'_>) -> Result<kentos_contracts::Wipeout, KcadError> {
     })
 }
 
-fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
+fn hatch_assoc(r: &mut Reader<'_>, faces: bool, gaps: bool) -> Result<HatchAssoc, KcadError> {
     let at = r.position();
     let (mut seed, mut outer, mut islands, mut cutouts) = (None, None, Vec::new(), Vec::new());
+    let mut bounds = Vec::new();
+    let mut gap = None;
     map(r, |r, key| {
         match key {
+            // Schema 70 (docs/adr/0329 §3).
+            "gap" if gaps => gap = Some(r.float()?),
             "seed" => seed = Some(point(r)?),
             "outer" => outer = Some(EntityId(id16(r)?)),
-            "cutouts" | "islands" => {
+            // A face's line work (schema 69, docs/adr/0328 §3).
+            "cutouts" | "islands" | "bounds" if key != "bounds" || faces => {
                 let at = r.position();
                 let ids = list(r, |r, _| Ok(EntityId(id16(r)?)))?;
                 // The writer leaves an empty list out: one spelling (§6.6).
@@ -2519,18 +2843,24 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
                         "nesne listesi boş; nesnesi olmayan listenin alanı yazılmaz",
                     ));
                 }
-                if key == "cutouts" {
-                    cutouts = ids;
-                } else {
-                    islands = ids;
+                match key {
+                    "cutouts" => cutouts = ids,
+                    "bounds" => bounds = ids,
+                    _ => islands = ids,
                 }
             }
             _ => return Err(unknown(r)),
         }
         Ok(())
     })?;
+    // Before schema 69 a tie always names its closed object.
+    if !faces && outer.is_none() {
+        return Err(r.fail_at(Code::BadValue, at, "taramanın ilişkisinde outer eksik"));
+    }
     let a = HatchAssoc {
-        outer: required(r, outer, "outer")?,
+        gap,
+        outer,
+        bounds,
         islands,
         cutouts,
         seed: required(r, seed, "seed")?,
@@ -2543,7 +2873,12 @@ fn hatch_assoc(r: &mut Reader<'_>) -> Result<HatchAssoc, KcadError> {
 
 /// What a dimension's points follow (docs/adr/0249 §4): `a`, `b` and `c`, each a reference; a point
 /// without one is not written, nor are references none of its points has.
-fn dimension_refs(r: &mut Reader<'_>, extras: bool) -> Result<DimensionRefs, KcadError> {
+fn dimension_refs(
+    r: &mut Reader<'_>,
+    extras: bool,
+    rules: bool,
+    pairs: bool,
+) -> Result<DimensionRefs, KcadError> {
     let at = r.position();
     let mut refs = DimensionRefs::default();
     map(r, |r, key| {
@@ -2551,6 +2886,21 @@ fn dimension_refs(r: &mut Reader<'_>, extras: bool) -> Result<DimensionRefs, Kca
             "a" => &mut refs.a,
             "b" => &mut refs.b,
             "c" => &mut refs.c,
+            // Schema 60 (docs/adr/0320 §1).
+            "rule" if rules => {
+                let here = r.position();
+                refs.rule = Some(match r.text()? {
+                    "curve" => kentos_contracts::DimensionRule::Curve,
+                    "edges" => kentos_contracts::DimensionRule::Edges,
+                    // Schema 62 (docs/adr/0322).
+                    "pair" if pairs => kentos_contracts::DimensionRule::Pair,
+                    other => {
+                        let words = format!("ölçünün başvuru kuralı “{other}” bilinmiyor");
+                        return Err(r.fail_at(Code::BadValue, here, &words));
+                    }
+                });
+                return Ok(());
+            }
             _ => return Err(unknown(r)),
         };
         *slot = Some(subref(r, extras)?);
@@ -2696,7 +3046,7 @@ fn text_path(r: &mut Reader<'_>) -> Result<kentos_contracts::TextPath, KcadError
     })
 }
 
-fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
+fn text_run(r: &mut Reader<'_>, stacks: bool) -> Result<TextRun, KcadError> {
     let (mut start, mut end) = (None, None);
     let mut run = TextRun::default();
     map(r, |r, key| {
@@ -2718,10 +3068,13 @@ fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
             "italic" => run.italic = flag(r, "italic")?,
             "underline" => run.underline = flag(r, "underline")?,
             "script" => {
-                run.script = Some(named(
-                    r,
-                    &[("super", TextScript::Super), ("sub", TextScript::Sub)],
-                )?)
+                // Schema 65 (docs/adr/0324 §1): a stacked fraction.
+                let scripts: &[(&str, TextScript)] = if stacks {
+                    &[("super", TextScript::Super), ("sub", TextScript::Sub), ("stack", TextScript::Stack)]
+                } else {
+                    &[("super", TextScript::Super), ("sub", TextScript::Sub)]
+                };
+                run.script = Some(named(r, scripts)?)
             }
             "color" => run.color = Some(text(r)?),
             _ => return Err(unknown(r)),
@@ -2774,4 +3127,31 @@ fn param_value(r: &mut Reader<'_>) -> Result<kentos_contracts::ParamValue, KcadE
         Some(b) if b >> 5 == 4 => V::Point(point(r)?),
         _ => V::Number(r.float()?),
     })
+}
+
+/// A contract's part written as its JSON (docs/adr/0321): read, checked against the writer's form (its defaults not
+/// written, floats as floats), and where it starts.
+pub(super) fn json_part<T: serde::de::DeserializeOwned + serde::Serialize>(
+    r: &mut Reader<'_>,
+    what: &str,
+) -> Result<(T, usize), KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let read: T = serde_json::from_value(value.clone()).map_err(|e| {
+        let words = e.to_string();
+        let code = if words.contains("unknown field") {
+            Code::UnknownField
+        } else {
+            Code::BadValue
+        };
+        r.fail_at(code, at, &format!("{what} okunamadı: {words}"))
+    })?;
+    if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("{what} yazıcının biçiminde değil (varsayılan değer yazılmış ya da ondalık yerine tam sayı)"),
+        ));
+    }
+    Ok((read, at))
 }

@@ -77,6 +77,9 @@ impl QuickDimension {
         let geometries = dimensions
             .iter()
             .map(|d| EntityGeometry::Dimension {
+                annotative: None,
+                text_shift: None,
+                breaks: Vec::new(),
                 a: wire(d.a),
                 b: wire(d.b),
                 offset: d.offset,

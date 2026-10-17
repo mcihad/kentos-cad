@@ -13,7 +13,7 @@ Gruplar ve alanlar görünürlük kuralı alıyordu, sekmeler almıyordu; kural�
 ## Karar
 
 - Sekmenin `visibleWhen`'i: kural tutmayan kayıtta sekme ve içindekiler gösterilmez, sorulmaz (grubun kuralı gibi). Sözleşmenin,
-  ön denetimin, alanın kullanıldığı yerlerin ve form çekirdeğinin kuralı aynıdır; `.kcad` şema 60'ta, bağımsız okuyucu ve form ikizi
+  ön denetimin, alanın kullanıldığı yerlerin ve form çekirdeğinin kuralı aynıdır; `.kcad` şema 72'de, bağımsız okuyucu ve form ikizi
   yazar.
 - Tasarımcıda sekme, grup, alan, ilişkili kayıtlar ve ekler öğesinin özelliklerinde **Alt türlerde göster**: katmanın her alt türü
   bir çip; seçilenler görünürlük kuralını `[Tür] içinde ('sanayi', 'depo')` olarak yazar, hiçbiri seçilmezse kural kalkar. Kural

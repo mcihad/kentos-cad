@@ -12,7 +12,7 @@
 //! own object and undo step (“Ekle”); the ring says nothing but its point,
 //! as on the web. The rings' points are the shared core's (`donut_rings`).
 
-use kentos_contracts::{EntityGeometry, HatchPattern, HatchPatternType};
+use kentos_contracts::{EntityGeometry, HatchLoop, HatchPattern, HatchPatternType};
 use kentos_geometry_core::tools::drawing::donut_rings;
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -71,7 +71,21 @@ impl Donut {
             return;
         }
         let rings = donut_rings(p, cx.memory.donut_inner, cx.memory.donut_outer);
+        // Its two circles exact (docs/adr/0328 §1): each two half arcs.
+        let circle = |r: f64| HatchLoop {
+            pts: vec![
+                kentos_contracts::Vec2 { x: p.x + r, y: p.y },
+                kentos_contracts::Vec2 { x: p.x - r, y: p.y },
+            ],
+            bulges: Some(vec![1.0, 1.0]),
+            curves: None,
+        };
+        let mut boundary = vec![circle(cx.memory.donut_outer / 2.0)];
+        if cx.memory.donut_inner > 0.0 {
+            boundary.push(circle(cx.memory.donut_inner / 2.0));
+        }
         let geometry = EntityGeometry::Hatch {
+            boundary: Some(boundary),
             ring: wire_all(&rings.ring),
             holes: rings
                 .holes
@@ -79,6 +93,7 @@ impl Donut {
             // A solid fill with the inner circle left out: AutoCAD's wide polyline.
             pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
             assoc: None,
+            annotative: None,
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx)
             && let Some(&id) = out.ids.first()

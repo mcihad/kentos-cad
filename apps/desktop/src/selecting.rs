@@ -42,7 +42,7 @@ impl App {
     }
 
     /// The persistent ids of these objects, as the query takes them.
-    fn uids_of(&self, slots: &[Slot]) -> Vec<String> {
+    pub(crate) fn uids_of(&self, slots: &[Slot]) -> Vec<String> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };

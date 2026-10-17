@@ -42,6 +42,8 @@ pub struct HatchSelected {
     /// What the command found the regions from, kept while the drawing stays.
     cache: RegionCache,
     memory: Memory,
+    /// The project's own patterns' names, as of the last call (docs/adr/0331 §1).
+    user: Vec<String>,
 }
 
 fn ring_points(r: &Ring) -> Vec<Vec2> {
@@ -70,8 +72,9 @@ impl HatchSelected {
                 islands: Some(m.hatch_islands),
                 texts: Some(m.hatch_texts),
                 associative: Some(m.hatch_assoc),
+                island_style: options::island_style(&m),
             },
-            pattern: options::spec(&m),
+            pattern: options::spec(&m, &self.user),
             layer_id: doc.layers().active().to_owned(),
             look: NewLook {
                 color: cx.draft.color_text(),
@@ -81,6 +84,8 @@ impl HatchSelected {
                 symbol: cx.template_symbol(),
             },
             expected_revision: None,
+            draw_order: options::look_of(&m).1,
+            transparency: options::look_of(&m).0,
         }
     }
 
@@ -135,6 +140,7 @@ impl Stages for HatchSelected {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
+        self.user = options::user_names(cx);
     }
 
     /// The selection's closed objects; none: said, and the tool leaves.
@@ -168,7 +174,7 @@ impl Stages for HatchSelected {
     /// The options while picking too.
     fn picking_hint(&self, prompt: Prompt) -> Prompt {
         options::with_region_options(
-            options::with_pattern_options(prompt, &self.memory),
+            options::with_pattern_options(prompt, &self.memory, &self.user),
             &self.memory,
             true,
         )
@@ -203,13 +209,18 @@ impl Stages for HatchSelected {
             format!("{n} bölge taranacak; Enter ya da sağ tıkla tarayın"),
         );
         options::with_region_options(
-            options::with_pattern_options(prompt, &self.memory),
+            options::with_pattern_options(prompt, &self.memory, &self.user),
             &self.memory,
             true,
         )
     }
 
-    fn point(&mut self, _p: Vec2, _cx: &mut Context<'_>) -> Flow {
+    /// A click answers Başlangıç's point or Özellik al's hatch (docs/adr/0331 §2).
+    fn point(&mut self, p: Vec2, cx: &mut Context<'_>) -> Flow {
+        if options::clicked(&mut self.asking, p, p, cx) {
+            self.see(cx);
+            self.plan(cx);
+        }
         Flow::Stay
     }
 
@@ -225,7 +236,7 @@ impl Stages for HatchSelected {
     }
 
     fn takes_points(&self) -> bool {
-        false
+        matches!(self.asking, Some(Asking::Origin | Asking::Inherit))
     }
 
     /// Enter writes; while a value is asked it keeps the old one.
@@ -272,7 +283,7 @@ impl Stages for HatchSelected {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        options::choices_of(key, &self.memory)
+        options::choices_of(key, &self.memory, &self.user)
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {

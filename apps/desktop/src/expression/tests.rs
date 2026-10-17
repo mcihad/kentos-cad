@@ -431,6 +431,34 @@ fn akis_changes_the_text_and_tamam_writes_it_back() {
     );
     assert_eq!(source(&app), "yuvarla(Nitelik, 3)");
 
+    // A full node chosen, an operator button wraps it where it stands; the new node is chosen,
+    // so the next value goes into its empty input.
+    flow(&mut app, F::Select(Some("0.1".into())));
+    event(
+        &mut app,
+        Event::Operator("*", " * ", kentos_expression::editor::Kind::Operator),
+    );
+    assert_eq!(source(&app), "yuvarla(Nitelik, 3 * ?)");
+    assert_eq!(
+        app.builder.as_ref().and_then(|b| b.flow.selected.clone()),
+        Some("0.1".into())
+    );
+    // A double press on Sayı in the tree: into the new node's empty input.
+    event(&mut app, Event::Row("lit:number".into()));
+    event(&mut app, Event::Row("lit:number".into()));
+    assert_eq!(source(&app), "yuvarla(Nitelik, 3 * 0)");
+    // The result chosen: its whole expression is wrapped.
+    flow(&mut app, F::Select(Some("r".into())));
+    event(
+        &mut app,
+        Event::Operator("+", " + ", kentos_expression::editor::Kind::Operator),
+    );
+    assert_eq!(source(&app), "yuvarla(Nitelik, 3 * 0) + ?");
+    flow(&mut app, F::Undo);
+    flow(&mut app, F::Undo);
+    flow(&mut app, F::Undo);
+    assert_eq!(source(&app), "yuvarla(Nitelik, 3)");
+
     // Metin shows the same text; Tamam writes it back.
     event(&mut app, Event::Mode(ViewMode::Text));
     event(&mut app, Event::Ok);
@@ -582,4 +610,32 @@ fn world_screens() {
             println!("{}", file.display());
         }
     }
+}
+
+/// A text the flow cannot read: Akış says so, and back in Metin the error's span is chosen.
+#[test]
+fn an_unreadable_text_goes_back_to_metin_at_its_error() {
+    use super::ViewMode;
+    let mut app = opened();
+    written(&mut app, "Nitelik = 'Arsa' ve (");
+    event(&mut app, Event::Mode(ViewMode::Flow));
+    let b = app.builder.as_ref().expect("open");
+    let error = b
+        .flow
+        .flow
+        .as_ref()
+        .and_then(|f| f.error.clone())
+        .expect("the flow says the text does not read");
+    event(&mut app, Event::Mode(ViewMode::Text));
+    let b = app.builder.as_ref().expect("open");
+    assert_eq!(b.view_mode, ViewMode::Text);
+    let c = b.content.cursor();
+    let units = |p: iced::widget::text_editor::Position| {
+        kentos_expression::editor::units::from_line_byte(&b.source, p.line, p.column)
+    };
+    assert_eq!(units(c.position), error.end.max(error.start));
+    assert_eq!(
+        c.selection.map(units).unwrap_or(units(c.position)),
+        error.start
+    );
 }

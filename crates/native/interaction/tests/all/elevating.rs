@@ -590,6 +590,7 @@ fn what_takes_no_elevation_is_counted_on_a_line_of_its_own_after_the_result() {
     let text = add(
         &mut b,
         Entity::Text(TextEntity {
+            annotative: None,
             base: base("cizim"),
             p: pt(1.0, 1.0),
             text: "Park".into(),

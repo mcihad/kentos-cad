@@ -724,7 +724,7 @@ impl App {
         } else {
             String::new()
         };
-        self.say(
+        self.announce(
             Level::Info,
             format!("“{name}” katmanının alanları kaydedildi.{tail}"),
         );

@@ -445,6 +445,16 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         path: Option<crate::TextPath>,
+        /// Its indents, tab stops and columns (docs/adr/0324 §1); absent: an object updated keeps its own, a new one
+        /// has none; an empty layout (`{}`) takes it away.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        layout: Option<Box<crate::ParagraphLayout>>,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces
@@ -493,10 +503,23 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         refs: Option<Box<crate::DimensionRefs>>,
+        /// Its value moved from its place (docs/adr/0321 §1).
+        #[serde(default, rename = "textShift", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        text_shift: Option<crate::TextShift>,
+        /// The gaps in its lines (docs/adr/0321 §1).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DimensionBreak>>", optional))]
+        breaks: Vec<crate::DimensionBreak>,
         /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
         #[serde(flatten)]
         #[cfg_attr(feature = "ts", ts(flatten))]
         look: crate::DimensionLook,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {
@@ -511,6 +534,15 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         assoc: Option<crate::HatchAssoc>,
+        /// Its boundary exact (docs/adr/0328 §1): the outer loop, then the holes'; `ring` and `holes` are then
+        /// drawn from it and may be left empty.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        boundary: Option<Vec<crate::HatchLoop>>,
+        /// Its scales (docs/adr/0331 §3): an annotative hatch's pattern as large on paper at each.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
     },
     /// A block placed (docs/adr/0144): the definition's base point goes to
     /// `p`, its objects are mirrored in the definition's x axis when
@@ -564,6 +596,17 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
+        /// Its scales (docs/adr/0323 §4); absent: an object updated keeps its own (only
+        /// `cad.annotations.scales` takes them away), a new one has none.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        annotative: Option<Box<crate::Annotative>>,
+        /// Its other arms' points, each its tip first (docs/adr/0326 §1); absent: an object updated keeps its own, a new
+        /// one has none; an arm kept keeps what its tip follows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        arms: Option<Vec<Vec<Vec2>>>,
     },
     /// A table (docs/adr/0184 §1): rows and columns of one-line cells
     /// hanging from `p`, its top left corner, turned by `rotation` (degrees
@@ -611,6 +654,16 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<crate::TableSource>,
+        /// Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        styles: Option<Vec<crate::CellStyle>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        formulas: Option<Vec<crate::CellFormula>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        fields: Option<Vec<crate::CellField>>,
     },
     /// A picture (docs/adr/0192 §1): its lower left corner `p`, its width
     /// and height (metres, over 0), turned by `rotation` (radians,

@@ -662,8 +662,27 @@ pub struct Memory {
     pub hatch_inverted: bool,
     pub hatch_by_lines: bool,
     pub hatch_islands: bool,
+    /// Adalar's third state, İç içe: the islands' insides hatched again (docs/adr/0329 §1).
+    pub hatch_nested: bool,
+    /// Boşluk: the line work's gaps Tarama closes, metres (docs/adr/0329 §3).
+    pub hatch_gap: f64,
     pub hatch_assoc: bool,
+    /// Taramayı düzenle's mode (`hatch_edit::Mode::ALL`'s place) and Biçim (docs/adr/0329 §4).
+    pub hatch_edit_mode: u8,
+    pub hatch_recreate_polyline: bool,
     pub hatch_texts: bool,
+    /// docs/adr/0331: a project pattern chosen (its place among the project's; none: the library's choice), Ölçek of
+    /// the drawing instead of the paper, the origin's rule (0 the world's, 1 bottom left, 2 bottom right, 3 top left,
+    /// 4 top right, 5 the middle, 6 a point) and its point, the boxes of every region at once, Ölçekli.
+    pub hatch_user: Option<u16>,
+    pub hatch_world: bool,
+    pub hatch_origin: u8,
+    pub hatch_origin_at: Option<kentos_geometry_core::Vec2>,
+    pub hatch_origin_across: bool,
+    pub hatch_annotative: bool,
+    /// docs/adr/0332 §1: Saydamlık (0 to 0.9) and Sıra (`hatch_options::ORDERS`' place) of the next hatches.
+    pub hatch_transparency: f64,
+    pub hatch_order: u8,
     /// Alan kesiştir's Kaynakları sil, Alan çıkar's Çıkarılanları sil and
     /// İçine tıklayarak alan's Adalar (`AreaIntersectTool.erase`,
     /// `AreaSubtractTool.eraseCutters`, `BoundaryTool.islands`).
@@ -1065,8 +1084,20 @@ impl Default for Memory {
             hatch_inverted: false,
             hatch_by_lines: false,
             hatch_islands: true,
+            hatch_nested: false,
+            hatch_gap: 0.0,
             hatch_assoc: true,
+            hatch_edit_mode: 0,
+            hatch_recreate_polyline: false,
             hatch_texts: false,
+            hatch_user: None,
+            hatch_world: false,
+            hatch_origin: 0,
+            hatch_origin_at: None,
+            hatch_origin_across: false,
+            hatch_annotative: false,
+            hatch_transparency: 0.0,
+            hatch_order: 0,
             area_intersect_erase: false,
             area_subtract_erase: false,
             boundary_islands: true,
@@ -1619,11 +1650,11 @@ pub trait Tool {
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
     /// The answer of the paragraph editor it asked for
-    /// ([`ViewChange::Paragraph`]): the text and its letter formats (Tamam),
+    /// ([`ViewChange::Paragraph`]): the text, its letter formats and its layout (Tamam; docs/adr/0324 §3),
     /// or none (Vazgeç).
     fn paragraph_typed(
         &mut self,
-        _typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        _typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
         _cx: &mut Context<'_>,
     ) {
     }

@@ -175,7 +175,7 @@ Liste:
   ve parçaların görünürlük kapısı (`Item::veiled`) web'in çiziminde ve seçiminde; 0'daki parçanın `byLayer`'ının yerleştirmenin
   katmanından alınması web'in stilli çiziminde; `cad.blocks.insert`'in ve `cad.blocks.edit` `units`'inin TS işleyicileri, Blok
   ekle'nin Y ölçeği, Öznitelikler'in X/Y ölçeği, Bloklar panelinin Birim ▸'i; web'in DXF yolu çekirdekten geldiği için hazır.
-- [ ] `FORM-A`…`FORM-D` formlar (ADR 0400, 0401, 16 Ekim): web'de gerekenler: `.kcad` şema 60'ın ayarlarının `forms`'u ve alanın
+- [ ] `FORM-A`…`FORM-D` formlar (ADR 0400, 0401, 16 Ekim): web'de gerekenler: `.kcad` şema 72'nin ayarlarının `forms`'u ve alanın
   `id`'si (web'in kopyası 55'te); web'in `model/` belgesinde alanın kararlı kimliğinin taşınması (`set_layer_fields`'in kuralı,
   `fixtures/document-ops/v1` değişmeden); `cad.forms.edit`, `.validate`, `.submit` ve `cad.entities.set`'in yazma profilinin TS
   işleyicileri (`fixtures/commands/v1/cad.forms.*.json`, `cad.entities.set.forms.json`); form çekirdeği WASM'la
@@ -314,9 +314,84 @@ Liste:
 - [ ] `CAD-BLOCK-13`, `14`, `15`, `16` dinamik bloklar ve KentOS blok kitaplığı (ADR 0318, 16 Ekim): web'de gerekenler: `.kcad`
   şema 59'un tanım `dynamic`'i ve yerleştirme `parameters`'ı (web'in kopyası 55'te), deponun ve stilli çizimin varyantları (çekirdeğin
   `block_dynamic`'i WASM'la; yerleştirmenin değerleri depoya), `cad.blocks.parameters`'ın ve `cad.blocks.edit` `dynamic`'inin TS
-  işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametrelerin tutamaçları ve
-  Öznitelikler'deki satırları (CAD-BLOCK-17, 18), parametre noktalarının eylemlerle zincirlenmesi, DXF'e değerli yerleştirmenin
-  varyantı (CAD-BLOCK-20).
+  işleyicileri, Blok ekle'nin değerleri, KentOS blok kitaplığı komutu. Masaüstünde de açık: parametre noktalarının taşıma ve
+  döndürme eylemleriyle zincirlenmesi (tutamaçlar yalnız çevirmelerin aynasını izler, ADR 0319).
+- [ ] `CAD-ANNO-12`…`15` ölçekli açıklamalar (ADR 0323, 16 Ekim): web'de gerekenler: `.kcad` şema 64 (`annotative`), sözleşmenin
+  temsil kuralı (`at_scale`, `rebase_annotative`; ortak `fixtures/annotative/v1/cases.json`), `cad.annotations.scales`'in TS işleyicisi,
+  çizim ölçeği değişince ölçekli nesnenin yeni ölçeğe taşınması, pafta haritasının ölçeğindeki kopya (web'in harita çizimi ve PDF'i),
+  Öznitelikler'in Ölçekli, Kendi ölçeği, Diğer ölçekler ve Ayrı değerler satırları, Ölçek paneli ve Ölçekteki yeri aracı. Masaüstünde de
+  açık: kâğıt üstündeki ölçü öğesi (kuralı ADR 0323 §5'te), ölçekli nesnenin DXF'te AutoCAD'in ölçek bağlamlarıyla yazılması.
+- [ ] `CAD-ANNO-18`…`21` yazının düzeni, kesirler ve yazı tipleri (ADR 0324, 16 Ekim): web'de gerekenler: `.kcad` şema 65 (`layout`,
+  `stack`), çekirdeğin yeni yerleşimi WASM'la (sekmeler, girintiler, sütunlar, kesirler) ve web'in çizimi (sekme parçaları, kesrin
+  çizgisi), `cad.entities.edit`'in `layout`'u, `cad.fonts.report`'un TS işleyicisi, Öznitelikler'in Girinti, Sol girinti, Sekmeler,
+  Sütunlar satırları, düzenleyicinin Kesir ve Liste ▾'si, Yazı tipleri penceresi, PDF'in `widthFactor` ve `lean`'i (web'in PDF'i), DXF'in
+  `\p`, `^I`, `\S` okuma ve yazması (biçim işçisi aynı çekirdekten). Masaüstünde de açık: paragraf başına hiza ve iki yana yaslama,
+  kullanıcının kendi TTF/OTF yazı tipleri.
+- [ ] `CAD-HATCH-01`, `02` taramanın kaynak sınırı ve yüzün bağı (ADR 0328, 17 Ekim): web'de gerekenler: `.kcad` şema 69'un
+  `boundary`'si ve ilişkinin `bounds`'u (web'in kopyası 53'te), belgenin sınır kuralı (sınır halkayı çizer, elle değişen halka
+  sınırı düşürür) ve `hatchTies.ts`'in yüz bağı (çizgi işinden yüz, tohumun kayması); Tarama'nın çizgi yolunda İlişkili (İ) ve
+  `cad.entities.hatch`'in yüz bağı (ortak durumlar `cad.entities.hatch.json`); dönüşümlerin, Esnet'in ve tutamaçların sınırı
+  taşıması çekirdekten (`geom::hatch_boundary`); DXF okuma ve yazma çekirdekte, web'in biçim işçisi yeni sürümü alınca gelir;
+  iz `hatches.json`'un İ seçeneği.
+- [ ] `CAD-HATCH-03`…`05` taramanın bölgeleri, boşluk toleransı ve düzenlenmesi (ADR 0329, 17 Ekim): web'de gerekenler: `.kcad`
+  şema 70'in bağdaki `gap`'i, `hatchTies.ts`'in boşluklu yüzü ve bağı değişen taramayı yeniden kesmesi; `cad.entities.hatch`'in
+  `islandStyle`, `alsoAt`, `gap`'i ve `cad.hatches.edit`'in web işleyicisi (ortak durumlar `cad.entities.hatch.json`,
+  `cad.hatches.edit.json`); Taramayı düzenle aracı, Tarama'nın Boşluk (G) seçeneği ve Adalar'ın iç içe değeri, Öznitelikler'in Sınır
+  satırı; iz `hatches.json`'un G seçeneği.
+- [ ] `CAD-HATCH-06`…`08` tarama desenleri, başlangıç ve ölçekli tarama (ADR 0331, 17 Ekim): web'de gerekenler: `.kcad` şema 71
+  (`hatchPatterns`, desenin `origin`'i, taramanın `annotative`'i; sütunların OPT[6]'sı), boyaların başlangıca bağlanması (çekirdekten),
+  projenin desenlerinin çözümü ve ölçek tabanı; `cad.hatchpatterns.edit` ve `cad.hatches.edit`'in `pattern` ve `align`'ının web
+  işleyicileri (ortak durumlar `cad.hatchpatterns.edit.json`, `cad.entities.hatch.json`, `cad.hatches.edit.json`,
+  `cad.annotations.scales.json`); PAT okuma ve yazma biçim işçisinde; Tarama desenleri penceresi; Tarama'nın Ölçek tabanı,
+  Başlangıç, Ölçekli ve Özellik al seçenekleri, Taramayı düzenle'nin Hizala'sı; Öznitelikler'in Başlangıç ve ölçekli satırları;
+  izler `hatch-patterns.json` ve `hatches.json`.
+- [ ] `CAD-HATCH-09`…`11` taramanın saydamlığı ve sırası, boş bıraktığı yazılar, bütçe ve iptal (ADR 0332, 17 Ekim): web'de gerekenler:
+  `cad.entities.hatch`'in `transparency` ve `drawOrder`'ı ile `cad.entities.create`'in `transparency` ve `order`'ı web işleyicilerinde
+  (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
+  kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
+  komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-HATCH-12`, `13` taramanın PDF'te degradesi ve DXF'te ilişkili gidiş-dönüşü (ADR 0333, 17 Ekim): web'de gerekenler:
+  paftanın web PDF'inde degradenin bantları (`gradient.rs`'in kuralı); web'in DXF içe aktarmasında yer tutucuların kimliklerle
+  değiştirilmesi (`io/apply.ts`, `tie_placeholders`'ın karşılığı) ve dışa aktarmanın `uids`'i; belgenin tarama izleyicisinde
+  kapalı çoklu çizgi (`model/hatchTies.ts`); ortak dosyalar `fixtures/formats/v1/dxf-hatch`.
+- [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
+  `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
+  WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in
+  paketleyicisi ve dolguların çizimi), belgenin hesaplanan tabloları (`table_cells.rs`'in ikizi: blok çizelgesi, alanlar,
+  formüller), `cad.tables.edit` TS işleyicisi (dosyanın baytları ve SHA-256'sı tarayıcıda; yol yerine dosya tutamacı), Tabloyu
+  düzenle'nin ikinci araç satırı ve ızgaranın biçimleri, Tabloyu güncelle'nin rapor ve dosya sorusu, Dosyaya bağla, Blok çizelgesi
+  tablosu, DXF dışa aktar'ın Açıklamalar'ı (`DxfWriteInput.annotations`). Masaüstünde de açık: ACAD_TABLE ve MULTILEADER
+  yazımı (bir AutoCAD'le sınanınca), çok satırlı hücre.
+- [ ] `CAD-ANNO-25`…`27` çok kollu kılavuz (ADR 0326, 17 Ekim): web'de gerekenler: `.kcad` şema 67 (`arms`, `tip`, `blocks`,
+  `leaderStyle`, `leaderStyles`), çekirdeğin kolları çizmesi ve seçmesi WASM'la (`arm_layouts`), paketli kaydın 24. türü (kollu ya da bloklu kılavuz:
+  15'inki ve ardından kollar ve blok sayısı; web'in paketleyicisi), belgenin izlemesi (`leader_ties.rs`'in ikizi), `cad.leaders.edit` ve `cad.styles.edit` leader TS işleyicileri, Kol ekle,
+  Kol sil, Hizala, Topla, Blok içerik, Kılavuz stilleri, Öznitelikler'in satırları, DXF'in kolları. Masaüstünde de açık: MULTILEADER'ın
+  blok içeriğini okumak, uçların bağlarını ve blok içeriği DXF'e yazmak.
+- [ ] `CAD-ANNO-22`…`24` alanlar ve yazının komutları (ADR 0325, 17 Ekim): web'de gerekenler: `.kcad` şema 66 (`fields`), belgenin
+  alan yenilemesi (`model/` içinde `text_fields.rs`'in ikizi: kaynağı değişen, elle düzenlenen, döngü, kopuk), `cad.fields.edit`,
+  `cad.texts.edit`, `cad.texts.check` TS işleyicileri (ortak durumlar `fixtures/commands/v1`), Alan ekle, Numarala, Yazı denetimi
+  pencereleri, Öznitelikler'in Alan satırları, Bul ve değiştir'in komutla yazması, DXF'in KENTOS verisindeki `fields`'ı. Masaüstünde de
+  açık: ifadeli alan, AutoCAD'in FIELD kodları, sözlükle yazım denetimi.
+- [ ] `CAD-ANNO-11`, `16`, `17` merkez işareti, eksen, kot, stil dosyaları ve stilden ayrılan alanlar (ADR 0322, 16 Ekim): web'de
+  gerekenler: `.kcad` şema 62 ve 63 (`centerMark`, `centerLine`, `elevation`, `pair`, yazının ve ölçünün `overrides`'ı), çekirdeğin üç
+  yerleşimi WASM'la ve `level`, `none` birimleri, belgenin `pair` kuralı, kotun izlemesi ve `mark_overrides`'ı, `cad.dimensions.create`'in üç
+  ölçüsünün ve `cad.styles.edit`'in `export` ve `import`'unun TS işleyicileri, üç araç, stil pencerelerinin Dışa aktar…/Al…'ı, Öznitelikler'in
+  Stilden ayrılan satırı. Masaüstünde de açık: iki yay arası eksen; kotun omzunda yazı tipinin ölçülen genişliği.
+- [ ] `CAD-ANNO-08`, `09`, `10` ölçü aralığı, kırma, değerin yazımı ve elle yazılan değer (ADR 0321, 16 Ekim): web'de gerekenler:
+  `.kcad` şema 61'in `options`, `textShift` ve `breaks`'i, çizimin yerleşiminde sığdırma, taşınan değer ve kırmalar (çekirdek WASM'la),
+  değerin yazımı (`Format::dimension_value`'nun TS karşılığı, `dimension-values.json`), `cad.dimensions.edit` ve `cad.dimensions.query`'nin
+  TS işleyicileri, Öznitelikler'in satırları, şeridin Ölçü aralığı, Ölçüyü kır, Kırmayı kaldır'ı. Masaüstünde de açık: kırmaların nesneler
+  değişince kendiliğinden yenilenmesi; sığdırmada yazı tipinin ölçülen genişliği.
+- [ ] `CAD-ANNO-03`, `04`, `07` her türün ilişkili ölçüsü (ADR 0320, 16 Ekim): web'de gerekenler: `.kcad` şema 60'ın `refs.rule`'ü,
+  belgenin kayıt öncesi izlemesinde kuralın uygulanması (`curve`: merkez ve dönen nokta; `edges`: kesişim ve kollar) ve Buda'nın
+  bağları (`relocateTiesKeepingEnds`), `cad.dimensions.create`'in kenar ve eğri bağları, `continue` ve `baseline`'ı (Zincir ve Baz
+  araçları onunla), seçili ölçünün bağ vurgusu; `cad.dimensions.follow.json` web'in çalıştırıcısında.
+- [ ] `CAD-BLOCK-17`, `18`, `19`, `20` dinamik bloğun tutamaçları, değerleri, vekil görünüşü ve DXF'i (ADR 0319, 16 Ekim): web'de
+  gerekenler: seçim aracının parametre tutamaçları (çekirdeğin `Store::param_grips`, `param_value`, `varied_outlines`'ı WASM'la) ve
+  çizimi, Öznitelikler'in Blok parametreleri bölümü, `cad.blocks.proxy`'nin ve `cad.blocks.freeze`'in TS işleyicileri, Sabit bloğa
+  çevir komutu, DXF'e değerli yerleştirmenin varyantı (`plain_for_export`'un TS karşılığı; WASM'ın `WriteInput`'u `notes`'u
+  okumuyor). Masaüstünde de açık: AutoCAD'in dinamik blok verisinin (`AcDbDynamicBlockGUID`, `ACAD_ENHANCEDBLOCK`) gerçek bir dosya
+  korpusuyla sınanması; sahibin örnek DXF/DWG dosyalarını bekler (plan/cad.md `CAD-BLOCK-20`).
 - [ ] `CAD-BLOCK-08`, `09`, `10`, `12` öznitelik seçenekleri, eşitleme, değiştirme, sorgu ve kartlar (ADR 0317, 16 Ekim): web'de
   gerekenler: `.kcad` şema 58'in öznitelik seçenekleri, `attributePlaces`'i ve bloğun `card`'ı (web'in kopyası 55'te); deponun ve
   stilli çizimin seçeneklere göre öznitelik yazısı (görünmez, sabit, taşınmış yer, çok satırlı kutu); `cad.blocks.edit`'in `sync`,
@@ -533,6 +608,16 @@ Liste:
   vurgu dolgusu float32 yüzünden 0,25 m'ye kadar kayar; kayma yakınlaşmayla değişir, nesnenin çizgisi ve tutamaçları yerindedir.
   Seçim ve üzerine gelme kaplamaları stilli çizimin karo düzenine (ADR 0157) geçmeli. Masaüstünde yok. Yeniden üretmek için: örnek
   çizimde 0,0'a 2 × 1,5 m'lik bir alan çizip seçin ve ona yakınlaşın.
+- [ ] Stil pencereleri (ADR 0330, 16 Ekim): web'de gerekenler:
+  - `style/file.ts`'in `LAYER_TYPES`'ı ve `validateSymbol`'ü: üç türde `geometryGenerator`, alanda `gradientFill`; adımların ve çizen
+    sembolün denetimi. Web de geometri üreticili sembolü kaydedemiyor (masaüstündeki hatanın aynısı).
+  - Sembol tasarımcısı ve SVG düzenleyicisi Kaydet'te kapanır; başarı bildirimle (web'in toast'u) söylenir.
+  - Üst araçlar tek şerit (`strip.rs`'in kuralları).
+  - Tasarımcının ƒ alanlarında ve Geometri üreticinin adım değerlerinde Ekle ▾ ve Oluşturucu…; hata yerinde. Katman stili'nin ifadelerinde
+    de Oluşturucu…
+  - Akışta sarma: çekirdeğin `wrap` düzenlemesi WASM'ın `exprFlowEdit`'inden zaten gelir; web'in akış görünümü işleç düğmesinde ve çift
+    tıkta onu çağırmalı. Okunamayan metinde “Metin'de düzelt”.
+  - Tamamlamanın harf sırası eşleşmesi çekirdektedir, web'e kendiliğinden gelir.
 
 ## 1. Koddan doğrulanan mevcut durum
 

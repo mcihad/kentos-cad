@@ -82,6 +82,8 @@ pub struct Marks {
     pub snap_note: Option<String>,
     pub select: Option<SelectBox>,
     pub grips: Vec<GripSet>,
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), in the info blue.
+    pub params: Vec<kentos_geometry_core::block_dynamic::ParamGrip>,
     /// The grip being moved.
     /// The hot grips: the one being moved and those made hot with Shift (docs/adr/0280).
     pub hot: Vec<(Slot, usize)>,
@@ -94,6 +96,8 @@ pub struct Marks {
     pub problem: Option<crate::topology::ProblemMark>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
+    /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
+    pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -192,10 +196,12 @@ impl Marks {
         self.snap.is_none()
             && self.select.is_none()
             && self.grips.is_empty()
+            && self.params.is_empty()
             && self.marked.is_empty()
             && self.found.is_none()
             && self.problem.is_none()
             && self.broken.is_empty()
+            && self.bonds.is_empty()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -223,6 +229,8 @@ impl<Message> canvas::Program<Message> for Marks {
             &self.colors,
             accent,
         );
+        bonds(&mut frame, &self.bonds, &self.camera, &self.colors, accent);
+        param_grips(&mut frame, &self.params, &self.camera, &self.colors);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
@@ -336,6 +344,77 @@ fn grips(
             &Path::rectangle(Point::new(x - 4.5, y - 4.5), Size::new(9.0, 9.0)),
             edge(1.5, accent),
         );
+    }
+}
+
+/// A dynamic block's parameter grips (docs/adr/0319 §1), as AutoCAD's are told apart by their shapes: a linear's a
+/// pair of arrowheads along its line, a polar's a diamond, an angle's a disc with a ring, a point's a disc, a flip's
+/// two arrowheads facing each other; in the window box's blue, on a halo.
+fn param_grips(
+    frame: &mut canvas::Frame,
+    grips: &[kentos_geometry_core::block_dynamic::ParamGrip],
+    camera: &Camera,
+    colors: &MarkColors,
+) {
+    use kentos_geometry_core::block_dynamic::GripKind;
+    let fill = colors.window;
+    let edge = Stroke::default().with_color(colors.halo).with_width(1.0);
+    // A triangle with its tip `r` px from (x, y) along (ux, uy).
+    let head = |x: f32, y: f32, ux: f32, uy: f32, r: f32| {
+        let (px, py) = (-uy, ux);
+        Path::new(|b| {
+            b.move_to(Point::new(x + ux * r, y + uy * r));
+            b.line_to(Point::new(x + px * 4.5, y + py * 4.5));
+            b.line_to(Point::new(x - px * 4.5, y - py * 4.5));
+            b.close();
+        })
+    };
+    for g in grips {
+        let s = camera.world_to_screen(g.at);
+        let (x, y) = (s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5);
+        match g.kind {
+            GripKind::Linear => {
+                // The screen's y runs down: the drawing's direction with its y turned.
+                let (ux, uy) = g.along.map_or((1.0, 0.0), |u| (u.x as f32, -(u.y as f32)));
+                for (sx, sy) in [(ux, uy), (-ux, -uy)] {
+                    let p = head(x + sx * 3.0, y + sy * 3.0, sx, sy, 6.0);
+                    frame.fill(&p, fill);
+                    frame.stroke(&p, edge);
+                }
+            }
+            GripKind::Polar => {
+                let p = Path::new(|b| {
+                    b.move_to(Point::new(x, y - 6.0));
+                    b.line_to(Point::new(x + 6.0, y));
+                    b.line_to(Point::new(x, y + 6.0));
+                    b.line_to(Point::new(x - 6.0, y));
+                    b.close();
+                });
+                frame.fill(&p, fill);
+                frame.stroke(&p, edge);
+            }
+            GripKind::Angle => {
+                let ring = Path::circle(Point::new(x, y), 6.0);
+                frame.stroke(
+                    &ring,
+                    Stroke::default().with_color(colors.halo).with_width(3.5),
+                );
+                frame.stroke(&ring, Stroke::default().with_color(fill).with_width(2.0));
+                frame.fill(&Path::circle(Point::new(x, y), 2.5), fill);
+            }
+            GripKind::Point => {
+                let p = Path::circle(Point::new(x, y), 5.0);
+                frame.fill(&p, fill);
+                frame.stroke(&p, edge);
+            }
+            GripKind::Flip => {
+                for sx in [1.0f32, -1.0] {
+                    let p = head(x + sx * 7.0, y, -sx, 0.0, 6.0);
+                    frame.fill(&p, fill);
+                    frame.stroke(&p, edge);
+                }
+            }
+        }
     }
 }
 
@@ -500,6 +579,162 @@ fn problem(
         frame.stroke(&shape, stroke(3.0, danger));
     }
     found(frame, m.at, &m.label, camera, colors, danger);
+}
+
+/// What a selected associative dimension is bound to (docs/adr/0320 §4): the object's edges dashed in the accent
+/// colour on a halo half a pixel wider each side, and the place a filled diamond on a halo; only what is in the
+/// view. One picture with exact coverage (label_picture.rs): the canvas's four samples left a rim round its
+/// wider halo, and its arcs' long chords fell beside the object.
+fn bonds(
+    frame: &mut canvas::Frame,
+    bonds: &[kentos_interaction::dimension_bonds::Bond],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    if bonds.is_empty() {
+        return;
+    }
+    let size = frame.size();
+    let screen = |p: Vec2| {
+        let [x, y] = camera.world_to_screen(p);
+        Point::new(x as f32, y as f32)
+    };
+    let room = (-20.0, -20.0, size.width + 20.0, size.height + 20.0);
+    let mut runs: Vec<Vec<Point>> = Vec::new();
+    let mut diamonds: Vec<Point> = Vec::new();
+    for b in bonds {
+        for run in &b.edges {
+            let pts: Vec<Point> = run.iter().map(|q| screen(*q)).collect();
+            runs.extend(clipped(&pts, room));
+        }
+        let at = screen(b.at);
+        if at.x >= -10.0 && at.y >= -10.0 && at.x <= size.width + 10.0 && at.y <= size.height + 10.0
+        {
+            diamonds.push(Point::new(at.x.round() + 0.5, at.y.round() + 0.5));
+        }
+    }
+    let lines: Vec<Path> = runs
+        .iter()
+        .map(|run| {
+            Path::new(|p| {
+                p.move_to(run[0]);
+                for q in &run[1..] {
+                    p.line_to(*q);
+                }
+            })
+        })
+        .collect();
+    let shapes: Vec<Path> = diamonds
+        .iter()
+        .map(|&Point { x, y }| {
+            Path::new(|p| {
+                p.move_to(Point::new(x, y - 6.0));
+                p.line_to(Point::new(x + 6.0, y));
+                p.line_to(Point::new(x, y + 6.0));
+                p.line_to(Point::new(x - 6.0, y));
+                p.close();
+            })
+        })
+        .collect();
+    let dash = [6.0f32, 4.0];
+    let bits = |c: iced::Color| [c.r.to_bits(), c.g.to_bits(), c.b.to_bits(), c.a.to_bits()];
+    let mut numbers: Vec<u32> = bits(accent).into_iter().chain(bits(colors.halo)).collect();
+    for run in &runs {
+        numbers.push(run.len() as u32);
+        numbers.extend(run.iter().flat_map(|q| [q.x.to_bits(), q.y.to_bits()]));
+    }
+    numbers.extend(diamonds.iter().flat_map(|q| [q.x.to_bits(), q.y.to_bits()]));
+    let key = crate::label_picture::Key {
+        what: "bonds".to_owned(),
+        numbers,
+    };
+    use crate::label_picture::{Local, Part};
+    let plain = Local { width_factor: 1.0 };
+    let pictured = crate::label_picture::draw_on_screen(frame, key, |add| {
+        add(Part::Stroke(&lines, plain, colors.halo, 3.0));
+        add(Part::Dash(&lines, plain, accent, 2.0, &dash));
+        add(Part::Stroke(&shapes, plain, colors.halo, 3.0));
+        add(Part::Fill(&shapes, plain, accent));
+    });
+    if pictured {
+        return;
+    }
+    // Too large for a picture: the canvas's paths.
+    for line in &lines {
+        frame.stroke(
+            line,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
+        );
+        frame.stroke(
+            line,
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &dash,
+                    offset: 0,
+                },
+                ..Stroke::default().with_color(accent).with_width(2.0)
+            },
+        );
+    }
+    for diamond in &shapes {
+        frame.stroke(
+            diamond,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
+        );
+        frame.fill(diamond, accent);
+    }
+}
+
+/// A run of screen points cut to the box `(left, top, right, bottom)`: the pieces inside, each of two or more
+/// points (Liang–Barsky on every segment).
+fn clipped(run: &[Point], (l, t, r, b): (f32, f32, f32, f32)) -> Vec<Vec<Point>> {
+    let mut out: Vec<Vec<Point>> = Vec::new();
+    let mut current: Vec<Point> = Vec::new();
+    for w in run.windows(2) {
+        let (p, q) = (w[0], w[1]);
+        let (dx, dy) = (q.x - p.x, q.y - p.y);
+        let (mut t0, mut t1) = (0.0f32, 1.0f32);
+        let mut inside = true;
+        for (pp, qq) in [(-dx, p.x - l), (dx, r - p.x), (-dy, p.y - t), (dy, b - p.y)] {
+            if pp == 0.0 {
+                if qq < 0.0 {
+                    inside = false;
+                }
+            } else {
+                let u = qq / pp;
+                if pp < 0.0 {
+                    t0 = t0.max(u);
+                } else {
+                    t1 = t1.min(u);
+                }
+            }
+        }
+        if !inside || t0 > t1 {
+            if current.len() >= 2 {
+                out.push(std::mem::take(&mut current));
+            }
+            current.clear();
+            continue;
+        }
+        let a = Point::new(p.x + t0 * dx, p.y + t0 * dy);
+        let c = Point::new(p.x + t1 * dx, p.y + t1 * dy);
+        if current.last() != Some(&a) {
+            if current.len() >= 2 {
+                out.push(std::mem::take(&mut current));
+            }
+            current.clear();
+            current.push(a);
+        }
+        current.push(c);
+        if t1 < 1.0 {
+            out.push(std::mem::take(&mut current));
+        }
+    }
+    if current.len() >= 2 {
+        out.push(current);
+    }
+    out
 }
 
 /// A broken reference of an associative dimension (docs/adr/0249 §3): a small warning triangle, its tip over the
@@ -993,6 +1228,18 @@ impl crate::app::App {
 }
 
 impl crate::app::App {
+    /// What the selected associative dimensions are bound to (docs/adr/0320 §4); none while a tool runs or the
+    /// selection is past the grips' limit.
+    pub(crate) fn bond_marks(&self) -> Vec<kentos_interaction::dimension_bonds::Bond> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
+            return Vec::new();
+        }
+        kentos_interaction::dimension_bonds::bonds(&doc.model, self.selection.ids())
+    }
+
     /// The points of the associative dimensions whose reference broke (docs/adr/0249 §3): from the document's index
     /// of such dimensions, not a walk over the drawing.
     pub(crate) fn broken_marks(&self) -> Vec<Vec2> {
@@ -1018,6 +1265,40 @@ impl crate::app::App {
             }
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod bond_tests {
+    use super::*;
+
+    #[test]
+    fn a_run_is_cut_to_the_box() {
+        let p = |x: f32, y: f32| Point::new(x, y);
+        let room = (0.0, 0.0, 100.0, 100.0);
+        // Inside: as it is.
+        assert_eq!(
+            clipped(&[p(10.0, 10.0), p(20.0, 10.0), p(20.0, 30.0)], room),
+            vec![vec![p(10.0, 10.0), p(20.0, 10.0), p(20.0, 30.0)]]
+        );
+        // Across the box: the inside piece only.
+        assert_eq!(
+            clipped(&[p(-50.0, 50.0), p(150.0, 50.0)], room),
+            vec![vec![p(0.0, 50.0), p(100.0, 50.0)]]
+        );
+        // Out and back in: two pieces.
+        assert_eq!(
+            clipped(
+                &[p(50.0, 50.0), p(50.0, 200.0), p(60.0, 200.0), p(60.0, 50.0)],
+                room
+            ),
+            vec![
+                vec![p(50.0, 50.0), p(50.0, 100.0)],
+                vec![p(60.0, 100.0), p(60.0, 50.0)]
+            ]
+        );
+        // Wholly outside: nothing.
+        assert!(clipped(&[p(-10.0, -10.0), p(-20.0, 300.0)], room).is_empty());
     }
 }
 

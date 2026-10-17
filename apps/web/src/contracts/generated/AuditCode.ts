@@ -3,4 +3,4 @@
 /**
  * What is broken.
  */
-export type AuditCode = "brokenLink" | "brokenHatch" | "brokenDimension" | "missingTextStyle" | "missingDimensionStyle";
+export type AuditCode = "brokenLink" | "brokenHatch" | "missingCutout" | "hatchTextCycle" | "brokenDimension" | "missingTextStyle" | "missingDimensionStyle";

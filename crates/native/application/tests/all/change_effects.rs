@@ -66,6 +66,10 @@ fn sample(id: &str, uid: impl Fn(u32) -> String) -> Option<(&'static str, Value)
             "cad.entities.order",
             json!({ "uids": [uid(1)], "to": "front" }),
         ),
+        "annotative-scales" => (
+            "cad.annotations.scales",
+            json!({ "operation": "make", "uids": [uid(3)], "scales": [50.0] }),
+        ),
         "match" => (
             "cad.entities.match",
             json!({ "source": uid(3), "uids": [uid(2)], "properties": ["layer"] }),
@@ -94,6 +98,10 @@ fn sample(id: &str, uid: impl Fn(u32) -> String) -> Option<(&'static str, Value)
         "line-types" => (
             "cad.linetypes.edit",
             json!({ "operation": "scale", "scale": 2.0 }),
+        ),
+        "hatch-patterns" => (
+            "cad.hatchpatterns.edit",
+            json!({ "operation": "load", "pat": "*CIM, Çim\n60, 0,0, 2,4, 1,-3\n", "source": "ofis.pat" }),
         ),
         "standards" => ("cad.standards.apply", json!({ "name": "mimari-ofis" })),
         "library" => (

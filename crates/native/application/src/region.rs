@@ -18,16 +18,22 @@ use kentos_contracts::{
     EntitiesCreatePlan, EntitiesCreated, EntitiesHatch, EntityGeometry, EntityId, HatchAssoc,
     HatchPattern as ContractPattern, HatchPatternSpec, HatchPatternType, HatchRegion, HatchWay,
     TrimBoundaries, Vec2 as Point,
+    Entity, HatchDrawOrder, IslandStyle,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::hatch::hatch_lines;
+use kentos_geometry_core::geom::hatch_boundary;
 use kentos_geometry_core::geom::hatch_pattern::too_dense;
-use kentos_geometry_core::geom::region::{FaceIndex, inside_area, net_area, orient_ring};
+use kentos_geometry_core::geom::region::{
+    FaceIndex, inside_area, net_area, orient_ring, subtract_areas,
+};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::areas::{areas_of_entity, line_source, polygon_of_area};
-use kentos_geometry_core::ops::hatch_region::{cut_base, cutout, pick, seed_of};
+use kentos_geometry_core::ops::hatch_region::{
+    Bridge, bounding, bridges, cut_base, cutout, pick, seed_of,
+};
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::hatch::{Options, choice_named, colour_of, pattern_of};
@@ -222,6 +228,17 @@ pub fn faces(
     set: Option<&TrimBoundaries>,
     layer: Option<&str>,
 ) -> FaceIndex {
+    faces_bridged(doc, store, set, layer, 0.0).0
+}
+
+/// [`faces`] with the line work's gaps up to `gap` bridged (docs/adr/0329 §3), and the bridges.
+pub fn faces_bridged(
+    doc: &Document,
+    store: &Store,
+    set: Option<&TrimBoundaries>,
+    layer: Option<&str>,
+    gap: f64,
+) -> (FaceIndex, Vec<Bridge>) {
     let on_layer = |e: &kentos_contracts::Entity| layer.is_none_or(|l| e.base().layer_id == l);
     let lines: Vec<CoreEntity> = match set {
         Some(TrimBoundaries::Objects { uids }) => uids
@@ -245,7 +262,17 @@ pub fn faces(
                 .collect()
         }
     };
-    FaceIndex::new(&[line_source(&lines)])
+    let bridged = bridges(
+        &lines.iter().map(|e| e.shape.clone()).collect::<Vec<_>>(),
+        gap,
+    );
+    let mut lines = lines;
+    lines.extend(
+        bridged
+            .iter()
+            .map(|b| CoreEntity::new(Shape::Line { a: b.a, b: b.b })),
+    );
+    (FaceIndex::new(&[line_source(&lines)]), bridged)
 }
 
 /// What finding regions keeps between calls on an unchanged drawing: the
@@ -255,7 +282,7 @@ pub fn faces(
 /// were found for.
 #[derive(Default)]
 pub struct RegionCache {
-    faces: Option<(String, FaceIndex)>,
+    faces: Option<(String, FaceIndex, Vec<Bridge>)>,
     cut: Option<(CutKey, Option<Whole>)>,
 }
 
@@ -270,15 +297,17 @@ impl RegionCache {
         store: &Store,
         set: Option<&TrimBoundaries>,
         layer: Option<&str>,
-    ) -> &FaceIndex {
-        let key = format!("{}|{set:?}|{layer:?}", doc.revision());
-        if self.faces.as_ref().is_some_and(|(k, _)| *k != key) {
+        gap: f64,
+    ) -> (&FaceIndex, &[Bridge]) {
+        let key = format!("{}|{set:?}|{layer:?}|{gap}", doc.revision());
+        if self.faces.as_ref().is_some_and(|(k, _, _)| *k != key) {
             self.faces = None;
         }
-        &self
-            .faces
-            .get_or_insert_with(|| (key, faces(doc, store, set, layer)))
-            .1
+        let (_, index, bridged) = self.faces.get_or_insert_with(|| {
+            let (index, bridged) = faces_bridged(doc, store, set, layer, gap);
+            (key, index, bridged)
+        });
+        (index, bridged)
     }
 }
 
@@ -310,11 +339,12 @@ fn check_boundary(
             &own
         }
     };
-    let index = cache.faces(
+    let (index, _) = cache.faces(
         doc,
         store,
         input.boundaries.as_ref(),
         input.boundary_layer.as_deref(),
+        0.0,
     );
     let at = Vec2::new(input.at.x, input.at.y);
     let Some(area) = index.at(at, input.islands.unwrap_or(true)).map(canonical) else {
@@ -403,11 +433,15 @@ pub mod entities_boundary {
 
 // ── Tarama ─────────────────────────────────────────────────────────────
 
-/// The objects a region came from: the closed object, the islands and the
-/// cutouts that reached in, by their slots (kapalı nesne only).
+/// The objects a region came from, by their slots: the closed object (kapalı
+/// nesne) or the line work bounding its face (çizgiler, docs/adr/0328 §3),
+/// the islands and the cutouts that reached in.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Tie {
-    pub outer: Slot,
+    /// A face's: the gaps its line work was closed across (docs/adr/0329 §3).
+    pub gap: Option<f64>,
+    pub outer: Option<Slot>,
+    pub bounds: Vec<Slot>,
     pub islands: Vec<Slot>,
     pub cutouts: Vec<Slot>,
 }
@@ -419,6 +453,8 @@ pub struct Planned {
     pub area: Area,
     pub seed: Vec2,
     pub tie: Option<Tie>,
+    /// The gaps closed to find it (docs/adr/0329 §3).
+    pub bridges: Vec<Bridge>,
 }
 
 /// The texts and inserts shown in `bounds` and their boxes left open.
@@ -484,7 +520,9 @@ fn cut_whole(own: Slot, part: &Area, bounds: &Bounds, by: Cutting, store: &Store
     let cut = cut_base(part, &island_areas, &boxes);
     Some(Whole {
         tie: Some(Tie {
-            outer: own,
+            gap: None,
+            outer: Some(own),
+            bounds: Vec::new(),
             islands: cut
                 .islands
                 .iter()
@@ -515,24 +553,40 @@ fn cut_part(
         area: canonical(pick(&whole.parts, seed)?.clone()),
         seed,
         tie: whole.tie,
+        bridges: Vec::new(),
     })
 }
 
-/// The pattern the spec names at the drawing's plot scale (1:N).
+/// The pattern a tool previews for the spec: [`pattern_of_spec`]'s, none where the command would refuse it.
+pub fn spec_pattern(
+    spec: &HatchPatternSpec,
+    settings: &kentos_contracts::ProjectSettings,
+) -> Option<ContractPattern> {
+    pattern_of_spec(spec, settings).ok()
+}
+
+/// The pattern the spec names at the drawing's plot scale (1:N), its origin left to [`origin_of`]: a project pattern
+/// of the name first (docs/adr/0331 §1), else the library's; Ölçek on paper or of the definition's unit in the
+/// drawing (`basis`); Ölçekli only on paper.
 pub(crate) fn pattern_of_spec(
     spec: &HatchPatternSpec,
-    plot_scale: f64,
+    settings: &kentos_contracts::ProjectSettings,
 ) -> Result<ContractPattern, Stop> {
-    let Some(choice) = choice_named(&spec.name) else {
+    let own = settings
+        .hatch_patterns
+        .iter()
+        .find(|d| kentos_contracts::same_hatch_pattern_name(&d.name, &spec.name));
+    let choice = choice_named(&spec.name);
+    if own.is_none() && choice.is_none() {
         return Err(refuse(
             codes::UNKNOWN_PATTERN,
             format!(
-                "“{}” adında desen yok. Desen kitaplığındaki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
+                "“{}” adında desen yok. Desen kitaplığındaki ya da projenin desenlerindeki bir adı verin (Dolu, Çizgili, ANSI31, ISO02W100 …).",
                 spec.name
             ),
             "pattern.name",
         ));
-    };
+    }
     let scale = spec.scale.unwrap_or(1.0);
     if !(scale.is_finite() && scale > 0.0 && scale <= MOST_SCALE) {
         return Err(refuse(
@@ -558,21 +612,125 @@ pub(crate) fn pattern_of_spec(
             )
         })?,
     };
-    contract_pattern(pattern_of(&Options {
-        choice,
-        scale,
-        angle,
-        color2,
-        inverted: spec.inverted.unwrap_or(false),
-        plot_scale,
-    }))
-    .ok_or_else(|| {
-        refuse(
-            codes::UNKNOWN_PATTERN,
-            format!("“{}” deseni yazılamıyor.", spec.name),
-            "pattern.name",
-        )
-    })
+    let world = spec.basis == Some(kentos_contracts::ScaleBasis::World);
+    if let Some(kentos_contracts::HatchOrigin::Point { at }) = &spec.origin {
+        checks::point(*at, "Desenin başlangıç noktasının", "pattern.origin.at")?;
+    }
+    if spec.annotative == Some(true) && world {
+        return Err(refuse(
+            codes::NOT_ANNOTATIVE,
+            "Ölçekli taramanın deseni kâğıttaki ölçüsüyle çizilir; çizimdeki ölçekle (basis: world) ölçekli olmaz.".into(),
+            "pattern.annotative",
+        ));
+    }
+    // The paper's metres per definition unit, or the drawing's (a world millimetre a millimetre).
+    let plot = if world { 1.0 } else { settings.plot_scale };
+    let pattern = match own {
+        Some(def) => {
+            let (mul, div) = settings.drawing_unit.unwrap_or_default().metres();
+            ContractPattern {
+                kind: HatchPatternType::Pattern,
+                angle: kentos_geometry_core::geom::hatch_pattern::turn_of(angle),
+                spacing: 1.0,
+                name: Some(def.name.clone()),
+                scale: Some(scale * def.unit.metres(plot, mul / div)),
+                lines: Some(def.lines.clone()),
+                gradient: None,
+                origin: None,
+            }
+        }
+        None => contract_pattern(pattern_of(&Options {
+            choice: choice.unwrap_or_default(),
+            scale,
+            angle,
+            color2,
+            inverted: spec.inverted.unwrap_or(false),
+            plot_scale: plot,
+        }))
+        .ok_or_else(|| {
+            refuse(
+                codes::UNKNOWN_PATTERN,
+                format!("“{}” deseni yazılamıyor.", spec.name),
+                "pattern.name",
+            )
+        })?,
+    };
+    if spec.annotative == Some(true)
+        && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient)
+    {
+        return Err(refuse(
+            codes::NOT_ANNOTATIVE,
+            "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.".into(),
+            "pattern.annotative",
+        ));
+    }
+    if spec.origin.is_some() && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+        return Err(refuse(
+            codes::INVALID_SCALE,
+            "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.".into(),
+            "pattern.origin",
+        ));
+    }
+    Ok(pattern)
+}
+
+/// A box's corner or middle.
+fn corner_of(b: (Vec2, Vec2), c: kentos_contracts::BoxCorner) -> Point {
+    use kentos_contracts::BoxCorner as C;
+    let (lo, hi) = b;
+    let (x, y) = match c {
+        C::BottomLeft => (lo.x, lo.y),
+        C::BottomRight => (hi.x, lo.y),
+        C::TopLeft => (lo.x, hi.y),
+        C::TopRight => (hi.x, hi.y),
+        C::Center => ((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0),
+    };
+    Point { x, y }
+}
+
+/// The box of rings.
+pub fn box_of<'a>(rings: impl IntoIterator<Item = &'a [Vec2]>) -> Option<(Vec2, Vec2)> {
+    let mut b: Option<(Vec2, Vec2)> = None;
+    for r in rings {
+        for p in r {
+            b = Some(match b {
+                None => (*p, *p),
+                Some((lo, hi)) => (
+                    Vec2::new(lo.x.min(p.x), lo.y.min(p.y)),
+                    Vec2::new(hi.x.max(p.x), hi.y.max(p.y)),
+                ),
+            });
+        }
+    }
+    b
+}
+
+/// The pattern's origin for a region of box `own` among regions of box `all` (docs/adr/0331 §2): the world's (none),
+/// a point, or a corner of the region's box or, `across`, of them all.
+pub fn origin_of(
+    spec: Option<&kentos_contracts::HatchOrigin>,
+    own: Option<(Vec2, Vec2)>,
+    all: Option<(Vec2, Vec2)>,
+) -> Option<Point> {
+    use kentos_contracts::HatchOrigin as O;
+    match spec? {
+        O::World => None,
+        O::Point { at } => Some(*at),
+        O::Corner { corner, across } => {
+            let b = if *across { all } else { own };
+            b.map(|b| corner_of(b, *corner))
+        }
+    }
+}
+
+/// A pattern too dense for a region: the core's family count, or user lines past ADR 0062's count.
+pub(crate) fn pattern_too_dense(ring: &[Point], holes: &[Vec<Point>], p: &ContractPattern) -> bool {
+    let ring: Vec<Vec2> = ring.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+    let holes: Vec<Vec<Vec2>> = holes
+        .iter()
+        .map(|h| h.iter().map(|q| Vec2::new(q.x, q.y)).collect())
+        .collect();
+    too_dense(&ring, &core_pattern(p)) || dense_lines(&ring, &holes, p)
 }
 
 /// A user-defined pattern's lines too many (the core's line count, ADR 0062's refusal).
@@ -593,100 +751,110 @@ pub(crate) fn regions(
     store: &Store,
     region: &HatchRegion,
     cache: &mut RegionCache,
+    stopped: &dyn Fn() -> bool,
 ) -> Result<(Vec<Planned>, Vec<CommandWarning>), Stop> {
     let font = drawing_font(doc.settings().drawing_font);
+    let style = region.islands_taken();
+    let mut warnings = Vec::new();
     match region {
         HatchRegion::Point {
             at,
+            also_at,
             way,
             boundaries,
             boundary_layer,
-            islands,
             texts,
+            gap,
             ..
         } => {
-            let p = Vec2::new(at.x, at.y);
-            let islands = islands.unwrap_or(true);
             let texts = texts.unwrap_or(false);
-            let found = match way.unwrap_or_default() {
-                HatchWay::Lines => {
-                    let index =
-                        cache.faces(doc, store, boundaries.as_ref(), boundary_layer.as_deref());
-                    index.at(p, islands).and_then(|face| {
-                        if !texts {
-                            return Some(Planned {
-                                area: canonical(face),
-                                seed: p,
-                                tie: None,
-                            });
-                        }
-                        let (_, boxes) = cutouts_in(&area_bounds(&face), font, store);
-                        cut_base(&face, &[], &boxes)
-                            .parts
-                            .into_iter()
-                            .find(|a| inside_area(a, p))
-                            .map(|area| Planned {
-                                area: canonical(area),
-                                seed: p,
-                                tie: None,
-                            })
-                    })
+            let lines = way.unwrap_or_default() == HatchWay::Lines;
+            if lines && style == IslandStyle::Normal {
+                warnings.push(CommandWarning {
+                    code: codes::ISLANDS_NOT_NESTED.into(),
+                    message: "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı (Dış).".into(),
+                    path: Some("region.islandStyle".into()),
+                });
+            }
+            let gap = if lines { gap.unwrap_or(0.0) } else { 0.0 };
+            let by = Cutting {
+                islands: style != IslandStyle::Ignore,
+                texts,
+                font,
+            };
+            let mut planned: Vec<Planned> = Vec::new();
+            for (k, at) in std::iter::once(at).chain(also_at.iter()).enumerate() {
+                // A job asked to stop stops between the points (docs/adr/0332 §3).
+                if stopped() {
+                    return Err(Stop::Cancelled);
                 }
-                HatchWay::Object => store.enclosing(p).and_then(|(id, _)| {
-                    let own = slot(id)?;
-                    let item = store.get(id)?;
-                    // A multi-part area's part the point is in (docs/adr/0143); one area is itself.
-                    let mut areas = areas_of_entity(&item.shape);
-                    let part = if areas.len() == 1 {
-                        0
-                    } else {
-                        areas.iter().position(|a| inside_area(a, p))?
-                    };
-                    // The part cut once while the drawing and the options stay; the piece
-                    // around the point picked from it each time.
-                    let key = (doc.revision(), own, part, islands, texts);
-                    if cache.cut.as_ref().is_none_or(|(k, _)| *k != key) {
-                        let base = areas.swap_remove(part);
-                        let by = Cutting {
-                            islands,
-                            texts,
-                            font,
+                let p = Vec2::new(at.x, at.y);
+                let found: Vec<Planned> = if lines {
+                    let (index, bridged) = cache.faces(
+                        doc,
+                        store,
+                        boundaries.as_ref(),
+                        boundary_layer.as_deref(),
+                        gap,
+                    );
+                    let face = index.at(p, by.islands);
+                    let bridged = bridged.to_vec();
+                    face.and_then(|face| {
+                        let used = bridges_on(&face, &bridged);
+                        let area = if texts {
+                            let (_, boxes) = cutouts_in(&area_bounds(&face), font, store);
+                            cut_base(&face, &[], &boxes)
+                                .parts
+                                .into_iter()
+                                .find(|a| inside_area(a, p))?
+                        } else {
+                            face
                         };
-                        let whole = cut_whole(own, &base, &item.bounds, by, store);
-                        cache.cut = Some((key, whole));
-                    }
-                    let (_, whole) = cache.cut.as_ref()?;
-                    let whole = whole.as_ref()?;
-                    Some(Planned {
-                        area: canonical(pick(&whole.parts, p)?.clone()),
-                        seed: p,
-                        tie: whole.tie.clone(),
+                        Some(Planned {
+                            area: canonical(area),
+                            seed: p,
+                            tie: None,
+                            bridges: used,
+                        })
                     })
-                }),
-            };
-            let Some(planned) = found else {
-                return Err(refuse(
-                    codes::NOT_ENCLOSED,
-                    if way.unwrap_or_default() == HatchWay::Lines {
-                        "Nokta çizgilerle kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.".into()
+                    .into_iter()
+                    .collect()
+                } else {
+                    object_regions(doc, store, p, by, style, cache)
+                };
+                if found.is_empty() {
+                    let path = if k == 0 {
+                        "region.at".to_owned()
                     } else {
-                        "Noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için way: lines verin.".into()
-                    },
-                    "region.at",
-                ));
-            };
-            Ok((vec![planned], Vec::new()))
+                        format!("region.alsoAt[{}]", k - 1)
+                    };
+                    return Err(refuse(
+                        codes::NOT_ENCLOSED,
+                        if lines {
+                            "Nokta çizgilerle kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.".into()
+                        } else {
+                            "Noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için way: lines verin.".into()
+                        },
+                        &path,
+                    ));
+                }
+                // A region two points find is hatched once.
+                for f in found {
+                    if !planned.iter().any(|q| q.area == f.area) {
+                        planned.push(f);
+                    }
+                }
+            }
+            Ok((planned, warnings))
         }
-        HatchRegion::Objects {
-            uids,
-            islands,
-            texts,
-            ..
-        } => {
-            let islands = islands.unwrap_or(true);
+        HatchRegion::Objects { uids, texts, .. } => {
             let texts = texts.unwrap_or(false);
+            let by = Cutting {
+                islands: style != IslandStyle::Ignore,
+                texts,
+                font,
+            };
             let mut planned = Vec::new();
-            let mut warnings = Vec::new();
             for (i, uid) in uids.iter().enumerate() {
                 let Some(s) = find(doc, uid) else { continue };
                 let Some(e) = doc.get(s) else { continue };
@@ -714,15 +882,15 @@ pub(crate) fn regions(
                     },
                     |it| it.bounds,
                 );
-                let by = Cutting {
-                    islands,
-                    texts,
-                    font,
-                };
                 for part in &parts {
                     let Some(seed) = seed_of(part) else { continue };
                     if let Some(p) = cut_part(s, part, &bounds, seed, by, store) {
                         planned.push(p);
+                    }
+                    if style == IslandStyle::Normal {
+                        for (k, karea, kb) in children(s, part, &bounds, store) {
+                            nested(k, &karea, &kb, by, store, 1, &mut planned);
+                        }
                     }
                 }
             }
@@ -747,11 +915,288 @@ pub(crate) fn regions(
     }
 }
 
+/// Kapalı nesne's regions around `p`: the smallest closed object's part around it, cut by its islands and texts;
+/// with İç içe the closed objects inside its islands too, by turns (docs/adr/0329 §1).
+fn object_regions(
+    doc: &Document,
+    store: &Store,
+    p: Vec2,
+    by: Cutting,
+    style: IslandStyle,
+    cache: &mut RegionCache,
+) -> Vec<Planned> {
+    let Some((id, _)) = store.enclosing(p) else {
+        return Vec::new();
+    };
+    let Some(own) = slot(id) else {
+        return Vec::new();
+    };
+    let Some(item) = store.get(id) else {
+        return Vec::new();
+    };
+    // A multi-part area's part the point is in (docs/adr/0143); one area is itself.
+    let mut areas = areas_of_entity(&item.shape);
+    let part = if areas.len() == 1 {
+        0
+    } else {
+        match areas.iter().position(|a| inside_area(a, p)) {
+            Some(k) => k,
+            None => return Vec::new(),
+        }
+    };
+    // The part cut once while the drawing and the options stay; the piece around the point picked from it each time.
+    let key = (doc.revision(), own, part, by.islands, by.texts);
+    let base = areas.swap_remove(part);
+    if cache.cut.as_ref().is_none_or(|(k, _)| *k != key) {
+        let whole = cut_whole(own, &base, &item.bounds, by, store);
+        cache.cut = Some((key, whole));
+    }
+    let Some((_, Some(whole))) = cache.cut.as_ref() else {
+        return Vec::new();
+    };
+    let Some(piece) = pick(&whole.parts, p) else {
+        return Vec::new();
+    };
+    let mut out = vec![Planned {
+        area: canonical(piece.clone()),
+        seed: p,
+        tie: whole.tie.clone(),
+        bridges: Vec::new(),
+    }];
+    if style == IslandStyle::Normal {
+        let bounds = item.bounds;
+        for (k, karea, kb) in children(own, &base, &bounds, store) {
+            nested(k, &karea, &kb, by, store, 1, &mut out);
+        }
+    }
+    out
+}
+
+/// How deep İç içe goes: islands in islands this many levels down.
+const NESTING: u32 = 16;
+
+/// Whether `a` lies within `b` (all of its inside).
+fn within(a: &Area, b: &Area) -> bool {
+    let left: f64 = subtract_areas(std::slice::from_ref(a), std::slice::from_ref(b))
+        .iter()
+        .map(net_area)
+        .sum();
+    left <= net_area(a) * 1e-9
+}
+
+/// The closed objects directly inside `own`'s area `area` (docs/adr/0329 §1): all of each within it, none within
+/// another of them; each with its part and box.
+fn children(own: Slot, area: &Area, bounds: &Bounds, store: &Store) -> Vec<(Slot, Area, Bounds)> {
+    let size = net_area(area);
+    let inside: Vec<(Slot, Area, Bounds)> = store
+        .overlapping(bounds, None)
+        .into_iter()
+        .filter(|it| slot(it.id) != Some(own) && !matches!(it.shape, Shape::Hatch { .. }))
+        .flat_map(|it| {
+            let s = slot(it.id);
+            let b = it.bounds;
+            areas_of_entity(&it.shape)
+                .into_iter()
+                .filter(|a| net_area(a) < size * (1.0 - 1e-9) && within(a, area))
+                .filter_map(move |a| Some((s?, a, b)))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let mut out: Vec<(Slot, Area, Bounds)> = inside
+        .iter()
+        .filter(|(s, a, _)| {
+            !inside
+                .iter()
+                .any(|(t, b, _)| t != s && net_area(b) > net_area(a) && within(a, b))
+        })
+        .cloned()
+        .collect();
+    out.sort_by_key(|(s, _, _)| *s);
+    out
+}
+
+/// İç içe below an open island `own` (docs/adr/0329 §1): each closed object directly inside it hatched, its own
+/// islands open, and below each of those again.
+fn nested(own: Slot, area: &Area, bounds: &Bounds, by: Cutting, store: &Store, depth: u32, out: &mut Vec<Planned>) {
+    if depth > NESTING {
+        return;
+    }
+    for (k, karea, kb) in children(own, area, bounds, store) {
+        let Some(seed) = seed_of(&karea) else { continue };
+        if let Some(mut p) = cut_part(k, &karea, &kb, seed, by, store) {
+            p.seed = seed_of(&p.area).unwrap_or(seed);
+            out.push(p);
+        }
+        for (j, jarea, jb) in children(k, &karea, &kb, store) {
+            nested(j, &jarea, &jb, by, store, depth + 2, out);
+        }
+    }
+}
+
+/// The bridges a face's ring runs along (their middles on its edges).
+fn bridges_on(face: &Area, bridged: &[Bridge]) -> Vec<Bridge> {
+    if bridged.is_empty() {
+        return Vec::new();
+    }
+    let on = |m: Vec2| {
+        std::iter::once(&face.outer).chain(&face.holes).any(|r| {
+            let n = r.pts.len();
+            (0..n).any(|i| {
+                let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
+                let e = kentos_geometry_core::geom::intersect::Edge::Seg { a, b };
+                kentos_geometry_core::geom::intersect::closest_on_edge(&e, m).d <= 1e-6
+            })
+        })
+    };
+    bridged
+        .iter()
+        .filter(|b| on(Vec2::new((b.a.x + b.b.x) / 2.0, (b.a.y + b.b.y) / 2.0)))
+        .copied()
+        .collect()
+}
+
+/// What closing the gaps did (docs/adr/0329 §3): how many, how long, the region's area; none without gaps.
+pub(crate) fn gaps_said(doc: &Document, p: &Planned) -> Option<CommandWarning> {
+    if p.bridges.is_empty() {
+        return None;
+    }
+    let f = kentos_project::format::Format::of(doc.settings());
+    let total: f64 = p.bridges.iter().map(|b| b.length).sum();
+    let longest = p
+        .bridges
+        .iter()
+        .map(|b| b.length)
+        .fold(0.0_f64, f64::max);
+    let area: f64 = net_area(&p.area);
+    Some(CommandWarning {
+        code: codes::GAPS_CLOSED.into(),
+        message: format!(
+            "{} boşluk kapatıldı (toplam {}, en uzunu {}); taranan alan {}.",
+            p.bridges.len(),
+            f.length(total),
+            f.length(longest),
+            f.area(area)
+        ),
+        path: Some("region.gap".into()),
+    })
+}
+
+/// The shown line work near `bounds` that closes faces: of the boundary set and layer Tarama's lines way reads.
+fn line_work_near(
+    doc: &Document,
+    store: &Store,
+    set: Option<&TrimBoundaries>,
+    layer: Option<&str>,
+    bounds: &Bounds,
+) -> Vec<(Slot, Shape)> {
+    let listed: Option<std::collections::HashSet<Slot>> = match set {
+        Some(TrimBoundaries::Objects { uids }) => {
+            Some(uids.iter().filter_map(|u| find(doc, u)).collect())
+        }
+        _ => None,
+    };
+    let rect = match set {
+        Some(TrimBoundaries::Area { min, max }) => Some(rect(*min, *max)),
+        _ => None,
+    };
+    store
+        .overlapping(bounds, None)
+        .into_iter()
+        .filter(|it| bounds_faces(&it.shape))
+        .filter(|it| {
+            rect.as_ref().is_none_or(|r| {
+                it.bounds.max_x >= r.min_x
+                    && it.bounds.min_x <= r.max_x
+                    && it.bounds.max_y >= r.min_y
+                    && it.bounds.min_y <= r.max_y
+            })
+        })
+        .filter_map(|it| {
+            let s = slot(it.id)?;
+            let e = doc.get(s)?;
+            if layer.is_some_and(|l| e.base().layer_id != l)
+                || listed.as_ref().is_some_and(|l| !l.contains(&s))
+            {
+                return None;
+            }
+            Some((s, it.shape.clone()))
+        })
+        .collect()
+}
+
+/// A face's tie (docs/adr/0328 §3): the line work along its outer ring its bounds, along its holes its islands, the
+/// texts and inserts left open its cutouts; none when no object runs along its outer ring.
+fn face_tie(
+    doc: &Document,
+    store: &Store,
+    face: &Area,
+    near: &[(Slot, Shape)],
+    texts: bool,
+    gap: f64,
+) -> Option<Tie> {
+    let shapes: Vec<Shape> = near.iter().map(|(_, s)| s.clone()).collect();
+    let outer = Area {
+        outer: face.outer.clone(),
+        holes: Vec::new(),
+    };
+    // In the drawing's order, as the slots go.
+    let bounds: Vec<Slot> = bounding(&outer, &shapes)
+        .into_iter()
+        .map(|i| near[i].0)
+        .collect::<std::collections::BTreeSet<Slot>>()
+        .into_iter()
+        .collect();
+    if bounds.is_empty() {
+        return None;
+    }
+    let islands: Vec<Slot> = face
+        .holes
+        .iter()
+        .flat_map(|h| {
+            bounding(
+                &Area {
+                    outer: h.clone(),
+                    holes: Vec::new(),
+                },
+                &shapes,
+            )
+        })
+        .map(|i| near[i].0)
+        .filter(|s| !bounds.contains(s))
+        .collect::<std::collections::BTreeSet<Slot>>()
+        .into_iter()
+        .collect();
+    let cutouts = if texts {
+        let font = drawing_font(doc.settings().drawing_font);
+        let (slots, boxes) = cutouts_in(&area_bounds(face), font, store);
+        let cut = cut_base(face, &[], &boxes);
+        cut.cutouts
+            .iter()
+            .filter_map(|&k| slots.get(k).copied())
+            .collect()
+    } else {
+        Vec::new()
+    };
+    Some(Tie {
+        gap: (gap > 0.0).then_some(gap),
+        outer: None,
+        bounds,
+        islands,
+        cutouts,
+    })
+}
+
 /// The tie in the contract's terms: the objects' persistent ids, the seed.
 fn assoc_of(doc: &Document, tie: &Tie, seed: Vec2) -> Option<HatchAssoc> {
     let id = |s: Slot| doc.uid(s).map(|u| EntityId(*u.as_bytes()));
+    let outer = match tie.outer {
+        Some(s) => Some(id(s)?),
+        None => None,
+    };
     Some(HatchAssoc {
-        outer: id(tie.outer)?,
+        gap: tie.gap,
+        outer,
+        bounds: tie.bounds.iter().filter_map(|s| id(*s)).collect(),
         islands: tie.islands.iter().filter_map(|s| id(*s)).collect(),
         cutouts: tie.cutouts.iter().filter_map(|s| id(*s)).collect(),
         seed: Point {
@@ -770,17 +1215,47 @@ fn check_hatch(
     doc: &Document,
     store: Option<&Store>,
     input: &EntitiesHatch,
+    job: Option<&crate::jobs::Progress>,
 ) -> Result<(Vec<Planned>, EntitiesCreate, Vec<CommandWarning>), Stop> {
-    let pattern = pattern_of_spec(&input.pattern, doc.settings().plot_scale)?;
-    let (associative, way) = match &input.region {
+    let stopped = || job.is_some_and(crate::jobs::Progress::stopped);
+    let pattern = pattern_of_spec(&input.pattern, doc.settings())?;
+    let (associative, _way) = match &input.region {
         HatchRegion::Point {
             at,
             way,
             boundaries,
             associative,
+            also_at,
+            gap,
             ..
         } => {
             checks::point(*at, "Tıklanan noktanın", "region.at")?;
+            if also_at.len() > kentos_contracts::MAX_HATCH_POINTS {
+                return Err(refuse(
+                    codes::INVALID_REGION,
+                    format!(
+                        "{} ek nokta verildi; en çok {} olur. Bölgeleri birkaç komutla tarayın.",
+                        also_at.len(),
+                        kentos_contracts::MAX_HATCH_POINTS
+                    ),
+                    "region.alsoAt",
+                ));
+            }
+            for (i, q) in also_at.iter().enumerate() {
+                checks::point(*q, "Ek noktanın", &format!("region.alsoAt[{i}]"))?;
+            }
+            if let Some(g) = gap
+                && !(g.is_finite() && *g >= 0.0 && *g <= kentos_contracts::MAX_HATCH_GAP)
+            {
+                return Err(refuse(
+                    codes::INVALID_GAP,
+                    format!(
+                        "Boşluk toleransı {g}; 0 ile {} m arasında sonlu bir sayı olmalı.",
+                        kentos_contracts::MAX_HATCH_GAP
+                    ),
+                    "region.gap",
+                ));
+            }
             check_set(boundaries.as_ref(), "region.boundaries")?;
             (associative.unwrap_or(true), way.unwrap_or_default())
         }
@@ -808,6 +1283,15 @@ fn check_hatch(
             (associative.unwrap_or(true), HatchWay::Object)
         }
     };
+    if let Some(x) = input.transparency
+        && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+    {
+        return Err(refuse(
+            codes::INVALID_TRANSPARENCY,
+            format!("Saydamlık {x}; 0 ile 0,9 arasında olmalı (%0–90)."),
+            "transparency",
+        ));
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     match &input.region {
         HatchRegion::Point {
@@ -843,12 +1327,34 @@ fn check_hatch(
             &own
         }
     };
-    let (planned, warnings) = regions(doc, store, &input.region, &mut RegionCache::default())?;
+    let (planned, mut warnings) =
+        regions(doc, store, &input.region, &mut RegionCache::default(), &stopped)?;
+    warnings.extend(planned.iter().filter_map(|p| gaps_said(doc, p)));
     let core = core_pattern(&pattern);
+    let rings: Vec<Vec<Vec2>> = planned.iter().map(|p| ring_points(&p.area.outer)).collect();
+    let all = box_of(rings.iter().map(Vec::as_slice));
+    // Ölçekli (docs/adr/0331 §3): at the drawing's scale, its pattern as large on paper at each other.
+    let annotative = (input.pattern.annotative == Some(true)).then(|| {
+        Box::new(kentos_contracts::Annotative {
+            at: doc.settings().plot_scale,
+            scales: Vec::new(),
+        })
+    });
     let mut geometries = Vec::with_capacity(planned.len());
-    for p in &planned {
-        let ring = ring_points(&p.area.outer);
+    let mut bounding: Vec<Vec<EntityId>> = Vec::with_capacity(planned.len());
+    let count = planned.len() as u64;
+    let mut lines = 0.0;
+    for (k, (p, ring)) in planned.iter().zip(rings).enumerate() {
+        // Region by region, a job says how far it came and stops when asked (docs/adr/0332 §3).
+        if stopped() {
+            return Err(Stop::Cancelled);
+        }
+        if let Some(job) = job {
+            job.set(k as u64, count);
+        }
         let holes: Vec<Vec<Vec2>> = p.area.holes.iter().map(ring_points).collect();
+        let mut pattern = pattern.clone();
+        pattern.origin = origin_of(input.pattern.origin.as_ref(), box_of([ring.as_slice()]), all);
         if too_dense(&ring, &core) || dense_lines(&ring, &holes, &pattern) {
             return Err(refuse(
                 codes::PATTERN_TOO_DENSE,
@@ -856,24 +1362,251 @@ fn check_hatch(
                 "pattern",
             ));
         }
-        let assoc = match &p.tie {
-            Some(tie) if associative && way == HatchWay::Object => assoc_of(doc, tie, p.seed),
-            _ => None,
-        };
+        // Sınırın arkasında / önünde (docs/adr/0332 §1) asks for the boundary's objects even when the hatch follows nothing.
+        let bound = matches!(
+            input.draw_order,
+            Some(HatchDrawOrder::BehindBoundary | HatchDrawOrder::AboveBoundary)
+        );
+        // The whole command's budget (docs/adr/0332 §3): what a sheet cuts into lines at most, over every region.
+        lines += lines_over(&ring, &core);
+        if lines > MAX_COMMAND_LINES {
+            return Err(refuse(
+                codes::PATTERN_TOO_DENSE,
+                "Bu taramalar birlikte 200 000'den çok çizgi verir; bölgeleri birkaç komutla tarayın, ölçeği büyütün ya da başka bir desen seçin.".into(),
+                "pattern",
+            ));
+        }
+        let (assoc, boundary) = hatch_ties_of(doc, store, p, &input.region, associative || bound);
+        bounding.push(assoc.as_ref().map(boundary_objects).unwrap_or_default());
+        let assoc = if associative { assoc } else { None };
         geometries.push(EntityGeometry::Hatch {
             ring: wire(&ring),
             holes: (!holes.is_empty()).then(|| holes.iter().map(|h| wire(h)).collect()),
-            pattern: pattern.clone(),
+            pattern,
             assoc,
+            boundary,
+            annotative: annotative.clone(),
         });
     }
-    let objects = creating::input(
+    let mut objects = creating::input(
         &input.layer_id,
         geometries,
         &input.look,
         CreateOperation::Hatch,
     );
+    let orders = hatch_orders(doc, &input.layer_id, input.draw_order, &bounding, &mut warnings)?;
+    for (o, order) in objects.objects.iter_mut().zip(orders) {
+        o.transparency = input.transparency.filter(|x| *x > 0.0);
+        o.order = order;
+    }
     Ok((planned, objects, warnings))
+}
+
+/// The most lines one `cad.entities.hatch` writes over all its regions (docs/adr/0332 §3): what a sheet's PDF cuts
+/// a hatch batch into at most (kentos-plot's `MAX_HATCH_PIECES`).
+pub(crate) const MAX_COMMAND_LINES: f64 = 200_000.0;
+
+/// How many lines a pattern's families draw across a ring, all families together (their whole lines, before the
+/// ring cuts them); none for a solid or a gradient.
+pub(crate) fn lines_over(ring: &[Vec2], p: &kentos_geometry_core::entity::HatchPattern) -> f64 {
+    use kentos_geometry_core::geom::hatch_pattern::paints;
+    paints(p)
+        .iter()
+        .filter(|f| f.spacing > 0.0)
+        .map(|f| {
+            let r = f.angle.to_radians();
+            let (c, s) = (r.cos(), r.sin());
+            let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+            for q in ring {
+                let v = -q.x * s + q.y * c;
+                lo = lo.min(v);
+                hi = hi.max(v);
+            }
+            ((hi - lo) / f.spacing).floor() + 1.0
+        })
+        .sum()
+}
+
+/// The objects a hatch's region was found from: its closed object, its face's line work and its islands (not the
+/// texts it leaves open).
+fn boundary_objects(a: &HatchAssoc) -> Vec<EntityId> {
+    a.outer
+        .iter()
+        .chain(&a.bounds)
+        .chain(&a.islands)
+        .copied()
+        .collect()
+}
+
+/// Each new hatch's place in its layer's draw order (docs/adr/0332 §1; AutoCAD's HPDRAWORDER): none, under or over
+/// every object of the layer, or just under or over its boundary's objects there. A boundary only on other layers
+/// leaves the hatch as a new object and says that the layers' order decides (`order_other_layer`).
+fn hatch_orders(
+    doc: &Document,
+    layer_id: &str,
+    how: Option<HatchDrawOrder>,
+    bounding: &[Vec<EntityId>],
+    warnings: &mut Vec<CommandWarning>,
+) -> Result<Vec<Option<i32>>, Stop> {
+    let how = how.unwrap_or_default();
+    if how == HatchDrawOrder::None {
+        return Ok(vec![None; bounding.len()]);
+    }
+    let order = |e: &Entity| i64::from(e.base().look.order.unwrap_or(0));
+    let layer: Vec<i64> = doc.by_layer(layer_id).map(order).collect();
+    let (low, high) = (
+        layer.iter().copied().min().unwrap_or(0),
+        layer.iter().copied().max().unwrap_or(0),
+    );
+    let mut elsewhere = false;
+    let mut out = Vec::with_capacity(bounding.len());
+    for objects in bounding {
+        let at: Option<i64> = match how {
+            HatchDrawOrder::None => None,
+            HatchDrawOrder::Back => Some(low - 1),
+            HatchDrawOrder::Front => Some(high + 1),
+            HatchDrawOrder::BehindBoundary | HatchDrawOrder::AboveBoundary => {
+                let mine: Vec<i64> = objects
+                    .iter()
+                    .filter_map(|id| doc.slot_of(Uuid::from_bytes(id.0)).and_then(|s| doc.get(s)))
+                    .filter(|e| e.base().layer_id == layer_id)
+                    .map(order)
+                    .collect();
+                elsewhere |= mine.is_empty() && !objects.is_empty();
+                if how == HatchDrawOrder::BehindBoundary {
+                    mine.iter().copied().min().map(|o| o - 1)
+                } else {
+                    mine.iter().copied().max().map(|o| o + 1)
+                }
+            }
+        };
+        if let Some(o) = at
+            && !(i64::from(i32::MIN)..=i64::from(i32::MAX)).contains(&o)
+        {
+            return Err(refuse(
+                codes::ORDER_LIMIT,
+                "Katmanın çizim sırası sınıra geldi; tarama daha arkaya ya da öne alınamaz. Nesneleri ters yöne taşıyarak yer açın.".into(),
+                "drawOrder",
+            ));
+        }
+        out.push(at.and_then(|o| i32::try_from(o).ok()).filter(|o| *o != 0));
+    }
+    if elsewhere {
+        warnings.push(CommandWarning {
+            code: codes::ORDER_OTHER_LAYER.into(),
+            message: "Tarama sınırından başka katmanda: önünde mi arkasında mı çizileceğini katmanların sırası belirler; taramanın katmanını Katmanlar panelinde sınırınkinin altına alın.".into(),
+            path: Some("drawOrder".into()),
+        });
+    }
+    Ok(out)
+}
+
+/// The checks of a point region given elsewhere (Sınırı yeniden seç, docs/adr/0329 §4), its paths under `at`: the
+/// point, the gap, the boundary set and layer; one point only (`invalid_region`).
+pub(crate) fn point_region_checks(doc: &Document, region: &HatchRegion, at: &str) -> Result<(), Stop> {
+    let HatchRegion::Point {
+        at: p,
+        also_at,
+        boundaries,
+        boundary_layer,
+        gap,
+        ..
+    } = region
+    else {
+        return Err(refuse(
+            codes::INVALID_REGION,
+            "Bölge tek bir noktayla verilmeli (kind: point); Çoklu tara'nın nesneleri burada alınmaz.".into(),
+            at,
+        ));
+    };
+    checks::point(*p, "Tıklanan noktanın", &format!("{at}.at"))?;
+    if !also_at.is_empty() {
+        return Err(refuse(
+            codes::INVALID_REGION,
+            "Bir taramanın bölgesi tek noktayla bulunur; alsoAt verilmez.".into(),
+            &format!("{at}.alsoAt"),
+        ));
+    }
+    if let Some(g) = gap
+        && !(g.is_finite() && *g >= 0.0 && *g <= kentos_contracts::MAX_HATCH_GAP)
+    {
+        return Err(refuse(
+            codes::INVALID_GAP,
+            format!(
+                "Boşluk toleransı {g}; 0 ile {} m arasında sonlu bir sayı olmalı.",
+                kentos_contracts::MAX_HATCH_GAP
+            ),
+            &format!("{at}.gap"),
+        ));
+    }
+    check_set(boundaries.as_ref(), &format!("{at}.boundaries"))?;
+    check_found(
+        doc,
+        boundaries.as_ref(),
+        &format!("{at}.boundaries"),
+        boundary_layer.as_deref(),
+        &format!("{at}.boundaryLayer"),
+    )
+}
+
+/// What a region's hatch follows and its exact boundary (docs/adr/0328): its tie's objects, or, found in the line work,
+/// the objects along its face; the curves it was cut from taken back.
+pub(crate) fn hatch_ties_of(
+    doc: &Document,
+    store: &Store,
+    p: &Planned,
+    region: &HatchRegion,
+    associative: bool,
+) -> (Option<HatchAssoc>, Option<Vec<kentos_contracts::HatchLoop>>) {
+    let (tie, sources) = match (&p.tie, region) {
+        (Some(tie), _) => {
+            let shapes = std::iter::once(tie.outer)
+                .flatten()
+                .chain(tie.islands.iter().copied())
+                .filter_map(|s| store.get(f64::from(s.0)).map(|it| it.shape.clone()))
+                .collect();
+            (Some(tie.clone()), shapes)
+        }
+        (
+            None,
+            HatchRegion::Point {
+                boundaries,
+                boundary_layer,
+                texts,
+                gap,
+                ..
+            },
+        ) => {
+            let near = line_work_near(
+                doc,
+                store,
+                boundaries.as_ref(),
+                boundary_layer.as_deref(),
+                &area_bounds(&p.area),
+            );
+            let tie = associative.then(|| {
+                face_tie(
+                    doc,
+                    store,
+                    &p.area,
+                    &near,
+                    texts.unwrap_or(false),
+                    gap.unwrap_or(0.0),
+                )
+            });
+            (tie.flatten(), near.into_iter().map(|(_, s)| s).collect())
+        }
+        _ => (None, Vec::new()),
+    };
+    let assoc = match &tie {
+        Some(tie) if associative => assoc_of(doc, tie, p.seed),
+        _ => None,
+    };
+    let loops = hatch_boundary::of_area(&p.area, &sources);
+    let boundary = hatch_boundary::curved(&loops)
+        .then(|| kentos_formats::blocks::contract_boundary(&loops))
+        .flatten();
+    (assoc, boundary)
 }
 
 /// `cad.entities.hatch` v1: Tarama (and Çoklu tara).
@@ -881,7 +1614,7 @@ pub mod entities_hatch {
     use super::*;
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesHatch) -> CommandResult<()> {
-        match check_hatch(cx.doc, cx.store, input) {
+        match check_hatch(cx.doc, cx.store, input, cx.job) {
             Ok((_, objects, warnings)) => {
                 creating::with_warnings(creating::validate(cx, &objects), warnings)
             }
@@ -902,7 +1635,7 @@ pub mod entities_hatch {
         store: Option<&Store>,
         input: &EntitiesHatch,
     ) -> CommandResult<EntitiesCreatePlan> {
-        match check_hatch(doc, store, input) {
+        match check_hatch(doc, store, input, None) {
             Ok((_, objects, warnings)) => {
                 creating::with_warnings(creating::plan(doc, &objects), warnings)
             }
@@ -927,7 +1660,7 @@ pub mod entities_hatch {
                 &own
             }
         };
-        regions(doc, store, &input.region, cache)
+        regions(doc, store, &input.region, cache, &|| false)
             .map(|(planned, _)| planned)
             .unwrap_or_default()
     }
@@ -941,12 +1674,80 @@ pub mod entities_hatch {
             kentos_contracts::CAD_ENTITIES_HATCH,
             kentos_contracts::CAD_ENTITIES_HATCH_VERSION,
             input,
-            |cx, input| match check_hatch(cx.doc, cx.store, &input) {
+            |cx, input| match check_hatch(cx.doc, cx.store, &input, cx.job) {
                 Ok((_, objects, warnings)) => {
                     creating::with_warnings(creating::execute(cx, objects), warnings)
                 }
                 Err(stop) => stop.into(),
             },
         )
+    }
+}
+
+#[cfg(test)]
+mod budget_tests {
+    use super::*;
+
+    /// A 100 m square of lines 1 m apart: 101 lines; crossed, 202; the budget is the sum over every region.
+    #[test]
+    fn the_lines_a_pattern_draws_are_counted_family_by_family() {
+        let ring = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(100.0, 0.0),
+            Vec2::new(100.0, 100.0),
+            Vec2::new(0.0, 100.0),
+        ];
+        let lines = |kind: HatchPatternType| {
+            core_pattern(&ContractPattern {
+                kind,
+                angle: 0.0,
+                spacing: 1.0,
+                name: None,
+                scale: None,
+                lines: None,
+                gradient: None,
+                origin: None,
+            })
+        };
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Lines)), 101.0);
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Cross)), 202.0);
+        assert_eq!(lines_over(&ring, &lines(HatchPatternType::Solid)), 0.0);
+        // A thousand such squares pass the budget's 200 000 at the 991st.
+        let crossed = lines_over(&ring, &lines(HatchPatternType::Cross));
+        assert!(990.0 * crossed < MAX_COMMAND_LINES && 991.0 * crossed > MAX_COMMAND_LINES);
+    }
+
+    /// A hatch run as a job asked to stop stops between its points and writes nothing (docs/adr/0332 §3).
+    #[test]
+    fn a_hatch_job_asked_to_stop_writes_nothing() {
+        let snapshot = serde_json::json!({"format":"kentos.document","version":1,"name":"İptal","settings":{"srid":5256,
+            "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":100},
+            "origin":{"x":0,"y":0},"layers":[{"id":"a","name":"A","type":"layer","visible":true,"locked":false,
+            "expanded":true,"style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
+            "activeLayer":"a","entities":[{"kind":"polygon","id":1,"layerId":"a","attrs":{},
+            "pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}],
+            "styles":{"items":[],"categories":[]}});
+        let mut doc = Document::from_snapshot(
+            kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
+        )
+        .expect("opens");
+        let at = doc.revision();
+        let envelope = kentos_contracts::CallEnvelope {
+            command: kentos_contracts::CAD_ENTITIES_HATCH.into(),
+            version: None,
+            op: kentos_contracts::CallOp::Execute,
+            input: serde_json::json!({"region": {"kind": "point", "at": {"x": 5, "y": 5}}, "pattern": {"name": "ANSI31"},
+                                      "layerId": "a"}),
+            request_id: None,
+            expected: None,
+        };
+        let progress = crate::jobs::Progress::default();
+        progress.stop();
+        let answer = crate::call::call_in_job(&mut doc, envelope.clone(), &progress);
+        assert!(matches!(answer.result, CommandResult::Cancelled), "{:?}", answer.result);
+        assert_eq!(doc.revision(), at, "nothing written");
+        // Not asked to stop, it writes.
+        let answer = crate::call::call_in_job(&mut doc, envelope, &crate::jobs::Progress::default());
+        assert!(matches!(answer.result, CommandResult::Completed { .. }), "{:?}", answer.result);
     }
 }

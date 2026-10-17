@@ -518,6 +518,50 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 if let (Entity::Text(was), Entity::Text(now)) = (entity, &mut next) {
                     now.label_of = was.label_of;
                     now.label_scale = was.label_scale;
+                    // It keeps its layout when the edit gives none (docs/adr/0324 §3); an empty one takes it away.
+                    if let EntityGeometry::Text { layout: None, .. } = geometry {
+                        now.paragraph.layout = was.paragraph.layout.clone();
+                    }
+                    // Its fields (docs/adr/0325 §2): the document keeps those the edit's letters did not touch.
+                    now.paragraph.fields = was.paragraph.fields.clone();
+                }
+                // A leader keeps its tips' references, content blocks and style (docs/adr/0326); its arms when the edit
+                // gives none, else each arm kept keeps what its tip follows.
+                if let (Entity::Leader(was), Entity::Leader(now)) = (entity, &mut next) {
+                    now.tip = was.tip.clone();
+                    now.blocks = was.blocks.clone();
+                    now.leader_style = was.leader_style.clone();
+                    match geometry {
+                        EntityGeometry::Leader { arms: None, .. } => now.arms = was.arms.clone(),
+                        _ => {
+                            for (arm, old) in now.arms.iter_mut().zip(&was.arms) {
+                                arm.tip = old.tip.clone();
+                            }
+                        }
+                    }
+                }
+                // A table keeps its cells' styles, formulas and fields when the edit gives none (docs/adr/0327), clipped
+                // to its new rows and columns; a linked file's data when the edit's source names the same file.
+                if let (Entity::Table(was), Entity::Table(now)) = (entity, &mut next) {
+                    if let EntityGeometry::Table {
+                        styles,
+                        formulas,
+                        fields,
+                        ..
+                    } = geometry
+                    {
+                        if styles.is_none() {
+                            now.styles = was.styles.clone();
+                        }
+                        if formulas.is_none() {
+                            now.formulas = was.formulas.clone();
+                        }
+                        if fields.is_none() {
+                            now.fields = was.fields.clone();
+                        }
+                    }
+                    let (n, m) = (now.rows.len(), now.columns.len());
+                    now.clip_to(n, m);
                 }
                 // A dimension keeps its references when the edit names none (docs/adr/0249 §3): the
                 // document lets a point go when the edit moved it, its object unchanged.
@@ -525,6 +569,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                     && now.refs.is_none()
                 {
                     now.refs = was.refs.clone();
+                }
+                // An annotation keeps its scales (docs/adr/0323 §4): cad.annotations.scales changes them,
+                // and one that cannot be annotative any more (a text given a curve) has none.
+                if let Some(scales) = kentos_contracts::annotative_of(entity)
+                    && std::mem::discriminant(entity) == std::mem::discriminant(&next)
+                    && kentos_contracts::why_not_annotative(&next).is_none()
+                    && let Some(field) = kentos_contracts::annotative_field(&mut next)
+                    && field.is_none()
+                {
+                    *field = Some(Box::new(scales.clone()));
                 }
                 checked.changed.push(Changed {
                     slot,
@@ -879,6 +933,8 @@ pub(crate) fn check_geometry(
             holes,
             pattern,
             assoc,
+            boundary,
+            ..
         } => {
             // Its pattern's own fields within their bounds, its tie's too (docs/adr/0186 §1, §6); a
             // number that is not finite is said as such below (`not_finite`).
@@ -893,7 +949,23 @@ pub(crate) fn check_geometry(
                     at(&format!(".{field}")),
                 )));
             }
-            if ring.len() < 3 {
+            // Its exact boundary in the contract's form, its curves ending at its points (docs/adr/0328 §1); the
+            // ring is then drawn from it.
+            if let Some(b) = boundary {
+                let words = kentos_contracts::boundary_problem(b).or_else(|| {
+                    kentos_domain::hatch_boundaries::drawn(b)
+                        .is_none()
+                        .then(|| "Tarama sınırının eğrileri kenarlarının uçlarında başlayıp bitmiyor ya da sınır bir alan kapatmıyor.".to_owned())
+                });
+                if let Some(words) = words {
+                    return Err(Stop::failed(error(
+                        codes::INVALID_HATCH,
+                        words,
+                        at(".boundary"),
+                    )));
+                }
+            }
+            if boundary.is_none() && ring.len() < 3 {
                 return Err(Stop::failed(error(
                     codes::TOO_FEW_CORNERS,
                     format!(
@@ -1123,10 +1195,14 @@ pub(crate) fn check_geometry(
         box_width,
         line_spacing,
         runs,
+        layout,
         ..
     } = g
     {
+        // An empty layout is the edit's way to take one away (docs/adr/0324 §3), not a layout to check.
         let paragraph = kentos_contracts::Paragraph {
+            fields: Vec::new(),
+            layout: layout.clone().filter(|l| !l.is_plain()),
             box_width: *box_width,
             line_spacing: *line_spacing,
             runs: runs.clone(),
@@ -1178,6 +1254,37 @@ pub(crate) fn check_geometry(
             )));
         }
     }
+    // Its cells' styles, formulas and fields (docs/adr/0327), when the edit gives them.
+    if let EntityGeometry::Table {
+        rows,
+        columns,
+        cells,
+        merges,
+        styles,
+        formulas,
+        fields,
+        ..
+    } = g
+        && (styles.is_some() || formulas.is_some() || fields.is_some())
+    {
+        let (none_s, none_f, none_d) = (Vec::new(), Vec::new(), Vec::new());
+        let problem = kentos_contracts::cells_problem_of(
+            rows.len(),
+            columns.len(),
+            merges,
+            styles.as_ref().unwrap_or(&none_s),
+            formulas.as_ref().unwrap_or(&none_f),
+            fields.as_ref().unwrap_or(&none_d),
+        );
+        let _ = cells;
+        if let Some((field, words)) = problem {
+            return Err(Stop::failed(error(
+                codes::INVALID_TABLE,
+                words,
+                at(&format!(".{field}")),
+            )));
+        }
+    }
     // A picture's size, its one source, its clip and opacity (docs/adr/0192 §6); a number that
     // is not finite is `not_finite`'s.
     if let EntityGeometry::Image(image) = g
@@ -1204,11 +1311,13 @@ pub(crate) fn check_geometry(
             at(""),
         )));
     }
-    // A dimension's references (docs/adr/0249 §3).
+    // A dimension's references (docs/adr/0249 §3) and their rule's kinds (docs/adr/0320 §1).
     if let EntityGeometry::Dimension {
-        refs: Some(refs), ..
+        refs: Some(refs),
+        style,
+        ..
     } = g
-        && let Some(words) = refs.problem()
+        && let Some(words) = refs.problem().or_else(|| refs.rule_problem(*style))
     {
         return Err(Stop::failed(error(codes::INVALID_REFS, words, at(".refs"))));
     }
@@ -1676,12 +1785,14 @@ fn finite(g: &EntityGeometry) -> bool {
             holes,
             pattern,
             assoc,
+            ..
         } => {
             pts(ring)
                 && holes.iter().flatten().all(|h| pts(h))
                 && pattern.angle.is_finite()
                 && pattern.spacing.is_finite()
                 && pattern.scale.is_none_or(f64::is_finite)
+                && pattern.origin.is_none_or(|o| o.x.is_finite() && o.y.is_finite())
                 && pattern.lines.iter().flatten().all(|l| {
                     [l.angle, l.origin[0], l.origin[1], l.offset[0], l.offset[1]]
                         .iter()

@@ -637,6 +637,154 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
     }
 }
 
+// ---- the edges and curves a dimension measures (docs/adr/0320 §1) ----------------------------------------------
+
+/// The kind of edge a measure takes: a straight edge (an angle's arms), an arc with ends (an arc length, an arc's
+/// angle), or anything round (a radius: a circle, an arc or a path's arc segment).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EdgeKind {
+    Straight,
+    Arc,
+    Round,
+}
+
+/// The fraction along a straight edge of the point nearest `at`, within 0 and 1.
+fn t_nearest_on_segment(a: Vec2, b: Vec2, at: Vec2) -> f64 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let ll = dx * dx + dy * dy;
+    if ll == 0.0 {
+        return 0.0;
+    }
+    clamp01(((at.x - a.x) * dx + (at.y - a.y) * dy) / ll)
+}
+
+/// The fraction of a signed sweep from `a0` of the point of the arc nearest `at`: its angle's, or the nearer end's
+/// when it lies off the arc.
+fn t_nearest_on_arc(c: Vec2, a0: f64, sw: f64, at: Vec2) -> f64 {
+    let th = atan2(at.y - c.y, at.x - c.x);
+    let d = if sw > 0.0 {
+        norm_angle(th - a0)
+    } else {
+        norm_angle(a0 - th)
+    };
+    let span = sw.abs();
+    if span >= TAU - 1e-12 {
+        return d / TAU;
+    }
+    if d <= span {
+        clamp01(d / span)
+    } else if d - span < TAU - d {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+/// The `along` place on `e`'s edge of `kind` nearest to `near` (the first of equals, in the object's order), at the
+/// point of it nearest `near`: the place an edge picked by a click there is bound by (docs/adr/0320 §1). None when
+/// `e` has no edge of that kind.
+pub fn edge_place_near(e: &Entity, kind: EdgeKind, near: Vec2) -> Option<Place> {
+    let whole = |t: f64| Place::Along {
+        part: 0,
+        ring: 0,
+        index: 0,
+        t,
+    };
+    match (&e.shape, kind) {
+        (Shape::Line { a, b }, EdgeKind::Straight) => {
+            return (a != b).then(|| whole(t_nearest_on_segment(*a, *b, near)));
+        }
+        (Shape::Arc { c, a0, a1, .. }, EdgeKind::Arc | EdgeKind::Round) => {
+            let sw = sweep(*a0, *a1);
+            if kind == EdgeKind::Arc && !(sw > 1e-9 && sw < TAU - 1e-9) {
+                return None;
+            }
+            return Some(whole(t_nearest_on_arc(*c, *a0, sw, near)));
+        }
+        (Shape::Circle { c, .. }, EdgeKind::Round) => {
+            return Some(whole(t_nearest_on_arc(*c, 0.0, TAU, near)));
+        }
+        (Shape::Polyline { .. } | Shape::Polygon { .. }, _) => {}
+        _ => return None,
+    }
+    let mut best: Option<(Place, f64)> = None;
+    for (p, _) in vertex_places(&e.shape) {
+        let Place::Vertex { part, ring, index } = p else {
+            continue;
+        };
+        let Some((a, b, k)) = edge_of(&e.shape, part, ring, index) else {
+            continue;
+        };
+        let (edge, t) = match (edge_arc(a, b, k), kind) {
+            (None, EdgeKind::Straight) if a != b => (
+                crate::geom::intersect::Edge::Seg { a, b },
+                t_nearest_on_segment(a, b, near),
+            ),
+            (Some((c, r, a0, sw)), EdgeKind::Arc | EdgeKind::Round) => (
+                crate::geom::intersect::Edge::Arc { c, r, a0, sweep: sw },
+                t_nearest_on_arc(c, a0, sw, near),
+            ),
+            _ => continue,
+        };
+        let d = closest_on_edge(&edge, near).d;
+        if best.is_none_or(|(_, bd)| d < bd) {
+            best = Some((
+                Place::Along {
+                    part,
+                    ring,
+                    index,
+                    t,
+                },
+                d,
+            ));
+        }
+    }
+    best.map(|(p, _)| p)
+}
+
+/// The centre of the curve `place` is on: a circle's or an arc's, or a path's arc segment's (an `along` place or an
+/// edge's middle); none on a straight edge or another object (docs/adr/0320 §1).
+pub fn curve_centre(e: &Entity, place: Place) -> Option<Vec2> {
+    match (&e.shape, place) {
+        (
+            Shape::Circle { c, .. } | Shape::Arc { c, .. },
+            Place::Along { .. } | Place::Start | Place::End | Place::Center,
+        ) => Some(*c),
+        (
+            Shape::Polyline { .. } | Shape::Polygon { .. },
+            Place::Along {
+                part, ring, index, ..
+            }
+            | Place::Mid { part, ring, index },
+        ) => {
+            let (a, b, k) = edge_of(&e.shape, part, ring, index)?;
+            edge_arc(a, b, k).map(|(c, ..)| c)
+        }
+        _ => None,
+    }
+}
+
+/// The ends of the straight edge `place` is on, in the object's direction: a line's, or a path's straight edge's (an
+/// `along` place or an edge's middle); none on a curve (docs/adr/0320 §1).
+pub fn edge_line(e: &Entity, place: Place) -> Option<(Vec2, Vec2)> {
+    match (&e.shape, place) {
+        (Shape::Line { a, b }, Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End) => {
+            Some((*a, *b))
+        }
+        (
+            Shape::Polyline { .. } | Shape::Polygon { .. },
+            Place::Along {
+                part, ring, index, ..
+            }
+            | Place::Mid { part, ring, index },
+        ) => {
+            let (a, b, k) = edge_of(&e.shape, part, ring, index)?;
+            edge_arc(a, b, k).is_none().then_some((a, b))
+        }
+        _ => None,
+    }
+}
+
 // ---- ranges (docs/adr/0263 §2) -----------------------------------------------------------------------------------
 
 /// The length of a piece of an edge, from fraction `t0` to `t1`.

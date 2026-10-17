@@ -48,6 +48,7 @@ apps/web/scripts/fixtures/record-font-metrics.mjs).
   them at the start; none in an empty text).
 """
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -210,52 +211,138 @@ SHARES = {
 
 
 def lay_out(t):
+    """A text's lines, box and point (docs/adr/0182 §2), with its layout (docs/adr/0324 §2): indents and tab stops in
+    its height, a hanging first line's left indent a stop too, a stacked fraction as wide as its wider part (`#`: both
+    parts and a slash side by side), columns of `columns.height` metres. Each line is a piece between tabs."""
     letters = list(t["text"])
-    formats = spread(t.get("runs", []), len(letters))
+    runs = t.get("runs", [])
+    formats = spread(runs, len(letters))
     font = t.get("font", "barlow")
     h = t["height"]
     wf = t.get("widthFactor", 1.0)
+    lay = t.get("layout", {})
     adv = []
-    for c, f in zip(letters, formats):
-        a = float(advance(font, c, f["bold"]))
+    for ch, f in zip(letters, formats):
+        a = float(advance(font, ch, f["bold"]))
         adv.append(a * 0.6 if f["script"] is not None else a)
 
-    def width(a, b):
-        s = 0.0
-        for x in adv[a:b]:
-            s += x
-        return s / 1000.0 * h * wf
+    def scale(total):
+        return total / 1000.0 * h * wf
 
-    lines = []
+    def units(heights):
+        return heights * 1000.0 / wf
+
+    def summed(a, b):
+        total = 0.0
+        for x in adv[a:b]:
+            total += x
+        return total
+
+    stacks = []
+    for r in runs:
+        if r.get("script") != "stack":
+            continue
+        start, end = r["start"], min(r["end"], len(letters))
+        marks = [k for k in range(start, end) if letters[k] in "/#^"]
+        if not marks:
+            continue
+        q = marks[0]
+        num, den = summed(start, q), summed(q + 1, end)
+        if letters[q] == "#":
+            w = num + float(advance(font, "/", t.get("bold", False) or r.get("bold", False))) * 0.6 + den
+        else:
+            w = max(num, den)
+        stacks.append((start, end, q, w))
+    stops = [units(x) for x in lay.get("tabs", [])]
+    every = units(4.0)
+    left = units(lay.get("leftIndent", 0.0))
+    first = units(lay.get("leftIndent", 0.0) + lay.get("indent", 0.0))
+
+    def stop(x):
+        later = [s for s in stops if s > x]
+        if later:
+            nxt = later[0]
+        else:
+            last = stops[-1] if stops else 0.0
+            nxt = last + (math.floor((x - last) / every) + 1.0) * every
+        return left if left > x and left < nxt else nxt
+
+    def walk(frm, to, x):
+        i = frm
+        while i < to:
+            if letters[i] == "\t":
+                x = stop(x)
+                i += 1
+                continue
+            hit = [s for s in stacks if s[0] == i and s[1] <= to]
+            if hit:
+                x += hit[0][3]
+                i = hit[0][1]
+                continue
+            x += adv[i]
+            i += 1
+        return x
+
+    rows = []
     start = 0
-    for i, c in enumerate(letters + ["\n"]):
-        if c != "\n":
+    for i, ch in enumerate(letters + ["\n"]):
+        if ch != "\n":
             continue
         if t.get("boxWidth") is None:
-            lines.append([start, i])
+            rows.append([start, i, first])
         else:
-            wrap(letters, start, i, t["boxWidth"], width, lines)
+            wrap(letters, start, i, t["boxWidth"], (first, left), lambda a, b, x: scale(walk(a, b, x)), rows)
         start = i + 1
-    for line in lines:
-        while line[1] > line[0] and letters[line[1] - 1] == " ":
-            line[1] -= 1
-    widths = [width(a, b) for a, b in lines]
-    box = t["boxWidth"] if t.get("boxWidth") is not None else max([0.0] + widths)
+    for row in rows:
+        while row[1] > row[0] and letters[row[1] - 1] == " ":
+            row[1] -= 1
+    measured = []
+    for a, b, x0 in rows:
+        x0m = scale(x0)
+        measured.append((x0m, scale(walk(a, b, x0)) - x0m))
+    box = t["boxWidth"] if t.get("boxWidth") is not None else max([0.0] + [x0 + w for x0, w in measured])
     pitch = 5.0 / 3.0 * h * t.get("lineSpacing", 1.0)
     along, up = SHARES[t.get("align")]
-    out = [{"start": a, "end": b, "width": w, "x": along * (box - w), "y": i * pitch} for i, ((a, b), w) in enumerate(zip(lines, widths))]
-    below = (len(lines) - 1) * pitch
+    cols = lay.get("columns")
+    if cols:
+        per, count, step = max(math.floor(cols["height"] / pitch), 1), max(cols["count"], 1), box + cols["gap"] * h
+    else:
+        per, count, step = None, 1, 0.0
+    out = []
+    for r, ((a, b, x0), (x0m, width)) in enumerate(zip(rows, measured)):
+        col = min(r // per, count - 1) if per else 0
+        row = r - col * per if per else r
+        shift = along * (box - x0m - width) + col * step
+        y = row * pitch
+        frm, at, k = a, x0, a
+        while True:
+            if k == b or letters[k] == "\t":
+                end_x = walk(frm, k, at)
+                out.append({"start": frm, "end": k, "width": scale(end_x) - scale(at), "x": shift + scale(at), "y": y})
+                if k == b:
+                    break
+                at = stop(end_x)
+                frm = k + 1
+            k += 1
+    if cols:
+        depth = max(max(0, (len(rows) if c + 1 == count else min(len(rows), c * per + per)) - c * per) for c in range(count))
+        total = count * box + (count - 1) * cols["gap"] * h
+    else:
+        depth = len(rows)
+        total = box
+    below = (depth - 1) * pitch if depth > 0 else 0.0
     if up < 0:
         rise = up * h - below
     elif 0 < up < 1:
         rise = up * h - below / 2.0
     else:
         rise = up * h
-    return {"lines": out, "width": box, "pitch": pitch, "shares": [along * box, rise]}
+    return {"lines": out, "width": total, "pitch": pitch, "shares": [along * total, rise]}
 
 
-def wrap(letters, frm, to, box, width, out):
-    start, filled, i = frm, None, frm
+def wrap(letters, frm, to, box, indents, end_of, out):
+    """One paragraph wrapped word by word: its first line from `indents[0]`, the others from `indents[1]`."""
+    start, filled, i, x0 = frm, None, frm, indents[0]
     while True:
         while i < to and letters[i] == " ":
             i += 1
@@ -264,11 +351,12 @@ def wrap(letters, frm, to, box, width, out):
         word = i
         while i < to and letters[i] != " ":
             i += 1
-        if filled is not None and width(start, i) > box:
-            out.append([start, filled])
+        if filled is not None and end_of(start, i, x0) > box:
+            out.append([start, filled, x0])
             start = word
+            x0 = indents[1]
         filled = i
-    out.append([start, to])
+    out.append([start, to, x0])
 
 
 # ── Cases ───────────────────────────────────────────────────────────────
@@ -307,6 +395,18 @@ LAYOUT = [
     ("eş aralıklı yazı tipi", text("plex mono\nkutu", font="plex-mono", boxWidth=10.0, align="middleCenter")),
     ("tek satır, kutusuz: bugünkü yazının genişliği", text("Parsel 101", runs=[{"start": 0, "end": 6, "italic": True}])),
     ("yalnız boşluklu paragraf boş satırdır", text("üst\n   \nalt", boxWidth=10.0)),
+    # docs/adr/0324: indents, tabs, lists, stacked fractions and columns.
+    ("girintili ilk satır, kutuda sarılır", text("Birinci paragrafın ilk satırı girintili, gerisi değil", boxWidth=24.0, layout={"indent": 2.0})),
+    ("sol girintili paragraf", text("Sol girintiden başlayan uzun bir paragraf sarılır", boxWidth=24.0, layout={"leftIndent": 3.0})),
+    ("madde işaretli liste: asılı girinti ve sekme", text("Malzemeler\n•\tKum ve çakıl karışımı kutuya sığmayınca alt satıra geçer\n•\tÇimento", boxWidth=30.0, layout={"indent": -2.0, "leftIndent": 2.0})),
+    ("numaralı liste", text("1.\tBirinci madde\n2.\tİkinci madde\n10.\tOnuncu madde", layout={"indent": -2.0, "leftIndent": 2.0})),
+    ("varsayılan sekmeler her dört yükseklikte", text("Ad\tSoyad\tParsel\nAli\tYılmaz\t101/5")),
+    ("verilen sekme durakları, sonra varsayılanlar", text("a\tb\tc\td", layout={"tabs": [3.0, 5.5]})),
+    ("ortalı satır sekmeli", text("Kot\t+12,50", boxWidth=20.0, align="topCenter", layout={"tabs": [6.0]})),
+    ("kesir: pay ve payda üst üste", text("Oran 1/2 ve 15/32", runs=[{"start": 5, "end": 8, "script": "stack"}, {"start": 12, "end": 17, "script": "stack"}])),
+    ("kesir: yan yana # ve toleranslı ^", text("Ölçü 3#4 ve 20+0.1^-0.1", runs=[{"start": 5, "end": 8, "script": "stack"}, {"start": 14, "end": 23, "script": "stack"}])),
+    ("iki sütun: satırlar sütun yüksekliğince", text("Bir\nİki\nÜç\nDört\nBeş", boxWidth=10.0, layout={"columns": {"count": 2, "gap": 1.0, "height": 8.5}})),
+    ("üç sütun, son sütun kalanları alır", text("a\nb\nc\nd\ne\nf\ng\nh", boxWidth=6.0, align="middleCenter", layout={"columns": {"count": 3, "gap": 0.5, "height": 4.5}})),
     ("Türkçe harfler ve uzun paragraf", text("Çağdaş şehir planlaması ölçüm, ifraz ve tevhit işlemlerini kapsar.", boxWidth=25.0, align="bottomLeft", font="overpass")),
 ]
 

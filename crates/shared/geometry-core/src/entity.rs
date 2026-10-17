@@ -75,6 +75,15 @@ impl Params {
         self.0.iter().find(|(k, _)| k == name).map(|(_, v)| v)
     }
 
+    /// These values with `name` set to `value`, in the names' order (the contract's map keeps them sorted).
+    pub fn with(&self, name: &str, value: ParamValue) -> Params {
+        let mut list: Vec<(String, ParamValue)> =
+            self.0.iter().filter(|(k, _)| k != name).cloned().collect();
+        list.push((name.to_owned(), value));
+        list.sort_by(|a, b| a.0.cmp(&b.0));
+        Params(list)
+    }
+
     /// The values as one text, a variant's key: the same values give the same text.
     pub fn key(&self) -> String {
         let mut out = String::new();
@@ -89,7 +98,9 @@ impl Params {
                     out.push_str(t);
                     out.push('"');
                 }
-                ParamValue::Point(q) => out.push_str(&format!("{:x},{:x}", q.x.to_bits(), q.y.to_bits())),
+                ParamValue::Point(q) => {
+                    out.push_str(&format!("{:x},{:x}", q.x.to_bits(), q.y.to_bits()))
+                }
             }
             out.push(';');
         }
@@ -118,9 +129,11 @@ pub struct HatchPattern {
     pub scale: Option<f64>,
     pub lines: Option<Vec<crate::geom::hatch_pattern::PatternLine>>,
     pub gradient: Option<crate::geom::hatch_pattern::Gradient>,
+    /// Where its lines are anchored in the world (docs/adr/0331 §2); none: the world's origin.
+    pub origin: Option<crate::Vec2>,
 }
 
-crate::json_struct!(HatchPattern { kind => "type", angle, spacing, name, scale, lines, gradient });
+crate::json_struct!(HatchPattern { kind => "type", angle, spacing, name, scale, lines, gradient, origin });
 
 impl HatchPattern {
     /// A user-defined pattern: solid, lines or crossed lines.
@@ -133,26 +146,73 @@ impl HatchPattern {
             scale: None,
             lines: None,
             gradient: None,
+            origin: None,
         }
     }
 }
 
-/// The objects a hatch's region follows (docs/adr/0186 §6), by their
-/// persistent ids: the closed object, its islands, the texts and inserts
+/// The objects a hatch's region follows (docs/adr/0186 §6, 0328 §3), by
+/// their persistent ids: the closed object (`outer`) or the objects whose
+/// line work closes its face (`bounds`), its islands, the texts and inserts
 /// left open, and the point clicked inside.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HatchAssoc {
-    pub outer: String,
+    /// The gap a face's line work was closed across (docs/adr/0329 §3).
+    pub gap: Option<f64>,
+    pub outer: Option<String>,
+    pub bounds: Option<Vec<String>>,
     pub islands: Option<Vec<String>>,
     pub cutouts: Option<Vec<String>>,
     pub seed: Vec2,
 }
 
 crate::json_struct!(HatchAssoc {
+    gap,
     outer,
+    bounds,
     islands,
     cutouts,
     seed
+});
+
+/// A boundary edge that is no line or circular arc (docs/adr/0328 §1): an
+/// ellipse's arc from `t0` to `t1` (counter-clockwise when `t1` is past
+/// `t0`), or a NURBS curve run whole.
+#[derive(Clone, Debug, PartialEq)]
+pub enum HatchCurve {
+    Ellipse {
+        c: Vec2,
+        major: Vec2,
+        ratio: f64,
+        t0: f64,
+        t1: f64,
+    },
+    Nurbs {
+        degree: usize,
+        ctrl: Vec<Vec2>,
+        knots: Vec<f64>,
+        weights: Option<Vec<f64>>,
+    },
+}
+
+crate::json_tagged!(HatchCurve, "kind",
+    Ellipse => "ellipse" { c, major, ratio, t0, t1 },
+    Nurbs => "nurbs" { degree, ctrl, knots, weights },
+);
+
+/// A closed loop of a hatch's boundary (docs/adr/0328 §1): edge `i` from
+/// `pts[i]` to the next, straight, an arc of `bulges[i]` or `curves[i]`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HatchLoop {
+    pub pts: Vec<Vec2>,
+    pub bulges: Option<Vec<f64>>,
+    pub curves: Option<Vec<Option<HatchCurve>>>,
+}
+
+crate::json_struct!(HatchLoop {
+    pts,
+    bulges,
+    curves
 });
 
 /// A part of a multi-part area past its first (docs/adr/0143): its ring in
@@ -192,6 +252,39 @@ crate::json_struct!(CellRange {
     rows,
     cols
 });
+
+/// A style over a table's range of cells (docs/adr/0327 §1): what it sets, a later over an earlier.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CellLook {
+    pub row: usize,
+    pub col: usize,
+    pub rows: usize,
+    pub cols: usize,
+    pub align: Option<String>,
+    pub bold: Option<bool>,
+    pub color: Option<String>,
+    pub fill: Option<String>,
+    pub decimals: Option<usize>,
+}
+
+crate::json_struct!(CellLook {
+    row,
+    col,
+    rows,
+    cols,
+    align,
+    bold,
+    color,
+    fill,
+    decimals
+});
+
+impl CellLook {
+    /// Whether the cell at `row`, `col` is in its range.
+    pub fn holds(&self, row: usize, col: usize) -> bool {
+        row >= self.row && row < self.row + self.rows && col >= self.col && col < self.col + self.cols
+    }
+}
 
 impl CellRange {
     /// Whether the cell at `row`, `col` is in it.
@@ -314,6 +407,8 @@ pub enum Shape {
         box_width: Option<f64>,
         line_spacing: Option<f64>,
         runs: Option<Vec<crate::text::paragraph::Run>>,
+        /// Its indents, tabs and columns (docs/adr/0324 §1); none: none.
+        flow: Option<Box<crate::text::paragraph::Flow>>,
         /// Its style, typeface, bold, italic and slant (docs/adr/0183 §2).
         face: crate::text::face::Face,
         /// The curve its letters stand on, in its frame (docs/adr/0196); none: straight.
@@ -341,6 +436,8 @@ pub enum Shape {
         pattern: HatchPattern,
         /// The objects its region follows (docs/adr/0186 §6).
         assoc: Option<HatchAssoc>,
+        /// Its boundary exact, the ring and holes drawn from it (docs/adr/0328 §1).
+        boundary: Option<Vec<HatchLoop>>,
     },
     /// A block placed in the drawing (docs/adr/0144): the definition `block`
     /// (its id) moved from its base point to `p`, mirrored in its x axis when
@@ -385,6 +482,10 @@ pub enum Shape {
         arrow_size: Option<f64>,
         /// `Some(true)`: the note's box is filled with the drawing area's colour first.
         mask: Option<bool>,
+        /// Its other arms, each from its tip to the last vertex (docs/adr/0326 §1).
+        arms: Option<Vec<crate::geom::leader::Arm>>,
+        /// Its content blocks' ids (docs/adr/0326 §2): with some, it has a landing and no note.
+        blocks: Option<Vec<String>>,
     },
     /// A table (docs/adr/0184): rows and columns of one-line cells hanging
     /// from `p`, its top left corner, turned `rotation` degrees; its rows'
@@ -407,6 +508,8 @@ pub enum Shape {
         /// Its frame's width, metres: the outline drawn as a band (docs/adr/0184 §2).
         frame: Option<f64>,
         source: Option<crate::api::json::Json>,
+        /// Its cells' styles (docs/adr/0327 §1).
+        styles: Option<Vec<CellLook>>,
         face: crate::text::face::Face,
     },
     /// A picture (docs/adr/0192): its frame from `p`, its lower left corner,
@@ -478,12 +581,12 @@ crate::json_tagged!(Shape, "kind",
     Spline => "spline" { pts, closed },
     // A NURBS curve's tangents are the typed hosts' (docs/adr/0259): the JSON API reads it without them.
     Nurbs => "nurbs" { degree, ctrl, knots, weights, closed, periodic, fit, fit_tolerance => "fitTolerance"; tangents },
-    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, path & face: crate::text::face::Face },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, flow => "layout", path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
-    Hatch => "hatch" { ring, holes, pattern, assoc },
+    Hatch => "hatch" { ring, holes, pattern, assoc, boundary },
     Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
-    Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask },
-    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
+    Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
+    Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
@@ -1145,6 +1248,8 @@ pub struct TextPlace<'a> {
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
     pub runs: &'a [crate::text::paragraph::Run],
+    /// Its indents, tabs and columns (docs/adr/0324 §1); none for none.
+    pub flow: Option<&'a crate::text::paragraph::Flow>,
     /// Its own typeface, bold and slant (docs/adr/0183 §2): measured in the
     /// typeface, bold in the bold table; `lean` (the slant's tangent) leans
     /// its box with its letters. None, false and 0 for the project's look.
@@ -1169,6 +1274,7 @@ impl<'a> TextPlace<'a> {
                 box_width,
                 line_spacing,
                 runs,
+                flow,
                 face,
                 path,
                 ..
@@ -1182,6 +1288,7 @@ impl<'a> TextPlace<'a> {
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: runs.as_deref().unwrap_or_default(),
+                flow: flow.as_deref(),
                 font: face.font,
                 bold: face.is_bold(),
                 lean: face.lean(),
@@ -1210,6 +1317,7 @@ impl<'a> TextPlace<'a> {
             box_width: None,
             line_spacing: None,
             runs: &[],
+            flow: None,
             font: None,
             bold: false,
             lean: 0.0,
@@ -1247,6 +1355,7 @@ impl<'a> TextPlace<'a> {
         self.box_width.is_some()
             || self.line_spacing.is_some()
             || !self.runs.is_empty()
+            || self.flow.is_some()
             || self.text.contains('\n')
     }
 
@@ -1267,6 +1376,7 @@ impl<'a> TextPlace<'a> {
             along: self.align.map_or(0.0, TextAlign::along),
             font: self.font_or(font),
             bold: self.bold,
+            flow: self.flow,
         })
     }
 
@@ -1280,7 +1390,7 @@ impl<'a> TextPlace<'a> {
             return (w, 0.0, 1, 0.0);
         }
         let laid = self.layout(font);
-        let n = laid.lines.len();
+        let n = laid.depth;
         (
             laid.width,
             n.saturating_sub(1) as f64 * laid.pitch,
@@ -1543,9 +1653,15 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             extend_bounds(&mut b, *p, 0.0);
             return b;
         }
-        // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4).
+        // Its vertices, its arrowhead, its landing and its note's box (docs/adr/0146 §4); its other arms and their
+        // arrowheads (docs/adr/0326 §1).
         Shape::Leader { pts, .. } => {
             let laid = leader::layout_of(e);
+            for (path, head) in leader::arm_layouts(e) {
+                for q in path.into_iter().chain(head.reach()) {
+                    extend_bounds(&mut b, q, 0.0);
+                }
+            }
             let reach = laid.iter().flat_map(leader::head_reach);
             let landing = laid.iter().filter_map(|l| l.landing.map(|[_, end]| end));
             let note = leader::note_place(e).map(|t| t.outline(font));
@@ -1717,7 +1833,19 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
         Shape::Spline { pts, closed } => Some(spline_length(pts, *closed)),
         Shape::Nurbs { .. } => crate::geom::nurbs::of(e).map(|n| n.length()),
         // Its vertices' length; the landing does not count (docs/adr/0146 §2).
-        Shape::Leader { pts, .. } => Some(path_length(pts, false)),
+        // Its arms' too (docs/adr/0326 §1).
+        Shape::Leader { pts, arms, .. } => Some(
+            path_length(pts, false)
+                + arms
+                    .iter()
+                    .flatten()
+                    .map(|a| {
+                        let mut all = a.pts.clone();
+                        all.extend(pts.last());
+                        path_length(&all, false)
+                    })
+                    .sum::<f64>(),
+        ),
         // The measured value when it is a length (an angle has none).
         Shape::Dimension { .. } => layout_of(e).filter(|l| l.unit == "length").map(|l| l.value),
         _ => None,
@@ -1872,6 +2000,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1882,6 +2011,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1905,6 +2035,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1915,6 +2046,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1940,6 +2072,7 @@ pub(crate) fn along_json<T>(
 ) -> Result<Option<T>, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1950,6 +2083,7 @@ pub(crate) fn along_json<T>(
         box_width: None,
         line_spacing: None,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -1987,6 +2121,7 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1997,6 +2132,7 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -2034,6 +2170,7 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
     let (text, runs, font) = text_place_json(v)?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -2044,6 +2181,7 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,
@@ -2071,6 +2209,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
     let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let path = curve_of(v)?;
 
+    let flow: Option<crate::text::paragraph::Flow> = json::read_field(v, "layout")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -2081,6 +2220,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        flow: flow.as_ref(),
         font: None,
         bold: bold_of(v)?,
         lean: lean_of(v)?,

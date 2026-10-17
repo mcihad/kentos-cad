@@ -108,6 +108,7 @@ impl Placing {
                     box_width,
                     line_spacing,
                     runs,
+                    flow,
                     face: _,
                     path,
                 } = piece.shape
@@ -129,6 +130,7 @@ impl Placing {
                 Some((
                     tag,
                     TextEntity {
+                        annotative: None,
                         base,
                         p: back(p),
                         text,
@@ -140,6 +142,8 @@ impl Placing {
                         label_of: None,
                         label_scale: None,
                         paragraph: kentos_contracts::Paragraph {
+                            fields: Vec::new(),
+                            layout: contract_layout(flow.as_deref()),
                             box_width,
                             line_spacing,
                             runs: contract_runs(runs.as_deref()),
@@ -189,6 +193,7 @@ pub(crate) fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> 
                 script: r.script.map(|s| match s {
                     kentos_contracts::TextScript::Super => Script::Super,
                     kentos_contracts::TextScript::Sub => Script::Sub,
+                    kentos_contracts::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
@@ -210,6 +215,7 @@ pub(crate) fn core_face(f: &kentos_contracts::TextFace) -> Face {
 /// The core's face as the contract writes it.
 pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
     kentos_contracts::TextFace {
+        overrides: Vec::new(),
         text_style: f.style.clone(),
         font: f
             .font
@@ -223,6 +229,7 @@ pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
 /// A table as the core takes it (docs/adr/0184 §1).
 pub fn core_table(t: &TableEntity) -> Shape {
     Shape::Table {
+        styles: None,
         p: core(t.p),
         rotation: t.rotation,
         height: t.height,
@@ -296,6 +303,7 @@ pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
 /// A dimension's look as the core takes it (docs/adr/0183 §3).
 pub(crate) fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
     Look {
+        more: None,
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
         arrow_size: l.arrow_size,
@@ -326,6 +334,8 @@ pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
     use kentos_contracts::DrawingUnit;
     let lines = l.lines.as_deref().cloned().unwrap_or_default();
     kentos_contracts::DimensionLook {
+        overrides: Vec::new(),
+        options: None,
         dim_style: l.style.clone(),
         arrow: l
             .arrow
@@ -394,10 +404,47 @@ pub(crate) fn contract_runs(runs: Option<&[Run]>) -> Vec<kentos_contracts::TextR
             script: r.script.map(|s| match s {
                 Script::Super => kentos_contracts::TextScript::Super,
                 Script::Sub => kentos_contracts::TextScript::Sub,
+                Script::Stack => kentos_contracts::TextScript::Stack,
             }),
             color: r.color.clone(),
         })
         .collect()
+}
+
+/// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
+pub(crate) fn core_layout(
+    l: Option<&kentos_contracts::ParagraphLayout>,
+) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
+    l.map(|l| {
+        Box::new(kentos_geometry_core::text::paragraph::Flow {
+            first: l.indent.unwrap_or(0.0),
+            left: l.left_indent.unwrap_or(0.0),
+            tabs: l.tabs.clone(),
+            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
+}
+
+/// The core's layout as the contract writes it: an indent of 0 is left out.
+pub(crate) fn contract_layout(
+    f: Option<&kentos_geometry_core::text::paragraph::Flow>,
+) -> Option<Box<kentos_contracts::ParagraphLayout>> {
+    f.map(|f| {
+        Box::new(kentos_contracts::ParagraphLayout {
+            indent: (f.first != 0.0).then_some(f.first),
+            left_indent: (f.left != 0.0).then_some(f.left),
+            tabs: f.tabs.clone(),
+            columns: f.columns.map(|c| kentos_contracts::TextColumns {
+                count: c.count,
+                gap: c.gap,
+                height: c.height,
+            }),
+        })
+    })
 }
 
 fn core(p: Vec2) -> CoreVec2 {
@@ -545,6 +592,13 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             r: c.r,
         },
         Entity::Leader(l) => Shape::Leader {
+            blocks: (!l.blocks.is_empty()).then(|| l.blocks.iter().map(|b| uuid_text(b.0)).collect()),
+            arms: (!l.arms.is_empty()).then(|| {
+                l.arms
+                    .iter()
+                    .map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) })
+                    .collect()
+            }),
             pts: points(&l.pts),
             text: l.text.clone(),
             height: l.height,
@@ -600,6 +654,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            flow: core_layout(t.paragraph.layout.as_deref()),
             face: core_face(&t.face),
             path: t.path.as_ref().map(core_curve),
         },
@@ -626,6 +681,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             pattern: core_pattern(&h.pattern),
             // A block's hatch follows nothing (docs/adr/0186 §6).
             assoc: None,
+            boundary: h.boundary.as_deref().and_then(core_boundary),
         },
         Entity::Table(t) => core_table(t),
         // A picture is no block's piece (docs/adr/0192 §1); its frame for what it covers.
@@ -863,7 +919,10 @@ fn entity(s: &Shape) -> Option<Entity> {
             tangents: tangents.map(|[a, b]| [a.map(back), b.map(back)]),
             fit_tolerance: *fit_tolerance,
         }),
+        // The arms' points; what their tips follow, the blocks and the style are the object's, not the shape's.
         Shape::Leader {
+            arms,
+            blocks: _,
             pts,
             text,
             height,
@@ -872,6 +931,15 @@ fn entity(s: &Shape) -> Option<Entity> {
             arrow_size,
             mask,
         } => Entity::Leader(LeaderEntity {
+            tip: None,
+            leader_style: None,
+            blocks: Vec::new(),
+            arms: arms
+                .iter()
+                .flatten()
+                .map(|a| kentos_contracts::LeaderArm { pts: points_back(&a.pts), tip: None })
+                .collect(),
+            annotative: None,
             base,
             pts: points_back(pts),
             text: text.clone(),
@@ -892,9 +960,11 @@ fn entity(s: &Shape) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            flow,
             face,
             path,
         } => Entity::Text(TextEntity {
+            annotative: None,
             base,
             path: path.clone().map(contract_curve),
             p: back(*p),
@@ -907,6 +977,8 @@ fn entity(s: &Shape) -> Option<Entity> {
             label_of: None,
             label_scale: None,
             paragraph: kentos_contracts::Paragraph {
+                fields: Vec::new(),
+                layout: contract_layout(flow.as_deref()),
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: contract_runs(runs.as_deref()),
@@ -927,6 +999,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             zb,
             look,
         } => Entity::Dimension(DimensionEntity {
+            annotative: None,
+            text_shift: None,
+            breaks: Vec::new(),
             base,
             a: back(*a),
             b: back(*b),
@@ -946,6 +1021,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             ring,
             holes,
             pattern,
+            boundary,
             ..
         } => Entity::Hatch(HatchEntity {
             base,
@@ -955,6 +1031,8 @@ fn entity(s: &Shape) -> Option<Entity> {
                 .map(|hs| hs.iter().map(|r| points_back(r)).collect()),
             pattern: contract_pattern(pattern),
             assoc: None,
+            boundary: boundary.as_deref().and_then(contract_boundary),
+            annotative: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
         Shape::Insert { .. }
@@ -966,6 +1044,26 @@ fn entity(s: &Shape) -> Option<Entity> {
             return None;
         }
     })
+}
+
+/// A hatch's exact boundary as the core holds it (docs/adr/0328 §1), read from the contract's JSON (the same
+/// form); none when it cannot be read.
+pub fn core_boundary(
+    loops: &[kentos_contracts::HatchLoop],
+) -> Option<Vec<kentos_geometry_core::entity::HatchLoop>> {
+    let text = serde_json::to_string(loops).ok()?;
+    let json = Json::parse(&text).ok()?;
+    Vec::<kentos_geometry_core::entity::HatchLoop>::from_json(&json).ok()
+}
+
+/// The core's boundary in the contract's terms.
+pub fn contract_boundary(
+    loops: &[kentos_geometry_core::entity::HatchLoop],
+) -> Option<Vec<kentos_contracts::HatchLoop>> {
+    use kentos_geometry_core::api::json::ToJson;
+    let mut text = String::new();
+    loops.to_vec().write_json(&mut text);
+    serde_json::from_str(&text).ok()
 }
 
 /// A dynamic definition's part as the core varies it (docs/adr/0318 §2), read from the contract's JSON.
@@ -1001,6 +1099,12 @@ pub fn core_params(
                 .collect(),
         )
     })
+}
+
+/// A persistent id's text: lowercase, with hyphens.
+fn uuid_text(b: [u8; 16]) -> String {
+    let h: String = b.iter().map(|x| format!("{x:02x}")).collect();
+    format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..])
 }
 
 #[cfg(test)]

@@ -3,4 +3,4 @@
 /**
  * A run raised over the line (superscript) or lowered under it (subscript).
  */
-export type TextScript = "super" | "sub";
+export type TextScript = "super" | "sub" | "stack";

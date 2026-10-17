@@ -14,9 +14,9 @@ use kentos_domain::contracts::ChangesetApply;
 use kentos_domain::contracts::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
-    EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
+    AnnotationsScales, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
     FieldsUsage, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersContingents, LayersRules, LayersSubtypes, LayersTable, LayersRenderer, LayersService,
-    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit,
+    LayersSet, LayersStates, LayersTime, LayersTranslate, LibraryEdit, LineTypesEdit, HatchPatternsEdit,
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
@@ -35,14 +35,14 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, address_define, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_reassociate, edit, entities_chamfer,
-    entities_extend, entities_fillet, entities_order, entities_pick, entities_select,
-    entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit, layers_filter,
-    fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service, layers_set, layers_contingents, layers_rules, layers_subtypes, layers_table,
-    layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, point,
-    points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit, set,
-    settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
+    DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
+    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
+    entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
+    layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset,
+    point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
+    set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
 };
 use kentos_native_application::{
@@ -52,8 +52,8 @@ use kentos_native_application::{
     entities_reverse, file_import, stretch,
 };
 use kentos_native_application::{
-    block_params, blocks_insert, blocks_query, blocks_replace, file_import_block, library_edit, line_types_edit,
-    styles_impact,
+    block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
+    file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
 use kentos_domain::contracts::{
     FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, DomainsExport, FieldsMigrate, AttachmentsInspect, SchemaDescribe, FormsExport, FormsImport, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
@@ -576,6 +576,23 @@ impl Input for kentos_domain::contracts::NurbsCreate {
                 .or_else(|| list_number(weights.as_deref_mut()?, "weights", rest))
                 .or_else(|| list_number(knots.as_deref_mut()?, "knots", rest)),
             NurbsBy::Fit { pts, .. } => named_point(pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for AnnotationsScales {
+    /// `scale`, `rotation`, `offset`, `scales[i]`, `point.x` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "scale" => self.scale.as_mut(),
+            "rotation" => self.rotation.as_mut(),
+            "offset" => self.offset.as_mut(),
+            "point.x" => self.point.as_mut().map(|p| &mut p.x),
+            "point.y" => self.point.as_mut().map(|p| &mut p.y),
+            _ => {
+                let i: usize = path.strip_prefix("scales[")?.strip_suffix(']')?.parse().ok()?;
+                self.scales.get_mut(i)
+            }
         }
     }
 }
@@ -1206,6 +1223,10 @@ impl Input for DimensionsCreate {
             ) => angle.as_mut(),
             (DimensionMeasure::Slope { za, .. }, "za") => za.as_mut(),
             (DimensionMeasure::Slope { zb, .. }, "zb") => zb.as_mut(),
+            (DimensionMeasure::Elevation { z, .. }, "z") => z.as_mut(),
+            (DimensionMeasure::Elevation { a, .. }, "a") => {
+                xy(point(a)?, rest.strip_prefix("at.")?)
+            }
             (DimensionMeasure::Angle { first, .. }, "first") => {
                 xy(&mut first.near, rest.strip_prefix("near.")?)
             }
@@ -1259,14 +1280,32 @@ impl Input for EntitiesHatch {
             "pattern.scale" => return self.pattern.scale.as_mut(),
             "pattern.angle" => return self.pattern.angle.as_mut(),
             "lineWeight" => return self.look.line_weight.as_mut(),
+            // docs/adr/0331 §2.
+            "pattern.origin.at.x" | "pattern.origin.at.y" => {
+                let Some(kentos_contracts::HatchOrigin::Point { at }) = &mut self.pattern.origin else {
+                    return None;
+                };
+                return Some(if path.ends_with('x') { &mut at.x } else { &mut at.y });
+            }
             _ => {}
         }
-        let HatchRegion::Point { at, boundaries, .. } = &mut self.region else {
+        let HatchRegion::Point {
+            at,
+            boundaries,
+            also_at,
+            gap,
+            ..
+        } = &mut self.region
+        else {
             return None;
         };
         match path {
             "region.at.x" => Some(&mut at.x),
             "region.at.y" => Some(&mut at.y),
+            "region.gap" => gap.as_mut(),
+            _ if path.starts_with("region.alsoAt[") => {
+                point_number(also_at, path.strip_prefix("region.alsoAt")?.replacen('[', "pts[", 1).as_str())
+            }
             _ => area_number(boundaries, path.strip_prefix("region.boundaries.")?),
         }
     }
@@ -1287,6 +1326,101 @@ impl Input for EntitiesChamfer {
 }
 
 impl Input for DimensionsReassociate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::DimensionsEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::DimensionEdit as E;
+        match (&mut self.edit, path) {
+            (
+                E::Space {
+                    spacing: Some(s), ..
+                },
+                "edit.spacing",
+            ) => Some(s),
+            (E::MoveText { along, .. }, "edit.along") => Some(along),
+            (E::MoveText { across, .. }, "edit.across") => Some(across),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::LeadersEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::LeaderEdit;
+        match (&mut self.edit, path) {
+            (LeaderEdit::Align { angle, .. }, "edit.angle") => Some(angle),
+            (LeaderEdit::Align { spacing: Some(s), .. }, "edit.spacing") => Some(s),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::HatchesEdit {
+    /// `edit.region.at.x`, `edit.region.at.y` (Sınırı yeniden seç).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::{HatchEdit, HatchRegion};
+        let HatchEdit::Reselect {
+            region: HatchRegion::Point { at, .. },
+            ..
+        } = &mut self.edit
+        else {
+            return None;
+        };
+        match path {
+            "edit.region.at.x" => Some(&mut at.x),
+            "edit.region.at.y" => Some(&mut at.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::TablesEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::{TableEdit, TablesOperation};
+        let TablesOperation::Edit { edits, .. } = &mut self.operation else {
+            return None;
+        };
+        // `operation.edits[i].height` or `.width`.
+        let rest = path.strip_prefix("operation.edits[")?;
+        let (i, field) = rest.split_once("].")?;
+        match (edits.get_mut(i.parse::<usize>().ok()?)?, field) {
+            (TableEdit::RowHeight { height, .. }, "height") => Some(height),
+            (TableEdit::ColumnWidth { width, .. }, "width") => Some(width),
+            (TableEdit::Frame { width: Some(w) }, "width") => Some(w),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::FieldsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::TextsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::TextsCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::FontsReport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::DimensionsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -1355,6 +1489,12 @@ impl Input for LineTypesEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         (path == "scale").then_some(())?;
         self.scale.as_mut()
+    }
+}
+
+impl Input for HatchPatternsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -1549,6 +1689,18 @@ impl Input for kentos_domain::contracts::BlocksQuery {
 }
 
 impl Input for kentos_domain::contracts::BlocksParameters {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::BlocksProxy {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::BlocksFreeze {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2171,12 +2323,40 @@ fn run_op(
         kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
         }
+        kentos_domain::contracts::CAD_DIMENSIONS_EDIT => {
+            run!(dimensions_edit, kentos_domain::contracts::DimensionsEdit)
+        }
+        kentos_domain::contracts::CAD_DIMENSIONS_QUERY => {
+            run!(dimensions_query, kentos_domain::contracts::DimensionsQuery)
+        }
+        kentos_domain::contracts::CAD_FONTS_REPORT => {
+            run!(fonts_report, kentos_domain::contracts::FontsReport)
+        }
+        kentos_domain::contracts::CAD_LEADERS_EDIT => {
+            run!(leaders_edit, kentos_domain::contracts::LeadersEdit)
+        }
+        kentos_domain::contracts::CAD_HATCHES_EDIT => {
+            run!(hatches_edit, kentos_domain::contracts::HatchesEdit)
+        }
+        kentos_domain::contracts::CAD_TABLES_EDIT => {
+            run!(tables_edit, kentos_domain::contracts::TablesEdit)
+        }
+        kentos_domain::contracts::CAD_FIELDS_EDIT => {
+            run!(fields_edit, kentos_domain::contracts::FieldsEdit)
+        }
+        kentos_domain::contracts::CAD_TEXTS_EDIT => {
+            run!(texts_edit, kentos_domain::contracts::TextsEdit)
+        }
+        kentos_domain::contracts::CAD_TEXTS_CHECK => {
+            run!(texts_check, kentos_domain::contracts::TextsCheck)
+        }
         kentos_domain::contracts::CAD_DIMENSIONS_CREATE => {
             run!(dimensions_create, DimensionsCreate)
         }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
+        kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
@@ -2194,6 +2374,12 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_BLOCKS_PARAMETERS => {
             run!(block_params, kentos_domain::contracts::BlocksParameters)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_PROXY => {
+            run!(blocks_proxy, kentos_domain::contracts::BlocksProxy)
+        }
+        kentos_domain::contracts::CAD_BLOCKS_FREEZE => {
+            run!(blocks_freeze, kentos_domain::contracts::BlocksFreeze)
         }
         kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
@@ -2219,6 +2405,7 @@ fn run_op(
         kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
         kentos_domain::contracts::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
+        kentos_domain::contracts::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
         kentos_domain::contracts::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
         kentos_domain::contracts::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
         kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
@@ -2476,15 +2663,25 @@ fn run_step(
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }
-    check(doc, state, step.get("expect"), before, at)
+    check(
+        doc,
+        state,
+        step.get("expect"),
+        before,
+        at,
+        step.get("within").and_then(Value::as_f64),
+    )
 }
 
+/// The document after a step as `expect` says; with `within`, the objects' numbers within it (a transcendental
+/// value the reference computes in another order, docs/adr/0320).
 fn check(
     doc: &Document,
     state: &State,
     expect: Option<&Value>,
     before: u64,
     at: &str,
+    within: Option<f64>,
 ) -> Outcome<()> {
     let Some(expect) = expect else {
         return Ok(());
@@ -2512,7 +2709,15 @@ fn check(
                         .map_err(|e| format!("{at}: {e}"))?
                         .unwrap_or(Value::Null);
                     let entity = block_ids(entity, doc, state, at)?;
-                    expect_same(&got, &entity, &format!("nesne {id}"), at)?;
+                    match within {
+                        Some(w) if !close(&got, &entity, w) => {
+                            return Err(format!(
+                                "{at}: nesne {id} (±{w}): beklenen {entity}, bulunan {got}"
+                            ));
+                        }
+                        Some(_) => {}
+                        None => expect_same(&got, &entity, &format!("nesne {id}"), at)?,
+                    }
                 }
             }
             // Only the fields named of each object, each whole (docs/adr/0257 §3: a reader's

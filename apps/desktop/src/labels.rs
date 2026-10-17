@@ -29,7 +29,7 @@ use iced::{
 use kentos_contracts::{DrawingFont, Entity, LabelInk};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
-use kentos_geometry_core::text::paragraph::{Run, Script, advance};
+use kentos_geometry_core::text::paragraph::{self, Run, Script, advance};
 use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_native_application::geometry::core_runs;
@@ -673,6 +673,8 @@ impl Collect<'_> {
                 underline: None,
                 fill: None,
                 stroke: None,
+                width_factor: 1.0,
+                lean: 0.0,
             },
         ))
     }
@@ -749,6 +751,9 @@ impl Ink for Collect<'_> {
             mask,
             fill: None,
             stroke: None,
+            // Its width factor and slant on the paper too (docs/adr/0324 §6).
+            width_factor: f64::from(piece.width_factor),
+            lean: f64::from(piece.lean),
             underline: (piece.underline > 0.0).then(|| {
                 // From the baseline's start 0.12 of the height down, 0.06 thick, the bar's length along.
                 let (w, h) = (f64::from(piece.underline) * px, f64::from(piece.size) * px);
@@ -817,6 +822,8 @@ impl Ink for Collect<'_> {
             underline: None,
             fill: None,
             stroke: None,
+            width_factor: 1.0,
+            lean: 0.0,
         });
     }
 
@@ -853,6 +860,7 @@ impl canvas::Program<Message> for Labels<'_> {
             state.key.set(self.key);
         }
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
+            crate::label_picture::set_twisted(self.turned.is_some());
             let Some(area) = self.turned else {
                 self.paint(frame);
                 return;
@@ -995,6 +1003,17 @@ impl Labels<'_> {
         }
     }
 
+    /// A table cell's fill (docs/adr/0327 §1): its colour as the drawing's colours show it.
+    fn fill_cell(&self, frame: &mut impl Ink, quad: [Point; 4], fill: &str, of: Option<Slot>) {
+        let mut color = self.colors.named(fill).unwrap_or(self.colors.label);
+        // On a dark drawing (light letters) a light fill is a tint, so the letters stay read.
+        let l = self.colors.label;
+        if 0.2126 * l.r + 0.7152 * l.g + 0.0722 * l.b > 0.5 {
+            color.a *= 0.3;
+        }
+        frame.fill_quad(quad, color, of);
+    }
+
     fn ink_of(&self, name: Option<&str>) -> Color {
         match name {
             None | Some("fg" | "fg-dim") => self.colors.label,
@@ -1064,26 +1083,69 @@ impl Labels<'_> {
             }
             let bold = f.is_some_and(|r| r.bold) || own_bold;
             let script = f.and_then(|r| r.script);
-            let width: f64 = letters[i..j]
-                .iter()
-                .map(|ch| advance(face, *ch, bold, script.is_some()))
-                .sum::<f64>()
-                * em;
-            let lift = match script {
-                Some(Script::Super) => 0.4 * height,
-                Some(Script::Sub) => -0.15 * height,
-                None => 0.0,
-            };
-            let words: String = letters[i..j].iter().collect();
-            let along = x + lift * slant;
-            let place = Vec2::new(at.x + c * along - s * lift, at.y + s * along + c * lift);
             let (font, lean) = face_font(text_face, self.font, false, f);
-            let scaled = if script.is_some() { size * 0.6 } else { size };
             let color = f
                 .and_then(|r| r.color.as_deref())
                 .and_then(|name| self.colors.named(name))
                 .unwrap_or(self.colors.label);
-            if !words.trim().is_empty() || f.is_some_and(|r| r.underline) {
+            let underlined = f.is_some_and(|r| r.underline);
+            // What the run draws: its words, where along and how high, at what size, and its underline's length.
+            let mut parts: Vec<(String, f64, f64, f64, f32)> = Vec::new();
+            let width: f64;
+            let stack = f.filter(|r| {
+                script == Some(Script::Stack) && r.start as usize >= i && r.end as usize <= j
+            });
+            if let Some((q, mark, num, den)) =
+                stack.and_then(|r| paragraph::stack_parts(&letters, r, face, bold))
+            {
+                // A stacked fraction (docs/adr/0324 §2): over and under, or side by side with `#`.
+                let small = size * paragraph::SCRIPT_SIZE;
+                let upper: String = letters[i..q].iter().collect();
+                let lower: String = letters[q + 1..j].iter().collect();
+                if mark == '#' {
+                    let slash = advance(face, '/', bold, true);
+                    parts.push((upper, x, paragraph::STACK_OVER * height, small, 0.0));
+                    parts.push(("/".into(), x + num * em, 0.0, small, 0.0));
+                    parts.push((lower, x + (num + slash) * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    width = (num + slash + den) * em;
+                } else {
+                    let w = num.max(den);
+                    parts.push((upper, x + (w - num) / 2.0 * em, paragraph::STACK_OVER * height, small, 0.0));
+                    parts.push((lower, x + (w - den) / 2.0 * em, paragraph::STACK_UNDER * height, small, 0.0));
+                    if mark == '/' {
+                        // The bar: an underline 0.12 of its size under a blank's baseline.
+                        let bar = paragraph::STACK_BAR * height + 0.12 * height * paragraph::SCRIPT_SIZE;
+                        let long = (w * em * self.camera.get().scale / width_factor) as f32;
+                        parts.push((" ".into(), x, bar, small, long));
+                    }
+                    width = w * em;
+                }
+            } else {
+                width = letters[i..j]
+                    .iter()
+                    .map(|ch| advance(face, *ch, bold, script.is_some()))
+                    .sum::<f64>()
+                    * em;
+                let lift = match script {
+                    Some(Script::Super) => 0.4 * height,
+                    Some(Script::Sub) => -0.15 * height,
+                    _ => 0.0,
+                };
+                let words: String = letters[i..j].iter().collect();
+                let scaled = if script.is_some() { size * 0.6 } else { size };
+                let line = if underlined {
+                    (width * self.camera.get().scale / width_factor) as f32
+                } else {
+                    0.0
+                };
+                parts.push((words, x, lift, scaled, line));
+            }
+            for (words, along, lift, scaled, line) in parts {
+                if words.trim().is_empty() && line == 0.0 {
+                    continue;
+                }
+                let along = along + lift * slant;
+                let place = Vec2::new(at.x + c * along - s * lift, at.y + s * along + c * lift);
                 self.draw(
                     frame,
                     &Piece {
@@ -1096,11 +1158,7 @@ impl Labels<'_> {
                         color,
                         width_factor: width_factor as f32,
                         mask: 0.0,
-                        underline: if f.is_some_and(|r| r.underline) {
-                            (width * self.camera.get().scale / width_factor) as f32
-                        } else {
-                            0.0
-                        },
+                        underline: line,
                         lean,
                     },
                     self.colors.halo,
@@ -1121,6 +1179,8 @@ impl Labels<'_> {
         let layers = self.doc.layers();
         // The label engine's label being drawn: its frame's look (docs/adr/0212 §3.8).
         let mut current: Option<Placed> = None;
+        // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
+        let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
         for (spot, grow) in self.spots.iter() {
             // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
             self.camera.set(grown(self.view, *grow));
@@ -1157,10 +1217,14 @@ impl Labels<'_> {
                     Entity::Dimension(d),
                 ) => {
                     // Its value in its look's writing and typeface (docs/adr/0183 §3).
-                    let text = match d.text.as_deref().filter(|t| !t.is_empty()) {
-                        Some(own) => own.to_owned(),
-                        None => self.format.dimension_in(prefix, unit, *value, &d.look),
-                    };
+                    // A text written over it shows the value where it says `<>` (docs/adr/0321 §3).
+                    let text = self.format.dimension_value(
+                        prefix,
+                        unit,
+                        *value,
+                        &d.look,
+                        d.text.as_deref().filter(|t| !t.is_empty()),
+                    );
                     // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
                     let color = self.ink_of(
                         d.look
@@ -1235,6 +1299,25 @@ impl Labels<'_> {
                     let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
                         continue;
                     };
+                    // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
+                    if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
+                        let shape = kentos_native_application::geometry::shape(entity);
+                        if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
+                            for f in g.fills() {
+                                let q = f.corners.map(|p| self.screen(p));
+                                let (cx, cy) = (
+                                    q.iter().map(|p| p.x).sum::<f32>() / 4.0,
+                                    q.iter().map(|p| p.y).sum::<f32>() / 4.0,
+                                );
+                                let inset = q.map(|p| {
+                                    let (dx, dy) = (cx - p.x, cy - p.y);
+                                    let l = (dx * dx + dy * dy).sqrt().max(1.0);
+                                    Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
+                                });
+                                self.fill_cell(frame, inset, &f.fill, Some(slot));
+                            }
+                        }
+                    }
                     let heading = Run {
                         start: 0,
                         end: 0,
@@ -1245,10 +1328,13 @@ impl Labels<'_> {
                         color: None,
                     };
                     let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
+                    // A cell style's colour over the table's (docs/adr/0327 §1).
+                    let own = t.cell_style(*row, *col).color;
                     let color = self.ink_of(
-                        base.color
+                        own.as_deref().or(base
+                            .color
                             .as_deref()
-                            .or(layer.map(|l| l.style.color.as_str())),
+                            .or(layer.map(|l| l.style.color.as_str()))),
                     );
                     self.draw(
                         frame,
@@ -1364,10 +1450,13 @@ impl Labels<'_> {
                     _,
                 ) => {
                     let look = kentos_native_application::geometry::contract_look(look.clone());
-                    let text = match text {
-                        Some(own) => own.clone(),
-                        None => self.format.dimension_in(prefix, unit, *value, &look),
-                    };
+                    let text = self.format.dimension_value(
+                        prefix,
+                        unit,
+                        *value,
+                        &look,
+                        text.as_deref().filter(|t| !t.is_empty()),
+                    );
                     let color = self.ink_of(
                         look.text_color
                             .as_deref()
@@ -2118,6 +2207,10 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         underline(frame, piece, Point::new(piece.at.x + dx, piece.at.y), halo);
         return;
     }
+    // As a picture with exact coverage (label_picture.rs); a text too large for one as paths.
+    if pictured(frame, piece, halo, dx, dy) {
+        return;
+    }
     frame.with_save(|frame| {
         frame.translate(Vector::new(piece.at.x, piece.at.y));
         frame.rotate(piece.angle);
@@ -2178,6 +2271,89 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         }
         underline(frame, piece, Point::new(dx, 0.0), halo);
     });
+}
+
+/// A turned (leaning, narrowed or masked) text as a picture: its mask, its glyphs' halo, its glyphs and its
+/// underline as the paths below draw them. False when it is too large for a picture.
+fn pictured(frame: &mut Frame, piece: &Piece<'_>, halo: Color, dx: f32, dy: f32) -> bool {
+    use crate::label_picture::{Key, Local, Part};
+    let bits = |c: Color| [c.r.to_bits(), c.g.to_bits(), c.b.to_bits(), c.a.to_bits()];
+    let mut numbers = vec![
+        piece.size.to_bits(),
+        dx.to_bits(),
+        dy.to_bits(),
+        piece.lean.to_bits(),
+        piece.width_factor.to_bits(),
+        piece.mask.to_bits(),
+        piece.underline.to_bits(),
+    ];
+    numbers.extend(bits(piece.color));
+    numbers.extend(bits(halo));
+    let key = Key {
+        what: format!("{}\u{0}{:?}", piece.text, piece.font),
+        numbers,
+    };
+    crate::label_picture::draw(frame, key, piece.at, piece.angle, |add| {
+        let sheared = |path: Path, lean: f32| {
+            if lean == 0.0 {
+                path
+            } else {
+                path.transform(&canvas::path::lyon_path::math::Transform::new(
+                    1.0, 0.0, -lean, 1.0, 0.0, 0.0,
+                ))
+            }
+        };
+        let plain = Local { width_factor: 1.0 };
+        let narrow = Local {
+            width_factor: piece.width_factor,
+        };
+        if piece.mask > 0.0 {
+            let m = piece.size * 0.1;
+            let v = if piece.anchor == Anchor::CenterBaseline {
+                0.0
+            } else {
+                m
+            };
+            let mask = sheared(
+                Path::rectangle(
+                    Point::new(dx - m, -piece.size * 1.15 - v),
+                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * v),
+                ),
+                piece.lean,
+            );
+            add(Part::Fill(std::slice::from_ref(&mask), plain, halo));
+        }
+        let lean = piece.lean / piece.width_factor;
+        let glyphs = outlines(piece, dx, dy, || {
+            let mut glyphs: Vec<Path> = Vec::new();
+            canvas::Text {
+                content: piece.text.to_owned(),
+                position: Point::new(dx, dy),
+                max_width: f32::INFINITY,
+                color: piece.color,
+                size: Pixels(piece.size),
+                line_height: text::LineHeight::Relative(1.0),
+                font: piece.font,
+                align_x: text::Alignment::Left,
+                align_y: Vertical::Top,
+                shaping: text::Shaping::Advanced,
+            }
+            .draw_with(|path, _| glyphs.push(sheared(path, lean)));
+            glyphs
+        });
+        add(Part::Halo(&glyphs, narrow, halo, HALO));
+        add(Part::Fill(&glyphs, narrow, piece.color));
+        if piece.underline > 0.0 {
+            let (top, thick) = (piece.size * 0.12, (piece.size * 0.06).max(1.0));
+            let back = Path::rectangle(
+                Point::new(dx - HALO, top - HALO),
+                Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
+            );
+            let bar = Path::rectangle(Point::new(dx, top), Size::new(piece.underline, thick));
+            add(Part::Fill(std::slice::from_ref(&back), narrow, halo));
+            add(Part::Fill(std::slice::from_ref(&bar), narrow, piece.color));
+        }
+    })
 }
 
 /// Turned texts' glyph outlines kept at most (a view at 1:1000 over a
