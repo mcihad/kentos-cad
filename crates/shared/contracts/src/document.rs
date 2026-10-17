@@ -291,6 +291,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectForm>>", optional))]
     pub forms: Vec<crate::ProjectForm>,
+    /// The project's value lists, in the order they were made (docs/adr/0430).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::FieldDomain>>", optional))]
+    pub domains: Vec<crate::FieldDomain>,
     /// The project's relations (docs/adr/0405 §1).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(

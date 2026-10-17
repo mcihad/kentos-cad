@@ -1718,6 +1718,26 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.domains.edit",
+        refusals: &[&[
+            "invalid_revision",
+            "revision_conflict",
+            "unknown_domain",
+            "layer_not_found",
+            "not_a_layer",
+            "field_not_found",
+            "domain_exists",
+            "invalid_domain",
+            "domain_mismatch",
+            "invalid_recode",
+            "domain_code_in_use",
+            "domain_in_use",
+            "layer_locked",
+        ]],
+        warnings: &["domain_values_outside"],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.transition",
         refusals: &[&[
             "invalid_uid",

@@ -1135,6 +1135,22 @@
    "tests": 0
   },
   {
+   "id": "data.domains",
+   "kind": "command",
+   "title": "Değer listeleri",
+   "level": "semantic",
+   "via": [
+    "cad.domains.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.domains.edit",
+   "mcp": "cad.domains.edit",
+   "note": "Listeler, bağlar ve çıkan kodların taşınması cad.domains.edit ile; pencerenin Kaydet'i bütün değişiklikleri tek geri alma adımında yazar (ADR 0430).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.duplicate",
    "kind": "command",
    "title": "Kaydı çoğalt",

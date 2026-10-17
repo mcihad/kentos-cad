@@ -56,10 +56,10 @@ use kentos_native_application::{
     styles_impact,
 };
 use kentos_domain::contracts::{
-    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 use kentos_native_application::{
-    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
+    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
 use serde_json::{Value, json};
 
@@ -393,6 +393,12 @@ impl Input for FormsRecompute {
 }
 
 impl Input for FormsTransition {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for DomainsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2184,6 +2190,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FORMS_TEST => run!(forms_test, FormsTest),
         kentos_domain::contracts::CAD_FORMS_COMPARE => run!(forms_compare, FormsCompare),
         kentos_domain::contracts::CAD_FORMS_TRANSITION => run!(forms_transition, FormsTransition),
+        kentos_domain::contracts::CAD_DOMAINS_EDIT => run!(domains_edit, DomainsEdit),
         kentos_domain::contracts::CAD_FORMS_RECOMPUTE => run!(forms_recompute, FormsRecompute),
         kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
         kentos_domain::contracts::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),

@@ -112,6 +112,7 @@ fn opened(n: usize) -> Opened {
         networks: Vec::new(),
         variables: Vec::new(),
         address_locators: Vec::new(),
+        domains: Vec::new(),
     };
     let layers = vec![LayerNode {
         table_styles: Vec::new(),

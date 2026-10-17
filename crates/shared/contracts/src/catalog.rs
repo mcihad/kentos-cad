@@ -4250,6 +4250,40 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The project's value lists (docs/adr/0430), held together by fixtures/commands/v1/cad.domains.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_DOMAINS_EDIT.into(),
+            version: crate::CAD_DOMAINS_EDIT_VERSION,
+            title: "Değer listeleri".into(),
+            summary: "Projenin değer listelerini düzenler (ArcGIS'in domain'i): bir kod listesi (values) ya da aralık (min, max) projede bir kez tutulur,                       birçok katmanın alanı ona bağlanır; bağlı alanın değerleri listenin kopyasıdır ve liste değişince aynı adımda yeniden yazılır.                       create yeni liste (domainKind: uyduğu alan türü), fromField bir alanın kendi listesinden liste yapıp alanı bağlar, update listeyi                       değiştirir (türü değişmez; kayıtların tuttuğu kod listeden çıkamaz: recode ile başka koda taşınır ya da kullanımdan kaldırılır),                       remove bağlı alanı olmayan listeyi siler (detach: alanlar kopyalarını tutar), link alanı bir listeye bağlar ya da bağı çözer.                       Tek geri alma adımı “Değer listeleri”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DomainsEdit>(),
+            output: schema::<crate::DomainsEdited>(),
+            plan: Some(schema::<crate::DomainsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Yapı malzemesi listesi".into(),
+                    input: json!({ "edit": { "kind": "create", "name": "Yapı malzemesi", "domainKind": "text", "values": [
+                        { "code": "ah", "label": "Ahşap" }, { "code": "bt", "label": "Betonarme" }, { "code": "ym", "label": "Yığma" }
+                    ] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Binanın Malzeme alanını listeye bağla".into(),
+                    input: json!({ "edit": { "kind": "link", "layer": "bina", "field": "Malzeme", "domain": "yapi-malzemesi" } }),
+                    output: None,
+                },
+            ],
+        },
         // A record's workflow step (docs/adr/0428), held together by fixtures/commands/v1/cad.forms.transition.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_TRANSITION.into(),
@@ -5517,6 +5551,9 @@ mod tests {
                     crate::CAD_FORMS_TEST => {
                         serde_json::from_value::<crate::FormsTest>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DOMAINS_EDIT => {
+                        serde_json::from_value::<crate::DomainsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_TRANSITION => {
                         serde_json::from_value::<crate::FormsTransition>(e.input.clone()).map(|_| ())
                     }
@@ -5854,6 +5891,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_TEST => {
                             serde_json::from_value::<crate::FormsTested>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DOMAINS_EDIT => {
+                            serde_json::from_value::<crate::DomainsEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_TRANSITION => {

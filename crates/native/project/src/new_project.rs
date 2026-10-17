@@ -86,6 +86,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         networks: Vec::new(),
         variables: Vec::new(),
         address_locators: Vec::new(),
+        domains: Vec::new(),
     }
 }
 

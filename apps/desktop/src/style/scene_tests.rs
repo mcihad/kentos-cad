@@ -160,6 +160,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             networks: Vec::new(),
             variables: Vec::new(),
             address_locators: Vec::new(),
+            domains: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

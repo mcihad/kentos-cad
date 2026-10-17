@@ -330,6 +330,8 @@ def settings(s):
                 "forms": (opaque, False),
                 # Schema 60 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
+                # Schema 60 (docs/adr/0430): the project's value lists, as their JSON.
+                "domains": (opaque, False),
             },
             "settings",
         )
@@ -812,6 +814,8 @@ def layer_field(f):
         # Schema 60 (docs/adr/0419): the split and merge policies.
         "split": (enum(("copy", "clear", "default", "ratio")), False),
         "merge": (enum(("first", "clear", "sum", "min", "max")), False),
+        # Schema 60 (docs/adr/0430): the value list it links.
+        "domain": (text, False),
     }
     return cmap(fields(f, table, f"alan {f.get('name')}"))
 
@@ -1980,6 +1984,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def keyed(nodes):
         return any(any("id" in f or f.get("multiple") or f["kind"] in ("datetime", "time")
                        or any(c.get("retired") for c in f.get("values", [])) or "split" in f or "merge" in f
+                       or "domain" in f
                        for f in n.get("fields", []))
                    or keyed(n.get("children", [])) for n in nodes)
 
@@ -1988,7 +1993,7 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
         return any(n.get("tableStyles") or n.get("subtypes") or n.get("contingents") or styled(n.get("children", []))
                    for n in nodes)
 
-    if (settings or {}).get("forms") or (settings or {}).get("relations") or keyed(layers) or styled(layers) or any(
+    if (settings or {}).get("forms") or (settings or {}).get("relations") or (settings or {}).get("domains") or keyed(layers) or styled(layers) or any(
         e["kind"] == "record" for e in entities
     ):
         return 60
@@ -3793,6 +3798,28 @@ def build():
     out["broken/field-id-twice.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][2].update(id="kat-sayisi"))
     # docs/adr/0408 §1, 0409 §1: several values only on a text field.
     out["broken/field-multiple-number.kcad"] = forms_broken(lambda d: d["layers"][0]["fields"][1].update(multiple=True))
+    # The project's value lists and a field's link are schema 60's (docs/adr/0430): in schema 59 an unknown field; an
+    # empty list, a list both coded and ranged, two lists of one id refused.
+    out["domains.kcad"] = container(document(load("domains.json")))
+    listed = copy.deepcopy(load("domains.json"))
+    listed["layers"][0]["fields"] = [{k: v for k, v in f.items() if k not in ("id", "domain")}
+                                     for f in listed["layers"][0]["fields"]]
+    for f in listed["layers"][0]["fields"]:
+        if "values" in f:
+            f["values"] = [c for c in f["values"] if not c.get("retired")]
+    listed_payload = document(listed)
+    assert listed_payload.count(b"\x67version\x18\x3c") == 1, "the value lists alone are schema 60"
+    out["broken/domains-in-schema-59.kcad"] = container(listed_payload.replace(b"\x67version\x18\x3c", b"\x67version\x18\x3b"))
+
+    def domains_broken(change):
+        d = copy.deepcopy(load("domains.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/domains-empty.kcad"] = domains_broken(lambda d: d["settings"].update(domains=[]))
+    out["broken/domains-coded-and-ranged.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(min="1"))
+    out["broken/domains-id-twice.kcad"] = domains_broken(lambda d: d["settings"]["domains"][1].update(id="durum"))
+    out["broken/domains-unknown-key.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(color="#FF0000"))
     out["block-cards.kcad"] = container(document(load("block-cards.json")))
     payload = document(load("block-cards.json"))
     assert payload.count(b"\x67version\x18\x3a") == 1

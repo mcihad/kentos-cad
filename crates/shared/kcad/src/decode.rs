@@ -446,6 +446,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut ucs, mut named_ucs) = (None, Vec::new());
     let mut named_views = Vec::new();
     let mut forms = Vec::new();
+    let mut domains = Vec::new();
     let mut relations = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
@@ -504,6 +505,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 forms = list;
+            }
+            // Schema 60 (docs/adr/0430): the project's value lists, read whole and checked.
+            "domains" if has.forms => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::FieldDomain> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("değer listeleri okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "değer listeleri yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; değer listesi yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some((_, problem)) = kentos_contracts::domains_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                domains = list;
             }
             // Schema 60 (docs/adr/0405 §1): the project's relations, read whole and checked.
             "relations" if has.forms => {
@@ -736,6 +770,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         forms,
         relations,
         length_style,
+        domains,
     })
 }
 
@@ -1349,6 +1384,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
     let mut many = None;
     let (mut split, mut merge) = (None, None);
+    let mut domain = None;
     let count = |r: &mut Reader<'_>| r.uint(u64::from(u32::MAX)).map(|n| n as u32);
     map(r, |r, key| {
         match key {
@@ -1374,6 +1410,8 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "default" => default = Some(text(r)?),
             "required" => must = Some(r.bool()?),
             "multiple" if ids => many = Some(r.bool()?),
+            // Schema 60 (docs/adr/0430): the value list it links.
+            "domain" if ids => domain = Some(text(r)?),
             // Schema 60 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
@@ -1416,6 +1454,7 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
         multiple: many == Some(true),
         split,
         merge,
+        domain,
     })
 }
 

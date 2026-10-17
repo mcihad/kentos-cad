@@ -241,6 +241,11 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub merge: Option<MergePolicy>,
+    /// The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that
+    /// list's copy, written anew whenever the list changes. None: its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub domain: Option<String>,
 }
 
 /// A field's value in the pieces of a split object (docs/adr/0419).
@@ -339,6 +344,7 @@ impl LayerField {
             multiple: false,
             split: None,
             merge: None,
+            domain: None,
         }
     }
 
@@ -858,6 +864,13 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
     }
     if js_trim(name).is_empty() {
         return Some("Alanın adı boş olamaz.".to_owned());
+    }
+    if let Some(d) = &field.domain
+        && (d.is_empty() || d.chars().count() > MAX_NAME)
+    {
+        return Some(format!(
+            "“{name}” alanının bağlı olduğu değer listesinin kimliği boş olamaz ve en çok {MAX_NAME} karakterdir."
+        ));
     }
     if js_trim(name) != name {
         return Some(format!(

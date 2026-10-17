@@ -60,4 +60,9 @@ split?: SplitPolicy,
  * What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,
  * Parçaları birleştir; docs/adr/0419). None: the first object's.
  */
-merge?: MergePolicy, };
+merge?: MergePolicy, 
+/**
+ * The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that
+ * list's copy, written anew whenever the list changes. None: its own.
+ */
+domain?: string, };

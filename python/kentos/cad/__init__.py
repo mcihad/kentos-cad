@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -220,6 +220,7 @@ __all__ = [
     "CornersRectangleFrame",
     "CountExplodeDensity",
     "CreateBlockChange",
+    "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
     "CreateOperation",
@@ -272,6 +273,10 @@ __all__ = [
     "Division",
     "Document",
     "DocumentInfo",
+    "DomainField",
+    "DomainsEdit",
+    "DomainsEdited",
+    "DomainsOp",
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",
@@ -372,6 +377,7 @@ __all__ = [
     "FeedKindName",
     "FenceSelectRegion",
     "FieldChoice",
+    "FieldDomain",
     "FieldFormItem",
     "FieldGroup",
     "FieldNetworkDirection",
@@ -432,6 +438,7 @@ __all__ = [
     "FormsValidated",
     "FoundSnap",
     "FrameUcsTo",
+    "FromFieldDomainsOp",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "Gone",
@@ -609,6 +616,7 @@ __all__ = [
     "LinearBlockParameter",
     "LinearDimensionMeasure",
     "LinesCornerPick",
+    "LinkDomainsOp",
     "LocalCommand",
     "LocalCrsSystem",
     "LocalDefinition",
@@ -834,6 +842,7 @@ __all__ = [
     "RelationsOp",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
+    "RemoveDomainsOp",
     "RemoveEntityEdit",
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
@@ -1000,6 +1009,7 @@ __all__ = [
     "Unset",
     "UnusedResource",
     "UpdateBlockChange",
+    "UpdateDomainsOp",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "UpdateFormsOp",
@@ -1039,6 +1049,7 @@ __all__ = [
     "current",
     "curves",
     "dimensions",
+    "domains",
     "drawing",
     "entities",
     "fields",

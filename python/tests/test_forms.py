@@ -390,6 +390,26 @@ class FormsTests(unittest.TestCase):
             revision=1, items=[body.items[0], item(["No", "Pay"])])))
         self.assertEqual([i.code for i in saved.issues], ["form_lookup_field"])
 
+    def test_a_project_list_is_shared_by_fields_and_its_codes_move(self) -> None:
+        """docs/adr/0430: a list made of a field's own, linked from another layer, a code dropped with its records."""
+        doc, layer = drawing()
+        cad.layers.edit(doc, operation="add", name="Depo")
+        depot = next(n.id for n in doc.layers() if n.name == "Depo")
+        cad.layers.edit(doc, operation="fields", layer=depot, fields=[cad.LayerField(name="Durum", kind="text")])
+        made = cad.domains.edit(doc, edit=cad.FromFieldDomainsOp(layer=layer, field="Durum", name="Yapı durumu"))
+        self.assertEqual(made.domain, "yapi-durumu")
+        cad.domains.edit(doc, edit=cad.LinkDomainsOp(layer=depot, field="Durum", domain="yapi-durumu"))
+        uid = cad.polygon.create(doc, pts=[cad.Vec2(0.0, 0.0), cad.Vec2(10.0, 0.0), cad.Vec2(10.0, 8.0)], layer_id=depot,
+                                 attrs={"Durum": "inceleme"}).uid
+        kept = [cad.FieldChoice(code="iyi", label="İyi"), cad.FieldChoice(code="kotu", label="Kötü")]
+        with self.assertRaises(cad.CommandFailed) as held:
+            cad.domains.edit(doc, edit=cad.UpdateDomainsOp(id="yapi-durumu", name="Yapı durumu", values=kept))
+        self.assertEqual(held.exception.code, "domain_code_in_use")
+        moved = cad.domains.edit(doc, edit=cad.UpdateDomainsOp(id="yapi-durumu", name="Yapı durumu", values=kept,
+                                                                recode={"inceleme": "kotu"}))
+        self.assertEqual((moved.recoded, len(moved.fields)), (1, 2), "both linked fields follow")
+        self.assertEqual(doc.entity(uid).entity.attrs["Durum"], "kotu")
+
     def test_a_record_moves_through_its_workflow(self) -> None:
         """docs/adr/0428: drafted, sent, approved (locked), returned with a reason."""
         doc, layer = drawing()

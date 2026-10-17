@@ -1178,6 +1178,13 @@
       ],
       "note": "Gruplar cad.layers.contingents ile tek adımda yazılır; yazmalar, formlar ve tablo onları okur (ADR 0423)."
     },
+    "data.domains": {
+      "level": "semantic",
+      "via": [
+        "cad.domains.edit"
+      ],
+      "note": "Listeler, bağlar ve çıkan kodların taşınması cad.domains.edit ile; pencerenin Kaydet'i bütün değişiklikleri tek geri alma adımında yazar (ADR 0430)."
+    },
     "data.subtypes": {
       "level": "semantic",
       "via": [

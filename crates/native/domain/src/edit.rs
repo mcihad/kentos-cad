@@ -211,6 +211,30 @@ impl Document {
             &kentos_contracts::forms_of_layer(&self.settings.forms, id),
             &keyed,
         );
+        // A linked field's values are its list's (docs/adr/0430): a new link to a list the project lacks
+        // or one the field cannot take is refused, a list gone leaves the copy.
+        for f in &fields {
+            let Some(id) = &f.domain else { continue };
+            let held = node
+                .fields
+                .iter()
+                .any(|o| o.key() == f.key() && o.domain.as_deref() == Some(id));
+            match self.settings.domains.iter().find(|d| d.id == *id) {
+                None if !held => {
+                    return Err(Refusal(format!(
+                        "“{}” alanının bağlandığı “{id}” değer listesi projede yok.",
+                        f.label()
+                    )));
+                }
+                Some(d) => {
+                    if let Some(problem) = kentos_contracts::link_problem(d, f) {
+                        return Err(Refusal(problem));
+                    }
+                }
+                None => {}
+            }
+        }
+        let (fields, _) = kentos_contracts::follow_domains(&fields, &self.settings.domains);
         if let Some(problem) = fields_problem(&fields) {
             return Err(Refusal(problem));
         }

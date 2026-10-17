@@ -8,6 +8,7 @@ import type { DatumTransform } from "./DatumTransform";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { FieldDomain } from "./FieldDomain";
 import type { LayerState } from "./LayerState";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
@@ -134,6 +135,10 @@ namedViews?: Array<NamedView>,
  * The project's forms, in the order they were made (docs/adr/0401).
  */
 forms?: Array<ProjectForm>, 
+/**
+ * The project's value lists, in the order they were made (docs/adr/0430).
+ */
+domains?: Array<FieldDomain>, 
 /**
  * The project's relations (docs/adr/0405 §1).
  */

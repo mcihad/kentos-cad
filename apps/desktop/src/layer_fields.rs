@@ -75,6 +75,8 @@ pub struct FieldRow {
     /// Bölünce and Birleşince (docs/adr/0419).
     pub split: Option<kentos_contracts::SplitPolicy>,
     pub merge: Option<kentos_contracts::MergePolicy>,
+    /// The project's value list it links (docs/adr/0430); its values or bounds are that list's.
+    pub domain: Option<String>,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -98,6 +100,7 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         multiple: f.multiple,
         split: f.split,
         merge: f.merge,
+        domain: f.domain.clone(),
     }
 }
 
@@ -147,6 +150,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     }
     f.split = r.split;
     f.merge = r.merge;
+    f.domain = r.domain.clone();
     f
 }
 
@@ -186,6 +190,8 @@ pub struct Choices {
     list: Vec<FieldChoice>,
     /// Several of the values may be chosen (a text field's).
     multiple: bool,
+    /// The project's list it is linked to (docs/adr/0430): its codes are that list's, read-only here.
+    domain: Option<String>,
 }
 
 /// The window: the layer, its rows, the fields as saved, the chosen row and
@@ -240,6 +246,8 @@ pub enum Event {
     ListRemove(usize),
     /// Birden çok değer seçilebilir (docs/adr/0408 §1).
     ListMultiple(bool),
+    /// Projenin listesi (docs/adr/0430): the row linked to a project's list; none: its own list.
+    ListDomain(Option<String>),
     ListOk,
     ListCancel,
 }
@@ -322,6 +330,11 @@ impl App {
             }),
             _ => None,
         };
+        let domains = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().domains.clone())
+            .unwrap_or_default();
         let Some(w) = self.layer_fields.as_mut() else {
             return Task::none();
         };
@@ -369,6 +382,7 @@ impl App {
                     multiple: false,
                     split: None,
                     merge: None,
+                    domain: None,
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -435,20 +449,32 @@ impl App {
                     .and_then(|r| r.values.clone())
                     .unwrap_or_default();
                 let multiple = w.rows.get(i).is_some_and(|r| r.multiple);
+                let domain = w.rows.get(i).and_then(|r| r.domain.clone());
                 w.chosen = Some(i);
                 w.choices = Some(Choices {
                     row: i,
                     list,
                     multiple,
+                    domain,
                 });
             }
             Event::ListCode(i, t) => {
-                if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
+                if let Some(c) = w
+                    .choices
+                    .as_mut()
+                    .filter(|c| c.domain.is_none())
+                    .and_then(|c| c.list.get_mut(i))
+                {
                     c.code = t;
                 }
             }
             Event::ListLabel(i, t) => {
-                if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
+                if let Some(c) = w
+                    .choices
+                    .as_mut()
+                    .filter(|c| c.domain.is_none())
+                    .and_then(|c| c.list.get_mut(i))
+                {
                     c.label = t;
                 }
             }
@@ -463,17 +489,26 @@ impl App {
                 }
             }
             Event::ListRetired(i, on) => {
-                if let Some(c) = w.choices.as_mut().and_then(|c| c.list.get_mut(i)) {
+                if let Some(c) = w
+                    .choices
+                    .as_mut()
+                    .filter(|c| c.domain.is_none())
+                    .and_then(|c| c.list.get_mut(i))
+                {
                     c.retired = on;
                 }
             }
             Event::ListAdd => {
-                if let Some(c) = w.choices.as_mut() {
+                if let Some(c) = w.choices.as_mut().filter(|c| c.domain.is_none()) {
                     c.list.push(FieldChoice::new("", ""));
                 }
             }
             Event::ListRemove(i) => {
-                if let Some(c) = w.choices.as_mut().filter(|c| i < c.list.len()) {
+                if let Some(c) = w
+                    .choices
+                    .as_mut()
+                    .filter(|c| i < c.list.len() && c.domain.is_none())
+                {
                     c.list.remove(i);
                 }
             }
@@ -482,11 +517,35 @@ impl App {
                     c.multiple = on;
                 }
             }
+            Event::ListDomain(id) => {
+                let found = id
+                    .as_ref()
+                    .and_then(|id| domains.iter().find(|d| d.id == *id));
+                if let Some(c) = w.choices.as_mut() {
+                    if let Some(d) = found {
+                        c.list = d.values.clone().unwrap_or_default();
+                    }
+                    c.domain = id;
+                }
+            }
             Event::ListOk => {
                 if let Some(c) = w.choices.take()
                     && let Some(r) = w.rows.get_mut(c.row)
                 {
-                    r.values = (!c.list.is_empty()).then_some(c.list);
+                    let found = c
+                        .domain
+                        .as_ref()
+                        .and_then(|id| domains.iter().find(|d| d.id == *id));
+                    match found {
+                        // A range's bounds are the row's; a list's codes its values.
+                        Some(d) if !d.coded() => {
+                            r.values = None;
+                            r.min = d.min.clone().unwrap_or_default();
+                            r.max = d.max.clone().unwrap_or_default();
+                        }
+                        _ => r.values = (!c.list.is_empty()).then_some(c.list),
+                    }
+                    r.domain = c.domain;
                     r.multiple = c.multiple && r.values.is_some();
                 }
             }
@@ -639,6 +698,11 @@ impl App {
         let (Some(w), Some(doc)) = (&self.layer_fields, &self.document) else {
             return text("").into();
         };
+        let domains = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().domains.clone())
+            .unwrap_or_default();
         let cell_width = |j: usize| Length::Fixed(typography::scaled(HEADS[j].1));
         let head = HEADS
             .iter()
@@ -679,14 +743,25 @@ impl App {
                 },
                 Some(msg(Event::Required(i, !r.required))),
             );
-            let list_words = match &r.values {
-                Some(v) if !v.is_empty() => format!("Liste ({})", v.len()),
+            let linked = r
+                .domain
+                .as_ref()
+                .and_then(|id| domains.iter().find(|d| d.id == *id));
+            let list_words = match (linked, &r.values) {
+                (Some(d), _) => format!("↗ {}", d.name),
+                (None, Some(v)) if !v.is_empty() => format!("Liste ({})", v.len()),
                 _ => "Liste…".to_owned(),
             };
-            let list = button(label::body(list_words))
-                .style(style::button::secondary)
-                .padding([3, 8])
-                .on_press_maybe(listed.then(|| msg(Event::OpenList(i))));
+            // A field linked to a project's range takes its bounds from it (docs/adr/0430).
+            let ranged = ranged && r.domain.is_none();
+            let list = button(
+                kentos_ui::widget::Elided::new(list_words)
+                    .size(typography::body())
+                    .width(Length::Fixed(typography::scaled(HEADS[8].1) - 18.0)),
+            )
+            .style(style::button::secondary)
+            .padding([3, 8])
+            .on_press_maybe(listed.then(|| msg(Event::OpenList(i))));
             let line = row![
                 container(input(i, Cell::Name, &r.name, "Ad", true)).width(cell_width(0)),
                 container(input(i, Cell::Alias, &r.alias, "Takma ad", true)).width(cell_width(1)),
@@ -815,27 +890,42 @@ impl App {
             ]
             .spacing(6),
         );
+        // Projenin listesi (docs/adr/0430): the project's lists of this field's kind.
+        let row_kind = w.rows.get(c.row).map(|r| r.kind);
+        let fitting: Vec<&kentos_contracts::FieldDomain> = domains
+            .iter()
+            .filter(|d| Some(d.kind) == row_kind)
+            .collect();
+        let linked = c
+            .domain
+            .as_ref()
+            .and_then(|id| fitting.iter().find(|d| d.id == *id).copied());
+        let own = linked.is_none();
         for (i, choice) in c.list.iter().enumerate() {
             let (code, label_text) = (&choice.code, &choice.label);
             let retired = choice.retired;
+            let code_input = text_input("", code)
+                .padding([3, 6])
+                .style(style::field::input);
+            let label_input = text_input("", label_text)
+                .padding([3, 6])
+                .style(style::field::input);
             list = list.push(
                 row![
-                    container(
-                        text_input("", code)
-                            .on_input(move |t| msg(Event::ListCode(i, t)))
-                            .padding([3, 6])
-                            .style(style::field::input)
-                    )
+                    container(if own {
+                        code_input.on_input(move |t| msg(Event::ListCode(i, t)))
+                    } else {
+                        code_input
+                    })
                     .width(Length::Fixed(140.0)),
-                    container(
-                        text_input("", label_text)
-                            .on_input(move |t| msg(Event::ListLabel(i, t)))
-                            .padding([3, 6])
-                            .style(style::field::input)
-                    )
+                    container(if own {
+                        label_input.on_input(move |t| msg(Event::ListLabel(i, t)))
+                    } else {
+                        label_input
+                    })
                     .width(Length::Fixed(200.0)),
                     kentos_ui::widget::tip(
-                        words::check(retired, "", Some(msg(Event::ListRetired(i, !retired)))),
+                        words::check(retired, "", own.then(|| msg(Event::ListRetired(i, !retired)))),
                         kentos_ui::widget::Tip::new("Kullanımdan kalktı").body(
                             "Tutan kayıtta kalır ve görünür; yeni seçimde sunulmaz, formla yeniden yazılmaz."
                         ),
@@ -844,19 +934,64 @@ impl App {
                     button(icon(kentos_ui::icon::Icon::Close).size(12.0))
                         .style(style::button::subtle)
                         .padding(4)
-                        .on_press(msg(Event::ListRemove(i))),
+                        .on_press_maybe(own.then(|| msg(Event::ListRemove(i)))),
                 ]
                 .spacing(6)
                 .align_y(Center),
             );
         }
-        let mut body = Column::new()
-            .spacing(10)
-            .push(label::caption(
-                "Nesneye kod yazılır, tabloda ve formda etiketi gösterilir; etiket yazılırsa kodu yazılır.",
-            ))
-            .push(list)
-            .push(tool("plus", "Değer ekle", Some(msg(Event::ListAdd))));
+        let ids: Vec<String> = fitting.iter().map(|d| d.id.clone()).collect();
+        let mut offered = vec![Choice::new("Alanın kendi listesi")];
+        offered.extend(fitting.iter().map(|d| {
+            Choice::new(if d.coded() {
+                format!("{} ({} kod)", d.name, d.values.as_ref().map_or(0, Vec::len))
+            } else {
+                format!(
+                    "{} ({} – {})",
+                    d.name,
+                    d.min.as_deref().unwrap_or("…"),
+                    d.max.as_deref().unwrap_or("…")
+                )
+            })
+        }));
+        let now = match &c.domain {
+            None => Some(0),
+            Some(id) => ids.iter().position(|x| x == id).map(|p| p + 1),
+        };
+        let pick = Select::new(offered, now, move |k| {
+            msg(Event::ListDomain(k.checked_sub(1).map(|k| ids[k].clone())))
+        });
+        let mut body = Column::new().spacing(10).push(words::field(
+            "Projenin listesi",
+            container(pick).width(320),
+            Some(match linked {
+                Some(d) => format!(
+                    "Kodlar “{}” listesinindir; Değer listeleri penceresinde düzenlenir, bağlı bütün alanlar izler.",
+                    d.name
+                ),
+                None if fitting.is_empty() => {
+                    "Projede bu türde değer listesi yok; Değer listeleri penceresinden ekleyin.".to_owned()
+                }
+                None => "Bir liste seçilirse alan ona bağlanır; liste değişince alan da değişir.".to_owned(),
+            }),
+        ));
+        if linked.is_some_and(|d| !d.coded()) {
+            let d = linked.unwrap_or_else(|| unreachable!());
+            body = body.push(label::caption(format!(
+                "Aralık: {} – {}",
+                d.min.as_deref().unwrap_or("…"),
+                d.max.as_deref().unwrap_or("…")
+            )));
+        } else {
+            body = body
+                .push(label::caption(
+                    "Nesneye kod yazılır, tabloda ve formda etiketi gösterilir; etiket yazılırsa kodu yazılır.",
+                ))
+                .push(list);
+            if own {
+                body = body.push(tool("plus", "Değer ekle", Some(msg(Event::ListAdd))));
+            }
+        }
         // A text field may hold several of its values (docs/adr/0408 §1).
         if w.rows
             .get(c.row)

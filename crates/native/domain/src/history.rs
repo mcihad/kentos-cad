@@ -204,6 +204,12 @@ pub(crate) enum Op {
         before: UnitState,
         after: UnitState,
     },
+    /// The project's value lists (docs/adr/0430), before and after: a setting, written in the step
+    /// with the linked fields it rewrote, so undo gives both back.
+    Domains {
+        before: Vec<kentos_contracts::FieldDomain>,
+        after: Vec<kentos_contracts::FieldDomain>,
+    },
 }
 
 /// A tree node as a step keeps it (children, flags, style), and where it
@@ -362,6 +368,10 @@ impl Op {
             Op::Units { before, after } => Op::Units {
                 before: *after,
                 after: *before,
+            },
+            Op::Domains { before, after } => Op::Domains {
+                before: after.clone(),
+                after: before.clone(),
             },
         }
     }
@@ -763,7 +773,8 @@ impl Document {
                 | Op::ArrayAdd { .. }
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
-                | Op::Units { .. } => false,
+                | Op::Units { .. }
+                | Op::Domains { .. } => false,
             })
         };
         self.history.undo.retain(|step| !touches(step));
@@ -957,6 +968,10 @@ impl Document {
                 self.settings.drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;
                 self.origin = after.origin;
+                return;
+            }
+            Op::Domains { after, .. } => {
+                self.settings.domains = after.clone();
                 return;
             }
         };

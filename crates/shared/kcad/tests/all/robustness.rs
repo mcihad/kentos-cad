@@ -511,6 +511,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             networks: Vec::new(),
             variables: Vec::new(),
             address_locators: Vec::new(),
+            domains: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

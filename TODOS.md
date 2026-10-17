@@ -194,6 +194,9 @@ Liste:
 - [ ] `FORM-S` tarih ve saat, saat alanları (ADR 0412, 16 Ekim): web'de gerekenler: `LayerFieldKind`'in `datetime` ve `time`'ı
   (`model/layerFields.ts`'in değer kuralı ve gösterimi, `fixtures/layer-fields/v1/cases.json`), Alanlar penceresi, formun tarih
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
+- [ ] `FORM-AM` projenin değer listeleri (ADR 0430, 17 Ekim): web'de gerekenler: ayarların `domains`'i ve alanın `domain`'i (TS türleri
+  üretildi), `cad.domains.edit`'in TS işleyicisi (`fixtures/commands/v1/cad.domains.edit.json`), belgenin kopyaları izlemesi ve geri
+  alması, Değer listeleri penceresi, Alanlar'da Projenin listesi.
 - [ ] `FORM-AL` iş akışının geçmişi (ADR 0429, 17 Ekim): web'de gerekenler: iş akışının `log`'u, adımın satırı, salt okunur çok satırlı
   alanın gösterimi, tasarımcıda Geçmiş alanı.
 - [ ] `FORM-AK` kayıt iş akışı (ADR 0428, 17 Ekim): web'de gerekenler: formun `workflow`'u (TS türleri üretildi), `cad.forms.transition`'ın TS
@@ -1511,6 +1514,9 @@ burada aşamaları izlenir.
   ADR 0411 §5.**
 - [x] `FORM-S` Tarih ve saat, saat alan türleri: denetim, gösterim, tahmin, formda seçiciler, `.kcad` şema 60. — **16 Ekim,
   [ADR 0412](docs/adr/0412-date-time-and-time-fields.md).**
+- [x] `FORM-AM` Projenin değer listeleri: kod listesi ya da aralık projede bir kez, birçok katmanın alanı bağlanır, liste değişince bağlı
+  alanlar aynı adımda izler; çıkan kodun kayıtları `recode` ile taşınır; Değer listeleri penceresi, Alanlar'da Projenin listesi;
+  `cad.domains.edit`. — **17 Ekim, [ADR 0430](docs/adr/0430-project-value-lists.md).**
 - [x] `FORM-AL` İş akışının geçmişi: her adım geçmiş alanına an, kişi, adım, durumlar ve gerekçeyle bir satır ekler; alan dolunca eski satırlar
   gider. — **17 Ekim, [ADR 0429](docs/adr/0429-workflow-log.md).**
 - [x] `FORM-AK` Kayıt iş akışı: formun durum alanı, ilk durumu, kilitli durumları ve adımları (geçerli kayıt, gerekçe); Formla düzenle'de adım

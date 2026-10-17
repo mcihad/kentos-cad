@@ -342,6 +342,7 @@ mod tests {
             networks: Vec::new(),
             variables: Vec::new(),
             address_locators: Vec::new(),
+            domains: Vec::new(),
         })
     }
 

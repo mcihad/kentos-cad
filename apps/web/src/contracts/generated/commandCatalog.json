@@ -3784,6 +3784,59 @@
             ],
             "type": "object"
           },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
           "FieldGroup": {
             "additionalProperties": false,
             "description": "A group of fields whose values go together.",
@@ -6192,6 +6245,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -9163,6 +9223,13 @@
                 "description": "The project's named dimension styles (docs/adr/0183 §3).",
                 "items": {
                   "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
+              "domains": {
+                "description": "The project's value lists, in the order they were made (docs/adr/0430).",
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
                 },
                 "type": "array"
               },
@@ -14177,6 +14244,59 @@
             ],
             "type": "object"
           },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
           "FieldGroup": {
             "additionalProperties": false,
             "description": "A group of fields whose values go together.",
@@ -15823,6 +15943,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -17233,6 +17360,13 @@
                 "description": "The project's named dimension styles (docs/adr/0183 §3).",
                 "items": {
                   "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
+              "domains": {
+                "description": "The project's value lists, in the order they were made (docs/adr/0430).",
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
                 },
                 "type": "array"
               },
@@ -22520,6 +22654,59 @@
             ],
             "type": "object"
           },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
           "FieldGroup": {
             "additionalProperties": false,
             "description": "A group of fields whose values go together.",
@@ -24928,6 +25115,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -27948,6 +28142,13 @@
                 "description": "The project's named dimension styles (docs/adr/0183 §3).",
                 "items": {
                   "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
+              "domains": {
+                "description": "The project's value lists, in the order they were made (docs/adr/0430).",
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
                 },
                 "type": "array"
               },
@@ -130007,6 +130208,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -138988,6 +139196,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -148097,6 +148312,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -305632,6 +305854,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -307428,6 +307657,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -311741,6 +311977,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -314431,6 +314674,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -316843,6 +317093,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -319292,6 +319549,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -321759,6 +322023,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -324187,6 +324458,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -326608,6 +326886,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -329815,6 +330100,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -332554,6 +332846,13 @@
                   "null"
                 ]
               },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "id": {
                 "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
                 "type": [
@@ -333906,6 +334205,13 @@
               },
               "default": {
                 "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
                 "type": [
                   "string",
                   "null"
@@ -347232,6 +347538,467 @@
           "title": "Bina formunun hesaplarını bütün kayıtlarda yenile",
           "input": {
             "form": "bina-denetimi"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.domains.edit",
+      "version": 1,
+      "title": "Değer listeleri",
+      "summary": "Projenin değer listelerini düzenler (ArcGIS'in domain'i): bir kod listesi (values) ya da aralık (min, max) projede bir kez tutulur,                       birçok katmanın alanı ona bağlanır; bağlı alanın değerleri listenin kopyasıdır ve liste değişince aynı adımda yeniden yazılır.                       create yeni liste (domainKind: uyduğu alan türü), fromField bir alanın kendi listesinden liste yapıp alanı bağlar, update listeyi                       değiştirir (türü değişmez; kayıtların tuttuğu kod listeden çıkamaz: recode ile başka koda taşınır ya da kullanımdan kaldırılır),                       remove bağlı alanı olmayan listeyi siler (detach: alanlar kopyalarını tutar), link alanı bir listeye bağlar ya da bağı çözer.                       Tek geri alma adımı “Değer listeleri”.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "DomainsOp": {
+            "description": "What `cad.domains.edit` does.",
+            "oneOf": [
+              {
+                "description": "Yeni liste: a coded list (`values`) or a range (`min`, `max`); no id: one made of the name.",
+                "properties": {
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "domainKind": {
+                    "$ref": "#/$defs/LayerFieldKind",
+                    "description": "The kind of field it fits (`domainKind` in the input: `kind` tags the operation)."
+                  },
+                  "id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "create",
+                    "type": "string"
+                  },
+                  "max": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "min": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "$ref": "#/$defs/FieldChoice"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "domainKind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Alanın listesinden: a list made of a field's own values (or bounds), the field linked to it.",
+                "properties": {
+                  "field": {
+                    "description": "The field's key.",
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "fromField",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "description": "The layer's id.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kaydet: the list replaced, its kind kept; `recode` moves the linked fields' records from a code\nto another of the new list in the same step (a code a record holds may not just go).",
+                "properties": {
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  },
+                  "max": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "min": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "recode": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "values": {
+                    "items": {
+                      "$ref": "#/$defs/FieldChoice"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Sil: a list no field links; `detach` lets the linked fields keep their copies.",
+                "properties": {
+                  "detach": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Bağla: a field linked to a list (none: unlinked, its copy kept as its own).",
+                "properties": {
+                  "domain": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "field": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "link",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layer",
+                  "field"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.domains.edit` v1.\n\nRefusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_domain`, `layer_not_found`, `not_a_layer`, `field_not_found`, `domain_exists`,\n`invalid_domain`, `domain_mismatch`, `invalid_recode`, `domain_code_in_use`, `domain_in_use`,\n`layer_locked`. Warnings: `domain_values_outside`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/DomainsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "DomainsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DomainField": {
+            "description": "A field a list's change reached: its layer's id and its key.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "field"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.domains.edit` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (a plan: would change).",
+            "type": "boolean"
+          },
+          "domain": {
+            "description": "The list made, changed or taken away (a link: the list linked, none when unlinked).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The fields whose definition changed, in the layer tree's order.",
+            "items": {
+              "$ref": "#/$defs/DomainField"
+            },
+            "type": "array"
+          },
+          "recoded": {
+            "description": "The records `recode` moved to another code.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document revision afterwards (a plan: as it is).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fields",
+          "recoded",
+          "changed",
+          "revision"
+        ],
+        "title": "DomainsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DomainField": {
+            "description": "A field a list's change reached: its layer's id and its key.",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "field"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.domains.edit` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (a plan: would change).",
+            "type": "boolean"
+          },
+          "domain": {
+            "description": "The list made, changed or taken away (a link: the list linked, none when unlinked).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fields": {
+            "description": "The fields whose definition changed, in the layer tree's order.",
+            "items": {
+              "$ref": "#/$defs/DomainField"
+            },
+            "type": "array"
+          },
+          "recoded": {
+            "description": "The records `recode` moved to another code.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The document revision afterwards (a plan: as it is).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fields",
+          "recoded",
+          "changed",
+          "revision"
+        ],
+        "title": "DomainsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_domain",
+          "layer_not_found",
+          "not_a_layer",
+          "field_not_found",
+          "domain_exists",
+          "invalid_domain",
+          "domain_mismatch",
+          "invalid_recode",
+          "domain_code_in_use",
+          "domain_in_use",
+          "layer_locked"
+        ],
+        "warnings": [
+          "domain_values_outside"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Yapı malzemesi listesi",
+          "input": {
+            "edit": {
+              "domainKind": "text",
+              "kind": "create",
+              "name": "Yapı malzemesi",
+              "values": [
+                {
+                  "code": "ah",
+                  "label": "Ahşap"
+                },
+                {
+                  "code": "bt",
+                  "label": "Betonarme"
+                },
+                {
+                  "code": "ym",
+                  "label": "Yığma"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Binanın Malzeme alanını listeye bağla",
+          "input": {
+            "edit": {
+              "domain": "yapi-malzemesi",
+              "field": "Malzeme",
+              "kind": "link",
+              "layer": "bina"
+            }
           }
         }
       ]
@@ -380578,6 +381345,54 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Değer grupları katmanın alanlarına uymuyor."
+    },
+    {
+      "code": "invalid_domain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Değer listesi kurallarına uymuyor (ad, kodlar, aralık)."
+    },
+    {
+      "code": "unknown_domain",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikli bir değer listesi yok."
+    },
+    {
+      "code": "domain_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikli bir değer listesi zaten var."
+    },
+    {
+      "code": "domain_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alan değer listesine uymuyor (başka tür ya da alanın kuralları)."
+    },
+    {
+      "code": "invalid_recode",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kod eşlemesi listede olmayan bir kodu anıyor."
+    },
+    {
+      "code": "domain_code_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kayıtların tuttuğu kodlar listeden çıkıyor; eşleyin ya da kullanımdan kaldırın."
+    },
+    {
+      "code": "domain_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Değer listesine bağlı alanlar var."
+    },
+    {
+      "code": "domain_values_outside",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı kayıtların değeri listenin aralığı dışında kaldı."
     },
     {
       "code": "invalid_subtypes",

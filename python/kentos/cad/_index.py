@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
+from . import addresses, arc, arrays, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -25,6 +25,7 @@ COMMANDS: dict[str, Any] = {
     "cad.curves.edit": curves.edit,
     "cad.dimensions.create": dimensions.create,
     "cad.dimensions.reassociate": dimensions.reassociate,
+    "cad.domains.edit": domains.edit,
     "cad.drawing.audit": drawing.audit,
     "cad.entities.array": entities.array,
     "cad.entities.boundary": entities.boundary,
@@ -134,4 +135,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "drawing", "entities", "fields", "file", "forms", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "arc", "arrays", "blocks", "changeset", "circle", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "forms", "labels", "layers", "library", "line", "linetypes", "network", "nurbs", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "settings", "sheets", "snap", "standards", "styles", "ucs", "units", "views",)

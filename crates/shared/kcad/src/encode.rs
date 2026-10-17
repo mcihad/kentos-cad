@@ -369,6 +369,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.named_ucs.is_empty())
             + usize::from(!s.named_views.is_empty())
             + usize::from(!s.forms.is_empty())
+            + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(s.line_type_scale.is_some());
@@ -393,6 +394,18 @@ impl<'d> Encoder<'d> {
         if let Some(v) = &s.survey {
             self.key("survey");
             self.at(Seg::Name("survey"), |e| e.survey(v))?;
+        }
+        // Schema 60 (docs/adr/0430): the project's value lists, written whole and checked.
+        if !s.domains.is_empty() {
+            self.key("domains");
+            self.at(Seg::Name("domains"), |e| {
+                if let Some((_, problem)) = kentos_contracts::domains_problem(&s.domains) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.domains)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         self.key("areaUnit");
         self.w.text(area_unit(s.area_unit));
@@ -1178,7 +1191,8 @@ impl<'d> Encoder<'d> {
             + usize::from(f.multiple)
             + usize::from(f.required)
             + usize::from(f.split.is_some())
-            + usize::from(f.merge.is_some());
+            + usize::from(f.merge.is_some())
+            + usize::from(f.domain.is_some());
         self.open(n, true)?;
         if let Some(id) = &f.id {
             self.key("id");
@@ -1212,6 +1226,11 @@ impl<'d> Encoder<'d> {
         if let Some(split) = f.split {
             self.key("split");
             self.w.text(split_name(split));
+        }
+        // Schema 60 (docs/adr/0430): the value list it links.
+        if let Some(domain) = &f.domain {
+            self.key("domain");
+            self.at(Seg::Name("domain"), |e| e.text(domain))?;
         }
         if let Some(length) = f.length {
             self.key("length");

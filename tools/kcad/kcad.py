@@ -1507,10 +1507,48 @@ def fields_problem(fields):
             fid = f["id"]
             if not fid.strip(JS_SPACE) or fid.strip(JS_SPACE) != fid or len(fid) > 64 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in fid):
                 return f"“{name}” alanının kimliği geçersiz"
+        # Schema 60 (docs/adr/0430): the value list it links, by its id.
+        if "domain" in f and (not f["domain"] or len(f["domain"]) > 64):
+            return f"“{name}” alanının değer listesi kimliği geçersiz"
         stable = f.get("id", name)
         if stable in keys:
             return f"“{stable}” kimliği iki alanda var"
         keys.add(stable)
+    return None
+
+
+MOST_DOMAINS = 200
+
+
+def domains_problem(domains):
+    """The contract's `domains_problem` (docs/adr/0430): at most 200 lists, ids and names that hold (names unique,
+    folded to lower case), a description within 500 characters, a coded list or a range, never both, not every code
+    retired, the values and bounds a field of the list's kind could hold."""
+    if len(domains) > MOST_DOMAINS:
+        return f"projede en çok {MOST_DOMAINS} değer listesi olur"
+    ids, names = set(), set()
+    for d in domains:
+        for k in ("id", "name"):
+            t = d[k]
+            if not t.strip() or t.strip() != t or len(t) > 64 or any(unicodedata.category(c) == "Cc" for c in t):
+                return f"değer listesinin {k} geçersiz"
+        if "description" in d and (not d["description"].strip() or len(d["description"]) > 500):
+            return f"“{d['name']}” listesinin açıklaması geçersiz"
+        ranged = "min" in d or "max" in d
+        if ("values" in d) == ranged:
+            return f"“{d['name']}” listesi ya kod listesi ya aralık olmalı"
+        if "values" in d and all(c.get("retired") for c in d["values"]):
+            return f"“{d['name']}” listesinin bütün kodları kullanımdan kalkmış"
+        probe = {"name": d["name"], "kind": d["kind"], **{k: d[k] for k in ("values", "min", "max") if k in d}}
+        problem = fields_problem([probe])
+        if problem:
+            return problem
+        if d["id"] in ids:
+            return f"“{d['id']}” kimlikli iki değer listesi var"
+        if d["name"].lower() in names:
+            return f"“{d['name']}” adlı iki değer listesi var"
+        ids.add(d["id"])
+        names.add(d["name"].lower())
     return None
 
 
@@ -2539,7 +2577,8 @@ class _Schema:
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
-                **({"forms": (self.forms_, False), "relations": (self.relations_, False)} if self.forms else {}),
+                **({"forms": (self.forms_, False), "relations": (self.relations_, False),
+                    "domains": (self.domains_, False)} if self.forms else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3466,6 +3505,8 @@ class _Schema:
                 # Schema 60 (docs/adr/0419): the split and merge policies.
                 **({"split": (self.enum(("copy", "clear", "default", "ratio")), False),
                     "merge": (self.enum(("first", "clear", "sum", "min", "max")), False)} if self.forms else {}),
+                # Schema 60 (docs/adr/0430): the value list it links.
+                **({"domain": (self.text, False)} if self.forms else {}),
                 "required": (self.bool, False),
             }
         )
@@ -3613,6 +3654,29 @@ class _Schema:
         if problem:
             self.fail("bad_value", problem)
         return all_
+
+    def domains_(self, v):
+        """Schema 60 (docs/adr/0430): the project's value lists, each its id, name, kind and its values or bounds;
+        the list checked whole (`domains_problem`)."""
+        choice = self.fields({"code": (self.text, True), "label": (self.text, True), "retired": (self.bool, False)})
+        domain = self.fields({
+            "id": (self.text, True),
+            "name": (self.text, True),
+            "description": (self.text, False),
+            "kind": (self.enum(FIELD_KINDS + ("datetime", "time")), True),
+            "values": (self.array(choice), False),
+            "min": (self.text, False),
+            "max": (self.text, False),
+        })
+        lst = self.array(domain)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
+        if any(c.get("retired") is False for d in lst for c in d.get("values", [])):
+            self.fail("bad_value", "retired yalnız true yazılır")
+        problem = domains_problem(lst)
+        if problem:
+            self.fail("bad_value", problem)
+        return lst
 
     def relations_(self, v):
         """Schema 60 (docs/adr/0405 §1): the project's relations; `onDelete` written only when not `unlink`."""

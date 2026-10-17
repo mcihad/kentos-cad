@@ -526,8 +526,8 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
             Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
             Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
-            // The unit is a setting (docs/adr/0256 §1).
-            Op::Units { .. } => {
+            // The unit and the value lists are settings (docs/adr/0256 §1, 0430).
+            Op::Units { .. } | Op::Domains { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);
                 }

@@ -2765,6 +2765,30 @@ class Division(_Union):
         return _variant(_DIVISION, "Division", "kind", data).from_json(data)
 
 
+class DomainsOp(_Union):
+    """What `cad.domains.edit` does.
+
+    One of:
+
+    - :class:`CreateDomainsOp` (``kind: create``)
+    - :class:`FromFieldDomainsOp` (``kind: fromField``)
+    - :class:`UpdateDomainsOp` (``kind: update``)
+    - :class:`RemoveDomainsOp` (``kind: remove``)
+    - :class:`LinkDomainsOp` (``kind: link``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainsOp:
+        return _variant(_DOMAINS_OP, "DomainsOp", "kind", data).from_json(data)
+
+
 class Entity(_Union):
     """Any drawing object, tagged by `kind` as in the TypeScript model.
 
@@ -7243,6 +7267,92 @@ class DivideBlock(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DomainField(_Model):
+    """A field a list's change reached: its layer's id and its key."""
+    layer: str
+    field: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainField:
+        return cls(
+            layer=data["layer"],
+            field=data["field"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DomainsEdit(_Model):
+    """Input of `cad.domains.edit` v1.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_domain`, `layer_not_found`, `not_a_layer`, `field_not_found`, `domain_exists`,
+    `invalid_domain`, `domain_mismatch`, `invalid_recode`, `domain_code_in_use`, `domain_in_use`,
+    `layer_locked`. Warnings: `domain_values_outside`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: DomainsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainsEdit:
+        return cls(
+            edit=DomainsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DomainsEdited(_Model):
+    """Output (and plan) of `cad.domains.edit` v1.
+    Attributes:
+        fields: The fields whose definition changed, in the layer tree's order.
+        recoded: The records `recode` moved to another code. Unit: count.
+        changed: Whether anything changed (a plan: would change).
+        revision: The document revision afterwards (a plan: as it is).
+        domain: The list made, changed or taken away (a link: the list linked, none when unlinked).
+    """
+    fields: list[DomainField]
+    recoded: int
+    changed: bool
+    revision: str
+    domain: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        out["recoded"] = self.recoded
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.domain is not UNSET:
+            out["domain"] = self.domain
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DomainsEdited:
+        return cls(
+            fields=[DomainField.from_json(e0) for e0 in data["fields"]],
+            recoded=data["recoded"],
+            changed=data["changed"],
+            revision=data["revision"],
+            domain=data.get("domain", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DoorSource(_Model):
     """The doors' layer and which of its attributes say what.
     Attributes:
@@ -10647,6 +10757,52 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldDomain(_Model):
+    """A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.
+    Attributes:
+        id: Its stable id: what a field links to.
+        kind: The kind of field it fits: a field linking it is of this kind.
+        max: A range's greatest value, in its canonical text; included.
+        min: A range's least value, in its canonical text; included.
+        values: A coded list's values, in their order (labels, retired codes as a field's list has them).
+    """
+    id: str
+    name: str
+    kind: LayerFieldKind | LayerFieldKindName
+    description: str | None | Unset = UNSET
+    max: str | None | Unset = UNSET
+    min: str | None | Unset = UNSET
+    values: list[FieldChoice] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldDomain:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(LayerFieldKind, data["kind"]),
+            description=data.get("description", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
+            values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldGroup(_Model):
     """A group of fields whose values go together.
     Attributes:
@@ -13752,6 +13908,8 @@ class LayerField(_Model):
     Attributes:
         alias: The name the table and the form show.
         default: The value a new object takes, in its canonical text.
+        domain: The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that
+            list's copy, written anew whenever the list changes. None: its own.
         id: The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a
             rename writes the old name here so a binding holds. Unique among the layer's fields' keys.
         length: A text's most characters (1–10 000). Unit: count.
@@ -13772,6 +13930,7 @@ class LayerField(_Model):
     kind: LayerFieldKind | LayerFieldKindName
     alias: str | None | Unset = UNSET
     default: str | None | Unset = UNSET
+    domain: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
     length: int | None | Unset = UNSET
     max: str | None | Unset = UNSET
@@ -13791,6 +13950,8 @@ class LayerField(_Model):
             out["alias"] = self.alias
         if self.default is not UNSET:
             out["default"] = self.default
+        if self.domain is not UNSET:
+            out["domain"] = self.domain
         if self.id is not UNSET:
             out["id"] = self.id
         if self.length is not UNSET:
@@ -13820,6 +13981,7 @@ class LayerField(_Model):
             kind=_enum_in(LayerFieldKind, data["kind"]),
             alias=data.get("alias", UNSET),
             default=data.get("default", UNSET),
+            domain=data.get("domain", UNSET),
             id=data.get("id", UNSET),
             length=data.get("length", UNSET),
             max=data.get("max", UNSET),
@@ -19600,6 +19762,7 @@ class ProjectSettings(_Model):
             (docs/adr/0168 §1); `srid` is then 0.
         datum_transforms: The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
         dimension_styles: The project's named dimension styles (docs/adr/0183 §3).
+        domains: The project's value lists, in the order they were made (docs/adr/0430).
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
@@ -19641,6 +19804,7 @@ class ProjectSettings(_Model):
     custom_crs: CrsDefinition | None | Unset = UNSET
     datum_transforms: list[DatumTransform] | Unset = UNSET
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
+    domains: list[FieldDomain] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     forms: list[ProjectForm] | Unset = UNSET
@@ -19681,6 +19845,8 @@ class ProjectSettings(_Model):
             out["datumTransforms"] = [e0.to_json() for e0 in self.datum_transforms]
         if self.dimension_styles is not UNSET:
             out["dimensionStyles"] = [e0.to_json() for e0 in self.dimension_styles]
+        if self.domains is not UNSET:
+            out["domains"] = [e0.to_json() for e0 in self.domains]
         if self.drawing_font is not UNSET:
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
@@ -19736,6 +19902,7 @@ class ProjectSettings(_Model):
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
@@ -26009,6 +26176,172 @@ class StepDivision(Division):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateDomainsOp(DomainsOp):
+    """Yeni liste: a coded list (`values`) or a range (`min`, `max`); no id: one made of the name.
+    Attributes:
+        domain_kind: The kind of field it fits (`domainKind` in the input: `kind` tags the operation).
+    """
+    TAG_VALUE: ClassVar[str] = "create"
+    name: str
+    domain_kind: LayerFieldKind | LayerFieldKindName
+    description: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    max: str | None | Unset = UNSET
+    min: str | None | Unset = UNSET
+    values: list[FieldChoice] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["name"] = self.name
+        out["domainKind"] = _enum_out(self.domain_kind)
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateDomainsOp:
+        return cls(
+            name=data["name"],
+            domain_kind=_enum_in(LayerFieldKind, data["domainKind"]),
+            description=data.get("description", UNSET),
+            id=data.get("id", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
+            values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FromFieldDomainsOp(DomainsOp):
+    """Alanın listesinden: a list made of a field's own values (or bounds), the field linked to it.
+    Attributes:
+        layer: The layer's id.
+        field: The field's key.
+    """
+    TAG_VALUE: ClassVar[str] = "fromField"
+    layer: str
+    field: str
+    name: str
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fromField"}
+        out["layer"] = self.layer
+        out["field"] = self.field
+        out["name"] = self.name
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FromFieldDomainsOp:
+        return cls(
+            layer=data["layer"],
+            field=data["field"],
+            name=data["name"],
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateDomainsOp(DomainsOp):
+    """Kaydet: the list replaced, its kind kept; `recode` moves the linked fields' records from a code
+    to another of the new list in the same step (a code a record holds may not just go).
+    """
+    TAG_VALUE: ClassVar[str] = "update"
+    id: str
+    name: str
+    description: str | None | Unset = UNSET
+    max: str | None | Unset = UNSET
+    min: str | None | Unset = UNSET
+    recode: dict[str, str] | Unset = UNSET
+    values: list[FieldChoice] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.max is not UNSET:
+            out["max"] = self.max
+        if self.min is not UNSET:
+            out["min"] = self.min
+        if self.recode is not UNSET:
+            out["recode"] = dict(self.recode)
+        if self.values is not UNSET:
+            out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateDomainsOp:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            description=data.get("description", UNSET),
+            max=data.get("max", UNSET),
+            min=data.get("min", UNSET),
+            recode=dict(data["recode"]) if "recode" in data else UNSET,
+            values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveDomainsOp(DomainsOp):
+    """Sil: a list no field links; `detach` lets the linked fields keep their copies."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+    detach: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        if self.detach is not UNSET:
+            out["detach"] = self.detach
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveDomainsOp:
+        return cls(
+            id=data["id"],
+            detach=data.get("detach", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LinkDomainsOp(DomainsOp):
+    """Bağla: a field linked to a list (none: unlinked, its copy kept as its own)."""
+    TAG_VALUE: ClassVar[str] = "link"
+    layer: str
+    field: str
+    domain: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "link"}
+        out["layer"] = self.layer
+        out["field"] = self.field
+        if self.domain is not UNSET:
+            out["domain"] = self.domain
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinkDomainsOp:
+        return cls(
+            layer=data["layer"],
+            field=data["field"],
+            domain=data.get("domain", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolylineEntity(PathEntity, Entity):
     """Entity ``polyline``: a :class:`PathEntity`."""
     TAG_VALUE: ClassVar[str] = "polyline"
@@ -29736,6 +30069,9 @@ _DIMENSION_MEASURE: dict[str, type[DimensionMeasure]] = {"aligned": AlignedDimen
 _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivision}
 
 
+_DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "link": LinkDomainsOp}
+
+
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "record": RecordEntity}
 
 
@@ -29987,6 +30323,7 @@ __all__ = [
     "CornersRectangleFrame",
     "CountExplodeDensity",
     "CreateBlockChange",
+    "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
     "CreateOperation",
@@ -30036,6 +30373,10 @@ __all__ = [
     "DivideEnds",
     "DivideEndsName",
     "Division",
+    "DomainField",
+    "DomainsEdit",
+    "DomainsEdited",
+    "DomainsOp",
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",
@@ -30134,6 +30475,7 @@ __all__ = [
     "FeedKindName",
     "FenceSelectRegion",
     "FieldChoice",
+    "FieldDomain",
     "FieldFormItem",
     "FieldGroup",
     "FieldNetworkDirection",
@@ -30192,6 +30534,7 @@ __all__ = [
     "FormsValidated",
     "FoundSnap",
     "FrameUcsTo",
+    "FromFieldDomainsOp",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GradientShape",
@@ -30363,6 +30706,7 @@ __all__ = [
     "LinearBlockParameter",
     "LinearDimensionMeasure",
     "LinesCornerPick",
+    "LinkDomainsOp",
     "LocalCrsSystem",
     "LocalDefinition",
     "LookPart",
@@ -30573,6 +30917,7 @@ __all__ = [
     "RelationsOp",
     "RemoveArrayEdit",
     "RemoveControlCurveEdit",
+    "RemoveDomainsOp",
     "RemoveEntityEdit",
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
@@ -30722,6 +31067,7 @@ __all__ = [
     "UnitsChanged",
     "UnusedResource",
     "UpdateBlockChange",
+    "UpdateDomainsOp",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "UpdateFormsOp",

@@ -815,6 +815,84 @@ fn workflow_log(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// Buildings and depots whose material comes from the project's list “Yapı malzemesi” and whose floor
+/// count from the range “Kat sayısı” (docs/adr/0430); a depot is of masonry (ym).
+fn listed_buildings(app: &mut App) {
+    let mut o = Objects::new();
+    let rows = [
+        ("bina", "B-1", "ah", "3"),
+        ("bina", "B-2", "bt", "7"),
+        ("depo", "D-1", "ym", ""),
+        ("depo", "D-2", "bt", ""),
+    ];
+    for (i, (layer, code, material, floors)) in rows.iter().enumerate() {
+        let x = (i % 2) as f64 * 24.0;
+        let y = (i / 2) as f64 * 20.0;
+        let id = o.path(
+            layer,
+            &[[x, y], [x + 18.0, y], [x + 18.0, y + 14.0], [x, y + 14.0]],
+            true,
+        );
+        let mut attrs = vec![("Kod", *code), ("Malzeme", *material)];
+        if !floors.is_empty() {
+            attrs.push(("Kat", *floors));
+        }
+        o.data(id, &attrs, Some(code));
+    }
+    let materials = json!([{ "code": "ah", "label": "Ahşap" }, { "code": "bt", "label": "Betonarme" },
+                           { "code": "ym", "label": "Yığma" }, { "code": "ce", "label": "Çelik" }]);
+    let fields_of = |floors: bool| {
+        let mut f = vec![
+            json!({ "name": "Kod", "kind": "text" }),
+            json!({ "name": "Malzeme", "kind": "text", "values": materials.clone(), "domain": "malzeme" }),
+        ];
+        if floors {
+            f.push(json!({ "name": "Kat", "kind": "integer", "min": "1", "max": "40", "domain": "kat" }));
+        }
+        Value::Array(f)
+    };
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = fields_of(true);
+        let mut depo = crate::tools_scenes::layer("depo", "Depo", "#E54D2E", 0.35);
+        depo["fields"] = fields_of(false);
+        layers.push(bina);
+        layers.push(depo);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["domains"] = json!([
+            { "id": "malzeme", "name": "Yapı malzemesi", "description": "Bütün yapı katmanlarının malzemesi.", "kind": "text",
+              "values": materials.clone() },
+            { "id": "kat", "name": "Kat sayısı", "kind": "integer", "min": "1", "max": "40" },
+            { "id": "cati", "name": "Çatı türü", "kind": "text",
+              "values": [{ "code": "dz", "label": "Düz" }, { "code": "bs", "label": "Beşik" }, { "code": "kr", "label": "Kırma" }] }
+        ]);
+    });
+    app.features.layer = Some("bina".into());
+}
+
+/// Değer listeleri on the material list (docs/adr/0430 §4): Yığma dropped, its records moved to Betonarme.
+fn domains_window(app: &mut App) {
+    use crate::forms::domains::Event;
+    listed_buildings(app);
+    run(app, "data.domains");
+    let _ = app.update(Message::Domains(Event::RemoveCode(2)));
+    let _ = app.update(Message::Domains(Event::Recode(
+        "ym".into(),
+        Some("bt".into()),
+    )));
+}
+
+/// Alanlar's value list of the building's material: linked to the project's list, its codes read-only.
+fn domains_field(app: &mut App) {
+    listed_buildings(app);
+    let _ = app.open_layer_fields("bina");
+    let _ = app.update(Message::LayerFields(crate::layer_fields::Event::OpenList(
+        1,
+    )));
+}
+
 /// Değer bileşimleri's window on the buildings' group (docs/adr/0423 §5).
 fn contingents_window(app: &mut App) {
     typed_buildings(app);
@@ -1622,6 +1700,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-is-akisi-adim", workflow_steps),
         ("form-is-akisi-kilitli", workflow_locked),
         ("form-is-akisi-gecmis", workflow_log),
+        ("deger-listeleri", domains_window),
+        ("deger-listesi-alan", domains_field),
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
@@ -1877,6 +1957,72 @@ mod tests {
         assert!(
             log.ends_with("Düzelt (Onaylandı → İade edildi): Kat yeniden ölçülecek."),
             "{log}"
+        );
+    }
+
+    #[test]
+    fn a_list_dropping_a_code_moves_its_records_in_one_undo_step() {
+        let mut app = crate::files_testing::app_with_drawing();
+        domains_window(&mut app);
+        let _ = app.update(Message::Domains(crate::forms::domains::Event::Save));
+        assert!(
+            app.domains.is_none(),
+            "the window closes when the lists went in"
+        );
+        let doc = &app.document.as_ref().unwrap().model;
+        let depot = doc.get(Slot(3)).unwrap();
+        assert_eq!(
+            depot.base().attrs.get("Malzeme").map(String::as_str),
+            Some("bt")
+        );
+        let fields = &doc.layers().get("depo").unwrap().fields;
+        assert_eq!(
+            fields[1].values.as_ref().map(Vec::len),
+            Some(3),
+            "the depot's copy follows"
+        );
+        assert_eq!(
+            doc.settings().domains[0].values.as_ref().map(Vec::len),
+            Some(3)
+        );
+        // One step takes the list, the copies and the records back.
+        let doc = &mut app.document.as_mut().unwrap().model;
+        doc.undo();
+        assert_eq!(
+            doc.get(Slot(3))
+                .unwrap()
+                .base()
+                .attrs
+                .get("Malzeme")
+                .map(String::as_str),
+            Some("ym")
+        );
+        assert_eq!(
+            doc.settings().domains[0].values.as_ref().map(Vec::len),
+            Some(4)
+        );
+        assert_eq!(
+            doc.layers().get("depo").unwrap().fields[1]
+                .values
+                .as_ref()
+                .map(Vec::len),
+            Some(4)
+        );
+    }
+
+    #[test]
+    fn a_code_records_hold_keeps_the_window_open_until_it_is_moved() {
+        let mut app = crate::files_testing::app_with_drawing();
+        listed_buildings(&mut app);
+        run(&mut app, "data.domains");
+        let _ = app.update(Message::Domains(crate::forms::domains::Event::RemoveCode(
+            2,
+        )));
+        let _ = app.update(Message::Domains(crate::forms::domains::Event::Save));
+        assert!(app.domains.is_some(), "refused: Yığma is held by a depot");
+        let doc = &app.document.as_ref().unwrap().model;
+        assert!(
+            !doc.can_undo() || doc.settings().domains[0].values.as_ref().map(Vec::len) == Some(4)
         );
     }
 

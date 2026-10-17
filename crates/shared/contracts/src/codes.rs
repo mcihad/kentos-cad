@@ -707,6 +707,22 @@ codes! {
     COMBINATION_UNMET = "combination_unmet", Warning, false, "Bu değer bileşimi katmanın değer grubunda yok.";
     /// A layer's value groups that do not fit its fields (docs/adr/0423 §3).
     INVALID_CONTINGENTS = "invalid_contingents", Failed, false, "Değer grupları katmanın alanlarına uymuyor.";
+    /// A value list that does not hold (docs/adr/0430).
+    INVALID_DOMAIN = "invalid_domain", Failed, false, "Değer listesi kurallarına uymuyor (ad, kodlar, aralık).";
+    /// No value list of the id given (docs/adr/0430).
+    UNKNOWN_DOMAIN = "unknown_domain", Failed, false, "Projede bu kimlikli bir değer listesi yok.";
+    /// A value list's id already taken (docs/adr/0430).
+    DOMAIN_EXISTS = "domain_exists", Failed, false, "Bu kimlikli bir değer listesi zaten var.";
+    /// A field that cannot take a value list (docs/adr/0430).
+    DOMAIN_MISMATCH = "domain_mismatch", Failed, false, "Alan değer listesine uymuyor (başka tür ya da alanın kuralları).";
+    /// A recode that names a code the lists lack (docs/adr/0430).
+    INVALID_RECODE = "invalid_recode", Failed, false, "Kod eşlemesi listede olmayan bir kodu anıyor.";
+    /// Codes records hold that a list's change would drop (docs/adr/0430).
+    DOMAIN_CODE_IN_USE = "domain_code_in_use", Failed, false, "Kayıtların tuttuğu kodlar listeden çıkıyor; eşleyin ya da kullanımdan kaldırın.";
+    /// A value list fields link (docs/adr/0430).
+    DOMAIN_IN_USE = "domain_in_use", Failed, false, "Değer listesine bağlı alanlar var.";
+    /// Records outside a range a list's change set (docs/adr/0430).
+    DOMAIN_VALUES_OUTSIDE = "domain_values_outside", Warning, false, "Bazı kayıtların değeri listenin aralığı dışında kaldı.";
     /// A layer's subtypes that do not fit its fields (docs/adr/0422 §3).
     INVALID_SUBTYPES = "invalid_subtypes", Failed, false, "Alt türler katmanın alanlarına uymuyor.";
     /// Records a form's recomputation left as they were (docs/adr/0421).

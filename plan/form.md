@@ -325,11 +325,11 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 
 ### 5.2 Domain ve subtype
 
-- [ ] **FORM-DATA-10:** Domain registry: personal/project/tenant scope, owner, stable ID/version, label/description ve published/draft durumu.
-- [ ] **FORM-DATA-11:** Coded domain; typed code/label, sıralama, localization, description, disabled/retired değerler ve geçerlilik aralığı taşısın.
-- [ ] **FORM-DATA-12:** Range domain; inclusive/exclusive min/max, unit, exact decimal ve numeric/date type kurallarını desteklesin.
-- [ ] **FORM-DATA-13:** Aynı domain birden çok dataset/field'da kullanılabilsin; kullanım grafı ve type mismatch doğrulaması olsun.
-- [ ] **FORM-DATA-14:** Domain code veya type değişikliği schema/data migration gerektirsin; label değişimi kodu ve geçmiş veriyi değiştirmesin.
+- [ ] **FORM-DATA-10:** Domain registry: personal/project/tenant scope, owner, stable ID/version, label/description ve published/draft durumu. — *17 Ekim, kısmen: projenin değer listeleri (ADR 0430: kimlik, ad, açıklama; `cad.domains.edit`); kişi ve kurum kapsamı, sahip ve yayın durumu bulutta açık.*
+- [ ] **FORM-DATA-11:** Coded domain; typed code/label, sıralama, localization, description, disabled/retired değerler ve geçerlilik aralığı taşısın. — *17 Ekim, kısmen: kod listesi kod, etiket, sıra ve kullanımdan kalkan kodla (ADR 0418, 0430); dil ve geçerlilik aralığı açık.*
+- [ ] **FORM-DATA-12:** Range domain; inclusive/exclusive min/max, unit, exact decimal ve numeric/date type kurallarını desteklesin. — *17 Ekim, kısmen: aralık listesi dahil en az ve en çok, kesin ondalıkla (ADR 0430); birim ve tarih aralığı açık.*
+- [x] **FORM-DATA-13:** Aynı domain birden çok dataset/field'da kullanılabilsin; kullanım grafı ve type mismatch doğrulaması olsun. — *17 Ekim: aynı liste birçok katmanın alanında, kullanan alanlar ve tür uyumsuzluğunun reddi (ADR 0430).*
+- [x] **FORM-DATA-14:** Domain code veya type değişikliği schema/data migration gerektirsin; label değişimi kodu ve geçmiş veriyi değiştirmesin. — *17 Ekim: kod çıkarmak kayıtların göçünü (`recode`) ya da kullanımdan kaldırmayı ister, tür değişmez; etiket değişimi kodu ve kayıtları değiştirmez (ADR 0430).*
 - [x] **FORM-DATA-15:** Retired domain değeri eski kayıtta görülebilsin; yeni seçim/yazma politikasını ayrı tanımla, kaydı otomatik boşaltma. — *Yapıldı (16 Ekim; ADR 0418: `retired`, tutan kayıtta kalır ve görünür, yeni seçimde sunulmaz, formla yeniden yazılmaz).*
 - [ ] **FORM-DATA-16:** Domain listesi büyükse yetkili search/page/cache kullansın; tüm değerler her forma indirilmesin.
 - [x] **FORM-DATA-17:** Subtype; discriminator field/code, subtype label ve alanlara özel domain/default/required/style bağlantısı taşısın. — *Yapıldı (17 Ekim; ADR 0422: `subtypes`, alanın değerleri, varsayılanı ve zorunluluğu; stil açık).*
@@ -337,7 +337,7 @@ ArcGIS'in domain yaklaşımı; kodlu değer veya aralık, yeniden kullanım ve s
 - [x] **FORM-DATA-19:** Contingent field groups; izinli combinations, wildcard/null, subtype ve restrictive/advisory policy ile sürümlensin. — *Yapıldı (17 Ekim; ADR 0423: gruplar, herhangi ve boş, alt türe özel bileşim, kısıtlayıcı ve uyarıcı).*
 - [x] **FORM-DATA-20:** Üst seçim değişince alt seçenekler aynı rule engine ile filtrelensin; önceki değer artık geçersizse açık validation ver. — *Yapıldı (16 Ekim; ADR 0402 §1 (`choiceFilter`, `form_choice_filtered`)).*
 - [x] **FORM-DATA-21:** Split/merge default/duplicate/sum/proportional gibi attribute politikaları domain/field modelinde açık olsun; geometri işlemlerine bağlantısı korunsun. — *Yapıldı (16 Ekim; ADR 0419: `split` ve `merge`, alan işlemleri ve Parçala, Kır, Birleştir aynı kuralla; toplam korunur).*
-- [ ] **FORM-DATA-22:** Domain/subtype/contingent create/edit/publish/import/export işlemleri UI/Python/AI'da aynı komut olsun.
+- [ ] **FORM-DATA-22:** Domain/subtype/contingent create/edit/publish/import/export işlemleri UI/Python/AI'da aynı komut olsun. — *17 Ekim, kısmen: değer listeleri arayüzde, Python'da ve ajanda aynı komut (`cad.domains.edit`, ADR 0430); alt türler ve bileşimler kendi komutlarıyla (ADR 0422, 0423); içe ve dışa aktarma açık.*
 - [x] **FORM-DATA-23:** Final commit bütün API'lerde authoritative dataset/domain/contingent validation yapsın; form widget listesi tek denetim olmasın. — *Yapıldı (16 Ekim; ADR 0411 §4: Kuralları uygula açık formun katmanına her API'den gelen yazma sunucuda formun kurallarıyla denetlenir).*
 - [x] **FORM-DATA-24:** Invalid legacy data için audit/repair raporu ve planlı correction sun; görüntüleme sırasında sessiz düzeltme yapma. — *Yapıldı (16 Ekim; ADR 0406 §1 (`cad.forms.audit`, Kayıtları denetle; düzeltme Formla düzenle ve `cad.forms.fill` ile)).*
 
