@@ -1195,7 +1195,7 @@
    ]
   },
   {
-   "name": "Formül: YUVARLA en kısa yazımdan yarım uzağa",
+   "name": "Formül: YUVARLA yarım uzağa, sonuç 15 anlamlı basamak",
    "steps": [
     {
      "op": "execute",
@@ -1290,7 +1290,7 @@
          [
           "Toplam",
           "2.68",
-          "0.30000000000000004"
+          "0.3"
          ]
         ],
         "header": true,

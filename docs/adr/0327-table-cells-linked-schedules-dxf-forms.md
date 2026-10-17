@@ -36,8 +36,10 @@ sonucudur (önbellek). Dil (`kentos_contracts::table_formula`): sayılar, A1 ba�
 COUNT SAY, ROUND YUVARLA, ABS MUTLAK; bağımsız değişkenler `,` ya da `;` ile. Bir hücrenin sayısı yazısının sayı olarak
 okunuşudur (nokta ondalık); boş hücre aritmetikte 0, işlevlerde atlanır; yazı aritmetikte `#DEĞER!`, aralıkta atlanır (elektronik
 tablolar gibi). Hatalar: `#AD?` (okunamayan), `#BAŞV!` (tablonun dışı ya da silinmiş), `#DEĞER!`, `#SAYI/0!`, `#SAYI!` (sonlu
-olmayan), `#DÖNGÜ!` (birbirini okuyan formüller). Sonuç en kısa yazımıyla (üssüz), biçimin basamağı varsa o en kısa yazımdan
-sıfırdan uzağa yarımla yuvarlanarak yazılır; YUVARLA da aynı kuralla. Hesap derinliğine bakmayan yinelemeli bir sırayla yapılır,
+olmayan), `#DÖNGÜ!` (birbirini okuyan formüller). Sonuç, elektronik tabloların gösterdiği gibi 15 anlamlı basamakla yazılır:
+en kısa yazımı (üssüz) sıfırdan uzağa yarımla 15 anlamlı basamağa yuvarlanır, sondaki sıfırlar düşer (`0.1+0.2` `0.3`'tür,
+`0.30000000000000004` değil; 17 Ekim eki, sahibin bildirimi); hesap tam değerle sürer. Biçimin basamağı varsa bu yazımdan
+sıfırdan uzağa yarımla yuvarlanır; YUVARLA da aynı kuralla. Hesap derinliğine bakmayan yinelemeli bir sırayla yapılır,
 döngüdeki her hücre `#DÖNGÜ!` olur. Satır ve sütun eklenip silinince başvurular kayar; silinen hücreyi gösteren başvuru `#BAŞV!`,
 silinen satırları içine alan aralık daralır (`shift`). Birleşik alanın içinde formül olmaz; formül alanın sol üst hücresine yazılır.
 

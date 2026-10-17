@@ -11,7 +11,8 @@ table_cases.py, which states them on its own; a file's rows from table_file_case
   refuses words (`#DEĞER!`); the functions take a range's and a reference's numbers, skipping nothing and words, an
   average of none is `#SAYI/0!`, MIN and MAX of none 0. ÷ 0 is `#SAYI/0!`, no finite result `#SAYI!`, a reference
   outside the table or deleted `#BAŞV!`, what does not read `#AD?`, formulas reading each other in a ring `#DÖNGÜ!`.
-  A result's words: its shortest decimal form without exponent (Python's repr, positional), with a cell style's
+  A result's words: its shortest decimal form without exponent (Python's repr, positional) rounded half away from zero
+  to 15 significant digits, trailing zeros dropped (as spreadsheets show 0.1 + 0.2 as 0.3), with a cell style's
   decimals rounded half away from zero from that form; nothing is 0;
 - rows or columns inserted or deleted move styles (as merged ranges), formulas and fields; a formula's references
   move, a deleted cell's is `#BAŞV!`, a range keeps what is left of it; merging takes the range's formulas and fields
@@ -110,8 +111,22 @@ def shortest(x):
     return text
 
 
+def general(x):
+    """A result's words: its shortest form rounded half away from zero to 15 significant digits, as spreadsheets show."""
+    text = shortest(x)
+    d = Decimal(text)
+    significant = "".join(map(str, d.as_tuple().digits)).strip("0")
+    if len(significant) <= 15:
+        return text
+    q = d.quantize(Decimal(1).scaleb(d.adjusted() - 14), rounding=ROUND_HALF_UP)
+    out = format(q, "f")
+    if "." in out:
+        out = out.rstrip("0").rstrip(".")
+    return out
+
+
 def rounded(x, d):
-    q = Decimal(shortest(x)).quantize(Decimal(1).scaleb(-d), rounding=ROUND_HALF_UP)
+    q = Decimal(general(x)).quantize(Decimal(1).scaleb(-d), rounding=ROUND_HALF_UP)
     text = format(q, "f")
     if text.startswith("-") and all(c in "0." for c in text[1:]):
         text = text[1:]
@@ -402,7 +417,7 @@ def work_out(cells, formulas, decimals):
         if v[0] == "empty":
             words = rounded(0.0, d) if d is not None else "0"
         elif v[0] == "num":
-            words = rounded(v[1], d) if d is not None else shortest(v[1])
+            words = rounded(v[1], d) if d is not None else general(v[1])
         elif v[0] == "text":
             words = v[1]
         else:
@@ -866,7 +881,7 @@ def cases():
     out.append(edit_case("Formül: Türkçe ve İngilizce adlar, noktalı virgül", 1, [
         {"kind": "setCell", "row": 3, "col": 1, "words": "=ORTALAMA(B2;B3)"},
         {"kind": "setCell", "row": 3, "col": 2, "words": "=max(C2:C3)*mİn(C2:C3)+SAY(B2:C3)"}]))
-    out.append(edit_case("Formül: YUVARLA en kısa yazımdan yarım uzağa", 1, [
+    out.append(edit_case("Formül: YUVARLA yarım uzağa, sonuç 15 anlamlı basamak", 1, [
         {"kind": "setCell", "row": 3, "col": 1, "words": "=YUVARLA(2.675;2)"},
         {"kind": "setCell", "row": 3, "col": 2, "words": "=0.1+0.2"}]))
     out.append(edit_case("Formül hataları: sıfıra bölme, yazıyla işlem, okunamayan", 1, [

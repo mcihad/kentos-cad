@@ -113,10 +113,43 @@ pub fn shortest(x: f64) -> String {
     format!("{x}")
 }
 
-/// `x` with `d` decimals (a negative `d` rounds to tens, hundreds …), rounded half away from zero from its shortest
-/// decimal form.
-pub fn rounded_text(x: f64, d: i32) -> String {
+/// The significant digits a result is written with, as spreadsheets show a number: 0.1 + 0.2 is `0.3`, not the
+/// double's `0.30000000000000004`.
+pub const SIGNIFICANT: i32 = 15;
+
+/// `x` as a result is written: its shortest decimal form rounded half away from zero to [`SIGNIFICANT`] digits, no
+/// trailing zeros, no exponent.
+pub fn general(x: f64) -> String {
     let s = shortest(x);
+    let body = s.strip_prefix('-').unwrap_or(&s);
+    let (int, frac) = body.split_once('.').unwrap_or((body, ""));
+    let digits: Vec<u8> = int.bytes().chain(frac.bytes()).collect();
+    let Some(first) = digits.iter().position(|&c| c != b'0') else {
+        return s;
+    };
+    let last = digits.iter().rposition(|&c| c != b'0').unwrap_or(first);
+    if ((last - first) as i32) < SIGNIFICANT {
+        return s;
+    }
+    // Decimals that keep SIGNIFICANT digits from the first non-zero one.
+    let d = SIGNIFICANT - (int.len() as i32 - first as i32);
+    let out = round_words(&s, d);
+    if out.contains('.') {
+        out.trim_end_matches('0').trim_end_matches('.').to_owned()
+    } else {
+        out
+    }
+}
+
+/// `x` with `d` decimals (a negative `d` rounds to tens, hundreds …), rounded half away from zero from its written
+/// form ([`general`]).
+pub fn rounded_text(x: f64, d: i32) -> String {
+    round_words(&general(x), d)
+}
+
+/// A number's plain decimal words `s` with `d` decimals, rounded half away from zero.
+fn round_words(s: &str, d: i32) -> String {
+    let s = s.to_owned();
     let (neg, s) = match s.strip_prefix('-') {
         Some(rest) => (true, rest.to_owned()),
         None => (false, s),
@@ -207,7 +240,7 @@ pub fn written(v: &Value, decimals: Option<u32>) -> String {
         Value::Number(x) if !x.is_finite() => NOT_FINITE.to_owned(),
         Value::Number(x) => match decimals {
             Some(d) => rounded_text(*x, d as i32),
-            None => shortest(*x),
+            None => general(*x),
         },
         Value::Text(t) => t.clone(),
         Value::Error(e) => (*e).to_owned(),
@@ -1001,7 +1034,23 @@ mod tests {
         assert_eq!(one(&cells, "=MİN(A1:B2)"), "1");
         assert_eq!(one(&cells, "=Z99"), BAD_REF);
         assert_eq!(one(&cells, "=SUM("), NOT_READ);
-        assert_eq!(one(&cells, "=0.1+0.2"), "0.30000000000000004");
+        assert_eq!(one(&cells, "=0.1+0.2"), "0.3");
+        assert_eq!(one(&cells, "=0.028+0.111+0.241+0.273+0.282+0.238+0.153+0.056+0.034"), "1.416");
+    }
+
+    #[test]
+    fn a_result_has_fifteen_significant_digits() {
+        assert_eq!(general(0.1 + 0.2), "0.3");
+        assert_eq!(general(1.4160000000000001), "1.416");
+        assert_eq!(general(-0.30000000000000004), "-0.3");
+        assert_eq!(general(1.0 / 3.0), "0.333333333333333");
+        assert_eq!(general(2.0 / 3.0), "0.666666666666667");
+        assert_eq!(general(12345678901234567.0), "12345678901234600");
+        assert_eq!(general(0.000_123_456_789_012_345_67), "0.000123456789012346");
+        assert_eq!(general(1e-20), "0.00000000000000000001");
+        assert_eq!(general(1234.5), "1234.5");
+        assert_eq!(general(0.0), "0");
+        assert_eq!(rounded_text(0.1 + 0.2, 16), "0.3000000000000000");
     }
 
     #[test]
