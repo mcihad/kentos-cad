@@ -142,6 +142,10 @@ pub struct CallExpectations {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<String>,
+    /// The constraints' and parameters' stamp (docs/adr/0336 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub constraints: Option<String>,
     /// The id of the plan the write must equal (a `plan` call's `planId`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -221,6 +225,8 @@ pub enum ProjectPart {
     Sheets,
     /// The layers' visibility, lock, snapping, names, folding and the active layer.
     LayerFlags,
+    /// The drawing's constraints and parameters (docs/adr/0334, 0336).
+    Constraints,
 }
 
 /// What a plan or a write touched (docs/adr/0253 §5), from the write itself.
@@ -339,6 +345,9 @@ pub struct StateStamps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sheets: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub constraints: Option<String>,
 }
 
 /// What computed a result: the command, its version, the numeric policy and

@@ -70,6 +70,7 @@ struct PartStamps {
     settings: String,
     styles: String,
     sheets: String,
+    constraints: String,
 }
 
 impl PartStamps {
@@ -79,6 +80,7 @@ impl PartStamps {
             settings: doc.settings_stamp(),
             styles: doc.styles_stamp(),
             sheets: doc.sheets_stamp(),
+            constraints: doc.constraints_stamp(),
         }
     }
 }
@@ -362,6 +364,7 @@ fn part_stamps(doc: &Document, parts: &[ProjectPart], into: &mut StateStamps) {
             ProjectPart::Styles => into.styles = Some(doc.styles_stamp()),
             ProjectPart::Sheets => into.sheets = Some(doc.sheets_stamp()),
             ProjectPart::LayerFlags => into.layers = Some(doc.layers_stamp()),
+            ProjectPart::Constraints => into.constraints = Some(doc.constraints_stamp()),
         }
     }
 }
@@ -526,6 +529,9 @@ fn summarize(
             ProjectPart::Styles => summary.sources.styles = Some(parts.styles.clone()),
             ProjectPart::Sheets => summary.sources.sheets = Some(parts.sheets.clone()),
             ProjectPart::LayerFlags => summary.sources.layers = Some(parts.layers.clone()),
+            ProjectPart::Constraints => {
+                summary.sources.constraints = Some(parts.constraints.clone())
+            }
         }
     }
     part_stamps(doc, &changed_parts, &mut summary.stamps);
@@ -739,6 +745,7 @@ fn expectation_fault(doc: &Document, e: &CallExpectations) -> Option<CallAnswer>
         ("settings", &e.settings, doc.settings_stamp()),
         ("styles", &e.styles, doc.styles_stamp()),
         ("sheets", &e.sheets, doc.sheets_stamp()),
+        ("constraints", &e.constraints, doc.constraints_stamp()),
     ] {
         if let Some(want) = want
             && *want != have

@@ -37,6 +37,10 @@ styles?: string,
  */
 sheets?: string, 
 /**
+ * The constraints' and parameters' stamp (docs/adr/0336 §3).
+ */
+constraints?: string, 
+/**
  * The id of the plan the write must equal (a `plan` call's `planId`).
  */
 plan?: string, };

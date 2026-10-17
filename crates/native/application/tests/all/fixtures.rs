@@ -46,7 +46,7 @@ use kentos_native_application::{
     views_edit,
 };
 use kentos_native_application::{
-    arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit, dimensions_create, divide, drawing_audit,
+    arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
     entities_reverse, file_import, stretch,
@@ -357,6 +357,12 @@ trait Input {
 
 // The constraint commands' numbers are in expressions, not the input's numbers (docs/adr/0335).
 impl Input for kentos_domain::contracts::ConstraintsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::ParametersEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2325,6 +2331,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_CONSTRAINTS_QUERY => {
             run!(constraints_query, kentos_domain::contracts::ConstraintsQuery)
+        }
+        kentos_domain::contracts::CAD_PARAMETERS_EDIT => {
+            run!(parameters_edit, kentos_domain::contracts::ParametersEdit)
         }
         kentos_domain::contracts::CAD_ENTITIES_EXPLODE => {
             run!(entities_explode, kentos_domain::contracts::EntitiesExplode)

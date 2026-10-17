@@ -47,6 +47,7 @@ pub mod arrays_edit;
 pub mod constraint_solve;
 pub mod constraints_edit;
 pub mod constraints_query;
+pub mod parameters_edit;
 pub mod audit_cmd;
 pub mod blocks;
 pub mod blocks_define;
@@ -585,6 +586,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_CONSTRAINTS_QUERY,
         kentos_contracts::CAD_CONSTRAINTS_QUERY_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_PARAMETERS_EDIT,
+        kentos_contracts::CAD_PARAMETERS_EDIT_VERSION,
     ),
     (
         kentos_contracts::CAD_ENTITIES_EXPLODE,

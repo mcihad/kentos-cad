@@ -1506,6 +1506,33 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Parametreler (docs/adr/0336 §1), held together by fixtures/commands/v1/cad.parameters.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_PARAMETERS_EDIT.into(),
+            version: crate::CAD_PARAMETERS_EDIT_VERSION,
+            title: "Parametreler".into(),
+            summary: "Çizimin parametrelerini (AutoCAD'in parametre yöneticisi) adlarıyla değiştirir ve çizimi yeni değerlerle çözer; parametreler ve çözümün oynattığı nesneler tek geri alma adımı “Parametreler”. \
+                      edits sırasıyla: add kullanıcı parametresi (ad, tür length, angle ya da number, ifade, isteğe bağlı min, max, açıklama); set ifade, sınırlar (clear kaldırır) ve açıklama, verilmeyenler kalır; rename yeni ad, onu okuyan ifadeler ve ölçü kısıtı izler; remove başka parametrenin okumadığı kullanıcı parametresi. \
+                      Değerler parametrenin biriminde: uzunluk çizim biriminde, açı projenin açı biriminde. Yalnız ölçen ölçünün parametresine ifade verilmez (parameter_measured). Döngü, aralık dışı değer, çelişki, tekillik ve ters dönme cad.constraints.edit'teki gibi reddedilir, hiçbir şey yazılmaz. Çıktı her parametrenin değerini, oynayan nesneleri ve çözücünün teşhisini verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParametersEdit>(),
+            output: schema::<crate::ParametersEdited>(),
+            plan: Some(schema::<crate::ParametersEditPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Genişliği 9 m yap".into(),
+                input: json!({ "edits": [{ "kind": "set", "name": "genislik", "expression": "9" }] }),
+                output: None,
+            }],
+        },
         // Kısıtları oku (docs/adr/0335 §1), held together by fixtures/commands/v1/cad.constraints.query.json.
         CommandDescriptor {
             id: crate::CAD_CONSTRAINTS_QUERY.into(),
@@ -6107,6 +6134,9 @@ mod tests {
                     crate::CAD_CONSTRAINTS_QUERY => {
                         serde_json::from_value::<crate::ConstraintsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_PARAMETERS_EDIT => {
+                        serde_json::from_value::<crate::ParametersEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_EXPLODE => {
                         serde_json::from_value::<crate::EntitiesExplode>(e.input.clone())
                             .map(|_| ())
@@ -6549,6 +6579,10 @@ mod tests {
                         }
                         crate::CAD_CONSTRAINTS_QUERY => {
                             serde_json::from_value::<crate::ConstraintsListed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARAMETERS_EDIT => {
+                            serde_json::from_value::<crate::ParametersEdited>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_ENTITIES_TRIM | crate::CAD_ENTITIES_EXTEND => {

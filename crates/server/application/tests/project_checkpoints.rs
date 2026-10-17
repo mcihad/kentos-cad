@@ -306,6 +306,7 @@ async fn names_and_notes_are_checked_and_archived_projects_take_none() {
 async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access, name: &str) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        constraints: Default::default(),
         name: name.into(),
         settings: s.settings,
         origin: s.origin,
@@ -551,6 +552,7 @@ async fn a_database_checkpoint_is_restored_as_a_new_project() {
     let mut unlocked = source.layers.clone();
     unlock(&mut unlocked);
     let input = ProjectCreate {
+        constraints: Default::default(),
         name: "Ada 5".into(),
         settings: source.settings.clone(),
         origin: source.origin,

@@ -357,6 +357,36 @@ pub fn param_expr_names(expr: &ParamExpr) -> BTreeSet<String> {
     out
 }
 
+/// `text` with every name `from` it reads written `to` (a parameter renamed, docs/adr/0336 §1): only whole names, so
+/// numbers, their units, functions and other names stay as written, and so does every space.
+pub fn rename_in_expression(text: &str, from: &str, to: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if c.is_alphabetic() || c == '_' {
+            let start = i;
+            while i < chars.len() && (chars[i].is_alphanumeric() || chars[i] == '_') {
+                i += 1;
+            }
+            let word: String = chars[start..i].iter().collect();
+            // A word right after a number is its unit (`2.5m`), not a name.
+            let unit = start > 0 && (chars[start - 1].is_ascii_digit() || chars[start - 1] == '.');
+            out.push_str(if word == from && !unit { to } else { &word });
+        } else if c.is_ascii_digit() || c == '.' {
+            while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
+                out.push(chars[i]);
+                i += 1;
+            }
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    out
+}
+
 /// What an expression's units mean in a drawing: a metre in its length unit and a radian in its angle unit.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ParamUnits {
@@ -532,6 +562,19 @@ pub fn param_order(reads: &BTreeMap<String, BTreeSet<String>>) -> Result<Vec<Str
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_rename_touches_only_the_name() {
+        assert_eq!(
+            rename_in_expression("d1 * 2 + d10 / d1", "d1", "genislik"),
+            "genislik * 2 + d10 / genislik"
+        );
+        assert_eq!(rename_in_expression("2.5m + m", "m", "boy"), "2.5m + boy");
+        assert_eq!(
+            rename_in_expression("max(a, sin(a))", "a", "b"),
+            "max(b, sin(b))"
+        );
+    }
 
     const METRES: ParamUnits = ParamUnits {
         metres_per_unit: 1.0,

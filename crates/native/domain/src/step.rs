@@ -393,6 +393,8 @@ impl Document {
                     frame.flags = Some(self.layers.flags());
                 }
             }
+            // The constraints change only in undo steps (`Op::Constraints`), which the ops report.
+            ProjectPart::Constraints => {}
         }
         true
     }
@@ -530,7 +532,12 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             Op::ArrayAdd { array, .. } => report.arrays.add(array.id),
             Op::ArrayRemove { array, .. } => report.arrays.remove(array.id),
             Op::ArrayUpdate { after, .. } => report.arrays.change(after.id),
-            Op::Constraints { .. } => report.constraints = true,
+            Op::Constraints { .. } => {
+                report.constraints = true;
+                if !report.parts.contains(&ProjectPart::Constraints) {
+                    report.parts.push(ProjectPart::Constraints);
+                }
+            }
             // The unit and the value lists are settings (docs/adr/0256 §1, 0430).
             Op::Units { .. } | Op::Domains { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {

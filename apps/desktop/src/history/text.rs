@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 123] = [
+pub(crate) const TITLES: [(&str, &str); 124] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -24,6 +24,7 @@ pub(crate) const TITLES: [(&str, &str); 123] = [
     ("cad.entities.array", "Nesneleri diziye kopyala"),
     ("cad.arrays.edit", "Diziyi düzenle"),
     ("cad.constraints.edit", "Kısıtlar"),
+    ("cad.parameters.edit", "Parametreler"),
     ("cad.constraints.query", "Kısıtları oku"),
     ("cad.entities.explode", "Nesneleri patlat"),
     ("cad.curves.edit", "Eğriyi düzenle"),
@@ -379,6 +380,7 @@ fn part_name(part: ProjectPart) -> &'static str {
         ProjectPart::Styles => "stil kitaplığı",
         ProjectPart::Sheets => "pafta kitabı",
         ProjectPart::LayerFlags => "katmanların durumu",
+        ProjectPart::Constraints => "kısıtlar",
     }
 }
 

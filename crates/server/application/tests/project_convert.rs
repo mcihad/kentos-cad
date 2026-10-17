@@ -55,6 +55,7 @@ fn by_uid(doc: &DocumentSnapshotV2) -> BTreeMap<EntityId, Value> {
 async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access, name: &str) -> Uuid {
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        constraints: Default::default(),
         name: name.into(),
         settings: s.settings,
         origin: s.origin,

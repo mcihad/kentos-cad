@@ -173,6 +173,10 @@ impl Meta {
                 Some(arrays) => arrays.iter().cloned().map(std::sync::Arc::new).collect(),
                 None => self.arrays.clone(),
             },
+            constraints: patch
+                .constraints
+                .clone()
+                .unwrap_or_else(|| self.constraints.clone()),
         }
     }
 }
@@ -530,6 +534,7 @@ impl ProjectSync {
                 styles: Some(after.styles),
                 sheets: Some(after.sheets.as_deref().cloned()),
                 arrays: Some(after.arrays.iter().map(|a| (**a).clone()).collect()),
+                constraints: Some(after.constraints),
             });
             if m.base != self.meta_version {
                 meta_conflict = Some((m.base.clone(), self.meta_version.clone()));

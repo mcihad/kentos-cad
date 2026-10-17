@@ -184,6 +184,7 @@ fn opened(n: usize) -> Opened {
         tenant,
         project,
         info: ProjectInfo {
+            constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
             arrays: Vec::new(),

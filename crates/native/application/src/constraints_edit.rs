@@ -702,8 +702,29 @@ pub(crate) fn check(
         }
         ConstraintEdit::Solve => {}
     }
+    let solved = settle(doc, &set, &held, &added, input.allow_flip, stop)?;
+    Ok(Planned {
+        set,
+        solved,
+        added,
+        removed,
+    })
+}
+
+/// The set's parameters worked out and the drawing solved with it, refused as the ADR says (docs/adr/0335 §1, 0336 §1):
+/// a parameter's value, the set's rules, a conflict (`layer_locked` when its objects are all locked), a singular
+/// constraint, no convergence, a constraint `added` that repeats the others, a shape turned inside out unless
+/// `allow_flip`. Shared by `cad.constraints.edit` and `cad.parameters.edit`.
+pub(crate) fn settle(
+    doc: &Document,
+    set: &ConstraintSet,
+    held: &[Held],
+    added: &[ConstraintId],
+    allow_flip: bool,
+    stop: &dyn Fn() -> bool,
+) -> Result<Solved, Stop> {
     // The parameters' values first: their own codes (expression, missing name, round, range).
-    let values = parameter_values(doc, &set).map_err(unsolvable)?;
+    let values = parameter_values(doc, set).map_err(unsolvable)?;
     for c in &set.constraints {
         if let (
             ConstraintRule::Radius { parameter, .. } | ConstraintRule::Diameter { parameter, .. },
@@ -728,18 +749,18 @@ pub(crate) fn check(
         .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
         .filter(|u| doc.slot_of(Uuid::from_bytes(u.0)).is_some())
         .collect();
-    if let Some((at, words)) = constraints_problem(&set, Some(&uids)) {
+    if let Some((at, words)) = constraints_problem(set, Some(&uids)) {
         return Err(refuse(
             codes::INVALID_CONSTRAINT,
             words,
             &format!("constraints.{at}"),
         ));
     }
-    let solved = solve_set(doc, &set, &held, None, stop).map_err(unsolvable)?;
+    let solved = solve_set(doc, set, held, None, stop).map_err(unsolvable)?;
     let ids = |list: &[ConstraintId]| list.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let d = &solved.diagnosis;
     match d.status {
-        SolveStatus::Inconsistent if all_locked(doc, &set, &d.conflicting) => {
+        SolveStatus::Inconsistent if all_locked(doc, set, &d.conflicting) => {
             return Err(refuse_ids(
                 codes::LAYER_LOCKED,
                 "Çelişen kısıtın nesneleri kilitli katmanlarda; kımıldamadan kısıta uyamıyorlar. Katmanın kilidini açın.".into(),
@@ -786,7 +807,7 @@ pub(crate) fn check(
             ids(&repeats),
         ));
     }
-    if !solved.flipped.is_empty() && !input.allow_flip {
+    if !solved.flipped.is_empty() && !allow_flip {
         let turned: Vec<String> = solved
             .flipped
             .iter()
@@ -800,12 +821,7 @@ pub(crate) fn check(
             turned,
         ));
     }
-    Ok(Planned {
-        set,
-        solved,
-        added,
-        removed,
-    })
+    Ok(solved)
 }
 
 /// Whether every object of every one of these constraints is on a locked layer.

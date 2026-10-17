@@ -45,6 +45,12 @@ pub struct BaseMeta {
     /// The associative arrays (docs/adr/0300 §5); a copy written before them has none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub arrays: Vec<kentos_contracts::AssocArray>,
+    /// The constraints and parameters (docs/adr/0336 §3); a copy written before them has none.
+    #[serde(
+        default,
+        skip_serializing_if = "kentos_contracts::ConstraintSet::is_empty"
+    )]
+    pub constraints: kentos_contracts::ConstraintSet,
 }
 
 /// A block definition as the server has it, with its version (docs/adr/0144 §5).
@@ -163,6 +169,7 @@ impl ProjectSync {
                     .iter()
                     .map(|a| (**a).clone())
                     .collect(),
+                constraints: self.meta_base.constraints.clone(),
             }),
             blocks: g.blocks.then(|| {
                 self.known_block_list()
@@ -198,7 +205,7 @@ impl ProjectSync {
         let known_blocks = self.known_block_list();
         BaseSnapshot {
             snapshot: DocumentSnapshotV2 {
-                constraints: Default::default(),
+                constraints: self.meta_base.constraints.clone(),
                 format: DOCUMENT_FORMAT.to_owned(),
                 version: DOCUMENT_VERSION_2,
                 name: self.meta_base.name.clone(),

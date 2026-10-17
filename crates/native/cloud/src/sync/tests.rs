@@ -23,6 +23,7 @@ pub(super) fn opened(permissions: Vec<ProjectPermission>, state: ProjectState) -
         tenant: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000002").unwrap(),
         project: Uuid::parse_str("0199aaaa-0000-7000-8000-000000000001").unwrap(),
         info: ProjectInfo {
+            constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
             arrays: Vec::new(),

@@ -231,6 +231,7 @@ fn part_label(part: ProjectPart) -> &'static str {
         ProjectPart::Styles => "Stil kitaplığı",
         ProjectPart::Sheets => "Pafta kitabı",
         ProjectPart::LayerFlags => "Katmanlar",
+        ProjectPart::Constraints => "Kısıtlar",
     }
 }
 

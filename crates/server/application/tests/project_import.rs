@@ -247,6 +247,7 @@ async fn an_import_needs_the_right_project_rights_and_upload() {
     // A file project keeps files as revisions, not imports.
     let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
     let input = ProjectCreate {
+        constraints: Default::default(),
         name: "Dosya".into(),
         settings: s.settings,
         origin: s.origin,

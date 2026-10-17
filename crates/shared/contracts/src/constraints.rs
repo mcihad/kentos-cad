@@ -501,6 +501,54 @@ pub fn rule_label(rule: &ConstraintRule) -> &'static str {
     }
 }
 
+/// `set` as the objects `uids` names can hold it (docs/adr/0336 §3; a snapshot of a database project another editor
+/// changed, another editor's set taken): the constraints naming an object no longer there go, a dimension's parameter
+/// with its constraint unless another parameter reads it; then, while the set breaks its rules, the parameter or
+/// constraint at fault goes, with the constraints naming such a parameter. What is left keeps the rules.
+pub fn constraints_kept(set: &ConstraintSet, uids: &HashSet<EntityId>) -> ConstraintSet {
+    let mut out = set.clone();
+    let (gone, kept): (Vec<Constraint>, Vec<Constraint>) = std::mem::take(&mut out.constraints)
+        .into_iter()
+        .partition(|c| c.rule.elements().iter().any(|e| !uids.contains(&e.uid)));
+    out.constraints = kept;
+    let read: BTreeSet<String> = out
+        .parameters
+        .iter()
+        .filter_map(|p| parse_param_expr(&p.expression).ok())
+        .flat_map(|e| param_expr_names(&e))
+        .collect();
+    for c in &gone {
+        if let Some(name) = c.rule.parameter()
+            && !read.contains(name)
+        {
+            out.parameters.retain(|p| p.name != name);
+        }
+    }
+    for _ in 0..(set.constraints.len() + set.parameters.len() + 1) {
+        let Some((place, _)) = constraints_problem(&out, Some(uids)) else {
+            break;
+        };
+        let index = |prefix: &str| {
+            place
+                .strip_prefix(prefix)
+                .and_then(|i| i.parse::<usize>().ok())
+        };
+        if let Some(i) = index("parameters/") {
+            let name = out.parameters.remove(i).name;
+            out.constraints
+                .retain(|c| c.rule.parameter() != Some(name.as_str()));
+        } else if let Some(i) = index("constraints/") {
+            out.constraints.remove(i);
+        } else {
+            return ConstraintSet::default();
+        }
+    }
+    if constraints_problem(&out, Some(uids)).is_some() {
+        return ConstraintSet::default();
+    }
+    out
+}
+
 /// Why `set` cannot be kept, and where (docs/adr/0334 §1): more than [`CONSTRAINTS_MAX`] constraints or
 /// [`PARAMETERS_MAX`] parameters; an id given twice; a rule's parts that do not fit it, or an object not among `uids`
 /// (when given); a reference geometric rule; a dimensional rule's parameter missing, of the wrong kind or shared; a
@@ -639,6 +687,21 @@ pub fn constraints_problem(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_set_kept_by_the_objects_left_keeps_its_rules() {
+        let set = rect();
+        let all: HashSet<EntityId> = set
+            .constraints
+            .iter()
+            .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
+            .collect();
+        assert_eq!(constraints_kept(&set, &all), set);
+        let none = HashSet::new();
+        let kept = constraints_kept(&set, &none);
+        assert!(kept.constraints.is_empty());
+        assert_eq!(constraints_problem(&kept, Some(&none)), None);
+    }
 
     #[test]
     fn an_angle_s_flags_are_written_in_camel_case() {

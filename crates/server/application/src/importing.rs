@@ -246,13 +246,14 @@ pub async fn import(
     check_tree(&doc.layers, &doc.active_layer)?;
     crate::projects::check_sheets(doc.sheets.as_ref(), "sheets")?;
     crate::projects::check_arrays(&doc.arrays, "arrays")?;
+    crate::projects::check_constraints(&doc.constraints, "constraints")?;
     check_srid(&mut tx, doc.settings.srid).await?;
     let value = |v: serde_json::Result<serde_json::Value>| {
         v.map_err(|e| AppError::invalid(format!("Yüklenen dosyanın kaydı yazılamadı: {e}")))
     };
     let (revision, meta): (i64, i64) = sqlx::query_as(
         "update kentos.project set settings = $3, layers = $4, active_layer = $5, origin_x = $6, origin_y = $7,
-                home_view = $8, styles = $9, srid = $10, sheets = $11, arrays = $12, data_revision = 1, meta_version = meta_version + 1, updated_at = now()
+                home_view = $8, styles = $9, srid = $10, sheets = $11, arrays = $12, constraints = $13, data_revision = 1, meta_version = meta_version + 1, updated_at = now()
           where tenant_id = $1 and id = $2 returning data_revision, meta_version",
     )
     .bind(now.tenant)
@@ -271,6 +272,7 @@ pub async fn import(
         AppError::invalid(format!("Yüklenen dosyanın kaydı yazılamadı: {e}"))
     })?)
     .bind(crate::projects::arrays_value(&doc.arrays)?)
+    .bind(crate::projects::constraints_value(&doc.constraints)?)
     .fetch_one(&mut *tx)
     .await?;
     for batch in rows.chunks(BATCH) {
@@ -411,8 +413,8 @@ pub(crate) async fn create_from_drawing(
     };
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage, sheets, arrays)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18)",
+                                     description, project_type, tags, storage, sheets, arrays, constraints)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19)",
     )
     .bind(target)
     .bind(id)
@@ -445,6 +447,11 @@ pub(crate) async fn create_from_drawing(
     // So are its associative arrays (docs/adr/0300 §5).
     .bind(match storage {
         ProjectStorage::Database => crate::projects::arrays_value(&meta.arrays)?,
+        ProjectStorage::File => None,
+    })
+    // So are its constraints (docs/adr/0336 §3).
+    .bind(match storage {
+        ProjectStorage::Database => crate::projects::constraints_value(&meta.constraints)?,
         ProjectStorage::File => None,
     })
     .execute(&mut **tx)

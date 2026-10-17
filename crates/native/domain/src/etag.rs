@@ -72,6 +72,11 @@ impl Document {
         stamp_of(&serde_json::to_value(&self.styles).unwrap_or(Value::Null))
     }
 
+    /// The constraints' and parameters' stamp (docs/adr/0336 §3).
+    pub fn constraints_stamp(&self) -> String {
+        stamp_of(&serde_json::to_value(&*self.constraints).unwrap_or(Value::Null))
+    }
+
     /// The sheet book's stamp.
     pub fn sheets_stamp(&self) -> String {
         let value = match self.sheets.as_deref() {

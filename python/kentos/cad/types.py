@@ -3164,6 +3164,27 @@ class BlockParameter(_Union):
         return _variant(_BLOCK_PARAMETER, "BlockParameter", "kind", data).from_json(data)
 
 
+class BoundChange(_Union):
+    """A bound's change: kept when absent, cleared when null.
+
+    One of:
+
+    - :class:`ClearBoundChange` (``kind: clear``)
+    - :class:`ToBoundChange` (``kind: to``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundChange:
+        return _variant(_BOUND_CHANGE, "BoundChange", "kind", data).from_json(data)
+
+
 class CadElement(_Union):
     """A part of an object a constraint names.
 
@@ -4049,6 +4070,29 @@ class OffsetBy(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> OffsetBy:
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
+
+
+class ParameterEdit(_Union):
+    """What changes.
+
+    One of:
+
+    - :class:`AddParameterEdit` (``kind: add``)
+    - :class:`SetParameterEdit` (``kind: set``)
+    - :class:`RenameParameterEdit` (``kind: rename``)
+    - :class:`RemoveParameterEdit` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParameterEdit:
+        return _variant(_PARAMETER_EDIT, "ParameterEdit", "kind", data).from_json(data)
 
 
 class PointConstruction(_Union):
@@ -7936,6 +7980,28 @@ class ConstraintDiagnosis(_Model):
             free=list(data["free"]) if "free" in data else UNSET,
             redundant=list(data["redundant"]) if "redundant" in data else UNSET,
             singular=list(data["singular"]) if "singular" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConstraintSet(_Model):
+    """A drawing's constraints and parameters."""
+    constraints: list[Constraint] | Unset = UNSET
+    parameters: list[CadParameter] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.constraints is not UNSET:
+            out["constraints"] = [e0.to_json() for e0 in self.constraints]
+        if self.parameters is not UNSET:
+            out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConstraintSet:
+        return cls(
+            constraints=[Constraint.from_json(e0) for e0 in data["constraints"]] if "constraints" in data else UNSET,
+            parameters=[CadParameter.from_json(e0) for e0 in data["parameters"]] if "parameters" in data else UNSET,
         )
 
 
@@ -21588,6 +21654,128 @@ class ParagraphLayout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParameterValue(_Model):
+    """A parameter with its value now.
+    Attributes:
+        value: Its value in its own unit. Unit: parameter.
+    """
+    name: str
+    kind: ParameterKind | ParameterKindName
+    value: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["value"] = float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParameterValue:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(ParameterKind, data["kind"]),
+            value=float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParametersEdit(_Model):
+    """Input of `cad.parameters.edit` v1: one undo step “Parametreler”: the parameters and every object the solve moves.
+
+    Refusals (`CommandError.code`), checked in this order: `invalid_parameter` (a name not valid),
+    `parameter_expression` (an expression that does not read), `invalid_revision`, `revision_conflict` (status
+    `conflict`), `parameter_not_found`, `parameter_exists` (a name in use), `parameter_kind` (a kind its dimension does
+    not take), `parameter_measured` (an expression for a dimension that only measures), `parameter_read` (a parameter
+    another reads, or a dimension's, taken away), then the parameters' values (`parameter_missing`,
+    `parameter_cycle`, `parameter_range`) and the solve's (`layer_locked`, `constraint_conflict`,
+    `constraint_singular`, `not_converged`, `shape_flipped`), as `cad.constraints.edit` answers.
+    Attributes:
+        edits: The changes, in order.
+        allow_flip: Writes even when a shape would turn inside out.
+    """
+    edits: list[ParameterEdit]
+    allow_flip: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edits"] = [e0.to_json() for e0 in self.edits]
+        if self.allow_flip is not UNSET:
+            out["allowFlip"] = self.allow_flip
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParametersEdit:
+        return cls(
+            edits=[ParameterEdit.from_json(e0) for e0 in data["edits"]],
+            allow_flip=data.get("allowFlip", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParametersEditPlan(_Model):
+    """What `cad.parameters.edit` would write (plan mode)."""
+    parameters: list[CadParameter]
+    values: list[ParameterValue]
+    changed: list[Entity]
+    diagnosis: ConstraintDiagnosis
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        out["values"] = [e0.to_json() for e0 in self.values]
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["diagnosis"] = self.diagnosis.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParametersEditPlan:
+        return cls(
+            parameters=[CadParameter.from_json(e0) for e0 in data["parameters"]],
+            values=[ParameterValue.from_json(e0) for e0 in data["values"]],
+            changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            diagnosis=ConstraintDiagnosis.from_json(data["diagnosis"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParametersEdited(_Model):
+    """The answer of `cad.parameters.edit`.
+    Attributes:
+        values: Every parameter's value after the write, in the table's order.
+        changed: The objects the solve moved.
+    """
+    values: list[ParameterValue]
+    changed: list[str]
+    diagnosis: ConstraintDiagnosis
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["values"] = [e0.to_json() for e0 in self.values]
+        out["changed"] = list(self.changed)
+        out["diagnosis"] = self.diagnosis.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParametersEdited:
+        return cls(
+            values=[ParameterValue.from_json(e0) for e0 in data["values"]],
+            changed=list(data["changed"]),
+            diagnosis=ConstraintDiagnosis.from_json(data["diagnosis"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PasteReport(_Model):
     """What a paste brought in besides its objects (docs/adr/0309 §3).
     Attributes:
@@ -23174,6 +23362,7 @@ class ProjectCreate(_Model):
     Attributes:
         origin: Unit: length.
         arrays: The project's associative arrays (docs/adr/0300); absent: none.
+        constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
         description: The catalog's description (docs/adr/0028); absent: none.
         home_view: Unit: length.
         project_type: Absent: the general type (`cad`).
@@ -23189,6 +23378,7 @@ class ProjectCreate(_Model):
     active_layer: str
     styles: ProjectStyles
     arrays: list[AssocArray] | Unset = UNSET
+    constraints: ConstraintSet | Unset = UNSET
     description: str | None | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     project_type: ProjectType | ProjectTypeName | None | Unset = UNSET
@@ -23206,6 +23396,8 @@ class ProjectCreate(_Model):
         out["styles"] = self.styles.to_json()
         if self.arrays is not UNSET:
             out["arrays"] = [e0.to_json() for e0 in self.arrays]
+        if self.constraints is not UNSET:
+            out["constraints"] = self.constraints.to_json()
         if self.description is not UNSET:
             out["description"] = self.description
         if self.home_view is not UNSET:
@@ -23230,6 +23422,7 @@ class ProjectCreate(_Model):
             active_layer=data["activeLayer"],
             styles=ProjectStyles.from_json(data["styles"]),
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
+            constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
             description=data.get("description", UNSET),
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(ProjectType, data["projectType"]),
@@ -23465,6 +23658,8 @@ class ProjectInfo(_Model):
         blocks: A database project's block definitions with their versions
             (docs/adr/0144 §5), in the order they were made. An older server's
             answer without them has none.
+        constraints: A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
+            none.
         home_view: Unit: length.
         sheets: A database project's sheet book and its pictures (docs/adr/0251); an
             older server's answer without it has none.
@@ -23490,6 +23685,7 @@ class ProjectInfo(_Model):
     event_cursor: str
     arrays: list[AssocArray] | Unset = UNSET
     blocks: list[BlockRecord] | Unset = UNSET
+    constraints: ConstraintSet | Unset = UNSET
     home_view: Bounds | None | Unset = UNSET
     sheets: ProjectSheets | None | Unset = UNSET
     storage: ProjectStorage | ProjectStorageName = ProjectStorage.DATABASE
@@ -23516,6 +23712,8 @@ class ProjectInfo(_Model):
             out["arrays"] = [e0.to_json() for e0 in self.arrays]
         if self.blocks is not UNSET:
             out["blocks"] = [e0.to_json() for e0 in self.blocks]
+        if self.constraints is not UNSET:
+            out["constraints"] = self.constraints.to_json()
         if self.home_view is not UNSET:
             out["homeView"] = None if self.home_view is None else self.home_view.to_json()
         if self.sheets is not UNSET:
@@ -23544,6 +23742,7 @@ class ProjectInfo(_Model):
             event_cursor=data["eventCursor"],
             arrays=[AssocArray.from_json(e0) for e0 in data["arrays"]] if "arrays" in data else UNSET,
             blocks=[BlockRecord.from_json(e0) for e0 in data["blocks"]] if "blocks" in data else UNSET,
+            constraints=ConstraintSet.from_json(data["constraints"]) if "constraints" in data else UNSET,
             home_view=UNSET if "homeView" not in data else None if data["homeView"] is None else Bounds.from_json(data["homeView"]),
             sheets=UNSET if "sheets" not in data else None if data["sheets"] is None else ProjectSheets.from_json(data["sheets"]),
             storage=_enum_in(ProjectStorage, data["storage"]) if "storage" in data else ProjectStorage.DATABASE,
@@ -23674,12 +23873,15 @@ class ProjectPatch(_Model):
     Attributes:
         arrays: The associative arrays, whole (docs/adr/0300); an empty list: none any more. Held to the contract's
             rules (`arrays_problem`) but for the blocks and objects they name, which the document keeps.
+        constraints: The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
+            contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
         sheets: The sheet book and its pictures, whole (docs/adr/0251); null: the
             project has none any more. Held to the file format's rules
             (`sheets_problem`).
     """
     active_layer: str | None | Unset = UNSET
     arrays: list[AssocArray] | None | Unset = UNSET
+    constraints: ConstraintSet | None | Unset = UNSET
     layers: list[LayerNode] | None | Unset = UNSET
     name: str | None | Unset = UNSET
     settings: ProjectSettings | None | Unset = UNSET
@@ -23692,6 +23894,8 @@ class ProjectPatch(_Model):
             out["activeLayer"] = self.active_layer
         if self.arrays is not UNSET:
             out["arrays"] = None if self.arrays is None else [e0.to_json() for e0 in self.arrays]
+        if self.constraints is not UNSET:
+            out["constraints"] = None if self.constraints is None else self.constraints.to_json()
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else [e0.to_json() for e0 in self.layers]
         if self.name is not UNSET:
@@ -23709,6 +23913,7 @@ class ProjectPatch(_Model):
         return cls(
             active_layer=data.get("activeLayer", UNSET),
             arrays=UNSET if "arrays" not in data else None if data["arrays"] is None else [AssocArray.from_json(e0) for e0 in data["arrays"]],
+            constraints=UNSET if "constraints" not in data else None if data["constraints"] is None else ConstraintSet.from_json(data["constraints"]),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else [LayerNode.from_json(e0) for e0 in data["layers"]],
             name=data.get("name", UNSET),
             settings=UNSET if "settings" not in data else None if data["settings"] is None else ProjectSettings.from_json(data["settings"]),
@@ -29627,6 +29832,41 @@ class LookupBlockParameter(BlockParameter):
 
 
 @dataclass(kw_only=True, slots=True)
+class ClearBoundChange(BoundChange):
+    """No bound."""
+    TAG_VALUE: ClassVar[str] = "clear"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "clear"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClearBoundChange:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ToBoundChange(BoundChange):
+    """This bound, in the parameter's own unit.
+    Attributes:
+        value: Unit: parameter.
+    """
+    TAG_VALUE: ClassVar[str] = "to"
+    value: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "to"}
+        out["value"] = float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToBoundChange:
+        return cls(
+            value=float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCadElement(CadElement):
     """A point: a line's or an arc's start or end, a circle's or an arc's centre, a point object's node, a path's
     vertex. Not a place along a curve nor an edge's middle.
@@ -35104,6 +35344,99 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddParameterEdit(ParameterEdit):
+    """A user parameter: its name, kind, expression and optional range and description."""
+    TAG_VALUE: ClassVar[str] = "add"
+    parameter: CadParameter
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        out["parameter"] = self.parameter.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddParameterEdit:
+        return cls(
+            parameter=CadParameter.from_json(data["parameter"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetParameterEdit(ParameterEdit):
+    """A parameter's expression, range or description; the absent ones stay. A dimension's that only measures takes
+    no expression.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    name: str
+    description: str | None | Unset = UNSET
+    expression: str | None | Unset = UNSET
+    max: BoundChange | None | Unset = UNSET
+    min: BoundChange | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        out["name"] = self.name
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.expression is not UNSET:
+            out["expression"] = self.expression
+        if self.max is not UNSET:
+            out["max"] = None if self.max is None else self.max.to_json()
+        if self.min is not UNSET:
+            out["min"] = None if self.min is None else self.min.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetParameterEdit:
+        return cls(
+            name=data["name"],
+            description=data.get("description", UNSET),
+            expression=data.get("expression", UNSET),
+            max=UNSET if "max" not in data else None if data["max"] is None else BoundChange.from_json(data["max"]),
+            min=UNSET if "min" not in data else None if data["min"] is None else BoundChange.from_json(data["min"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameParameterEdit(ParameterEdit):
+    """A parameter's new name: the expressions that read it and its dimension follow."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    name: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["name"] = self.name
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameParameterEdit:
+        return cls(
+            name=data["name"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveParameterEdit(ParameterEdit):
+    """A user parameter no other parameter reads."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveParameterEdit:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MidPointConstruction(PointConstruction):
     """İki nokta ortası: halfway from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "mid"
@@ -37483,6 +37816,9 @@ _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "upd
 _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParameter, "polar": PolarBlockParameter, "angle": AngleBlockParameter, "point": PointBlockParameter, "flip": FlipBlockParameter, "visibility": VisibilityBlockParameter, "lookup": LookupBlockParameter}
 
 
+_BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": ToBoundChange}
+
+
 _CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement}
 
 
@@ -37582,6 +37918,9 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
+_PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
+
+
 _POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
 
 
@@ -37640,6 +37979,7 @@ __all__ = [
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddIslandsHatchEdit",
+    "AddParameterEdit",
     "AddressLocator",
     "AddressesDefine",
     "AddressesDefineOperation",
@@ -37779,6 +38119,7 @@ __all__ = [
     "BlocksReplaced",
     "BlocksTableSource",
     "BothNetworkDirection",
+    "BoundChange",
     "BoundaryForm",
     "BoundaryFormName",
     "Bounds",
@@ -37830,6 +38171,7 @@ __all__ = [
     "CleanupIgnore",
     "CleanupIgnoreName",
     "CleanupReport",
+    "ClearBoundChange",
     "ClearStyleTableEdit",
     "Clip",
     "CloseCurveEdit",
@@ -37857,6 +38199,7 @@ __all__ = [
     "ConstraintRule",
     "ConstraintSense",
     "ConstraintSenseName",
+    "ConstraintSet",
     "ConstraintsEdit",
     "ConstraintsEditPlan",
     "ConstraintsEdited",
@@ -38454,8 +38797,13 @@ __all__ = [
     "ParallelConstraintRule",
     "ParallelPointConstruction",
     "ParamValue",
+    "ParameterEdit",
     "ParameterKind",
     "ParameterKindName",
+    "ParameterValue",
+    "ParametersEdit",
+    "ParametersEditPlan",
+    "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
     "PartsDivision",
@@ -38624,8 +38972,10 @@ __all__ = [
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
     "RemoveIslandsHatchEdit",
+    "RemoveParameterEdit",
     "RemoveRelationsOp",
     "RenameFormsOp",
+    "RenameParameterEdit",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
@@ -38673,6 +39023,7 @@ __all__ = [
     "ServiceLayer",
     "ServiceParam",
     "SetCellTableEdit",
+    "SetParameterEdit",
     "SettingsChanged",
     "SettingsSet",
     "SharpRectangleCorners",
@@ -38785,6 +39136,7 @@ __all__ = [
     "TileMatrix",
     "TmCrsSystem",
     "TmDefinition",
+    "ToBoundChange",
     "ToPolylineCurveEdit",
     "ToSplineCurveEdit",
     "ToleranceKind",

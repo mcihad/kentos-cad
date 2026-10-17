@@ -5,4 +5,4 @@
  * blocks: what a command may change that is no undo step (docs/adr/0248,
  * 0251).
  */
-export type ProjectPart = "name" | "settings" | "styles" | "sheets" | "layerFlags";
+export type ProjectPart = "name" | "settings" | "styles" | "sheets" | "layerFlags" | "constraints";

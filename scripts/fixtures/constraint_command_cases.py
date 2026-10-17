@@ -202,6 +202,34 @@ def evaluate(text, values, kind):
     return expr()
 
 
+FUNCTIONS = {"sin", "cos", "tan", "asin", "acos", "atan", "sqrt", "abs", "round", "floor", "ceil", "min", "max", "pi"}
+
+
+def names_in(text):
+    """The parameter names an expression reads: its words, but not a number's unit nor a function."""
+    out, i = [], 0
+    while i < len(text):
+        ch = text[i]
+        if ch.isalpha() or ch == "_":
+            j = i
+            while j < len(text) and (text[j].isalnum() or text[j] == "_"):
+                j += 1
+            word = text[i:j]
+            if not (i > 0 and (text[i - 1].isdigit() or text[i - 1] == ".")) and word not in FUNCTIONS:
+                out.append(word)
+            i = j
+        else:
+            i += 1
+    return out
+
+
+class AnyValue(dict):
+    """Every name read as one: an expression checked for its form only."""
+
+    def __missing__(self, key):
+        return 1.0
+
+
 def value_text(v):
     t = f"{v:.12f}".rstrip("0").rstrip(".")
     return "0" if t == "-0" else t

@@ -534,6 +534,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.arrays.edit"
             // A solve moves the constrained objects; remove takes constraints away (docs/adr/0335).
             | "cad.constraints.edit"
+            // A parameter's new value moves the constrained objects; remove takes one away (docs/adr/0336).
+            | "cad.parameters.edit"
             // Patlat replaces objects by their pieces (docs/adr/0302).
             | "cad.entities.explode"
             // It reshapes or replaces a polyline or a NURBS curve (docs/adr/0303).

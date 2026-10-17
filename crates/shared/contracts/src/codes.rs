@@ -1093,6 +1093,14 @@ codes! {
     CONSTRAINT_SINGULAR = "constraint_singular", Failed, false, "Bir kısıt anlamını yitirdi (boysuz kenar, yarıçapsız daire …); hiçbir şey yazılmadı.";
     /// The solver did not reach a solution.
     NOT_CONVERGED = "not_converged", Failed, false, "Çözücü adımları içinde bir çözüme ulaşamadı; hiçbir şey yazılmadı.";
+    /// A parameter name already in use.
+    PARAMETER_EXISTS = "parameter_exists", Failed, false, "Bu adda bir parametre zaten var.";
+    /// A parameter name the drawing does not hold.
+    PARAMETER_NOT_FOUND = "parameter_not_found", Failed, false, "Bu adda parametre yok.";
+    /// An expression for a dimension that only measures.
+    PARAMETER_MEASURED = "parameter_measured", Failed, false, "Bu parametre yalnız ölçen bir ölçününki; değeri çizimden ölçülür, ifadesi yazılmaz.";
+    /// A parameter taken away that another reads or a dimension has.
+    PARAMETER_READ = "parameter_read", Failed, false, "Parametreyi başka bir parametre okuyor ya da bir ölçü kısıtının; kaldırılmadı.";
     /// The solution turns a shape inside out; allowFlip writes it all the same.
     SHAPE_FLIPPED = "shape_flipped", Failed, false, "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır.";
 

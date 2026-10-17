@@ -159,6 +159,8 @@ struct Meta {
     sheets: Option<Arc<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300 §5), shared with the drawing's.
     arrays: Vec<Arc<kentos_contracts::AssocArray>>,
+    /// The constraints and parameters (docs/adr/0336 §3).
+    constraints: kentos_contracts::ConstraintSet,
 }
 
 impl Meta {
@@ -170,6 +172,7 @@ impl Meta {
             styles: doc.styles().clone(),
             sheets: doc.sheets_shared().cloned(),
             arrays: doc.arrays().to_vec(),
+            constraints: doc.constraints().clone(),
         }
     }
 
@@ -195,6 +198,9 @@ impl Meta {
         }
         if doc.arrays() != self.arrays.as_slice() {
             patch.arrays = Some(doc.arrays().iter().map(|a| (**a).clone()).collect());
+        }
+        if *doc.constraints() != self.constraints {
+            patch.constraints = Some(doc.constraints().clone());
         }
         (patch != ProjectPatch::default()).then_some(patch)
     }

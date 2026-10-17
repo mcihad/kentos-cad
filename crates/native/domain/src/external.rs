@@ -53,6 +53,8 @@ pub struct ExternalMeta {
     pub sheets: Option<Option<ProjectSheets>>,
     /// The associative arrays (docs/adr/0300 §5), whole; none: they stay.
     pub arrays: Option<Vec<AssocArray>>,
+    /// The constraints and parameters (docs/adr/0336 §3), whole; none: they stay.
+    pub constraints: Option<kentos_contracts::ConstraintSet>,
 }
 
 /// What came from outside.
@@ -219,6 +221,16 @@ impl Document {
             }
             if let Some(sheets) = meta.sheets {
                 self.sheets = sheets.map(Arc::new);
+            }
+            if let Some(set) = meta.constraints {
+                // As this drawing's objects hold them; outside the steps, as another editor's arrays are.
+                let uids: std::collections::HashSet<EntityId> = self
+                    .store
+                    .iter()
+                    .map(|s| EntityId(s.uid.into_bytes()))
+                    .collect();
+                self.constraints =
+                    std::sync::Arc::new(kentos_contracts::constraints_kept(&set, &uids));
             }
             if let Some(arrays) = meta.arrays {
                 self.take_arrays(&arrays);

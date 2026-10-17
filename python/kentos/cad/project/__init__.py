@@ -14,6 +14,7 @@ from ..types import (  # noqa: F401
     BlockChange,
     Bounds,
     CommitResult,
+    ConstraintSet,
     EmptyInput,
     FeatureChange,
     GrantRole,
@@ -271,6 +272,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
         active_layer: str,
         styles: ProjectStyles,
         arrays: Sequence[AssocArray] | Unset = UNSET,
+        constraints: ConstraintSet | Unset = UNSET,
         description: str | None | Unset = UNSET,
         home_view: Bounds | None | Unset = UNSET,
         project_type: ProjectType | ProjectTypeName | None | Unset = UNSET,
@@ -296,6 +298,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             active_layer:
             styles:
             arrays: The project's associative arrays (docs/adr/0300); absent: none.
+            constraints: The project's constraints and parameters (docs/adr/0336 §3); absent: none.
             description: The catalog's description (docs/adr/0028); absent: none.
             home_view: Unit: length.
             project_type: Absent: the general type (`cad`).
@@ -325,6 +328,7 @@ class _ProjectCreate(ServerCommand[ProjectCreate, ProjectInfo]):
             active_layer=active_layer,
             styles=styles,
             arrays=_opt(arrays, lambda x: list(x)),
+            constraints=constraints,
             description=description,
             home_view=home_view,
             project_type=project_type,

@@ -167,6 +167,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "ortak durumu yok; masaüstünün Harita servisi penceresi nesneli katmanı önermez",
     ),
     (
+        "cad.parameters.edit",
+        "*",
+        "çözümün ve kümenin retleri (çelişki, kilitli katman, tekillik, ters dönme, yakınsamama, kümenin kuralı) cad.constraints.edit'in durumlarında; parametre komutu aynı constraints_edit::settle'dan geçer (ADR 0336 §1)",
+    ),
+    (
         "cad.constraints.edit",
         "not_converged",
         "beklenmez: en az değişikliğin Gauss–Newton'u kısıtların tuttuğu bir çözüme ya ulaşır ya çelişki ya da tekillik bulur; 64 adımı aşan bir durum kararlı yazılamaz (ADR 0334 §4)",

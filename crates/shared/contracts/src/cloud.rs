@@ -478,6 +478,16 @@ pub struct ProjectCreate {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// The project's constraints and parameters (docs/adr/0336 §3); absent: none.
+    #[serde(
+        default,
+        skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
+    )]
+    pub constraints: crate::constraints::ConstraintSet,
     /// The catalog's description (docs/adr/0028); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -535,6 +545,17 @@ pub struct ProjectInfo {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Vec<crate::assoc_array::AssocArray>,
+    /// A database project's constraints and parameters (docs/adr/0336 §3); an older server's answer without them has
+    /// none.
+    #[serde(
+        default,
+        skip_serializing_if = "crate::constraints::ConstraintSet::is_empty"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<crate::constraints::ConstraintSet>")
+    )]
+    pub constraints: crate::constraints::ConstraintSet,
     pub meta_version: String,
     pub data_revision: String,
     pub feature_count: String,
@@ -709,6 +730,11 @@ pub struct ProjectPatch {
         ts(optional, as = "Option<Vec<crate::assoc_array::AssocArray>>")
     )]
     pub arrays: Option<Vec<crate::assoc_array::AssocArray>>,
+    /// The constraints and parameters, whole (docs/adr/0336 §3); an empty set: none any more. Held to the
+    /// contract's rules (`constraints_problem`) but for the objects they name, which the document keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub constraints: Option<crate::constraints::ConstraintSet>,
 }
 
 /// The committed result; a retry with the same idempotency key gets the same one (`replayed`).

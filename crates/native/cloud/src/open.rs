@@ -103,8 +103,11 @@ fn snapshot(info: &ProjectInfo, project: Uuid, objects: Objects) -> DocumentSnap
     // without its array is an item removed.
     let blocks: Vec<_> = info.blocks.iter().map(|r| r.block.id).collect();
     let arrays = kentos_contracts::arrays_kept(&info.arrays, &blocks, &uids);
+    // The constraints as these objects hold them (docs/adr/0336 §3).
+    let present: std::collections::HashSet<EntityId> = uids.iter().copied().collect();
+    let constraints = kentos_contracts::constraints_kept(&info.constraints, &present);
     DocumentSnapshotV2 {
-        constraints: Default::default(),
+        constraints,
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name: info.name.clone(),
@@ -310,6 +313,7 @@ mod tests {
     fn info() -> ProjectInfo {
         let s = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
         ProjectInfo {
+            constraints: Default::default(),
             blocks: Vec::new(),
             sheets: None,
             arrays: Vec::new(),

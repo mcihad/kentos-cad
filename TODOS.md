@@ -350,6 +350,9 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-PARAM-04`, `10`, `12` parametreler, tek işlem ve taşınma (ADR 0336, 18 Ekim): web'de gerekenler: `cad.parameters.edit`'in
+  işleyicisi; bulut eşitlemesinde `ProjectPatch.constraints` ve `ProjectInfo.constraints` (web'in `syncMeta`'sı), görüntüde
+  `constraints_kept`'in WASM'ı; protokolün `constraints` damgası.
 - [ ] `CAD-PARAM-02`, `03`, `07` kısıt komutları ve aracı (ADR 0335, 17 Ekim): web'de gerekenler: `cad.constraints.edit` ve
   `.query`'nin işleyicileri (`product/`, masaüstünün `constraints_edit.rs` ve `constraint_solve.rs`'inin ikizi; çözücü WASM'la),
   Kısıt aracı (`tools/`; parça seçimi, planla önizleme), şeridin Kısıtlar paneli ve ikonları (`catalog/v1/additions.json`), ortak iz

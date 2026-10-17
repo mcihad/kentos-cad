@@ -627,6 +627,10 @@ pub async fn commit(
     if let Some(arrays) = &patch.arrays {
         crate::projects::check_arrays(arrays, "project.arrays")?;
     }
+    // So do the constraints, but for the objects they name (docs/adr/0336 §3).
+    if let Some(set) = &patch.constraints {
+        crate::projects::check_constraints(set, "project.constraints")?;
+    }
     if new_srid != srid as u32 {
         check_srid(&mut tx, new_srid).await?;
     }
@@ -1022,6 +1026,7 @@ pub async fn commit(
             layers = coalesce($7, layers), active_layer = coalesce($8, active_layer), styles = coalesce($9, styles),
             sheets = case when $11 then $12 else sheets end,
             arrays = case when $13 then $14 else arrays end,
+            constraints = case when $15 then $16 else constraints end,
             catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
@@ -1050,6 +1055,15 @@ pub async fn commit(
             .arrays
             .as_deref()
             .map(crate::projects::arrays_value)
+            .transpose()?
+            .flatten(),
+    )
+    .bind(patch.constraints.is_some())
+    .bind(
+        patch
+            .constraints
+            .as_ref()
+            .map(crate::projects::constraints_value)
             .transpose()?
             .flatten(),
     )

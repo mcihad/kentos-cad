@@ -244,6 +244,29 @@ pub fn check_arrays(arrays: &[kentos_contracts::AssocArray], path: &str) -> AppR
     }
 }
 
+/// A project's constraints by the contract's rules but for the objects they name (`constraints_problem` without the
+/// ids, docs/adr/0336 §3), refused at their place under `path`; the objects are the document's.
+pub fn check_constraints(set: &kentos_contracts::ConstraintSet, path: &str) -> AppResult<()> {
+    match kentos_contracts::constraints_problem(set, None) {
+        Some((at, why)) => {
+            let place = match at.split_once('/') {
+                Some((part, i)) => format!("{path}.{part}[{i}]"),
+                None => format!("{path}.{at}"),
+            };
+            Err(AppError::invalid_at(place, format!("Kısıtlar: {why}.")))
+        }
+        None => Ok(()),
+    }
+}
+
+/// The constraints as a column holds them: none when there are none.
+pub(crate) fn constraints_value(set: &kentos_contracts::ConstraintSet) -> AppResult<Option<Value>> {
+    if set.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(json(set)?))
+}
+
 /// The arrays as a column holds them: none when there are none.
 pub(crate) fn arrays_value(arrays: &[kentos_contracts::AssocArray]) -> AppResult<Option<Value>> {
     if arrays.is_empty() {
@@ -376,6 +399,7 @@ pub async fn create(
     check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
     check_sheets(input.sheets.as_ref(), "sheets")?;
     check_arrays(&input.arrays, "arrays")?;
+    check_constraints(&input.constraints, "constraints")?;
     let description =
         crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
     let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
@@ -401,8 +425,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage, sheets, arrays)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18)",
+                                     description, project_type, tags, storage, sheets, arrays, constraints)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16, $17, $18, $19)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -422,6 +446,7 @@ pub async fn create(
     .bind(storage_name(input.storage.unwrap_or(ProjectStorage::Database)))
     .bind(input.sheets.as_ref().map(json).transpose()?)
     .bind(arrays_value(&input.arrays)?)
+    .bind(constraints_value(&input.constraints)?)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
@@ -501,7 +526,7 @@ type ProjectRow = (
     bool,
     String,
     Option<Value>,
-    Option<Value>,
+    Value,
 );
 
 /// A project's metadata, object count and the event cursor of this moment:
@@ -516,7 +541,8 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 (select count(*) from kentos.feature f where f.tenant_id = p.tenant_id and f.project_id = p.id),
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.deleted_at is not null, p.storage, p.sheets, p.arrays
+                p.deleted_at is not null, p.storage, p.sheets,
+                jsonb_build_object('arrays', p.arrays, 'constraints', p.constraints)
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -542,8 +568,13 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         deleted,
         storage,
         sheets,
-        arrays,
+        mut meta_parts,
     ) = row.ok_or_else(not_found)?;
+    // The arrays and the constraints, read as one object (a row of sixteen columns at most).
+    let part =
+        |name: &str, parts: &mut Value| Some(parts.get_mut(name)?.take()).filter(|v| !v.is_null());
+    let arrays = part("arrays", &mut meta_parts);
+    let constraints = part("constraints", &mut meta_parts);
     if deleted {
         return Err(gone(&name));
     }
@@ -568,6 +599,11 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
             .transpose()
             .map_err(bad)?,
         arrays: arrays
+            .map(serde_json::from_value)
+            .transpose()
+            .map_err(bad)?
+            .unwrap_or_default(),
+        constraints: constraints
             .map(serde_json::from_value)
             .transpose()
             .map_err(bad)?
