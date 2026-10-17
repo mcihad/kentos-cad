@@ -171,6 +171,19 @@ def other(command, inp, expect=None):
 
 # ── cad.sources.edit ───────────────────────────────────────────────────────
 
+W = "wgs84.gpkg"
+WB = link("yer", "import-yer", name=W, srid=4326)
+
+
+def wgs_link():
+    """The WGS 84 table bound with reproject: the point moved into TM36 (its coordinates the core's, PROJ's within a
+    micrometre: crs_transform_cases.py), the table's system kept in the binding."""
+    row = rows_of(W, "yer")[0]
+    answer = {"link": WB, "objects": 1, "layers": [{"id": "import-yer", "name": "yer"}], "revision": "$current"}
+    return step({"edit": {"kind": "link", "path": fx(W), "table": "yer", "reproject": True}}, done(answer),
+                {"ids": [1, 2], "fields": {"2": {"kind": "point", "layerId": "import-yer", "attrs": row["attrs"]}},
+                 "revision": "changed", "canUndo": True, "settings": {"sources": [WB]}}, command="cad.sources.edit")
+
 def linked(table, name=Q, start=2, objects_layer=None):
     """`link` onto a new layer: the answer, the objects (their fields by slot) and the binding."""
     out, warnings, fields, ids, r = gi.imported(name, [table], start=start)
@@ -217,11 +230,12 @@ def edit_cases():
                       {"code": "crs_undeclared", "message": "bos.gpkg koordinat sistemi bildirmiyor; koordinatlar "
                        "projenin sisteminde sayılıp olduğu gibi alındı.", "path": "path"}]),
                   {"ids": [1], "revision": "changed", "settings": {"sources": [empty_answer["link"]]}})),
-        case("WGS 84'teki tablo bağlanmaz: bağlı katman çevrilmez",
+        case("WGS 84'teki tablo çevirme istenmeden bağlanmaz",
              step({"edit": {"kind": "link", "path": fx("wgs84.gpkg"), "table": "yer"}},
-                  failed("crs_mismatch", "“yer” tablosu EPSG:4326 sisteminde, proje EPSG:5256. Bağlı katman dosyayla "
-                         "aynı sistemde olmalı: projeyi EPSG:4326'de açın ya da tabloyu çevirip içe aktarın.",
-                         "edit.path"))),
+                  failed("crs_mismatch", "“yer” tablosu EPSG:4326 sisteminde, proje EPSG:5256. Katmanın nesneleri "
+                         "projenin sisteminde, tablonunkiler kendi sisteminde tutulsun diye reproject verin ya da "
+                         "projeyi EPSG:4326'de açın.", "edit.reproject"))),
+        case("WGS 84'teki tablo reproject ile bağlanır: katman projenin, tablo kendi sisteminde", wgs_link()),
         case("aynı tablo ikinci kez bağlanmaz", s_link,
              step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel"}},
                   failed("source_bound", "“parsel” tablosu zaten “import-parsel” katmanına bağlı (kaynak-1).",
@@ -377,6 +391,11 @@ def describe_cases():
                             "revision": "$current"})),
              setup_=setup([bound], [{"kind": "point", "id": 2, "layerId": "bagli", "attrs": {}, "p": gi.P(1, 2)}],
                           [{**link("parsel", "bagli"), "digest": FAKE}])),
+        case("başka sistemdeki tablo: gidip gelen koordinatlar aynı sayılır", wgs_link(),
+             step({}, done({"links": [state(WB)], "revision": "$current"}))),
+        case("başka sistemdeki tablo: taşınan nokta farklı", wgs_link(),
+             other("cad.entities.transform", {"uids": ["$uidOf:2"], "transform": {"kind": "move", "dx": 10, "dy": 0}}),
+             step({}, done({"links": [state(WB, edited=True, modified=1)], "revision": "$current"}))),
         case("iki bağ sırasıyla", s_link, n_link,
              step({}, done({"links": [state(b), state({**nb, "id": "kaynak-2"})], "revision": "$current"}))),
     ]
@@ -494,6 +513,15 @@ def sync_cases():
         case("plan okunacakları söyler, yazmaz",
              step({"layer": "bagli", "direction": "read", "discard": True}, done(synced(added=3)), op="plan"),
              setup_=setup([bound], sources=[good])),
+        case("başka sistemdeki tablo: bağlanınca yazılacak bir şey yok", wgs_link(),
+             step({"layer": "import-yer", "direction": "write"}, done(synced(name=W)), op="plan")),
+        case("başka sistemdeki tablo: taşınan nokta tablonun sistemine çevrilip yazılacak", wgs_link(),
+             other("cad.entities.transform", {"uids": ["$uidOf:2"], "transform": {"kind": "move", "dx": 10, "dy": 0}}),
+             step({"layer": "import-yer", "direction": "write"}, done(synced(modified=1, name=W)), op="plan")),
+        case("başka sistemdeki tablo: okunca nokta yerine döner", wgs_link(),
+             other("cad.entities.transform", {"uids": ["$uidOf:2"], "transform": {"kind": "move", "dx": 10, "dy": 0}}),
+             step({"layer": "import-yer", "direction": "read", "discard": True}, done(synced(modified=1, name=W)),
+                  {"ids": [1, 2], "revision": "changed", "canUndo": True})),
         case("validate yalnız denetler", s_link, step(w, done(None), op="validate")),
     ]
 

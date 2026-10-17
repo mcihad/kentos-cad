@@ -158,6 +158,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-07 — Katman CRS'sini koruyan genel on-the-fly provider dönüşümü ekle — P0**
 
+  *Kısmen (17 Ekim 2026; [ADR 0504](../docs/adr/0504-source-crs-and-box-transform.md)): bağlı katmanda kaynak sistemi korunur (`reproject`: katman projenin, tablo kendi sisteminde; yazma tablonun sistemine geri çevirerek, gidip gelen koordinat aynı sayılır), sıklaştırılmış ve antimeridyeni bilen kutu dönüşümü `crs::transform_bounds` (PROJ'un `transform_bounds`'uyla). Kalan: her katmanın kendi sistemiyle çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı, genel PROJ bağdaştırıcısı.*
+
   **Mevcut:** Türkiye odaklı dönüşüm/ikinci CRS ve servis dönüşümleri var. Genel feature içe alma/servis verisi çoğunlukla proje sistemine kopyalanıyor [K05/K12]. Bir harita CRS'si ile her veri kaynağının CRS'si ayrı olmalı.
 
   **Yapılacak kalan iş:** Kaynak CRS, harita gösterim CRS'si ve işlem/ölçüm CRS'sini ayır. On-the-fly çizim, ters dönüşümlü identify/snap, kaynak uzayında yazma ve dönüştürülmüş bbox sorgusu birlikte tasarlansın. WKT2/authority kimliği, axis order, birim ve area-of-use saklansın. Bbox dönüşümünde yalnız iki köşe yerine gereken sıklaştırma; antimeridyen ve kutup durumları ele alınsın. Desteklenen yerel Rust CRS kapsamı ile genel PROJ adapter kapsamı açık olsun. CRS atama, görüntüleme dönüşümü ve kalıcı reprojection ayrı komutlardır. [Q05], [S02]

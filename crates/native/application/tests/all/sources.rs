@@ -298,3 +298,71 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
     );
     assert_eq!(refused["error"]["code"], "too_many_sources");
 }
+
+/// A table in WGS 84 bound to a TM36 drawing (docs/adr/0504 §1): the point moved 10 m east in the drawing is written
+/// back in degrees, the untouched round trip writes nothing. With KENTOS_WRITE_GPKG the file is kept as
+/// fixtures/geopackage/v1/kentos-synced-wgs84.gpkg; geopackage_cases.py moves it into TM36 with PROJ and compares.
+#[test]
+fn a_table_in_another_system_is_written_back_in_its_own() {
+    let tmp = std::env::temp_dir().join(format!("kentos-sources-wgs-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("wgs84.gpkg"), &tmp).expect("copied");
+    let mut d = doc();
+    let mut settings = d.settings().clone();
+    settings.srid = 5256;
+    d.set_settings(settings);
+    let path = tmp.display().to_string();
+    let refused = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Plan,
+        json!({ "edit": { "kind": "link", "path": path, "table": "yer" } }),
+    );
+    assert_eq!(refused["error"]["code"], "crs_mismatch");
+    ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "yer", "reproject": true } }),
+    ));
+    let layer = link_of(&d).layer;
+    let input = json!({ "layer": layer, "direction": "write" });
+    let nothing = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        input.clone(),
+    ))
+    .clone();
+    assert_eq!(
+        (
+            nothing["added"].clone(),
+            nothing["modified"].clone(),
+            nothing["removed"].clone()
+        ),
+        (json!(0), json!(0), json!(0))
+    );
+    let uid = d
+        .by_layer_with_uids(&layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("the point");
+    ok(&run(
+        &mut d,
+        "cad.entities.transform",
+        CallOp::Execute,
+        json!({ "uids": [uid], "transform": { "kind": "move", "dx": 10.0, "dy": 0.0 } }),
+    ));
+    let written = ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, input)).clone();
+    assert_eq!(written["modified"], 1, "{written}");
+    assert_eq!(link_of(&d).srid, Some(4326));
+    let after = state(&mut d);
+    assert_eq!(
+        (after["edited"].clone(), after["modified"].clone()),
+        (json!(false), json!(0)),
+        "{after}"
+    );
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-synced-wgs84.gpkg")).expect("copied");
+    }
+    let _ = std::fs::remove_file(&tmp);
+}

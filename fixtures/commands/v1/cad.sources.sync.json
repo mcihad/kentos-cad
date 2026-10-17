@@ -3543,6 +3543,341 @@
    }
   },
   {
+   "name": "başka sistemdeki tablo: bağlanınca yazılacak bir şey yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/wgs84.gpkg",
+       "table": "yer",
+       "reproject": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/wgs84.gpkg",
+        "table": "yer",
+        "layer": "import-yer",
+        "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+        "digest": "$any",
+        "srid": 4326,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/wgs84.gpkg",
+         "table": "yer",
+         "layer": "import-yer",
+         "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+         "digest": "$any",
+         "srid": 4326,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-yer",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka sistemdeki tablo: taşınan nokta tablonun sistemine çevrilip yazılacak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/wgs84.gpkg",
+       "table": "yer",
+       "reproject": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/wgs84.gpkg",
+        "table": "yer",
+        "layer": "import-yer",
+        "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+        "digest": "$any",
+        "srid": 4326,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/wgs84.gpkg",
+         "table": "yer",
+         "layer": "import-yer",
+         "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+         "digest": "$any",
+         "srid": 4326,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.transform"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-yer",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka sistemdeki tablo: okunca nokta yerine döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/wgs84.gpkg",
+       "table": "yer",
+       "reproject": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/wgs84.gpkg",
+        "table": "yer",
+        "layer": "import-yer",
+        "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+        "digest": "$any",
+        "srid": 4326,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/wgs84.gpkg",
+         "table": "yer",
+         "layer": "import-yer",
+         "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+         "digest": "$any",
+         "srid": 4326,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 10,
+       "dy": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.transform"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-yer",
+      "direction": "read",
+      "discard": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
    "name": "validate yalnız denetler",
    "steps": [
     {

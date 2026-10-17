@@ -223,6 +223,29 @@ def synced_problems(path):
     return out
 
 
+def moved_problems(path):
+    """The WGS 84 table bound to a TM36 drawing and written back (docs/adr/0504 §1): Kızılay moved 10 m east in TM36,
+    stored in degrees. PROJ moves the stored point into TUREF / TM36 (EPSG:5256 by TUREF to WGS 84 (1), the null
+    shift) and compares with the original point moved 10 m, within a micrometre."""
+    from osgeo import ogr
+    from pyproj import Transformer
+    ds = ogr.Open(str(path))
+    lyr = ds.GetLayerByName("yer")
+    feats = list(lyr)
+    if len(feats) != 1:
+        return [f"{len(feats)} satır"]
+    g = feats[0].GetGeometryRef()
+    srs = lyr.GetSpatialRef()
+    if srs is None or srs.GetAuthorityCode(None) != "4326":
+        return ["tablonun sistemi değişti"]
+    t = Transformer.from_crs("EPSG:4326", "EPSG:5256", always_xy=True)
+    x0, y0 = t.transform(32.8541, 39.9208)
+    x, y = t.transform(g.GetX(), g.GetY())
+    if abs(x - (x0 + 10.0)) > 1e-6 or abs(y - y0) > 1e-6:
+        return [f"nokta ({x - x0:.9f}, {y - y0:.9f}) kaydı, beklenen (10, 0)"]
+    return []
+
+
 def findings(path):
     """GDAL's validator's findings of a file."""
     from osgeo_utils.samples import validate_gpkg
@@ -313,13 +336,20 @@ def main():
                   "--test all sources::", file=sys.stderr)
             return 1
         problems += synced_problems(synced)
+        moved = DIR / "kentos-synced-wgs84.gpkg"
+        if not moved.exists():
+            print(f"{moved.relative_to(ROOT)} yok: KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application "
+                  "--test all sources::", file=sys.stderr)
+            return 1
+        problems += moved_problems(moved)
+        problems += [str(e) for e in findings(moved) if e not in findings(QGIS_FILE)]
         problems += [str(e) for e in findings(synced) if e not in findings(QGIS_FILE)]
         problems += [str(e) for e in findings(edited) if e not in findings(QGIS_FILE)]
         if problems:
             print(f"{edited.relative_to(ROOT)}: " + "; ".join(problems), file=sys.stderr)
             return 1
         print(f"GeoPackage durumları tutarlı: {len(want['layers'])} katman; kentos.gpkg QGIS'inkiyle aynı okunuyor, "
-              "kentos-export.gpkg (QGIS'inki çizime alınıp yazılmış) aynı anlamda ve QGIS 4.2 onu açıyor; ikisi de GDAL'ın doğrulayıcısından geçiyor; yerinde düzenlenen kentos-edited.gpkg'yi ve bağlı katmanın yazdığı kentos-synced.gpkg'yi OGR doğru okuyor")
+              "kentos-export.gpkg (QGIS'inki çizime alınıp yazılmış) aynı anlamda ve QGIS 4.2 onu açıyor; ikisi de GDAL'ın doğrulayıcısından geçiyor; yerinde düzenlenen kentos-edited.gpkg'yi ve bağlı katmanın yazdığı kentos-synced.gpkg'yi OGR doğru okuyor; WGS 84 tablosuna geri yazılan nokta PROJ'la TM36'da 10 m doğuda")
         return 0
     doc = {
         "format": "kentos.geopackage-cases",

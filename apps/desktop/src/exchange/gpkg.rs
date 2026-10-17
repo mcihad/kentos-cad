@@ -261,6 +261,7 @@ impl App {
         };
         let path = s.path.display().to_string();
         let file = s.file.clone();
+        let reproject = s.reproject;
         let tables: Vec<String> = s
             .tables
             .iter()
@@ -279,6 +280,7 @@ impl App {
                     path: path.clone(),
                     table: table.clone(),
                     layer: None,
+                    reproject,
                 },
             };
             match kentos_native_application::sources::edit::execute(
@@ -435,17 +437,17 @@ impl App {
         body = body.push(words::field(
             "Bağ",
             words::check(
-                s.bind && !mismatch,
+                s.bind,
                 "Bağlı katman olarak aç".to_owned(),
-                (!mismatch).then(|| event(Event::Bind)),
+                Some(event(Event::Bind)),
             ),
             Some(if mismatch {
-                "Bağlı katman çevrilmez: dosya projenin sisteminde olmalı.".to_owned()
+                "Katman projenin sisteminde, tablo kendi sisteminde kalır: Kaynağa yaz nesneleri tablonun sistemine geri çevirerek yazar.".to_owned()
             } else {
                 "Katman tablonun çalışma kopyası olur: değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir.".to_owned()
             }),
         ));
-        if mismatch && !s.bind {
+        if mismatch {
             body = body.push(words::field(
                 "Koordinat sistemi",
                 words::check(
@@ -463,7 +465,7 @@ impl App {
                 text.clone(),
             ));
         }
-        let ready = chosen > 0 && (!mismatch || (s.reproject && !s.bind));
+        let ready = chosen > 0 && (!mismatch || s.reproject);
         overlay::blocking(
             Dialog::new(if s.bind {
                 "Kaynağa bağla"

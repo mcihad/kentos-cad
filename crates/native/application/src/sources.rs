@@ -30,6 +30,39 @@ use crate::geopackage as gp;
 
 /// Coordinates of an object and its row agree within this (m): the geometry kernel's tolerance.
 const SAME: f64 = 1e-6;
+/// The same in degrees, for a table in a geographic system (about a millimetre).
+const SAME_DEGREES: f64 = 1e-11;
+
+/// How a bound layer's objects move between the project's system and its table's (docs/adr/0504 §1).
+struct Mover {
+    project: kentos_geometry_core::crs::System,
+    source: kentos_geometry_core::crs::System,
+    choices: Vec<kentos_geometry_core::crs::Choice>,
+}
+
+/// The move between the project and a table of `srid`: none in the same system or for a table that declares none;
+/// why not, when one of the systems has no transform.
+fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String> {
+    let settings = doc.settings();
+    let Some(srid) = srid.filter(|&s| s != settings.srid) else {
+        return Ok(None);
+    };
+    let Some(project) = kentos_project::systems::own(settings).and_then(|n| n.system) else {
+        return Err(format!(
+            "tablo EPSG:{srid} sisteminde; projenin koordinat sistemi yok (yerel proje), çevrilemez"
+        ));
+    };
+    let Some(source) = kentos_project::crs::system(srid).and_then(|s| s.transform_system()) else {
+        return Err(format!(
+            "tablonun sistemi EPSG:{srid} KentOS'un kayıtlı sistemlerinde yok"
+        ));
+    };
+    Ok(Some(Mover {
+        project,
+        source,
+        choices: kentos_project::systems::choices(settings),
+    }))
+}
 
 fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
@@ -103,8 +136,40 @@ struct Stored {
     layer: gpkg::Layer,
     srid: Option<u32>,
     rows: HashMap<Uuid, (i64, Option<Geometry>, Vec<Value>)>,
+    /// The rows as the import reads them, in the table's own system.
+    objects: Vec<(Uuid, kentos_contracts::Entity)>,
     writable: bool,
     sha256: String,
+}
+
+impl Stored {
+    /// Leaves out the rows the move into the project's system does not reach (an arc, a vertex outside it): the
+    /// layer never holds them, so a write must not delete them.
+    fn reachable(&mut self, mover: Option<&Mover>) {
+        let Some(m) = mover else { return };
+        let rows = &mut self.rows;
+        self.objects.retain(|(uid, e)| {
+            let mut e = e.clone();
+            let ok =
+                kentos_formats::reproject::move_entity(&mut e, &m.source, &m.project, &m.choices)
+                    .is_ok();
+            if !ok {
+                rows.remove(uid);
+            }
+            ok
+        });
+    }
+
+    /// The table's objects in the project's system (those that reach it).
+    fn in_project(&self, mover: Option<&Mover>) -> Vec<(Uuid, kentos_contracts::Entity)> {
+        let mut out = self.objects.clone();
+        if let Some(m) = mover {
+            out.retain_mut(|(_, e)| {
+                kentos_formats::reproject::move_entity(e, &m.source, &m.project, &m.choices).is_ok()
+            });
+        }
+        out
+    }
 }
 
 fn load(path: &Path, table: &str) -> Result<Stored, String> {
@@ -128,6 +193,7 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
         .map(|r| (r.fid, r))
         .collect();
     let mut rows = HashMap::with_capacity(t.fids.len());
+    let objects = t.objects.clone();
     for ((uid, _), fid) in t.objects.iter().zip(&t.fids) {
         let Some(r) = raw.remove(fid) else { continue };
         let g = match r.geometry {
@@ -150,6 +216,7 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
         layer,
         srid,
         rows,
+        objects,
         writable,
         sha256: read.sha256,
     })
@@ -257,14 +324,14 @@ fn walk(g: &Geometry, sig: &mut Vec<u8>, xs: &mut Vec<f64>) {
     sig.push(0);
 }
 
-fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>) -> bool {
+fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>, tol: f64) -> bool {
     match (a, b) {
         (None, None) => true,
         (Some(a), Some(b)) => {
             let (mut sa, mut xa, mut sb, mut xb) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
             walk(a, &mut sa, &mut xa);
             walk(b, &mut sb, &mut xb);
-            sa == sb && xa.iter().zip(&xb).all(|(p, q)| (p - q).abs() <= SAME)
+            sa == sb && xa.iter().zip(&xb).all(|(p, q)| (p - q).abs() <= tol)
         }
         _ => false,
     }
@@ -282,7 +349,7 @@ fn same_value(a: &Value, b: &Value) -> bool {
     }
 }
 
-fn diff(doc: &Document, layer: &str, s: &Stored) -> Diff {
+fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff {
     let mut d = Diff::default();
     let fields = doc
         .layers()
@@ -307,6 +374,11 @@ fn diff(doc: &Document, layer: &str, s: &Stored) -> Diff {
     }
     let width = s.layer.columns.len();
     let geometry = s.layer.geometry.as_ref().map(|g| g.type_name.as_str());
+    let tol = if mover.is_some_and(|m| m.source.is_geographic()) {
+        SAME_DEGREES
+    } else {
+        SAME
+    };
     let mut seen = HashSet::new();
     for (uid, e) in doc.by_layer_with_uids(layer) {
         for k in e.base().attrs.keys() {
@@ -314,6 +386,22 @@ fn diff(doc: &Document, layer: &str, s: &Stored) -> Diff {
                 d.lost.insert(k.clone());
             }
         }
+        // In the table's own system (docs/adr/0504 §1); an object the move does not take stays in the drawing.
+        let moved;
+        let e = match mover {
+            Some(m) => {
+                let mut c = e.clone();
+                if kentos_formats::reproject::move_entity(&mut c, &m.project, &m.source, &m.choices)
+                    .is_err()
+                {
+                    d.left += 1;
+                    continue;
+                }
+                moved = c;
+                &moved
+            }
+            None => e,
+        };
         let row = match gp::row_for(e, &columns, geometry) {
             Ok(Some(r)) => r,
             Ok(None) => {
@@ -331,7 +419,7 @@ fn diff(doc: &Document, layer: &str, s: &Stored) -> Diff {
             None => d.insert.push((uid.to_string(), row)),
             Some((fid, g, values)) => {
                 seen.insert(uid);
-                let same = same_geometry(row.geometry.as_ref(), g.as_ref())
+                let same = same_geometry(row.geometry.as_ref(), g.as_ref(), tol)
                     && row.values.iter().enumerate().all(|(i, v)| {
                         same_value(v, if i < width { &values[i] } else { &Value::Null })
                     });
@@ -449,9 +537,10 @@ fn state_of(doc: &Document, link: &SourceLink) -> SourceState {
         modified: 0,
         removed: 0,
     };
-    if let Ok(s) = load(path, &link.table) {
+    if let (Ok(mut s), Ok(mover)) = (load(path, &link.table), mover_for(doc, link.srid)) {
         state.changed = s.sha256 != link.revision;
-        let d = diff(doc, &link.layer, &s);
+        s.reachable(mover.as_ref());
+        let d = diff(doc, &link.layer, &s, mover.as_ref());
         state.added = d.insert.len() as u32;
         state.modified = d.update.len() as u32;
         state.removed = d.delete.len() as u32;
@@ -567,6 +656,7 @@ fn link_table(
     path: &str,
     table: &str,
     layer: Option<&str>,
+    reproject: bool,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     let p = checked(path, "edit.path")?;
     if doc.settings().sources.len() >= MAX_SOURCES {
@@ -591,17 +681,25 @@ fn link_table(
             "edit.table",
         ));
     }
-    let stored = load_or_refuse(p, table, "edit.table")?;
+    let mut stored = load_or_refuse(p, table, "edit.table")?;
     let project = doc.settings().srid;
-    if let Some(s) = stored.srid.filter(|&s| s != project) {
+    if let Some(s) = stored.srid.filter(|&s| s != project && !reproject) {
         return Err(refuse(
             codes::CRS_MISMATCH,
             format!(
-                "“{table}” tablosu EPSG:{s} sisteminde, proje EPSG:{project}. Bağlı katman dosyayla aynı sistemde olmalı: projeyi EPSG:{s}'de açın ya da tabloyu çevirip içe aktarın."
+                "“{table}” tablosu EPSG:{s} sisteminde, proje EPSG:{project}. Katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde tutulsun diye reproject verin ya da projeyi EPSG:{s}'de açın."
             ),
-            "edit.path",
+            "edit.reproject",
         ));
     }
+    let mover = mover_for(doc, stored.srid).map_err(|why| {
+        refuse(
+            codes::CRS_MISMATCH,
+            format!("“{table}” bağlanamaz: {why}."),
+            "edit.reproject",
+        )
+    })?;
+    stored.reachable(mover.as_ref());
     let mut warnings = Vec::new();
     let (layer, objects, layers) = match layer {
         Some(id) => {
@@ -616,7 +714,7 @@ fn link_table(
                     "edit.layer",
                 ));
             }
-            let d = diff(doc, id, &stored);
+            let d = diff(doc, id, &stored, mover.as_ref());
             if !d.is_empty() || d.mismatch.is_some() {
                 return Err(refuse(
                     codes::SOURCE_DIFFERS,
@@ -636,7 +734,7 @@ fn link_table(
                 path: path.to_owned(),
                 tables: vec![table.to_owned()],
                 layers: Default::default(),
-                reproject: false,
+                reproject: mover.is_some(),
             };
             let (out, w) = crate::file_import_gpkg::run_with(doc, &input, true)?;
             // A table without geometry has no system to declare.
@@ -682,9 +780,12 @@ fn edit_run(
     input: &SourcesEdit,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     match &input.edit {
-        SourcesEditOp::Link { path, table, layer } => {
-            link_table(doc, path, table, layer.as_deref())
-        }
+        SourcesEditOp::Link {
+            path,
+            table,
+            layer,
+            reproject,
+        } => link_table(doc, path, table, layer.as_deref(), *reproject),
         SourcesEditOp::Unlink { id } => {
             if link_of(doc, id).is_none() {
                 return Err(refuse(
@@ -815,7 +916,15 @@ fn sync_run(
             "layer",
         ));
     }
-    let stored = load_or_refuse(path, &link.table, "layer")?;
+    let mut stored = load_or_refuse(path, &link.table, "layer")?;
+    let mover = mover_for(doc, link.srid).map_err(|why| {
+        refuse(
+            codes::CRS_MISMATCH,
+            format!("“{}” eşitlenemez: {why}.", link.layer),
+            "layer",
+        )
+    })?;
+    stored.reachable(mover.as_ref());
     match input.direction {
         SyncDirection::Write => {
             if !link.writable || !stored.writable {
@@ -838,7 +947,7 @@ fn sync_run(
                     "layer",
                 ));
             }
-            let d = diff(doc, &link.layer, &stored);
+            let d = diff(doc, &link.layer, &stored, mover.as_ref());
             if let Some((uid, why)) = &d.mismatch {
                 return Err(refuse(
                     codes::GEOMETRY_MISMATCH,
@@ -936,14 +1045,7 @@ fn sync_run(
                     "layer",
                 ));
             }
-            let read = gp::read(path, Some(std::slice::from_ref(&link.table)))
-                .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "layer"))?;
-            let objects = read
-                .tables
-                .into_iter()
-                .next()
-                .map(|t| t.objects)
-                .unwrap_or_default();
+            let objects = stored.in_project(mover.as_ref());
             let wanted: HashSet<Uuid> = objects.iter().map(|(u, _)| *u).collect();
             let mut updates: Vec<(Slot, kentos_contracts::Entity)> = Vec::new();
             let mut adds = Vec::new();

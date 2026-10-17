@@ -255,6 +255,79 @@ pub fn transform(from: &System, to: &System, p: Vec2) -> Option<Transformed> {
     transform_in(from, to, p, &[]).ok()
 }
 
+/// The box `[min x, min y, max x, max y]` of the system `from` as a box of the system `to` (docs/adr/0504 §2): each
+/// edge sampled at `densify` inner points besides its corners (PROJ's `proj_trans_bounds` with `densify_pts`), the
+/// moved points' extent. Points the target does not reach are left out; none when no point is reached. A target in
+/// degrees whose sampled edges cross the antimeridian answers `min x > max x` (the box wraps), as PROJ does.
+pub fn transform_bounds(
+    from: &System,
+    to: &System,
+    bounds: [f64; 4],
+    densify: usize,
+    choices: &[Choice],
+) -> Option<[f64; 4]> {
+    let [x0, y0, x1, y1] = bounds;
+    if !(x0 <= x1 && y0 <= y1) || bounds.iter().any(|v| !v.is_finite()) {
+        return None;
+    }
+    let steps = densify + 1;
+    let mut ring = Vec::with_capacity(4 * steps);
+    let edge = |a: Vec2, b: Vec2, out: &mut Vec<Vec2>| {
+        for i in 0..steps {
+            let t = i as f64 / steps as f64;
+            out.push(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
+        }
+    };
+    edge(Vec2::new(x0, y0), Vec2::new(x1, y0), &mut ring);
+    edge(Vec2::new(x1, y0), Vec2::new(x1, y1), &mut ring);
+    edge(Vec2::new(x1, y1), Vec2::new(x0, y1), &mut ring);
+    edge(Vec2::new(x0, y1), Vec2::new(x0, y0), &mut ring);
+    let geographic = to.is_geographic();
+    let moved: Vec<Vec2> = ring
+        .into_iter()
+        .filter_map(|p| transform_in(from, to, p, choices).ok().map(|t| t.point))
+        // Longitudes folded into [-180°, 180°): a projection's may run past the antimeridian.
+        .map(|p| {
+            if geographic && !(-180.0..180.0).contains(&p.x) {
+                Vec2::new((p.x + 180.0).rem_euclid(360.0) - 180.0, p.y)
+            } else {
+                p
+            }
+        })
+        .collect();
+    if moved.is_empty() {
+        return None;
+    }
+    let (mut lo_y, mut hi_y) = (f64::INFINITY, f64::NEG_INFINITY);
+    for p in &moved {
+        lo_y = crate::jsmath::js_min(lo_y, p.y);
+        hi_y = crate::jsmath::js_max(hi_y, p.y);
+    }
+    let (mut lo_x, mut hi_x) = (f64::INFINITY, f64::NEG_INFINITY);
+    for p in &moved {
+        lo_x = crate::jsmath::js_min(lo_x, p.x);
+        hi_x = crate::jsmath::js_max(hi_x, p.x);
+    }
+    // In degrees, a sampled edge that jumps more than half the world crosses the antimeridian: the box is the
+    // longitudes' gap's complement.
+    if geographic && hi_x - lo_x > 180.0 {
+        let mut xs: Vec<f64> = moved.iter().map(|p| p.x).collect();
+        xs.sort_by(f64::total_cmp);
+        let (mut gap, mut at) = (0.0, 0);
+        for i in 1..xs.len() {
+            if xs[i] - xs[i - 1] > gap {
+                gap = xs[i] - xs[i - 1];
+                at = i;
+            }
+        }
+        if gap > 180.0 {
+            lo_x = xs[at];
+            hi_x = xs[at - 1];
+        }
+    }
+    Some([lo_x, lo_y, hi_x, hi_y])
+}
+
 /// The op's answer: the moved point, or why there is none.
 struct Moved(Result<Transformed, Unreached>);
 

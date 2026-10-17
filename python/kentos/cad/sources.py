@@ -141,10 +141,13 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
     çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun
     satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş
     tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi
-    taşımalıdır (source_differs). Tablo projenin sisteminde olmalıdır (crs_mismatch):
-    bağlı katman çevrilmez. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar;
-    projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer,
-    nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256)
+    taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır
+    (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi
+    sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri
+    çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda
+    dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin
+    ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler
+    kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256)
     olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok
     1000 bağ.
     """
@@ -169,8 +172,11 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
         """Kaynağa bağla: Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da
         bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır
         (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse
-        o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Tablo
-        projenin sisteminde olmalıdır (crs_mismatch): bağlı katman çevrilmez. Bağ dosyanın
+        o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka
+        sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın
+        nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her
+        seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler
+        kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın
         SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma
         adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni
         yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir

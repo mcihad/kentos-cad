@@ -84,6 +84,41 @@ fn vertices(e: &mut Entity, f: &mut dyn FnMut(&mut Vec2)) -> bool {
     }
 }
 
+/// One object moved from `from` into `to` in place (a bound layer's object and its table's row, docs/adr/0504 §1).
+/// `Err(None)`: a kind that is not points and straight paths (an arc does not move exactly); `Err(Some(why))`: a
+/// vertex the target does not reach. The object is unchanged when it is refused.
+pub fn move_entity(
+    e: &mut Entity,
+    from: &System,
+    to: &System,
+    choices: &[Choice],
+) -> Result<(), Option<Unreached>> {
+    let mut moved = e.clone();
+    let mut miss: Option<Unreached> = None;
+    let taken = vertices(&mut moved, &mut |p: &mut Vec2| {
+        if miss.is_some() {
+            return;
+        }
+        match transform_in(from, to, kentos_geometry_core::Vec2::new(p.x, p.y), choices) {
+            Ok(t) => {
+                *p = Vec2 {
+                    x: t.point.x,
+                    y: t.point.y,
+                }
+            }
+            Err(u) => miss = Some(u),
+        }
+    });
+    if !taken {
+        return Err(None);
+    }
+    if let Some(u) = miss {
+        return Err(Some(u));
+    }
+    *e = moved;
+    Ok(())
+}
+
 /// The import's objects moved from `from` into `to`, the project's datum
 /// choices taken; those not moved are left out and said in the report.
 pub fn reproject(

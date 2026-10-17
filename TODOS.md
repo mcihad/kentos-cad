@@ -198,7 +198,8 @@ Liste:
   yok: sqlite-wasm ya da sunucu yolu kararı), içe aktarma penceresi; TS türleri üretildi.
 - [ ] `CBS-01/02/11/36` bağlı katman (ADR 0503, 17 Ekim): web'de gerekenler: `cad.sources.describe`, `.edit`, `.sync`
   işleyicileri (web'de SQLite ve dosya yazma yok: sunucu yolu ya da File System Access kararı), `.kcad` şema 73'ün
-  `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi.
+  `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi. ADR 0504: `link`'in `reproject`'i ve
+  çekirdeğin `crs::transform_bounds`'u (WASM bağlayıcısı gerekirse).
 - [ ] `CBS-22` standart ilişkiler (ADR 0501, 17 Ekim): web'de gerekenler: `cad.entities.relate` işleyicisi (çekirdeğin
   `ops::de9im`'i WASM'a bağlanır; TS türleri üretildi), `too_many_pairs` kodu ve `invalid_pattern`'ın genişleyen metni.
 - [ ] `FORM-BB` yayından kaldırma (ADR 0445, 17 Ekim): web'de gerekenler: formun `withdrawn`'ı ve `cad.forms.edit`'in `withdraw`'ı
@@ -1766,6 +1767,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   masaüstünde Bağlı katman olarak aç, Katmanlar'da rozet ve Kaynak ▸, şeritte Veri › Dosya alışverişi; Python ve MCP; 71 ortak durum,
   yazma geçici kopyada ve OGR'la. Kalan: PostGIS (CBS-04), kaynak gezgininde önizleme, kaynağa itilen sorgu, üç yollu
   birleştirme, taşınabilir paket. — **17 Ekim, [ADR 0503](docs/adr/0503-bound-layers.md).**
+- [ ] `CBS-07` kaynağın sistemi (ilk dilim): bağlı katmanda `reproject` (katman projenin, tablo kendi sisteminde; yazma ve
+  karşılaştırma tablonun sisteminde, gidip gelen koordinat aynı sayılır, yaylı satıra dokunulmaz), çekirdeğin
+  `crs::transform_bounds`'u (sıklaştırma, antimeridyen; PROJ'la 10 durum); geri yazılan nokta PROJ'la denetlenir. Kalan:
+  katmanın kendi sistemiyle anında çizim, ters dönüşümlü tıklama ve kenet, WKT2, genel PROJ. — **17 Ekim,
+  [ADR 0504](docs/adr/0504-source-crs-and-box-transform.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

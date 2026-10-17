@@ -35557,12 +35557,15 @@ class SimilarSelectRegion(SelectRegion):
 @dataclass(kw_only=True, slots=True)
 class LinkSourcesEditOp(SourcesEditOp):
     """Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
-    `layer` given, which must hold the table's objects as they are.
+    `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
+    only with `reproject` (docs/adr/0504): the layer holds its objects in the project's system, the table keeps
+    its own, and every sync moves them across.
     """
     TAG_VALUE: ClassVar[str] = "link"
     path: str
     table: str
     layer: str | None | Unset = UNSET
+    reproject: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "link"}
@@ -35570,6 +35573,8 @@ class LinkSourcesEditOp(SourcesEditOp):
         out["table"] = self.table
         if self.layer is not UNSET:
             out["layer"] = self.layer
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
         return out
 
     @classmethod
@@ -35578,6 +35583,7 @@ class LinkSourcesEditOp(SourcesEditOp):
             path=data["path"],
             table=data["table"],
             layer=data.get("layer", UNSET),
+            reproject=data.get("reproject", UNSET),
         )
 
 

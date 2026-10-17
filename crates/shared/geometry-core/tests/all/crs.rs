@@ -116,3 +116,56 @@ fn angles_are_written_and_read_as_the_rules_say() {
         }
     }
 }
+
+/// Boxes move as PROJ's `transform_bounds` moves them (`fixtures/geodesy/v1/bounds.json`,
+/// `scripts/fixtures/crs_bounds_cases.py`; docs/adr/0504 §2): grid coordinates within 1e-6 m, degrees within 1e-11; the
+/// antimeridian's box wraps.
+#[test]
+fn boxes_move_as_proj_moves_them() {
+    use kentos_geometry_core::crs::transform_bounds;
+    let path = format!(
+        "{}/../../../fixtures/geodesy/v1/bounds.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value = serde_json::from_str(&std::fs::read_to_string(path).expect("fixture file"))
+        .expect("fixture JSON");
+    assert_eq!(file["format"], "kentos.crs-bounds");
+    let cases = file["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 10);
+    for case in cases {
+        let name = case["name"].as_str().expect("name");
+        let (from, to) = (system(&case["from"]), system(&case["to"]));
+        let b: Vec<f64> = case["bounds"]
+            .as_array()
+            .expect("bounds")
+            .iter()
+            .map(num)
+            .collect();
+        let densify = case["densify"].as_u64().expect("densify") as usize;
+        let got = transform_bounds(&from, &to, [b[0], b[1], b[2], b[3]], densify, &[])
+            .unwrap_or_else(|| panic!("{name}: none"));
+        let tol = if case["to"]["kind"] == "geographic" {
+            1e-11
+        } else {
+            1e-6
+        };
+        for (i, w) in case["expect"]
+            .as_array()
+            .expect("expect")
+            .iter()
+            .enumerate()
+        {
+            assert!(
+                (got[i] - num(w)).abs() <= tol,
+                "{name}: {got:?} ≠ {}",
+                case["expect"]
+            );
+        }
+    }
+    let wgs = system(&json!({"kind": "geographic", "datum": "WGS84"}));
+    assert_eq!(
+        transform_bounds(&wgs, &wgs, [1.0, 2.0, 0.0, 3.0], 2, &[]),
+        None,
+        "an inverted box"
+    );
+}

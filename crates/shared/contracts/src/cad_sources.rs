@@ -138,13 +138,18 @@ pub struct SourcesDescribed {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum SourcesEditOp {
     /// Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
-    /// `layer` given, which must hold the table's objects as they are.
+    /// `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
+    /// only with `reproject` (docs/adr/0504): the layer holds its objects in the project's system, the table keeps
+    /// its own, and every sync moves them across.
     Link {
         path: String,
         table: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         layer: Option<String>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        reproject: bool,
     },
     /// Unbinds a layer; its objects stay.
     Unlink { id: String },

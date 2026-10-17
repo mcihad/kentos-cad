@@ -186,14 +186,18 @@ fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
 }
 
 #[test]
-fn a_file_in_another_system_is_not_bound() {
+fn a_file_in_another_system_is_bound_only_when_the_move_is_asked() {
     let mut app = app_with_drawing();
     app.picker = Picker::File(gpkg("wgs84.gpkg"));
     run(&mut app, "source.link");
-    send(&mut app, Event::Gpkg(G::Reproject));
     let before = count(&app);
     send(&mut app, Event::Gpkg(G::Run));
-    assert_eq!(count(&app), before, "a bound layer is never moved");
+    assert_eq!(count(&app), before, "nothing moved silently");
+    send(&mut app, Event::Gpkg(G::Reproject));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before + 1);
+    let link = app.bound_link("import-yer").expect("bound");
+    assert_eq!(link.srid, Some(4326), "the table keeps its own system");
 }
 
 #[test]

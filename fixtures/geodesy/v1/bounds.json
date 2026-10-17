@@ -1,0 +1,309 @@
+{
+ "format": "kentos.crs-bounds",
+ "version": 1,
+ "proj": "9.7.1",
+ "cases": [
+  {
+   "name": "TM33 → WGS 84, Ankara, köşeler",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5255,
+   "toSrid": 4326,
+   "bounds": [
+    480000.0,
+    4410000.0,
+    500000.0,
+    4430000.0
+   ],
+   "densify": 0,
+   "expect": [
+    32.76577754567358,
+    39.82387981323551,
+    33.0,
+    40.0042416458686
+   ]
+  },
+  {
+   "name": "TM33 → WGS 84, Ankara, sık",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5255,
+   "toSrid": 4326,
+   "bounds": [
+    480000.0,
+    4410000.0,
+    500000.0,
+    4430000.0
+   ],
+   "densify": 21,
+   "expect": [
+    32.76577754567358,
+    39.82387981323551,
+    33.0,
+    40.0042416458686
+   ]
+  },
+  {
+   "name": "TM33 → WGS 84, bütün dilim, köşeler",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5255,
+   "toSrid": 4326,
+   "bounds": [
+    330000.0,
+    4000000.0,
+    670000.0,
+    4700000.0
+   ],
+   "densify": 0,
+   "expect": [
+    30.934626100562284,
+    36.11541084128269,
+    35.06537389943772,
+    42.416789758137746
+   ]
+  },
+  {
+   "name": "TM33 → WGS 84, bütün dilim, sık",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5255,
+   "toSrid": 4326,
+   "bounds": [
+    330000.0,
+    4000000.0,
+    670000.0,
+    4700000.0
+   ],
+   "densify": 21,
+   "expect": [
+    30.934626100562284,
+    36.11541084128269,
+    35.06537389943772,
+    42.43539974139452
+   ]
+  },
+  {
+   "name": "WGS 84 → TM30, İstanbul",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "bounds": [
+    28.5,
+    40.8,
+    29.5,
+    41.3
+   ],
+   "densify": 21,
+   "expect": [
+    373414.3694422067,
+    4518483.197973892,
+    458123.6580145657,
+    4574975.840693682
+   ]
+  },
+  {
+   "name": "WGS 84 → Web Mercator, Türkiye",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 4326,
+   "toSrid": 3857,
+   "bounds": [
+    26.0,
+    36.0,
+    45.0,
+    42.0
+   ],
+   "densify": 21,
+   "expect": [
+    2894306.760625113,
+    4300621.372044271,
+    5009377.085697311,
+    5160979.444049781
+   ]
+  },
+  {
+   "name": "Web Mercator → TM30, İstanbul",
+   "from": {
+    "kind": "mercator"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 3857,
+   "toSrid": 5254,
+   "bounds": [
+    3200000.0,
+    4980000.0,
+    3260000.0,
+    5030000.0
+   ],
+   "densify": 21,
+   "expect": [
+    394151.2973326255,
+    4516428.869132382,
+    439958.58189721516,
+    4554614.347819903
+   ]
+  },
+  {
+   "name": "ED50 UTM 36 → TUREF TM33, Ankara",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 23036,
+   "toSrid": 5255,
+   "bounds": [
+    480000.0,
+    4410000.0,
+    500000.0,
+    4430000.0
+   ],
+   "densify": 21,
+   "expect": [
+    479964.0068881255,
+    4411580.796713984,
+    499971.9347392096,
+    4431588.724059188
+   ]
+  },
+  {
+   "name": "TM30 → UTM 35, sınırda",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "bounds": [
+    380000.0,
+    4300000.0,
+    520000.0,
+    4500000.0
+   ],
+   "densify": 21,
+   "expect": [
+    633778.1287702612,
+    4298616.815196214,
+    780408.5059715256,
+    4503210.269921888
+   ]
+  },
+  {
+   "name": "180° boylamında dilim → WGS 84: kutu sarar",
+   "from": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 180,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": null,
+   "toSrid": 4326,
+   "bounds": [
+    400000.0,
+    5500000.0,
+    600000.0,
+    5600000.0
+   ],
+   "densify": 21,
+   "expect": [
+    178.5886612296265,
+    49.64425686242591,
+    -178.5886612296265,
+    50.55193238270382
+   ]
+  }
+ ]
+}

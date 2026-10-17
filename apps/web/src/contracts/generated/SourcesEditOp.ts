@@ -3,4 +3,4 @@
 /**
  * An edit of the project's bound layers.
  */
-export type SourcesEditOp = { "kind": "link", path: string, table: string, layer?: string, } | { "kind": "unlink", id: string, } | { "kind": "relink", id: string, path: string, };
+export type SourcesEditOp = { "kind": "link", path: string, table: string, layer?: string, reproject?: boolean, } | { "kind": "unlink", id: string, } | { "kind": "relink", id: string, path: string, };

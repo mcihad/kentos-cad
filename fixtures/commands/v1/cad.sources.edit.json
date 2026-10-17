@@ -570,7 +570,7 @@
    ]
   },
   {
-   "name": "WGS 84'teki tablo bağlanmaz: bağlı katman çevrilmez",
+   "name": "WGS 84'teki tablo çevirme istenmeden bağlanmaz",
    "steps": [
     {
      "op": "execute",
@@ -585,13 +585,87 @@
       "status": "failed",
       "error": {
        "code": "crs_mismatch",
-       "message": "“yer” tablosu EPSG:4326 sisteminde, proje EPSG:5256. Bağlı katman dosyayla aynı sistemde olmalı: projeyi EPSG:4326'de açın ya da tabloyu çevirip içe aktarın.",
-       "path": "edit.path"
+       "message": "“yer” tablosu EPSG:4326 sisteminde, proje EPSG:5256. Katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde tutulsun diye reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "edit.reproject"
       }
      },
      "expect": {
       "revision": "same"
      }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki tablo reproject ile bağlanır: katman projenin, tablo kendi sisteminde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/wgs84.gpkg",
+       "table": "yer",
+       "reproject": true
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/wgs84.gpkg",
+        "table": "yer",
+        "layer": "import-yer",
+        "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+        "digest": "$any",
+        "srid": 4326,
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/wgs84.gpkg",
+         "table": "yer",
+         "layer": "import-yer",
+         "revision": "35d423f243bf461edd4f7ae2d74582a54f65cc90f657f37bfe988951cd77d64f",
+         "digest": "$any",
+         "srid": 4326,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
     }
    ]
   },
