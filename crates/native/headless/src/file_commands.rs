@@ -12,10 +12,11 @@ use std::path::{Path, PathBuf};
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
     BlockFileExported, CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult,
-    DxfExported, ExportBlock, ExportDxf, ExportPdf, FILE_COMMANDS, FILE_EXPORT_BLOCK,
-    FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION, FILE_EXPORT_PDF,
-    FILE_EXPORT_PDF_VERSION, FileEffect, LayerNodeType, PdfExported, ReplayOutcome, ReplayStep,
-    codes,
+    CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, FILE_COMMANDS,
+    FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION,
+    FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION,
+    FileEffect, GpkgExported, GpkgTableExported, LayerNodeType, PdfExported, ReplayOutcome,
+    ReplayStep, codes,
 };
 use kentos_domain::Document;
 use kentos_native_application::call::{self, CallState};
@@ -362,6 +363,134 @@ pub fn export_block(doc: &Document, input: &ExportBlock) -> Result<BlockFileExpo
     Ok(output)
 }
 
+/// The GeoPackage's bytes, what they hold and what was not written, or the refusal (docs/adr/0502): the layers
+/// (groups give their layers) written to a temporary file by the product commands' conversion, read back.
+/// A GeoPackage made: where it goes, whether a file is there, its bytes, what it holds and what it says.
+type GpkgMade = (PathBuf, bool, Vec<u8>, GpkgExported, Vec<CommandWarning>);
+
+fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    let (path, exists) = target(&input.path, input.overwrite)?;
+    let mut ids = Vec::new();
+    for (i, id) in input.layers.iter().enumerate() {
+        let Some(node) = doc.layers().get(id) else {
+            return Err(refuse(
+                codes::LAYER_NOT_FOUND,
+                format!(
+                    "“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."
+                ),
+                &format!("layers[{i}]"),
+            ));
+        };
+        match node.kind {
+            LayerNodeType::Layer => ids.push(id.clone()),
+            LayerNodeType::Group => {
+                ids.extend(doc.layers().leaves_of(id).iter().map(|n| n.id.clone()))
+            }
+        }
+    }
+    let tmp = std::env::temp_dir().join(format!(
+        "kentos-gpkg-{}-{}.gpkg",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ));
+    let _ = std::fs::remove_file(&tmp);
+    let written = kentos_native_application::geopackage::write(doc, &ids, &tmp);
+    let bytes = std::fs::read(&tmp);
+    let _ = std::fs::remove_file(&tmp);
+    let written = written.map_err(|why| {
+        refuse(
+            codes::FILE_UNWRITABLE,
+            format!("GeoPackage yazılamadı: {why}"),
+            "path",
+        )
+    })?;
+    let bytes = bytes.map_err(|e| {
+        refuse(
+            codes::FILE_UNWRITABLE,
+            format!("GeoPackage geri okunamadı: {e}"),
+            "path",
+        )
+    })?;
+    if written.tables.is_empty() {
+        return Err(refuse(
+            codes::NOTHING_TO_EXPORT,
+            "Seçilen katmanlarda GeoPackage'a yazılacak nesne yok: yazılar, ölçüler, bloklar ve taramaların GeoPackage'da geometrisi yok.",
+            if input.layers.is_empty() {
+                "path"
+            } else {
+                "layers"
+            },
+        ));
+    }
+    let mut warnings = Vec::new();
+    if !written.left.is_empty() || written.approximated > 0 || !written.renamed.is_empty() {
+        let mut parts: Vec<String> = written
+            .left
+            .iter()
+            .map(|(k, n)| format!("{n} {k}"))
+            .collect();
+        let mut message = String::new();
+        if !parts.is_empty() {
+            message.push_str(&format!(
+                "GeoPackage'da karşılığı olmayan nesneler yazılmadı: {}.",
+                std::mem::take(&mut parts).join(", ")
+            ));
+        }
+        if written.approximated > 0 {
+            if !message.is_empty() {
+                message.push(' ');
+            }
+            message.push_str(&format!(
+                "{} eğri (elips, eğri, NURBS) 0,1 mm'lik kirişlerle yazıldı.",
+                written.approximated
+            ));
+        }
+        for (table, from, to) in &written.renamed {
+            if !message.is_empty() {
+                message.push(' ');
+            }
+            message.push_str(&format!(
+                "“{table}” tablosunda “{from}” özniteliği “{to}” sütununa yazıldı: aynı adda (büyük küçük harf ayrı) bir sütun vardı."
+            ));
+        }
+        warnings.push(CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message,
+            path: Some("layers".into()),
+        });
+    }
+    let output = GpkgExported {
+        path: path.display().to_string(),
+        bytes: bytes.len() as u64,
+        sha256: sha256_hex(&bytes),
+        tables: written
+            .tables
+            .into_iter()
+            .map(|t| GpkgTableExported {
+                table: t.table,
+                layer: t.layer,
+                rows: t.rows,
+                geometry: t.geometry,
+            })
+            .collect(),
+        left: written.left,
+        approximated: written.approximated,
+    };
+    Ok((path, exists, bytes, output, warnings))
+}
+
+/// The GeoPackage written whole, as `file.export.gpkg` writes it (docs/adr/0502).
+pub fn export_gpkg(
+    doc: &Document,
+    input: &ExportGpkg,
+) -> Result<(GpkgExported, Vec<CommandWarning>), Refused> {
+    let (path, _, bytes, output, warnings) = gpkg(doc, input)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
+
 /// Writes `bytes` to `path` whole (`files::write_bytes`), or the refusal.
 fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
     files::write_bytes(bytes, path)
@@ -424,6 +553,48 @@ fn run_typed(
             ))
         }};
     }
+    if command == FILE_EXPORT_GPKG {
+        let typed: ExportGpkg = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, _, bytes, output, warnings) = match gpkg(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
     match command {
         FILE_EXPORT_DXF => go!(ExportDxf, dxf),
         FILE_EXPORT_PDF => go!(ExportPdf, pdf),
@@ -436,6 +607,7 @@ fn version_of(command: &str) -> u32 {
     match command {
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
+        FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -450,6 +622,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_BLOCK => serde_json::from_value::<ExportBlock>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_GPKG => serde_json::from_value::<ExportGpkg>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         _ => serde_json::from_value::<ExportPdf>(input.clone())

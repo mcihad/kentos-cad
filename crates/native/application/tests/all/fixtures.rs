@@ -29,15 +29,16 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, MeasuredPoint,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, MeasuredPoint,
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
+use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
-    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
+    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
     layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset,
@@ -49,7 +50,7 @@ use kentos_native_application::{
     arrays_edit, changeset, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, stretch,
+    entities_reverse, file_import, file_import_gpkg, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -836,6 +837,13 @@ impl Input for kentos_domain::contracts::EntitiesPick {
     }
 }
 
+// Ids and a pattern: no number a case makes NaN (docs/adr/0501).
+impl Input for kentos_domain::contracts::EntitiesRelate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::EntitiesSelect {
     /// The region's `region.a.x` … `region.radius`, `region.tolerance`, `region.points[i].x`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1617,6 +1625,34 @@ impl Input for ImportDxf {
     }
 }
 
+impl Input for ImportGpkg {
+    /// No number: a path, table names and a choice.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SourcesDescribe {
+    /// No number: a path.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SourcesEdit {
+    /// No number: paths, a table, a layer and ids.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SourcesSync {
+    /// No number: a layer and a direction.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for NetworkDefine {
     /// `network.tolerance` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -2272,6 +2308,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ENTITIES_PICK => {
             run!(entities_pick, kentos_domain::contracts::EntitiesPick)
         }
+        kentos_domain::contracts::CAD_ENTITIES_RELATE => {
+            run!(entities_relate, kentos_domain::contracts::EntitiesRelate)
+        }
         kentos_domain::contracts::CAD_ENTITIES_SELECT => {
             run!(entities_select, kentos_domain::contracts::EntitiesSelect)
         }
@@ -2433,6 +2472,10 @@ fn run_op(
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
+        kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
+        kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
+        kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
+        kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -2922,7 +2965,7 @@ fn check(
                 for (k, v) in want.as_object().unwrap_or(&empty) {
                     expect_same(
                         got.get(k).unwrap_or(&Value::Null),
-                        v,
+                        &setup_paths(v),
                         &format!("ayar {k}"),
                         at,
                     )?;
@@ -2956,7 +2999,18 @@ fn check(
     Ok(())
 }
 
+/// `value` with every `$fixture:` path in its texts made absolute (a bound layer's file, docs/adr/0503).
+fn setup_paths(value: &Value) -> Value {
+    match value {
+        Value::String(text) if text.contains("$fixture:") => Value::String(with_fixtures(text)),
+        Value::Array(items) => Value::Array(items.iter().map(setup_paths).collect()),
+        Value::Object(fields) => Value::Object(fields.iter().map(|(k, v)| (k.clone(), setup_paths(v))).collect()),
+        other => other.clone(),
+    }
+}
+
 fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()> {
+    let setup = &setup_paths(setup);
     let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
         .map_err(|e| format!("{at}: kurulum: {e}"))?;
     let mut doc = Document::from_snapshot(snapshot).map_err(|e| format!("{at}: kurulum: {e}"))?;

@@ -51,8 +51,9 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
             // Wide windows show every panel as designed. CBS's Veri, with Alt türler and Değer
             // bileşimleri (docs/adr/0422, 0423), is 3474 px in the interface's typefaces; its
-            // Harita, twelve panels with Adres (docs/adr/0229 §13), 3292 px.
-            let (wide, _) = fitted(&app, tab, 3600.0);
+            // Harita, twelve panels with Adres (docs/adr/0229 §13), 3292 px; Veri with the bound layers'
+            // three buttons in Dosya alışverişi (docs/adr/0503 §5) 3647 px.
+            let (wide, _) = fitted(&app, tab, 3800.0);
             let full: f32 = groups(&app, tab).iter().map(|g| g.widths()[0]).sum();
             assert!(
                 wide.iter().all(|&l| l == 0),

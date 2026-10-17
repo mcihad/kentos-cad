@@ -107,6 +107,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "eğrinin kopyası yaklaşıktır, kesin bir beklentiyle yazılamaz; geometri-core'un offset_notes testinde eğriye uzaklığıyla denetlenir (ADR 0293)",
     ),
     (
+        "cad.entities.relate",
+        "too_many_pairs",
+        "bir milyondan çok çift için binlerce kimlik gerekir; durum dosyasını büyütmeye değmez, sınır entities_relate.rs'in MAX_RELATE_PAIRS denetimidir (ADR 0501 §3)",
+    ),
+    (
         "cad.entities.select",
         "too_many_points",
         "100 001 noktalı ya da kimlikli durum dosyayı megabaytlarca büyütür; bu dosyanın selections_beyond_the_limit testinde",
@@ -175,6 +180,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.entities.join",
         "join_failed",
         "beklenmez: çekirdek yalnız boş zinciri reddeder, komut onu nothing_to_join ile önce yakalar (ADR 0254 §4)",
+    ),
+    (
+        "cad.sources.sync",
+        "file_unwritable",
+        "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada sources.rs sınar",
+    ),
+    (
+        "cad.sources.edit",
+        "too_many_sources",
+        "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
     ),
     (
         "cad.sheets.edit",

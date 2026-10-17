@@ -1,0 +1,2542 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.relate",
+ "commandVersion": 1,
+ "title": "Standart ilişkiler: DE-9IM matrisi ve yüklemler",
+ "note": "ADR 0501. Düz kenarlı çiftlerin matrisleri GEOS'tan (QGIS 4.2'nin Python'u), yüklemler OGC SFA 1.2.1'in desenlerinden; dairenin çiftleri tanımdan elle. Konuma göre seç'in 1 mm toleransı yok: sınırdaki nokta covers'ta tutar, contains'te tutmaz. Çizim değişmez. Bağımsız başvuru: scripts/fixtures/relate_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Standart ilişkiler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "nokta",
+    "name": "Nokta",
+    "type": "layer",
+    "visible": false,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 10.0
+     },
+     {
+      "x": 0.0,
+      "y": 10.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 10.0,
+      "y": 0.0
+     },
+     {
+      "x": 20.0,
+      "y": 0.0
+     },
+     {
+      "x": 20.0,
+      "y": 10.0
+     },
+     {
+      "x": 10.0,
+      "y": 10.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 2.0,
+      "y": 2.0
+     },
+     {
+      "x": 4.0,
+      "y": 2.0
+     },
+     {
+      "x": 4.0,
+      "y": 4.0
+     },
+     {
+      "x": 2.0,
+      "y": 4.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 5.0,
+      "y": 5.0
+     },
+     {
+      "x": 15.0,
+      "y": 5.0
+     },
+     {
+      "x": 15.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 15.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 30.0,
+      "y": 0.0
+     },
+     {
+      "x": 40.0,
+      "y": 0.0
+     },
+     {
+      "x": 40.0,
+      "y": 10.0
+     },
+     {
+      "x": 30.0,
+      "y": 10.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 33.0,
+        "y": 7.0
+       },
+       {
+        "x": 37.0,
+        "y": 7.0
+       },
+       {
+        "x": 37.0,
+        "y": 3.0
+       },
+       {
+        "x": 33.0,
+        "y": 3.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 34.0,
+      "y": 4.0
+     },
+     {
+      "x": 36.0,
+      "y": 4.0
+     },
+     {
+      "x": 36.0,
+      "y": 6.0
+     },
+     {
+      "x": 34.0,
+      "y": 6.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 10.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 5.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 50.0,
+     "y": 50.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": -5.0,
+     "y": 5.0
+    },
+    "b": {
+     "x": 15.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 11,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 12,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 10.0
+     },
+     {
+      "x": 0.0,
+      "y": 10.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 13,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 10.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 14,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 2.0,
+     "y": -5.0
+    },
+    "b": {
+     "x": 2.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 15,
+    "layerId": "parsel",
+    "attrs": {},
+    "c": {
+     "x": 60.0,
+     "y": 0.0
+    },
+    "r": 5.0
+   },
+   {
+    "kind": "point",
+    "id": 16,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 65.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 60.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 18,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 55.0,
+      "y": -5.0
+     },
+     {
+      "x": 65.0,
+      "y": -5.0
+     },
+     {
+      "x": 65.0,
+      "y": 5.0
+     },
+     {
+      "x": 55.0,
+      "y": 5.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 19,
+    "layerId": "nokta",
+    "attrs": {},
+    "p": {
+     "x": 5.0,
+     "y": 5.0
+    },
+    "parts": [
+     {
+      "p": {
+       "x": 25.0,
+       "y": 5.0
+      }
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 20,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 10.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 21,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 12.0,
+     "y": 5.0
+    },
+    "b": {
+     "x": 18.0,
+     "y": 5.0
+    }
+   },
+   {
+    "kind": "xline",
+    "id": 22,
+    "layerId": "yol",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "dir": {
+     "x": 1.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 23,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 0.0
+     },
+     {
+      "x": 10.0,
+      "y": 10.0
+     },
+     {
+      "x": 0.0,
+      "y": 10.0
+     },
+     {
+      "x": 0.0,
+      "y": 0.0
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "sınırdaki noktanın matrisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:7",
+         "matrix": "FF20F1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sınırdaki noktayı kapsar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:7"
+      ],
+      "predicate": "covers"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:7",
+         "matrix": "FF20F1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sınırdaki noktayı içermez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:7"
+      ],
+      "predicate": "contains"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içteki noktayı içerir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:7",
+       "$uidOf:8",
+       "$uidOf:9",
+       "$uidOf:19"
+      ],
+      "predicate": "contains"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:8",
+         "matrix": "0F2FF1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ortak kenarlı parseller değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "predicate": "touches"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:2",
+         "matrix": "FF2F11212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "örtüşen parseller",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "b": [
+       "$uidOf:4"
+      ],
+      "predicate": "overlaps"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:4",
+         "matrix": "212101212"
+        },
+        {
+         "a": "$uidOf:2",
+         "b": "$uidOf:4",
+         "matrix": "212101212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içteki parsel içinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "within"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:3",
+         "b": "$uidOf:1",
+         "matrix": "2FF1FF212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parseli kesen yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:10",
+       "$uidOf:11",
+       "$uidOf:21"
+      ],
+      "b": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "predicate": "crosses"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:10",
+         "b": "$uidOf:1",
+         "matrix": "101FF0212"
+        },
+        {
+         "a": "$uidOf:10",
+         "b": "$uidOf:2",
+         "matrix": "1010F0212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sınır boyunca çizgi kapsanır ama içinde kalmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:11",
+       "$uidOf:12"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "coveredBy"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:11",
+         "b": "$uidOf:1",
+         "matrix": "F1FF0F212"
+        },
+        {
+         "a": "$uidOf:12",
+         "b": "$uidOf:1",
+         "matrix": "F1FF0F212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sınır boyunca çizgi içinde kalmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:11",
+       "$uidOf:12"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "within"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ortak sınır çizgisi iki parsele de değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:13"
+      ],
+      "b": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "predicate": "touches"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:13",
+         "b": "$uidOf:1",
+         "matrix": "F1FF0F212"
+        },
+        {
+         "a": "$uidOf:13",
+         "b": "$uidOf:2",
+         "matrix": "F1FF0F212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ucu sınırda biten çizgi değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:14"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "touches"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:14",
+         "b": "$uidOf:1",
+         "matrix": "FF1F00212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "delikteki parsel ayrık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:6"
+      ],
+      "b": [
+       "$uidOf:5"
+      ],
+      "predicate": "disjoint"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:6",
+         "b": "$uidOf:5",
+         "matrix": "FF2FF1212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "delikli parsel deliktekiyle kesişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:5"
+      ],
+      "b": [
+       "$uidOf:6"
+      ],
+      "predicate": "intersects"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı çizgi eşit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:11"
+      ],
+      "b": [
+       "$uidOf:20",
+       "$uidOf:13"
+      ],
+      "predicate": "equals"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:11",
+         "b": "$uidOf:20",
+         "matrix": "1FFF0FFF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kapalı yolun sınırı yok: çizgi kapsanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:23"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "coveredBy"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:23",
+         "b": "$uidOf:1",
+         "matrix": "F1FFFF2F2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kapalı yolla açık yol: matrisler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:23"
+      ],
+      "b": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:23",
+         "b": "$uidOf:12",
+         "matrix": "101FFFFF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok noktalının biri dışarıda: içinde kalmaz, kesişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:19"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "within"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok noktalı kesişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:19"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "intersects"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:19",
+         "b": "$uidOf:1",
+         "matrix": "0F0FFF212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "içerme deseni",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:3",
+       "$uidOf:7",
+       "$uidOf:8"
+      ],
+      "pattern": "T*****FF*"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:3",
+         "matrix": "212FF1FF2"
+        },
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:8",
+         "matrix": "0F2FF1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "küçük harfli desen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:3",
+       "$uidOf:7",
+       "$uidOf:8"
+      ],
+      "pattern": "t*****ff*"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:3",
+         "matrix": "212FF1FF2"
+        },
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:8",
+         "matrix": "0F2FF1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dairenin sınırındaki nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:15"
+      ],
+      "b": [
+       "$uidOf:16",
+       "$uidOf:17"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:15",
+         "b": "$uidOf:16",
+         "matrix": "FF20F1FF2"
+        },
+        {
+         "a": "$uidOf:15",
+         "b": "$uidOf:17",
+         "matrix": "0F2FF1FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "daire kareye teğet içinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:15"
+      ],
+      "b": [
+       "$uidOf:18"
+      ],
+      "predicate": "within"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:15",
+         "b": "$uidOf:18",
+         "matrix": "2FF10F212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kare daireyi kapsar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:18"
+      ],
+      "b": [
+       "$uidOf:15"
+      ],
+      "predicate": "covers"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:18",
+         "b": "$uidOf:15",
+         "matrix": "212F01FF2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "uzaktaki daire ayrık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:15"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "disjoint"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:15",
+         "b": "$uidOf:1",
+         "matrix": "FF2FF1212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yardımcı çizgi okunmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:22",
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:8",
+         "matrix": "0F2FF1FF2"
+        }
+       ],
+       "revision": "$current",
+       "unread": [
+        "$uidOf:22"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gizli ve kilitli katmandaki nokta da okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:8"
+      ],
+      "b": [
+       "$uidOf:1"
+      ],
+      "predicate": "within"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:8",
+         "b": "$uidOf:1",
+         "matrix": "0FFFFF212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "predicate": "touches"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "$uidOf:1",
+         "b": "$uidOf:2",
+         "matrix": "FF2F11212"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:2"
+      ],
+      "predicate": "touches"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş a",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [],
+      "b": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_objects",
+       "message": "a listesi boş: ilişkisi sorulacak nesnelerin kalıcı kimliklerini verin.",
+       "path": "a"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hem yüklem hem desen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:2"
+      ],
+      "predicate": "touches",
+      "pattern": "F********"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hem yüklem hem desen verildi: birini verin (predicate ya da pattern) ya da hiçbirini (bütün çiftlerin matrisleri).",
+       "path": "pattern"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kısa desen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1"
+      ],
+      "b": [
+       "$uidOf:2"
+      ],
+      "pattern": "T*F"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pattern",
+       "message": "“T*F” bir DE-9IM deseni değil: dokuz harf, her biri T, F, *, 0, 1 ya da 2 olmalı (içerme T*****FF* gibi).",
+       "path": "pattern"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "$uidOf:1",
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+      ],
+      "b": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "a[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

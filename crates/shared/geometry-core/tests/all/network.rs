@@ -435,10 +435,9 @@ fn the_analyses_give_what_the_independent_reference_gives() {
 
 /// TODOS.md `GEO-01`: the overlay's union of its own result with buffers whose end circles lie on that result's
 /// boundary counts area twice. Here a service area's first band (one area, no holes) joined again with the second
-/// band's buffers gives more than all the buffers joined at once (and than shapely's 27 590.47 m²). Kept ignored
-/// until the overlay is fixed; `service_polygons` joins every band from its buffers.
+/// band's buffers gave more than all the buffers joined at once (and than shapely's 27 590.47 m²). The overlay's
+/// robustness rules (docs/adr/0221 §10) closed it; fixtures/overlay/v1 holds the wider corpus (docs/adr/0500).
 #[test]
-#[ignore = "the overlay's bug GEO-01, not fixed yet"]
 fn geo01_a_union_joined_again_with_touching_circles() {
     use kentos_geometry_core::ops::geoprocess::buffer::edge_pieces;
     use kentos_geometry_core::ops::geoprocess::union_all;

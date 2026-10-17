@@ -208,6 +208,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::HatchPatternDef>>"))]
     pub hatch_patterns: Vec<crate::HatchPatternDef>,
+    /// The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceLink>>"))]
+    pub sources: Vec<crate::SourceLink>,
     /// The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
     /// absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]

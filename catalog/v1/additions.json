@@ -1270,6 +1270,94 @@
       "shortcuts": [],
       "category": "Veri",
       "status": "implemented"
+    },
+    {
+      "id": "file.import.gpkg",
+      "title": "GeoPackage…",
+      "icon": "importGpkg",
+      "description": "Bir GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını çizime alır: tablolar katman, sütunlar alan, satırlar nesne ve geometrisiz kayıt olur; yaylar, Z ve M korunur, her satır kalıcı kimliğiyle gelir. Pencere tabloları ve dosyanın koordinat sistemini gösterir; başka sistemdeki dosya Projenin sistemine çevir onayıyla alınır.",
+      "aliases": [
+        "GPKGAL",
+        "GEOPACKAGE",
+        "GPKG"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "file.export.gpkg",
+      "title": "GeoPackage dışa aktar…",
+      "icon": "exportGpkg",
+      "description": "Nesnesi olan katmanları yeni bir GeoPackage'a yazar: her katman bir tablo, alanlar türleriyle, nesnelerin kalıcı kimlikleri kentos_uids uzantısında; yaylar dairesel eğri olarak kesin. GeoPackage'da geometrisi olmayan nesneler (yazı, ölçü, blok, tarama) yazılmaz ve sayılır.",
+      "aliases": [
+        "GPKGVER",
+        "GPKGYAZ"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "source.link",
+      "title": "Kaynağa bağla…",
+      "icon": "sourceLinked",
+      "description": "Bir GeoPackage tablosunu bağlı katman olarak açar: katman tablonun çalışma kopyası olur, değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir. Dosya projenin sisteminde olmalıdır.",
+      "aliases": [
+        "KAYNAKBAGLA",
+        "GPKGBAGLA"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
+      "id": "source.write",
+      "title": "Kaynağa yaz",
+      "icon": "sourceWrite",
+      "description": "Bağlı katmanın değişikliklerini tablosuna tek işlemde yazar: yeni nesneler eklenir, değişenler güncellenir, silinenler silinir, katmanın yeni alanları sütun olur. Dosya başka bir programda değiştiyse yazmaz ve söyler.",
+      "aliases": [
+        "KAYNAKYAZ"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
+      "id": "source.read",
+      "title": "Kaynaktan oku",
+      "icon": "sourceRead",
+      "description": "Bağlı katmanı tablosunun hâline getirir, tek geri alma adımında; nesnelerin görünüşü kalır. Katmanda yazılmamış değişiklik varsa önce sorar.",
+      "aliases": [
+        "KAYNAKOKU"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
+      "id": "source.status",
+      "title": "Kaynak durumu",
+      "icon": "sourceLinked",
+      "description": "Projenin bağlı katmanlarını söyler: dosya yerinde mi, katman ya da dosya değişti mi, kaç nesne farklı.",
+      "aliases": [
+        "KAYNAKDURUM"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
+      "id": "source.unlink",
+      "title": "Bağı çöz",
+      "icon": "sourceUnlink",
+      "description": "Seçili ya da etkin katmanın kaynağa bağını çözer; nesneleri çizimde kalır.",
+      "aliases": [
+        "KAYNAKCOZ"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1404,7 +1492,13 @@
     "layerRules": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"15\" rx=\"1.2\"/><path d=\"M5 6.5h6M5 9.5h6M5 12.5h3\"/><circle cx=\"15\" cy=\"14\" r=\"3.2\" fill=\"currentColor\" fill-opacity=\".15\"/><path d=\"M13.6 14l1 1 1.9-2\" stroke-width=\"1.4\"/>",
     "contingents": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"15\" rx=\"1\"/><rect x=\"11.5\" y=\"2.5\" width=\"6\" height=\"15\" rx=\"1\"/><path d=\"M2.5 7.5h6M2.5 12.5h6M11.5 7.5h6M11.5 12.5h6\"/><path d=\"M8.5 5h3M8.5 10h3\" stroke-width=\"1.4\"/>",
     "subtypes": "<rect x=\"2.5\" y=\"2.5\" width=\"6.5\" height=\"6.5\" rx=\"1\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"14.2\" cy=\"5.8\" r=\"3.3\"/><path d=\"M5.8 11.2 9.3 17.4H2.3z\" stroke-linejoin=\"round\"/><path d=\"M11.2 12h6.3M11.2 14.6h6.3M11.2 17.2h4\"/>",
-    "tableStyles": "<rect x=\"2.5\" y=\"3.5\" width=\"11\" height=\"11\" rx=\"1.2\"/><path d=\"M2.5 7.5h11M2.5 11h11M6.5 3.5v11\"/><path d=\"M15.8 12.2c1 1.4 1.6 2.4 1.6 3a1.6 1.6 0 0 1-3.2 0c0-.6.6-1.6 1.6-3z\" fill=\"currentColor\"/>"
+    "tableStyles": "<rect x=\"2.5\" y=\"3.5\" width=\"11\" height=\"11\" rx=\"1.2\"/><path d=\"M2.5 7.5h11M2.5 11h11M6.5 3.5v11\"/><path d=\"M15.8 12.2c1 1.4 1.6 2.4 1.6 3a1.6 1.6 0 0 1-3.2 0c0-.6.6-1.6 1.6-3z\" fill=\"currentColor\"/>",
+    "importGpkg": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><ellipse cx=\"12.7\" cy=\"9.5\" rx=\"2.8\" ry=\"1.05\" stroke-width=\"1\"/><path d=\"M9.9 9.5v4.9c0 .6 1.25 1.1 2.8 1.1s2.8-.5 2.8-1.1V9.5M9.9 12c0 .6 1.25 1.1 2.8 1.1s2.8-.5 2.8-1.1\" stroke-width=\"1\"/>",
+    "exportGpkg": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><ellipse cx=\"12.7\" cy=\"9.5\" rx=\"2.8\" ry=\"1.05\" stroke-width=\"1\"/><path d=\"M9.9 9.5v4.9c0 .6 1.25 1.1 2.8 1.1s2.8-.5 2.8-1.1V9.5M9.9 12c0 .6 1.25 1.1 2.8 1.1s2.8-.5 2.8-1.1\" stroke-width=\"1\"/>",
+    "sourceLinked": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M14 16.3 16.3 14\" stroke-width=\"1.3\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/>",
+    "sourceWrite": "<ellipse cx=\"12.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M7.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M7.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M1.5 10.5h5.2M4.4 8l2.5 2.5-2.5 2.5\" stroke-width=\"1.4\"/>",
+    "sourceRead": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M13.3 10.5h5.2M16 8l2.5 2.5L16 13\" stroke-width=\"1.4\"/>",
+    "sourceUnlink": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/><path d=\"M12.4 12.4l6.1 6.1\" stroke-width=\"1.3\"/>"
   },
   "ribbon": [
     {
@@ -2177,6 +2271,35 @@
         {
           "command": "data.formAudit",
           "size": "large"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "data",
+      "into": "Dosya alışverişi",
+      "items": [
+        {
+          "command": "file.import.gpkg",
+          "size": "small"
+        },
+        {
+          "command": "file.export.gpkg",
+          "size": "small"
+        },
+        {
+          "command": "source.link",
+          "size": "small"
+        },
+        {
+          "command": "source.write",
+          "size": "small"
+        },
+        {
+          "command": "source.read",
+          "size": "small"
         }
       ]
     }

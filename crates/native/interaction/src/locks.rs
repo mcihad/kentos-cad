@@ -345,6 +345,7 @@ mod tests {
             address_locators: Vec::new(),
             domains: Vec::new(),
             hatch_patterns: Vec::new(),
+            sources: Vec::new(),
         })
     }
 

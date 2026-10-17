@@ -269,6 +269,13 @@
     "file.export.geojson": {
       "level": "none"
     },
+    "file.export.gpkg": {
+      "level": "semantic",
+      "via": [
+        "file.export.gpkg"
+      ],
+      "note": "Kaydet penceresinden sonra komut dosyayı bütün yazar; yazılamayanlar export_losses ile sayılır (ADR 0502)."
+    },
     "file.export.gpx": {
       "level": "none"
     },
@@ -290,6 +297,13 @@
     },
     "file.import.gnss": {
       "level": "none"
+    },
+    "file.import.gpkg": {
+      "level": "semantic",
+      "via": [
+        "file.import.gpkg"
+      ],
+      "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502)."
     },
     "file.import.kml": {
       "level": "none"
@@ -776,6 +790,41 @@
     "service.connections": {
       "level": "host",
       "note": "Bağlantıların gizli değerleri cihazda."
+    },
+    "source.link": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.edit"
+      ],
+      "note": "GeoPackage penceresinin Bağlı katman olarak aç'ı her tabloyu cad.sources.edit link ile bağlar (ADR 0503)."
+    },
+    "source.write": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.sync"
+      ],
+      "note": "Katmanın değişiklikleri cad.sources.sync write ile tabloya (ADR 0503)."
+    },
+    "source.read": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.sync"
+      ],
+      "note": "cad.sources.sync read; katman değiştiyse soru ve discard (ADR 0503)."
+    },
+    "source.status": {
+      "level": "query",
+      "via": [
+        "cad.sources.describe"
+      ],
+      "note": "cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503)."
+    },
+    "source.unlink": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.edit"
+      ],
+      "note": "cad.sources.edit unlink (ADR 0503)."
     },
     "table.insert": {
       "level": "semantic",

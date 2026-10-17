@@ -346,3 +346,91 @@ pub struct EntitiesPicked {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
+
+/// The standard relations between objects (docs/adr/0501).
+pub const CAD_ENTITIES_RELATE: &str = "cad.entities.relate";
+pub const CAD_ENTITIES_RELATE_VERSION: u32 = 1;
+
+/// At most this many pairs of `a` and `b` (docs/adr/0501 §3).
+pub const MAX_RELATE_PAIRS: usize = 1_000_000;
+
+/// A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's
+/// relations, which allow 1 mm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RelatePredicate {
+    Intersects,
+    Disjoint,
+    Contains,
+    Within,
+    Covers,
+    CoveredBy,
+    Touches,
+    Crosses,
+    Overlaps,
+    Equals,
+}
+
+/// Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard
+/// DE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of
+/// `T`, `F`, `*`, `0`, `1`, `2`) only the pairs it holds for are answered; with neither, every pair and its matrix. An
+/// object is read as a query reads it: its areas with their holes (arcs exact), its open paths or its points; Z is not
+/// read. Hidden and locked objects are read as well: the ids are given.
+///
+/// Refusals (`CommandError.code`), in this order: `no_objects` (`a` or `b` empty), `invalid_input` (both `predicate`
+/// and `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more
+/// than 1 000 000 pairs).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesRelate {
+    /// The objects related, by their lasting ids.
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub a: Vec<String>,
+    /// The objects they are related to.
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub b: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub predicate: Option<RelatePredicate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pattern: Option<String>,
+}
+
+/// A pair and its matrix.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RelatedPair {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub a: String,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub b: String,
+    /// The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).
+    pub matrix: String,
+}
+
+/// Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile
+/// does not read (a construction line, a ray), the revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesRelated {
+    pub pairs: Vec<RelatedPair>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub unread: Vec<String>,
+    /// The document's revision the objects were read at, as decimal text.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}

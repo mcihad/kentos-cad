@@ -11162,6 +11162,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sources": {
+                "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
+                "items": {
+                  "$ref": "#/$defs/SourceLink"
+                },
+                "type": "array"
+              },
               "srid": {
                 "format": "uint32",
                 "minimum": 0,
@@ -12322,6 +12329,71 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
             ],
             "type": "object"
           },
@@ -20668,6 +20740,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sources": {
+                "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
+                "items": {
+                  "$ref": "#/$defs/SourceLink"
+                },
+                "type": "array"
+              },
               "srid": {
                 "format": "uint32",
                 "minimum": 0,
@@ -21221,6 +21300,71 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
             ],
             "type": "object"
           },
@@ -33285,6 +33429,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sources": {
+                "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
+                "items": {
+                  "$ref": "#/$defs/SourceLink"
+                },
+                "type": "array"
+              },
               "srid": {
                 "format": "uint32",
                 "minimum": 0,
@@ -34481,6 +34632,71 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
             ],
             "type": "object"
           },
@@ -503708,6 +503924,1571 @@
       ]
     },
     {
+      "id": "cad.sources.describe",
+      "version": 1,
+      "title": "Kaynakları tanı",
+      "summary": "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz.",
+      "aliases": [
+        "kaynaklar"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.sources.describe` v1: a file's tables (`path`), or the project's bound layers' state (none). Refusals:\n`invalid_file_path`, `file_not_found`, `import_unreadable`.",
+        "properties": {
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SourcesDescribe",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "SourceCapabilities": {
+            "description": "What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.",
+            "properties": {
+              "curves": {
+                "description": "Arcs kept as arcs.",
+                "type": "boolean"
+              },
+              "delete": {
+                "type": "boolean"
+              },
+              "insert": {
+                "type": "boolean"
+              },
+              "m": {
+                "type": "boolean"
+              },
+              "read": {
+                "type": "boolean"
+              },
+              "transaction": {
+                "description": "Every write of a sync in one transaction.",
+                "type": "boolean"
+              },
+              "update": {
+                "type": "boolean"
+              },
+              "z": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "read",
+              "insert",
+              "update",
+              "delete",
+              "transaction",
+              "z",
+              "m",
+              "curves"
+            ],
+            "type": "object"
+          },
+          "SourceColumn": {
+            "description": "A column of a table and the field kind it reads as; none for one that is not read (a blob).",
+            "properties": {
+              "declared": {
+                "description": "As the file declares it (`MEDIUMINT`, `TEXT(40)` …).",
+                "type": "string"
+              },
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFieldKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "declared"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
+            ],
+            "type": "object"
+          },
+          "SourceState": {
+            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks).",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "changed": {
+                "description": "The file changed since the layer last matched it.",
+                "type": "boolean"
+              },
+              "edited": {
+                "description": "The layer changed since it last matched the file.",
+                "type": "boolean"
+              },
+              "found": {
+                "type": "boolean"
+              },
+              "link": {
+                "$ref": "#/$defs/SourceLink"
+              },
+              "modified": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "link",
+              "found",
+              "changed",
+              "edited",
+              "added",
+              "modified",
+              "removed"
+            ],
+            "type": "object"
+          },
+          "SourceTable": {
+            "description": "A table of a file.",
+            "properties": {
+              "capabilities": {
+                "$ref": "#/$defs/SourceCapabilities"
+              },
+              "columns": {
+                "items": {
+                  "$ref": "#/$defs/SourceColumn"
+                },
+                "type": "array"
+              },
+              "data": {
+                "description": "`features` or `attributes`.",
+                "type": "string"
+              },
+              "geometry": {
+                "description": "The geometry column's type, none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "data",
+              "rows",
+              "columns",
+              "capabilities"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.describe` v1, and its plan.",
+        "properties": {
+          "links": {
+            "description": "The project's bound layers (without `path`).",
+            "items": {
+              "$ref": "#/$defs/SourceState"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "tables": {
+            "description": "The file's tables (with `path`).",
+            "items": {
+              "$ref": "#/$defs/SourceTable"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "SourcesDescribed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "SourceCapabilities": {
+            "description": "What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.",
+            "properties": {
+              "curves": {
+                "description": "Arcs kept as arcs.",
+                "type": "boolean"
+              },
+              "delete": {
+                "type": "boolean"
+              },
+              "insert": {
+                "type": "boolean"
+              },
+              "m": {
+                "type": "boolean"
+              },
+              "read": {
+                "type": "boolean"
+              },
+              "transaction": {
+                "description": "Every write of a sync in one transaction.",
+                "type": "boolean"
+              },
+              "update": {
+                "type": "boolean"
+              },
+              "z": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "read",
+              "insert",
+              "update",
+              "delete",
+              "transaction",
+              "z",
+              "m",
+              "curves"
+            ],
+            "type": "object"
+          },
+          "SourceColumn": {
+            "description": "A column of a table and the field kind it reads as; none for one that is not read (a blob).",
+            "properties": {
+              "declared": {
+                "description": "As the file declares it (`MEDIUMINT`, `TEXT(40)` …).",
+                "type": "string"
+              },
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerFieldKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "declared"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
+            ],
+            "type": "object"
+          },
+          "SourceState": {
+            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks).",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "changed": {
+                "description": "The file changed since the layer last matched it.",
+                "type": "boolean"
+              },
+              "edited": {
+                "description": "The layer changed since it last matched the file.",
+                "type": "boolean"
+              },
+              "found": {
+                "type": "boolean"
+              },
+              "link": {
+                "$ref": "#/$defs/SourceLink"
+              },
+              "modified": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "link",
+              "found",
+              "changed",
+              "edited",
+              "added",
+              "modified",
+              "removed"
+            ],
+            "type": "object"
+          },
+          "SourceTable": {
+            "description": "A table of a file.",
+            "properties": {
+              "capabilities": {
+                "$ref": "#/$defs/SourceCapabilities"
+              },
+              "columns": {
+                "items": {
+                  "$ref": "#/$defs/SourceColumn"
+                },
+                "type": "array"
+              },
+              "data": {
+                "description": "`features` or `attributes`.",
+                "type": "string"
+              },
+              "geometry": {
+                "description": "The geometry column's type, none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "data",
+              "rows",
+              "columns",
+              "capabilities"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.describe` v1, and its plan.",
+        "properties": {
+          "links": {
+            "description": "The project's bound layers (without `path`).",
+            "items": {
+              "$ref": "#/$defs/SourceState"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "tables": {
+            "description": "The file's tables (with `path`).",
+            "items": {
+              "$ref": "#/$defs/SourceTable"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "SourcesDescribed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir dosyanın tabloları",
+          "input": {
+            "path": "/veri/kadastro.gpkg"
+          }
+        },
+        {
+          "title": "Projenin bağlı katmanları",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "cad.sources.edit",
+      "version": 1,
+      "title": "Kaynağa bağla",
+      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Tablo projenin sisteminde olmalıdır (crs_mismatch): bağlı katman çevrilmez. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ.",
+      "aliases": [
+        "kaynakbagla"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "SourcesEditOp": {
+            "description": "An edit of the project's bound layers.",
+            "oneOf": [
+              {
+                "description": "Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the\n`layer` given, which must hold the table's objects as they are.",
+                "properties": {
+                  "kind": {
+                    "const": "link",
+                    "type": "string"
+                  },
+                  "layer": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "table": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "table"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Unbinds a layer; its objects stay.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "unlink",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The file moved: binds the layer to the file at `path`, which must be the same file (the revision's).",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "relink",
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "path"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/SourcesEditOp"
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "SourcesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.edit` v1, and its plan.",
+        "properties": {
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SourceLink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The binding as it is now; none after unlinking."
+          },
+          "objects": {
+            "description": "The objects taken in, and the layers made (linking onto a new layer).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects",
+          "revision"
+        ],
+        "title": "SourcesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "SourceKind": {
+            "description": "What a source is.",
+            "enum": [
+              "geopackage"
+            ],
+            "type": "string"
+          },
+          "SourceLink": {
+            "additionalProperties": false,
+            "description": "A layer bound to a table of a file.",
+            "properties": {
+              "digest": {
+                "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
+                "type": "string"
+              },
+              "id": {
+                "description": "Its own id, `kaynak-N`.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SourceKind"
+              },
+              "layer": {
+                "description": "The drawing's layer that is its working copy.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The file, an absolute path.",
+                "type": "string"
+              },
+              "revision": {
+                "description": "The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The EPSG code the table declares, none for an undefined system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "table": {
+                "description": "The table in it.",
+                "type": "string"
+              },
+              "writable": {
+                "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "table",
+              "layer",
+              "revision",
+              "digest",
+              "writable"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.edit` v1, and its plan.",
+        "properties": {
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SourceLink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The binding as it is now; none after unlinking."
+          },
+          "objects": {
+            "description": "The objects taken in, and the layers made (linking onto a new layer).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects",
+          "revision"
+        ],
+        "title": "SourcesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "entity_exists",
+          "source_bound",
+          "source_differs",
+          "source_not_found",
+          "source_changed",
+          "too_many_sources"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel tablosunu yeni katman olarak bağla",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "/veri/kadastro.gpkg",
+              "table": "parsel"
+            }
+          }
+        },
+        {
+          "title": "Taşınan dosyanın yeni yeri",
+          "input": {
+            "edit": {
+              "id": "kaynak-1",
+              "kind": "relink",
+              "path": "/arsiv/kadastro.gpkg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.sources.sync",
+      "version": 1,
+      "title": "Kaynakla eşitle",
+      "summary": "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.",
+      "aliases": [
+        "kaynakesitle"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "SyncDirection": {
+            "description": "Which way a sync goes.",
+            "oneOf": [
+              {
+                "const": "write",
+                "description": "The layer's changes into its table.",
+                "type": "string"
+              },
+              {
+                "const": "read",
+                "description": "The table's rows into the layer.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only).",
+        "properties": {
+          "direction": {
+            "$ref": "#/$defs/SyncDirection"
+          },
+          "discard": {
+            "description": "Reading: take the table's rows though the layer differs (one undo step brings the layer back).",
+            "type": "boolean"
+          },
+          "layer": {
+            "description": "The bound layer, by id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "direction"
+        ],
+        "title": "SourcesSync",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "modified": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's SHA-256 after (plan: before).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "added",
+          "modified",
+          "removed",
+          "source",
+          "revision"
+        ],
+        "title": "SourcesSynced",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "modified": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's SHA-256 after (plan: before).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "added",
+          "modified",
+          "removed",
+          "source",
+          "revision"
+        ],
+        "title": "SourcesSynced",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "source_not_found",
+          "layer_not_found",
+          "layer_locked",
+          "source_gone",
+          "import_unreadable",
+          "table_not_found",
+          "source_readonly",
+          "source_changed",
+          "geometry_mismatch",
+          "file_unwritable",
+          "pending_changes"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının değişikliklerini dosyaya yaz",
+          "input": {
+            "direction": "write",
+            "layer": "import-parsel"
+          }
+        },
+        {
+          "title": "Başkasının değiştirdiği tabloyu yeniden oku",
+          "input": {
+            "direction": "read",
+            "layer": "import-parsel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.gpkg",
+      "version": 1,
+      "title": "GeoPackage içe aktar",
+      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "gpkgin",
+        "geopackage"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.gpkg` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `file_not_found`,\n`import_unreadable` (not a GeoPackage, or broken), `table_not_found` (a table of `tables`), `layer_not_found` and\n`not_a_layer` (a target of `layers`), `layer_locked`, `crs_mismatch` (the file's system is not the project's and\n`reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),\n`nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.",
+        "properties": {
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer\nof the same name (case and Turkish marks aside), else onto a new layer with the table's fields.",
+            "type": "object"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "reproject": {
+            "description": "Move the coordinates from the file's system into the project's (the project's datum choices taken); without\nit a file in another system is refused.",
+            "type": "boolean"
+          },
+          "tables": {
+            "description": "The tables to take; empty: every feature and attribute table.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportGpkg",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "table_not_found",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "entity_exists",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Belediyenin parsel ve bina GeoPackage'ı",
+          "input": {
+            "path": "/veri/kadastro.gpkg",
+            "tables": [
+              "parsel",
+              "bina"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.dxf",
       "version": 1,
       "title": "DXF içe aktar",
@@ -528188,6 +529969,221 @@
       ]
     },
     {
+      "id": "cad.entities.relate",
+      "version": 1,
+      "title": "Standart ilişkiler",
+      "summary": "a'nın her nesnesinin b'nin her nesnesiyle DE-9IM matrisini standart profille verir: kayan noktaya kadar kesin, Konuma göre seç'in 1 mm'lik toleransı yok (OGC SFA, PostGIS ST_Relate gibi). predicate (intersects, disjoint, contains, within, covers, coveredBy, touches, crosses, overlaps, equals) ya da pattern (dokuz harf: T, F, *, 0, 1, 2) verilirse yalnız tutan çiftler; ikisi de yoksa bütün çiftler matrisleriyle. Sınırdaki nokta covers'ta tutar, contains'te tutmaz. Nesne alanları ve delikleriyle (yaylar kesin), açık yollarıyla ya da noktalarıyla okunur; Z okunmaz; yardımcı çizgi ve ışın okunmaz (unread). Kimlikler verildiği için gizli ve kilitli nesneler de okunur. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "iliski",
+        "relate",
+        "de9im"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "RelatePredicate": {
+            "description": "A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's\nrelations, which allow 1 mm.",
+            "enum": [
+              "intersects",
+              "disjoint",
+              "contains",
+              "within",
+              "covers",
+              "coveredBy",
+              "touches",
+              "crosses",
+              "overlaps",
+              "equals"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard\nDE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of\n`T`, `F`, `*`, `0`, `1`, `2`) only the pairs it holds for are answered; with neither, every pair and its matrix. An\nobject is read as a query reads it: its areas with their holes (arcs exact), its open paths or its points; Z is not\nread. Hidden and locked objects are read as well: the ids are given.\n\nRefusals (`CommandError.code`), in this order: `no_objects` (`a` or `b` empty), `invalid_input` (both `predicate`\nand `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more\nthan 1 000 000 pairs).",
+        "properties": {
+          "a": {
+            "description": "The objects related, by their lasting ids.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "b": {
+            "description": "The objects they are related to.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pattern": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "predicate": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RelatePredicate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ],
+        "title": "EntitiesRelate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "RelatedPair": {
+            "description": "A pair and its matrix.",
+            "properties": {
+              "a": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "b": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "matrix": {
+                "description": "The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b",
+              "matrix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile\ndoes not read (a construction line, a ray), the revision.",
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/RelatedPair"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unread": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pairs",
+          "revision"
+        ],
+        "title": "EntitiesRelated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "RelatedPair": {
+            "description": "A pair and its matrix.",
+            "properties": {
+              "a": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "b": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "matrix": {
+                "description": "The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "a",
+              "b",
+              "matrix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile\ndoes not read (a construction line, a ray), the revision.",
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/$defs/RelatedPair"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision the objects were read at, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "unread": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "pairs",
+          "revision"
+        ],
+        "title": "EntitiesRelated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "invalid_input",
+          "invalid_pattern",
+          "entity_not_found",
+          "too_many_pairs"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselin sınırındaki nokta: kapsar ama içermez",
+          "input": {
+            "a": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+            ],
+            "b": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+            ],
+            "predicate": "covers"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.select",
       "version": 1,
       "title": "Nesne seç",
@@ -531296,6 +533292,243 @@
       ]
     },
     {
+      "id": "file.export.gpkg",
+      "version": 1,
+      "title": "GeoPackage dışa aktar",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "gpkg",
+        "gpkgout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object\na row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's\ncoordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,\n`nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves\nwritten as chords).",
+        "properties": {
+          "layers": {
+            "description": "The layers, by id; empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "The file to write, an absolute path (`.gpkg`).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGpkg",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "tables",
+          "approximated"
+        ],
+        "title": "GpkgExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "tables",
+          "approximated"
+        ],
+        "title": "GpkgExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel ve yol katmanları",
+          "input": {
+            "layers": [
+              "parsel",
+              "yol"
+            ],
+            "overwrite": true,
+            "path": "/veri/teslim.gpkg"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -533970,7 +536203,13 @@
       "code": "invalid_pattern",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme."
+      "meaning": "Örüntü okunmuyor: katman adında boş ya da kapanmayan küme, DE-9IM deseninde T, F, *, 0, 1, 2 dışında harf ya da dokuzdan başka uzunluk."
+    },
+    {
+      "code": "too_many_pairs",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "1 000 000'dan çok çift olurdu; nesneleri daha küçük kümelere bölün."
     },
     {
       "code": "no_rules",
@@ -534619,6 +536858,90 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler."
+    },
+    {
+      "code": "table_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adı verilen tablo dosyada yok."
+    },
+    {
+      "code": "crs_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyanın koordinat sistemi projeninkinden başka; çevirmeyi isteyin ya da projeyi o sistemde açın."
+    },
+    {
+      "code": "crs_undeclared",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı."
+    },
+    {
+      "code": "entity_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz."
+    },
+    {
+      "code": "source_bound",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman ya da tablo zaten bir kaynağa bağlı."
+    },
+    {
+      "code": "source_differs",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen katman tablonun nesnelerini olduğu gibi taşımıyor; bağlanamaz."
+    },
+    {
+      "code": "source_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte ya da bu katmanda bir bağ yok."
+    },
+    {
+      "code": "source_changed",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Dosya, katman onunla son eşleştiğinden beri değişti."
+    },
+    {
+      "code": "source_gone",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bağlı katmanın dosyası yerinde yok; yeniden bağlayın."
+    },
+    {
+      "code": "source_readonly",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu tabloya yazılamaz."
+    },
+    {
+      "code": "geometry_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnenin geometrisi tablonun geometri sütununa uymuyor."
+    },
+    {
+      "code": "pending_changes",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür."
+    },
+    {
+      "code": "too_many_sources",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir projede en çok 1000 bağlı katman olur."
+    },
+    {
+      "code": "export_losses",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir."
     },
     {
       "code": "pdf_unwritable",

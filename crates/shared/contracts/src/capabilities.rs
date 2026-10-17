@@ -2211,6 +2211,41 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sources.describe",
+        refusals: &[&["invalid_file_path", "file_not_found", "import_unreadable"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.edit",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.sync",
+        refusals: &[
+            &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found"],
+            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes"],
+        ],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.gpkg",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "nothing_to_import"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.dxf",
         refusals: &[
             &["invalid_file_path"],
@@ -2368,6 +2403,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.entities.relate",
+        refusals: &[&[
+            "no_objects",
+            "invalid_input",
+            "invalid_pattern",
+            "entity_not_found",
+            "too_many_pairs",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.select",
         refusals: &[&[
             "not_finite",
@@ -2390,6 +2437,18 @@ const ENTRIES: &[Entry] = &[
         id: "cad.snap.find",
         refusals: &[&["not_finite", "invalid_aperture", "no_snap_kinds"]],
         warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.gpkg",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
         targets: none,
     },
     Entry {

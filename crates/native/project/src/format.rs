@@ -776,6 +776,7 @@ mod tests {
             address_locators: Vec::new(),
             domains: Vec::new(),
             hatch_patterns: Vec::new(),
+            sources: Vec::new(),
         };
         let cad = Format::of(&settings);
         assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
@@ -864,6 +865,7 @@ mod tests {
             address_locators: Vec::new(),
             domains: Vec::new(),
             hatch_patterns: Vec::new(),
+            sources: Vec::new(),
         };
         let f = Format::of(&settings);
         assert_eq!(f.coord(0.1), "100.000");
