@@ -2277,6 +2277,14 @@ class _Schema:
         names = ("minX", "minY", "maxX", "maxY")
         return {n: self.at(i, self.float, x) for i, (n, x) in enumerate(zip(names, v))}
 
+    def keyed(self, of):
+        """A map of text keys to values `of` reads."""
+        def read(v):
+            if type(v) is not dict:
+                self.fail("wrong_type", "harita olmalı")
+            return {k: self.at(k, of, x) for k, x in v.items()}
+        return read
+
     def attrs(self, v):
         if type(v) is not dict:
             self.fail("wrong_type", "harita olmalı")
@@ -3736,6 +3744,8 @@ class _Schema:
                     "columns": (self.uint(8), False),
                     "visibleWhen": (self.text, False),
                     "collapsed": (true_, False),
+                    # docs/adr/0443 §6: two columns filled a row at a time.
+                    "across": (true_, False),
                     "items": (items, True),
                 },
                 "field": {
@@ -3764,6 +3774,8 @@ class _Schema:
                     "checks": (nonempty(self.array(check)), False),
                     # docs/adr/0437: the field shown again, read-only.
                     "mirror": (true_, False),
+                    # docs/adr/0443 §2: kept out of the recorder's examples.
+                    "redact": (true_, False),
                 },
                 "note": {"id": (self.text, True), "text": (self.text, True)},
                 "related": {
@@ -3835,9 +3847,15 @@ class _Schema:
                                 "drafts": (nonempty(self.array(self.text)), False),
                                 # docs/adr/0442 §4: the field the steps' notes are written to.
                                 "notes": (self.text, False)})
+        words = self.fields({"label": (self.text, False), "help": (self.text, False), "placeholder": (self.text, False),
+                             "choices": (lambda v: nonempty(self.keyed(self.text))(v), False)})
+        translation = self.fields({"name": (self.text, False),
+                                   "items": (lambda v: nonempty(self.keyed(words))(v), False)})
         body = self.fields({"revision": (self.uint(32), True), "items": (items, True), "clearHidden": (true_, False),
                             "steps": (true_, False),
-                            "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False)})
+                            "tests": (nonempty(self.array(scenario)), False), "workflow": (workflow, False),
+                            # docs/adr/0443 §5: the form's words in other languages, by tag.
+                            "translations": (lambda v: nonempty(self.keyed(translation))(v), False)})
         release = self.fields(
             {"version": (self.uint(32), True), "digest": (self.text, True), "body": (body, True), "note": (self.text, False)}
         )

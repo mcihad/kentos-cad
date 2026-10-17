@@ -337,6 +337,8 @@ mod forms;
 #[cfg(test)]
 mod form_scenes;
 #[cfg(test)]
+mod form_access_scenes;
+#[cfg(test)]
 mod window_layers_tests;
 #[cfg(test)]
 mod wipeout_scenes;

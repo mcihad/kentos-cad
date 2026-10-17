@@ -190,3 +190,118 @@ mod tests {
         );
     }
 }
+
+/// The text a hidden value is written as (docs/adr/0443 §2).
+pub const HIDDEN: &str = "‹gizli›";
+
+/// The layer fields' keys and names the project's forms keep out of the recorder's examples (a field
+/// item's `redact`, in any form's draft or release).
+pub fn redacted_names(doc: &kentos_domain::Document) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for form in &doc.settings().forms {
+        let fields = doc
+            .layers()
+            .get(&form.layer)
+            .map(|n| n.fields.clone())
+            .unwrap_or_default();
+        let bodies = std::iter::once(&form.draft).chain(form.releases.iter().map(|r| &r.body));
+        for body in bodies {
+            for (_, item) in body.walk() {
+                if let kentos_contracts::FormItem::Field(f) = item
+                    && f.redact
+                {
+                    let names = std::iter::once(f.field.clone()).chain(
+                        fields
+                            .iter()
+                            .filter(|l| l.key() == f.field)
+                            .map(|l| l.name.clone()),
+                    );
+                    for n in names {
+                        if !out.contains(&n) {
+                            out.push(n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// `input` with every text value under a hidden name written as [`HIDDEN`]: a call's values, attributes,
+/// children's values and notes alike, however deep (docs/adr/0443 §2).
+pub fn redacted(input: &Value, names: &[String]) -> Value {
+    match input {
+        Value::Object(map) => Value::Object(
+            map.iter()
+                .map(|(k, v)| {
+                    let v = match v {
+                        Value::String(_) if names.iter().any(|n| n == k) => {
+                            Value::String(HIDDEN.into())
+                        }
+                        other => redacted(other, names),
+                    };
+                    (k.clone(), v)
+                })
+                .collect(),
+        ),
+        Value::Array(items) => Value::Array(items.iter().map(|v| redacted(v, names)).collect()),
+        other => other.clone(),
+    }
+}
+
+/// The calls as one Python script, in their order, each as [`python_call`] writes it, the hidden values
+/// written as [`HIDDEN`] (docs/adr/0443 §2).
+pub fn python_script(calls: &[(String, u32, Option<String>, Value)], names: &[String]) -> String {
+    let mut out = String::from(
+        "# KentOS komut geçmişi: çağrılar sırasıyla. Python konsolunda doc açık çizimdir.\n",
+    );
+    if !names.is_empty() {
+        out.push_str(&format!(
+            "# Formda gizlenen alanların değerleri {HIDDEN} olarak yazıldı: çalıştırmadan önce yerlerine değer yazın.\n"
+        ));
+    }
+    for (command, version, title, input) in calls {
+        out.push('\n');
+        out.push_str(&python_call(
+            command,
+            *version,
+            title.as_deref(),
+            &redacted(input, names),
+        ));
+    }
+    out
+}
+
+#[cfg(test)]
+mod redaction_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn a_hidden_name_s_texts_are_written_hidden_however_deep() {
+        let names = vec!["Kimlik No".to_owned(), "tc".to_owned()];
+        let input = json!({ "form": "malik", "values": { "Kimlik No": "12345678901", "Ad": "Ayşe" },
+            "children": [{ "values": { "tc": "98765432109", "Pay": "1/2" } }], "count": 3 });
+        assert_eq!(
+            redacted(&input, &names),
+            json!({ "form": "malik", "values": { "Kimlik No": HIDDEN, "Ad": "Ayşe" },
+                "children": [{ "values": { "tc": HIDDEN, "Pay": "1/2" } }], "count": 3 })
+        );
+        let script = python_script(
+            &[(
+                "cad.forms.submit".into(),
+                1,
+                Some("Formla kaydet".into()),
+                input,
+            )],
+            &names,
+        );
+        assert!(
+            script.contains(HIDDEN)
+                && !script.contains("12345678901")
+                && !script.contains("98765432109")
+        );
+        assert!(script.contains("Ayşe"));
+    }
+}

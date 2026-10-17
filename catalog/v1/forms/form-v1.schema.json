@@ -113,6 +113,13 @@
           },
           "type": "array"
         },
+        "translations": {
+          "additionalProperties": {
+            "$ref": "#/$defs/FormTranslation"
+          },
+          "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+          "type": "object"
+        },
         "workflow": {
           "anyOf": [
             {
@@ -249,6 +256,10 @@
         {
           "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
           "properties": {
+            "across": {
+              "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+              "type": "boolean"
+            },
             "collapsed": {
               "description": "It opens closed (its title opens it); written only as `true`.",
               "type": "boolean"
@@ -404,6 +415,10 @@
                 "string",
                 "null"
               ]
+            },
+            "redact": {
+              "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+              "type": "boolean"
             },
             "required": {
               "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -891,6 +906,27 @@
       },
       "type": "object"
     },
+    "FormTranslation": {
+      "additionalProperties": false,
+      "description": "A form's words in one language (docs/adr/0443 §5).",
+      "properties": {
+        "items": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ItemWords"
+          },
+          "description": "Item ids to their words.",
+          "type": "object"
+        },
+        "name": {
+          "description": "The form's name; none: its own.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "FormWidget": {
       "description": "How a field is edited.",
       "oneOf": [
@@ -1024,6 +1060,39 @@
         "initial",
         "steps"
       ],
+      "type": "object"
+    },
+    "ItemWords": {
+      "additionalProperties": false,
+      "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+      "properties": {
+        "choices": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+          "type": "object"
+        },
+        "help": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "placeholder": {
+          "description": "A field's text shown in it while empty.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
       "type": "object"
     },
     "LookupCopy": {

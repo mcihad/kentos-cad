@@ -20,7 +20,7 @@ use super::designer::{
     DOWN, DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME, NEW_FORM,
     PALETTE_DOMAINS, PALETTE_FIELDS, PALETTE_RELATIONS, PALETTE_SECTIONS, PASTE_ITEM, PREVIEW,
     PROPERTIES, PUBLISH, PUBLISH_ANYWAY, Palette, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM,
-    RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, Said, TITLE, Text, UNDO, UP, Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
@@ -633,6 +633,149 @@ impl App {
     }
 
     /// The review comments on an item (else on the form), with one to add (docs/adr/0441 §5).
+    /// Çeviriler (docs/adr/0443 §5): the form's languages as chips, a new one's tag added; the chosen
+    /// one's words beside the form's own: its name, each item's label, a field's help.
+    fn translations_box<'a>(&'a self, body: &FormBody) -> Element<'a, Message> {
+        let Some(w) = &self.forms_window else {
+            return column![].into();
+        };
+        let editable = self.forms_locked().is_none();
+        let fields = self
+            .chosen_form()
+            .map(|f| self.layer_fields_of(&f.layer))
+            .unwrap_or_default();
+        let mut col = Column::new().spacing(8).push(label::strong("Çeviriler"));
+        let mut chips = Row::new().spacing(4);
+        for tag in body.translations.keys() {
+            let on = w.language.as_deref() == Some(tag.as_str());
+            chips = chips.push(
+                row![
+                    button(label::caption(crate::forms::entry::language_name(Some(
+                        tag
+                    ))))
+                    .padding([2, 8])
+                    .style(if on {
+                        style::button::primary
+                    } else {
+                        style::button::ghost
+                    })
+                    .on_press(msg(Event::LanguagePick(tag.clone()))),
+                    button(icon(Icon::Close).size(10.0))
+                        .padding([4, 4])
+                        .style(style::button::ghost)
+                        .on_press_maybe(editable.then(|| msg(Event::LanguageRemove(tag.clone())))),
+                ]
+                .spacing(0)
+                .align_y(Center),
+            );
+        }
+        let tag_ok = kentos_contracts::language_tag_ok(w.new_language.trim())
+            && !body.translations.contains_key(w.new_language.trim());
+        let add = row![
+            text_input("Dil etiketi (en, de, ar)", &w.new_language)
+                .size(typography::body())
+                .on_input(|t| msg(Event::LanguageText(t)))
+                .on_submit_maybe((editable && tag_ok).then(|| msg(Event::LanguageAdd)))
+                .padding([4, 8])
+                .width(150)
+                .style(style::field::input),
+            words::ghost(
+                "Dil ekle",
+                (editable && tag_ok).then(|| msg(Event::LanguageAdd))
+            ),
+        ]
+        .spacing(6)
+        .align_y(Center);
+        col = col.push(chips.wrap()).push(add);
+        let Some(tag) = w
+            .language
+            .as_ref()
+            .filter(|t| body.translations.contains_key(*t))
+        else {
+            return col
+                .push(
+                    label::caption(
+                        "Formun sözleri başka dillerde: yalnız gösterilen değişir; değerler, kodlar ve kurallar formundur.",
+                    )
+                    .style(muted),
+                )
+                .into();
+        };
+        let words = &body.translations[tag];
+        let line = |own: String, value: String, item: Option<String>, said: Said| {
+            let field = text_input(&own, &value)
+                .size(typography::body())
+                .padding([4, 8])
+                .style(style::field::input);
+            let field = if editable {
+                field.on_input(move |t| msg(Event::Translate(item.clone(), said.clone(), t)))
+            } else {
+                field
+            };
+            row![
+                container(Elided::new(own).size(typography::caption())).width(130),
+                focus_ring(field),
+            ]
+            .spacing(6)
+            .align_y(Center)
+        };
+        let form_name = self
+            .chosen_form()
+            .map(|f| f.name.clone())
+            .unwrap_or_default();
+        col = col.push(line(
+            form_name,
+            words.name.clone().unwrap_or_default(),
+            None,
+            Said::Label,
+        ));
+        for (_, item) in body.walk() {
+            let id = item.id().to_owned();
+            let own = item_face(item, &fields).1;
+            let said = words.items.get(&id);
+            col = col.push(line(
+                own,
+                said.and_then(|s| s.label.clone()).unwrap_or_default(),
+                Some(id.clone()),
+                Said::Label,
+            ));
+            if let FormItem::Field(f) = item {
+                if let Some(help) = &f.help {
+                    col = col.push(line(
+                        format!("Yardım: {help}"),
+                        said.and_then(|s| s.help.clone()).unwrap_or_default(),
+                        Some(id.clone()),
+                        Said::Help,
+                    ));
+                }
+                if let Some(hint) = &f.placeholder {
+                    col = col.push(line(
+                        format!("Boşken: {hint}"),
+                        said.and_then(|s| s.placeholder.clone()).unwrap_or_default(),
+                        Some(id.clone()),
+                        Said::Placeholder,
+                    ));
+                }
+                // The listed values' labels; the codes are the list's own.
+                let values = fields
+                    .iter()
+                    .find(|l| l.key() == f.field)
+                    .and_then(|l| l.values.clone())
+                    .unwrap_or_default();
+                for c in values {
+                    col = col.push(line(
+                        format!("{} · {}", c.code, c.label),
+                        said.and_then(|s| s.choices.get(&c.code).cloned())
+                            .unwrap_or_default(),
+                        Some(id.clone()),
+                        Said::Choice(c.code.clone()),
+                    ));
+                }
+            }
+        }
+        col.into()
+    }
+
     fn comments_box(&self, item: Option<&str>) -> Element<'_, Message> {
         let comments: Vec<kentos_contracts::FormComment> = self
             .chosen_form()
@@ -766,6 +909,7 @@ impl App {
                 .style(muted),
             );
         }
+        col = col.push(self.translations_box(body));
         col = col.push(self.comments_box(None));
         scrollable(col.padding(iced::Padding {
             top: 0.0,
@@ -1034,6 +1178,7 @@ impl App {
                 columns,
                 visible_when,
                 collapsed,
+                across,
                 ..
             } => {
                 let cols = columns.unwrap_or(1);
@@ -1059,6 +1204,16 @@ impl App {
                         "Kapalı açılır",
                         Some(msg(Event::Collapsed(!*collapsed))),
                     ));
+                if cols == 2 {
+                    // Satır satır (docs/adr/0443 §6): Tab goes across, then down.
+                    col = col.push(kentos_ui::widget::tip(
+                        words::check(*across, "Satır satır", Some(msg(Event::Across(!*across)))),
+                        kentos_ui::widget::Tip::new("Satır satır").body(
+                            "Öğeler soldan sağa, satır satır dizilir; Tab önce yana, sonra aşağı gider",
+                        ),
+                        iced::widget::tooltip::Position::Top,
+                    ));
+                }
             }
             FormItem::Related {
                 label: text,
@@ -1508,6 +1663,14 @@ impl App {
                         ]
                         .spacing(16),
                     )
+                    // Kept out of the recorder's examples (docs/adr/0443 §2).
+                    .push(kentos_ui::widget::tip(
+                        words::check(f.redact, "Örneklerde gizle", Some(msg(Event::Redact(!f.redact)))),
+                        kentos_ui::widget::Tip::new("Örneklerde gizle").body(
+                            "Komut geçmişinin Python'unda ve tekrar oynatma girdisinde değeri ‹gizli› yazılır",
+                        ),
+                        iced::widget::tooltip::Position::Top,
+                    ))
                     .push(words::field(
                         "Yardım",
                         input(

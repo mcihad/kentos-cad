@@ -656,6 +656,18 @@ def preflight(body, fields, variables=(), world=None):
                 issues.append(issue("form_action_step", True, x["id"], None, "step"))
             actions(x.get("items", []))
     actions(body["items"])
+    # docs/adr/0443 §5: a translation's words for an item the form has not.
+    ids = set()
+
+    def every(xs):
+        for x in xs:
+            ids.add(x["id"])
+            every(x.get("items", []))
+    every(body["items"])
+    for tag in sorted(body.get("translations", {}), key=lambda s: s.encode("utf-8")):
+        for i in sorted(body["translations"][tag].get("items", {}), key=lambda s: s.encode("utf-8")):
+            if i not in ids:
+                issues.append(issue("form_translation_item", False))
     if not bound:
         issues.append(issue("form_empty", False))
     for f in fields:
@@ -1557,6 +1569,36 @@ def core():
     ):
         gen.append({"name": name, "fields": fields, "body": generate(fields)})
 
+    # docs/adr/0441 §4, 0443 §4: what a form needs and what a host lacking some cannot do.
+    hosts = {"masaüstü": ["moment", "user", "layers", "geometry", "attachments", "workflow", "tools"],
+             "veri": [], "çevrimdışı görüntüleyici": ["moment", "geometry", "attachments"]}
+    need_bodies = [
+        ("saf form: hiçbir şey gerektirmez", {"revision": 1, "items": [{"type": "field", "id": "kat", "field": "kat-sayisi"}]}),
+        ("anı ve kullanıcıyı okuyan kurallar (Türkçe harfler sade)", {"revision": 1, "items": [
+            {"type": "field", "id": "tarih", "field": "Tarih", "defaultExpr": "@TARİH"},
+            {"type": "note", "id": "n", "text": "Kaydeden: {@Kullanıcı}"}]}),
+        ("başka katman, konum, ekler ve iş akışı", {"revision": 1, "items": [
+            {"type": "related", "id": "r", "layer": "sayac", "field": "Bina"},
+            {"type": "location", "id": "yer"}, {"type": "attachments", "id": "ek"}],
+            "workflow": {"field": "Durum", "initial": "taslak", "steps": [
+                {"label": "Gönder", "from": ["taslak"], "to": "inceleme"}]}}),
+        ("eylemlerin araçları sırayla birer kez; gösteren eylem konum ister", {"revision": 1, "items": [
+            {"type": "action", "id": "a", "label": "Alan", "tool": "attributes.calculate"},
+            {"type": "group", "id": "g", "items": [
+                {"type": "action", "id": "b", "label": "Numarala", "tool": "vertex.number"},
+                {"type": "action", "id": "c", "label": "Yine", "tool": "attributes.calculate"},
+                {"type": "action", "id": "d", "label": "Göster", "kind": "show"}]}]}),
+        ("mekânsal süzgeçli liste konum ve katman ister", {"revision": 1, "items": [
+            {"type": "field", "id": "ada", "field": "Ada", "lookup": {"layer": "ada", "key": "No", "spatial": {"relation": "contains"}}}]}),
+    ]
+    needs = []
+    for name, b in need_bodies:
+        req = requirements(b)
+        for host, supported in hosts.items():
+            lacking = [r for r in req if ("tools" if r.startswith("tool:") else r) not in supported]
+            needs.append({"name": f"{name} — {host}", "body": b, "supported": supported, "requires": req,
+                          "unsupported": lacking})
+
     return {
         "format": "kentos.forms-cases",
         "version": 1,
@@ -1574,6 +1616,7 @@ def core():
         "unique": unique,
         "defaults": defaults,
         "generate": gen,
+        "needs": needs,
     }
 
 
@@ -2335,10 +2378,10 @@ class Project:
             self.forms.append(kept)
         elif k == "update":
             f = self.find(op["id"])
-            if (op["body"]["items"], op["body"].get("clearHidden")) != (f["draft"]["items"], f["draft"].get("clearHidden")):
-                f["draft"] = {"revision": f["draft"]["revision"] + 1, "items": copy.deepcopy(op["body"]["items"])}
-                if op["body"].get("clearHidden"):
-                    f["draft"]["clearHidden"] = True
+            # docs/adr/0443 §5: the whole draft (items, scenarios, workflow, steps, translations), one past.
+            same = lambda b: {k: v for k, v in b.items() if k != "revision"}  # noqa: E731
+            if same(op["body"]) != same(f["draft"]):
+                f["draft"] = {**copy.deepcopy(op["body"]), "revision": f["draft"]["revision"] + 1}
             kept = f
         elif k == "rename":
             f = self.find(op["id"])
@@ -2590,6 +2633,19 @@ def edit_cases():
     added = body_with(lambda b: item(b, "denetim")["items"].append({"type": "field", "id": "yeni", "field": "Yok", "visibleWhen": "Kod = 'A'"}))
     steps = [p.step({"kind": "update", "id": "denetim", "body": added})]
     cases.append({"name": "taslağın sorunları çıktıda: olmayan alan hata, katmanda olmayan ad uyarı", "setup": setup([FORM]), "steps": steps})
+
+    # docs/adr/0443 §5: Kaydet writes the whole draft: its translations, scenarios and steps too, not only
+    # its items; translations alone are a change, the words for an item the form has not a warning.
+    p = Project([FORM])
+    worded = body_with(lambda b: b.update(translations={"en": {"name": "Building survey", "items": {
+        "kat": {"label": "Storeys", "help": "Ground floor included."}, "yok": {"label": "Gone"}}}}))
+    tested = {**worded, "revision": 2, "tests": [{"name": "boş", "expect": {}}]}
+    steps = [p.step({"kind": "update", "id": "denetim", "body": worded}),
+             p.step({"kind": "update", "id": "denetim", "body": tested}),
+             p.step({"kind": "update", "id": "denetim", "body": {**tested, "revision": 3}})]
+    assert p.find("denetim")["draft"]["revision"] == 3
+    cases.append({"name": "Kaydet taslağın bütününü yazar: çeviriler ve senaryolar da; yalnız çeviri de bir değişikliktir",
+                  "setup": setup([FORM]), "steps": steps})
 
     # docs/adr/0441 §5: the reviewers' comments.
     p = Project([FORM])

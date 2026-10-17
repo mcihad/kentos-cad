@@ -56,10 +56,10 @@ use kentos_native_application::{
     styles_impact,
 };
 use kentos_domain::contracts::{
-    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, DomainsExport, FieldsMigrate, AttachmentsInspect, FormsExport, FormsImport, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+    FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, DomainsExport, FieldsMigrate, AttachmentsInspect, SchemaDescribe, FormsExport, FormsImport, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 use kentos_native_application::{
-    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
+    forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, schema_describe, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
 use serde_json::{Value, json};
 
@@ -423,6 +423,12 @@ impl Input for FieldsMigrate {
 }
 
 impl Input for AttachmentsInspect {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for SchemaDescribe {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2231,6 +2237,7 @@ fn run_op(
         kentos_domain::contracts::CAD_DOMAINS_EXPORT => run!(domains_export, DomainsExport),
         kentos_domain::contracts::CAD_FIELDS_MIGRATE => run!(fields_migrate, FieldsMigrate),
         kentos_domain::contracts::CAD_ATTACHMENTS_INSPECT => run!(attachments_inspect, AttachmentsInspect),
+        kentos_domain::contracts::CAD_SCHEMA_DESCRIBE => run!(schema_describe, SchemaDescribe),
         kentos_domain::contracts::CAD_FORMS_EXPORT => run!(forms_export, FormsExport),
         kentos_domain::contracts::CAD_FORMS_IMPORT => run!(forms_import, FormsImport),
         kentos_domain::contracts::CAD_FORMS_RECOMPUTE => run!(forms_recompute, FormsRecompute),

@@ -2129,6 +2129,18 @@ ScenarioOperationName = Literal["create", "apply"]
 """The names of :class:`ScenarioOperation`, for a plain string."""
 
 
+class SchemaKind(_StrEnum):
+    """What the schema holds."""
+    LAYERS = "layers"
+    FORMS = "forms"
+    DOMAINS = "domains"
+    RELATIONS = "relations"
+
+
+SchemaKindName = Literal["layers", "forms", "domains", "relations"]
+"""The names of :class:`SchemaKind`, for a plain string."""
+
+
 class SelectKind(_StrEnum):
     """A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`)."""
     POINT = "point"
@@ -11531,6 +11543,9 @@ class FormBody(_Model):
             an error is not left forward. Only a form of tabs; written only as `true`.
         tests: The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
             them, run again whenever the form changes.
+        translations: The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its
+            name and its items' labels and help. Only what is shown changes; the values, codes and rules are
+            the form's own.
         workflow: The records' workflow (docs/adr/0428): their state, the steps between states, the states that
             lock a record.
     """
@@ -11539,6 +11554,7 @@ class FormBody(_Model):
     clear_hidden: bool | Unset = UNSET
     steps: bool | Unset = UNSET
     tests: list[FormTest] | Unset = UNSET
+    translations: dict[str, FormTranslation] | Unset = UNSET
     workflow: FormWorkflow | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -11551,6 +11567,8 @@ class FormBody(_Model):
             out["steps"] = self.steps
         if self.tests is not UNSET:
             out["tests"] = [e0.to_json() for e0 in self.tests]
+        if self.translations is not UNSET:
+            out["translations"] = {k0: e0.to_json() for k0, e0 in self.translations.items()}
         if self.workflow is not UNSET:
             out["workflow"] = None if self.workflow is None else self.workflow.to_json()
         return out
@@ -11563,6 +11581,7 @@ class FormBody(_Model):
             clear_hidden=data.get("clearHidden", UNSET),
             steps=data.get("steps", UNSET),
             tests=[FormTest.from_json(e0) for e0 in data["tests"]] if "tests" in data else UNSET,
+            translations={k0: FormTranslation.from_json(e0) for k0, e0 in data["translations"].items()} if "translations" in data else UNSET,
             workflow=UNSET if "workflow" not in data else None if data["workflow"] is None else FormWorkflow.from_json(data["workflow"]),
         )
 
@@ -12158,6 +12177,32 @@ class FormTestResult(_Model):
             name=data["name"],
             passed=data["passed"],
             differences=list(data["differences"]) if "differences" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormTranslation(_Model):
+    """A form's words in one language (docs/adr/0443 §5).
+    Attributes:
+        items: Item ids to their words.
+        name: The form's name; none: its own.
+    """
+    items: dict[str, ItemWords] | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.items is not UNSET:
+            out["items"] = {k0: e0.to_json() for k0, e0 in self.items.items()}
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormTranslation:
+        return cls(
+            items={k0: ItemWords.from_json(e0) for k0, e0 in data["items"].items()} if "items" in data else UNSET,
+            name=data.get("name", UNSET),
         )
 
 
@@ -14202,6 +14247,41 @@ class InvitationRevoke(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> InvitationRevoke:
         return cls(
             invitation_id=data["invitationId"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ItemWords(_Model):
+    """An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a
+    note's text) and its help line.
+    Attributes:
+        choices: A listed field's values' labels by their codes; the codes written are the list's own.
+        placeholder: A field's text shown in it while empty.
+    """
+    choices: dict[str, str] | Unset = UNSET
+    help: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    placeholder: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.choices is not UNSET:
+            out["choices"] = dict(self.choices)
+        if self.help is not UNSET:
+            out["help"] = self.help
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.placeholder is not UNSET:
+            out["placeholder"] = self.placeholder
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ItemWords:
+        return cls(
+            choices=dict(data["choices"]) if "choices" in data else UNSET,
+            help=data.get("help", UNSET),
+            label=data.get("label", UNSET),
+            placeholder=data.get("placeholder", UNSET),
         )
 
 
@@ -22507,6 +22587,134 @@ class ScenariosEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SchemaDescribe(_Model):
+    """Input of `cad.schema.describe` v1.
+
+    Refusals: `invalid_count` (a limit not 1–100), `invalid_cursor`, `layer_not_found`.
+    Attributes:
+        cursor: The page after the one whose `next` this is.
+        expand: The whole definitions too (a layer's fields, a form's draft and releases, a list's values, a
+            relation); else summaries.
+        kinds: The kinds, listed in the order layers, forms, value lists, relations; none: all.
+        layer: Only what a layer has: itself, its forms, the value lists its fields link, the relations it is a
+            side of.
+        limit: How many a page lists, 1–100; none: 20. Unit: count.
+        query: Words its id or name holds (Turkish folded); none: every one.
+    """
+    cursor: str | None | Unset = UNSET
+    expand: bool | Unset = UNSET
+    kinds: list[SchemaKind | SchemaKindName] | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    query: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.expand is not UNSET:
+            out["expand"] = self.expand
+        if self.kinds is not UNSET:
+            out["kinds"] = [_enum_out(e0) for e0 in self.kinds]
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.query is not UNSET:
+            out["query"] = self.query
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchemaDescribe:
+        return cls(
+            cursor=data.get("cursor", UNSET),
+            expand=data.get("expand", UNSET),
+            kinds=[_enum_in(SchemaKind, e0) for e0 in data["kinds"]] if "kinds" in data else UNSET,
+            layer=data.get("layer", UNSET),
+            limit=data.get("limit", UNSET),
+            query=data.get("query", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchemaDescribed(_Model):
+    """Output of `cad.schema.describe` v1, and what plan says.
+    Attributes:
+        total: Every one found, all pages. Unit: count.
+        next: The next page's cursor; none on the last.
+    """
+    items: list[SchemaItem]
+    total: int
+    next: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["items"] = [e0.to_json() for e0 in self.items]
+        out["total"] = self.total
+        if self.next is not UNSET:
+            out["next"] = self.next
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchemaDescribed:
+        return cls(
+            items=[SchemaItem.from_json(e0) for e0 in data["items"]],
+            total=data["total"],
+            next=data.get("next", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchemaItem(_Model):
+    """One thing of the schema.
+    Attributes:
+        child: A relation's child layer.
+        count: A layer's fields, a form draft's items, a list's values; none for a relation. Unit: count.
+        detail: The whole definition, with `expand`.
+        layer: A form's layer; a relation's parent layer.
+        version: A form's latest release; none unpublished. Unit: version.
+    """
+    kind: SchemaKind | SchemaKindName
+    id: str
+    name: str
+    child: str | None | Unset = UNSET
+    count: int | None | Unset = UNSET
+    detail: Any | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.child is not UNSET:
+            out["child"] = self.child
+        if self.count is not UNSET:
+            out["count"] = self.count
+        if self.detail is not UNSET:
+            out["detail"] = self.detail
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchemaItem:
+        return cls(
+            kind=_enum_in(SchemaKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
+            child=data.get("child", UNSET),
+            count=data.get("count", UNSET),
+            detail=data.get("detail", UNSET),
+            layer=data.get("layer", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SelectLeftOut(_Model):
     """What the kinds and the layers left out of the region's objects, and the objects given that are not shown.
     Attributes:
@@ -28910,12 +29118,15 @@ class TabFormItem(FormItem):
 class GroupFormItem(FormItem):
     """A group: a titled box of items, in one or two columns, that a rule may hide.
     Attributes:
+        across: In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else
+            down the first column, then the second. Written only as `true`.
         collapsed: It opens closed (its title opens it); written only as `true`.
         columns: 1 or 2; none: 1. Unit: count.
     """
     TAG_VALUE: ClassVar[str] = "group"
     id: str
     items: list[FormItem]
+    across: bool | Unset = UNSET
     collapsed: bool | Unset = UNSET
     columns: int | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -28925,6 +29136,8 @@ class GroupFormItem(FormItem):
         out: dict[str, Any] = {"type": "group"}
         out["id"] = self.id
         out["items"] = [e0.to_json() for e0 in self.items]
+        if self.across is not UNSET:
+            out["across"] = self.across
         if self.collapsed is not UNSET:
             out["collapsed"] = self.collapsed
         if self.columns is not UNSET:
@@ -28940,6 +29153,7 @@ class GroupFormItem(FormItem):
         return cls(
             id=data["id"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
+            across=data.get("across", UNSET),
             collapsed=data.get("collapsed", UNSET),
             columns=data.get("columns", UNSET),
             label=data.get("label", UNSET),
@@ -28977,6 +29191,8 @@ class FieldFormItem(FormItem):
         placeholder: The empty box's hint.
         read_only: Shown, never edited; written only as `true`.
         read_only_when: Locked when this expression is true.
+        redact: Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as
+            `‹gizli›` in the Python and replay a call is copied as. Written only as `true`.
         required: May not be left empty while shown; written only as `true`. The layer field's own `required`
             holds as well.
         required_when: Required when this expression is true (and the field is shown).
@@ -29005,6 +29221,7 @@ class FieldFormItem(FormItem):
     placeholder: str | None | Unset = UNSET
     read_only: bool | Unset = UNSET
     read_only_when: str | None | Unset = UNSET
+    redact: bool | Unset = UNSET
     required: bool | Unset = UNSET
     required_when: str | None | Unset = UNSET
     reuse_last: bool | Unset = UNSET
@@ -29045,6 +29262,8 @@ class FieldFormItem(FormItem):
             out["readOnly"] = self.read_only
         if self.read_only_when is not UNSET:
             out["readOnlyWhen"] = self.read_only_when
+        if self.redact is not UNSET:
+            out["redact"] = self.redact
         if self.required is not UNSET:
             out["required"] = self.required
         if self.required_when is not UNSET:
@@ -29080,6 +29299,7 @@ class FieldFormItem(FormItem):
             placeholder=data.get("placeholder", UNSET),
             read_only=data.get("readOnly", UNSET),
             read_only_when=data.get("readOnlyWhen", UNSET),
+            redact=data.get("redact", UNSET),
             required=data.get("required", UNSET),
             required_when=data.get("requiredWhen", UNSET),
             reuse_last=data.get("reuseLast", UNSET),
@@ -32006,6 +32226,7 @@ __all__ = [
     "FormTest",
     "FormTestExpect",
     "FormTestResult",
+    "FormTranslation",
     "FormWidget",
     "FormWidgetName",
     "FormWorkflow",
@@ -32077,6 +32298,7 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "ItemWords",
     "JoggedDimensionMeasure",
     "JunctionLayer",
     "JunctionRole",
@@ -32462,6 +32684,11 @@ __all__ = [
     "ScenariosEditPlan",
     "ScenariosEdited",
     "ScheduleCell",
+    "SchemaDescribe",
+    "SchemaDescribed",
+    "SchemaItem",
+    "SchemaKind",
+    "SchemaKindName",
     "SelectKind",
     "SelectKindName",
     "SelectLeftOut",

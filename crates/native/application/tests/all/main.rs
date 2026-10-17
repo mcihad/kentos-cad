@@ -15,6 +15,7 @@ mod curves_edit;
 mod delete;
 mod divide;
 mod edit;
+mod entries;
 mod fixtures;
 mod forms_timing;
 mod info_templates;

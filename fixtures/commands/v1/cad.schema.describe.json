@@ -1,0 +1,2067 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.schema.describe",
+ "commandVersion": 1,
+ "title": "Şemayı keşfet",
+ "note": "ADR 0443 §1: projenin veri şeması sayfa sayfa. Written by scripts/fixtures/schema_describe_cases.py with the layers of domains_cases.py, without KentOS code; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Şema",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "domains": [
+    {
+     "id": "malzeme",
+     "name": "Yapı malzemesi",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ah",
+       "label": "Ahşap"
+      },
+      {
+       "code": "bt",
+       "label": "Betonarme"
+      },
+      {
+       "code": "ym",
+       "label": "Yığma"
+      }
+     ]
+    },
+    {
+     "id": "kat",
+     "name": "Kat sayısı",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "id": "genislik",
+     "name": "Yol genişliği",
+     "kind": "decimal",
+     "values": [
+      {
+       "code": "2.5",
+       "label": "Dar"
+      },
+      {
+       "code": "3.5",
+       "label": "Geniş"
+      }
+     ]
+    }
+   ],
+   "forms": [
+    {
+     "id": "bina-denetim",
+     "name": "Bina denetimi",
+     "layer": "bina",
+     "draft": {
+      "revision": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "malzeme",
+        "field": "Malzeme"
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi"
+       },
+       {
+        "type": "group",
+        "id": "ek",
+        "label": "Ek bilgi",
+        "items": [
+         {
+          "type": "field",
+          "id": "not",
+          "field": "Not"
+         },
+         {
+          "type": "field",
+          "id": "etiket",
+          "field": "Etiket"
+         }
+        ]
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "60eec808392b0eab9b2e72ef2e8a969c",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         }
+        ]
+       }
+      },
+      {
+       "version": 2,
+       "digest": "5c2e1a76cc973c840c79d984db34eac0",
+       "body": {
+        "revision": 2,
+        "items": [
+         {
+          "type": "field",
+          "id": "malzeme",
+          "field": "Malzeme"
+         },
+         {
+          "type": "field",
+          "id": "kat",
+          "field": "kat-sayisi"
+         },
+         {
+          "type": "group",
+          "id": "ek",
+          "label": "Ek bilgi",
+          "items": [
+           {
+            "type": "field",
+            "id": "not",
+            "field": "Not"
+           },
+           {
+            "type": "field",
+            "id": "etiket",
+            "field": "Etiket"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "depo-kayit",
+     "name": "Depo kaydı",
+     "layer": "depo",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "m",
+        "field": "Malzeme"
+       }
+      ]
+     }
+    },
+    {
+     "id": "yol-olcu",
+     "name": "Yol ölçüsü",
+     "layer": "yol",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "g",
+        "field": "Genişlik"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "cd9e50e826481ee3ebc5163c997a5c59",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "g",
+          "field": "Genişlik"
+         }
+        ]
+       }
+      }
+     ],
+     "enforce": true
+    }
+   ],
+   "relations": [
+    {
+     "id": "bina-depo",
+     "name": "Binanın depoları",
+     "parent": "bina",
+     "child": "depo",
+     "field": "Malzeme"
+    },
+    {
+     "id": "yol-bina",
+     "name": "Yolun binaları",
+     "parent": "yol",
+     "child": "bina",
+     "field": "Not",
+     "onDelete": "restrict"
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ]
+     },
+     {
+      "id": "kat-sayisi",
+      "name": "Kat",
+      "kind": "integer",
+      "min": "1",
+      "max": "40"
+     },
+     {
+      "name": "Etiket",
+      "kind": "text",
+      "multiple": true,
+      "values": [
+       {
+        "code": "a",
+        "label": "A"
+       },
+       {
+        "code": "b",
+        "label": "B"
+       }
+      ]
+     },
+     {
+      "name": "Not",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "depo",
+    "name": "Depo",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ],
+      "domain": "malzeme"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Eski yapılar",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "eski",
+      "name": "Eski",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Genişlik",
+      "kind": "decimal",
+      "values": [
+       {
+        "code": "2.5",
+        "label": "Dar"
+       },
+       {
+        "code": "3.5",
+        "label": "Geniş"
+       }
+      ],
+      "domain": "genislik",
+      "scale": 1
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah",
+     "Kat": "3",
+     "Etiket": "a; b"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "bina",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "bt",
+     "Kat": "45"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "depo",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ym"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "eski",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Malzeme": "ah"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "yol",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "attrs": {
+     "Genişlik": "2.5"
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bütün şema: katmanlar, formlar, listeler, ilişkiler bu sırayla, özetleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4
+        },
+        {
+         "kind": "layers",
+         "id": "depo",
+         "name": "Depo",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "eski",
+         "name": "Eski",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "yol",
+         "name": "Yol",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "yol-olcu",
+         "name": "Yol ölçüsü",
+         "layer": "yol",
+         "count": 1,
+         "version": 1
+        },
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        },
+        {
+         "kind": "domains",
+         "id": "kat",
+         "name": "Kat sayısı",
+         "count": 0
+        },
+        {
+         "kind": "domains",
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "count": 2
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina"
+        }
+       ],
+       "total": 12
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız katmanlar: gruplar yok, alan sayılarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kinds": [
+       "layers"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4
+        },
+        {
+         "kind": "layers",
+         "id": "depo",
+         "name": "Depo",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "eski",
+         "name": "Eski",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "yol",
+         "name": "Yol",
+         "count": 1
+        }
+       ],
+       "total": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türlerin verilen sırası listenin sırasını değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kinds": [
+       "relations",
+       "forms"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "yol-olcu",
+         "name": "Yol ölçüsü",
+         "layer": "yol",
+         "count": 1,
+         "version": 1
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina"
+        }
+       ],
+       "total": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "formlar: katmanı, öğe sayısı iç içe öğelerle, son yayın",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kinds": [
+       "forms"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "yol-olcu",
+         "name": "Yol ölçüsü",
+         "layer": "yol",
+         "count": 1,
+         "version": 1
+        }
+       ],
+       "total": 3
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir katmanın sahip oldukları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "bina"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4
+        },
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina"
+        }
+       ],
+       "total": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilişkinin çocuk tarafı da katmanındır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "depo"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "depo",
+         "name": "Depo",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        },
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        }
+       ],
+       "total": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman da listelenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "eski"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "eski",
+         "name": "Eski",
+         "count": 1
+        },
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        }
+       ],
+       "total": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sözcük adda, Türkçe katlanarak (I ı)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "YAPI"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        }
+       ],
+       "total": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sözcük kimlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "denetim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        }
+       ],
+       "total": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "büyük İ küçük i olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "İLİŞKİ"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [],
+       "total": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş sözcük süzmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "  ",
+      "kinds": [
+       "domains"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        },
+        {
+         "kind": "domains",
+         "id": "kat",
+         "name": "Kat sayısı",
+         "count": 0
+        },
+        {
+         "kind": "domains",
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "count": 2
+        }
+       ],
+       "total": 3
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bulunmayan sözcük: boş sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "kanalizasyon"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [],
+       "total": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tanımlarıyla: alanlar, form gövdesi ve yayınların özetleri, liste, ilişki",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "bina",
+      "expand": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4,
+         "detail": [
+          {
+           "name": "Malzeme",
+           "kind": "text",
+           "values": [
+            {
+             "code": "ah",
+             "label": "Ahşap"
+            },
+            {
+             "code": "bt",
+             "label": "Betonarme"
+            },
+            {
+             "code": "ym",
+             "label": "Yığma"
+            }
+           ]
+          },
+          {
+           "id": "kat-sayisi",
+           "name": "Kat",
+           "kind": "integer",
+           "min": "1",
+           "max": "40"
+          },
+          {
+           "name": "Etiket",
+           "kind": "text",
+           "multiple": true,
+           "values": [
+            {
+             "code": "a",
+             "label": "A"
+            },
+            {
+             "code": "b",
+             "label": "B"
+            }
+           ]
+          },
+          {
+           "name": "Not",
+           "kind": "text"
+          }
+         ]
+        },
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2,
+         "detail": {
+          "draft": {
+           "revision": 2,
+           "items": [
+            {
+             "type": "field",
+             "id": "malzeme",
+             "field": "Malzeme"
+            },
+            {
+             "type": "field",
+             "id": "kat",
+             "field": "kat-sayisi"
+            },
+            {
+             "type": "group",
+             "id": "ek",
+             "label": "Ek bilgi",
+             "items": [
+              {
+               "type": "field",
+               "id": "not",
+               "field": "Not"
+              },
+              {
+               "type": "field",
+               "id": "etiket",
+               "field": "Etiket"
+              }
+             ]
+            }
+           ]
+          },
+          "releases": [
+           {
+            "version": 1,
+            "digest": "60eec808392b0eab9b2e72ef2e8a969c"
+           },
+           {
+            "version": 2,
+            "digest": "5c2e1a76cc973c840c79d984db34eac0"
+           }
+          ],
+          "enforce": false
+         }
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo",
+         "detail": {
+          "id": "bina-depo",
+          "name": "Binanın depoları",
+          "parent": "bina",
+          "child": "depo",
+          "field": "Malzeme"
+         }
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina",
+         "detail": {
+          "id": "yol-bina",
+          "name": "Yolun binaları",
+          "parent": "yol",
+          "child": "bina",
+          "field": "Not",
+          "onDelete": "restrict"
+         }
+        }
+       ],
+       "total": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "formun tanımı: kurallar uygulanıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kinds": [
+       "forms"
+      ],
+      "query": "yol",
+      "expand": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "forms",
+         "id": "yol-olcu",
+         "name": "Yol ölçüsü",
+         "layer": "yol",
+         "count": 1,
+         "version": 1,
+         "detail": {
+          "draft": {
+           "revision": 1,
+           "items": [
+            {
+             "type": "field",
+             "id": "g",
+             "field": "Genişlik"
+            }
+           ]
+          },
+          "releases": [
+           {
+            "version": 1,
+            "digest": "cd9e50e826481ee3ebc5163c997a5c59"
+           }
+          ],
+          "enforce": true
+         }
+        }
+       ],
+       "total": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilk sayfa ve sonrakinin imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4
+        },
+        {
+         "kind": "layers",
+         "id": "depo",
+         "name": "Depo",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "eski",
+         "name": "Eski",
+         "count": 1
+        }
+       ],
+       "total": 12,
+       "next": "3"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 3,
+      "cursor": "3"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "yol",
+         "name": "Yol",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        }
+       ],
+       "total": 12,
+       "next": "6"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "son sayfa: imleç yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 5,
+      "cursor": "10"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina"
+        }
+       ],
+       "total": 12
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listenin sonundaki imleç: boş sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 5,
+      "cursor": "12"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [],
+       "total": 12
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "en büyük sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 100
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "layers",
+         "id": "bina",
+         "name": "Bina",
+         "count": 4
+        },
+        {
+         "kind": "layers",
+         "id": "depo",
+         "name": "Depo",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "eski",
+         "name": "Eski",
+         "count": 1
+        },
+        {
+         "kind": "layers",
+         "id": "yol",
+         "name": "Yol",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "bina-denetim",
+         "name": "Bina denetimi",
+         "layer": "bina",
+         "count": 5,
+         "version": 2
+        },
+        {
+         "kind": "forms",
+         "id": "depo-kayit",
+         "name": "Depo kaydı",
+         "layer": "depo",
+         "count": 1
+        },
+        {
+         "kind": "forms",
+         "id": "yol-olcu",
+         "name": "Yol ölçüsü",
+         "layer": "yol",
+         "count": 1,
+         "version": 1
+        },
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        },
+        {
+         "kind": "domains",
+         "id": "kat",
+         "name": "Kat sayısı",
+         "count": 0
+        },
+        {
+         "kind": "domains",
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "count": 2
+        },
+        {
+         "kind": "relations",
+         "id": "bina-depo",
+         "name": "Binanın depoları",
+         "layer": "bina",
+         "child": "depo"
+        },
+        {
+         "kind": "relations",
+         "id": "yol-bina",
+         "name": "Yolun binaları",
+         "layer": "yol",
+         "child": "bina"
+        }
+       ],
+       "total": 12
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "kinds": [
+       "domains",
+       "relations"
+      ],
+      "limit": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "domains",
+         "id": "malzeme",
+         "name": "Yapı malzemesi",
+         "count": 3
+        },
+        {
+         "kind": "domains",
+         "id": "kat",
+         "name": "Kat sayısı",
+         "count": 0
+        }
+       ],
+       "total": 5,
+       "next": "2"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir katmanın listeleri: alanlarının bağladıkları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kinds": [
+       "domains"
+      ],
+      "layer": "yol"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "items": [
+        {
+         "kind": "domains",
+         "id": "genislik",
+         "name": "Yol genişliği",
+         "count": 2
+        }
+       ],
+       "total": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayfa sıfır olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir sayfada 1 ile 100 arasında öğe listelenir; 0 verildi.",
+       "path": "limit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayfa en çok 100",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 101
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir sayfada 1 ile 100 arasında öğe listelenir; 101 verildi.",
+       "path": "limit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleç sayı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "cursor": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“abc” bu listenin sayfa imleci değil; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleç başında sıfırla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "cursor": "03"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“03” bu listenin sayfa imleci değil; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleç listenin ötesinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "cursor": "13"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“13” bu listenin sayfa imleci değil: liste 12 öğe; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup katman değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“grup” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman, planda da",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "su"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“su” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayfa imlecinden önce denetlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "limit": 0,
+      "cursor": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "Bir sayfada 1 ile 100 arasında öğe listelenir; 0 verildi.",
+       "path": "limit"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

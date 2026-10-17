@@ -299,6 +299,8 @@ codes! {
     /// A publish whose scenarios fail (docs/adr/0442 §1).
     /// A folder given that is not an absolute path (docs/adr/0442 §7).
     INVALID_FOLDER = "invalid_folder", Failed, false, "Klasör mutlak bir yol değil.";
+    /// A page cursor this listing did not give (docs/adr/0443 §1).
+    INVALID_CURSOR = "invalid_cursor", Failed, false, "Sayfa imleci bu listenin değil.";
     FORM_TESTS_FAILED = "form_tests_failed", Failed, false, "Formun senaryolarından biri tutmuyor; yayınlanmadı.";
     /// A release that some records held by the earlier one do not hold (docs/adr/0442 §2).
     FORM_BREAKING = "form_breaking", Warning, false, "Önceki yayına uyan bazı kayıtlar yeni yayına uymuyor.";

@@ -87,7 +87,7 @@ impl BottomTab {
 }
 
 /// The tab row's two buttons (Geçmişi temizle, Paneli kapat) and their margins.
-const ACTIONS_WIDTH: f32 = 60.0;
+const ACTIONS_WIDTH: f32 = 88.0;
 
 /// What the coordinate list shows (built from the selection, kept small:
 /// the rows are formatted as they scroll into view).
@@ -262,7 +262,19 @@ impl App {
                 iced::widget::tooltip::Position::Top,
             )
         };
+        // Komut geçmişi as one Python script (docs/adr/0443 §2), when it has calls.
+        let script =
+            (self.bottom_tab == BottomTab::History && self.history_has_calls()).then(|| {
+                action(
+                    "terminal",
+                    Message::History(crate::history::Event::CopyScript),
+                    Tip::new("Python betiği olarak kopyala").body(
+                        "Komut geçmişinin çağrıları sırasıyla; formda gizlenen alanlar ‹gizli›",
+                    ),
+                )
+            });
         let buttons = row![
+            script,
             action("clear", Message::HistoryCleared, Tip::new(plan::CLEAR)),
             action(
                 "chevronDown",

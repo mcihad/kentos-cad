@@ -192,6 +192,19 @@ pub struct Window {
     pub(crate) kept: Option<crate::forms::library::KeptDraft>,
     /// The records Yayınla would break, asked about before it publishes (docs/adr/0442 §2).
     pub(crate) breaking: Option<kentos_contracts::FormBreaking>,
+    /// Çeviriler (docs/adr/0443 §5): the language whose words are being written, and a new tag typed.
+    pub(crate) language: Option<String>,
+    pub(crate) new_language: String,
+}
+
+/// Which of an item's words a translation writes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Said {
+    Label,
+    Help,
+    Placeholder,
+    /// A listed value's label, by its code.
+    Choice(String),
 }
 
 /// The left column's palettes (docs/adr/0441 §1): the layer's fields, the project's relations and
@@ -244,6 +257,15 @@ pub enum Event {
     ResolveComment(u32, bool),
     /// Yayınla over the records it breaks, or not (docs/adr/0442 §2).
     PublishAnyway,
+    /// Çeviriler (docs/adr/0443 §5): a new language's tag typed, added, chosen, removed; a word written
+    /// (the form's name with no item).
+    LanguageText(String),
+    LanguageAdd,
+    LanguagePick(String),
+    LanguageRemove(String),
+    Translate(Option<String>, Said, String),
+    /// Satır satır (docs/adr/0443 §6): a two-column group filled a row at a time.
+    Across(bool),
     DropPublish,
     /// The draft kept on this device taken back, or let go.
     RestoreDraft,
@@ -344,6 +366,8 @@ pub enum Event {
     Overridable(bool),
     /// A new record starts with the session's last value.
     ReuseLast(bool),
+    /// Örneklerde gizle (docs/adr/0443 §2).
+    Redact(bool),
     /// A check's failure is a warning, not an error.
     CheckWarning(usize, bool),
     /// When a check is asked (docs/adr/0438 §2): none as the value changes.
@@ -621,6 +645,7 @@ fn pasted(
         })
         .collect();
     let mut holder = FormBody {
+        translations: Default::default(),
         revision: 1,
         items: vec![item],
         clear_hidden: false,
@@ -732,7 +757,7 @@ pub(crate) fn id_at(body: &FormBody, index: usize) -> Option<String> {
 
 /// Two copies of a form's draft are the same form, whatever their revision.
 fn same_form(a: &FormBody, b: &FormBody) -> bool {
-    a.items == b.items && a.clear_hidden == b.clear_hidden
+    a.items == b.items && a.clear_hidden == b.clear_hidden && a.translations == b.translations
 }
 
 fn remove(body: &mut FormBody, id: &str) {
@@ -993,6 +1018,11 @@ impl App {
                 self.forms_window.as_ref().and_then(|w| w.item.clone())
             )),
             Event::RuleText(rule, _) => Some(format!("{rule:?}")),
+            // A word of a translation typed runs as one step (docs/adr/0443 §5).
+            Event::Translate(item, said, _) => Some(format!(
+                "translate:{:?}:{item:?}:{said:?}",
+                self.forms_window.as_ref().and_then(|w| w.language.clone())
+            )),
             _ => None,
         };
         let before = self
@@ -1167,6 +1197,7 @@ impl App {
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
                 let id = kentos_forms::item_id_of("grup", &taken);
                 let item = FormItem::Group {
+                    across: false,
                     id: id.clone(),
                     label: Some("Grup".into()),
                     columns: None,
@@ -2137,6 +2168,15 @@ impl App {
                     });
                 }
             }
+            Event::Redact(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
+                            f.redact = on;
+                        }
+                    });
+                }
+            }
             Event::CheckWarning(i, on) => {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
@@ -2174,6 +2214,69 @@ impl App {
             }
             Event::Steps(on) => {
                 edited(&mut w, &|b| b.steps = on);
+            }
+            Event::LanguageText(text) => w.new_language = text,
+            Event::LanguageAdd => {
+                let tag = w.new_language.trim().to_owned();
+                if kentos_contracts::language_tag_ok(&tag) {
+                    edited(&mut w, &|b| {
+                        b.translations.entry(tag.clone()).or_default();
+                    });
+                    w.language = Some(tag);
+                    w.new_language.clear();
+                }
+            }
+            Event::LanguagePick(tag) => w.language = Some(tag),
+            Event::LanguageRemove(tag) => {
+                edited(&mut w, &|b| {
+                    b.translations.remove(&tag);
+                });
+                if w.language.as_deref() == Some(tag.as_str()) {
+                    w.language = None;
+                }
+            }
+            Event::Translate(item, said, text) => {
+                if let Some(tag) = w.language.clone() {
+                    edited(&mut w, &|b| {
+                        let words = b.translations.entry(tag.clone()).or_default();
+                        let value = (!text.trim().is_empty()).then(|| text.clone());
+                        match &item {
+                            None => words.name = value.map(|v| v.trim().to_owned()),
+                            Some(id) => {
+                                let w = words.items.entry(id.clone()).or_default();
+                                match &said {
+                                    Said::Label => w.label = value,
+                                    Said::Help => w.help = value,
+                                    Said::Placeholder => w.placeholder = value,
+                                    Said::Choice(code) => match value {
+                                        Some(v) => {
+                                            w.choices.insert(code.clone(), v);
+                                        }
+                                        None => {
+                                            w.choices.remove(code);
+                                        }
+                                    },
+                                }
+                                if w.label.is_none()
+                                    && w.help.is_none()
+                                    && w.placeholder.is_none()
+                                    && w.choices.is_empty()
+                                {
+                                    words.items.remove(id);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            Event::Across(on) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Group { across, .. }) = find_mut(&mut b.items, &id) {
+                            *across = on;
+                        }
+                    });
+                }
             }
             Event::Columns(n) => {
                 if let Some(id) = chosen_item.clone() {
@@ -2625,6 +2728,7 @@ mod tests {
         let mut b = body();
         let second = add_tab(&mut b);
         let group = FormItem::Group {
+            across: false,
             id: "g".into(),
             label: None,
             columns: None,

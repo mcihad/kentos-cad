@@ -104,6 +104,20 @@ pub fn preflight_in(
             ));
         }
     }
+    // A translation's words for an item the form has not: kept, said (docs/adr/0443 §5).
+    let ids: std::collections::HashSet<&str> = body.walk().iter().map(|(_, i)| i.id()).collect();
+    for (tag, words) in &body.translations {
+        for id in words.items.keys().filter(|id| !ids.contains(id.as_str())) {
+            p.issues.push(issue(
+                codes::TRANSLATION_ITEM,
+                FormSeverity::Warning,
+                None,
+                None,
+                None,
+                format!("“{tag}” çevirisinde “{id}” öğesinin sözleri var ama formda bu öğe yok."),
+            ));
+        }
+    }
     if p.bound.is_empty() {
         p.issues.push(issue(
             codes::EMPTY,

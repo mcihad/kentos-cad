@@ -71,6 +71,11 @@ const NEW_RELEASE: &str = "Yeni sürümle aç";
 const FIELD_NOTES: &str = "Alanlara not";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
+const NEXT_ISSUE: &str = "Sonraki sorun";
+const UNSAVED: &str = "Kaydedilmedi.";
+const DISCARD: &str = "Kaydetmeden kapat";
+const KEEP_EDITING: &str = "Düzenlemeye dön";
+const SAVE_AND_CLOSE: &str = "Kaydet ve kapat";
 const BACK: &str = "Geri";
 const NEXT: &str = "İleri";
 /// The scrolled items' room: clear of the scrollbar on the right.
@@ -176,6 +181,12 @@ pub struct Entry {
     field_notes: BTreeMap<String, String>,
     /// Bilgi: the record's attachments as `cad.attachments.inspect` read them (docs/adr/0442 §7).
     facts: Option<Vec<kentos_contracts::AttachmentFacts>>,
+    /// The language its words are shown in (docs/adr/0443 §5): a translation's tag; none: the form's own.
+    pub(crate) language: Option<String>,
+    /// How many times Sonraki sorun went on (docs/adr/0443 §6): the next press goes to the issue after.
+    issue_at: usize,
+    /// Vazgeç (or Esc) with what was typed unsaved asks first (docs/adr/0443 §6).
+    asking_close: bool,
 }
 
 /// A record of the many-record mode.
@@ -262,6 +273,12 @@ pub enum Event {
     /// (docs/adr/0409 §3).
     NewRelated(String),
     FirstIssue,
+    /// The language its words are shown in (docs/adr/0443 §5); none: the form's own.
+    Language(Option<String>),
+    /// Asked when closing with what was typed unsaved (docs/adr/0443 §6): closed without it, or back
+    /// to the form.
+    Discard,
+    KeepEditing,
     /// Uymayanları boşalt (docs/adr/0422 §2): the values the record's subtype does not offer emptied.
     ClearMisfits,
     /// A step of the form's workflow, by its label (docs/adr/0428): `cad.forms.transition`.
@@ -290,6 +307,29 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn uid_text(&self) -> String {
         self.uid.clone()
+    }
+
+    /// Whether Vazgeç asked before dropping what was typed (for the tests).
+    #[cfg(test)]
+    pub(crate) fn asking_close(&self) -> bool {
+        self.asking_close
+    }
+
+    /// The errors' fields in the form's order, and how far Sonraki sorun went (for the tests).
+    #[cfg(test)]
+    pub(crate) fn issue_fields(&self) -> Vec<String> {
+        self.errors().filter_map(|i| i.field.clone()).collect()
+    }
+
+    /// A listed value's label in the chosen language (for the tests).
+    #[cfg(test)]
+    pub(crate) fn translated_choice(&self, id: &str, code: &str) -> Option<String> {
+        self.said(id).and_then(|w| w.choices.get(code)).cloned()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn issue_at(&self) -> usize {
+        self.issue_at
     }
 
     /// An event of this window: the preview's go to the designer's preview.
@@ -467,6 +507,39 @@ impl Entry {
     /// A field's name by its key.
     fn name_of(&self, key: &str) -> Option<&String> {
         self.fields.iter().find(|f| f.key() == key).map(|f| &f.name)
+    }
+
+    /// An item's words in the chosen language (docs/adr/0443 §5), else `own`.
+    pub(crate) fn words_of(&self, id: &str, own: Option<&String>) -> Option<String> {
+        self.said(id)
+            .and_then(|w| w.label.clone())
+            .or_else(|| own.cloned())
+    }
+
+    fn said(&self, id: &str) -> Option<&kentos_contracts::ItemWords> {
+        let tag = self.language.as_ref()?;
+        self.body.translations.get(tag)?.items.get(id)
+    }
+
+    /// A field's help line in the chosen language.
+    fn help_in(&self, id: &str) -> Option<String> {
+        self.said(id).and_then(|w| w.help.clone())
+    }
+
+    /// A note's text in the chosen language, when it has no `{…}` of the record's values to fill.
+    fn note_in(&self, id: &str) -> Option<String> {
+        self.said(id)
+            .and_then(|w| w.label.clone())
+            .filter(|t| !t.contains('{'))
+    }
+
+    /// The form's name in the chosen language.
+    pub(crate) fn name_in(&self) -> String {
+        self.language
+            .as_ref()
+            .and_then(|tag| self.body.translations.get(tag))
+            .and_then(|w| w.name.clone())
+            .unwrap_or_else(|| self.name.clone())
     }
 
     fn errors(&self) -> impl Iterator<Item = &FormIssue> {
@@ -850,6 +923,9 @@ impl App {
             reviewing: false,
             field_notes: BTreeMap::new(),
             facts: None,
+            language: None,
+            issue_at: 0,
+            asking_close: false,
             touched: BTreeSet::new(),
             after: Attrs::new(),
             items: Vec::new(),
@@ -1625,15 +1701,29 @@ impl App {
                     e.closed.insert(id);
                 }
             }
-            Event::FirstIssue => return self.go_to_first_issue(),
-            Event::Cancel => {
+            Event::FirstIssue => return self.go_to_next_issue(),
+            Event::Language(tag) => {
+                e.language = tag.filter(|t| e.body.translations.contains_key(t));
+            }
+            Event::Cancel if e.dirty() && !e.preview && !e.asking_close => {
+                e.asking_close = true;
+            }
+            // Esc or × on the question goes back to the form: it is the question's Vazgeç.
+            Event::Cancel if e.asking_close => e.asking_close = false,
+            Event::KeepEditing => e.asking_close = false,
+            Event::Cancel | Event::Discard => {
+                e.asking_close = false;
                 if e.docked {
                     let (uid, form) = (e.uid.clone(), e.form.clone());
                     return self.redock(&uid, &form);
                 }
                 return self.entry_closed();
             }
-            Event::Save => return self.save_entry(),
+            Event::Save => {
+                // Kaydet ve kapat: a refused write goes back to the form, its issues shown.
+                e.asking_close = false;
+                return self.save_entry();
+            }
             Event::Reload => {
                 // A new release: the record's form is its body now; values of fields it no longer
                 // has are dropped and said (docs/adr/0442 §2).
@@ -1777,11 +1867,28 @@ impl App {
     }
 
     fn go_to_first_issue(&mut self) -> Task<Message> {
+        if let Some(e) = self.form_entry.as_mut() {
+            e.issue_at = 0;
+        }
+        self.go_to_next_issue()
+    }
+
+    /// İlk soruna git, then Sonraki sorun (docs/adr/0443 §6): each press the next error in the form's
+    /// order, round again after the last; with no error the first issue.
+    fn go_to_next_issue(&mut self) -> Task<Message> {
         let Some(e) = self.form_entry.as_mut() else {
             return Task::none();
         };
         e.tried = true;
-        let Some(first) = e.errors().next().or(e.issues.first()).cloned() else {
+        let errors: Vec<FormIssue> = e.errors().cloned().collect();
+        let first = if errors.is_empty() {
+            e.issues.first().cloned()
+        } else {
+            let at = e.issue_at % errors.len();
+            e.issue_at = at + 1;
+            Some(errors[at].clone())
+        };
+        let Some(first) = first else {
             return Task::none();
         };
         // A closed group holding it opens.
@@ -1976,10 +2083,11 @@ impl App {
             return iced::widget::text("").into();
         };
         let body = self.entry_column(e, Some(380.0), true);
+        let name = e.name_in();
         let title = if e.dirty() {
-            format!("{TITLE} · {} ●", e.name)
+            format!("{TITLE} · {name} ●")
         } else {
-            format!("{TITLE} · {}", e.name)
+            format!("{TITLE} · {name}")
         };
         overlay::modal(
             Frame::new(title).push(body).width(620.0),
@@ -2185,6 +2293,14 @@ impl App {
                 .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
                 .push(words::primary(NEW_RELEASE, Some(e.msg(Event::Reload))));
         }
+        if e.asking_close {
+            return footer
+                .push(words::text_line(Kind::Warn, UNSAVED))
+                .push(space::horizontal().width(Fill))
+                .push(words::secondary(DISCARD, Some(e.msg(Event::Discard))))
+                .push(words::secondary(KEEP_EDITING, Some(e.msg(Event::KeepEditing))))
+                .push(words::primary(SAVE_AND_CLOSE, (!locked).then(|| e.msg(Event::Save))));
+        }
         if e.conflict.is_some() {
             return footer
                 .push(words::text_line(Kind::Warn, "Kayıt ya da form siz düzenlerken değişti."))
@@ -2194,9 +2310,18 @@ impl App {
                 .push(words::primary(OVERWRITE, (!locked).then(|| e.msg(Event::Overwrite))));
         }
         if errors > 0 {
+            // Where the last press went, then the next (docs/adr/0443 §6).
+            let (said, press) = if e.issue_at == 0 || errors == 1 {
+                (format!("{errors} sorun"), FIRST_ISSUE)
+            } else {
+                (
+                    format!("{}/{errors} sorun", (e.issue_at - 1) % errors + 1),
+                    NEXT_ISSUE,
+                )
+            };
             footer = footer
-                .push(words::text_line(Kind::Error, format!("{errors} sorun")))
-                .push(words::ghost(FIRST_ISSUE, Some(e.msg(Event::FirstIssue))));
+                .push(words::text_line(Kind::Error, said))
+                .push(words::ghost(press, Some(e.msg(Event::FirstIssue))));
         }
         if warnings > 0 {
             footer = footer.push(words::text_line(Kind::Warn, format!("{warnings} uyarı")));
@@ -2229,6 +2354,26 @@ impl App {
                     .size(16.0)
                     .text_size(typography::body())
                     .on_toggle(|on| e.msg(Event::Reviewing(on))),
+            );
+        }
+        // The form's languages (docs/adr/0443 §5): only what is shown changes.
+        if !e.body.translations.is_empty() {
+            let tags: Vec<Option<String>> = std::iter::once(None)
+                .chain(e.body.translations.keys().cloned().map(Some))
+                .collect();
+            let chosen = tags.iter().position(|t| *t == e.language);
+            let picks = tags.clone();
+            footer = footer.push(
+                container(
+                    Select::new(
+                        tags.iter()
+                            .map(|t| Choice::new(language_name(t.as_deref()))),
+                        chosen,
+                        move |i| Message::FormEntry(Event::Language(picks[i].clone())),
+                    )
+                    .placeholder("Dil"),
+                )
+                .width(140.0),
             );
         }
         let by_state = e.screen.prepared.locked_by_state(&e.after);
@@ -2287,7 +2432,7 @@ impl App {
             .iter()
             .map(|t| {
                 let label = match t {
-                    FormItem::Tab { label, .. } => label.clone(),
+                    FormItem::Tab { id, label, .. } => e.words_of(id, Some(label)).unwrap_or_default(),
                     _ => String::new(),
                 };
                 let count = if e.tried {
@@ -2312,7 +2457,9 @@ impl App {
                 .enumerate()
                 .map(|(k, (_, t))| {
                     let label = match t {
-                        FormItem::Tab { label, .. } => label.clone(),
+                        FormItem::Tab { id, label, .. } => {
+                            e.words_of(id, Some(label)).unwrap_or_default()
+                        }
                         _ => String::new(),
                     };
                     Tab::new(format!("{}. {label}", k + 1)).closable(false)
@@ -2390,13 +2537,16 @@ impl App {
                     columns,
                     items: inner,
                     collapsed,
+                    across,
                     ..
                 } => {
                     out = flush(&mut run, out);
                     let closed = e.closed.contains(id);
                     if *collapsed {
                         // Its title opens and closes it.
-                        let words = title.clone().unwrap_or_else(|| "Grup".to_owned());
+                        let words = e
+                            .words_of(id, title.as_ref())
+                            .unwrap_or_else(|| "Grup".to_owned());
                         let head = iced::widget::button(
                             row![
                                 icon(if closed {
@@ -2429,7 +2579,25 @@ impl App {
                         .collect();
                     // The designer's narrow preview keeps one column.
                     let content: Element<'a, Message> =
-                        if *columns == Some(2) && shown.len() > 1 && !e.preview {
+                        if *columns == Some(2) && shown.len() > 1 && !e.preview && *across {
+                            // A row at a time: Tab goes across, then down (docs/adr/0443 §6).
+                            let mut rows = Column::new().spacing(8);
+                            for pair in shown.chunks(2) {
+                                let right: Element<'a, Message> = match pair.get(1) {
+                                    Some(r) => self.entry_form_in(e, std::slice::from_ref(r), locked, 80.0),
+                                    None => space::horizontal().width(Fill).into(),
+                                };
+                                rows = rows.push(
+                                    row![
+                                        container(self.entry_form_in(e, &pair[..1], locked, 80.0))
+                                            .width(Fill),
+                                        container(right).width(Fill),
+                                    ]
+                                    .spacing(16),
+                                );
+                            }
+                            rows.into()
+                        } else if *columns == Some(2) && shown.len() > 1 && !e.preview {
                             let half = shown.len().div_ceil(2);
                             row![
                                 container(self.entry_form_in(e, &shown[..half], locked, 80.0))
@@ -2449,7 +2617,8 @@ impl App {
                                 row![
                                     icon(Icon::ChevronDown).size(12.0),
                                     label::strong(
-                                        title.clone().unwrap_or_else(|| "Grup".to_owned())
+                                        e.words_of(id, title.as_ref())
+                                            .unwrap_or_else(|| "Grup".to_owned())
                                     ),
                                 ]
                                 .spacing(6)
@@ -2539,7 +2708,10 @@ impl App {
                         kentos_contracts::ActionKind::Show => Icon::Target,
                     };
                     let button = iced::widget::button(
-                        row![icon(glyph).size(12.0), label::body(title.clone())]
+                        row![
+                            icon(glyph).size(12.0),
+                            label::body(e.words_of(id, Some(title)).unwrap_or_default())
+                        ]
                             .spacing(6)
                             .align_y(Center),
                     )
@@ -2559,10 +2731,11 @@ impl App {
                 }
                 FormItem::Note { id, text } => {
                     out = flush(&mut run, out);
-                    let text = e
-                        .state(id)
-                        .and_then(|s| s.text.clone())
-                        .unwrap_or_else(|| text.clone());
+                    let text = e.note_in(id).unwrap_or_else(|| {
+                        e.state(id)
+                            .and_then(|s| s.text.clone())
+                            .unwrap_or_else(|| text.clone())
+                    });
                     out = out.push(
                         container(
                             iced::widget::text(text)
@@ -2607,7 +2780,9 @@ impl App {
                     let state = e.state(&f.id);
                     // A mirror is shown, never written (docs/adr/0437).
                     let read_only = locked || f.mirror || state.is_some_and(|s| s.read_only);
-                    let words = f.label.clone().unwrap_or_else(|| field.label().to_owned());
+                    let words = e
+                        .words_of(&f.id, f.label.as_ref())
+                        .unwrap_or_else(|| field.label().to_owned());
                     let control = entry_control(e, f, field, read_only);
                     // A list's chosen object, its columns live, and the values past the page
                     // (docs/adr/0439 §1, §2).
@@ -2709,8 +2884,8 @@ impl App {
                             form = form.warning(said.map(|n| format!("İnceleyenin notu: {n}")));
                         }
                         None => {
-                            if let Some(help) = &f.help {
-                                form = form.help(help.clone());
+                            if let Some(help) = e.help_in(&f.id).or(f.help.clone()) {
+                                form = form.help(help);
                             } else if let Some(meaning) = meaning {
                                 form = form.help(meaning);
                             } else if let Some(calc) = &f.calculate {
@@ -2724,10 +2899,11 @@ impl App {
                     }
                 }
                 FormItem::Note { id, text } => {
-                    let text = e
-                        .state(id)
-                        .and_then(|s| s.text.clone())
-                        .unwrap_or_else(|| text.clone());
+                    let text = e.note_in(id).unwrap_or_else(|| {
+                        e.state(id)
+                            .and_then(|s| s.text.clone())
+                            .unwrap_or_else(|| text.clone())
+                    });
                     form = form.row(container(label::caption(text).style(muted)).width(Fill));
                 }
                 FormItem::Group { .. }
@@ -3086,7 +3262,10 @@ impl App {
         Ok(match control {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
-            Control::Press(FIRST_ISSUE) => Some(msg(Event::FirstIssue)),
+            Control::Press(FIRST_ISSUE | NEXT_ISSUE) => Some(msg(Event::FirstIssue)),
+            Control::Press(DISCARD) => Some(msg(Event::Discard)),
+            Control::Press(KEEP_EDITING) => Some(msg(Event::KeepEditing)),
+            Control::Press(SAVE_AND_CLOSE) => Some(msg(Event::Save)),
             Control::Fill(words, text) => {
                 let key = e
                     .fields
@@ -3190,7 +3369,10 @@ fn entry_control<'a>(
     let placeholder = if e.mixed.contains(&field.name) && !e.values.contains_key(&key) {
         "Çeşitli değerler".to_owned()
     } else {
-        item.placeholder.clone().unwrap_or_default()
+        e.said(&item.id)
+            .and_then(|w| w.placeholder.clone())
+            .or_else(|| item.placeholder.clone())
+            .unwrap_or_default()
     };
     // What the item's choice filter offers for the record; every listed value without one.
     let offered = e.state(&item.id).and_then(|s| s.choices.as_ref());
@@ -3235,7 +3417,11 @@ fn entry_control<'a>(
         Some(list) if !list.is_empty() => listed
             .iter()
             .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
-            .map(|c| (c.code.clone(), c.label.clone()))
+            // A label in the chosen language; the code is the list's own (docs/adr/0443 §5).
+            .map(|c| {
+                let said = e.said(&item.id).and_then(|w| w.choices.get(&c.code)).cloned();
+                (c.code.clone(), said.unwrap_or_else(|| c.label.clone()))
+            })
             .collect(),
         _ if field.kind == LayerFieldKind::Boolean => vec![
             ("true".into(), "Evet".into()),
@@ -4110,4 +4296,38 @@ fn ordered_codes(codes: &[&str], list: &[String]) -> String {
 pub(crate) fn ordered_for_tests(codes: &[&str], list: &[&str]) -> String {
     let list: Vec<String> = list.iter().map(|s| (*s).to_owned()).collect();
     ordered_codes(codes, &list)
+}
+
+/// A language tag's name as its speakers write it (docs/adr/0443 §5); none: the form's own, Türkçe.
+pub(crate) fn language_name(tag: Option<&str>) -> String {
+    let Some(tag) = tag else {
+        return "Türkçe".to_owned();
+    };
+    let lang = tag.split('-').next().unwrap_or(tag);
+    let name = match lang {
+        "en" => "English",
+        "de" => "Deutsch",
+        "fr" => "Français",
+        "es" => "Español",
+        "it" => "Italiano",
+        "pt" => "Português",
+        "nl" => "Nederlands",
+        "ru" => "Русский",
+        "uk" => "Українська",
+        "ar" => "العربية",
+        "fa" => "فارسی",
+        "ku" | "kmr" => "Kurdî",
+        "az" => "Azərbaycanca",
+        "el" => "Ελληνικά",
+        "bg" => "Български",
+        "ka" => "ქართული",
+        "ja" => "日本語",
+        "zh" => "中文",
+        _ => return tag.to_owned(),
+    };
+    if lang == tag {
+        name.to_owned()
+    } else {
+        format!("{name} ({tag})")
+    }
 }

@@ -4397,6 +4397,35 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The data schema a page at a time (docs/adr/0443 §1), held together by fixtures/commands/v1/cad.schema.describe.json.
+        CommandDescriptor {
+            id: crate::CAD_SCHEMA_DESCRIBE.into(),
+            version: crate::CAD_SCHEMA_DESCRIBE_VERSION,
+            title: "Şemayı keşfet".into(),
+            summary: "Projenin veri şemasını sayfa sayfa listeler, hiçbir şey yazmaz: katmanlar (alanlarıyla), formlar, değer listeleri ve ilişkiler, \
+                      bu sırayla; her biri kısa özetiyle (kimlik, ad, katman, sayı, son yayın), bütün tanımı yalnız expand ile. kinds türleri, layer bir \
+                      katmanın sahip olduklarını (kendisi, formları, alanlarının bağladığı listeler, taraf olduğu ilişkiler), query kimliğinde ya da \
+                      adında geçen sözcükleri (Türkçe katlanarak) süzer. Sayfa en çok 100 (varsayılan 20); next bir sonraki sayfanın imleci, total \
+                      bütün bulunanlar. Bir ajanın bağlamına bütün şemayı değil, gerekeni koyması için."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SchemaDescribe>(),
+            output: schema::<crate::SchemaDescribed>(),
+            plan: Some(schema::<crate::SchemaDescribed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina katmanının formlarını bul".into(),
+                input: json!({ "kinds": ["forms"], "layer": "bina", "limit": 10 }),
+                output: None,
+            }],
+        },
         // A form package out and in (docs/adr/0435), held together by fixtures/commands/v1/cad.forms.export.json and
         // cad.forms.import.json.
         CommandDescriptor {
@@ -5731,6 +5760,9 @@ mod tests {
                     crate::CAD_ATTACHMENTS_INSPECT => {
                         serde_json::from_value::<crate::AttachmentsInspect>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SCHEMA_DESCRIBE => {
+                        serde_json::from_value::<crate::SchemaDescribe>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_EXPORT => {
                         serde_json::from_value::<crate::FormsExport>(e.input.clone()).map(|_| ())
                     }
@@ -6090,6 +6122,10 @@ mod tests {
                         }
                         crate::CAD_ATTACHMENTS_INSPECT => {
                             serde_json::from_value::<crate::AttachmentsInspected>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SCHEMA_DESCRIBE => {
+                            serde_json::from_value::<crate::SchemaDescribed>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_EXPORT => {

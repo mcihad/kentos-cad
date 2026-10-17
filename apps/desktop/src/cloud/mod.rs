@@ -997,6 +997,11 @@ impl App {
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
             Some(Dialog::TemplateEditor) => self.template_editor = None,
             Some(Dialog::PointBatch) => self.points.close_batch(),
+            // Formla düzenle: its Vazgeç, which asks first when something was typed (docs/adr/0443 §6).
+            Some(Dialog::FormEntry) => {
+                self.dialog = Some(Dialog::FormEntry);
+                let _ = self.form_entry_event(crate::forms::entry::Event::Cancel);
+            }
             _ => {}
         }
     }

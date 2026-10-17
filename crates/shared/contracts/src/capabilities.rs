@@ -1792,6 +1792,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.schema.describe",
+        refusals: &[&["invalid_count", "invalid_cursor", "layer_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.export",
         refusals: &[&["unknown_form", "form_unpublished"]],
         warnings: &[],

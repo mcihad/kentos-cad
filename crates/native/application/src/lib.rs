@@ -126,6 +126,7 @@ pub mod layers_edit;
 pub mod layers_filter;
 pub mod field_policy;
 pub mod attachments_inspect;
+pub mod schema_describe;
 pub mod fields_usage;
 pub mod layers_find;
 pub mod layers_info;
@@ -283,6 +284,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ATTACHMENTS_INSPECT,
         kentos_contracts::CAD_ATTACHMENTS_INSPECT_VERSION,
+    ),
+    // The data schema a page at a time ([`schema_describe`], docs/adr/0443 §1).
+    (
+        kentos_contracts::CAD_SCHEMA_DESCRIBE,
+        kentos_contracts::CAD_SCHEMA_DESCRIBE_VERSION,
     ),
     (
         kentos_contracts::CAD_FORMS_EXPORT,

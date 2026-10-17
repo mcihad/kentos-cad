@@ -104,6 +104,8 @@ pub enum Event {
     SaveReplay(u64),
     /// Where its replay input goes (none: not chosen).
     SaveTo(u64, Option<PathBuf>),
+    /// Every call as one Python script, to the clipboard (docs/adr/0443 §2).
+    CopyScript,
 }
 
 impl App {
@@ -169,11 +171,45 @@ impl App {
             Call::Row(_) => return None,
             Call::Refused(r) => (r.command.as_str(), r.version, &r.input),
         };
+        // A form's hidden fields are written hidden (docs/adr/0443 §2).
+        let names = self
+            .document
+            .as_ref()
+            .map(|d| kentos_native_application::python_call::redacted_names(&d.model))
+            .unwrap_or_default();
         Some(python_call(
             command,
             version,
             Some(text::title_of(command)),
-            input,
+            &kentos_native_application::python_call::redacted(input, &names),
+        ))
+    }
+
+    /// Every command call of the open drawing's history as one Python script, in their order; the
+    /// form's hidden fields written hidden (docs/adr/0443 §2). None without a call.
+    pub(crate) fn python_script_of_history(&self) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        let calls: Vec<(String, u32, Option<String>, serde_json::Value)> = self
+            .history
+            .entries
+            .iter()
+            .filter(|e| e.doc == doc.session)
+            .filter_map(|e| match &e.call {
+                Call::Row(row) if row.kind == CallKind::Command => Some((
+                    row.command.clone()?,
+                    row.version.unwrap_or(1),
+                    row.command.as_deref().map(|c| text::title_of(c).to_owned()),
+                    row.input.clone()?,
+                )),
+                _ => None,
+            })
+            .collect();
+        if calls.is_empty() {
+            return None;
+        }
+        let names = kentos_native_application::python_call::redacted_names(&doc.model);
+        Some(kentos_native_application::python_call::python_script(
+            &calls, &names,
         ))
     }
 
@@ -230,7 +266,15 @@ impl App {
             context,
             calls: vec![row],
         };
-        serde_json::to_string_pretty(&journal).ok()
+        // A form's hidden fields are written hidden here too: replaying asks for their values.
+        let names = doc
+            .map(kentos_native_application::python_call::redacted_names)
+            .unwrap_or_default();
+        let value = serde_json::to_value(&journal).ok()?;
+        serde_json::to_string_pretty(&kentos_native_application::python_call::redacted(
+            &value, &names,
+        ))
+        .ok()
     }
 
     pub(crate) fn calls_event(&mut self, event: Event) -> Task<Message> {
@@ -278,6 +322,14 @@ impl App {
                     },
                     move |path| Message::History(Event::SaveTo(id, path)),
                 );
+            }
+            Event::CopyScript => {
+                if let Some(script) = self.python_script_of_history() {
+                    self.output(
+                        "Komut geçmişi Python betiği olarak panoya kopyalandı; formda gizlenen alanların değerleri ‹gizli› yazıldı.",
+                    );
+                    return iced::clipboard::write(script);
+                }
             }
             Event::SaveTo(_, None) => {}
             Event::SaveTo(id, Some(path)) => {

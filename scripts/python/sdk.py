@@ -1209,7 +1209,7 @@ def emit_init(model: Model, commands: list[Command]) -> str:
     spaces = sorted({c.path[0] for c in commands})
     names = ["COMMANDS", "NAMESPACES", "UNSET", "Unset", "CommandNote", "LocalCommand", "Outcome",
              "ServerCommand", "types", *spaces]
-    for module in ("_api", "connection", "document", "errors", "protocol"):
+    for module in ("_api", "connection", "document", "errors", "protocol", "versions"):
         names += exports_of(OUT / f"{module}.py")
     names += type_names(model)
     if len(set(names)) != len(names):
@@ -1227,7 +1227,8 @@ def emit_init(model: Model, commands: list[Command]) -> str:
         + "from .document import *  # noqa: F403\n"
         + "from .errors import *  # noqa: F403\n"
         + "from .protocol import *  # noqa: F403\n"
-        + "from .types import *  # noqa: F403\n\n"
+        + "from .types import *  # noqa: F403\n"
+        + "from .versions import *  # noqa: F403\n\n"
         + f"from . import {', '.join(spaces)}  # noqa: E402  isort: skip\n\n"
         + f"__all__ = [\n{rows}]\n"
     )

@@ -41167,5 +41167,557 @@
     ]
    }
   }
+ ],
+ "needs": [
+  {
+   "name": "saf form: hiçbir şey gerektirmez — masaüstü",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "kat-sayisi"
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "user",
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow",
+    "tools"
+   ],
+   "requires": [],
+   "unsupported": []
+  },
+  {
+   "name": "saf form: hiçbir şey gerektirmez — veri",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "kat-sayisi"
+     }
+    ]
+   },
+   "supported": [],
+   "requires": [],
+   "unsupported": []
+  },
+  {
+   "name": "saf form: hiçbir şey gerektirmez — çevrimdışı görüntüleyici",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "kat-sayisi"
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "geometry",
+    "attachments"
+   ],
+   "requires": [],
+   "unsupported": []
+  },
+  {
+   "name": "anı ve kullanıcıyı okuyan kurallar (Türkçe harfler sade) — masaüstü",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@TARİH"
+     },
+     {
+      "type": "note",
+      "id": "n",
+      "text": "Kaydeden: {@Kullanıcı}"
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "user",
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow",
+    "tools"
+   ],
+   "requires": [
+    "moment",
+    "user"
+   ],
+   "unsupported": []
+  },
+  {
+   "name": "anı ve kullanıcıyı okuyan kurallar (Türkçe harfler sade) — veri",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@TARİH"
+     },
+     {
+      "type": "note",
+      "id": "n",
+      "text": "Kaydeden: {@Kullanıcı}"
+     }
+    ]
+   },
+   "supported": [],
+   "requires": [
+    "moment",
+    "user"
+   ],
+   "unsupported": [
+    "moment",
+    "user"
+   ]
+  },
+  {
+   "name": "anı ve kullanıcıyı okuyan kurallar (Türkçe harfler sade) — çevrimdışı görüntüleyici",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "tarih",
+      "field": "Tarih",
+      "defaultExpr": "@TARİH"
+     },
+     {
+      "type": "note",
+      "id": "n",
+      "text": "Kaydeden: {@Kullanıcı}"
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "geometry",
+    "attachments"
+   ],
+   "requires": [
+    "moment",
+    "user"
+   ],
+   "unsupported": [
+    "user"
+   ]
+  },
+  {
+   "name": "başka katman, konum, ekler ve iş akışı — masaüstü",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "related",
+      "id": "r",
+      "layer": "sayac",
+      "field": "Bina"
+     },
+     {
+      "type": "location",
+      "id": "yer"
+     },
+     {
+      "type": "attachments",
+      "id": "ek"
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "taslak",
+     "steps": [
+      {
+       "label": "Gönder",
+       "from": [
+        "taslak"
+       ],
+       "to": "inceleme"
+      }
+     ]
+    }
+   },
+   "supported": [
+    "moment",
+    "user",
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow",
+    "tools"
+   ],
+   "requires": [
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow"
+   ],
+   "unsupported": []
+  },
+  {
+   "name": "başka katman, konum, ekler ve iş akışı — veri",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "related",
+      "id": "r",
+      "layer": "sayac",
+      "field": "Bina"
+     },
+     {
+      "type": "location",
+      "id": "yer"
+     },
+     {
+      "type": "attachments",
+      "id": "ek"
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "taslak",
+     "steps": [
+      {
+       "label": "Gönder",
+       "from": [
+        "taslak"
+       ],
+       "to": "inceleme"
+      }
+     ]
+    }
+   },
+   "supported": [],
+   "requires": [
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow"
+   ],
+   "unsupported": [
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow"
+   ]
+  },
+  {
+   "name": "başka katman, konum, ekler ve iş akışı — çevrimdışı görüntüleyici",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "related",
+      "id": "r",
+      "layer": "sayac",
+      "field": "Bina"
+     },
+     {
+      "type": "location",
+      "id": "yer"
+     },
+     {
+      "type": "attachments",
+      "id": "ek"
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "taslak",
+     "steps": [
+      {
+       "label": "Gönder",
+       "from": [
+        "taslak"
+       ],
+       "to": "inceleme"
+      }
+     ]
+    }
+   },
+   "supported": [
+    "moment",
+    "geometry",
+    "attachments"
+   ],
+   "requires": [
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow"
+   ],
+   "unsupported": [
+    "layers",
+    "workflow"
+   ]
+  },
+  {
+   "name": "eylemlerin araçları sırayla birer kez; gösteren eylem konum ister — masaüstü",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "action",
+      "id": "a",
+      "label": "Alan",
+      "tool": "attributes.calculate"
+     },
+     {
+      "type": "group",
+      "id": "g",
+      "items": [
+       {
+        "type": "action",
+        "id": "b",
+        "label": "Numarala",
+        "tool": "vertex.number"
+       },
+       {
+        "type": "action",
+        "id": "c",
+        "label": "Yine",
+        "tool": "attributes.calculate"
+       },
+       {
+        "type": "action",
+        "id": "d",
+        "label": "Göster",
+        "kind": "show"
+       }
+      ]
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "user",
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow",
+    "tools"
+   ],
+   "requires": [
+    "geometry",
+    "tool:attributes.calculate",
+    "tool:vertex.number"
+   ],
+   "unsupported": []
+  },
+  {
+   "name": "eylemlerin araçları sırayla birer kez; gösteren eylem konum ister — veri",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "action",
+      "id": "a",
+      "label": "Alan",
+      "tool": "attributes.calculate"
+     },
+     {
+      "type": "group",
+      "id": "g",
+      "items": [
+       {
+        "type": "action",
+        "id": "b",
+        "label": "Numarala",
+        "tool": "vertex.number"
+       },
+       {
+        "type": "action",
+        "id": "c",
+        "label": "Yine",
+        "tool": "attributes.calculate"
+       },
+       {
+        "type": "action",
+        "id": "d",
+        "label": "Göster",
+        "kind": "show"
+       }
+      ]
+     }
+    ]
+   },
+   "supported": [],
+   "requires": [
+    "geometry",
+    "tool:attributes.calculate",
+    "tool:vertex.number"
+   ],
+   "unsupported": [
+    "geometry",
+    "tool:attributes.calculate",
+    "tool:vertex.number"
+   ]
+  },
+  {
+   "name": "eylemlerin araçları sırayla birer kez; gösteren eylem konum ister — çevrimdışı görüntüleyici",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "action",
+      "id": "a",
+      "label": "Alan",
+      "tool": "attributes.calculate"
+     },
+     {
+      "type": "group",
+      "id": "g",
+      "items": [
+       {
+        "type": "action",
+        "id": "b",
+        "label": "Numarala",
+        "tool": "vertex.number"
+       },
+       {
+        "type": "action",
+        "id": "c",
+        "label": "Yine",
+        "tool": "attributes.calculate"
+       },
+       {
+        "type": "action",
+        "id": "d",
+        "label": "Göster",
+        "kind": "show"
+       }
+      ]
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "geometry",
+    "attachments"
+   ],
+   "requires": [
+    "geometry",
+    "tool:attributes.calculate",
+    "tool:vertex.number"
+   ],
+   "unsupported": [
+    "tool:attributes.calculate",
+    "tool:vertex.number"
+   ]
+  },
+  {
+   "name": "mekânsal süzgeçli liste konum ve katman ister — masaüstü",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ada",
+      "field": "Ada",
+      "lookup": {
+       "layer": "ada",
+       "key": "No",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "user",
+    "layers",
+    "geometry",
+    "attachments",
+    "workflow",
+    "tools"
+   ],
+   "requires": [
+    "layers",
+    "geometry"
+   ],
+   "unsupported": []
+  },
+  {
+   "name": "mekânsal süzgeçli liste konum ve katman ister — veri",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ada",
+      "field": "Ada",
+      "lookup": {
+       "layer": "ada",
+       "key": "No",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     }
+    ]
+   },
+   "supported": [],
+   "requires": [
+    "layers",
+    "geometry"
+   ],
+   "unsupported": [
+    "layers",
+    "geometry"
+   ]
+  },
+  {
+   "name": "mekânsal süzgeçli liste konum ve katman ister — çevrimdışı görüntüleyici",
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ada",
+      "field": "Ada",
+      "lookup": {
+       "layer": "ada",
+       "key": "No",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     }
+    ]
+   },
+   "supported": [
+    "moment",
+    "geometry",
+    "attachments"
+   ],
+   "requires": [
+    "layers",
+    "geometry"
+   ],
+   "unsupported": [
+    "layers"
+   ]
+  }
  ]
 }

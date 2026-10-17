@@ -250,6 +250,7 @@ mod tests {
 
     fn group() -> FormItem {
         FormItem::Group {
+            across: false,
             id: "adres".into(),
             label: Some("Adres".into()),
             columns: None,

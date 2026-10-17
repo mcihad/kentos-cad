@@ -20,7 +20,12 @@ columns?: number, visibleWhen?: string,
 /**
  * It opens closed (its title opens it); written only as `true`.
  */
-collapsed?: boolean, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, } | { "type": "related", id: string, label?: string, 
+collapsed?: boolean, 
+/**
+ * In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else
+ * down the first column, then the second. Written only as `true`.
+ */
+across?: boolean, items: Array<FormItem>, } | { "type": "field" } & FormField | { "type": "note", id: string, text: string, } | { "type": "related", id: string, label?: string, 
 /**
  * The other layer's id.
  */

@@ -4000,6 +4000,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -4136,6 +4143,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -4291,6 +4302,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -4774,6 +4789,27 @@
                   "type": "string"
                 },
                 "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "type": "object"
@@ -5780,6 +5816,39 @@
               "scale",
               "rotation"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "JunctionLayer": {
@@ -15016,6 +15085,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -15152,6 +15228,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -15307,6 +15387,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -15794,6 +15878,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -16064,6 +16169,39 @@
               },
               "title": {
                 "description": "The card's title, a template; absent: the object's kind and label.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
                 "type": [
                   "string",
                   "null"
@@ -23982,6 +24120,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -24118,6 +24263,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -24273,6 +24422,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -24756,6 +24909,27 @@
                   "type": "string"
                 },
                 "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "type": "object"
@@ -25762,6 +25936,39 @@
               "scale",
               "rotation"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "JunctionLayer": {
@@ -349035,6 +349242,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -349126,6 +349340,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -349281,6 +349499,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -349735,6 +349957,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -350083,6 +350326,39 @@
               }
             ]
           },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "LookupCopy": {
             "additionalProperties": false,
             "description": "A field of the chosen object copied into a field of the record.",
@@ -350429,6 +350705,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -350630,6 +350913,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -350785,6 +351072,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -351321,6 +351612,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -351454,6 +351766,39 @@
               "initial",
               "steps"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "LookupCopy": {
@@ -351885,6 +352230,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -352086,6 +352438,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -352241,6 +352597,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -352777,6 +353137,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -352910,6 +353291,39 @@
               "initial",
               "steps"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "LookupCopy": {
@@ -356452,6 +356866,308 @@
       ]
     },
     {
+      "id": "cad.schema.describe",
+      "version": 1,
+      "title": "Şemayı keşfet",
+      "summary": "Projenin veri şemasını sayfa sayfa listeler, hiçbir şey yazmaz: katmanlar (alanlarıyla), formlar, değer listeleri ve ilişkiler, bu sırayla; her biri kısa özetiyle (kimlik, ad, katman, sayı, son yayın), bütün tanımı yalnız expand ile. kinds türleri, layer bir katmanın sahip olduklarını (kendisi, formları, alanlarının bağladığı listeler, taraf olduğu ilişkiler), query kimliğinde ya da adında geçen sözcükleri (Türkçe katlanarak) süzer. Sayfa en çok 100 (varsayılan 20); next bir sonraki sayfanın imleci, total bütün bulunanlar. Bir ajanın bağlamına bütün şemayı değil, gerekeni koyması için.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "SchemaKind": {
+            "description": "What the schema holds.",
+            "enum": [
+              "layers",
+              "forms",
+              "domains",
+              "relations"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.schema.describe` v1.\n\nRefusals: `invalid_count` (a limit not 1–100), `invalid_cursor`, `layer_not_found`.",
+        "properties": {
+          "cursor": {
+            "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expand": {
+            "description": "The whole definitions too (a layer's fields, a form's draft and releases, a list's values, a\nrelation); else summaries.",
+            "type": "boolean"
+          },
+          "kinds": {
+            "description": "The kinds, listed in the order layers, forms, value lists, relations; none: all.",
+            "items": {
+              "$ref": "#/$defs/SchemaKind"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "description": "Only what a layer has: itself, its forms, the value lists its fields link, the relations it is a\nside of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "How many a page lists, 1–100; none: 20.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "query": {
+            "description": "Words its id or name holds (Turkish folded); none: every one.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SchemaDescribe",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SchemaItem": {
+            "description": "One thing of the schema.",
+            "properties": {
+              "child": {
+                "description": "A relation's child layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "A layer's fields, a form draft's items, a list's values; none for a relation.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "detail": {
+                "description": "The whole definition, with `expand`."
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SchemaKind"
+              },
+              "layer": {
+                "description": "A form's layer; a relation's parent layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "description": "A form's latest release; none unpublished.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "SchemaKind": {
+            "description": "What the schema holds.",
+            "enum": [
+              "layers",
+              "forms",
+              "domains",
+              "relations"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.schema.describe` v1, and what plan says.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/SchemaItem"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "The next page's cursor; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Every one found, all pages.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SchemaDescribed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "SchemaItem": {
+            "description": "One thing of the schema.",
+            "properties": {
+              "child": {
+                "description": "A relation's child layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "A layer's fields, a form draft's items, a list's values; none for a relation.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "detail": {
+                "description": "The whole definition, with `expand`."
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/SchemaKind"
+              },
+              "layer": {
+                "description": "A form's layer; a relation's parent layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "description": "A form's latest release; none unpublished.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "SchemaKind": {
+            "description": "What the schema holds.",
+            "enum": [
+              "layers",
+              "forms",
+              "domains",
+              "relations"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.schema.describe` v1, and what plan says.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/SchemaItem"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "The next page's cursor; none on the last.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Every one found, all pages.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SchemaDescribed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_count",
+          "invalid_cursor",
+          "layer_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina katmanının formlarını bul",
+          "input": {
+            "kinds": [
+              "forms"
+            ],
+            "layer": "bina",
+            "limit": 10
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.export",
       "version": 1,
       "title": "Formu dışa aktar",
@@ -356711,6 +357427,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -356802,6 +357525,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -356957,6 +357684,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -357411,6 +358142,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -357544,6 +358296,39 @@
               "initial",
               "steps"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "LayerField": {
@@ -358223,6 +359008,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -358314,6 +359106,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -358469,6 +359265,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -358923,6 +359723,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -359056,6 +359877,39 @@
               "initial",
               "steps"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "LayerField": {
@@ -359767,6 +360621,13 @@
                 },
                 "type": "array"
               },
+              "translations": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/FormTranslation"
+                },
+                "description": "The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its\nname and its items' labels and help. Only what is shown changes; the values, codes and rules are\nthe form's own.",
+                "type": "object"
+              },
               "workflow": {
                 "anyOf": [
                   {
@@ -359858,6 +360719,10 @@
               {
                 "description": "A group: a titled box of items, in one or two columns, that a rule may hide.",
                 "properties": {
+                  "across": {
+                    "description": "In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else\ndown the first column, then the second. Written only as `true`.",
+                    "type": "boolean"
+                  },
                   "collapsed": {
                     "description": "It opens closed (its title opens it); written only as `true`.",
                     "type": "boolean"
@@ -360013,6 +360878,10 @@
                       "string",
                       "null"
                     ]
+                  },
+                  "redact": {
+                    "description": "Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as\n`‹gizli›` in the Python and replay a call is copied as. Written only as `true`.",
+                    "type": "boolean"
                   },
                   "required": {
                     "description": "May not be left empty while shown; written only as `true`. The layer field's own `required`\nholds as well.",
@@ -360512,6 +361381,27 @@
             },
             "type": "object"
           },
+          "FormTranslation": {
+            "additionalProperties": false,
+            "description": "A form's words in one language (docs/adr/0443 §5).",
+            "properties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/ItemWords"
+                },
+                "description": "Item ids to their words.",
+                "type": "object"
+              },
+              "name": {
+                "description": "The form's name; none: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "FormWidget": {
             "description": "How a field is edited.",
             "oneOf": [
@@ -360645,6 +361535,39 @@
               "initial",
               "steps"
             ],
+            "type": "object"
+          },
+          "ItemWords": {
+            "additionalProperties": false,
+            "description": "An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a\nnote's text) and its help line.",
+            "properties": {
+              "choices": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "A listed field's values' labels by their codes; the codes written are the list's own.",
+                "type": "object"
+              },
+              "help": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "placeholder": {
+                "description": "A field's text shown in it while empty.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "LayerField": {
@@ -393597,6 +394520,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Klasör mutlak bir yol değil."
+    },
+    {
+      "code": "invalid_cursor",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sayfa imleci bu listenin değil."
     },
     {
       "code": "form_tests_failed",

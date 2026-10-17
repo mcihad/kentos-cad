@@ -111,4 +111,9 @@ checks?: Array<FormCheck>,
  * field's own item elsewhere writes it. Only its label, help, widget and visibility rule. Written
  * only as `true`.
  */
-mirror?: boolean, };
+mirror?: boolean, 
+/**
+ * Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as
+ * `‹gizli›` in the Python and replay a call is copied as. Written only as `true`.
+ */
+redact?: boolean, };

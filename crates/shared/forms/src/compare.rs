@@ -254,6 +254,27 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             },
         });
     }
+    // docs/adr/0443 §5: the words in other languages; what is shown, not what is kept.
+    if old.translations != new.translations {
+        let tags = |b: &FormBody| {
+            b.translations
+                .keys()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        out.push(FormChange {
+            item: None,
+            kind: FormChangeKind::Changed,
+            properties: vec!["translations".into()],
+            areas: areas(&["layout"]),
+            words: if new.translations.is_empty() {
+                "Çeviriler kaldırıldı.".into()
+            } else {
+                format!("Çeviriler değişti: {}.", tags(new))
+            },
+        });
+    }
     if old.tests != new.tests {
         out.push(FormChange {
             item: None,
@@ -279,6 +300,7 @@ mod tests {
     fn a_change_of_each_kind_is_said_in_order() {
         let field = |id: &str, f: &str| FormItem::Field(FormField::new(id, f));
         let old = FormBody {
+            translations: Default::default(),
             revision: 1,
             items: vec![field("a", "A"), field("b", "B"), field("c", "C")],
             clear_hidden: false,
@@ -289,6 +311,7 @@ mod tests {
         let mut changed = FormField::new("b", "B");
         changed.required = true;
         let new = FormBody {
+            translations: Default::default(),
             revision: 2,
             items: vec![field("c", "C"), FormItem::Field(changed), field("d", "D")],
             clear_hidden: true,

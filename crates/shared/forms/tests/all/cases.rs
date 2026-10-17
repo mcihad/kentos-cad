@@ -270,3 +270,22 @@ fn suggestions_are_counted_and_matched() {
         ["Çınar", "Ihlamur"]
     );
 }
+
+/// What a form needs of its host and what a host lacking some does not meet (docs/adr/0441 §4,
+/// 0443 §4): the keys in their order, each tool once.
+#[test]
+fn a_form_s_needs_and_a_host_s_lacks_are_as_the_cases_say() {
+    for c in cases("needs") {
+        let name = c["name"].as_str().unwrap_or_default();
+        let required = kentos_forms::requirements(&body(&c));
+        let want: Vec<String> = serde_json::from_value(c["requires"].clone()).expect("requires");
+        assert_eq!(required, want, "{name}");
+        let supported: Vec<String> =
+            serde_json::from_value(c["supported"].clone()).expect("supported");
+        let supported: Vec<&str> = supported.iter().map(String::as_str).collect();
+        let lacking = kentos_forms::unsupported(&required, &supported);
+        let want: Vec<String> =
+            serde_json::from_value(c["unsupported"].clone()).expect("unsupported");
+        assert_eq!(lacking, want, "{name}");
+    }
+}

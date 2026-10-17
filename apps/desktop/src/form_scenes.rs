@@ -41,7 +41,7 @@ fn fields() -> Value {
 
 /// The building form: Genel (status, storeys, the note shown and asked for a building to look at again)
 /// and Ayrıntı (a group of two columns shown with storeys, the approval locked for a sound building, a note).
-fn form(published: bool) -> Value {
+pub(crate) fn form(published: bool) -> Value {
     let body = json!({ "revision": 3, "items": [
         { "type": "tab", "id": "genel", "label": "Genel", "items": [
             { "type": "field", "id": "durum", "field": "Durum", "required": true },
@@ -246,7 +246,7 @@ fn province_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
     focused(s, app, "İl");
 }
 
-fn focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App, key: &str) {
+pub(crate) fn focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App, key: &str) {
     use iced::futures::StreamExt as _;
     let task: iced::Task<Message> = iced::widget::operation::focus(entry::input_id(key));
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
@@ -2602,7 +2602,12 @@ fn items_mut_find<'a>(
 }
 
 /// A street block of four buildings, two with records; the layer's form in the project.
-fn buildings(app: &mut App, published: bool) {
+pub(crate) fn buildings(app: &mut App, published: bool) {
+    buildings_with(app, form(published));
+}
+
+/// The four buildings with `form` on their layer.
+pub(crate) fn buildings_with(app: &mut App, form: Value) {
     let mut o = Objects::new();
     let corners = [[0.0, 0.0], [24.0, 0.0], [0.0, 20.0], [24.0, 20.0]];
     let mut ids = Vec::new();
@@ -2621,7 +2626,6 @@ fn buildings(app: &mut App, published: bool) {
     );
     o.line("yol", [-8.0, -6.0], [50.0, -6.0]);
     let fields = fields();
-    let form = form(published);
     open_edited(app, o, move |d| {
         let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
         let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
@@ -2642,11 +2646,11 @@ fn buildings(app: &mut App, published: bool) {
     );
 }
 
-fn designer(app: &mut App, event: designer::Event) {
+pub(crate) fn designer(app: &mut App, event: designer::Event) {
     let _ = app.update(Message::Forms(event));
 }
 
-fn entry(app: &mut App, event: entry::Event) {
+pub(crate) fn entry(app: &mut App, event: entry::Event) {
     let _ = app.update(Message::FormEntry(event));
 }
 
@@ -2886,6 +2890,23 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
+        (
+            "form-ceviri-giris",
+            crate::form_access_scenes::translated_entry,
+        ),
+        (
+            "form-ceviriler",
+            crate::form_access_scenes::translations_designer,
+        ),
+        (
+            "form-sorun-gezinme",
+            crate::form_access_scenes::issues_walked,
+        ),
+        (
+            "form-kapanis-sorusu",
+            crate::form_access_scenes::closing_asked,
+        ),
+        ("form-satir-satir", crate::form_access_scenes::across_group),
     ]
 }
 
@@ -3201,6 +3222,7 @@ mod tests {
         assert!(app.form_entry.is_some(), "refused: the window stays");
         assert_eq!(attrs(&app, 1).get("Durum").map(String::as_str), Some("iyi"));
         let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+        let _ = app.update(Message::FormEntry(entry::Event::Discard));
         // B-3 holds it: its floor count is written and its state kept.
         app.selection.set([Slot(3)]);
         run(&mut app, "data.formEdit");

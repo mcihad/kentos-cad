@@ -3,9 +3,9 @@
 //! own undo. The shared cases are `fixtures/commands/v1/cad.forms.edit.json`.
 
 use kentos_contracts::{
-    CommandResult, CommandWarning, FormIssue, FormRelease, FormsEdit, FormsEdited, FormsOp,
-    LayerNodeType, MOST_FORM_RELEASES, MOST_FORM_TEXT, MOST_FORMS, ProjectForm, ProjectSettings,
-    body_digest, body_problem, form_id_ok, form_name_ok,
+    CommandResult, CommandWarning, FormBody, FormIssue, FormRelease, FormsEdit, FormsEdited,
+    FormsOp, LayerNodeType, MOST_FORM_RELEASES, MOST_FORM_TEXT, MOST_FORMS, ProjectForm,
+    ProjectSettings, body_digest, body_problem, form_id_ok, form_name_ok,
 };
 use kentos_domain::Document;
 
@@ -204,10 +204,16 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     Some("edit.body.revision".into()),
                 )));
             }
-            if body.items != form.draft.items || body.clear_hidden != form.draft.clear_hidden {
-                form.draft.items = body.items.clone();
-                form.draft.clear_hidden = body.clear_hidden;
-                form.draft.revision += 1;
+            // The whole draft: its items, scenarios, workflow, steps and translations (docs/adr/0443 §5).
+            let next = FormBody {
+                revision: form.draft.revision,
+                ..body.clone()
+            };
+            if next != form.draft {
+                form.draft = FormBody {
+                    revision: form.draft.revision + 1,
+                    ..next
+                };
             }
             Some(form.clone())
         }

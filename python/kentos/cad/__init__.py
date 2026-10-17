@@ -29,8 +29,9 @@ from .document import *  # noqa: F403
 from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
+from .versions import *  # noqa: F403
 
-from . import addresses, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, arc, arrays, attachments, blocks, changeset, circle, curves, dimensions, domains, drawing, entities, fields, file, forms, labels, layers, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, standards, styles, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -221,6 +222,7 @@ __all__ = [
     "CommandWarning",
     "CommentFormsOp",
     "CommitResult",
+    "Compatibility",
     "Connection",
     "ConstructedCurve",
     "ConstructionEntity",
@@ -388,6 +390,7 @@ __all__ = [
     "ExportPdf",
     "Exported",
     "ExtensionPointConstruction",
+    "FORM_PROFILE",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -441,6 +444,7 @@ __all__ = [
     "FormTest",
     "FormTestExpect",
     "FormTestResult",
+    "FormTranslation",
     "FormWidget",
     "FormWidgetName",
     "FormWorkflow",
@@ -515,6 +519,7 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "ItemWords",
     "Job",
     "JobStatus",
     "JoggedDimensionMeasure",
@@ -922,6 +927,11 @@ __all__ = [
     "ScenariosEditPlan",
     "ScenariosEdited",
     "ScheduleCell",
+    "SchemaDescribe",
+    "SchemaDescribed",
+    "SchemaItem",
+    "SchemaKind",
+    "SchemaKindName",
     "SelectKind",
     "SelectKindName",
     "SelectLeftOut",
@@ -1092,6 +1102,7 @@ __all__ = [
     "changeset",
     "circle",
     "command",
+    "compatibility",
     "current",
     "curves",
     "dimensions",
@@ -1116,7 +1127,9 @@ __all__ = [
     "records",
     "rectangle",
     "relations",
+    "require",
     "scenarios",
+    "schema",
     "settings",
     "sheets",
     "snap",

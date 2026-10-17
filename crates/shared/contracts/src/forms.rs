@@ -128,6 +128,81 @@ pub struct FormBody {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub steps: bool,
+    /// The form's words in other languages (docs/adr/0443 §5), by language tag (`en`, `de`, `ar`): its
+    /// name and its items' labels and help. Only what is shown changes; the values, codes and rules are
+    /// the form's own.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            as = "Option<std::collections::BTreeMap<String, FormTranslation>>",
+            optional
+        )
+    )]
+    pub translations: std::collections::BTreeMap<String, FormTranslation>,
+}
+
+/// A form's words in one language (docs/adr/0443 §5).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormTranslation {
+    /// The form's name; none: its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// Item ids to their words.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<std::collections::BTreeMap<String, ItemWords>>", optional)
+    )]
+    pub items: std::collections::BTreeMap<String, ItemWords>,
+}
+
+/// An item's words in a language: its label (a tab's, group's, field's, list's or action's title, a
+/// note's text) and its help line.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ItemWords {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub help: Option<String>,
+    /// A field's text shown in it while empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub placeholder: Option<String>,
+    /// A listed field's values' labels by their codes; the codes written are the list's own.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
+    )]
+    pub choices: std::collections::BTreeMap<String, String>,
+}
+
+/// The most languages a form is written in besides its own.
+pub const MOST_TRANSLATIONS: usize = 20;
+
+/// A language tag a translation is kept under: two or three lowercase letters, a region after a hyphen
+/// (`pt-BR`); not `tr`, the form's own language.
+pub fn language_tag_ok(tag: &str) -> bool {
+    let (lang, region) = match tag.split_once('-') {
+        Some((l, r)) => (l, Some(r)),
+        None => (tag, None),
+    };
+    (2..=3).contains(&lang.len())
+        && lang.bytes().all(|b| b.is_ascii_lowercase())
+        && region.is_none_or(|r| r.len() == 2 && r.bytes().all(|b| b.is_ascii_uppercase()))
+        && tag != "tr"
 }
 
 /// A form's workflow (İş akışı, docs/adr/0428): a listed field holds each record's state; a step
@@ -486,6 +561,11 @@ pub enum FormItem {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         collapsed: bool,
+        /// In two columns, filled a row at a time: Tab goes across, then down (docs/adr/0443 §6); else
+        /// down the first column, then the second. Written only as `true`.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        across: bool,
         items: Vec<FormItem>,
     },
     /// A field of the layer.
@@ -996,6 +1076,11 @@ pub struct FormField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mirror: bool,
+    /// Kept out of the recorder's examples (docs/adr/0443 §2): the field's values are written as
+    /// `‹gizli›` in the Python and replay a call is copied as. Written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub redact: bool,
 }
 
 impl FormField {
@@ -1025,6 +1110,7 @@ impl FormField {
             min_search: None,
             checks: Vec::new(),
             mirror: false,
+            redact: false,
         }
     }
 
@@ -1707,6 +1793,55 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
             return Some(format!("“{name}” senaryosu formda iki kez var."));
         }
     }
+    // The translations (docs/adr/0443 §5): tags, at most twenty, words as the form's own are written.
+    if body.translations.len() > MOST_TRANSLATIONS {
+        return Some(format!(
+            "Bir form kendi dilinden başka en çok {MOST_TRANSLATIONS} dilde yazılır; {} var.",
+            body.translations.len()
+        ));
+    }
+    for (tag, words) in &body.translations {
+        if !language_tag_ok(tag) {
+            return Some(format!(
+                "“{tag}” bir dil etiketi olamaz: iki ya da üç küçük harf, isteğe bağlı tire ve iki büyük harf bölge (en, pt-BR); formun kendi dili (tr) çevrilmez."
+            ));
+        }
+        if words.name.as_deref().is_some_and(|n| !form_name_ok(n)) {
+            return Some(format!(
+                "“{tag}” çevirisinde formun adı 1–64 karakterdir, başında ve sonunda boşluk ve denetim karakteri olmaz."
+            ));
+        }
+        if words.items.len() > MOST_FORM_ITEMS {
+            return Some(format!(
+                "“{tag}” çevirisinde en çok {MOST_FORM_ITEMS} öğe olur."
+            ));
+        }
+        for (id, w) in &words.items {
+            if !form_id_ok(id) {
+                return Some(format!(
+                    "“{tag}” çevirisinde “{id}” bir öğe kimliği olamaz."
+                ));
+            }
+            if w.label
+                .as_deref()
+                .is_some_and(|l| l.trim().is_empty() || !text_ok(l, MOST_FORM_TEXT))
+                || w.help
+                    .as_deref()
+                    .is_some_and(|h| !text_ok(h, MOST_FORM_TEXT))
+                || w.placeholder
+                    .as_deref()
+                    .is_some_and(|h| !text_ok(h, MOST_FORM_TEXT))
+                || w.choices.len() > MOST_FORM_ITEMS
+                || w.choices
+                    .values()
+                    .any(|l| l.trim().is_empty() || !text_ok(l, MOST_FORM_TEXT))
+            {
+                return Some(format!(
+                    "“{tag}” çevirisinde “{id}” öğesinin sözleri en çok {MOST_FORM_TEXT} karakterdir, ad boş olmaz."
+                ));
+            }
+        }
+    }
     None
 }
 
@@ -1880,6 +2015,7 @@ mod tests {
         assert!(body_problem(&twice.draft).unwrap().contains("iki kez"));
         // A tab inside a group.
         let deep = form(vec![FormItem::Group {
+            across: false,
             id: "g".into(),
             label: None,
             columns: None,
@@ -1924,6 +2060,7 @@ mod tests {
     #[test]
     fn the_json_is_the_documented_one() {
         let f = form(vec![FormItem::Group {
+            across: false,
             id: "g".into(),
             label: Some("Genel".into()),
             columns: Some(2),

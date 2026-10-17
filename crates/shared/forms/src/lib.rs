@@ -55,6 +55,8 @@ pub mod codes {
     pub const ACTION_UNKNOWN: &str = "form_action_unknown";
     /// A step action whose step the form's workflow has not (docs/adr/0442 §5).
     pub const ACTION_STEP_UNKNOWN: &str = "form_action_step";
+    /// A translation's words for an item the form has not (docs/adr/0443 §5).
+    pub const TRANSLATION_ITEM: &str = "form_translation_item";
     /// A mirror with a rule that writes, requires or checks (docs/adr/0437).
     pub const MIRROR_RULES: &str = "form_mirror_rules";
     /// The widget does not take the field's kind.

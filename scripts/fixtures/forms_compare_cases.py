@@ -154,6 +154,10 @@ def compare(old, new):
         words = ("İş akışı eklendi." if "workflow" not in old else "İş akışı kaldırıldı." if "workflow" not in new
                  else "İş akışı değişti.")
         out.append({"kind": "changed", "properties": ["workflow"], "areas": ["workflow"], "words": words})
+    if old.get("translations", {}) != new.get("translations", {}):
+        tags = sorted(new.get("translations", {}), key=lambda s: s.encode("utf-8"))
+        out.append({"kind": "changed", "properties": ["translations"], "areas": ["layout"],
+                    "words": f"Çeviriler değişti: {', '.join(tags)}." if tags else "Çeviriler kaldırıldı."})
     if old.get("tests", []) != new.get("tests", []):
         out.append({"kind": "changed", "properties": ["tests"], "areas": ["tests"],
                     "words": f"Senaryolar değişti: {len(new.get('tests', []))} senaryo, önce {len(old.get('tests', []))}."})
