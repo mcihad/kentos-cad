@@ -174,6 +174,7 @@ mod line_parts;
 pub mod locks;
 mod log;
 pub mod look;
+pub mod hatch_edit;
 pub mod match_properties;
 pub mod meeting;
 pub mod mirror;

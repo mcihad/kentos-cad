@@ -1622,7 +1622,8 @@ def hatch_assoc(a):
     assert a.get("islands", [None]) and a.get("cutouts", [None]) and a.get("bounds", [None]), "boş liste yazılmaz"
     # Schema 69 (docs/adr/0328 §3): a face's tie names its line work (`bounds`) and no closed object; the reader holds
     # it to one of the two (broken/hatch-assoc-outer-and-bounds.kcad).
-    return cmap(fields(a, {"outer": (lambda u: blob(uid_bytes(u)), False), "bounds": (ids, False), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
+    # Schema 70 (docs/adr/0329 §3): the gap a face's line work was closed across.
+    return cmap(fields(a, {"gap": (f64, False), "outer": (lambda u: blob(uid_bytes(u)), False), "bounds": (ids, False), "islands": (ids, False), "cutouts": (ids, False), "seed": (point, True)}, "assoc"))
 
 
 # A reference's places and the numbers each has (docs/adr/0249 §1); the codes of a broken one.
@@ -2016,6 +2017,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     def line_patterned(nodes):
         return any("linePattern" in n.get("style", {}) or line_patterned(n.get("children", [])) for n in nodes)
 
+    # Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
+    if any(e["kind"] == "hatch" and "gap" in e.get("assoc", {}) for e in entities):
+        return 70
     # Schema 69 (docs/adr/0328): a hatch's exact boundary or a face's tie.
     def bounded(es):
         return any(e["kind"] == "hatch" and ("boundary" in e or "bounds" in e.get("assoc", {})) for e in es)
@@ -2412,7 +2416,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-70.kcad"] = container(root(cmap(parts), version=uint(70)))
+    files["schema-version-71.kcad"] = container(root(cmap(parts), version=uint(71)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3805,6 +3809,25 @@ def build():
     def tied_twice(d):
         d["entities"][7]["assoc"]["outer"] = d["uids"][0]
     out["broken/hatch-assoc-outer-and-bounds.kcad"] = boundary_broken(tied_twice)
+    # A face's tie's gap is schema 70's (docs/adr/0329 §3): in schema 69 an unknown field; beside a closed object, or
+    # 0, refused.
+    out["hatch-gaps.kcad"] = container(document(load("hatch-gaps.json")))
+    payload = document(load("hatch-gaps.json"))
+    assert payload.count(b"\x67version\x18\x46") == 1
+    out["broken/hatch-gap-in-schema-69.kcad"] = container(payload.replace(b"\x67version\x18\x46", b"\x67version\x18\x45"))
+
+    def gap_broken(change):
+        d = load("hatch-gaps.json")
+        change(d)
+        return container(document(d))
+
+    out["broken/hatch-gap-zero.kcad"] = gap_broken(lambda d: d["entities"][4]["assoc"].update(gap=0.0))
+
+    def gap_with_outer(d):
+        a = d["entities"][4]["assoc"]
+        a.pop("bounds")
+        a["outer"] = d["uids"][0]
+    out["broken/hatch-gap-with-outer.kcad"] = gap_broken(gap_with_outer)
     out["sheets.kcad"] = container(document(load("sheets.json")))
     out["requests.kcad"] = container(document(load("requests.json")))
     out["polyline-extras.kcad"] = container(document(load("polyline-extras.json")))

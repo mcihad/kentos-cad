@@ -46,6 +46,7 @@ fn drawing() -> Document {
     let tied = Entity::Hatch(kentos_domain::contracts::HatchEntity {
         boundary: None,
         assoc: Some(HatchAssoc {
+            gap: None,
             outer: Some(id(&doc, 1)),
             bounds: Vec::new(),
             islands: Vec::new(),

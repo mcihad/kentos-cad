@@ -150,6 +150,8 @@ pub const TOOLS: &[&str] = &[
     dimension::ID,
     hatch::ID,
     hatch_selected::ID,
+    // Taramayı düzenle (docs/adr/0329 §4).
+    crate::hatch_edit::ID,
     // Blocks (docs/adr/0144).
     block_define::ID,
     block_insert::ID,
@@ -579,6 +581,7 @@ impl Session {
                 Box::new(crate::dimension_reassociate::DimensionReassociate::new())
             }
             crate::array_edit::ID => Box::new(crate::array_edit::ArrayEdit::new()),
+            crate::hatch_edit::ID => Box::new(crate::hatch_edit::HatchEditor::new()),
             crate::curve_edit::ID => Box::new(crate::curve_edit::CurveEditTool::new()),
             crate::audit::ID => Box::new(crate::audit::Audit::new()),
             crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),

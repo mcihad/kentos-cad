@@ -113,6 +113,7 @@ fn only_a_drawing_with_a_pattern_a_gradient_or_a_tie_is_schema_23() {
     // Lines that follow their objects: the tie is schema 23's.
     let mut doc = drawing(vec![hatch(lines, None)]);
     let tie = HatchAssoc {
+        gap: None,
         outer: Some(doc.uids[0]),
         bounds: Vec::new(),
         islands: Vec::new(),
@@ -169,6 +170,7 @@ fn the_writer_refuses_what_the_reader_would() {
     // A tie names each object once.
     let id = EntityId([0x55; 16]);
     let twice = HatchAssoc {
+        gap: None,
         outer: Some(id),
         bounds: Vec::new(),
         islands: vec![id],
@@ -181,6 +183,7 @@ fn the_writer_refuses_what_the_reader_would() {
     // A block definition's objects have no persistent ids for a tie to name.
     let mut doc = content("blocks.json");
     let tie = HatchAssoc {
+        gap: None,
         outer: Some(id),
         bounds: Vec::new(),
         islands: Vec::new(),

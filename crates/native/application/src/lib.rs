@@ -77,6 +77,7 @@ pub mod dimension_create;
 pub mod dimensions_edit;
 pub mod dimensions_query;
 pub mod fields_edit;
+pub mod hatches_edit;
 pub mod leaders_edit;
 pub mod fonts_report;
 pub mod texts_check;
@@ -228,6 +229,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_VIEWS_EDIT,
         kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+    ),
+    // Taramanın sınırı, adaları ve ilişkisi ([`hatches_edit`], docs/adr/0329 §4).
+    (
+        kentos_contracts::CAD_HATCHES_EDIT,
+        kentos_contracts::CAD_HATCHES_EDIT_VERSION,
     ),
     // Çok kollu kılavuz ([`leaders_edit`], docs/adr/0326 §5).
     (

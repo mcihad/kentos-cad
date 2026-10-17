@@ -599,6 +599,7 @@ impl Reader<'_> {
                     None => None,
                     // The packed record keeps the closed object's id; a face's line work is not drawn.
                     Some(outer) => Some(HatchAssoc {
+                        gap: None,
                         outer: (!outer.is_empty()).then_some(outer),
                         bounds: None,
                         islands: self.strings()?,

@@ -197,6 +197,11 @@ Liste:
   `cad.entities.hatch`'in yüz bağı (ortak durumlar `cad.entities.hatch.json`); dönüşümlerin, Esnet'in ve tutamaçların sınırı
   taşıması çekirdekten (`geom::hatch_boundary`); DXF okuma ve yazma çekirdekte, web'in biçim işçisi yeni sürümü alınca gelir;
   iz `hatches.json`'un İ seçeneği.
+- [ ] `CAD-HATCH-03`…`05` taramanın bölgeleri, boşluk toleransı ve düzenlenmesi (ADR 0329, 17 Ekim): web'de gerekenler: `.kcad`
+  şema 70'in bağdaki `gap`'i, `hatchTies.ts`'in boşluklu yüzü ve bağı değişen taramayı yeniden kesmesi; `cad.entities.hatch`'in
+  `islandStyle`, `alsoAt`, `gap`'i ve `cad.hatches.edit`'in web işleyicisi (ortak durumlar `cad.entities.hatch.json`,
+  `cad.hatches.edit.json`); Taramayı düzenle aracı, Tarama'nın Boşluk (G) seçeneği ve Adalar'ın iç içe değeri, Öznitelikler'in Sınır
+  satırı; iz `hatches.json`'un G seçeneği.
 - [ ] `CAD-ANNO-28`…`30` tablonun hücreleri, bağlı çizelge ve açıklamaların DXF biçimleri (ADR 0327, 17 Ekim): web'de gerekenler:
   `.kcad` şema 68 (`styles`, `formulas`, `fields`, `link`, `schedule`; sütunların 12. seçeneği), sözleşmenin `table_formula`'sı
   WASM'la (formüllerin hesabı ve kayması), paketli kaydın 25. türü (biçimli tablo: 18'inki ve biçimlerin JSON'u; web'in

@@ -1089,6 +1089,21 @@
       "shortcuts": [],
       "category": "Tablo",
       "status": "implemented"
+    },
+    {
+      "id": "tool.hatchEdit",
+      "title": "Taramayı düzenle",
+      "icon": "hatchEdit",
+      "description": "Bir taramaya tıklanır; Ada ekle tıklanan kapalı nesneyi ada yapar, Ada çıkar tıklanan adayı yeniden tarar, Yeniden seç taramanın bölgesini tıklanan yerden Tarama'nın seçenekleriyle yeniden bulur, Yeniden oluştur sınırını alan ya da çoklu çizgi olarak yazar ve taramayı ona bağlar, İlişkiyi kopar taramayı serbest bırakır (cad.hatches.edit; AutoCAD'in HATCHEDIT'i).",
+      "aliases": [
+        "HATCHEDIT",
+        "HE",
+        "TARAMADUZENLE",
+        "TARAMADÜZENLE"
+      ],
+      "shortcuts": [],
+      "category": "Açıklama",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1206,7 +1221,13 @@
     "tableBlocks": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\"/><path d=\"M2.5 7h15M9 7v10.5\"/><path d=\"M12 10h3v3h-3Z\"/><path d=\"M4.5 11h2.5M4.5 14h2.5\"/>",
     "tableBold": "<path d=\"M6 3.5h5a3 3 0 0 1 0 6H6Z\"/><path d=\"M6 9.5h6a3.5 3.5 0 0 1 0 7H6Z\"/>",
     "tableClearStyle": "<path d=\"M7.5 16.5 4 13l8.5-8.5L16 8l-8.5 8.5h9\"/><path d=\"M8.5 9 12 12.5\"/>",
-    "tableUnfield": "<path d=\"M7 3.5c-2 0-2 1.2-2 3.2S4 9.8 3 10c1 .2 2 1 2 3.1s0 3.4 2 3.4\"/><path d=\"M13 3.5c2 0 2 1.2 2 3.2s1 3.1 2 3.3c-1 .2-2 1-2 3.1s0 3.4-2 3.4\"/><path d=\"M4 16.5 16 3.5\"/>"
+    "tableUnfield": "<path d=\"M7 3.5c-2 0-2 1.2-2 3.2S4 9.8 3 10c1 .2 2 1 2 3.1s0 3.4 2 3.4\"/><path d=\"M13 3.5c2 0 2 1.2 2 3.2s1 3.1 2 3.3c-1 .2-2 1-2 3.1s0 3.4-2 3.4\"/><path d=\"M4 16.5 16 3.5\"/>",
+    "hatchEdit": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8 8 2.5M3.5 13.5l10-10M8 13.5l5.5-5.5\" stroke-width=\"1\"/><path d=\"M11.2 18.2l.7-2.7 5-5a1.5 1.5 0 0 1 2.1 2.1l-5 5z\"/>",
+    "hatchIslandAdd": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 6.5l4-4M9.5 13.5l4-4\" stroke-width=\"1\"/><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\"/><path d=\"M16 12.5v6M13 15.5h6\" stroke-width=\"1.4\"/>",
+    "hatchIslandRemove": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 6.5l4-4M9.5 13.5l4-4M6 10l4-4\" stroke-width=\"1\"/><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\" stroke-dasharray=\"1.2 1\"/><path d=\"M13 15.5h6\" stroke-width=\"1.4\"/>",
+    "hatchReselect": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.4\"/><path d=\"M4 9 9 4M6 12l6-6\" stroke-width=\"1\"/><circle cx=\"15.5\" cy=\"15.5\" r=\"2.6\"/><path d=\"M15.5 11.4v1.4M15.5 18.2v1.4M11.4 15.5h1.4M18.2 15.5h1.4\" stroke-width=\"1.2\"/>",
+    "hatchRecreate": "<path d=\"M2.5 2.5h11v11h-11z\" stroke-dasharray=\"2 1.4\"/><path d=\"M2.5 8 8 2.5M3.5 13.5l10-10\" stroke-width=\"1\"/><path d=\"M8 8h10v10H8z\" stroke-width=\"1.6\"/>",
+    "hatchUntie": "<rect x=\"2.5\" y=\"2.5\" width=\"11\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8 8 2.5M3.5 13.5l10-10M8 13.5l5.5-5.5\" stroke-width=\"1\"/><path d=\"M13.5 14.5l-1.2 1.2a1.8 1.8 0 0 0 2.5 2.5l1.2-1.2M17.5 16.5l1.2-1.2a1.8 1.8 0 0 0-2.5-2.5l-1.2 1.2M14.2 12.2l-.8-1.6M18.8 17.8l1.6.8\" stroke-width=\"1.2\"/>"
   },
   "ribbon": [
     {
@@ -1872,6 +1893,32 @@
           "size": "small"
         }
       ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "annotate",
+      "into": "Tarama",
+      "items": [
+        {
+          "command": "tool.hatchEdit",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "edit",
+      "into": "Nesne",
+      "items": [
+        {
+          "command": "tool.hatchEdit",
+          "size": "small"
+        }
+      ]
     }
   ],
   "methods": [
@@ -2033,6 +2080,36 @@
       "option": "P",
       "description": "Düz bir kenara uzaklıkla ya da bir noktadan paralel",
       "icon": "xlineParallel"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "Ada ekle",
+      "option": "E",
+      "icon": "hatchIslandAdd"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "Ada çıkar",
+      "option": "Ç",
+      "icon": "hatchIslandRemove"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "Sınırı yeniden seç",
+      "option": "S",
+      "icon": "hatchReselect"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "Sınırı yeniden oluştur",
+      "option": "O",
+      "icon": "hatchRecreate"
+    },
+    {
+      "command": "tool.hatchEdit",
+      "label": "İlişkiyi kopar",
+      "option": "K",
+      "icon": "hatchUntie"
     }
   ]
 }

@@ -125,14 +125,15 @@ impl Document {
                 }
                 // The point clicked inside, or, when the line work moved away from it, the point moved as the first
                 // of its moved objects did.
-                let found = face_region(&bound_shapes, &island_shapes, &boxes, seed)
+                let gap = a.gap.unwrap_or(0.0);
+                let found = face_region(&bound_shapes, &island_shapes, &boxes, seed, gap)
                     .map(|a| (a, seed))
                     .or_else(|| {
                         let d = bounds
                             .iter()
                             .find_map(|(id, _)| shifts.get(&Uuid::from_bytes(id.0)))?;
                         let moved = CoreVec2::new(seed.x + d.x, seed.y + d.y);
-                        face_region(&bound_shapes, &island_shapes, &boxes, moved)
+                        face_region(&bound_shapes, &island_shapes, &boxes, moved, gap)
                             .map(|a| (a, moved))
                     });
                 let (area, seed) = found?;
@@ -168,6 +169,7 @@ impl Document {
                     .collect()
             }),
             assoc: Some(HatchAssoc {
+                gap: a.gap,
                 outer: a.outer,
                 bounds: bounds.into_iter().map(|(id, _)| id).collect(),
                 islands,
@@ -177,6 +179,12 @@ impl Document {
             boundary,
             ..h.clone()
         })
+    }
+
+    /// The tied hatch `h` cut again from its objects as they are now (docs/adr/0329 §4: a tie changed by a command);
+    /// none when its objects give no region.
+    pub fn recut_hatch(&self, h: &HatchEntity) -> Option<HatchEntity> {
+        self.retied(h, &HashMap::new())
     }
 
     /// What keeps the associative hatches with their objects after `ops` (a
@@ -190,6 +198,7 @@ impl Document {
         let mut objects: Vec<Uuid> = Vec::new();
         let mut seen: HashSet<Uuid> = HashSet::new();
         let mut edited: BTreeSet<Slot> = BTreeSet::new();
+        let mut retie: BTreeSet<Slot> = BTreeSet::new();
         for op in ops {
             let (stored, before) = match op {
                 Op::Add(s) | Op::Remove(s) => (s, None),
@@ -202,9 +211,13 @@ impl Document {
             if let (Some(before), Entity::Hatch(after)) = (before, &*stored.entity)
                 && let Entity::Hatch(was) = &*before.entity
                 && after.assoc.is_some()
-                && (was.ring != after.ring || was.holes != after.holes)
             {
-                edited.insert(stored.slot());
+                // A tie the step changed (a command's, docs/adr/0329 §4): cut again from it.
+                if was.assoc != after.assoc {
+                    retie.insert(stored.slot());
+                } else if was.ring != after.ring || was.holes != after.holes {
+                    edited.insert(stored.slot());
+                }
             }
         }
         // How far each changed object moved: its first vertex's way (a face's tie finds its point again by it).
@@ -241,6 +254,21 @@ impl Document {
                 if next != *h {
                     out.push(updated(current, next));
                 }
+            }
+        }
+        for slot in retie {
+            if !done.insert(slot) {
+                continue;
+            }
+            let Some(current) = self.store.get(slot).cloned() else {
+                continue;
+            };
+            let Entity::Hatch(h) = &*current.entity else {
+                continue;
+            };
+            let next = self.retied(h, &shifts).unwrap_or_else(|| untied(h));
+            if next != *h {
+                out.push(updated(current, next));
             }
         }
         // A hatch edited by itself, its objects unchanged: it follows nothing now.

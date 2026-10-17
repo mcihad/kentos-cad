@@ -128,6 +128,9 @@ pub enum Event {
     /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
     SelectObject(Slot),
     Unlink(Vec<Slot>),
+    /// A hatch's Sınır ▾: its boundary written again as an area or polylines, the hatch then following it
+    /// (docs/adr/0329 §4).
+    RecreateBoundary(Slot, kentos_contracts::BoundaryForm),
     /// Yazı stili ▾ and Ölçü stili ▾ (docs/adr/0183 §6): the style applied
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
@@ -553,6 +556,7 @@ impl App {
                 input.unlink = true;
                 properties::set_properties(model, input)
             }
+            Event::RecreateBoundary(slot, form) => properties::recreate_boundary(model, slot, form),
             // On a hidden layer they vanish from the drawing, still selected: the command's warning says so.
             Event::Layer(ids, layer) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Layer);

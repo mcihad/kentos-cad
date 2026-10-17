@@ -251,20 +251,109 @@ pub fn bounding(rings: &Area, shapes: &[Shape]) -> Vec<usize> {
         .collect()
 }
 
+/// A gap closed to find a region (docs/adr/0329 §3): from a dangling end to
+/// the nearest point of the other line work, and its length.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Bridge {
+    pub a: Vec2,
+    pub b: Vec2,
+    pub length: f64,
+}
+
+/// An open object's free ends: a line's, an arc's, an open polyline's
+/// (each part's), an open fit-point curve's; none for anything closed.
+fn free_ends(s: &Shape) -> Vec<Vec2> {
+    match s {
+        Shape::Line { a, b } => vec![*a, *b],
+        Shape::Arc { c, r, a0, a1 } => {
+            let g = crate::geom::arc::ArcGeom {
+                c: *c,
+                r: *r,
+                a0: *a0,
+                a1: *a1,
+            };
+            vec![crate::geom::arc::arc_start(&g), crate::geom::arc::arc_end(&g)]
+        }
+        Shape::Polyline { closed: false, .. } => crate::entity::area_parts(s)
+            .iter()
+            .filter_map(|p| match p {
+                Shape::Polyline { pts, .. } if pts.len() >= 2 => Some([pts[0], pts[pts.len() - 1]]),
+                _ => None,
+            })
+            .flatten()
+            .collect(),
+        Shape::Spline { pts, closed: false } if pts.len() >= 2 => vec![pts[0], pts[pts.len() - 1]],
+        _ => Vec::new(),
+    }
+}
+
+/// The bridges that close the line work's gaps up to `gap` metres
+/// (docs/adr/0329 §3): each free end that no other object's line work
+/// touches (within 1 µm) goes to the nearest point of the other objects'
+/// line work within `gap`; two ends bridged to each other are one bridge.
+/// In the objects' order, each object's ends in theirs.
+pub fn bridges(lines: &[Shape], gap: f64) -> Vec<Bridge> {
+    if !(gap > 0.0) {
+        return Vec::new();
+    }
+    let edges: Vec<Vec<crate::geom::intersect::Edge>> =
+        lines.iter().map(crate::ops::edges::entity_edges).collect();
+    let mut out: Vec<Bridge> = Vec::new();
+    for (i, s) in lines.iter().enumerate() {
+        for p in free_ends(s) {
+            let mut best: Option<(f64, Vec2)> = None;
+            for (j, es) in edges.iter().enumerate() {
+                if j == i {
+                    continue;
+                }
+                for e in es {
+                    let c = crate::geom::intersect::closest_on_edge(e, p);
+                    if best.is_none_or(|(d, _)| c.d < d) {
+                        best = Some((c.d, c.p));
+                    }
+                }
+            }
+            let Some((d, q)) = best else { continue };
+            // Touching already, or too far.
+            if d <= BOUND_TOL || d > gap {
+                continue;
+            }
+            let same = |b: &Bridge| {
+                let near = |u: Vec2, v: Vec2| crate::geometry::dist(u, v) <= BOUND_TOL;
+                (near(b.a, q) && near(b.b, p)) || (near(b.a, p) && near(b.b, q))
+            };
+            if !out.iter().any(same) {
+                out.push(Bridge {
+                    a: p,
+                    b: q,
+                    length: d,
+                });
+            }
+        }
+    }
+    out
+}
+
 /// A face's region (docs/adr/0328 §3): the face the line work of `bounds`
-/// and `islands` closes around `seed` (the islands' closed groups its
-/// holes), less the `cutouts`' boxes; the part that holds the seed. None
-/// when the line work closes nothing around it.
+/// and `islands` closes around `seed`, its gaps up to `gap` bridged (the
+/// islands' closed groups its holes), less the `cutouts`' boxes; the part
+/// that holds the seed. None when the line work closes nothing around it.
 pub fn face_region(
     bounds: &[Shape],
     islands: &[Shape],
     cutouts: &[Vec<Vec2>],
     seed: Vec2,
+    gap: f64,
 ) -> Option<Area> {
-    let lines: Vec<Entity> = bounds
-        .iter()
-        .chain(islands)
-        .map(|s| Entity::new(s.clone()))
+    let shapes: Vec<Shape> = bounds.iter().chain(islands).cloned().collect();
+    // The gaps the hatch was found across closed again (docs/adr/0329 §3).
+    let bridged = bridges(&shapes, gap)
+        .into_iter()
+        .map(|b| Shape::Line { a: b.a, b: b.b });
+    let lines: Vec<Entity> = shapes
+        .into_iter()
+        .chain(bridged)
+        .map(Entity::new)
         .collect();
     let index = crate::geom::region::FaceIndex::new(&[crate::ops::areas::line_source(&lines)]);
     let face = index.at(seed, !islands.is_empty())?;

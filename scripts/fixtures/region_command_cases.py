@@ -80,6 +80,12 @@ ROOM_B = (X + 20, Y, X + 30, Y + 8)
 PARCEL = (X + 40, Y, X + 60, Y + 20)
 BUILDING = (X + 44, Y + 4, X + 48, Y + 8)
 HIDDEN = (X + 70, Y, X + 80, Y + 8)
+# İç içe adalar (docs/adr/0329 §1): three closed objects, each inside the one before.
+NEST_OUTER = (X + 130, Y, X + 150, Y + 20)
+NEST_MID = (X + 134, Y + 4, X + 146, Y + 16)
+NEST_IN = (X + 138, Y + 8, X + 142, Y + 12)
+# A room whose left wall stops 0.125 m short of the floor (docs/adr/0329 §3).
+GAP_ROOM = (X + 110, Y, X + 120, Y + 8)
 
 ENTITIES = [
     *rect_lines(10, *ROOM_A),
@@ -90,10 +96,17 @@ ENTITIES = [
     polygon(21, rect(*BUILDING)),
     *rect_lines(22, *HIDDEN, layer_id="gizli"),
     line(26, (X + 90, Y), (X + 100, Y)),
+    polygon(27, rect(*NEST_OUTER)),
+    polygon(28, rect(*NEST_MID)),
+    polygon(29, rect(*NEST_IN)),
+    line(30, (X + 110, Y), (X + 120, Y)),
+    line(31, (X + 120, Y), (X + 120, Y + 8)),
+    line(32, (X + 120, Y + 8), (X + 110, Y + 8)),
+    line(33, (X + 110, Y + 8), (X + 110, F(1, 8) + Y)),
 ]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
-NEXT = 27
+NEXT = 34
 
 SETUP = {
     "format": "kentos.document", "version": 1, "name": "Bölge komutları",
@@ -308,7 +321,11 @@ def plain(v):
 
 
 def hatch_entity(eid, outer, holes, pat, assoc=None, layer_id="tarama", **look):
-    o, hs = area(outer, holes)
+    if isinstance(outer, list):
+        # A ring given vertex by vertex (a face with a bridged gap).
+        o, hs = canonical(outer, True), []
+    else:
+        o, hs = area(outer, holes)
     e = {"kind": "hatch", "id": eid, "layerId": layer_id, "attrs": {}, **look, "ring": [P(*p) for p in o]}
     if hs:
         e["holes"] = [[P(*p) for p in h] for h in hs]
@@ -426,6 +443,31 @@ def hatch_cases():
         hatch_case("Plan: tarama yazılacağı gibi, id 0; hiçbir şey yazılmaz", at_point(*p_in, associative=False), DOLU,
                    [(PARCEL, [BUILDING], solid, None)], plan=True),
     ]
+    # Ada biçimleri, ek noktalar ve boşluklar (docs/adr/0329 §1–§3).
+    n_in = (X + 132, Y + 2)
+    inner_seed = seed_of(NEST_IN)
+    out += [
+        hatch_case("Ada biçimi Dış: adalar ve içlerindekiler boş; ilişkide değen her ada", at_point(*n_in, islandStyle="outer"), DOLU,
+                   [(NEST_OUTER, [NEST_MID], solid, tie(27, [28, 29], n_in))]),
+        hatch_case("Ada biçimi İç içe: adanın içindeki kapalı nesne ayrı bir taramayla yeniden taranır", at_point(*n_in, islandStyle="normal"), DOLU,
+                   [(NEST_OUTER, [NEST_MID], solid, tie(27, [28, 29], n_in)),
+                    (NEST_IN, [], solid, tie(29, [], inner_seed))]),
+        hatch_case("Ada biçimi Yok say: adalar da taranır; islands'ın yerine", at_point(*n_in, islands=True, islandStyle="ignore"), DOLU,
+                   [(NEST_OUTER, [], solid, tie(27, [], n_in))]),
+        hatch_case("Çoklu tara İç içe: dıştaki kendi içinden, iç ada ayrıca", {"kind": "objects", "uids": [UID(27)], "islandStyle": "normal"}, DOLU,
+                   [(NEST_OUTER, [NEST_MID], solid, tie(27, [28, 29], seed_of(NEST_OUTER))),
+                    (NEST_IN, [], solid, tie(29, [], inner_seed))]),
+        hatch_case("Ek noktalar: her nokta kendi bölgesi; aynı bölgeyi bulan nokta bir kez", at_point(*n_in, alsoAt=[P(X + 140, Y + 10), P(X + 148, Y + 18)]), DOLU,
+                   [(NEST_OUTER, [NEST_MID], solid, tie(27, [28, 29], n_in)),
+                    (NEST_IN, [], solid, tie(29, [], (X + 140, Y + 10)))]),
+        hatch_case("Çizgilerde İç içe: Dış gibi, islands_not_nested uyarısıyla", at_point(X + 2, Y + 2, way="lines", islandStyle="normal"), DOLU,
+                   [(ROOM_A, [ISLAND], solid, face_tie(ROOM_A, [ISLAND], (X + 2, Y + 2)))],
+                   warnings=[warning("islands_not_nested", "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı (Dış).", "region.islandStyle")]),
+        hatch_case("Boşluk toleransı: 0,125 m'lik boşluk köprüyle kapanır, bağ boşluğu da bilir", at_point(X + 115, Y + 4, way="lines", gap=0.25), DOLU,
+                   [([(X + 110, Y), (X + 120, Y), (X + 120, Y + 8), (X + 110, Y + 8), (X + 110, F(1, 8) + Y)], [], solid,
+                     {**face_tie(GAP_ROOM, [], (X + 115, Y + 4)), "gap": 0.25})],
+                   warnings=[warning("gaps_closed", "1 boşluk kapatıldı (toplam 0.125 m, en uzunu 0.125 m); taranan alan 80.00 m².", "region.gap")]),
+    ]
     one = {"region": at_point(*p_in), "pattern": DOLU, "layerId": "tarama"}
     out += [
         refused("Bilinmeyen desen", {**one, "pattern": {"name": "Yok"}}, "unknown_pattern",
@@ -449,6 +491,13 @@ def hatch_cases():
                 "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "region.boundaryLayer"),
         refused("Kapalı nesne yok", {**one, "region": at_point(X + 200, Y + 200)}, "not_enclosed", NOT_ENCLOSED_OBJECT, "region.at"),
         refused("Çizgilerle kapalı bölge yok", {**one, "region": at_point(X + 200, Y + 200, way="lines")}, "not_enclosed", NOT_ENCLOSED_LINES, "region.at"),
+        refused("Boşluksuz: duvarı kısa oda kapanmaz", {**one, "region": at_point(X + 115, Y + 4, way="lines")}, "not_enclosed", NOT_ENCLOSED_LINES, "region.at"),
+        refused("Ek noktanın bölgesi yok", {**one, "region": at_point(*p_in, alsoAt=[P(X + 200, Y + 200)])}, "not_enclosed", NOT_ENCLOSED_OBJECT,
+                "region.alsoAt[0]"),
+        refused("Boşluk toleransı 1000 m'yi aşamaz", {**one, "region": at_point(X + 115, Y + 4, way="lines", gap=2000)}, "invalid_gap",
+                "Boşluk toleransı 2000; 0 ile 1000 m arasında sonlu bir sayı olmalı.", "region.gap"),
+        refused("Ek nokta sonlu değil", {**one, "region": at_point(*p_in, alsoAt=[P(X, Y)])}, "not_finite", not_finite_point("Ek noktanın", "x"),
+                "region.alsoAt[0].x", non_finite={"region.alsoAt[0].x": "NaN"}),
         refused("Çoklu tara: hiçbiri kapalı değil", {**one, "region": {"kind": "objects", "uids": [UID(26)]}}, "not_closed",
                 "Nesnelerin hiçbiri kapalı değil: alan, daire, tam elips ya da kapalı eğri taranır.", "region.uids"),
         refused("Desen bölge için çok sık: 20 000'den çok çizgi", {**one, "pattern": {"name": "Çizgili", "scale": 0.0001}}, "pattern_too_dense",

@@ -1403,6 +1403,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 70 (docs/adr/0329 §3): a face's tie closed across gaps.
+    if doc.entities.iter().any(|e| {
+        matches!(e, Entity::Hatch(h) if h.assoc.as_ref().is_some_and(|a| a.gap.is_some()))
+    }) {
+        return crate::SCHEMA_WITH_HATCH_GAPS;
+    }
     // Schema 69 (docs/adr/0328): a hatch's exact boundary or a tie to a face's line work.
     let bounded = |list: &[Entity]| {
         list.iter().any(|e| {

@@ -1211,12 +1211,14 @@ const ENTRIES: &[Entry] = &[
                 "not_enclosed",
                 "not_closed",
                 "pattern_too_dense",
+                "invalid_region",
+                "invalid_gap",
             ],
             LAYER,
             LOOK,
             REVISION,
         ],
-        warnings: &["not_closed", "layer_hidden"],
+        warnings: &["not_closed", "layer_hidden", "gaps_closed", "islands_not_nested"],
         targets: || {
             vec![target(
                 Some("objects"),
@@ -1303,6 +1305,26 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_text"]],
         warnings: &[],
         targets: || vec![target(None, &["text"], &[], Some("not_a_text"), None)],
+    },
+    Entry {
+        id: "cad.hatches.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_hatch",
+                "layer_not_found",
+                "not_a_layer",
+                "not_closed",
+                "not_enclosed",
+                "island_not_found",
+                "invalid_region",
+                "not_finite",
+                "invalid_gap",
+            ],
+            REVISION,
+        ],
+        warnings: &["curves_approximated", "gaps_closed", "islands_not_nested", "layer_hidden"],
+        targets: || vec![target(None, &["hatch"], &[], Some("not_a_hatch"), None)],
     },
     Entry {
         id: "cad.leaders.edit",

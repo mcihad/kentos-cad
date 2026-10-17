@@ -127,6 +127,9 @@ impl Hatch {
                 islands: Some(m.hatch_islands),
                 texts: Some(m.hatch_texts),
                 associative: Some(m.hatch_assoc),
+                also_at: Vec::new(),
+                island_style: options::island_style(&m),
+                gap: (m.hatch_by_lines && m.hatch_gap > 0.0).then_some(m.hatch_gap),
             },
             pattern: options::spec(&m),
             layer_id: cx.doc.layers().active().to_owned(),
@@ -270,7 +273,9 @@ impl Tool for Hatch {
                 .boundary_name
                 .clone()
                 .unwrap_or_else(|| "tümü".to_owned());
-            return prompt.option_with("Sınır katmanı", "K", layer);
+            return prompt
+                .option_with("Sınır katmanı", "K", layer)
+                .option_with("Boşluk", "G", crate::format::js_number(m.hatch_gap));
         }
         prompt
     }
@@ -334,6 +339,11 @@ impl Tool for Hatch {
             "B" => {
                 cx.memory.hatch_by_lines = !cx.memory.hatch_by_lines;
                 self.picking_layer = false;
+                self.changed()
+            }
+            // Boşluk, in the line work (docs/adr/0329 §3).
+            "G" if cx.memory.hatch_by_lines => {
+                self.asking = Some(Asking::Gap);
                 self.changed()
             }
             "K" if cx.memory.hatch_by_lines || self.picking_layer => {

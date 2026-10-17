@@ -234,6 +234,8 @@ pub(super) struct Features {
     pub(super) table_cells: bool,
     /// Schema 69: a hatch's `boundary` and its tie's `bounds` (docs/adr/0328).
     pub(super) hatch_boundaries: bool,
+    /// Schema 70: a face's tie's `gap` (docs/adr/0329 §3).
+    pub(super) hatch_gaps: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -318,6 +320,7 @@ impl Features {
             multileader: schema >= crate::SCHEMA_WITH_MULTILEADER,
             table_cells: schema >= crate::SCHEMA_WITH_TABLE_CELLS,
             hatch_boundaries: schema >= crate::SCHEMA_WITH_HATCH_BOUNDARIES,
+            hatch_gaps: schema >= crate::SCHEMA_WITH_HATCH_GAPS,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
@@ -1150,7 +1153,7 @@ pub(super) fn object(
                 f.style = Some(named(r, known)?)
             }
             "pattern" => f.pattern = Some(pattern(r, has)?),
-            "assoc" => f.assoc = Some(hatch_assoc(r, has.hatch_boundaries)?),
+            "assoc" => f.assoc = Some(hatch_assoc(r, has.hatch_boundaries, has.hatch_gaps)?),
             "boundary" if kind == Kind::Hatch => {
                 let (b, at): (Vec<kentos_contracts::HatchLoop>, usize) = json_part(r, "taramanın sınırı")?;
                 if let Some(words) = kentos_contracts::boundary_problem(&b) {
@@ -2796,12 +2799,15 @@ fn wipeout(r: &mut Reader<'_>) -> Result<kentos_contracts::Wipeout, KcadError> {
     })
 }
 
-fn hatch_assoc(r: &mut Reader<'_>, faces: bool) -> Result<HatchAssoc, KcadError> {
+fn hatch_assoc(r: &mut Reader<'_>, faces: bool, gaps: bool) -> Result<HatchAssoc, KcadError> {
     let at = r.position();
     let (mut seed, mut outer, mut islands, mut cutouts) = (None, None, Vec::new(), Vec::new());
     let mut bounds = Vec::new();
+    let mut gap = None;
     map(r, |r, key| {
         match key {
+            // Schema 70 (docs/adr/0329 §3).
+            "gap" if gaps => gap = Some(r.float()?),
             "seed" => seed = Some(point(r)?),
             "outer" => outer = Some(EntityId(id16(r)?)),
             // A face's line work (schema 69, docs/adr/0328 §3).
@@ -2831,6 +2837,7 @@ fn hatch_assoc(r: &mut Reader<'_>, faces: bool) -> Result<HatchAssoc, KcadError>
         return Err(r.fail_at(Code::BadValue, at, "taramanın ilişkisinde outer eksik"));
     }
     let a = HatchAssoc {
+        gap,
         outer,
         bounds,
         islands,

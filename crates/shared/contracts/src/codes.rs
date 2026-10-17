@@ -758,6 +758,20 @@ codes! {
     SOURCE_MISSING = "source_missing", Warning, false, "Tablonun dosyası yolunda yok; tablo olduğu gibi kaldı.";
     /// A linked table's file that does not read as a table.
     SOURCE_UNREADABLE = "source_unreadable", Warning, false, "Tablonun dosyası tablo olarak okunamadı; tablo olduğu gibi kaldı.";
+    /// An object given as a hatch that is not one (docs/adr/0329 §4).
+    NOT_A_HATCH = "not_a_hatch", Failed, false, "Verilen nesne bir tarama değil.";
+    /// An island a hatch does not have: an object not among its islands, a hole's place past its holes.
+    ISLAND_NOT_FOUND = "island_not_found", Failed, false, "Taramanın böyle bir adası yok.";
+    /// A region Sınırı yeniden seç cannot take: Çoklu tara's objects, or further points.
+    INVALID_REGION = "invalid_region", Failed, false, "Bölge tek bir noktayla verilmeli.";
+    /// A gap tolerance below 0, not finite or past its bound.
+    INVALID_GAP = "invalid_gap", Failed, false, "Boşluk toleransı 0 ile 1000 m arasında olmalı.";
+    /// Gaps in the line work closed to find the region, each said with its length (docs/adr/0329 §3).
+    GAPS_CLOSED = "gaps_closed", Warning, false, "Çizgi işindeki boşluklar kapatılarak bölge bulundu.";
+    /// İç içe adalar asked in the line work: taken as Dış.
+    ISLANDS_NOT_NESTED = "islands_not_nested", Warning, false, "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı.";
+    /// A boundary's ellipse or curve written as its chords (an area holds lines and arcs).
+    CURVES_APPROXIMATED = "curves_approximated", Warning, false, "Sınırın elips ya da eğri kenarları 0,1 mm'lik kirişleriyle yazıldı.";
     /// A table that names a file but is linked to none.
     SOURCE_UNLINKED = "source_unlinked", Warning, false, "Tablo bir dosyanın adını taşıyor ama ona bağlı değil; Dosyaya bağla ile seçin.";
     /// An object given as a content block that is not a block insert.

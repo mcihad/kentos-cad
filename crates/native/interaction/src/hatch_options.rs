@@ -23,6 +23,22 @@ pub enum Asking {
     Scale,
     Angle,
     Colour,
+    /// Boşluk, in the line work (docs/adr/0329 §3).
+    Gap,
+}
+
+/// How the islands are taken as Adalar says (docs/adr/0329 §1): taranmaz is Dış, iç içe Normal, taranır Yok say.
+pub fn island_style(m: &Memory) -> Option<kentos_contracts::IslandStyle> {
+    (m.hatch_islands && m.hatch_nested).then_some(kentos_contracts::IslandStyle::Normal)
+}
+
+/// Adalar's word.
+fn islands_word(m: &Memory) -> &'static str {
+    match (m.hatch_islands, m.hatch_nested) {
+        (false, _) => "taranır",
+        (true, true) => "iç içe",
+        (true, false) => "taranmaz",
+    }
 }
 
 /// The largest Ölçek taken.
@@ -98,15 +114,7 @@ pub fn with_pattern_options(prompt: Prompt, m: &Memory) -> Prompt {
 /// Adalar, İlişkili (where the hatch can follow its objects) and Yazılar.
 pub fn with_region_options(prompt: Prompt, m: &Memory, tie: bool) -> Prompt {
     prompt
-        .option_with(
-            "Adalar",
-            "A",
-            if m.hatch_islands {
-                "taranmaz"
-            } else {
-                "taranır"
-            },
-        )
+        .option_with("Adalar", "A", islands_word(m))
         .option_if(tie, "İlişkili", "İ", on(m.hatch_assoc))
         .option_with(
             "Yazılar",
@@ -127,6 +135,10 @@ pub fn asking_prompt(label: &'static str, asking: Asking) -> Prompt {
             "desenin kâğıttaki ölçeğini yazın (1: kitaplığın büyüklüğü)",
         ),
         Asking::Angle => Prompt::new(label, "desenin açısını derece olarak yazın"),
+        Asking::Gap => Prompt::new(
+            label,
+            "kapatılacak en büyük boşluğu metre olarak yazın (0: boşluk kapatılmaz)",
+        ),
         Asking::Colour => Prompt::new(
             label,
             "ikinci rengi yazın (#RRGGBB ya da renk adı) ya da menüden seçin",
@@ -147,7 +159,14 @@ pub fn option(key: &str, tie: bool, asking: &mut Option<Asking>, cx: &mut Contex
         "Ç" if kind != Kind::Solid => *asking = Some(Asking::Angle),
         "R" if gradient => *asking = Some(Asking::Colour),
         "T" if gradient => m.hatch_inverted = !m.hatch_inverted,
-        "A" => m.hatch_islands = !m.hatch_islands,
+        // taranmaz → taranır → iç içe → taranmaz.
+        "A" => {
+            (m.hatch_islands, m.hatch_nested) = match (m.hatch_islands, m.hatch_nested) {
+                (true, false) => (false, false),
+                (false, _) => (true, true),
+                (true, true) => (true, false),
+            }
+        }
         "İ" if tie => m.hatch_assoc = !m.hatch_assoc,
         "Y" => m.hatch_texts = !m.hatch_texts,
         _ => return false,
@@ -179,6 +198,16 @@ pub fn answer(asking: &mut Option<Asking>, text: &str, cx: &mut Context<'_>) -> 
                 *asking = None;
             }
             _ => cx.say(Level::Warn, format!("Açı derece olarak bir sayı olmalı; “{t}” yazıldı.")),
+        },
+        Asking::Gap => match parse_number(t) {
+            Some(n) if (0.0..=kentos_contracts::MAX_HATCH_GAP).contains(&n) => {
+                cx.memory.hatch_gap = n;
+                *asking = None;
+            }
+            _ => cx.say(
+                Level::Warn,
+                format!("Boşluk 0 ile 1000 m arasında bir sayı olmalı; “{t}” yazıldı."),
+            ),
         },
         Asking::Colour => match colour_of(t) {
             Some(c) => {

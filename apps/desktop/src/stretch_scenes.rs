@@ -73,6 +73,7 @@ fn tie(app: &mut App) {
     };
     if let Some(Entity::Hatch(h)) = doc.get(Slot(2)).cloned() {
         let tied = HatchAssoc {
+            gap: None,
             outer: Some(room),
             bounds: Vec::new(),
             islands: Vec::new(),

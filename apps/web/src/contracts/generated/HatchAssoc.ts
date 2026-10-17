@@ -10,6 +10,10 @@ import type { Vec2 } from "./Vec2";
  */
 export type HatchAssoc = { outer?: EntityId, 
 /**
+ * A face's tie: the gaps its line work was closed across, metres (docs/adr/0329 §3); absent: none.
+ */
+gap?: number, 
+/**
  * The objects whose line work closes its face (docs/adr/0328 §3).
  */
 bounds?: Array<EntityId>, islands?: Array<EntityId>, cutouts?: Array<EntityId>, seed: Vec2, };

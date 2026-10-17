@@ -506,6 +506,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.dimensions.reassociate"
             | "cad.dimensions.edit"
             | "cad.fields.edit"
+            | "cad.hatches.edit"
             | "cad.leaders.edit"
             | "cad.tables.edit"
             | "cad.texts.edit"

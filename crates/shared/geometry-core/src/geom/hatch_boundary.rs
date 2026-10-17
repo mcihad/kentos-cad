@@ -225,6 +225,99 @@ pub fn curved(loops: &[HatchLoop]) -> bool {
     })
 }
 
+/// A loop as a polygon's ring holds it (docs/adr/0329 §4): its lines and
+/// arcs as they are, each curve's chords within 0.1 mm in its place; and
+/// whether a curve was taken so.
+pub fn chorded(l: &HatchLoop) -> (Vec<Vec2>, Vec<f64>, bool) {
+    let n = l.pts.len();
+    let mut pts = Vec::with_capacity(n);
+    let mut bulges = Vec::with_capacity(n);
+    let mut approximated = false;
+    for i in 0..n {
+        match curve_at(l, i) {
+            Some(c) => {
+                approximated = true;
+                let inner = curve_points(c);
+                // A whole closed curve's ring starts at its start; an edge's chords between its ends.
+                if n == 1 {
+                    pts.extend_from_slice(&inner);
+                    bulges.extend(std::iter::repeat_n(0.0, inner.len()));
+                    continue;
+                }
+                pts.push(l.pts[i]);
+                bulges.push(0.0);
+                if inner.len() > 2 {
+                    pts.extend_from_slice(&inner[1..inner.len() - 1]);
+                    bulges.extend(std::iter::repeat_n(0.0, inner.len() - 2));
+                }
+            }
+            None => {
+                pts.push(l.pts[i]);
+                bulges.push(l.bulges.as_ref().map_or(0.0, |b| b[i]));
+            }
+        }
+    }
+    (pts, bulges, approximated)
+}
+
+/// The area a boundary encloses, arcs exact, curves as chords.
+pub fn area_of(loops: &[HatchLoop]) -> Option<Area> {
+    let mut rings = loops.iter().map(|l| {
+        let (pts, bulges, _) = chorded(l);
+        crate::geom::arrangement::Ring {
+            pts,
+            bulges: bulges.iter().any(|b| *b != 0.0).then_some(bulges),
+        }
+    });
+    let outer = rings.next()?;
+    Some(Area {
+        outer,
+        holes: rings.collect(),
+    })
+}
+
+/// A loop that is one whole closed curve as a shape: an ellipse, or a
+/// closed NURBS curve; none for any other loop.
+pub fn whole_curve(l: &HatchLoop) -> Option<Shape> {
+    if l.pts.len() != 1 {
+        return None;
+    }
+    match curve_at(l, 0)? {
+        HatchCurve::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => {
+            let (lo, hi) = if t1 < t0 { (*t1, *t0) } else { (*t0, *t1) };
+            Some(Shape::Ellipse {
+                c: *c,
+                major: *major,
+                ratio: *ratio,
+                t0: lo,
+                t1: hi,
+            })
+        }
+        HatchCurve::Nurbs {
+            degree,
+            ctrl,
+            knots,
+            weights,
+        } => Some(Shape::Nurbs {
+            degree: *degree,
+            ctrl: ctrl.clone(),
+            knots: knots.clone(),
+            weights: weights.clone(),
+            closed: true,
+            periodic: false,
+            fit: None,
+            fit_tolerance: None,
+            tangents: None,
+        }),
+    }
+}
+
 /// A boundary of lines and arcs: an area's rings.
 pub fn of_rings(area: &Area) -> Vec<HatchLoop> {
     std::iter::once(&area.outer)

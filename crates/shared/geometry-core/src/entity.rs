@@ -154,6 +154,8 @@ impl HatchPattern {
 /// left open, and the point clicked inside.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HatchAssoc {
+    /// The gap a face's line work was closed across (docs/adr/0329 §3).
+    pub gap: Option<f64>,
     pub outer: Option<String>,
     pub bounds: Option<Vec<String>>,
     pub islands: Option<Vec<String>>,
@@ -162,6 +164,7 @@ pub struct HatchAssoc {
 }
 
 crate::json_struct!(HatchAssoc {
+    gap,
     outer,
     bounds,
     islands,

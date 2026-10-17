@@ -186,7 +186,9 @@ use crate::layer::LineType;
 /// 78 (docs/adr/0328): a hatch's exact `boundary` and a face's tie (`bounds`, no `outer`): `.kcad` document schema
 ///    69; in the typed columns the hatch's option bit 6 and one JSON text, a face's tie with an empty outer id. The
 ///    web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 78;
+/// 79 (docs/adr/0329 §3): a face's tie's `gap`: `.kcad` document schema 70; in the typed columns inside the hatch's
+///    option 6 JSON. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 79;
 
 // ── Every import ────────────────────────────────────────────────────────
 

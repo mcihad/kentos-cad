@@ -407,6 +407,134 @@
           "x": 487100,
           "y": 4420000
         }
+      },
+      {
+        "kind": "polygon",
+        "id": 27,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487130,
+            "y": 4420000
+          },
+          {
+            "x": 487150,
+            "y": 4420000
+          },
+          {
+            "x": 487150,
+            "y": 4420020
+          },
+          {
+            "x": 487130,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 28,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487134,
+            "y": 4420004
+          },
+          {
+            "x": 487146,
+            "y": 4420004
+          },
+          {
+            "x": 487146,
+            "y": 4420016
+          },
+          {
+            "x": 487134,
+            "y": 4420016
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 29,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487138,
+            "y": 4420008
+          },
+          {
+            "x": 487142,
+            "y": 4420008
+          },
+          {
+            "x": 487142,
+            "y": 4420012
+          },
+          {
+            "x": 487138,
+            "y": 4420012
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 30,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487110,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487120,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 31,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487120,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487120,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 32,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487120,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487110,
+          "y": 4420008
+        }
+      },
+      {
+        "kind": "line",
+        "id": 33,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487110,
+          "y": 4420008
+        },
+        "b": {
+          "x": 487110,
+          "y": 4420000.125
+        }
       }
     ],
     "styles": {
@@ -437,10 +565,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -465,12 +593,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -555,7 +690,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": true
@@ -586,10 +728,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -614,12 +756,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -685,10 +834,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -713,12 +862,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -796,10 +952,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -824,12 +980,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -895,10 +1058,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -923,12 +1086,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1023,10 +1193,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1051,12 +1221,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1136,10 +1313,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1164,12 +1341,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1242,10 +1426,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1270,12 +1454,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1354,10 +1545,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1382,12 +1573,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1483,10 +1681,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1511,12 +1709,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1599,12 +1804,12 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27",
-                "$uidOf:28"
+                "$uidOf:34",
+                "$uidOf:35"
               ],
               "ids": [
-                27,
-                28
+                34,
+                35
               ],
               "revision": "$current"
             },
@@ -1630,12 +1835,19 @@
               25,
               26,
               27,
-              28
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1692,9 +1904,9 @@
                   }
                 }
               },
-              "28": {
+              "35": {
                 "kind": "hatch",
-                "id": 28,
+                "id": 35,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1760,10 +1972,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1794,12 +2006,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "ring": [
@@ -1859,10 +2078,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -1887,12 +2106,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "tarama",
                 "attrs": {},
                 "color": "#30A46C",
@@ -1972,10 +2198,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },
@@ -2006,12 +2232,19 @@
               24,
               25,
               26,
-              27
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
             ],
             "entities": {
-              "27": {
+              "34": {
                 "kind": "hatch",
-                "id": 27,
+                "id": 34,
                 "layerId": "gizli",
                 "attrs": {},
                 "ring": [
@@ -2162,12 +2395,1035 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
             "dirty": false,
             "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ada biçimi Dış: adalar ve içlerindekiler boş; ilişkide değen her ada",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487132,
+                "y": 4420002
+              },
+              "islandStyle": "outer"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487130,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487130,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487134,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487134,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:27",
+                  "islands": [
+                    "$uidOf:28",
+                    "$uidOf:29"
+                  ],
+                  "seed": {
+                    "x": 487132,
+                    "y": 4420002
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ada biçimi İç içe: adanın içindeki kapalı nesne ayrı bir taramayla yeniden taranır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487132,
+                "y": 4420002
+              },
+              "islandStyle": "normal"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34",
+                "$uidOf:35"
+              ],
+              "ids": [
+                34,
+                35
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487130,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487130,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487134,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487134,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:27",
+                  "islands": [
+                    "$uidOf:28",
+                    "$uidOf:29"
+                  ],
+                  "seed": {
+                    "x": 487132,
+                    "y": 4420002
+                  }
+                }
+              },
+              "35": {
+                "kind": "hatch",
+                "id": 35,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487138,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487138,
+                    "y": 4420012
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:29",
+                  "seed": {
+                    "x": 487140,
+                    "y": 4420010
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ada biçimi Yok say: adalar da taranır; islands'ın yerine",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487132,
+                "y": 4420002
+              },
+              "islands": true,
+              "islandStyle": "ignore"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487130,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487130,
+                    "y": 4420020
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:27",
+                  "seed": {
+                    "x": 487132,
+                    "y": 4420002
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çoklu tara İç içe: dıştaki kendi içinden, iç ada ayrıca",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "objects",
+              "uids": [
+                "$uidOf:27"
+              ],
+              "islandStyle": "normal"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34",
+                "$uidOf:35"
+              ],
+              "ids": [
+                34,
+                35
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487130,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487130,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487134,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487134,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:27",
+                  "islands": [
+                    "$uidOf:28",
+                    "$uidOf:29"
+                  ],
+                  "seed": {
+                    "x": 487140,
+                    "y": 4420010
+                  }
+                }
+              },
+              "35": {
+                "kind": "hatch",
+                "id": 35,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487138,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487138,
+                    "y": 4420012
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:29",
+                  "seed": {
+                    "x": 487140,
+                    "y": 4420010
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ek noktalar: her nokta kendi bölgesi; aynı bölgeyi bulan nokta bir kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487132,
+                "y": 4420002
+              },
+              "alsoAt": [
+                {
+                  "x": 487140,
+                  "y": 4420010
+                },
+                {
+                  "x": 487148,
+                  "y": 4420018
+                }
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34",
+                "$uidOf:35"
+              ],
+              "ids": [
+                34,
+                35
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487130,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487150,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487130,
+                    "y": 4420020
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487134,
+                      "y": 4420004
+                    },
+                    {
+                      "x": 487134,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420016
+                    },
+                    {
+                      "x": 487146,
+                      "y": 4420004
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:27",
+                  "islands": [
+                    "$uidOf:28",
+                    "$uidOf:29"
+                  ],
+                  "seed": {
+                    "x": 487132,
+                    "y": 4420002
+                  }
+                }
+              },
+              "35": {
+                "kind": "hatch",
+                "id": 35,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487138,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487142,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487138,
+                    "y": 4420012
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "outer": "$uidOf:29",
+                  "seed": {
+                    "x": 487140,
+                    "y": 4420010
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizgilerde İç içe: Dış gibi, islands_not_nested uyarısıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487002,
+                "y": 4420002
+              },
+              "way": "lines",
+              "islandStyle": "normal"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "islands_not_nested",
+                "message": "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı (Dış).",
+                "path": "region.islandStyle"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487010,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420008
+                  }
+                ],
+                "holes": [
+                  [
+                    {
+                      "x": 487004,
+                      "y": 4420003
+                    },
+                    {
+                      "x": 487004,
+                      "y": 4420005
+                    },
+                    {
+                      "x": 487006,
+                      "y": 4420005
+                    },
+                    {
+                      "x": 487006,
+                      "y": 4420003
+                    }
+                  ]
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "bounds": [
+                    "$uidOf:10",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:13"
+                  ],
+                  "islands": [
+                    "$uidOf:14"
+                  ],
+                  "seed": {
+                    "x": 487002,
+                    "y": 4420002
+                  }
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluk toleransı: 0,125 m'lik boşluk köprüyle kapanır, bağ boşluğu da bilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487115,
+                "y": 4420004
+              },
+              "way": "lines",
+              "gap": 0.25
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "created": [
+                "$uidOf:34"
+              ],
+              "ids": [
+                34
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "gaps_closed",
+                "message": "1 boşluk kapatıldı (toplam 0.125 m, en uzunu 0.125 m); taranan alan 80.00 m².",
+                "path": "region.gap"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "entities": {
+              "34": {
+                "kind": "hatch",
+                "id": 34,
+                "layerId": "tarama",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 487110,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487120,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487120,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420008
+                  },
+                  {
+                    "x": 487110,
+                    "y": 4420000.125
+                  }
+                ],
+                "pattern": {
+                  "type": "solid",
+                  "angle": 0,
+                  "spacing": 1
+                },
+                "assoc": {
+                  "bounds": [
+                    "$uidOf:30",
+                    "$uidOf:31",
+                    "$uidOf:32",
+                    "$uidOf:33"
+                  ],
+                  "seed": {
+                    "x": 487115,
+                    "y": 4420004
+                  },
+                  "gap": 0.25
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
           }
         }
       ]
@@ -2216,7 +3472,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2271,7 +3534,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2326,7 +3596,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2384,7 +3661,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2439,7 +3723,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2496,7 +3787,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2547,7 +3845,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2600,7 +3905,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2655,7 +3967,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2708,7 +4027,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2764,7 +4090,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2818,7 +4151,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2873,7 +4213,276 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluksuz: duvarı kısa oda kapanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487115,
+                "y": 4420004
+              },
+              "way": "lines"
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Nokta çizgilerle kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli.",
+              "path": "region.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ek noktanın bölgesi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "alsoAt": [
+                {
+                  "x": 487200,
+                  "y": 4420200
+                }
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_enclosed",
+              "message": "Noktayı çevreleyen kapalı bir alan, daire ya da kapalı eğri yok. Çizgilerle çevrili yerler için way: lines verin.",
+              "path": "region.alsoAt[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boşluk toleransı 1000 m'yi aşamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487115,
+                "y": 4420004
+              },
+              "way": "lines",
+              "gap": 2000
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_gap",
+              "message": "Boşluk toleransı 2000; 0 ile 1000 m arasında sonlu bir sayı olmalı.",
+              "path": "region.gap"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ek nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "region": {
+              "kind": "point",
+              "at": {
+                "x": 487042,
+                "y": 4420002
+              },
+              "alsoAt": [
+                {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              ]
+            },
+            "pattern": {
+              "name": "Dolu"
+            },
+            "layerId": "tarama"
+          },
+          "nonFinite": {
+            "region.alsoAt[0].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ek noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "region.alsoAt[0].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2926,7 +4535,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2981,7 +4597,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3035,7 +4658,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3089,7 +4719,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3143,7 +4780,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3198,7 +4842,14 @@
               23,
               24,
               25,
-              26
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3234,10 +4885,10 @@
             "status": "completed",
             "output": {
               "created": [
-                "$uidOf:27"
+                "$uidOf:34"
               ],
               "ids": [
-                27
+                34
               ],
               "revision": "$current"
             },

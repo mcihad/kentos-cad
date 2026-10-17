@@ -5,7 +5,7 @@
 //! ellipse exact: tarama-kesin-sinir). `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=tarama-yuz-bagi,tarama-kesin-sinir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=tarama-yuz-bagi,tarama-kesin-sinir,tarama-ic-ice,tarama-bosluk,tarama-duzenle cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -105,6 +105,66 @@ fn exact(app: &mut App) {
     hover(app, [11.5, 9.5]);
 }
 
+/// Three courtyards one inside the other, Tarama with Adalar iç içe clicked in the outer: the outer ring and the
+/// innermost square hatched, the middle one open (docs/adr/0329 §1).
+fn nested(app: &mut App) {
+    let mut o = Objects::new();
+    o.path("duvar", &[[0.0, 0.0], [12.0, 0.0], [12.0, 9.0], [0.0, 9.0]], true);
+    o.path("duvar", &[[2.0, 1.5], [10.0, 1.5], [10.0, 7.5], [2.0, 7.5]], true);
+    o.path("duvar", &[[4.5, 3.0], [7.5, 3.0], [7.5, 6.0], [4.5, 6.0]], true);
+    cad(app, o, [-2.0, -2.0], [14.0, 11.0]);
+    app.memory.hatch_by_lines = false;
+    app.memory.hatch_islands = true;
+    app.memory.hatch_nested = true;
+    app.memory.hatch_choice = 1;
+    run(app, "tool.hatch");
+    click(app, [1.0, 1.0]);
+    hover(app, [13.0, 10.0]);
+}
+
+/// A room whose left wall stops 20 cm short, Tarama in the line work with Boşluk 0.25 m: the gap closed, said in
+/// the status line (docs/adr/0329 §3).
+fn gap(app: &mut App) {
+    let mut o = Objects::new();
+    o.line("duvar", [-1.0, 0.0], [9.0, 0.0]);
+    o.line("duvar", [8.0, -1.0], [8.0, 7.0]);
+    o.line("duvar", [9.0, 6.0], [-1.0, 6.0]);
+    o.line("duvar", [0.0, 7.0], [0.0, 0.2]);
+    cad(app, o, [-3.0, -3.0], [11.0, 9.0]);
+    app.memory.hatch_by_lines = true;
+    app.memory.hatch_gap = 0.25;
+    app.memory.hatch_choice = 1;
+    run(app, "tool.hatch");
+    click(app, [4.0, 3.0]);
+    hover(app, [10.0, 8.0]);
+}
+
+/// Taramayı düzenle on a tied hatch, Ada ekle: the column clicked became an island; the prompt shows the modes.
+fn edit_tool(app: &mut App) {
+    let mut o = Objects::new();
+    o.path("duvar", &[[0.0, 0.0], [10.0, 0.0], [10.0, 7.0], [0.0, 7.0]], true);
+    o.circle("duvar", [3.0, 3.5], 0.7);
+    o.path("duvar", &[[6.0, 2.5], [7.5, 2.5], [7.5, 4.5], [6.0, 4.5]], true);
+    cad(app, o, [-2.0, -2.0], [12.0, 9.0]);
+    app.memory.hatch_by_lines = false;
+    app.memory.hatch_islands = false;
+    app.memory.hatch_choice = 1;
+    run(app, "tool.hatch");
+    click(app, [1.0, 1.0]);
+    let _ = app.update(Message::Run("tool.cancel"));
+    app.memory.hatch_edit_mode = 0;
+    run(app, "tool.hatchEdit");
+    click(app, [0.0, 3.5]);
+    click(app, [6.0, 3.5]);
+    hover(app, [11.0, 8.5]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("tarama-yuz-bagi", face), ("tarama-kesin-sinir", exact)]
+    vec![
+        ("tarama-yuz-bagi", face),
+        ("tarama-kesin-sinir", exact),
+        ("tarama-ic-ice", nested),
+        ("tarama-bosluk", gap),
+        ("tarama-duzenle", edit_tool),
+    ]
 }

@@ -2340,6 +2340,28 @@ fn hatch_rows(
         )],
     });
     rows.push(Row::text("İlişkili", tie).editor(untie));
+    // Sınır ▾ (docs/adr/0329 §4): exact when it holds an arc or a curve; written again as objects.
+    let exact = if h.boundary.is_some() { "Kesin" } else { "Çizilen halka" };
+    let recreate = (!locked).then(|| Editor::Select {
+        text: exact.to_owned(),
+        swatch: None,
+        icon: Some("hatchRecreate"),
+        items: vec![
+            pick(
+                "Sınırı yeniden oluştur: alan".to_owned(),
+                None,
+                false,
+                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Area),
+            ),
+            pick(
+                "Sınırı yeniden oluştur: çoklu çizgi".to_owned(),
+                None,
+                false,
+                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Polyline),
+            ),
+        ],
+    });
+    rows.push(Row::text("Sınır", exact).editor(recreate));
     rows
 }
 

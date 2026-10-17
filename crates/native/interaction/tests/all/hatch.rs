@@ -130,7 +130,7 @@ fn by_lines_the_face_around_the_click_with_its_island() {
     assert!(b.type_text("B"));
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): ANSI31 / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
     b.click(8.0, -3.0);
     let (bx, holes, _, area) = newest(&b);
@@ -184,7 +184,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): Çizim]")
+            .ends_with("/ Sınır katmanı (K): Çizim / Boşluk (G): 0]")
     );
     // The closed polyline is on Yapılar: no island now.
     let count = b.doc.entities().count();
@@ -199,7 +199,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): tümü]")
+            .ends_with("/ Sınır katmanı (K): tümü / Boşluk (G): 0]")
     );
     // Esc leaves the picking first, then the tool.
     assert!(b.type_text("K"));
@@ -208,7 +208,7 @@ fn the_boundary_layer_is_picked_by_one_of_its_objects() {
         b.session
             .prompt()
             .text()
-            .ends_with("/ Sınır katmanı (K): tümü]")
+            .ends_with("/ Sınır katmanı (K): tümü / Boşluk (G): 0]")
     );
     assert!(!b.run(|s, cx| s.cancel(cx)));
     assert!(!b.session.is_running());
@@ -252,7 +252,7 @@ fn patterns_cycle_by_their_key_or_go_by_their_name() {
     b.start("hatch");
     assert_eq!(
         b.session.prompt().text(),
-        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü]"
+        "Tarama: taranacak yerin içine tıklayın [Desen (D): Çapraz / Ölçek (Ö): 1 / Açı (Ç): 0° / Sınır (B): çizgiler / Adalar (A): taranmaz / İlişkili (İ): açık / Yazılar (Y): taranır / Sınır katmanı (K): tümü / Boşluk (G): 0]"
     );
 }
 

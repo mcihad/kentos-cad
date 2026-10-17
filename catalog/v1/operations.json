@@ -868,6 +868,13 @@
       ],
       "note": "Ölçü, nokta ve nesnenin yeri komuta verilir; nokta yerinden hesaplanır (ADR 0249)."
     },
+    "tool.hatchEdit": {
+      "level": "semantic",
+      "via": [
+        "cad.hatches.edit"
+      ],
+      "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329)."
+    },
     "tool.arrayEdit": {
       "level": "semantic",
       "via": [

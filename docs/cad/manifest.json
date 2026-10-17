@@ -8531,6 +8531,22 @@
    "tests": 4
   },
   {
+   "id": "tool.hatchEdit",
+   "kind": "command",
+   "title": "Taramayı düzenle",
+   "level": "semantic",
+   "via": [
+    "cad.hatches.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.hatches.edit",
+   "mcp": "cad.hatches.edit",
+   "note": "Taramanın kimliği, adanın nesnesi ya da deliğin sırası, yeni bölgenin noktası ve Tarama'nın seçenekleri, sınırın biçimi komuta verilir; bölgeyi ve sınırı komut hesaplar (ADR 0329).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.hatchSelected",
    "kind": "tool",
    "title": "Çoklu tara",

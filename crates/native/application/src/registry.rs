@@ -9,7 +9,7 @@ use crate::{
 };
 use kentos_contracts::{
     AddressesDefine, AnnotationsScales, ArcCreate, ArraysEdit, BlocksDefine, BlocksEdit, CallOp, ChangesetApply,
-    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate, FieldsEdit, LeadersEdit, TablesEdit, FontsReport, TextsCheck, TextsEdit,
+    CircleCreate, CurvesConstruct, CurvesEdit, DimensionsCreate, DimensionsEdit, DimensionsQuery, DimensionsReassociate, FieldsEdit, HatchesEdit, LeadersEdit, TablesEdit, FontsReport, TextsCheck, TextsEdit,
     DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
@@ -33,7 +33,7 @@ use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, blocks_define,
     blocks_edit, changeset, circle, create, curves_construct, curves_edit, delete,
-    dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
+    dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
@@ -147,6 +147,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_FONTS_REPORT => $then!(fonts_report, FontsReport),
             kentos_contracts::CAD_FIELDS_EDIT => $then!(fields_edit, FieldsEdit),
             kentos_contracts::CAD_LEADERS_EDIT => $then!(leaders_edit, LeadersEdit),
+            kentos_contracts::CAD_HATCHES_EDIT => $then!(hatches_edit, HatchesEdit),
             kentos_contracts::CAD_TABLES_EDIT => $then!(tables_edit, TablesEdit),
             kentos_contracts::CAD_TEXTS_EDIT => $then!(texts_edit, TextsEdit),
             kentos_contracts::CAD_TEXTS_CHECK => $then!(texts_check, TextsCheck),

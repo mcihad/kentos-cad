@@ -2152,6 +2152,46 @@ pub fn catalog() -> CommandCatalog {
                 })),
             }],
         },
+        // Taramanın sınırı, adaları ve ilişkisi (docs/adr/0329 §4), held together by fixtures/commands/v1/cad.hatches.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_HATCHES_EDIT.into(),
+            version: crate::CAD_HATCHES_EDIT_VERSION,
+            title: "Taramaları düzenle".into(),
+            summary: "Taramalarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. \
+                      recreate (Sınırı yeniden oluştur) taramanın sınırını layerId'ye (yoksa taramanın katmanı) nesne olarak yazar: form area tek alan (delikleri taramanınkiler; yaylar kesin, elips ve eğri kenarları 0,1 mm'lik kirişlerle, curves_approximated uyarısıyla), \
+                      form polyline her halkayı ayrı nesne (doğru ve yaylardan kapalı çoklu çizgi, tam elips elips, tam kapalı eğri NURBS); associative (varsayılan açık) tarama sonra bu nesneleri izler. \
+                      reselect (Sınırı yeniden seç) bölgeyi cad.entities.hatch'in point bölgesiyle yeniden bulur (desen, katman ve görünüş kalır). \
+                      addIslands (Ada ekle) kapalı nesneleri ada yapar: ilişkili tarama onları adaları arasına alır ve nesnelerinden yeniden kesilir, ilişkisiz taramanın bölgesinden alanları çıkarılır. \
+                      removeIslands (Ada çıkar) ilişkili taramanın adalarını nesneleriyle (uids), ilişkisiz taramanınkileri deliklerinin sırasıyla (holes, 0 ilki) kaldırır. \
+                      untie (İlişkiyi kopar) taramalar bir şeyi izlemez. Kilitli katmandaki tarama reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::HatchesEdit>(),
+            output: schema::<crate::HatchesEdited>(),
+            plan: Some(schema::<crate::HatchesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taramanın sınırını alan olarak yeniden oluştur ve taramayı ona bağla".into(),
+                    input: json!({ "edit": { "kind": "recreate", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001", "form": "area" } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"],
+                                         "created": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"], "revision": "12" })),
+                },
+                CommandExample {
+                    title: "Kolonu taramaya ada olarak ekle".into(),
+                    input: json!({ "edit": { "kind": "addIslands", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+                                             "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"] } }),
+                    output: Some(json!({ "changed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "revision": "13" })),
+                },
+            ],
+        },
         // Çok kollu kılavuz (docs/adr/0326 §5), held together by fixtures/commands/v1/cad.leaders.edit.json.
         CommandDescriptor {
             id: crate::CAD_LEADERS_EDIT.into(),
@@ -2741,7 +2781,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_ENTITIES_HATCH_VERSION,
             title: "Tara".into(),
             summary: "region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. \
-                      region point: at'yi çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; bir şeye bağlanmaz. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
+                      region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. \
                       region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. \
                       pattern: name (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa not_enclosed. \
                       Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
@@ -5311,6 +5351,9 @@ mod tests {
                     crate::CAD_LEADERS_EDIT => {
                         serde_json::from_value::<crate::LeadersEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_HATCHES_EDIT => {
+                        serde_json::from_value::<crate::HatchesEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_TEXTS_EDIT => {
                         serde_json::from_value::<crate::TextsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -5573,6 +5616,9 @@ mod tests {
                         }
                         crate::CAD_LEADERS_EDIT => {
                             serde_json::from_value::<crate::LeadersEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_HATCHES_EDIT => {
+                            serde_json::from_value::<crate::HatchesEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_TABLES_EDIT => {
                             serde_json::from_value::<crate::TablesEdited>(output.clone()).map(|_| ())

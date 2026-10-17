@@ -30,7 +30,7 @@ from .errors import *  # noqa: F403
 from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 
-from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arrays, blocks, changeset, circle, curves, dimensions, drawing, entities, fields, file, fonts, hatches, labels, layers, leaders, library, line, linetypes, network, nurbs, point, points, polygon, polyline, project, rectangle, scenarios, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -38,6 +38,7 @@ __all__ = [
     "AddArmLeaderEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
+    "AddIslandsHatchEdit",
     "AddressLocator",
     "AddressesDefine",
     "AddressesDefineOperation",
@@ -166,6 +167,8 @@ __all__ = [
     "BlocksReplaced",
     "BlocksTableSource",
     "BothNetworkDirection",
+    "BoundaryForm",
+    "BoundaryFormName",
     "Bounds",
     "BoundsLike",
     "BreakDimensionEdit",
@@ -464,6 +467,7 @@ __all__ = [
     "GridTableEdit",
     "HatchAssoc",
     "HatchCurve",
+    "HatchEdit",
     "HatchEntity",
     "HatchEntityGeometry",
     "HatchGradient",
@@ -475,6 +479,9 @@ __all__ = [
     "HatchRegion",
     "HatchWay",
     "HatchWayName",
+    "HatchesEdit",
+    "HatchesEdited",
+    "HatchesPlan",
     "HeaderTableEdit",
     "Helmert",
     "HostError",
@@ -503,6 +510,8 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "IslandStyle",
+    "IslandStyleName",
     "Job",
     "JobStatus",
     "JoggedDimensionMeasure",
@@ -847,6 +856,7 @@ __all__ = [
     "RayEntity",
     "RayEntityGeometry",
     "Record",
+    "RecreateHatchEdit",
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
@@ -861,6 +871,7 @@ __all__ = [
     "RemoveEntityEdit",
     "RemoveFieldEdit",
     "RemoveFitCurveEdit",
+    "RemoveIslandsHatchEdit",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
@@ -868,6 +879,7 @@ __all__ = [
     "ReplaceTextEdit",
     "ReplayReport",
     "ReplayStep",
+    "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResourceKind",
     "ResourceKindName",
@@ -1052,6 +1064,7 @@ __all__ = [
     "UnmergeTableEdit",
     "Unreachable",
     "Unset",
+    "UntieHatchEdit",
     "UnusedResource",
     "UpdateBlockChange",
     "UpdateEntityEdit",
@@ -1097,6 +1110,7 @@ __all__ = [
     "fields",
     "file",
     "fonts",
+    "hatches",
     "labels",
     "layers",
     "leaders",

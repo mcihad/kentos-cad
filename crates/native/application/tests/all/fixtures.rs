@@ -36,7 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
-    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
+    circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
@@ -1136,12 +1136,23 @@ impl Input for EntitiesHatch {
             "lineWeight" => return self.look.line_weight.as_mut(),
             _ => {}
         }
-        let HatchRegion::Point { at, boundaries, .. } = &mut self.region else {
+        let HatchRegion::Point {
+            at,
+            boundaries,
+            also_at,
+            gap,
+            ..
+        } = &mut self.region
+        else {
             return None;
         };
         match path {
             "region.at.x" => Some(&mut at.x),
             "region.at.y" => Some(&mut at.y),
+            "region.gap" => gap.as_mut(),
+            _ if path.starts_with("region.alsoAt[") => {
+                point_number(also_at, path.strip_prefix("region.alsoAt")?.replacen('[', "pts[", 1).as_str())
+            }
             _ => area_number(boundaries, path.strip_prefix("region.boundaries.")?),
         }
     }
@@ -1190,6 +1201,25 @@ impl Input for kentos_domain::contracts::LeadersEdit {
         match (&mut self.edit, path) {
             (LeaderEdit::Align { angle, .. }, "edit.angle") => Some(angle),
             (LeaderEdit::Align { spacing: Some(s), .. }, "edit.spacing") => Some(s),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::HatchesEdit {
+    /// `edit.region.at.x`, `edit.region.at.y` (Sınırı yeniden seç).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::{HatchEdit, HatchRegion};
+        let HatchEdit::Reselect {
+            region: HatchRegion::Point { at, .. },
+            ..
+        } = &mut self.edit
+        else {
+            return None;
+        };
+        match path {
+            "edit.region.at.x" => Some(&mut at.x),
+            "edit.region.at.y" => Some(&mut at.y),
             _ => None,
         }
     }
@@ -2139,6 +2169,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_LEADERS_EDIT => {
             run!(leaders_edit, kentos_domain::contracts::LeadersEdit)
+        }
+        kentos_domain::contracts::CAD_HATCHES_EDIT => {
+            run!(hatches_edit, kentos_domain::contracts::HatchesEdit)
         }
         kentos_domain::contracts::CAD_TABLES_EDIT => {
             run!(tables_edit, kentos_domain::contracts::TablesEdit)

@@ -1230,7 +1230,8 @@ impl Packer {
                 }
                 // Schema 69's exact boundary and a face's bounds (docs/adr/0328): one JSON object.
                 let bounds = assoc.as_ref().map_or(&[][..], |a| &a.bounds[..]);
-                if boundary.is_some() || !bounds.is_empty() {
+                let gap = assoc.as_ref().and_then(|a| a.gap);
+                if boundary.is_some() || !bounds.is_empty() || gap.is_some() {
                     flags |= OPT[6];
                     let mut more = serde_json::Map::new();
                     if let Some(b) = boundary {
@@ -1238,6 +1239,9 @@ impl Packer {
                     }
                     if !bounds.is_empty() {
                         more.insert("bounds".into(), serde_json::to_value(bounds).unwrap_or_default());
+                    }
+                    if let Some(g) = gap {
+                        more.insert("gap".into(), serde_json::json!(g));
                     }
                     self.text(&serde_json::Value::Object(more).to_string());
                 }
@@ -2777,6 +2781,7 @@ fn geometry(
                     .map(|_| id("assoc/cutouts"))
                     .collect::<Result<Vec<_>, _>>()?;
                 Some(HatchAssoc {
+                    gap: None,
                     outer,
                     bounds: Vec::new(),
                     islands,
@@ -2794,13 +2799,18 @@ fn geometry(
                     boundary: Option<Vec<kentos_contracts::HatchLoop>>,
                     #[serde(default)]
                     bounds: Vec<EntityId>,
+                    #[serde(default)]
+                    gap: Option<f64>,
                 }
                 let t = c.text(|| place("boundary"))?;
                 let more: More = serde_json::from_str(&t)
                     .map_err(|e| broken(&format!("taramanın sınırı okunamadı: {e}")))?;
-                if !more.bounds.is_empty() {
+                if !more.bounds.is_empty() || more.gap.is_some() {
                     match &mut assoc {
-                        Some(a) => a.bounds = more.bounds,
+                        Some(a) => {
+                            a.bounds = more.bounds;
+                            a.gap = more.gap;
+                        }
                         None => return Err(broken("ilişkisi olmayan taramanın sınır nesneleri")),
                     }
                 }
@@ -3709,6 +3719,7 @@ mod tests {
                     ..HatchPattern::user(HatchPatternType::Pattern, 30.0, 1.0)
                 },
                 assoc: Some(HatchAssoc {
+                    gap: None,
                     outer: Some(id(1)),
                     bounds: Vec::new(),
                     islands: vec![id(2)],

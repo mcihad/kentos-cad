@@ -132,6 +132,11 @@ pub struct HatchAssoc {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub outer: Option<EntityId>,
+    /// A face's tie: the gaps its line work was closed across, metres (docs/adr/0329 §3); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gap: Option<f64>,
     /// The objects whose line work closes its face (docs/adr/0328 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<EntityId>>", optional))]
@@ -536,6 +541,14 @@ impl HatchAssoc {
                 "assoc",
                 "Taramanın ilişkisi ya kapalı nesneyi (outer) ya da sınır nesnelerini (bounds) gösterir; ikisinden biri verilmeli."
                     .to_owned(),
+            ));
+        }
+        if let Some(g) = self.gap
+            && (self.outer.is_some() || !(g > 0.0 && g <= 1000.0))
+        {
+            return Some((
+                "assoc.gap",
+                "Taramanın boşluk toleransı yalnız yüzün ilişkisinde, 0'dan büyük ve en çok 1000 m olur.".to_owned(),
             ));
         }
         let n = self.islands.len() + self.cutouts.len() + self.bounds.len();

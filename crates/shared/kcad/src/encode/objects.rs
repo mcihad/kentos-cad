@@ -1881,12 +1881,17 @@ impl<'d> Encoder<'d> {
             }
             Val::Assoc(a) => {
                 let n = 1
+                    + usize::from(a.gap.is_some())
                     + usize::from(a.outer.is_some())
                     + usize::from(!a.bounds.is_empty())
                     + usize::from(!a.cutouts.is_empty())
                     + usize::from(!a.islands.is_empty());
                 self.open(n, true)?;
-                // seed (4), outer (5), bounds (6, docs/adr/0328 §3), cutouts (7), islands (7).
+                // gap (3, docs/adr/0329 §3), seed (4), outer (5), bounds (6, docs/adr/0328 §3), cutouts (7), islands (7).
+                if let Some(g) = a.gap {
+                    self.key("gap");
+                    self.at(Seg::Name("gap"), |e| e.float(g))?;
+                }
                 self.key("seed");
                 self.at(Seg::Name("seed"), |e| e.point(&a.seed))?;
                 if let Some(outer) = &a.outer {

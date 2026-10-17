@@ -70,6 +70,7 @@ impl HatchSelected {
                 islands: Some(m.hatch_islands),
                 texts: Some(m.hatch_texts),
                 associative: Some(m.hatch_assoc),
+                island_style: options::island_style(&m),
             },
             pattern: options::spec(&m),
             layer_id: doc.layers().active().to_owned(),

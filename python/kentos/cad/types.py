@@ -403,6 +403,20 @@ BlockUnitsName = Literal["mm", "cm", "m", "in", "ft", "unitless"]
 """The names of :class:`BlockUnits`, for a plain string."""
 
 
+class BoundaryForm(_StrEnum):
+    """What a hatch's boundary is made again as.
+
+    - ``area``: One area, its holes the hatch's holes; arcs exact, an ellipse's or a curve's edges its chords within 0.1 mm.
+    - ``polyline``: One object a loop: a closed polyline of its lines and arcs, a whole ellipse an ellipse, a whole closed curve a
+    """
+    AREA = "area"
+    POLYLINE = "polyline"
+
+
+BoundaryFormName = Literal["area", "polyline"]
+"""The names of :class:`BoundaryForm`, for a plain string."""
+
+
 class BreakLine(_StrEnum):
     """Which of a dimension's lines a break is on.
 
@@ -1142,6 +1156,22 @@ class InvitationState(_StrEnum):
 
 InvitationStateName = Literal["accepted", "revoked", "pending", "expired"]
 """The names of :class:`InvitationState`, for a plain string."""
+
+
+class IslandStyle(_StrEnum):
+    """How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).
+
+    - ``outer``: Dış: the islands are left open, whatever lies inside them too.
+    - ``normal``: İç içe (Normal): the islands are left open, the closed objects inside them hatched again, those inside these
+    - ``ignore``: Yok say: the islands are hatched over.
+    """
+    OUTER = "outer"
+    NORMAL = "normal"
+    IGNORE = "ignore"
+
+
+IslandStyleName = Literal["outer", "normal", "ignore"]
+"""The names of :class:`IslandStyle`, for a plain string."""
 
 
 class JunctionRole(_StrEnum):
@@ -3152,6 +3182,30 @@ class HatchCurve(_Union):
         return _variant(_HATCH_CURVE, "HatchCurve", "kind", data).from_json(data)
 
 
+class HatchEdit(_Union):
+    """One edit of `cad.hatches.edit`.
+
+    One of:
+
+    - :class:`RecreateHatchEdit` (``kind: recreate``)
+    - :class:`ReselectHatchEdit` (``kind: reselect``)
+    - :class:`AddIslandsHatchEdit` (``kind: addIslands``)
+    - :class:`RemoveIslandsHatchEdit` (``kind: removeIslands``)
+    - :class:`UntieHatchEdit` (``kind: untie``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchEdit:
+        return _variant(_HATCH_EDIT, "HatchEdit", "kind", data).from_json(data)
+
+
 class HatchRegion(_Union):
     """Where Tarama hatches.
 
@@ -3166,6 +3220,7 @@ class HatchRegion(_Union):
     if TYPE_CHECKING:
         # Every variant has these.
         associative: bool | None | Unset
+        island_style: IslandStyle | IslandStyleName | None | Unset
         islands: bool | None | Unset
         texts: bool | None | Unset
 
@@ -11973,10 +12028,12 @@ class HatchAssoc(_Model):
     Attributes:
         seed: Unit: length.
         bounds: The objects whose line work closes its face (docs/adr/0328 §3).
+        gap: A face's tie: the gaps its line work was closed across, metres (docs/adr/0329 §3); absent: none. Unit: length.
     """
     seed: Vec2
     bounds: list[str] | Unset = UNSET
     cutouts: list[str] | Unset = UNSET
+    gap: float | None | Unset = UNSET
     islands: list[str] | Unset = UNSET
     outer: str | None | Unset = UNSET
 
@@ -11987,6 +12044,8 @@ class HatchAssoc(_Model):
             out["bounds"] = list(self.bounds)
         if self.cutouts is not UNSET:
             out["cutouts"] = list(self.cutouts)
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
         if self.islands is not UNSET:
             out["islands"] = list(self.islands)
         if self.outer is not UNSET:
@@ -11999,6 +12058,7 @@ class HatchAssoc(_Model):
             seed=Vec2.from_json(data["seed"]),
             bounds=list(data["bounds"]) if "bounds" in data else UNSET,
             cutouts=list(data["cutouts"]) if "cutouts" in data else UNSET,
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
             islands=list(data["islands"]) if "islands" in data else UNSET,
             outer=data.get("outer", UNSET),
         )
@@ -12279,6 +12339,86 @@ class HatchPatternSpec(_Model):
             inverted=data.get("inverted", UNSET),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
             second_color=data.get("secondColor", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchesEdit(_Model):
+    """Input of `cad.hatches.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_hatch`, `layer_locked`,
+    `layer_not_found`, `no_entities`, `not_closed`, `not_enclosed`, `island_not_found`, `invalid_region`,
+    `not_finite`, `invalid_gap`; `invalid_revision`, `revision_conflict`.
+    """
+    edit: HatchEdit
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchesEdit:
+        return cls(
+            edit=HatchEdit.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchesEdited(_Model):
+    """Output of `cad.hatches.edit` v1.
+    Attributes:
+        changed: The hatches that changed, by their persistent ids.
+        created: The objects Sınırı yeniden oluştur wrote.
+    """
+    changed: list[str]
+    revision: str
+    created: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["revision"] = self.revision
+        if self.created is not UNSET:
+            out["created"] = list(self.created)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchesEdited:
+        return cls(
+            changed=list(data["changed"]),
+            revision=data["revision"],
+            created=list(data["created"]) if "created" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HatchesPlan(_Model):
+    """What `cad.hatches.edit` would write (plan mode).
+    Attributes:
+        hatches: The hatches as execute would write them.
+        created: The objects Sınırı yeniden oluştur would write, `id` 0.
+    """
+    hatches: list[Entity]
+    revision: str
+    created: list[Entity] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hatches"] = [e0.to_json() for e0 in self.hatches]
+        out["revision"] = self.revision
+        if self.created is not UNSET:
+            out["created"] = [e0.to_json() for e0 in self.created]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HatchesPlan:
+        return cls(
+            hatches=[Entity.from_json(e0) for e0 in data["hatches"]],
+            revision=data["revision"],
+            created=[Entity.from_json(e0) for e0 in data["created"]] if "created" in data else UNSET,
         )
 
 
@@ -27646,14 +27786,145 @@ class NurbsHatchCurve(HatchCurve):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecreateHatchEdit(HatchEdit):
+    """Sınırı yeniden oluştur: the hatch's boundary written as new objects on `layerId` (absent: the hatch's layer)
+    in `form`; with `associative` (absent: true) the hatch then follows them.
+    """
+    TAG_VALUE: ClassVar[str] = "recreate"
+    uid: str
+    associative: bool | None | Unset = UNSET
+    form: BoundaryForm | BoundaryFormName | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "recreate"}
+        out["uid"] = self.uid
+        if self.associative is not UNSET:
+            out["associative"] = self.associative
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecreateHatchEdit:
+        return cls(
+            uid=data["uid"],
+            associative=data.get("associative", UNSET),
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(BoundaryForm, data["form"]),
+            layer_id=data.get("layerId", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReselectHatchEdit(HatchEdit):
+    """Sınırı yeniden seç: the hatch's region found again as Tarama finds it (`region`, a point; its pattern, layer
+    and look kept), its tie and boundary the new region's.
+    """
+    TAG_VALUE: ClassVar[str] = "reselect"
+    uid: str
+    region: HatchRegion
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reselect"}
+        out["uid"] = self.uid
+        out["region"] = self.region.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReselectHatchEdit:
+        return cls(
+            uid=data["uid"],
+            region=HatchRegion.from_json(data["region"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddIslandsHatchEdit(HatchEdit):
+    """Ada ekle: closed objects left open in the hatch. A tied hatch names them among its islands and is cut again
+    from its objects; another has their areas taken away from its region.
+    """
+    TAG_VALUE: ClassVar[str] = "addIslands"
+    uid: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "addIslands"}
+        out["uid"] = self.uid
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddIslandsHatchEdit:
+        return cls(
+            uid=data["uid"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveIslandsHatchEdit(HatchEdit):
+    """Ada çıkar: islands hatched over again: a tied hatch's by their objects (`uids`, among its islands), any
+    hatch's by its holes' places (`holes`, 0 the first).
+    Attributes:
+        holes: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "removeIslands"
+    uid: str
+    holes: list[int] | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "removeIslands"}
+        out["uid"] = self.uid
+        if self.holes is not UNSET:
+            out["holes"] = list(self.holes)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveIslandsHatchEdit:
+        return cls(
+            uid=data["uid"],
+            holes=list(data["holes"]) if "holes" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UntieHatchEdit(HatchEdit):
+    """İlişkiyi kopar: the hatches follow nothing; they stay as they are."""
+    TAG_VALUE: ClassVar[str] = "untie"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "untie"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UntieHatchEdit:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointHatchRegion(HatchRegion):
     """The region around `at`.
     Attributes:
         at: Unit: length.
+        also_at: Further points, each a region of its own found as `at`'s; a region two points find is hatched once
+            (docs/adr/0329 §2). Unit: length.
         associative: İlişkili: the hatch follows its closed object (`object`) or the line work closing its face (`lines`,
             docs/adr/0328 §3); absent: true.
         boundaries: `lines`: whose line work closes the region; absent: every shown object.
         boundary_layer: `lines`: only this layer's line work counts (Sınır katmanı).
+        gap: `lines`: gaps in the line work up to this many metres are closed, each dangling end bridged to the
+            nearest line work (docs/adr/0329 §3); absent: 0. Unit: length.
+        island_style: How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
         islands: Adalar: the islands are left unhatched; absent: true.
         texts: Yazılar: the texts and inserts in the region are left open, each
             its box a little wider; absent: false.
@@ -27661,9 +27932,12 @@ class PointHatchRegion(HatchRegion):
     """
     TAG_VALUE: ClassVar[str] = "point"
     at: Vec2
+    also_at: list[Vec2] | Unset = UNSET
     associative: bool | None | Unset = UNSET
     boundaries: TrimBoundaries | None | Unset = UNSET
     boundary_layer: str | None | Unset = UNSET
+    gap: float | None | Unset = UNSET
+    island_style: IslandStyle | IslandStyleName | None | Unset = UNSET
     islands: bool | None | Unset = UNSET
     texts: bool | None | Unset = UNSET
     way: HatchWay | HatchWayName | None | Unset = UNSET
@@ -27671,12 +27945,18 @@ class PointHatchRegion(HatchRegion):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "point"}
         out["at"] = _vec2_out(self.at)
+        if self.also_at is not UNSET:
+            out["alsoAt"] = [_vec2_out(e0) for e0 in self.also_at]
         if self.associative is not UNSET:
             out["associative"] = self.associative
         if self.boundaries is not UNSET:
             out["boundaries"] = None if self.boundaries is None else self.boundaries.to_json()
         if self.boundary_layer is not UNSET:
             out["boundaryLayer"] = self.boundary_layer
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
+        if self.island_style is not UNSET:
+            out["islandStyle"] = None if self.island_style is None else _enum_out(self.island_style)
         if self.islands is not UNSET:
             out["islands"] = self.islands
         if self.texts is not UNSET:
@@ -27689,9 +27969,12 @@ class PointHatchRegion(HatchRegion):
     def from_json(cls, data: Mapping[str, Any]) -> PointHatchRegion:
         return cls(
             at=Vec2.from_json(data["at"]),
+            also_at=[Vec2.from_json(e0) for e0 in data["alsoAt"]] if "alsoAt" in data else UNSET,
             associative=data.get("associative", UNSET),
             boundaries=UNSET if "boundaries" not in data else None if data["boundaries"] is None else TrimBoundaries.from_json(data["boundaries"]),
             boundary_layer=data.get("boundaryLayer", UNSET),
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
+            island_style=UNSET if "islandStyle" not in data else None if data["islandStyle"] is None else _enum_in(IslandStyle, data["islandStyle"]),
             islands=data.get("islands", UNSET),
             texts=data.get("texts", UNSET),
             way=UNSET if "way" not in data else None if data["way"] is None else _enum_in(HatchWay, data["way"]),
@@ -27704,12 +27987,14 @@ class ObjectsHatchRegion(HatchRegion):
     hatched by itself, from a point inside it.
     Attributes:
         associative: İlişkili; absent: true.
+        island_style: How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
         islands: Adalar; absent: true.
         texts: Yazılar; absent: false.
     """
     TAG_VALUE: ClassVar[str] = "objects"
     uids: list[str]
     associative: bool | None | Unset = UNSET
+    island_style: IslandStyle | IslandStyleName | None | Unset = UNSET
     islands: bool | None | Unset = UNSET
     texts: bool | None | Unset = UNSET
 
@@ -27718,6 +28003,8 @@ class ObjectsHatchRegion(HatchRegion):
         out["uids"] = list(self.uids)
         if self.associative is not UNSET:
             out["associative"] = self.associative
+        if self.island_style is not UNSET:
+            out["islandStyle"] = None if self.island_style is None else _enum_out(self.island_style)
         if self.islands is not UNSET:
             out["islands"] = self.islands
         if self.texts is not UNSET:
@@ -27729,6 +28016,7 @@ class ObjectsHatchRegion(HatchRegion):
         return cls(
             uids=list(data["uids"]),
             associative=data.get("associative", UNSET),
+            island_style=UNSET if "islandStyle" not in data else None if data["islandStyle"] is None else _enum_in(IslandStyle, data["islandStyle"]),
             islands=data.get("islands", UNSET),
             texts=data.get("texts", UNSET),
         )
@@ -30676,6 +30964,9 @@ _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "pro
 _HATCH_CURVE: dict[str, type[HatchCurve]] = {"ellipse": EllipseHatchCurve, "nurbs": NurbsHatchCurve}
 
 
+_HATCH_EDIT: dict[str, type[HatchEdit]] = {"recreate": RecreateHatchEdit, "reselect": ReselectHatchEdit, "addIslands": AddIslandsHatchEdit, "removeIslands": RemoveIslandsHatchEdit, "untie": UntieHatchEdit}
+
+
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
@@ -30745,6 +31036,7 @@ __all__ = [
     "AddArmLeaderEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
+    "AddIslandsHatchEdit",
     "AddressLocator",
     "AddressesDefine",
     "AddressesDefineOperation",
@@ -30872,6 +31164,8 @@ __all__ = [
     "BlocksReplaced",
     "BlocksTableSource",
     "BothNetworkDirection",
+    "BoundaryForm",
+    "BoundaryFormName",
     "Bounds",
     "BreakDimensionEdit",
     "BreakLine",
@@ -31151,6 +31445,7 @@ __all__ = [
     "GridTableEdit",
     "HatchAssoc",
     "HatchCurve",
+    "HatchEdit",
     "HatchEntity",
     "HatchEntityGeometry",
     "HatchGradient",
@@ -31162,6 +31457,9 @@ __all__ = [
     "HatchRegion",
     "HatchWay",
     "HatchWayName",
+    "HatchesEdit",
+    "HatchesEdited",
+    "HatchesPlan",
     "HeaderTableEdit",
     "Helmert",
     "ImageEntity",
@@ -31188,6 +31486,8 @@ __all__ = [
     "InvitationRevoke",
     "InvitationState",
     "InvitationStateName",
+    "IslandStyle",
+    "IslandStyleName",
     "JoggedDimensionMeasure",
     "JunctionLayer",
     "JunctionRole",
@@ -31514,6 +31814,7 @@ __all__ = [
     "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
+    "RecreateHatchEdit",
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
@@ -31528,11 +31829,13 @@ __all__ = [
     "RemoveEntityEdit",
     "RemoveFieldEdit",
     "RemoveFitCurveEdit",
+    "RemoveIslandsHatchEdit",
     "RenameViewsOp",
     "RenamedBlock",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ReplaceTextEdit",
+    "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResourceKind",
     "ResourceKindName",
@@ -31702,6 +32005,7 @@ __all__ = [
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
     "UnmergeTableEdit",
+    "UntieHatchEdit",
     "UnusedResource",
     "UpdateBlockChange",
     "UpdateEntityEdit",

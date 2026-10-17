@@ -493,6 +493,7 @@ pub fn core_assoc(a: &HatchAssoc) -> CoreAssoc {
         (!list.is_empty()).then(|| list.iter().map(EntityId::to_text).collect())
     };
     CoreAssoc {
+        gap: a.gap,
         outer: a.outer.map(|o| o.to_text()),
         bounds: ids(&a.bounds),
         islands: ids(&a.islands),
@@ -510,6 +511,7 @@ pub fn contract_assoc(a: CoreAssoc) -> Option<HatchAssoc> {
             .collect()
     };
     Some(HatchAssoc {
+        gap: a.gap,
         outer: match &a.outer {
             Some(o) => Some(EntityId::parse(o)?),
             None => None,

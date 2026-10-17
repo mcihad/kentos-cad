@@ -66,6 +66,27 @@ pub fn set_parameters(
     ))
 }
 
+/// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
+/// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
+pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_contracts::BoundaryForm) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::HatchesEdit {
+        edit: kentos_contracts::HatchEdit::Recreate {
+            uid: uid.to_string(),
+            form: Some(form),
+            layer_id: None,
+            associative: Some(true),
+        },
+        expected_revision: None,
+    };
+    said(kentos_native_application::hatches_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
+}
+
 /// The object at `slot` given `entity`'s geometry in its place, as the step
 /// “Değiştir” (its layer, colour, attributes, label and symbol stay); what
 /// to say: the command's refusal (a locked layer, an empty text).

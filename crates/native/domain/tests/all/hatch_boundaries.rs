@@ -161,6 +161,7 @@ fn tied_face() -> (Document, [Slot; 4], Slot) {
     ];
     let slots = lines.map(|l| doc.add(l).expect("added"));
     let tie = HatchAssoc {
+        gap: None,
         outer: None,
         bounds: slots.iter().map(|s| id(&doc, *s)).collect(),
         islands: Vec::new(),
@@ -247,6 +248,7 @@ fn a_tied_hatch_keeps_its_ellipse_island_exact() {
     let room = doc.add(room).expect("added");
     let island = doc.add(island).expect("added");
     let tie = HatchAssoc {
+        gap: None,
         outer: Some(id(&doc, room)),
         bounds: Vec::new(),
         islands: vec![id(&doc, island)],

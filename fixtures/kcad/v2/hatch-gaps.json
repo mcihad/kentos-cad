@@ -1,0 +1,145 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Boşluklu yüz",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500010.0,
+        "y": 4400000.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500010.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500010.0,
+        "y": 4400008.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500010.0,
+        "y": 4400008.0
+      },
+      "b": {
+        "x": 500000.0,
+        "y": 4400008.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400008.0
+      },
+      "b": {
+        "x": 500000.0,
+        "y": 4400000.1
+      }
+    },
+    {
+      "kind": "hatch",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "ring": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400008.0
+        },
+        {
+          "x": 500000.0,
+          "y": 4400008.0
+        }
+      ],
+      "pattern": {
+        "type": "solid",
+        "angle": 0.0,
+        "spacing": 1.0
+      },
+      "assoc": {
+        "bounds": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f20",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f21",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f22",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f23"
+        ],
+        "gap": 0.25,
+        "seed": {
+          "x": 500005.0,
+          "y": 4400004.0
+        }
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f20",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f21",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f22",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f23",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3f24"
+  ]
+}

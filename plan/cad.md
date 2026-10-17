@@ -408,9 +408,9 @@ Mevcut desen/degrade ve ilişkili tarama kodu korunmalıdır. Hedef yeni bir tar
 
 - [x] **CAD-HATCH-01:** Line/arc/ellipse/NURBS kaynak boundary edge'lerini kayıpsız temsil et; render ring ile kaynak boundary birbirine karışmasın. — *17 Ekim; [ADR 0328](../docs/adr/0328-hatch-source-boundary-and-face-ties.md) §1, §3: taramanın `boundary`'si (halkalar: nokta, büküm, elips yayı ve NURBS kenarları), `ring`/`holes` ondan çizilir (belgenin kuralı), bölgeden kapalı eğriler geri bulunur, dönüşümler taşır, DXF HATCH kenarlarıyla iki yönde; `.kcad` şema 69.*
 - [x] **CAD-HATCH-02:** Associative hatch kaynaklarını kararlı alt geometri referanslarıyla bağla; boundary değişikliği ilgili taramayı aynı transaction'da güncellesin. — *17 Ekim; [ADR 0328](../docs/adr/0328-hatch-source-boundary-and-face-ties.md) §2: çizgilerle kapanan yüzün bağı (`bounds`: kenarları yüzün kenarında olan nesneler kalıcı kimlikleriyle), belge aynı adımda yeniden keser, bütünüyle taşınan yüz tohumunu götürür, açılan yüz bağı koparır.*
-- [ ] **CAD-HATCH-03:** Pick point / select boundaries / çoklu bölge / island detection yöntemlerinin sayısal ve UI kapsamını doğrula.
-- [ ] **CAD-HATCH-04:** Gap tolerance ve boundary repair; kapanan boşluk ve değişen alanı plan raporunda göstersin.
-- [ ] **CAD-HATCH-05:** Boundary oluşturma, boundary yeniden seçme, add/remove island ve ilişkiyi koparma işlemleri API'de olsun.
+- [x] **CAD-HATCH-03:** Pick point / select boundaries / çoklu bölge / island detection yöntemlerinin sayısal ve UI kapsamını doğrula.
+- [x] **CAD-HATCH-04:** Gap tolerance ve boundary repair; kapanan boşluk ve değişen alanı plan raporunda göstersin.
+- [x] **CAD-HATCH-05:** Boundary oluşturma, boundary yeniden seçme, add/remove island ve ilişkiyi koparma işlemleri API'de olsun.
 - [ ] **CAD-HATCH-06:** PAT import/export ve kullanıcı desenleri; pattern name, family, dash ve origin bilgilerini korusun.
 - [ ] **CAD-HATCH-07:** Pattern scale/angle/origin, match hatch properties ve align across objects seçeneklerini tamamla.
 - [ ] **CAD-HATCH-08:** Çok ölçekli/annotative pattern ile kaynak world ölçeğinde pattern açık ayrı seçenekler olsun.

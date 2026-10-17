@@ -2206,20 +2206,26 @@ fillet = _EntitiesFillet()
 class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreatePlan]):
     """``cad.entities.hatch`` v1. Tara: region'ın bölgelerini pattern ile tarar, her
     bölgeye bir tarama; layerId'ye cad.entities.create'in kurallarıyla tek adımda yazar,
-    adı “Tarama”. region point: at'yi çevreleyen bölge. way object (varsayılan, kapalı
-    nesne): noktayı çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük
-    kapalı nesneler adadır; associative (varsayılan açık) taramayı nesnelerine bağlar.
-    way lines (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı
-    yüz; bir şeye bağlanmaz. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş
-    kalır. region objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası
-    kendi içinden taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name
-    (Dolu, Çizgili, Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim
-    ölçeğiyle çarpılır), angle (derece), secondColor ve inverted (degrade). Bilinmeyen
-    ad unknown_pattern; desen bölge için çok sıksa pattern_too_dense; bölge yoksa
-    not_enclosed. Bölgeleri paylaşılan geometri çekirdeği bulur: Tarama ve Çoklu tara
-    araçları, Python ve ajan aynı isteğe aynı halkaları alır. Çıktı ve plan
-    cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    adı “Tarama”. region point: at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu
+    aynı bölge bir kez) çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı
+    çevreleyen en küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler
+    adadır; associative (varsayılan açık) taramayı nesnelerine bağlar. way lines
+    (çizgiler): sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz;
+    associative açıksa tarama yüzü kapatan çizgileri izler; gap verilirse o kadar
+    metreye kadar boşluklar sarkan uçtan en yakın çizgiye köprüyle kapanır, gaps_closed
+    uyarısı kapanan boşlukları ve alanı söyler. islandStyle (verilirse islands'ın
+    yerine): outer adaları boş bırakır, normal adaların içindeki kapalı nesneleri
+    yeniden tarar (sırayla, ayrı taramalar; çizgiler yolunda outer gibi,
+    islands_not_nested uyarısıyla), ignore adaları da tarar. texts açıksa bölgedeki
+    yazılar ve bloklar kutularıyla boş kalır. region objects (Çoklu tara): her kapalı
+    nesne, çok parçalı alanın her parçası kendi içinden taranır; kapalı olmayan
+    not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili, Çapraz, ANSI31,
+    ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır), angle (derece),
+    secondColor ve inverted (degrade). Bilinmeyen ad unknown_pattern; desen bölge için
+    çok sıksa pattern_too_dense; bölge yoksa not_enclosed. Bölgeleri paylaşılan geometri
+    çekirdeği bulur: Tarama ve Çoklu tara araçları, Python ve ajan aynı isteğe aynı
+    halkaları alır. Çıktı ve plan cad.entities.create'inkidir. expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.hatch"
@@ -2249,11 +2255,17 @@ class _EntitiesHatch(LocalCommand[EntitiesHatch, EntitiesCreated, EntitiesCreate
     ) -> EntitiesCreated:
         """Tara: region'ın bölgelerini pattern ile tarar, her bölgeye bir tarama; layerId'ye
         cad.entities.create'in kurallarıyla tek adımda yazar, adı “Tarama”. region point:
-        at'yi çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en
-        küçük kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır;
-        associative (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler):
-        sınırların (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; bir şeye
-        bağlanmaz. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region
+        at'yi (ve alsoAt'nin her noktasını; iki noktanın bulduğu aynı bölge bir kez)
+        çevreleyen bölge. way object (varsayılan, kapalı nesne): noktayı çevreleyen en küçük
+        kapalı nesne, içindeki ya da kenarını aşan küçük kapalı nesneler adadır; associative
+        (varsayılan açık) taramayı nesnelerine bağlar. way lines (çizgiler): sınırların
+        (boundaries, boundaryLayer) çizgilerinin kapattığı yüz; associative açıksa tarama
+        yüzü kapatan çizgileri izler; gap verilirse o kadar metreye kadar boşluklar sarkan
+        uçtan en yakın çizgiye köprüyle kapanır, gaps_closed uyarısı kapanan boşlukları ve
+        alanı söyler. islandStyle (verilirse islands'ın yerine): outer adaları boş bırakır,
+        normal adaların içindeki kapalı nesneleri yeniden tarar (sırayla, ayrı taramalar;
+        çizgiler yolunda outer gibi, islands_not_nested uyarısıyla), ignore adaları da
+        tarar. texts açıksa bölgedeki yazılar ve bloklar kutularıyla boş kalır. region
         objects (Çoklu tara): her kapalı nesne, çok parçalı alanın her parçası kendi içinden
         taranır; kapalı olmayan not_closed uyarısıyla atlanır. pattern: name (Dolu, Çizgili,
         Çapraz, ANSI31, ISO02W100 …, degradeler), scale (kâğıtta; çizim ölçeğiyle çarpılır),

@@ -131,6 +131,27 @@ pub enum HatchWay {
     Lines,
 }
 
+/// How a region's islands are taken (docs/adr/0329 §1; AutoCAD's island detection).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum IslandStyle {
+    /// Dış: the islands are left open, whatever lies inside them too.
+    #[default]
+    Outer,
+    /// İç içe (Normal): the islands are left open, the closed objects inside them hatched again, those inside these
+    /// open again, by turns (kapalı nesne and Çoklu tara; in the line work as Outer, said).
+    Normal,
+    /// Yok say: the islands are hatched over.
+    Ignore,
+}
+
+/// The most further points a region takes, and the widest gap it closes (m).
+pub const MAX_HATCH_POINTS: usize = 1000;
+pub const MAX_HATCH_GAP: f64 = 1000.0;
+
 /// Where Tarama hatches.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -172,6 +193,22 @@ pub enum HatchRegion {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
+        /// Further points, each a region of its own found as `at`'s; a region two points find is hatched once
+        /// (docs/adr/0329 §2).
+        #[serde(default, rename = "alsoAt", skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec2>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        also_at: Vec<Vec2>,
+        /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
+        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        island_style: Option<IslandStyle>,
+        /// `lines`: gaps in the line work up to this many metres are closed, each dangling end bridged to the
+        /// nearest line work (docs/adr/0329 §3); absent: 0.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        gap: Option<f64>,
     },
     /// Çoklu tara: each closed object (each part of a multi-part area)
     /// hatched by itself, from a point inside it.
@@ -190,7 +227,34 @@ pub enum HatchRegion {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
+        /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
+        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        island_style: Option<IslandStyle>,
     },
+}
+
+impl HatchRegion {
+    /// How its islands are taken: `islandStyle`, else Adalar (on: outer, off: ignore).
+    pub fn islands_taken(&self) -> IslandStyle {
+        let (style, on) = match self {
+            HatchRegion::Point {
+                island_style,
+                islands,
+                ..
+            }
+            | HatchRegion::Objects {
+                island_style,
+                islands,
+                ..
+            } => (*island_style, *islands),
+        };
+        style.unwrap_or(if on.unwrap_or(true) {
+            IslandStyle::Outer
+        } else {
+            IslandStyle::Ignore
+        })
+    }
 }
 
 /// The pattern by its name, as Tarama's Desen lists it, and its options.
