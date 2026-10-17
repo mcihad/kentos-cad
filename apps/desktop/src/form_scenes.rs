@@ -2918,6 +2918,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
             "form-yayin-alanlari",
             crate::form_access_scenes::stale_release,
         ),
+        (
+            "form-yayindan-kaldirildi",
+            crate::form_access_scenes::withdrawn_designer,
+        ),
     ]
 }
 

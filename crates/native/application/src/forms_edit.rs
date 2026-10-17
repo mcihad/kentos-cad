@@ -23,6 +23,7 @@ fn check_input(input: &FormsEdit) -> Result<(), Stop> {
         | FormsOp::Remove { id }
         | FormsOp::Publish { id, .. }
         | FormsOp::Enforce { id, .. }
+        | FormsOp::Withdraw { id, .. }
         | FormsOp::Comment { id, .. }
         | FormsOp::Resolve { id, .. } => Some(id.as_str()),
     };
@@ -180,6 +181,7 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
             };
             draft.revision = 1;
             let form = ProjectForm {
+                withdrawn: false,
                 id,
                 name: name.trim().to_owned(),
                 layer: layer.clone(),
@@ -337,7 +339,44 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     "edit.on",
                 ));
             }
+            // A withdrawn form's rules are not enforced (docs/adr/0445 §1).
+            if *on && form.withdrawn {
+                return Err(fail(
+                    codes::FORM_WITHDRAWN,
+                    format!(
+                        "“{}” formu yayından kaldırıldı; kuralları uygulanmadan önce yeniden yayına alın.",
+                        form.name
+                    ),
+                    "edit.on",
+                ));
+            }
             form.enforce = *on;
+            Some(form.clone())
+        }
+        FormsOp::Withdraw { id, on } => {
+            let i = at(&s, id).ok_or_else(|| unknown(id))?;
+            let form = &mut s.forms[i];
+            if *on && form.releases.is_empty() {
+                return Err(fail(
+                    codes::FORM_UNPUBLISHED,
+                    format!(
+                        "“{}” formu hiç yayınlanmadı; yayından kaldırılacak bir yayını yok.",
+                        form.name
+                    ),
+                    "edit.on",
+                ));
+            }
+            if *on && form.enforce {
+                return Err(fail(
+                    codes::FORM_ENFORCED,
+                    format!(
+                        "“{}” formunun kuralları katmanın yazma kuralı; önce Kuralları uygula'yı kapatın.",
+                        form.name
+                    ),
+                    "edit.on",
+                ));
+            }
+            form.withdrawn = *on;
             Some(form.clone())
         }
         FormsOp::Comment {

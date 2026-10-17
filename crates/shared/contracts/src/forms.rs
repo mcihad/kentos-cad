@@ -60,6 +60,11 @@ pub struct ProjectForm {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub enforce: bool,
+    /// Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps
+    /// what was typed. Written only as `true`, and only with a release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub withdrawn: bool,
     /// The reviewers' comments on the form, oldest first (docs/adr/0441 §5).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormComment>>", optional))]
@@ -2019,6 +2024,7 @@ mod tests {
 
     fn form(items: Vec<FormItem>) -> ProjectForm {
         ProjectForm {
+            withdrawn: false,
             id: "bina".into(),
             name: "Bina".into(),
             layer: "yapi".into(),

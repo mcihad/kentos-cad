@@ -299,6 +299,10 @@ codes! {
     /// A publish whose scenarios fail (docs/adr/0442 §1).
     /// A folder given that is not an absolute path (docs/adr/0442 §7).
     INVALID_FOLDER = "invalid_folder", Failed, false, "Klasör mutlak bir yol değil.";
+    /// The form is withdrawn: no record is written through it (docs/adr/0445 §1).
+    FORM_WITHDRAWN = "form_withdrawn", Failed, false, "Form yayından kaldırıldı.";
+    /// The form's rules are enforced: it is not withdrawn (docs/adr/0445 §1).
+    FORM_ENFORCED = "form_enforced", Failed, false, "Formun kuralları uygulanıyor.";
     /// A page cursor this listing did not give (docs/adr/0443 §1).
     INVALID_CURSOR = "invalid_cursor", Failed, false, "Sayfa imleci bu listenin değil.";
     FORM_TESTS_FAILED = "form_tests_failed", Failed, false, "Formun senaryolarından biri tutmuyor; yayınlanmadı.";

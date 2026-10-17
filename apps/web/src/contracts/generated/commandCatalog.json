@@ -9688,6 +9688,10 @@
                   "$ref": "#/$defs/FormRelease"
                 },
                 "type": "array"
+              },
+              "withdrawn": {
+                "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -18545,6 +18549,10 @@
                   "$ref": "#/$defs/FormRelease"
                 },
                 "type": "array"
+              },
+              "withdrawn": {
+                "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -29885,6 +29893,10 @@
                   "$ref": "#/$defs/FormRelease"
                 },
                 "type": "array"
+              },
+              "withdrawn": {
+                "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -349195,7 +349207,7 @@
       "id": "cad.forms.edit",
       "version": 1,
       "title": "Formlar",
-      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin formlarını düzenler. Form bir katmanın veri giriş ekranıdır: sekmeler, gruplar ve katmanın alanlarına kararlı anahtarlarıyla (alanın id'si, yoksa adı) bağlı alan öğeleri; bir alanı gösteren (visibleWhen), zorunlu kılan (requiredWhen) ve kilitleyen (readOnlyWhen) kurallar ve kaydın geçmesi gereken denetimler (checks); kurallar İfadeyle seç'in dilindedir. edit.kind: create (katmanın formu; body verilmezse katmanın alanlarından, id verilmezse adından üretilir), update (taslağı değiştirir; body.revision taslağın şimdiki sürümü olmalı, değilse form_draft_changed; saklanan taslak bir sonraki sürümdür), rename, remove, publish (taslağı sıradaki yayın olarak dondurur; ön denetimde hata varsa form_preflight, senaryolarından biri tutmazsa form_tests_failed; önceki yayına uyup yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50 yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te form_rules; yayın yoksa form_unpublished, yayından kaldırılmışsa form_withdrawn), withdraw (on: form yayından kaldırılır, kayıt onunla yazılmaz: formla yazan komutlar form_withdrawn; yayın yoksa form_unpublished, kuralları uygulanıyorsa form_enforced; off: yeniden yayına alır), comment (gözden geçirenin forma ya da taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid, form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir; nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -350345,6 +350357,27 @@
                   },
                   "kind": {
                     "const": "enforce",
+                    "type": "string"
+                  },
+                  "on": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "on"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yayından kaldır (docs/adr/0445 §1): no record is written through the form until it is put back\n(`on: false`); a form whose rules are enforced is not withdrawn.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "withdraw",
                     "type": "string"
                   },
                   "on": {
@@ -352093,6 +352126,10 @@
                   "$ref": "#/$defs/FormRelease"
                 },
                 "type": "array"
+              },
+              "withdrawn": {
+                "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -353645,6 +353682,10 @@
                   "$ref": "#/$defs/FormRelease"
                 },
                 "type": "array"
+              },
+              "withdrawn": {
+                "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -353778,6 +353819,8 @@
       },
       "capabilities": {
         "refusals": [
+          "form_enforced",
+          "form_withdrawn",
           "invalid_form_id",
           "invalid_form_name",
           "invalid_form",
@@ -354867,6 +354910,7 @@
       },
       "capabilities": {
         "refusals": [
+          "form_withdrawn",
           "invalid_uid",
           "invalid_moment",
           "invalid_user",
@@ -355403,6 +355447,7 @@
       },
       "capabilities": {
         "refusals": [
+          "form_withdrawn",
           "invalid_moment",
           "invalid_user",
           "invalid_revision",
@@ -362610,6 +362655,7 @@
       },
       "capabilities": {
         "refusals": [
+          "form_withdrawn",
           "invalid_uid",
           "invalid_moment",
           "invalid_user",
@@ -369696,6 +369742,7 @@
       },
       "capabilities": {
         "refusals": [
+          "form_withdrawn",
           "no_entities",
           "invalid_uid",
           "invalid_moment",
@@ -394743,6 +394790,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Klasör mutlak bir yol değil."
+    },
+    {
+      "code": "form_withdrawn",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Form yayından kaldırıldı."
+    },
+    {
+      "code": "form_enforced",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Formun kuralları uygulanıyor."
     },
     {
       "code": "invalid_cursor",

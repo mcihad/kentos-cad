@@ -3871,6 +3871,8 @@ class _Schema:
                 "layer": (self.text, True),
                 "draft": (body, True),
                 "releases": (nonempty(self.array(release)), False),
+                # docs/adr/0445 §1: withdrawn; written only as true.
+                "withdrawn": (true_, False),
                 "enforce": (true_, False),
                 # docs/adr/0441 §5: the reviewers' comments.
                 "comments": (nonempty(self.array(self.fields({

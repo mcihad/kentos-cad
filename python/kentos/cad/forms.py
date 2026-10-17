@@ -329,10 +329,13 @@ class _FormsEdit(LocalCommand[FormsEdit, FormsEdited, FormsEdited]):
     yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50
     yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının
     kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te
-    form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da
-    taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer
-    ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın
-    ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
+    form_rules; yayın yoksa form_unpublished, yayından kaldırılmışsa form_withdrawn),
+    withdraw (on: form yayından kaldırılır, kayıt onunla yazılmaz: formla yazan komutlar
+    form_withdrawn; yayın yoksa form_unpublished, kuralları uygulanıyorsa form_enforced;
+    off: yeniden yayına alır), comment (gözden geçirenin forma ya da taslağın bir
+    öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden
+    açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön
+    denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
     form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir;
     nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
     yazılmaz, sonuç conflict olur.
@@ -369,10 +372,13 @@ class _FormsEdit(LocalCommand[FormsEdit, FormsEdited, FormsEdited]):
         yenisine uymayan kayıtlar sayılır: breaking ve form_breaking uyarısı; en çok 50
         yayın, fazlası en eskiyi düşürür: form_release_dropped), enforce (on: son yayının
         kuralları katmanın her öznitelik yazmasında uygulanır, cad.entities.set'te
-        form_rules; yayın yoksa form_unpublished), comment (gözden geçirenin forma ya da
-        taslağın bir öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer
-        ya da yeniden açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın
-        ön denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
+        form_rules; yayın yoksa form_unpublished, yayından kaldırılmışsa form_withdrawn),
+        withdraw (on: form yayından kaldırılır, kayıt onunla yazılmaz: formla yazan komutlar
+        form_withdrawn; yayın yoksa form_unpublished, kuralları uygulanıyorsa form_enforced;
+        off: yeniden yayına alır), comment (gözden geçirenin forma ya da taslağın bir
+        öğesine yorumu; olmayan öğe form_item_unknown), resolve (yorumu çözer ya da yeniden
+        açar; olmayan numara form_comment_unknown). Çıktının issues'u taslağın ön
+        denetimidir (form_field_unknown, form_widget_unfit, form_rule_invalid,
         form_required_hidden …; uyarılar da). Proje ayarıdır, geri alma adımı değildir;
         nesneler değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
         yazılmaz, sonuç conflict olur.

@@ -55,7 +55,18 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
             let v: Value = serde_json::from_str(&std::fs::read_to_string(&file).expect("reads"))
                 .expect("json");
             let command = v["command"].as_str().expect("command").to_owned();
-            walk(&v["cases"], out.entry(command).or_default());
+            // A step that runs another command (its `command`) reaches that command's codes.
+            for case in v["cases"].as_array().into_iter().flatten() {
+                match case["steps"].as_array() {
+                    Some(steps) => {
+                        for step in steps {
+                            let id = step["command"].as_str().unwrap_or(&command).to_owned();
+                            walk(step, out.entry(id).or_default());
+                        }
+                    }
+                    None => walk(case, out.entry(command.clone()).or_default()),
+                }
+            }
         }
     }
     out

@@ -26,6 +26,7 @@ fn drawing() -> Document {
 fn bind(doc: &mut Document, key: &str) {
     let mut settings = doc.settings().clone();
     settings.forms = vec![ProjectForm {
+        withdrawn: false,
         id: "f".into(),
         name: "Form".into(),
         layer: "a".into(),

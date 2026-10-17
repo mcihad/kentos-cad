@@ -283,6 +283,7 @@ fn check(doc: &Document, input: &FormsImport) -> Result<Planned, Stop> {
     kentos_forms::field_refs::rebind_body(&mut body, &pairs);
     body.revision = 1;
     let form = ProjectForm {
+        withdrawn: false,
         id,
         name: name.trim().to_owned(),
         layer: input.layer.clone(),

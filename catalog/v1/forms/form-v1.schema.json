@@ -1350,6 +1350,10 @@
         "$ref": "#/$defs/FormRelease"
       },
       "type": "array"
+    },
+    "withdrawn": {
+      "description": "Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps\nwhat was typed. Written only as `true`, and only with a release.",
+      "type": "boolean"
     }
   },
   "required": [

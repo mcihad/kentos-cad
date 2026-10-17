@@ -112,6 +112,13 @@ pub(crate) fn stale_release(app: &mut App) {
     run(app, "data.formEdit");
 }
 
+/// Formlar with the building form withdrawn (docs/adr/0445 §1): its status and Yeniden yayına al.
+pub(crate) fn withdrawn_designer(app: &mut App) {
+    buildings(app, true);
+    run(app, "data.forms");
+    designer(app, fd::Event::Withdraw(true));
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::{Arc, Mutex};
@@ -557,6 +564,37 @@ mod tests {
             "the storeys' bound changed since"
         );
         assert!(app.form_entry.is_some());
+    }
+
+    #[test]
+    fn a_withdrawn_form_opens_no_record_and_an_open_window_keeps_what_was_typed() {
+        let mut app = crate::files_testing::app_with_drawing();
+        buildings(&mut app, true);
+        // A window open before the form is withdrawn.
+        app.selection.set([Slot(2)]);
+        run(&mut app, "data.formEdit");
+        entry(&mut app, fe::Event::Value("kat-sayisi".into(), "6".into()));
+        let open = app.form_entry.take();
+        let dialog = app.dialog.take();
+        run(&mut app, "data.forms");
+        designer(&mut app, fd::Event::Withdraw(true));
+        assert!(app.project_forms()[0].withdrawn);
+        let _ = app.update(Message::Forms(fd::Event::Cancel));
+        // Opening it again is refused and said.
+        run(&mut app, "data.formEdit");
+        assert!(app.form_entry.is_none(), "not opened");
+        // The window that was open: Kaydet refused, what was typed kept.
+        app.form_entry = open;
+        app.dialog = dialog;
+        entry(&mut app, fe::Event::Save);
+        let e = app.form_entry.as_ref().expect("the window stays");
+        assert_eq!(e.value_of("Kat").as_deref(), Some("6"));
+        assert_eq!(attrs(&app, 2).get("Kat").map(String::as_str), Some("2"));
+        // Put back: it writes again.
+        let _ = app.update(Message::FormEntry(fe::Event::Discard));
+        run(&mut app, "data.forms");
+        designer(&mut app, fd::Event::Withdraw(false));
+        assert!(!app.project_forms()[0].withdrawn);
     }
 
     fn app_body(app: &App) -> kentos_contracts::FormBody {

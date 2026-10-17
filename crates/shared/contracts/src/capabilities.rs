@@ -1663,7 +1663,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.forms.edit",
-        refusals: &[
+        refusals: &[&["form_enforced", "form_withdrawn"], 
             &["invalid_form_id", "invalid_form_name", "invalid_form"],
             REVISION,
             &[
@@ -1699,7 +1699,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.forms.submit",
-        refusals: &[
+        refusals: &[&["form_withdrawn"], 
             &["invalid_uid", "invalid_moment", "invalid_user"],
             REVISION,
             &[
@@ -1733,7 +1733,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.forms.recompute",
-        refusals: &[&[
+        refusals: &[&["form_withdrawn"], &[
             "invalid_moment",
             "invalid_user",
             "invalid_revision",
@@ -1825,7 +1825,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.forms.transition",
-        refusals: &[&[
+        refusals: &[&["form_withdrawn"], &[
             "invalid_uid",
             "invalid_moment",
             "invalid_user",
@@ -1886,7 +1886,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.forms.fill",
-        refusals: &[
+        refusals: &[&["form_withdrawn"], 
             &["no_entities", "invalid_uid", "invalid_moment", "invalid_user"],
             REVISION,
             &[

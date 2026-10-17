@@ -19,8 +19,9 @@ use super::designer::{
     ADD_REFERENCE, ADD_RELATED, ADD_TAB, AUDIT, CANCEL, CHANGES, COPY_ITEM, CREATE, DOMAINS_WINDOW,
     DOWN, DROP_KEPT, ENFORCE, EXPORT, Event, FLOW, IMPORT, LookupEdit, NAME, NEW_FORM,
     PALETTE_DOMAINS, PALETTE_FIELDS, PALETTE_RELATIONS, PALETTE_SECTIONS, PASTE_ITEM, PREVIEW,
-    PROPERTIES, PUBLISH, PUBLISH_ANYWAY, Palette, RECOMPUTE, REDO, REMOVE_FORM, REMOVE_ITEM,
-    RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, Said, TITLE, Text, UNDO, UP, Window, bound, find, msg,
+    PROPERTIES, PUBLISH, PUBLISH_ANYWAY, PUT_BACK, Palette, RECOMPUTE, REDO, REMOVE_FORM,
+    REMOVE_ITEM, RESTORE_DRAFT, Rule, SAVE, SAVE_SECTION, Said, TITLE, Text, UNDO, UP, WITHDRAW,
+    Window, bound, find, msg,
 };
 use crate::app::{App, Message};
 
@@ -1991,6 +1992,9 @@ impl App {
             Some(r) => status.push_str(&format!(" · son yayın {}", r.version)),
             None => status.push_str(" · yayınlanmadı"),
         }
+        if form.withdrawn {
+            status.push_str(" · yayından kaldırıldı");
+        }
         if w.dirty {
             status.push_str(" · kaydedilmedi");
         }
@@ -2049,6 +2053,12 @@ impl App {
             words::ghost(AUDIT, Some(msg(Event::Audit))),
             words::ghost(RECOMPUTE, editable.then(|| msg(Event::Recompute))),
             words::ghost(EXPORT, editable.then(|| msg(Event::Export))),
+            // Yayından kaldır / Yeniden yayına al (docs/adr/0445 §1).
+            words::ghost(
+                if form.withdrawn { PUT_BACK } else { WITHDRAW },
+                (editable && !form.releases.is_empty() && (form.withdrawn || !form.enforce))
+                    .then(|| msg(Event::Withdraw(!form.withdrawn))),
+            ),
             words::ghost(IMPORT, Some(msg(Event::Import))),
             space::horizontal().width(Fill),
             words::secondary(CANCEL, Some(msg(Event::Cancel))),

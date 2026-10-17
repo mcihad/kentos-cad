@@ -91,6 +91,9 @@ pub enum FormsOp {
     },
     /// Kuralları uygula: whether the latest release is the layer's write profile.
     Enforce { id: String, on: bool },
+    /// Yayından kaldır (docs/adr/0445 §1): no record is written through the form until it is put back
+    /// (`on: false`); a form whose rules are enforced is not withdrawn.
+    Withdraw { id: String, on: bool },
     /// Yorum (docs/adr/0441 §5): a reviewer's comment on the form or an item of its draft.
     Comment {
         id: String,

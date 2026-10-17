@@ -1087,6 +1087,7 @@ __all__ = [
     "WeightCurveEdit",
     "WindowSelectRegion",
     "Wipeout",
+    "WithdrawFormsOp",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",

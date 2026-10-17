@@ -100,6 +100,45 @@ class FormsAcceptance(unittest.TestCase):
         expanded = cad.schema.describe(doc, kinds=["layers"], layer=layer, expand=True)
         self.assertEqual([f["name"] for f in expanded.items[0].detail], ["Aşama", "Kat", "Kimlik No", "Notlar"])
 
+    def test_a_link_table_carries_its_own_rows(self) -> None:
+        """N:M with a link table (docs/adr/0445 §2): parcels and owners joined by share records without
+        geometry, each link row its own id and attributes; a parcel deleted takes its shares, its owners stay."""
+        doc = cad.Document.new("Hisseler", srid=5256)
+        for name in ("Parsel", "Malik", "Hisse"):
+            cad.layers.edit(doc, operation="add", name=name)
+        lid = {n.name: n.id for n in doc.layers()}
+        cad.layers.edit(doc, operation="fields", layer=lid["Parsel"], fields=[cad.LayerField(name="No", kind="text")])
+        cad.layers.edit(doc, operation="fields", layer=lid["Malik"], fields=[cad.LayerField(name="Ad", kind="text")])
+        cad.layers.edit(doc, operation="fields", layer=lid["Hisse"], fields=[
+            cad.LayerField(name="Parsel", kind="text"), cad.LayerField(name="Malik", kind="text"),
+            cad.LayerField(name="Pay", kind="text")])
+        cad.relations.edit(doc, edit=cad.CreateRelationsOp(relation=cad.ProjectRelation(
+            id="parsel-hisse", name="Parselin hisseleri", parent=lid["Parsel"], child=lid["Hisse"], field="Parsel",
+            on_delete="cascade")))
+        cad.relations.edit(doc, edit=cad.CreateRelationsOp(relation=cad.ProjectRelation(
+            id="malik-hisse", name="Malikin hisseleri", parent=lid["Malik"], child=lid["Hisse"], field="Malik",
+            on_delete="restrict")))
+        parcels = [cad.polygon.create(doc, pts=[cad.Vec2(x, 0.0), cad.Vec2(x + 10.0, 0.0), cad.Vec2(x + 10.0, 8.0)],
+                                      layer_id=lid["Parsel"], attrs={"No": f"101/{k}"}).uid
+                   for k, x in ((1, 0.0), (2, 20.0))]
+        owners = cad.records.create(doc, layer_id=lid["Malik"], rows=[
+            cad.RecordRow(attrs={"Ad": "Ayşe"}), cad.RecordRow(attrs={"Ad": "Mehmet"})]).uids
+        # Ayşe holds 1/2 of the first parcel and all of the second; Mehmet 1/2 of the first.
+        shares = cad.records.create(doc, layer_id=lid["Hisse"], rows=[
+            cad.RecordRow(attrs={"Parsel": parcels[0], "Malik": owners[0], "Pay": "1/2"}),
+            cad.RecordRow(attrs={"Parsel": parcels[0], "Malik": owners[1], "Pay": "1/2"}),
+            cad.RecordRow(attrs={"Parsel": parcels[1], "Malik": owners[0], "Pay": "1/1"})]).uids
+        self.assertEqual(len(set(shares)), 3, "each link row its own id")
+        rows = {r.uid: doc.entity(r.uid).entity.attrs for r in doc.entities(layer=lid["Hisse"])}
+        self.assertEqual(rows[shares[1]]["Pay"], "1/2")
+        # An owner holding shares is not deleted (restrict); the first parcel takes its two shares with it.
+        with self.assertRaises(cad.CommandFailed):
+            cad.entities.delete(doc, uids=[owners[1]])
+        cad.entities.delete(doc, uids=[parcels[0]])
+        left = {r.uid for r in doc.entities(layer=lid["Hisse"])}
+        self.assertEqual(left, {shares[2]})
+        self.assertEqual(len(list(doc.entities(layer=lid["Malik"]))), 2, "the owners stay")
+
     def test_the_sdk_and_the_profile_agree_with_the_host(self) -> None:
         self.assertTrue(cad.compatibility().ok)
         self.assertEqual(cad.FORM_PROFILE, "kentos.forms/1")

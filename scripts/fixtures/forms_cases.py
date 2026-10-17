@@ -2439,6 +2439,14 @@ class Project:
             else:
                 f.pop("enforce", None)
             kept = f
+        elif k == "withdraw":
+            # docs/adr/0445 §1: written only as true.
+            f = self.find(op["id"])
+            if op["on"]:
+                f["withdrawn"] = True
+            else:
+                f.pop("withdrawn", None)
+            kept = f
         elif k == "comment":
             # docs/adr/0441 §5: numbered one past the form's last, its text trimmed.
             f = self.find(op["id"])

@@ -3125,6 +3125,7 @@ class FormsOp(_Union):
     - :class:`RemoveFormsOp` (``kind: remove``)
     - :class:`PublishFormsOp` (``kind: publish``)
     - :class:`EnforceFormsOp` (``kind: enforce``)
+    - :class:`WithdrawFormsOp` (``kind: withdraw``)
     - :class:`CommentFormsOp` (``kind: comment``)
     - :class:`ResolveFormsOp` (``kind: resolve``)
     """
@@ -20521,6 +20522,8 @@ class ProjectForm(_Model):
         enforce: The latest release's rules hold for every attribute write on the layer (the write profile);
             written only as `true`, and only with a release.
         releases: The frozen releases, oldest first; data entry uses the last.
+        withdrawn: Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps
+            what was typed. Written only as `true`, and only with a release.
     """
     id: str
     name: str
@@ -20529,6 +20532,7 @@ class ProjectForm(_Model):
     comments: list[FormComment] | Unset = UNSET
     enforce: bool | Unset = UNSET
     releases: list[FormRelease] | Unset = UNSET
+    withdrawn: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -20542,6 +20546,8 @@ class ProjectForm(_Model):
             out["enforce"] = self.enforce
         if self.releases is not UNSET:
             out["releases"] = [e0.to_json() for e0 in self.releases]
+        if self.withdrawn is not UNSET:
+            out["withdrawn"] = self.withdrawn
         return out
 
     @classmethod
@@ -20554,6 +20560,7 @@ class ProjectForm(_Model):
             comments=[FormComment.from_json(e0) for e0 in data["comments"]] if "comments" in data else UNSET,
             enforce=data.get("enforce", UNSET),
             releases=[FormRelease.from_json(e0) for e0 in data["releases"]] if "releases" in data else UNSET,
+            withdrawn=data.get("withdrawn", UNSET),
         )
 
 
@@ -29690,6 +29697,29 @@ class EnforceFormsOp(FormsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class WithdrawFormsOp(FormsOp):
+    """Yayından kaldır (docs/adr/0445 §1): no record is written through the form until it is put back
+    (`on: false`); a form whose rules are enforced is not withdrawn.
+    """
+    TAG_VALUE: ClassVar[str] = "withdraw"
+    id: str
+    on: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "withdraw"}
+        out["id"] = self.id
+        out["on"] = self.on
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WithdrawFormsOp:
+        return cls(
+            id=data["id"],
+            on=data["on"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CommentFormsOp(FormsOp):
     """Yorum (docs/adr/0441 §5): a reviewer's comment on the form or an item of its draft."""
     TAG_VALUE: ClassVar[str] = "comment"
@@ -31802,7 +31832,7 @@ _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange
 _FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem, "divider": DividerFormItem, "action": ActionFormItem}
 
 
-_FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp, "comment": CommentFormsOp, "resolve": ResolveFormsOp}
+_FORMS_OP: dict[str, type[FormsOp]] = {"create": CreateFormsOp, "update": UpdateFormsOp, "rename": RenameFormsOp, "remove": RemoveFormsOp, "publish": PublishFormsOp, "enforce": EnforceFormsOp, "withdraw": WithdrawFormsOp, "comment": CommentFormsOp, "resolve": ResolveFormsOp}
 
 
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
@@ -32853,6 +32883,7 @@ __all__ = [
     "WeightCurveEdit",
     "WindowSelectRegion",
     "Wipeout",
+    "WithdrawFormsOp",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",

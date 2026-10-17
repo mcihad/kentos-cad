@@ -33,6 +33,11 @@ releases?: Array<FormRelease>,
  */
 enforce?: boolean, 
 /**
+ * Yayından kaldırıldı (docs/adr/0445 §1): no record is written through it; a window open on it keeps
+ * what was typed. Written only as `true`, and only with a release.
+ */
+withdrawn?: boolean, 
+/**
  * The reviewers' comments on the form, oldest first (docs/adr/0441 §5).
  */
 comments?: Array<FormComment>, };

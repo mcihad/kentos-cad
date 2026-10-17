@@ -15,6 +15,7 @@ Projenin her formu (`ProjectForm`) projenin ayarındadır (`settings.forms`; `.k
 | `draft` | Taslağın gövdesi (`FormBody`): `revision`, `items`, isteğe bağlı `clearHidden`, `tests`, `workflow`, `steps`, `translations` |
 | `releases` | Yayınlar, eskiden yeniye: `version` (1, 2, …), `digest`, `body`, isteğe bağlı `note` ve bağlı alanların özeti `fields` (ADR 0444 §2) |
 | `enforce` | Son yayın katmanın yazma kuralıdır (yalnız `true` yazılır) |
+| `withdrawn` | Yayından kaldırıldı: kayıt bu formla yazılmaz (yalnız `true` yazılır; ADR 0445 §1) |
 | `comments` | Gözden geçirenlerin yorumları (ADR 0441 §5): `id` (1, 2, …), isteğe bağlı `item`, `author`, `at`, `text`, `resolved`; en çok 200 |
 
 Öğeler (`items`) `type` ile ayrılır: `tab`, `group`, `field`, `note`, `related`, `attachments`, `location`, `divider`, `action`.

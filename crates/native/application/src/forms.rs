@@ -103,6 +103,21 @@ pub(crate) fn variables_given(
     Ok(all)
 }
 
+/// No record is written through a withdrawn form (docs/adr/0445 §1): `form_withdrawn` at `form`.
+pub(crate) fn writable(form: &ProjectForm) -> Result<(), Stop> {
+    if form.withdrawn {
+        return Err(fail(
+            codes::FORM_WITHDRAWN,
+            format!(
+                "“{}” formu yayından kaldırıldı; kayıt bu formla yazılmaz. Formlar penceresinde Yeniden yayına al'ı kullanın.",
+                form.name
+            ),
+            "form",
+        ));
+    }
+    Ok(())
+}
+
 /// The body `draft` asks: the draft, else the latest release (`form_unpublished` at `path`
 /// without one), with the release's version.
 pub(crate) fn body<'a>(

@@ -46,6 +46,8 @@ pub(super) const REMOVE_FORM: &str = "Formu sil";
 pub(super) const NEW_FORM: &str = "Yeni form";
 pub(super) const CREATE: &str = "Oluştur";
 pub(super) const ENFORCE: &str = "Kuralları uygula";
+pub(super) const WITHDRAW: &str = "Yayından kaldır";
+pub(super) const PUT_BACK: &str = "Yeniden yayına al";
 pub(super) const NAME: &str = "Ad";
 pub(super) const ADD_TAB: &str = "Sekme";
 pub(super) const ADD_GROUP: &str = "Grup";
@@ -387,6 +389,8 @@ pub enum Event {
     Save,
     Publish,
     Enforce(bool),
+    /// Yayından kaldır (`true`) or Yeniden yayına al (docs/adr/0445 §1).
+    Withdraw(bool),
     RemoveForm,
     Cancel,
 }
@@ -2415,6 +2419,18 @@ impl App {
                         "Formun son yayını katmanın öznitelik yazmalarında uygulanacak."
                     } else {
                         "Formun kuralları artık yalnız formla yazarken uygulanır."
+                    };
+                    self.say(Level::Success, said);
+                }
+            }
+            Event::Withdraw(on) => {
+                if let Some(id) = w.chosen.clone()
+                    && self.edit_forms(FormsOp::Withdraw { id, on }).is_some()
+                {
+                    let said = if on {
+                        "Form yayından kaldırıldı: kayıt bu formla yazılmaz; açık pencereler yazdıklarını korur."
+                    } else {
+                        "Form yeniden yayında: kayıtlar son yayınıyla yazılır."
                     };
                     self.say(Level::Success, said);
                 }

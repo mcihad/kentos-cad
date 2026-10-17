@@ -172,11 +172,30 @@ impl App {
             .iter()
             .filter(|f| f.layer == layer)
             .collect();
+        // A published form in use first, then any in use, then a withdrawn one (said when opened).
         forms
             .iter()
-            .find(|f| !f.releases.is_empty())
+            .find(|f| !f.releases.is_empty() && !f.withdrawn)
+            .or_else(|| forms.iter().find(|f| !f.withdrawn))
             .or(forms.first())
             .map(|f| f.id.clone())
+    }
+
+    /// A withdrawn form is not opened (docs/adr/0445 §1): said, and true.
+    fn withdrawn_said(&mut self, id: &str) -> bool {
+        let Some(name) = self
+            .project_forms()
+            .iter()
+            .find(|f| f.id == id && f.withdrawn)
+            .map(|f| f.name.clone())
+        else {
+            return false;
+        };
+        self.say(
+            Level::Warn,
+            format!("“{name}” formu yayından kaldırıldı; kayıt bu formla açılmaz. Formlar penceresinde Yeniden yayına al'ı kullanın."),
+        );
+        true
     }
 
     /// Formla düzenle: the chosen object's record through its layer's form.
@@ -203,6 +222,7 @@ impl App {
                 _ => None,
             };
             return match form {
+                Some(id) if self.withdrawn_said(&id) => Task::none(),
                 Some(id) => self.open_entry_many(&slots, &id),
                 None => {
                     self.say(
@@ -224,6 +244,7 @@ impl App {
             return Task::none();
         };
         match self.form_of_layer(&layer) {
+            Some(id) if self.withdrawn_said(&id) => Task::none(),
             Some(id) => self.open_entry(slot, &id),
             None => Task::none(),
         }

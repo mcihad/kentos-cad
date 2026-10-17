@@ -56,6 +56,7 @@ fn check(doc: &Document, input: &FormsFill) -> Result<Checked, Stop> {
     let variables = forms::variables_given(doc, input.moment.as_deref(), input.user.as_deref())?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let form = forms::form(doc.settings(), &input.form, "form")?;
+    forms::writable(form)?;
     let (body, version) = forms::body(form, input.draft, "draft")?;
     let prepared = forms::prepared(doc, form, body, &variables, "form")?;
     let named = checks::named(doc, &input.uids)?;
