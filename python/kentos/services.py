@@ -195,6 +195,13 @@ def _read(reading: Any, url: str, proof: _Proof | None, timeout: float) -> dict[
     else:
         if nxt is not None:
             raise ServiceError("Servis okunurken çok fazla istek gerekti; adresi denetleyin.")
+    # An OGC API service's conformance (docs/adr/0513): optional, a failed request leaves the profile unread.
+    conformance = reading.conformance() if hasattr(reading, "conformance") else None
+    if conformance is not None:
+        try:
+            reading.read_conformance(_ask(json.loads(conformance), proof, url, timeout))
+        except ServiceError:
+            reading.read_conformance(None)
     offer = reading.offer()
     if offer is None:
         raise ServiceError("Servis okunamadı.")
@@ -309,6 +316,9 @@ class Taken:
     dropped: int
     capped: bool
     skipped: list[dict[str, Any]] = field(default_factory=list)
+    #: How the take ended (docs/adr/0513): ``complete``, ``capped`` (the most objects), ``short`` (the service
+    #: stopped before the number it matched) or ``pages`` (the pages' limit); only ``complete`` is all of it.
+    ending: str = "complete"
     words: str = ""
     ids: list[str] = field(default_factory=list)
 
@@ -398,7 +408,8 @@ def import_features(
         dropped += int(moved["dropped"])
         nxt = page["next"]
     skipped: list[dict[str, Any]] = json.loads(taking.skipped())
-    capped = taking.taken >= int(most)
+    ending = taking.ending or "complete"
+    capped = ending == "capped"
     objects = json.loads(_native_call(_native.services_new_objects, _json(entities)))
     with doc.group("Servisten veri al"):
         if layer is None:
@@ -421,7 +432,7 @@ def import_features(
                 raise ServiceError(str(error.get("message") or "Servisin nesneleri yazılamadı."))
             ids = list(answer["output"]["created"])
     matched = taking.matched
-    words = _native.services_taken_words(len(entities), matched, _json(skipped), dropped, capped, asked)
+    words = _native.services_taken_words(len(entities), matched, _json(skipped), dropped, ending, asked)
     return Taken(
         layer=layer,
         taken=len(entities),
@@ -429,6 +440,7 @@ def import_features(
         dropped=dropped,
         capped=capped,
         skipped=skipped,
+        ending=ending,
         words=words,
         ids=ids,
     )

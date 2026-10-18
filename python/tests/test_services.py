@@ -1,5 +1,6 @@
 """kentos.services (docs/adr/0208 §15) against a server of the test's own on the loopback: a WMS's
-capabilities, a GeoJSON address and an ArcGIS layer in pages behind a key."""
+capabilities, a GeoJSON address, an ArcGIS layer in pages behind a key, and OGC API Features services with and
+without a filter in their conformance (docs/adr/0513)."""
 
 from __future__ import annotations
 
@@ -47,6 +48,42 @@ GEOJSON = {
 ARCGIS_LAYER = {"type": "Feature Layer", "name": "Duraklar", "geometryType": "esriGeometryPoint", "maxRecordCount": 2000, "supportedQueryFormats": "JSON, geoJSON"}
 
 
+F1 = "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/"
+F3 = "http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/"
+CQL = "http://www.opengis.net/spec/cql2/1.0/conf/"
+# The OGC API roots: without a filter (Part 1), with one (Part 3 and CQL2 text), without a conformance page.
+CONFORMANCE = {
+    "/ogc": [F1 + "core", F1 + "geojson"],
+    "/ogcf": [F1 + "core", F1 + "geojson", F3 + "filter", F3 + "features-filter", CQL + "cql2-text"],
+}
+#: The items requests the OGC API roots were asked, in order.
+ASKED: list[str] = []
+
+
+def ogc(handler: "Handler", root: str, rest: str, q: dict[str, str], base: str) -> None:
+    if rest == "/conformance":
+        if root not in CONFORMANCE:
+            handler.answer(404, "yok", "text/plain")
+        else:
+            handler.answer(200, json.dumps({"conformsTo": CONFORMANCE[root]}), "application/json")
+    elif rest == "/collections":
+        items = f"{base}{root}/collections/durak/items"
+        doc = {"collections": [{"id": "durak", "title": "Duraklar",
+                                "links": [{"rel": "items", "href": items, "type": "application/geo+json"}]}]}
+        handler.answer(200, json.dumps(doc), "application/json")
+    elif rest == "/collections/durak/items":
+        ASKED.append(handler.path)
+        if "filter" in q:
+            body = {"type": "FeatureCollection", "numberMatched": 1, "features": [point(KIZILAY[0], KIZILAY[1], "1")]}
+        else:
+            # Five matched, three given and no next link: the service stopped short.
+            features = [point(KIZILAY[0] + i * 0.001, KIZILAY[1], str(i + 1)) for i in range(3)]
+            body = {"type": "FeatureCollection", "numberMatched": 5, "features": features}
+        handler.answer(200, json.dumps(body), "application/geo+json")
+    else:
+        handler.answer(404, "yok", "text/plain")
+
+
 def point(x: float, y: float, no: str) -> dict[str, Any]:
     return {"type": "Feature", "properties": {"NO": no}, "geometry": {"type": "Point", "coordinates": [x, y]}}
 
@@ -71,6 +108,9 @@ class Handler(BaseHTTPRequestHandler):
         base = f"http://127.0.0.1:{self.server.server_address[1]}"
         if url.path == "/wms":
             self.answer(200, WMS.replace("{base}", base), "text/xml")
+        elif url.path.split("/")[1] in ("ogc", "ogcf", "ogcx"):
+            root = "/" + url.path.split("/")[1]
+            ogc(self, root, url.path[len(root):], q, base)
         elif url.path == "/veri.geojson":
             self.answer(200, json.dumps(GEOJSON), "application/geo+json")
         elif url.path.startswith("/arcgis/"):
@@ -180,6 +220,37 @@ class Services(unittest.TestCase):
         self.assertNotIn(b"gizli", doc.to_bytes())
         node = next(n for n in json.loads(doc._session.layers()) if n["id"] == taken.layer)
         self.assertEqual((node["feed"]["key"], node["feed"]["connection"], node["feed"]["srid"]), ("NO", "anahtar", 5255))
+
+
+    def test_an_ogc_api_service_says_what_it_reads_and_a_short_take_is_said(self) -> None:
+        offer = services.read_feed("ogcFeatures", f"{self.base}/ogc/collections")
+        profile = offer["profile"]
+        self.assertTrue(profile["read"] and profile["core"])
+        self.assertFalse(profile["featuresFilter"] or profile["cql2Text"])
+        doc = self.doc()
+        # A filter is not sent to a service that does not say it reads one: it would give every object.
+        with self.assertRaises(services.ServiceError) as refused:
+            services.import_features(doc, "ogcFeatures", f"{self.base}/ogc/collections", filter="NO = '1'")
+        self.assertIn("süzgeci desteklediğini bildirmiyor", str(refused.exception))
+        taken = services.import_features(doc, "ogcFeatures", f"{self.base}/ogc/collections")
+        self.assertEqual((taken.taken, taken.matched, taken.ending, taken.capped), (3, 5, "short", False))
+        self.assertIn("Sonuç eksik", taken.words)
+
+    def test_a_filter_goes_to_a_service_that_reads_it(self) -> None:
+        ASKED.clear()
+        doc = self.doc()
+        taken = services.import_features(doc, "ogcFeatures", f"{self.base}/ogcf/collections", filter="NO = '1'")
+        self.assertEqual((taken.taken, taken.ending), (1, "complete"))
+        self.assertEqual(taken.words, "1 nesne alındı.")
+        q = parse_qs(urlsplit(ASKED[-1]).query)
+        self.assertEqual((q["filter"], q["filter-lang"]), (["NO = '1'"], ["cql2-text"]))
+
+    def test_a_service_without_a_conformance_page_takes_no_filter(self) -> None:
+        offer = services.read_feed("ogcFeatures", f"{self.base}/ogcx/collections")
+        self.assertFalse(offer["profile"]["read"])
+        with self.assertRaises(services.ServiceError) as refused:
+            services.import_features(self.doc(), "ogcFeatures", f"{self.base}/ogcx/collections", filter="NO = '1'")
+        self.assertIn("uygunluk sayfası (conformance) okunamadı", str(refused.exception))
 
 
 if __name__ == "__main__":

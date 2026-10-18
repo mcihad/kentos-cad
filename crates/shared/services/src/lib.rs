@@ -39,6 +39,7 @@ pub mod labels;
 pub mod mvt;
 pub mod picture;
 pub mod presets;
+pub mod profile;
 pub mod query;
 pub mod request;
 pub mod source;

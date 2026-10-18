@@ -177,12 +177,14 @@ pub fn services_taken_words(
     matched: Option<u64>,
     skipped: &str,
     dropped: usize,
-    capped: bool,
+    ending: &str,
     srid: u32,
 ) -> PyResult<String> {
     let skipped: Vec<ReportItem> = parse(skipped, "atlananlar")?;
+    let ending = feed::Ending::from_name(ending)
+        .ok_or_else(|| refused("invalid_feed", format!("bilinmeyen bitiş: {ending}")))?;
     Ok(feed::taken_words(
-        taken, matched, &skipped, dropped, capped, srid,
+        taken, matched, &skipped, dropped, ending, srid,
     ))
 }
 
@@ -377,6 +379,21 @@ impl PyFeedReading {
         self.inner.offer().map(text).transpose()
     }
 
+    /// An OGC API service's conformance page to ask (docs/adr/0513), once the offer is ready.
+    fn conformance(&self) -> PyResult<Option<String>> {
+        self.inner
+            .conformance_request()
+            .as_ref()
+            .map(wire)
+            .transpose()
+    }
+
+    /// The conformance page's answer, or none when asking it failed.
+    #[pyo3(signature = (body = None))]
+    fn read_conformance(&mut self, body: Option<&str>) {
+        self.inner.read_conformance(body);
+    }
+
     /// Whether a WFS gives its objects as GeoJSON.
     fn geojson(&self) -> bool {
         self.inner.geojson()
@@ -466,6 +483,12 @@ impl PyFeedTaking {
     #[getter]
     fn matched(&self) -> Option<u64> {
         self.inner.matched
+    }
+
+    /// How the take ended (`complete`, `capped`, `short`, `pages`; docs/adr/0513); none while pages follow.
+    #[getter]
+    fn ending(&self) -> Option<&'static str> {
+        self.inner.ending().map(feed::Ending::name)
     }
 
     /// What the pages' readers left out, summed (`ReportItem`s).

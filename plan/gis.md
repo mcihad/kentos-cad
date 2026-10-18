@@ -486,6 +486,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-43 — Mevcut servis istemcisini canlı feature provider ve açık filtre profiliyle genişlet — P1; yayın P2**
 
+  *Kısmen (18 Ekim 2026; [ADR 0513](../docs/adr/0513-feed-completeness-and-filter-profile.md)): Servisten veri al'ın bitişi `complete`, `capped`, `short`, `pages` (sınırlı ya da sayfalı servisin eksik sonucu tam sayılmaz; WFS 2.0 sunucunun kestiği sayfada sürer); OGC API'nin uygunluk sayfası profil olarak okunur (Bölüm 1–4, CQL2; Bölüm 4 taslak, kullanılmaz), CQL2 metin süzgeci yalnız bildiren servise gider. Bağımsız başvuru `feed_paging_cases.py` sahte sunucuyla; Python yerel sunucuyla uçtan uca. Kalan: canlı sağlayıcı (servis üstünde sorgu ve düzenleme), expires/ETag, belirteç yenileme, kesilen ağ, CQL2 JSON ve queryables, QGIS'in FeatureServer kıyası, yayın (P2).*
+
   **Mevcut:** WMS/WMTS/XYZ/MVT, WFS/OGC API Features/ArcGIS REST okuma, auth/cache/atıf ve feed yenileme mevcut [K12]. İlk GIS için harita sunucusu/Martin eşdeğeri kurmak zorunlu değildir; mevcut yayın kapsamı sınırı korunur.
 
   **Yapılacak kalan iş:** Mevcut WMS/WMTS/XYZ/MVT ve feature feed/auth/cache istemcilerini yeniden geliştirme. Ayrı kalan canlı feature provider'ını mevcut bağlantı/capability okumaya bağla; kopya veri alma ile source üzerinde canlı sorgu/düzenlemeyi ayrı göster. OGC API Features Part 1/2/3 ve CQL2 için desteklenen filtre/CRS profilini açık capability olarak bildir; yeni query adapter'ının paging/filtre sonucunu tam veriyle karşılaştır. QGIS 4.2 FeatureServer bbox veri çekme yaklaşımı yeni provider'ın performans kıyasıdır. [S08], [S09], [Q02]

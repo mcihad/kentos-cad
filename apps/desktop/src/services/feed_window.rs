@@ -13,12 +13,12 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use iced::widget::{Column, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, button, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{
     CommandResult, Entity, FeatureFeed, FeedKind, LayerServiceOperation, LayersService,
 };
-use kentos_services::feed::{DEFAULT_MOST, FeedChoice, FeedConnecting, Taking};
+use kentos_services::feed::{DEFAULT_MOST, Ending, FeedChoice, FeedConnecting, Taking};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
@@ -93,8 +93,8 @@ pub struct Taken {
     /// Left out: no place in the project's system.
     pub dropped: usize,
     pub matched: Option<u64>,
-    /// The take stopped at the most asked.
-    pub capped: bool,
+    /// How the take ended: only `Complete` is all of the service's objects (docs/adr/0513).
+    pub ending: Ending,
     /// What the pages' readers left out, summed.
     pub skipped: Vec<kentos_contracts::ReportItem>,
 }
@@ -447,6 +447,16 @@ impl App {
                     )?;
                     next = c.answer(&body)?;
                 }
+                // An OGC API service's conformance (docs/adr/0513): optional, a failed request leaves it unread.
+                if let Some(req) = c.conformance_request() {
+                    let body = super::net::send_text(
+                        req,
+                        conn.as_ref().map(|(c, s)| (c, s.as_ref())),
+                        &url,
+                        6,
+                    );
+                    c.read_conformance(body.as_deref().ok());
+                }
                 Ok(Box::new(c))
             },
             |answer| super::app::Event::Feed(Event::Connected(answer)),
@@ -679,15 +689,17 @@ impl App {
                     t.matched,
                     &t.skipped,
                     t.dropped,
-                    t.capped,
+                    t.ending,
                     t.feed.srid.unwrap_or(4326),
                 );
-                // What was left out is a warning: the user may want to take it again otherwise.
-                let level = if t.skipped.is_empty() && t.dropped == 0 {
-                    kentos_interaction::Level::Success
-                } else {
-                    kentos_interaction::Level::Warn
-                };
+                // What was left out is a warning: the user may want to take it again otherwise; so is a take that
+                // is not all of the service's objects.
+                let level =
+                    if t.skipped.is_empty() && t.dropped == 0 && t.ending == Ending::Complete {
+                        kentos_interaction::Level::Success
+                    } else {
+                        kentos_interaction::Level::Warn
+                    };
                 self.say(level, said);
             }
             Err(e) => {
@@ -738,7 +750,9 @@ impl App {
         } else {
             TITLE
         })
-        .push(column![row![left, right].spacing(16), words::summary(vec![line])].spacing(12))
+        // The form scrolls in a low window; the summary and the buttons stay in sight.
+        .scroll(row![left, right].spacing(16))
+        .push(words::summary(vec![line]))
         .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
         .width(900.0);
         frame = if taking {
@@ -866,6 +880,15 @@ impl App {
                     .style(style::container::field_box)
                     .width(Fill),
             );
+            // What an OGC API service says it can do (docs/adr/0513).
+            if let Some(p) = w
+                .connecting
+                .as_ref()
+                .and_then(FeedConnecting::offer)
+                .and_then(|o| o.profile.as_ref())
+            {
+                form = form.push(labelled("Uygunluk", label::caption(p.words()).into()));
+            }
             let project = self
                 .document
                 .as_ref()
@@ -914,7 +937,23 @@ impl App {
                         &w.filter,
                         Event::Filter,
                     ),
-                ))
+                ));
+            // A filter is not sent to an OGC API service that does not say it reads one (docs/adr/0513).
+            if w.connecting
+                .as_ref()
+                .and_then(FeedConnecting::offer)
+                .and_then(|o| o.profile.as_ref())
+                .is_some_and(|p| !p.filters())
+            {
+                form = form.push(labelled(
+                    "",
+                    label::caption(
+                        "Servis süzgeci desteklediğini bildirmiyor; süzgeçle alınmaz.".to_owned(),
+                    )
+                    .into(),
+                ));
+            }
+            form = form
                 .push(labelled(
                     "En çok nesne",
                     input("50000", &w.most, Event::Most),
@@ -1056,14 +1095,9 @@ pub(crate) fn take_all(
     let mut next = Some(first);
     let mut entities = Vec::new();
     let mut dropped = 0;
-    let mut pages = 0;
     while let Some(req) = next {
         if stop.load(Ordering::Relaxed) {
             return Err("Alma durduruldu; çizim değişmedi.".into());
-        }
-        pages += 1;
-        if pages > 1000 {
-            break;
         }
         let body = super::net::send_text(req, conn.map(|(c, s)| (c, s.as_ref())), &feed.url, 4)?;
         let (mut result, more) = taking.answer(&body, "")?;
@@ -1074,13 +1108,12 @@ pub(crate) fn take_all(
         progress(entities.len() as u64);
         next = more;
     }
-    let capped = taking.taken >= u64::from(most);
     Ok(Taken {
         feed: feed.clone(),
         entities,
         dropped,
         matched: taking.matched,
-        capped,
+        ending: taking.ending().unwrap_or(Ending::Complete),
         skipped: taking.skipped.clone(),
     })
 }

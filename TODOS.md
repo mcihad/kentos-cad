@@ -203,6 +203,10 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
+  bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
+  döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede
+  Uygunluk satırı ve süzgecin notu, tam olmayan alma uyarı olarak; bilinen bozulma: web OGC API'ye süzgeç yazınca reddedilir.
 - [ ] `CBS-02` bağlı katmanın parçası (ADR 0510, 18 Ekim): web'de gerekenler: bağlama penceresinde “Yalnız görünen alanın
   satırları”, `SourceLink.extent`'in okunması ve yazılması (TS türleri üretildi).
 - [ ] `CBS-41` işlem araçları komut olarak (ADR 0508, 18 Ekim): web'de gerekenler: `cad.processing.tools` ve `.run`'ın işleyicisi
@@ -1804,6 +1808,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
+  `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
+  `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,
+  [ADR 0513](docs/adr/0513-feed-completeness-and-filter-profile.md).**
 - [ ] `CBS-06` bağlı katmanda geniş değerler (dilim): eşitleme hücreleri sütunun okuma kuralıyla karşılaştırır (`geopackage::same_cell`):
   2⁵³ üstü tam sayının değişikliği yazılır, saat dilimi dokunulmamış satırı yeniden yazdırmaz; `genis.gpkg` (OGR) ve
   `wide_values_cases.py`, Python'dan `test_wide_values.py`. Kalan: kendi türler, PostGIS. — **18 Ekim,
