@@ -176,6 +176,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
+    /// Parametreler (parameters_window.rs, docs/adr/0338 §1); the window is `App::parameters_window`.
+    Parameters,
     /// Tarama desenleri (hatch_patterns_window.rs, docs/adr/0331 §1); the window is `App::hatch_patterns_window`.
     HatchPatterns,
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4); the window is `App::style_impact`.
@@ -457,6 +459,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
+    /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
+    Parameters(crate::parameters_window::Event),
     /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
     HatchPatterns(crate::hatch_patterns_window::Event),
     /// Değişikliğin etkisi (style_impact.rs, docs/adr/0314 §4).
@@ -899,6 +903,10 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
+    /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
+    pub(crate) parameters_window: Option<crate::parameters_window::Window>,
+    /// The constraints' marks over the drawing (constraint_view.rs, docs/adr/0338 §1).
+    pub(crate) constraint_view: crate::constraint_view::ConstraintView,
     /// Tarama desenleri's window (hatch_patterns_window.rs, docs/adr/0331 §1).
     pub(crate) hatch_patterns_window: Option<crate::hatch_patterns_window::Window>,
     /// Değişikliğin etkisi's window (style_impact.rs, docs/adr/0314 §4).
@@ -1239,6 +1247,8 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             line_types_window: None,
+            parameters_window: None,
+            constraint_view: Default::default(),
             hatch_patterns_window: None,
             style_impact: None,
             block_editor: None,
@@ -1782,6 +1792,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
+            Message::Parameters(event) => return self.parameters_event(event),
             Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::BlockEditor(event) => return self.block_editor_event(event),
@@ -2513,6 +2524,9 @@ impl App {
             "address.providers" => return self.open_address_providers(),
             // Gevşeterek düzenle: the next write relaxes the constraints (docs/adr/0337 §1); again, it does not.
             "constraint.relaxNext" => self.relax_next(),
+            // Parametreler and the constraints' marks (docs/adr/0338 §1).
+            "constraint.parameters" => self.open_parameters(),
+            "constraint.show" => self.constraint_view.toggle(),
             // The user coordinate system (ucs.rs, docs/adr/0261).
             "ucs.world" => self.ucs_world(),
             "ucs.previous" => self.ucs_previous(),

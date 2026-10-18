@@ -73,7 +73,7 @@ fn bonds_of(
 
 /// An edge as a run of points: a segment's two ends, an arc's chords of at most 1° (a chord of 10° stood 5.7 mm
 /// inside a 1.5 m circle, beside the circle the scene draws when zoomed in).
-fn chords(edge: &Edge) -> Vec<Vec2> {
+pub(crate) fn chords(edge: &Edge) -> Vec<Vec2> {
     match *edge {
         Edge::Seg { a, b } => vec![a, b],
         Edge::Arc { c, r, a0, sweep } => {

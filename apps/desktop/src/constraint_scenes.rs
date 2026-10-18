@@ -61,11 +61,11 @@ fn part(app: &App, slot: u32, element: CadElement) -> ElementRef {
     }
 }
 
-fn point(app: &App, slot: u32, place: SubPlace) -> ElementRef {
+pub(crate) fn point(app: &App, slot: u32, place: SubPlace) -> ElementRef {
     part(app, slot, CadElement::Point { place })
 }
 
-fn segment(app: &App, slot: u32) -> ElementRef {
+pub(crate) fn segment(app: &App, slot: u32) -> ElementRef {
     part(
         app,
         slot,
@@ -77,7 +77,7 @@ fn segment(app: &App, slot: u32) -> ElementRef {
     )
 }
 
-fn add(rule: ConstraintRule, value: Option<&str>) -> NewConstraint {
+pub(crate) fn add(rule: ConstraintRule, value: Option<&str>) -> NewConstraint {
     NewConstraint {
         rule,
         sense: ConstraintSense::Drawing,

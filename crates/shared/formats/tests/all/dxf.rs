@@ -2573,3 +2573,30 @@ fn an_associative_hatch_is_tied_to_its_objects() {
     let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
     assert_eq!((a.outer, a.bounds.len()), (None, 4));
 }
+
+/// AutoCAD's constraints (docs/adr/0338 §4): a constraint group in the OBJECTS section is said, not read; the geometry
+/// comes as drawn. A file without one says nothing of constraints.
+#[test]
+fn autocad_constraint_groups_are_said_not_read() {
+    let line = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n4\n21\n0\n0\nENDSEC\n";
+    let objects = "0\nSECTION\n2\nOBJECTS\n0\nACDBASSOC2DCONSTRAINTGROUP\n5\n1F\n\
+                   0\nACDBASSOC2DCONSTRAINTGROUP\n5\n2A\n0\nENDSEC\n";
+    let with = format!("{line}{objects}0\nEOF\n");
+    let r = dxf::read(with.as_bytes(), &DxfReadOptions::default()).expect("reads");
+    assert_eq!(r.entities.len(), 1, "the line comes as drawn");
+    let said: Vec<_> = r
+        .report
+        .notes
+        .iter()
+        .filter(|n| n.what == "Kısıt")
+        .collect();
+    assert_eq!(said.len(), 1, "{:?}", r.report.notes);
+    assert!(
+        said[0].reason.contains("2 AutoCAD kısıt grubu"),
+        "{}",
+        said[0].reason
+    );
+    let without = format!("{line}0\nEOF\n");
+    let r = dxf::read(without.as_bytes(), &DxfReadOptions::default()).expect("reads");
+    assert!(r.report.notes.iter().all(|n| n.what != "Kısıt"));
+}

@@ -656,6 +656,28 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
 
 /// Reads an ASCII DXF file, telling `watch` how far it is (thousandths of
 /// the file's bytes) and stopping when it says so (`Err(STOPPED)`).
+/// How many AutoCAD constraint groups a DXF holds: the objects named `ACDBASSOC2DCONSTRAINTGROUP` (docs/adr/0338 §4).
+fn constraint_groups(bytes: &[u8]) -> usize {
+    const NAME: &[u8] = b"ACDBASSOC2DCONSTRAINTGROUP";
+    // Only where an `A` stands: a large file is read once, byte by byte, without a window at every place.
+    let mut count = 0;
+    let mut i = 0;
+    while let Some(k) = bytes[i..]
+        .iter()
+        .position(|b| b.eq_ignore_ascii_case(&b'A'))
+    {
+        let at = i + k;
+        if bytes
+            .get(at..at + NAME.len())
+            .is_some_and(|w| w.eq_ignore_ascii_case(NAME))
+        {
+            count += 1;
+        }
+        i = at + 1;
+    }
+    count
+}
+
 pub fn read_watched(
     bytes: &[u8],
     opts: &DxfReadOptions,
@@ -771,6 +793,17 @@ fn read_once(
     em.closed_lines = !opts.closed_polylines.is_area();
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
+    }
+    // AutoCAD's constraints (docs/adr/0338 §4): their objects are not read; the geometry comes as drawn.
+    let groups = constraint_groups(bytes);
+    if groups > 0 {
+        em.out.report.note(
+            "Kısıt",
+            &format!(
+                "dosyadaki {groups} AutoCAD kısıt grubu (ACDBASSOC2DCONSTRAINTGROUP) okunmadı; geometri kısıtsız alındı"
+            ),
+            0,
+        );
     }
     if deep {
         em.out.report.note(

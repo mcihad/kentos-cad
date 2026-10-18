@@ -405,6 +405,12 @@ impl App {
             viewport::Event::Moved(_) | viewport::Event::Left => self.panning = false,
             _ => {}
         }
+        // Where the pointer is, for the constraints' marks (constraint_view.rs).
+        self.constraint_view.pointer = match event {
+            viewport::Event::Moved(at) => Some(at),
+            viewport::Event::Left => None,
+            _ => self.constraint_view.pointer,
+        };
         match event {
             viewport::Event::Moved(at) => {
                 let world = self.viewport.world(at);

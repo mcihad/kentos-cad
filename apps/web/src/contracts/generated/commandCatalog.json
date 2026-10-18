@@ -132337,6 +132337,7 @@
           "parameter_expression",
           "entity_not_found",
           "element_not_found",
+          "constraint_governed",
           "constraint_not_found",
           "parameter_in_use",
           "parameter_kind",
@@ -555147,6 +555148,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır."
+    },
+    {
+      "code": "constraint_governed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesnenin yerini başka bir ilişki veriyor (ilişkili tarama, bağlı yazı, ilişkili ölçü, ilişkili dizinin öğesi); kısıt ona konmaz."
     },
     {
       "code": "constraints_removed",

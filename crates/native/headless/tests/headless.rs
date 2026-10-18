@@ -1009,3 +1009,38 @@ fn dxf_hatches_go_round() {
         }
     }
 }
+
+#[test]
+fn constraints_are_said_not_written_to_dxf() {
+    // DXF gets the geometry as solved; KentOS's constraints and parameters are not written (docs/adr/0338 §4).
+    let dir = scratch("constraints-dxf");
+    let mut s = new_drawing();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let line = s
+        .call(json!({ "command": "cad.line.create", "input": {
+            "layerId": layer, "a": { "x": 423500.0, "y": 4512300.0 }, "b": { "x": 423504.0, "y": 4512300.2 } } }))
+        .expect("answers");
+    assert_eq!(line["status"], "completed", "{line}");
+    let uid = line["output"]["uid"].as_str().expect("a uid").to_owned();
+    let seg =
+        json!({ "uid": uid, "element": { "kind": "segment", "part": 0, "ring": 0, "index": 0 } });
+    let start = json!({ "uid": uid, "element": { "kind": "point", "place": { "kind": "start" } } });
+    let end = json!({ "uid": uid, "element": { "kind": "point", "place": { "kind": "end" } } });
+    let added = s
+        .call(json!({ "command": "cad.constraints.edit", "input": { "edit": { "kind": "add", "constraints": [
+            { "rule": { "kind": "horizontal", "a": seg } },
+            { "rule": { "kind": "distance", "a": start, "b": end, "parameter": "" }, "value": "5" } ] } } }))
+        .expect("answers");
+    assert_eq!(added["status"], "completed", "{added}");
+    let path = dir.join("kisitli.dxf");
+    let written = s
+        .call(json!({ "command": "file.export.dxf", "input": { "path": path.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    let notes = written["output"]["report"]["notes"].to_string();
+    assert!(notes.contains("Kısıt"), "{notes}");
+    assert!(notes.contains("1 parametre"), "{notes}");
+}

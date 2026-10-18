@@ -28,10 +28,13 @@ mod appearance_tokens_tests;
 #[cfg(test)]
 mod assoc_array_scenes;
 mod constraint_relax;
+mod constraint_view;
 #[cfg(test)]
 mod constraint_follow_scenes;
 #[cfg(test)]
 mod constraint_scenes;
+#[cfg(test)]
+mod constraint_ui_scenes;
 #[cfg(test)]
 mod attachment_scenes;
 mod attachments;
@@ -182,6 +185,7 @@ mod lengthen_scenes;
 mod line_type_scenes;
 mod hatch_patterns_window;
 mod line_types_window;
+mod parameters_window;
 mod locks;
 mod log_plan;
 #[cfg(test)]

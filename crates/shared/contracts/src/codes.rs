@@ -1103,6 +1103,8 @@ codes! {
     PARAMETER_READ = "parameter_read", Failed, false, "Parametreyi başka bir parametre okuyor ya da bir ölçü kısıtının; kaldırılmadı.";
     /// The solution turns a shape inside out; allowFlip writes it all the same.
     SHAPE_FLIPPED = "shape_flipped", Failed, false, "Çözüm bir şekli ters çeviriyor (dönüşü, yönü ya da yayı); allowFlip ile yine de yazılır.";
+    /// A constraint naming an object another relation places (docs/adr/0338 §2).
+    CONSTRAINT_GOVERNED = "constraint_governed", Failed, false, "Nesnenin yerini başka bir ilişki veriyor (ilişkili tarama, bağlı yazı, ilişkili ölçü, ilişkili dizinin öğesi); kısıt ona konmaz.";
     /// Constraints a write left without their parts or unmet, taken away with it (docs/adr/0337 §2).
     CONSTRAINTS_REMOVED = "constraints_removed", Warning, false, "Kısıtlar kaldırıldı: andıkları nesne silindi, biçimi değişti ya da düzenleme onları bozdu.";
     /// A relaxed write: the constraints it left unmet went with it (docs/adr/0337 §1).

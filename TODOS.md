@@ -350,6 +350,10 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
+  çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
+  (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`
+  reddi (`Document::governed`'ın ikizi), DXF okumada kısıt gruplarının notu ve dışa aktarmada “Kısıt” satırı.
 - [ ] `CAD-PARAM-08`, `09`, `13` düzenlemelerde kısıtlar, kayıp ve kopya, iş olarak çözüm (ADR 0337, 18 Ekim): web'de gerekenler:
   her yazan çağrının ardından kısıtların izlenmesi (`constraint_follow.rs`'in ikizi: oynatılan parçalar `moved_parts`, kesen komutlar,
   gevşetme), belgenin yapısal kuralı (`follow_constraints`), kopyada kısıtlar (`constraint_copy.rs`), zarfın ve kaydın

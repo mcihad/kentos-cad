@@ -1095,6 +1095,23 @@
    "tests": 2
   },
   {
+   "id": "constraint.parameters",
+   "kind": "command",
+   "title": "Parametreler",
+   "level": "semantic",
+   "via": [
+    "cad.parameters.edit",
+    "cad.constraints.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.parameters.edit, kentos.cad.constraints.edit",
+   "mcp": "cad.parameters.edit, cad.constraints.edit",
+   "note": "Pencere parametreleri cad.parameters.edit ile, kısıtları cad.constraints.edit ile yazar (ADR 0338 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "constraint.relaxNext",
    "kind": "command",
    "title": "Gevşeterek düzenle",
@@ -1104,6 +1121,20 @@
    "python": null,
    "mcp": null,
    "note": "Belgenin oturum durumu (Relax::Next): bir sonraki yazan çağrı kısıtları gevşetir; Python'da with doc.relaxed(), MCP'de ve protokolde relaxConstraints (ADR 0337 §1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "constraint.show",
+   "kind": "command",
+   "title": "Kısıtları göster",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Kısıt işaretlerinin görünürlüğü: oturumun durumu (ADR 0338 §1).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

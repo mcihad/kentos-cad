@@ -462,6 +462,15 @@ fn check_parts(doc: &Document, rule: &ConstraintRule, at: &str) -> Result<(), St
                 vec![uid.to_string()],
             ));
         };
+        // Another relation's object: its one authority is that relation (docs/adr/0338 §2).
+        if let Some(why) = doc.governed(entity) {
+            return Err(refuse_ids(
+                codes::CONSTRAINT_GOVERNED,
+                format!("Kısıt bu nesneye konmaz: {why}."),
+                at,
+                vec![uid.to_string()],
+            ));
+        }
         let has = core_shape(entity).is_some_and(|s| has_part(&s, &core_element(&e.element)));
         if !has {
             return Err(refuse_ids(

@@ -12,6 +12,7 @@ mod blocks;
 mod clipboard;
 mod colour;
 mod common;
+mod constraint_marks;
 mod constructing;
 mod coordinate_z;
 mod curve_methods;

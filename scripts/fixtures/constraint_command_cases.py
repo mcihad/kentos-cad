@@ -880,6 +880,23 @@ def cases():
     case("Yarıçap sıfır olamaz").execute(add(c({"kind": "radius", "a": circ(5), "parameter": ""}, value="0")))
     case("Çizginin iki ucu çakışık ve paralel: tekil").execute(add(
         c({"kind": "coincident", "a": pt(1, "start"), "b": pt(1, "end")}), c({"kind": "parallel", "a": seg(1), "b": seg(3)})))
+    # Another relation's object takes no constraint (docs/adr/0338 §2): an associative hatch follows its boundary, an
+    # associative dimension its points. The object is made by its own command first (slot 12).
+    for name, made in (
+        ("İlişkili taramaya kısıt konmaz: sınırını izler",
+         {"op": "execute", "command": "cad.entities.hatch",
+          "input": {"region": {"kind": "point", "at": P(21, 1.5)}, "pattern": {"name": "Dolu"}, "layerId": "cizim"}, "result": "$any"}),
+        ("İlişkili ölçüye kısıt konmaz: bağlı olduğu noktaları izler",
+         {"op": "execute", "command": "cad.dimensions.create",
+          "input": {"measure": {"kind": "aligned", "a": {"kind": "place", "uid": U(6), "place": {"kind": "start"}},
+                                "b": {"kind": "place", "uid": U(6), "place": {"kind": "end"}}},
+                    "at": P(11, -1), "layerId": "cizim"}, "result": "$any"}),
+    ):
+        k = case(name)
+        k.steps.append(made)
+        k.steps.append({"op": "execute", "input": {"edit": add(c({"kind": "fix", "a": pt(12, "start")}))},
+                        "result": failed("constraint_governed", "edit.constraints[0].rule", [U(12)]),
+                        "expect": {"revision": "same"}})
     return out
 
 
@@ -979,7 +996,7 @@ def main():
     for path, data in files:
         path.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
     for k in built["cases"]:
-        said = [f"{st['result']['status']} {st['result'].get('error', {}).get('code', '')}".strip() for st in k["steps"] if "result" in st]
+        said = [f"{st['result']['status']} {st['result'].get('error', {}).get('code', '')}".strip() for st in k["steps"] if isinstance(st.get("result"), dict)]
         print(f"{k['name']}: {' → '.join(said)}")
 
 

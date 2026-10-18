@@ -5282,6 +5282,139 @@
      }
     }
    ]
+  },
+  {
+   "name": "İlişkili taramaya kısıt konmaz: sınırını izler",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.hatch",
+     "input": {
+      "region": {
+       "kind": "point",
+       "at": {
+        "x": 21,
+        "y": 1.5
+       }
+      },
+      "pattern": {
+       "name": "Dolu"
+      },
+      "layerId": "cizim"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:12",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_governed",
+       "message": "$any",
+       "path": "edit.constraints[0].rule",
+       "uids": [
+        "$uidOf:12"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlişkili ölçüye kısıt konmaz: bağlı olduğu noktaları izler",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.dimensions.create",
+     "input": {
+      "measure": {
+       "kind": "aligned",
+       "a": {
+        "kind": "place",
+        "uid": "$uidOf:6",
+        "place": {
+         "kind": "start"
+        }
+       },
+       "b": {
+        "kind": "place",
+        "uid": "$uidOf:6",
+        "place": {
+         "kind": "end"
+        }
+       }
+      },
+      "at": {
+       "x": 11,
+       "y": -1
+      },
+      "layerId": "cizim"
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "add",
+       "constraints": [
+        {
+         "rule": {
+          "kind": "fix",
+          "a": {
+           "uid": "$uidOf:12",
+           "element": {
+            "kind": "point",
+            "place": {
+             "kind": "start"
+            }
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_governed",
+       "message": "$any",
+       "path": "edit.constraints[0].rule",
+       "uids": [
+        "$uidOf:12"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
   }
  ]
 }

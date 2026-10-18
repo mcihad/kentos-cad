@@ -44,6 +44,37 @@ pub fn cad_element(e: &Element) -> CadElement {
 }
 
 impl Document {
+    /// What owns an object's geometry other than the constraints (docs/adr/0338 §2): an object that follows another
+    /// (an associative hatch its boundary, a linked text its object, an associative dimension its points) or an
+    /// associative array's item (the array places it). The constraints do not name such an object: the relation it
+    /// follows is its one authority, and it follows the constrained objects after their solve. A hosted opening
+    /// (`CAD-ARCH-13`) joins this list when it comes.
+    pub fn governed(&self, e: &Entity) -> Option<&'static str> {
+        match e {
+            Entity::Hatch(h) if h.assoc.is_some() => {
+                Some("ilişkili tarama sınırını izler; kısıtı sınıra koyun")
+            }
+            Entity::Text(t) if t.label_of.is_some() => {
+                Some("bağlı yazı nesnesini izler; kısıtı nesneye koyun")
+            }
+            Entity::Dimension(d) if d.refs.is_some() => {
+                Some("ilişkili ölçü bağlı olduğu nesneleri izler; ölçü kısıtı kullanın")
+            }
+            _ => {
+                let uid = EntityId(
+                    self.store
+                        .get(crate::identity::Slot(e.base().id))?
+                        .uid
+                        .into_bytes(),
+                );
+                self.arrays
+                    .iter()
+                    .any(|a| a.items.iter().any(|i| i.uid == Some(uid)))
+                    .then_some("ilişkili dizinin öğesi; yerini dizi verir (Diziyi düzenle)")
+            }
+        }
+    }
+
     /// Whether writes relax the constraints.
     pub fn relax(&self) -> Relax {
         self.relax

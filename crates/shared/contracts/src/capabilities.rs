@@ -643,6 +643,7 @@ const ENTRIES: &[Entry] = &[
                 "parameter_expression",
                 "entity_not_found",
                 "element_not_found",
+                "constraint_governed",
                 "constraint_not_found",
                 "parameter_in_use",
                 "parameter_kind",

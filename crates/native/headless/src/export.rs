@@ -93,6 +93,20 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             lines: Vec::new(),
         });
     }
+    // Constraints and parameters (docs/adr/0338 §4): DXF gets the geometry as solved; AutoCAD's constraint objects
+    // are not written, so another program does not keep them.
+    let constraints = doc.constraints();
+    if !constraints.constraints.is_empty() {
+        notes.push(kentos_contracts::ReportItem {
+            what: "Kısıt".into(),
+            count: u32::try_from(constraints.constraints.len()).unwrap_or(u32::MAX),
+            reason: format!(
+                "Geometri çözülmüş hâliyle yazıldı; kısıtlar ve {} parametre DXF'e yazılmadı, başka programda düzenlenebilir kısıt olarak gelmez.",
+                constraints.parameters.len()
+            ),
+            lines: Vec::new(),
+        });
+    }
     let settings = doc.settings();
     let format = Format::of(settings);
     // What a dimension without its own text shows (project units): its

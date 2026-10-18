@@ -98,6 +98,10 @@ pub struct Marks {
     pub broken: Vec<Vec2>,
     /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
     pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
+    /// The constraints' marks (constraint_view.rs, docs/adr/0338 §1).
+    pub constraints: Option<std::sync::Arc<crate::constraint_view::ConstraintMarks>>,
+    /// The pointer over the drawing, for the mark under it.
+    pub constraint_pointer: Option<Point>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -202,6 +206,7 @@ impl Marks {
             && self.problem.is_none()
             && self.broken.is_empty()
             && self.bonds.is_empty()
+            && self.constraints.is_none()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -230,6 +235,16 @@ impl<Message> canvas::Program<Message> for Marks {
             accent,
         );
         bonds(&mut frame, &self.bonds, &self.camera, &self.colors, accent);
+        if let Some(c) = &self.constraints {
+            crate::constraint_view::draw(
+                &mut frame,
+                c,
+                &self.camera,
+                &self.colors,
+                &Tokens::of(theme),
+                self.constraint_pointer,
+            );
+        }
         param_grips(&mut frame, &self.params, &self.camera, &self.colors);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
@@ -585,6 +600,17 @@ fn problem(
 /// colour on a halo half a pixel wider each side, and the place a filled diamond on a halo; only what is in the
 /// view. One picture with exact coverage (label_picture.rs): the canvas's four samples left a rim round its
 /// wider halo, and its arcs' long chords fell beside the object.
+/// The parts a constraint names, as a dimension's bonds are shown (constraint_view.rs).
+pub(crate) fn draw_bonds(
+    frame: &mut canvas::Frame,
+    parts: &[kentos_interaction::dimension_bonds::Bond],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    bonds(frame, parts, camera, colors, accent);
+}
+
 fn bonds(
     frame: &mut canvas::Frame,
     bonds: &[kentos_interaction::dimension_bonds::Bond],
