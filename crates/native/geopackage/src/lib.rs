@@ -680,6 +680,54 @@ impl GeoPackage {
         Ok(rows)
     }
 
+    /// Adds a table's metadata (the GeoPackage metadata extension, `gpkg_metadata` and `gpkg_metadata_reference`, made
+    /// when the file lacks them): one dataset-scope document of `standard` (a URI) and `mime` type, referenced to
+    /// `table` at `timestamp` (`YYYY-MM-DDTHH:MM:SS.SSSZ`). Returns its id.
+    pub fn add_metadata(
+        &self,
+        table: &str,
+        standard: &str,
+        mime: &str,
+        metadata: &str,
+        timestamp: &str,
+    ) -> Result<i64> {
+        const DEFINITION: &str = "http://www.geopackage.org/spec120/#extension_metadata";
+        self.conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS gpkg_metadata (
+               id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
+               md_scope TEXT NOT NULL DEFAULT 'dataset',
+               md_standard_uri TEXT NOT NULL,
+               mime_type TEXT NOT NULL DEFAULT 'text/xml',
+               metadata TEXT NOT NULL DEFAULT '');
+             CREATE TABLE IF NOT EXISTS gpkg_metadata_reference (
+               reference_scope TEXT NOT NULL,
+               table_name TEXT,
+               column_name TEXT,
+               row_id_value INTEGER,
+               timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+               md_file_id INTEGER NOT NULL,
+               md_parent_id INTEGER,
+               CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
+               CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id));",
+        )?;
+        for t in ["gpkg_metadata", "gpkg_metadata_reference"] {
+            self.conn.execute(
+                "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, 'gpkg_metadata', ?2, 'read-write')",
+                params![t, DEFINITION],
+            )?;
+        }
+        self.conn.execute(
+            "INSERT INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata) VALUES ('dataset', ?1, ?2, ?3)",
+            params![standard, mime, metadata],
+        )?;
+        let id = self.conn.last_insert_rowid();
+        self.conn.execute(
+            "INSERT INTO gpkg_metadata_reference (reference_scope, table_name, timestamp, md_file_id) VALUES ('table', ?1, ?2, ?3)",
+            params![table, timestamp, id],
+        )?;
+        Ok(id)
+    }
+
     /// Adds a spatial reference system, unless one with its id is there.
     pub fn add_srs(&self, s: &Srs) -> Result<()> {
         self.conn.execute(

@@ -3,4 +3,9 @@
 /**
  * A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
  */
-export type RunInput = { layer: string, source?: string, revision?: string, };
+export type RunInput = { layer: string, 
+/**
+ * The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
+ * (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+ */
+digest: string, source?: string, revision?: string, };

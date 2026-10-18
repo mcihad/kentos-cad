@@ -25654,14 +25654,20 @@ class RubberLink(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RunInput(_Model):
-    """A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503)."""
+    """A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
+    Attributes:
+        digest: The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
+            (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+    """
     layer: str
+    digest: str
     revision: str | None | Unset = UNSET
     source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layer"] = self.layer
+        out["digest"] = self.digest
         if self.revision is not UNSET:
             out["revision"] = self.revision
         if self.source is not UNSET:
@@ -25672,6 +25678,7 @@ class RunInput(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RunInput:
         return cls(
             layer=data["layer"],
+            digest=data["digest"],
             revision=data.get("revision", UNSET),
             source=data.get("source", UNSET),
         )

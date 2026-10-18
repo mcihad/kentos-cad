@@ -2904,6 +2904,7 @@ dependencies = [
  "kentos-expression",
  "kentos-formats",
  "kentos-geometry-core",
+ "kentos-geopackage",
  "kentos-native-application",
  "kentos-pointcloud",
  "kentos-project",

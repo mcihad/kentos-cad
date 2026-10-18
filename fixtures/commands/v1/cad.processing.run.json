@@ -363,7 +363,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "step": "Öznitelik hesapla",
@@ -450,7 +451,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "step": "Öznitelik hesapla",
@@ -529,7 +531,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "step": "Öznitelik hesapla",
@@ -616,10 +619,12 @@
        ],
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "kilitli"
+         "layer": "kilitli",
+         "digest": "$any"
         }
        ],
        "step": "Öznitelik hesapla",
@@ -1042,10 +1047,12 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "yol"
+         "layer": "yol",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -1716,10 +1723,12 @@
        },
        "inputs": [
         {
-         "layer": "yapi"
+         "layer": "yapi",
+         "digest": "$any"
         },
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -2390,10 +2399,12 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "yapi"
+         "layer": "yapi",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -3064,10 +3075,12 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "yol"
+         "layer": "yol",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -3735,10 +3748,12 @@
        },
        "inputs": [
         {
-         "layer": "agac"
+         "layer": "agac",
+         "digest": "$any"
         },
         {
-         "layer": "yol"
+         "layer": "yol",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -4411,10 +4426,12 @@
        },
        "inputs": [
         {
-         "layer": "yapi"
+         "layer": "yapi",
+         "digest": "$any"
         },
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -5088,10 +5105,12 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "yol"
+         "layer": "yol",
+         "digest": "$any"
         }
        ],
        "revision": "$current"
@@ -6417,10 +6436,12 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "agac"
+         "layer": "agac",
+         "digest": "$any"
         }
        ],
        "step": "İçindekinden bilgi al",
@@ -7148,10 +7169,12 @@
        ],
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "yapi"
+         "layer": "yapi",
+         "digest": "$any"
         }
        ],
        "step": "İçindekinden bilgi al",
@@ -14370,10 +14393,12 @@
        ],
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         },
         {
-         "layer": "imar"
+         "layer": "imar",
+         "digest": "$any"
         }
        ],
        "revision": "$current",
@@ -15115,7 +15140,8 @@
        ],
        "inputs": [
         {
-         "layer": "agac"
+         "layer": "agac",
+         "digest": "$any"
         }
        ],
        "revision": "$current",
@@ -15857,7 +15883,8 @@
        ],
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "revision": "$current",
@@ -16258,7 +16285,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "revision": "$current",
@@ -16473,7 +16501,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "step": "Öznitelik hesapla",
@@ -16532,7 +16561,8 @@
        },
        "inputs": [
         {
-         "layer": "parsel"
+         "layer": "parsel",
+         "digest": "$any"
         }
        ],
        "step": "Köşe noktalarını numarala",

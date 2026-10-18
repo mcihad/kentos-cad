@@ -188,6 +188,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-10 — Dataset metadata'sını ve analiz soy ağacını kalıcılaştır — P0 asgari; P1 katalog**
 
+  *Kısmen (18 Ekim 2026; [ADR 0511](../docs/adr/0511-result-lineage.md)): analiz damgası: `cad.processing.run`'ın girdileri içeriklerinin özetiyle (`digest`) ve bağlı katmanın kaynak sürümüyle; dosyaya yazılan sonucun her tablosu soyunu GeoPackage'ın metadata uzantısında taşır (araç, istek, girdiler ve özetleri, çizimin sürümü, motor, zaman; `https://kentos.app/lineage/1`), sqlite3 ve GDAL'ın doğrulayıcısıyla denetlenir. Kalan: çizimin katmanına yazılan sonucun soyu, bağımlılık grafı ve eski türev göstergesi, veri kümesinin tanımı (başlık, sorumlu, lisans, kalite), katalog adaptörleri.*
+
   **Mevcut:** Proje bilgileri, layer info kartı ve işlem geçmişi var; bunlar veri üretim yöntemi/kalite/provenance standardının bütünü değil [K06/K09].
 
   **Yapılacak kalan iş:** Dataset başlığı, açıklama, sorumlu, lisans/kullanım kısıtı, kapsam, tarih/güncellik, CRS/datum, ölçek/çözünürlük, veri sözlüğü ve kalite özetini kaynak kimliğiyle sakla. Her türev; girdi revision/hash'leri, filtre/kapsam, algoritma/sürüm, parametre/birim, engine ve üretim zamanını taşısın. “Bu harita hangi veriden üretildi?” sorusuna bağımlılık grafıyla cevap ver. Yerel arama sonrasında kurum kataloğu, OGC API Records ve görüntü varlıklarında STAC adapter'ı eklenebilir; taslak standardı yayımlanmış sürüm diye kullanma. [S03], [F06]

@@ -100,8 +100,11 @@ def inputs_of(c: dict, doc: dict) -> list[dict]:
         for l in found:
             if l not in out:
                 out.append(l)
+    # A layer's digest is the SHA-256 of a canonical JSON KentOS writes (sources::layer_digest); its value is not
+    # written here.
     return [
-        {"layer": l, **({"source": sources[l]["id"], "revision": sources[l]["revision"]} if l in sources else {})}
+        {"layer": l, "digest": "$any",
+         **({"source": sources[l]["id"], "revision": sources[l]["revision"]} if l in sources else {})}
         for l in out
     ]
 
@@ -224,7 +227,7 @@ def sink_case(c: dict, inputs: list[str]) -> dict:
             left[word] = left.get(word, 0) + 1
     rows = len(made) - sum(left.values())
     out.pop("step", None)
-    out["inputs"] = [{"layer": l} for l in inputs]
+    out["inputs"] = [{"layer": l, "digest": "$any"} for l in inputs]
     out["sink"] = {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
         "bytes": "$any",
@@ -425,7 +428,7 @@ def own_run_from(cases: dict) -> list[dict]:
                             "summary": area["summary"].replace("3 nesnede", "1 nesnede"),
                             "changed": ["$uidOf:1"],
                             "outputs": {"count": 1, "changed": ["$uidOf:1"]},
-                            "inputs": [{"layer": "parsel"}],
+                            "inputs": [{"layer": "parsel", "digest": "$any"}],
                             "step": area["undo"],
                             "revision": "$current",
                         },

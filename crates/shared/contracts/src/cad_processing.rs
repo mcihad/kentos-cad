@@ -152,6 +152,9 @@ pub struct RunSink {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RunInput {
     pub layer: String,
+    /// The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
+    /// (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+    pub digest: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,

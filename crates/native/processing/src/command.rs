@@ -426,10 +426,17 @@ impl ToolHost for Tools {
             return Ok((ran, Vec::new()));
         };
         let target = sink_target(sink)?;
+        let (tool_id, tool_label) = (ready.tool.id.clone(), ready.tool.label.clone());
         // The run is made on a copy: the drawing does not change, the file takes the result.
         let mut copy = doc.reading_copy();
         let (mut ran, added) = run_on(&mut copy, ready)?;
-        let (exported, warnings) = write_sink(&mut copy, &added, &target, write)?;
+        let lineage = Lineage {
+            tool: (&tool_id, &tool_label),
+            request: input,
+            inputs: &inputs,
+            drawing: doc.revision().to_string(),
+        };
+        let (exported, warnings) = write_sink(&mut copy, &added, &target, write, &lineage)?;
         ran.inputs = inputs;
         ran.sink = Some(exported);
         ran.step = None;
@@ -585,6 +592,7 @@ fn inputs_of(doc: &Document, ready: &Ready) -> Vec<RunInput> {
             RunInput {
                 source: link.map(|s| s.id.clone()),
                 revision: link.map(|s| s.revision.clone()),
+                digest: kentos_native_application::sources::layer_digest(doc, &layer),
                 layer,
             }
         })
@@ -634,6 +642,60 @@ fn sink_target(sink: &RunSink) -> Result<(PathBuf, bool), Box<CommandError>> {
     Ok((p.to_path_buf(), exists))
 }
 
+/// What a result came from (docs/adr/0511): the tool, the request as given, the layers it read, the drawing's revision.
+struct Lineage<'a> {
+    tool: (&'a str, &'a str),
+    request: &'a ProcessingRun,
+    inputs: &'a [RunInput],
+    drawing: String,
+}
+
+/// The URI of KentOS's lineage document in `gpkg_metadata` (docs/adr/0511).
+pub const LINEAGE_STANDARD: &str = "https://kentos.app/lineage/1";
+
+impl Lineage<'_> {
+    /// The table's lineage document: `kentos.lineage` 1, as JSON.
+    fn document(&self, table: &str, layer: &str, made: &str) -> String {
+        let mut request = serde_json::to_value(self.request).unwrap_or(Value::Null);
+        if let Some(o) = request.as_object_mut() {
+            o.remove("sink");
+        }
+        json!({
+            "format": "kentos.lineage",
+            "version": 1,
+            "table": table,
+            "layer": layer,
+            "tool": { "id": self.tool.0, "label": self.tool.1 },
+            "request": request,
+            "inputs": self.inputs,
+            "drawing": { "revision": self.drawing },
+            "engine": format!("KentOS {}", env!("CARGO_PKG_VERSION")),
+            "made": made,
+        })
+        .to_string()
+    }
+}
+
+/// The time now, `YYYY-MM-DDTHH:MM:SS.SSSZ`.
+fn utc_now() -> String {
+    let ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0.0, |d| d.as_millis() as f64);
+    let text = kentos_geometry_core::time::write(ms, false);
+    // A whole second is written without its milliseconds, and midnight as the day alone.
+    let text = if text.len() == 10 {
+        format!("{text}T00:00:00")
+    } else {
+        text
+    };
+    let text = if text.len() == 19 {
+        format!("{text}.000")
+    } else {
+        text
+    };
+    format!("{text}Z")
+}
+
 /// The objects a run made on `copy` written to the sink's GeoPackage, each layer they are on a table; the other
 /// objects of the copy are left out first. The file is made beside the target under a passing name and, with
 /// `write`, put in its place in one step; a plan removes it. What it holds, and what it could not hold.
@@ -642,6 +704,7 @@ fn write_sink(
     added: &[Slot],
     (path, _): &(PathBuf, bool),
     write: bool,
+    lineage: &Lineage<'_>,
 ) -> Result<(GpkgExported, Vec<CommandWarning>), Box<CommandError>> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -675,7 +738,23 @@ fn write_sink(
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     let _ = std::fs::remove_file(&tmp);
-    let written = kentos_native_application::geopackage::write(copy, &layers, &tmp);
+    let written = kentos_native_application::geopackage::write(copy, &layers, &tmp).and_then(|w| {
+        // Each table says what it came from (docs/adr/0511): GeoPackage's metadata extension.
+        let gp = kentos_geopackage::GeoPackage::open(&tmp, true).map_err(|e| e.0)?;
+        let made = utc_now();
+        for t in &w.tables {
+            gp.add_metadata(
+                &t.table,
+                LINEAGE_STANDARD,
+                "application/json",
+                &lineage.document(&t.table, &t.layer, &made),
+                &made,
+            )
+            .map_err(|e| e.0)?;
+        }
+        gp.close().map_err(|e| e.0)?;
+        Ok(w)
+    });
     let bytes = std::fs::read(&tmp);
     let unwritable = |why: String| {
         refused(

@@ -11,7 +11,11 @@ source drawing (fixtures/processing/v1/geometry.kcad) and İşlemler's own indep
 - Tampon: one row per road, each a valid surface whose area is OGR's 5 m buffer of the road (1024 segments per
   quarter circle) within 0.05 %, the road's attributes carried;
 - Birleştirilen: one row per Ada, its area OGR's union of the group's parcels, sums as İşlemler's case says;
-- every table in the project's system (EPSG:5254), every row valid, kentos_uids naming each row.
+- every table in the project's system (EPSG:5254), every row valid, kentos_uids naming each row;
+- its lineage (docs/adr/0511) in GeoPackage's metadata extension, read with sqlite3: the extension registered, one
+  dataset document of https://kentos.app/lineage/1 referenced to the table at the time it was made, naming the tool,
+  the request as the test gave it, and the layers read with their content's digest (the same parcels' digest in two
+  files); GDAL's validate_gpkg.py finds nothing wrong.
 
   /usr/bin/python3 scripts/fixtures/processing_sink_cases.py --check
 """
@@ -117,6 +121,54 @@ for (attrs, g), w in zip(got, want):
         if e["attrs"]["Ada"] == attrs["Ada"]:
             union = polygon(e) if union is None else union.Union(polygon(e))
     expect(close(g.GetArea(), union.GetArea(), 1e-9), f"birlestirilen {attrs['Ada']}: area {g.GetArea()} != {union.GetArea()}")
+
+# Lineage (docs/adr/0511).
+import re
+import sqlite3
+
+REQUESTS = {
+    "kesisim": ("Kesişim", "geometry.intersection", {
+        "input": {"scope": "layer", "layerId": "parsel"}, "overlay": {"scope": "layer", "layerId": "imar"},
+        "prefix": "", "apportion": "Değer"}, ["parsel", "imar"]),
+    "tampon": ("Tampon", "geometry.buffer", {"input": {"scope": "layer", "layerId": "yol"}, "distance": 5}, ["yol"]),
+    "birlestirilen": ("Birleştirilen", "geometry.dissolve", {
+        "input": {"scope": "layer", "layerId": "parsel"}, "group": "Ada", "sums": "Değer"}, ["parsel"]),
+}
+digests: dict[str, set[str]] = {}
+for name, (table, tool, parameters, layers) in REQUESTS.items():
+    path = GPKG / f"kentos-run-{name}.gpkg"
+    c = sqlite3.connect(path)
+    ext = c.execute("SELECT table_name, column_name, extension_name, definition, scope FROM gpkg_extensions "
+                    "WHERE extension_name = 'gpkg_metadata' ORDER BY table_name").fetchall()
+    want_def = "http://www.geopackage.org/spec120/#extension_metadata"
+    expect(ext == [("gpkg_metadata", None, "gpkg_metadata", want_def, "read-write"),
+                   ("gpkg_metadata_reference", None, "gpkg_metadata", want_def, "read-write")], f"{name}: extension {ext}")
+    rows = c.execute("SELECT m.md_scope, m.md_standard_uri, m.mime_type, m.metadata, r.reference_scope, r.table_name, "
+                     "r.column_name, r.row_id_value, r.timestamp FROM gpkg_metadata m JOIN gpkg_metadata_reference r "
+                     "ON r.md_file_id = m.id").fetchall()
+    expect(len(rows) == 1, f"{name}: {len(rows)} metadata rows")
+    scope, uri, mime, text, ref, ref_table, col, row_id, stamp = rows[0]
+    expect((scope, uri, mime, ref, ref_table, col, row_id) ==
+           ("dataset", "https://kentos.app/lineage/1", "application/json", "table", table, None, None),
+           f"{name}: metadata row {rows[0][:3]} {rows[0][4:8]}")
+    expect(re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", stamp) is not None, f"{name}: timestamp {stamp}")
+    doc = json.loads(text)
+    expect(doc["format"] == "kentos.lineage" and doc["version"] == 1, f"{name}: format")
+    expect(doc["table"] == table and doc["made"] == stamp, f"{name}: table and time")
+    expect(doc["tool"]["id"] == tool and doc["request"] == {"tool": tool, "parameters": parameters},
+           f"{name}: request {doc['request']}")
+    expect([i["layer"] for i in doc["inputs"]] == layers, f"{name}: inputs {doc['inputs']}")
+    for i in doc["inputs"]:
+        expect(re.fullmatch(r"[0-9a-f]{64}", i["digest"]) is not None, f"{name}: digest {i['digest']}")
+        digests.setdefault(i["layer"], set()).add(i["digest"])
+    expect(doc["engine"].startswith("KentOS "), f"{name}: engine {doc['engine']}")
+    try:
+        from osgeo_utils.samples import validate_gpkg
+        found = validate_gpkg.check(str(path), abort_at_first_error=False) or []
+        expect(not found, f"{name}: validate_gpkg {found}")
+    except ImportError:
+        pass
+expect(len(digests["parsel"]) == 1, f"the parcels read unchanged give one digest: {digests['parsel']}")
 
 if problems:
     print("\n".join(problems))

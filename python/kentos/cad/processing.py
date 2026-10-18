@@ -47,7 +47,9 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler
     invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın
     tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve
-    tabloları, inputs'u okunan katmanlar ve bağlı katmanların kaynak sürümleri.
+    tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların
+    kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır
+    (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -94,8 +96,10 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur,
         var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists,
         file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses;
-        cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar ve
-        bağlı katmanların kaynak sürümleri.
+        cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar,
+        içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu
+        GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek,
+        girdiler ve özetleri, motor, zaman).
 
         Args:
             doc: The drawing it works on.
