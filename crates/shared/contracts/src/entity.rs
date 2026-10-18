@@ -1754,6 +1754,14 @@ pub enum Entity {
     /// jambs' points.
     Opening(crate::OpeningEntity),
     Space(crate::SpaceEntity),
+    /// A grid (docs/adr/0343): its line, label and bubbles.
+    Grid(crate::GridEntity),
+    /// A column (docs/adr/0343): its centre, outline and the grids it stands on.
+    Column(crate::ColumnEntity),
+    /// A stair (docs/adr/0343): its walking line and its risers, treads and landings.
+    Stair(crate::StairEntity),
+    /// A ramp (docs/adr/0343): its centre line, width, rise and landings.
+    Ramp(crate::RampEntity),
     /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
     /// attachments and label; not drawn, picked or snapped to.
     Record(RecordEntity),
@@ -1809,6 +1817,10 @@ impl Entity {
             Entity::Wall(e) => &e.base,
             Entity::Opening(e) => &e.base,
             Entity::Space(e) => &e.base,
+            Entity::Grid(e) => &e.base,
+            Entity::Column(e) => &e.base,
+            Entity::Stair(e) => &e.base,
+            Entity::Ramp(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1838,6 +1850,10 @@ impl Entity {
             Entity::Wall(e) => &mut e.base,
             Entity::Opening(e) => &mut e.base,
             Entity::Space(e) => &mut e.base,
+            Entity::Grid(e) => &mut e.base,
+            Entity::Column(e) => &mut e.base,
+            Entity::Stair(e) => &mut e.base,
+            Entity::Ramp(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1867,6 +1883,10 @@ impl Entity {
             Entity::Wall(_) => "wall",
             Entity::Opening(_) => "opening",
             Entity::Space(_) => "space",
+            Entity::Grid(_) => "grid",
+            Entity::Column(_) => "column",
+            Entity::Stair(_) => "stair",
+            Entity::Ramp(_) => "ramp",
             Entity::Xline(_) => "xline",
             Entity::Ray(_) => "ray",
             Entity::Text(_) => "text",

@@ -56,6 +56,7 @@ mod layers;
 pub mod leader_ties;
 pub mod opening_follow;
 pub mod space_follow;
+pub mod arch_follow;
 mod linked;
 mod patch;
 mod snapshot;

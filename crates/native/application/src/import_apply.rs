@@ -876,6 +876,10 @@ fn finite(e: &Entity) -> bool {
             Entity::Wall(e) => ps(&e.wall.pts) && fs(&[e.wall.width, e.wall.offset]),
             Entity::Opening(e) => ps(&e.opening.place) && fs(&[e.opening.at, e.opening.width]),
             Entity::Space(e) => e.space.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
+            Entity::Grid(e) => ps(&e.grid.pts),
+            Entity::Column(e) => p(&e.column.at) && fs(&[e.column.width, e.column.rotation]),
+            Entity::Stair(e) => ps(&e.stair.pts) && fs(&[e.stair.width, e.stair.tread, e.stair.riser_height]),
+            Entity::Ramp(e) => ps(&e.ramp.pts) && fs(&[e.ramp.width, e.ramp.rise]),
             Entity::Nurbs(e) => {
                 ps(&e.ctrl)
                     && fs(&e.knots)

@@ -549,7 +549,12 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
         .iter()
         .filter(|e| matches!(e, kentos_contracts::Entity::Space(_)))
         .count();
-    if walls == 0 && openings == 0 && spaces == 0 {
+    let elements = input
+        .entities
+        .iter()
+        .filter(|e| crate::arch_elements::core_of(e).is_some())
+        .count();
+    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 {
         return None;
     }
     let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
@@ -595,8 +600,20 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
                     }
                 }
             }
+            // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
+            (e, _) if crate::arch_elements::core_of(e).is_some() => {
+                out.entities.extend(crate::arch_elements::plain_pieces(e, scale).unwrap_or_default());
+            }
             _ => out.entities.push(e.clone()),
         }
+    }
+    if elements > 0 {
+        report.note_n(
+            "Mimari nesne",
+            "DXF'te KentOS'un aksı, kolonu, merdiveni ve rampası yoktur: çizimlerinin çizgileri, daireleri, yazıları ve taramaları olarak yazıldı; etiketleri, ölçüleri ve aks bağları taşınmaz, geri okunmaz",
+            0,
+            u32::try_from(elements).unwrap_or(u32::MAX),
+        );
     }
     if spaces > 0 {
         report.note_n(

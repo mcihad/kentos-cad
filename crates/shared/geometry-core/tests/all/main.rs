@@ -71,5 +71,6 @@ mod vertex_points;
 mod vertex_table;
 mod openings;
 mod spaces;
+mod arch;
 mod wall_joins;
 mod walls;

@@ -1686,6 +1686,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 79 (docs/adr/0343): a grid, a column, a stair or a ramp.
+    if doc.entities.iter().any(|e| {
+        matches!(
+            e,
+            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_)
+        )
+    }) {
+        return crate::SCHEMA_WITH_ARCH_ELEMENTS;
+    }
     // Schema 78 (docs/adr/0342): a space, or the project's space method.
     if doc.entities.iter().any(|e| matches!(e, Entity::Space(_)))
         || doc.settings.arch.as_ref().is_some_and(|a| a.space_method.is_some())

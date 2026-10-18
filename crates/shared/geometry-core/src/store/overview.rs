@@ -416,6 +416,12 @@ impl Canvas {
                     self.shape(&piece, c);
                 }
             }
+            // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343).
+            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } => {
+                if let Some(o) = crate::geom::arch::outline(s) {
+                    self.shape(&o, c);
+                }
+            }
             // Its body, filled (docs/adr/0339).
             Shape::Wall { pts, bulges, wall } => {
                 if let Ok((ring, holes)) = crate::geom::wall::body(pts, bulges.as_deref(), wall) {

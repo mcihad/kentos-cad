@@ -48,6 +48,9 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
         // Its label's place: dragged, the whole space moves (docs/adr/0342 §3).
         Shape::Space { parts, .. } => crate::geom::space::label_at(parts).into_iter().collect(),
+        // A grid's ends, a stair's or ramp's walking line's points, a column's centre (docs/adr/0343 §2).
+        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => pts.clone(),
+        Shape::Column { at, .. } => vec![*at],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             // A closed polyline's closing edge has its middle too (docs/adr/0258 §1).
@@ -323,6 +326,16 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Raster { .. } | Shape::PointCloud { .. } | Shape::Record {} => return None,
         // Moved above by its path.
         Shape::Wall { .. } => return None,
+        // A path's point moves; a column moves whole (docs/adr/0343 §2).
+        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => {
+            let mut pts = pts.clone();
+            *pts.get_mut(index)? = p;
+            crate::geom::arch::with_pts(&e.shape, pts)?
+        }
+        Shape::Column { column, .. } => Shape::Column {
+            at: p,
+            column: column.clone(),
+        },
         // It moves whole with its label (docs/adr/0342 §3).
         Shape::Space { parts, .. } => {
             let c = crate::geom::space::label_at(parts)?;

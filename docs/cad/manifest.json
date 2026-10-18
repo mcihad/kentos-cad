@@ -2375,6 +2375,20 @@
    "tests": 1
   },
   {
+   "id": "edit.selectFilter.column",
+   "kind": "command",
+   "title": "Seçim süzgecinde Kolon",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.dimension",
    "kind": "command",
    "title": "Seçim süzgecinde Ölçü",
@@ -2399,6 +2413,20 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.selectFilter.grid",
+   "kind": "command",
+   "title": "Seçim süzgecinde Aks",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -2529,6 +2557,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.ramp",
+   "kind": "command",
+   "title": "Seçim süzgecinde Rampa",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.ray",
    "kind": "command",
    "title": "Seçim süzgecinde Işın",
@@ -2567,6 +2609,20 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.selectFilter.stair",
+   "kind": "command",
+   "title": "Seçim süzgecinde Merdiven",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8370,6 +8426,22 @@
    "tests": 1
   },
   {
+   "id": "tool.column",
+   "kind": "command",
+   "title": "Kolon",
+   "level": "semantic",
+   "via": [
+    "cad.columns.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.columns.create",
+   "mcp": "cad.columns.create",
+   "note": "Tıklanan merkez ve yakın kesişimin iki aksı ya da görünen aksların kesişimleri komuta verilir; kesişim ve konum yazısı komutun hesabı (ADR 0343 §3–§5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.confirm",
    "kind": "command",
    "title": "Onayla",
@@ -9059,6 +9131,38 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.grid",
+   "kind": "command",
+   "title": "Aks",
+   "level": "semantic",
+   "via": [
+    "cad.grids.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.grids.create",
+   "mcp": "cad.grids.create",
+   "note": "Tıklanan iki nokta, etiket ya da seri (aralıklar ve yan) komuta verilir; etiketlerin sırası komutun, önizleme planından (ADR 0343 §4, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.gridNumber",
+   "kind": "command",
+   "title": "Aksları numarala",
+   "level": "semantic",
+   "via": [
+    "cad.arch.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.arch.edit",
+   "mcp": "cad.arch.edit",
+   "note": "Tıklanan akslar sırasıyla renumber'a verilir; bağlı kolonların konum yazıları belgede izler (ADR 0343 §3, §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.hatch",
@@ -10043,6 +10147,22 @@
    "tests": 2
   },
   {
+   "id": "tool.ramp",
+   "kind": "command",
+   "title": "Rampa",
+   "level": "semantic",
+   "via": [
+    "cad.ramps.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ramps.create",
+   "mcp": "cad.ramps.create",
+   "note": "Orta çizginin noktaları, yükseklik ve eğim komuta verilir; eğimin denetimi komutun (ADR 0343 §2, §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.rangeRings",
    "kind": "tool",
    "title": "Menzil halkaları",
@@ -10696,6 +10816,22 @@
    "scope": "gis",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.stair",
+   "kind": "command",
+   "title": "Merdiven",
+   "level": "semantic",
+   "via": [
+    "cad.stairs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.stairs.create",
+   "mcp": "cad.stairs.create",
+   "note": "Yürüme çizgisinin noktaları ve ölçüler komuta verilir; basamaklar ve denetimler komutun, önizleme planından (ADR 0343 §2, §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.stakeout",

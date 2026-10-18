@@ -665,6 +665,28 @@ CloudRenderName = Literal["rgb", "classification", "elevation", "intensity", "re
 """The names of :class:`CloudRender`, for a plain string."""
 
 
+class ColumnBreak(_StrEnum):
+    """Why a column is not where its grids say.
+
+    - ``gridGone``: One of its grids is gone, or they no longer cross.
+    """
+    GRID_GONE = "gridGone"
+
+
+ColumnBreakName = Literal["gridGone"]
+"""The names of :class:`ColumnBreak`, for a plain string."""
+
+
+class ColumnShape(_StrEnum):
+    """A column's outline."""
+    RECT = "rect"
+    ROUND = "round"
+
+
+ColumnShapeName = Literal["rect", "round"]
+"""The names of :class:`ColumnShape`, for a plain string."""
+
+
 class ConstraintSense(_StrEnum):
     """Where a new constraint's sense comes from.
 
@@ -1367,6 +1389,18 @@ class GrantRole(_StrEnum):
 
 GrantRoleName = Literal["viewer", "commenter", "editor", "manager", "entry"]
 """The names of :class:`GrantRole`, for a plain string."""
+
+
+class GridBubbles(_StrEnum):
+    """Which ends of a grid carry a bubble."""
+    BOTH = "both"
+    START = "start"
+    END = "end"
+    NONE = "none"
+
+
+GridBubblesName = Literal["both", "start", "end", "none"]
+"""The names of :class:`GridBubbles`, for a plain string."""
 
 
 class HatchDrawOrder(_StrEnum):
@@ -2798,9 +2832,13 @@ class SelectKind(_StrEnum):
     - ``leader``
     - ``table``
     - ``image``
+    - ``column``
+    - ``stair``
+    - ``ramp``
     - ``wall``: Duvar (docs/adr/0339 §6).
     - ``opening``: Açıklık: a door, a window or a bare opening (docs/adr/0341 §5).
     - ``space``: Mahal (docs/adr/0342 §5).
+    - ``grid``: Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
     """
     POINT = "point"
     LINE = "line"
@@ -2819,13 +2857,27 @@ class SelectKind(_StrEnum):
     LEADER = "leader"
     TABLE = "table"
     IMAGE = "image"
+    COLUMN = "column"
+    STAIR = "stair"
+    RAMP = "ramp"
     WALL = "wall"
     OPENING = "opening"
     SPACE = "space"
+    GRID = "grid"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall", "opening", "space"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid"]
 """The names of :class:`SelectKind`, for a plain string."""
+
+
+class SeriesSide(_StrEnum):
+    """The side of a line."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+SeriesSideName = Literal["left", "right"]
+"""The names of :class:`SeriesSide`, for a plain string."""
 
 
 class ServiceKind(_StrEnum):
@@ -3447,6 +3499,29 @@ ScheduleCell = Union[float, str]
 VariableValue = Union[bool, float, str, None]
 
 
+class ArchOperation(_Union):
+    """What `cad.arch.edit` does (docs/adr/0343 §4).
+
+    One of:
+
+    - :class:`SetArchOperation` (``kind: set``)
+    - :class:`RenumberArchOperation` (``kind: renumber``)
+    - :class:`AttachArchOperation` (``kind: attach``)
+    - :class:`DetachArchOperation` (``kind: detach``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchOperation:
+        return _variant(_ARCH_OPERATION, "ArchOperation", "kind", data).from_json(data)
+
+
 class ArrayEdit(_Union):
     """What changes in the array (AutoCAD ARRAYEDIT's properties, Replace, Reset; an item's erase).
 
@@ -4002,6 +4077,10 @@ class Entity(_Union):
     - :class:`WallEntity` (``kind: wall``)
     - :class:`OpeningEntity` (``kind: opening``)
     - :class:`SpaceEntity` (``kind: space``)
+    - :class:`GridEntity` (``kind: grid``)
+    - :class:`ColumnEntity` (``kind: column``)
+    - :class:`StairEntity` (``kind: stair``)
+    - :class:`RampEntity` (``kind: ramp``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -5699,6 +5778,60 @@ class ArcPlan(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArcPlan:
         return cls(
             entity=Entity.from_json(data["entity"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchEdit(_Model):
+    """Input of `cad.arch.edit` v1: grids, columns, stairs and ramps named by their persistent ids changed as one undo step
+    “Mimari nesneyi düzenle”, all or none.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_arch_element`, `nothing_to_set`,
+    `field_not_for_kind`, `mixed_kinds`, `not_finite`, `invalid_grid`, `invalid_column`, `invalid_stair`, `invalid_ramp`,
+    `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
+    Warnings: those of the stairs and ramps written.
+    """
+    uids: list[str]
+    operation: ArchOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchEdit:
+        return cls(
+            uids=list(data["uids"]),
+            operation=ArchOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchEdited(_Model):
+    """Output of `cad.arch.edit` v1 (its plan's too: the objects as they would be, nothing written).
+    Attributes:
+        elements: The objects as written, in their order.
+    """
+    elements: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["elements"] = [e0.to_json() for e0 in self.elements]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchEdited:
+        return cls(
+            elements=[Entity.from_json(e0) for e0 in data["elements"]],
             revision=data["revision"],
         )
 
@@ -8476,6 +8609,307 @@ class CloudSource(_Model):
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnCrossings(_Model):
+    """Columns at every crossing of the grids given, pair by pair in their order, within both grids.
+    Attributes:
+        width: Unit: length.
+        depth: Unit: length.
+        rotation: Unit: rad.
+    """
+    grids: list[str]
+    width: float
+    arch: ArchInfo | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    fill: bool | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["grids"] = list(self.grids)
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.type is not UNSET:
+            out["type"] = self.type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnCrossings:
+        return cls(
+            grids=list(data["grids"]),
+            width=float(data["width"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fill=data.get("fill", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
+            type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnEntity(Entity):
+    """A column (docs/adr/0343).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        at: Its centre. Unit: length.
+        width: Across, metres (a round column's diameter). Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        depth: Along, metres; absent: its width. Unit: length.
+        grids: The two grids it stands where they cross, by their persistent ids.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        place: Its place by its grids' labels (“B-3”), which the document writes.
+        rotation: Its turn, radians counter-clockwise. Unit: rad.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        type: Its type's name.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "column"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    at: Vec2
+    width: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    broken: ColumnBreak | ColumnBreakName | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    fill: bool | Unset = UNSET
+    grids: list[str] | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
+    place: str | None | Unset = UNSET
+    rotation: float | Unset = UNSET
+    shape: ColumnShape | ColumnShapeName | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "column"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["at"] = _vec2_out(self.at)
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.grids is not UNSET:
+            out["grids"] = None if self.grids is None else list(self.grids)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.place is not UNSET:
+            out["place"] = self.place
+        if self.rotation is not UNSET:
+            out["rotation"] = float(self.rotation)
+        if self.shape is not UNSET:
+            out["shape"] = _enum_out(self.shape)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.type is not UNSET:
+            out["type"] = self.type
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            at=Vec2.from_json(data["at"]),
+            width=float(data["width"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(ColumnBreak, data["broken"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fill=data.get("fill", UNSET),
+            grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
+            place=data.get("place", UNSET),
+            rotation=float(data["rotation"]) if "rotation" in data else UNSET,
+            shape=_enum_in(ColumnShape, data["shape"]) if "shape" in data else UNSET,
+            symbol=data.get("symbol", UNSET),
+            tag=data.get("tag", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            type=data.get("type", UNSET),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnsCreate(_Model):
+    """Input of `cad.columns.create` v1 (“Kolon”): `columns`, then those at the `crossings`, on a named layer, as one undo
+    step. A column with grids stands at their crossing and the document keeps it there (docs/adr/0343 §3).
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_column`, `invalid_uid`, `entity_not_found`,
+    `not_a_grid`, `grids_parallel`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
+    Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+        tag_start: The first untagged column's tag, the next ones' following on (S1, S2 …).
+    """
+    layer_id: str
+    color: str | None | Unset = UNSET
+    columns: list[NewColumn] | Unset = UNSET
+    crossings: ColumnCrossings | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    tag_start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.columns is not UNSET:
+            out["columns"] = [e0.to_json() for e0 in self.columns]
+        if self.crossings is not UNSET:
+            out["crossings"] = None if self.crossings is None else self.crossings.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.tag_start is not UNSET:
+            out["tagStart"] = self.tag_start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            color=data.get("color", UNSET),
+            columns=[NewColumn.from_json(e0) for e0 in data["columns"]] if "columns" in data else UNSET,
+            crossings=UNSET if "crossings" not in data else None if data["crossings"] is None else ColumnCrossings.from_json(data["crossings"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            tag_start=data.get("tagStart", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnsCreated(_Model):
+    """Output of `cad.columns.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ColumnsPlan(_Model):
+    """What `cad.columns.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    columns: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnsPlan:
+        return cls(
+            columns=[Entity.from_json(e0) for e0 in data["columns"]],
+            revision=data["revision"],
         )
 
 
@@ -16580,6 +17014,275 @@ class GridChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GridEntity(Entity):
+    """A grid (docs/adr/0343).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its start and end. Unit: length.
+        name: Its label (A, B … 1, 2 …), on the wire `name`: an object's own `label` is another field.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        bubble_size: The bubble's diameter on paper, millimetres; absent: 8. Unit: paper-mm.
+        bulges: One bulge per point (the first the arc's; absent: straight). Unit: 1.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "grid"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    name: str
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "grid"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["name"] = self.name
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = _enum_out(self.bubbles)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            name=data["name"],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=_enum_in(GridBubbles, data["bubbles"]) if "bubbles" in data else UNSET,
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridSeries(_Model):
+    """Parallel grids: the first from `from` to `to`, each next `spacings[i]` further to the `side`.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        spacings: The gaps between them, metres, each greater than 0. Unit: length.
+        bubble_size: Unit: paper-mm.
+        side: Which side of `from` → `to` the next grids go; absent: the left.
+        start: The first's label; absent: as a grid with none.
+    """
+    from_: Vec2
+    to: Vec2
+    spacings: list[float]
+    arch: ArchInfo | None | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    side: SeriesSide | SeriesSideName | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["spacings"] = [float(e0) for e0 in self.spacings]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.start is not UNSET:
+            out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridSeries:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            spacings=[float(e0) for e0 in data["spacings"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(SeriesSide, data["side"]),
+            start=data.get("start", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridsCreate(_Model):
+    """Input of `cad.grids.create` v1 (“Aks”): `grids`, then the `series`, on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_grid`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
+    Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    grids: list[NewGrid] | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    series: GridSeries | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.grids is not UNSET:
+            out["grids"] = [e0.to_json() for e0 in self.grids]
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.series is not UNSET:
+            out["series"] = None if self.series is None else self.series.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            grids=[NewGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            series=UNSET if "series" not in data else None if data["series"] is None else GridSeries.from_json(data["series"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridsCreated(_Model):
+    """Output of `cad.grids.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridsPlan(_Model):
+    """What `cad.grids.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    grids: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["grids"] = [e0.to_json() for e0 in self.grids]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridsPlan:
+        return cls(
+            grids=[Entity.from_json(e0) for e0 in data["grids"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchAssoc(_Model):
     """The objects a hatch follows (docs/adr/0186 §6, 0328 §3): a hatch made inside a closed object follows the
     object (`outer`), its islands, the texts and inserts left open; a hatch made in the face line work closes
@@ -22265,6 +22968,72 @@ class NetworkLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewColumn(_Model):
+    """One column to put.
+    Attributes:
+        width: Across, metres (a round column's diameter). Unit: length.
+        at: Its centre; with `grids`, the crossing nearest it. Unit: length.
+        depth: Along, metres; absent: its width. Unit: length.
+        grids: The two grids it stands where they cross, by their persistent ids; it follows them.
+        rotation: Its turn, radians counter-clockwise. Unit: rad.
+        tag: Absent: from `tagStart` on, else none.
+        type: Its type's name.
+    """
+    width: float
+    arch: ArchInfo | None | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    fill: bool | None | Unset = UNSET
+    grids: list[str] | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.grids is not UNSET:
+            out["grids"] = None if self.grids is None else list(self.grids)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.type is not UNSET:
+            out["type"] = self.type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewColumn:
+        return cls(
+            width=float(data["width"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fill=data.get("fill", UNSET),
+            grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
+            tag=data.get("tag", UNSET),
+            type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewConstraint(_Model):
     """A constraint to add.
     Attributes:
@@ -22298,6 +23067,53 @@ class NewConstraint(_Model):
             reference=data.get("reference", UNSET),
             sense=_enum_in(ConstraintSense, data["sense"]) if "sense" in data else UNSET,
             value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewGrid(_Model):
+    """One grid to draw.
+    Attributes:
+        pts: Its start and end. Unit: length.
+        bubble_size: The bubble's diameter on paper, millimetres; absent: 8. Unit: paper-mm.
+        bulges: Two bulges, the first its arc's; absent: straight. Unit: 1.
+        label: Absent: the one after the grid before it in this call, else after the drawing's last grid, else “A”.
+    """
+    pts: list[Vec2]
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewGrid:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            label=data.get("label", UNSET),
         )
 
 
@@ -22476,6 +23292,57 @@ class NewOpening(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewRamp(_Model):
+    """One ramp to draw.
+    Attributes:
+        pts: Its centre line, up from its first point. Unit: length.
+        width: Unit: length.
+        rise: How much higher its end is than its start. Unit: elevation.
+        base: Its start's elevation; absent: 0. Unit: elevation.
+        landing: A landing's length at a turn; absent: the width. Unit: length.
+        slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
+    """
+    pts: list[Vec2]
+    width: float
+    rise: float
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    base: float | None | Unset = UNSET
+    landing: float | None | Unset = UNSET
+    slope: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["rise"] = float(self.rise)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else float(self.base)
+        if self.landing is not UNSET:
+            out["landing"] = None if self.landing is None else float(self.landing)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewRamp:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            rise=float(data["rise"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
@@ -22532,6 +23399,64 @@ class NewSpace(_Model):
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             usage=data.get("usage", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewStair(_Model):
+    """One stair to draw.
+    Attributes:
+        pts: Its walking line, up from its first point: two points straight, three an L, four a U. Unit: length.
+        width: Unit: length.
+        risers: Unit: count.
+        riser_height: Unit: length.
+        tread: A tread's depth along the walking line. Unit: length.
+        cut: The riser its cut line stands at; absent: none. Unit: index.
+        landing: A landing's length at a turn; absent: the width. Unit: length.
+    """
+    pts: list[Vec2]
+    width: float
+    risers: int
+    riser_height: float
+    tread: float
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    cut: int | None | Unset = UNSET
+    landing: float | None | Unset = UNSET
+    numbering: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["risers"] = self.risers
+        out["riserHeight"] = float(self.riser_height)
+        out["tread"] = float(self.tread)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.cut is not UNSET:
+            out["cut"] = self.cut
+        if self.landing is not UNSET:
+            out["landing"] = None if self.landing is None else float(self.landing)
+        if self.numbering is not UNSET:
+            out["numbering"] = self.numbering
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewStair:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            risers=data["risers"],
+            riser_height=float(data["riserHeight"]),
+            tread=float(data["tread"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            cut=data.get("cut", UNSET),
+            landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            numbering=data.get("numbering", UNSET),
         )
 
 
@@ -26571,6 +27496,225 @@ class QuantityTotals(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RampEntity(Entity):
+    """A ramp (docs/adr/0343).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its centre line, up from its first point. Unit: length.
+        width: Unit: length.
+        rise: How much higher its end is than its start. Unit: elevation.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        base: Its start's elevation; absent: 0. Unit: elevation.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        landing: A landing's length at a turn; absent: the width. Unit: length.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        slope: Its slope, per cent; absent: its rise over its sloped length. Unit: percent.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "ramp"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    width: float
+    rise: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    base: float | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    landing: float | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
+    slope: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "ramp"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["rise"] = float(self.rise)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else float(self.base)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.landing is not UNSET:
+            out["landing"] = None if self.landing is None else float(self.landing)
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RampEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            rise=float(data["rise"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RampsCreate(_Model):
+    """Input of `cad.ramps.create` v1 (“Rampa”): ramps on a named layer, as one undo step. A slope that does not fit
+    (`ramp_slope_mismatch`) and landings with no sloped run left (`ramp_no_run`) are warnings.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_ramp`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
+    Warnings: `layer_hidden`, `ramp_slope_mismatch`, `ramp_no_run`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    ramps: list[NewRamp]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["ramps"] = [e0.to_json() for e0 in self.ramps]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RampsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            ramps=[NewRamp.from_json(e0) for e0 in data["ramps"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RampsCreated(_Model):
+    """Output of `cad.ramps.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RampsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RampsPlan(_Model):
+    """What `cad.ramps.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    ramps: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ramps"] = [e0.to_json() for e0 in self.ramps]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RampsPlan:
+        return cls(
+            ramps=[Entity.from_json(e0) for e0 in data["ramps"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RasterDataset(_Model):
     """A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a
     UGRID mesh's dataset, one slice of its other dimensions.
@@ -29613,6 +30757,232 @@ class SplineEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StairEntity(Entity):
+    """A stair (docs/adr/0343).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Its walking line, up from its first point: two points straight, three an L, four a U. Unit: length.
+        width: Unit: length.
+        risers: Unit: count.
+        riser_height: Unit: length.
+        tread: A tread's depth along the walking line. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        cut: The riser its cut line stands at; absent: none. Unit: index.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        landing: A landing's length along the walking line at a turn; absent: the width. Unit: length.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "stair"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    width: float
+    risers: int
+    riser_height: float
+    tread: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    cut: int | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    landing: float | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    numbering: bool | Unset = UNSET
+    order: int | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "stair"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        out["risers"] = self.risers
+        out["riserHeight"] = float(self.riser_height)
+        out["tread"] = float(self.tread)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.cut is not UNSET:
+            out["cut"] = self.cut
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.landing is not UNSET:
+            out["landing"] = None if self.landing is None else float(self.landing)
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.numbering is not UNSET:
+            out["numbering"] = self.numbering
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StairEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            risers=data["risers"],
+            riser_height=float(data["riserHeight"]),
+            tread=float(data["tread"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            cut=data.get("cut", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            numbering=data.get("numbering", UNSET),
+            order=data.get("order", UNSET),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StairsCreate(_Model):
+    """Input of `cad.stairs.create` v1 (“Merdiven”): stairs on a named layer, as one undo step. How their fields fit
+    (`stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`) are warnings.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_stair`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`.
+    Warnings: `layer_hidden`, `stair_short`, `stair_long`, `stair_step_rule`, `stair_rise_level`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    stairs: list[NewStair]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["stairs"] = [e0.to_json() for e0 in self.stairs]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StairsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            stairs=[NewStair.from_json(e0) for e0 in data["stairs"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StairsCreated(_Model):
+    """Output of `cad.stairs.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StairsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StairsPlan(_Model):
+    """What `cad.stairs.create` would write (plan mode): the objects as they would be stored, their `id` 0."""
+    stairs: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stairs"] = [e0.to_json() for e0 in self.stairs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StairsPlan:
+        return cls(
+            stairs=[Entity.from_json(e0) for e0 in data["stairs"]],
+            revision=data["revision"],
         )
 
 
@@ -33263,6 +34633,178 @@ class WorkflowStep(_Model):
             reason=data.get("reason", UNSET),
             valid=data.get("valid", UNSET),
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetArchOperation(ArchOperation):
+    """Değiştir: the fields given, on every object named.
+    Attributes:
+        base: A ramp's; null: 0. Unit: elevation.
+        bubble_size: A grid's; null: 8 mm. Unit: paper-mm.
+        bubbles: A grid's.
+        cut: A stair's. Unit: index.
+        depth: A column's; null: its width. Unit: length.
+        fill: A column's.
+        label: A grid's.
+        landing: A stair's or a ramp's; null: the width. Unit: length.
+        level: Any kind's.
+        numbering: A stair's.
+        phase: Any kind's.
+        rise: A ramp's. Unit: elevation.
+        riser_height: A stair's. Unit: length.
+        risers: A stair's. Unit: count.
+        rotation: A column's. Unit: rad.
+        shape: A column's.
+        slope: A ramp's. Unit: percent.
+        tag: A column's.
+        tread: A stair's. Unit: length.
+        type: A column's type.
+        width: A column's, a stair's or a ramp's. Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    base: float | None | Unset = UNSET
+    bubble_size: float | None | Unset = UNSET
+    bubbles: GridBubbles | GridBubblesName | None | Unset = UNSET
+    cut: int | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    fill: bool | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    landing: float | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    numbering: bool | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    rise: float | None | Unset = UNSET
+    riser_height: float | None | Unset = UNSET
+    risers: int | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
+    slope: float | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    tread: float | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else float(self.base)
+        if self.bubble_size is not UNSET:
+            out["bubbleSize"] = None if self.bubble_size is None else float(self.bubble_size)
+        if self.bubbles is not UNSET:
+            out["bubbles"] = None if self.bubbles is None else _enum_out(self.bubbles)
+        if self.cut is not UNSET:
+            out["cut"] = self.cut
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.landing is not UNSET:
+            out["landing"] = None if self.landing is None else float(self.landing)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.numbering is not UNSET:
+            out["numbering"] = self.numbering
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.rise is not UNSET:
+            out["rise"] = None if self.rise is None else float(self.rise)
+        if self.riser_height is not UNSET:
+            out["riserHeight"] = None if self.riser_height is None else float(self.riser_height)
+        if self.risers is not UNSET:
+            out["risers"] = self.risers
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.tread is not UNSET:
+            out["tread"] = None if self.tread is None else float(self.tread)
+        if self.type is not UNSET:
+            out["type"] = self.type
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetArchOperation:
+        return cls(
+            base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            bubble_size=UNSET if "bubbleSize" not in data else None if data["bubbleSize"] is None else float(data["bubbleSize"]),
+            bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
+            cut=data.get("cut", UNSET),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fill=data.get("fill", UNSET),
+            label=data.get("label", UNSET),
+            landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            level=data.get("level", UNSET),
+            numbering=data.get("numbering", UNSET),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
+            riser_height=UNSET if "riserHeight" not in data else None if data["riserHeight"] is None else float(data["riserHeight"]),
+            risers=data.get("risers", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            tag=data.get("tag", UNSET),
+            tread=UNSET if "tread" not in data else None if data["tread"] is None else float(data["tread"]),
+            type=data.get("type", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenumberArchOperation(ArchOperation):
+    """Numarala: the grids' labels or the columns' tags `start` and on, in the order given (all of one kind)."""
+    TAG_VALUE: ClassVar[str] = "renumber"
+    start: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "renumber"}
+        out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenumberArchOperation:
+        return cls(
+            start=data["start"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttachArchOperation(ArchOperation):
+    """Akslara bağla: each column to the crossing of these two grids (nearest its centre)."""
+    TAG_VALUE: ClassVar[str] = "attach"
+    grids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "attach"}
+        out["grids"] = list(self.grids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachArchOperation:
+        return cls(
+            grids=list(data["grids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachArchOperation(ArchOperation):
+    """Bağı kopar: each column off its grids, staying where it is."""
+    TAG_VALUE: ClassVar[str] = "detach"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachArchOperation:
+        return cls()
 
 
 @dataclass(kw_only=True, slots=True)
@@ -42620,6 +44162,9 @@ class ResetJoinsWallsOperation(WallsOperation):
         return cls()
 
 
+_ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
+
+
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
@@ -42680,7 +44225,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -42866,8 +44411,11 @@ __all__ = [
     "ArcThreePointsCurveConstruction",
     "ArchDiscipline",
     "ArchDisciplineName",
+    "ArchEdit",
+    "ArchEdited",
     "ArchInfo",
     "ArchLevel",
+    "ArchOperation",
     "ArchPhase",
     "ArchPhaseName",
     "ArchSettings",
@@ -42894,6 +44442,7 @@ __all__ = [
     "ArraysEdit",
     "AssocArray",
     "AtMeasuredPoint",
+    "AttachArchOperation",
     "Attachment",
     "AttachmentAccept",
     "AttachmentAcceptName",
@@ -43031,7 +44580,16 @@ __all__ = [
     "CollectLeaderEdit",
     "CollinearConstraintRule",
     "ColumnAlignTableEdit",
+    "ColumnBreak",
+    "ColumnBreakName",
+    "ColumnCrossings",
+    "ColumnEntity",
+    "ColumnShape",
+    "ColumnShapeName",
     "ColumnWidthTableEdit",
+    "ColumnsCreate",
+    "ColumnsCreated",
+    "ColumnsPlan",
     "Combination",
     "CombineTextEdit",
     "CommentFormsOp",
@@ -43093,6 +44651,7 @@ __all__ = [
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
+    "DetachArchOperation",
     "DeviationExplodeDensity",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
@@ -43371,8 +44930,15 @@ __all__ = [
     "GrantRole",
     "GrantRoleName",
     "GridArrayLayout",
+    "GridBubbles",
+    "GridBubblesName",
     "GridChoice",
+    "GridEntity",
+    "GridSeries",
     "GridTableEdit",
+    "GridsCreate",
+    "GridsCreated",
+    "GridsPlan",
     "GroupFormItem",
     "HatchAssoc",
     "HatchCurve",
@@ -43633,10 +45199,14 @@ __all__ = [
     "NetworkKind",
     "NetworkKindName",
     "NetworkLayer",
+    "NewColumn",
     "NewConstraint",
+    "NewGrid",
     "NewObject",
     "NewOpening",
+    "NewRamp",
     "NewSpace",
+    "NewStair",
     "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
@@ -43830,6 +45400,10 @@ __all__ = [
     "QuantityTotals",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
+    "RampEntity",
+    "RampsCreate",
+    "RampsCreated",
+    "RampsPlan",
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
@@ -43895,6 +45469,7 @@ __all__ = [
     "RenameParameterEdit",
     "RenameViewsOp",
     "RenamedBlock",
+    "RenumberArchOperation",
     "RenumberOpeningsOperation",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
@@ -43940,11 +45515,14 @@ __all__ = [
     "SelectKindName",
     "SelectLeftOut",
     "SelectRegion",
+    "SeriesSide",
+    "SeriesSideName",
     "ServiceConnection",
     "ServiceKind",
     "ServiceKindName",
     "ServiceLayer",
     "ServiceParam",
+    "SetArchOperation",
     "SetCellTableEdit",
     "SetOpeningsOperation",
     "SetParameterEdit",
@@ -44014,6 +45592,10 @@ __all__ = [
     "SplitWallsOperation",
     "StackMode",
     "StackModeName",
+    "StairEntity",
+    "StairsCreate",
+    "StairsCreated",
+    "StairsPlan",
     "StandardDimensionStyle",
     "StandardIssue",
     "StandardIssueKind",

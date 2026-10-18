@@ -94,6 +94,20 @@ pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_contracts::S
     said(kentos_native_application::spaces_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
+/// `cad.arch.edit`; what to say.
+pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_contracts::ArchOperation) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::ArchEdit {
+        uids: vec![uid.to_string()],
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// An opening's field or type from Öznitelikler (docs/adr/0341 §5): `operation` through `cad.openings.edit`; what to say.
 pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_contracts::OpeningsOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {

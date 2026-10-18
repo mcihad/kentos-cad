@@ -1,0 +1,2655 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.grids.create",
+  "commandVersion": 1,
+  "title": "Aks: tek aks, seri, etiketlerin sırası, balonlar, yaylı aks; doğrulama, plan, yazma, geri alma, retler",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Etiketli tek aks: doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiketli tek aks: plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "grids": [
+                {
+                  "kind": "grid",
+                  "id": 0,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": -2.0,
+                      "y": 9.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 9.0
+                    }
+                  ],
+                  "name": "3"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiketli tek aks: yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "name": "3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Aks",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiketli tek aks: gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "gizli",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "name": "3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "etiketsiz aks çizimin son aksından sonrakini alır (C → D)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 18.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 12.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 18.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "D"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "etiketsiz akslar birbirini izler (D, E)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 18.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 12.0
+                  }
+                ]
+              },
+              {
+                "pts": [
+                  {
+                    "x": 24.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 24.0,
+                    "y": 12.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 18.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 18.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "D"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 24.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 24.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "E"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sayılı aksın ardındaki etiketsiz aks bir sonraki sayı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "9"
+              },
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 14.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 14.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "name": "9"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 14.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 14.0
+                  }
+                ],
+                "name": "10"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seri: sağa 6, 6, 4.5 arayla A'dan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 0.0,
+                "y": -2.0
+              },
+              "to": {
+                "x": 0.0,
+                "y": 12.0
+              },
+              "spacings": [
+                6.0,
+                6.0,
+                4.5
+              ],
+              "side": "right",
+              "start": "A"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12,
+                13
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "A"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "B"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "C"
+              },
+              "13": {
+                "kind": "grid",
+                "id": 13,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 16.5,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 16.5,
+                    "y": 12.0
+                  }
+                ],
+                "name": "D"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seri: sola, etiketsiz, çizimin son aksından sonra",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": -2.0,
+                "y": 8.0
+              },
+              "to": {
+                "x": 14.0,
+                "y": 8.0
+              },
+              "spacings": [
+                3.0,
+                3.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 8.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 8.0
+                  }
+                ],
+                "name": "D"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 11.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 11.0
+                  }
+                ],
+                "name": "E"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 14.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 14.0
+                  }
+                ],
+                "name": "F"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seri I harfini atlar (H, J)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 40.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 40.0,
+                "y": 10.0
+              },
+              "spacings": [
+                5.0
+              ],
+              "start": "H"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 40.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 40.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "H"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 35.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 35.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "J"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seri Z'den AA'ya geçer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 40.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 40.0,
+                "y": 10.0
+              },
+              "spacings": [
+                5.0
+              ],
+              "start": "Z"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 40.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 40.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "Z"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 35.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 35.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "AA"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "başında balonlu, 10 mm balonlu aks",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 30.0
+                  }
+                ],
+                "label": "X1",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 30.0
+                  }
+                ],
+                "name": "X1",
+                "bubbles": "start",
+                "bubbleSize": 10.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaylı aks (büküm 0.5)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -5.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0.0
+                ],
+                "label": "R"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -5.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 40.0
+                  }
+                ],
+                "bulges": [
+                  0.5,
+                  0.0
+                ],
+                "name": "R"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katı ve evresiyle aks, rengi ve kalınlığıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "color": "#c03030",
+            "lineWeight": 0.18,
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 50.0
+                  }
+                ],
+                "label": "Z1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "color": "#c03030",
+                "lineWeight": 0.18,
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 50.0
+                  }
+                ],
+                "name": "Z1",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksla seri birlikte: seri aksın ardından sürer",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "label": "M"
+              }
+            ],
+            "series": {
+              "from": {
+                "x": 52.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 52.0,
+                "y": 10.0
+              },
+              "spacings": [
+                2.0
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                10,
+                11,
+                12
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "M"
+              },
+              "11": {
+                "kind": "grid",
+                "id": 11,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 52.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "N"
+              },
+              "12": {
+                "kind": "grid",
+                "id": 12,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 50.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 50.0,
+                    "y": 10.0
+                  }
+                ],
+                "name": "P"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ve seri verilmezse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_objects",
+              "message": "Yazılacak aks verilmedi. Akslar (grids) ya da bir seri (series) verin.",
+              "path": "grids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz koordinat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "A"
+              }
+            ]
+          },
+          "nonFinite": {
+            "grids[0].pts[1].x": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "2. noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "grids[0].pts[1].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek noktalı aks reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "A"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aks iki noktadır (başı ve sonu); 1 verildi.",
+              "path": "grids[0].pts"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "başı ve sonu aynı aks reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 1.0,
+                    "y": 1.0
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 1.0
+                  }
+                ],
+                "label": "A"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aksın başı ve sonu aynı; aksın bir boyu olmalı.",
+              "path": "grids[0].pts"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş etiket reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "  "
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aksın etiketi boş olamaz.",
+              "path": "grids[0].name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır balon çapı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "A",
+                "bubbleSize": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Balonun çapı 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "grids[0].bubbleSize"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek bükümlü aks reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "A",
+                "bulges": [
+                  0.2
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aksın iki noktası ve iki sonlu bükümü olur.",
+              "path": "grids[0].bulges"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır aralıklı seri reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 0.0,
+                "y": 5.0
+              },
+              "spacings": [
+                3.0,
+                0.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Akslar arası 0; sıfırdan büyük olmalı.",
+              "path": "series.spacings[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "eksi aralıklı seri reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 0.0,
+                "y": 5.0
+              },
+              "spacings": [
+                -1.5
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Akslar arası -1.5; sıfırdan büyük olmalı.",
+              "path": "series.spacings[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "başı ve sonu aynı seri reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 2.0,
+                "y": 2.0
+              },
+              "to": {
+                "x": 2.0,
+                "y": 2.0
+              },
+              "spacings": [
+                3.0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Serinin ilk aksının başı ve sonu aynı; aksın bir boyu olmalı.",
+              "path": "series.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz aralık reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "series": {
+              "from": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "to": {
+                "x": 0.0,
+                "y": 5.0
+              },
+              "spacings": [
+                3.0
+              ]
+            }
+          },
+          "nonFinite": {
+            "series.spacings[0]": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Aralık sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "series.spacings[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 0.0
+                  }
+                ],
+                "label": "A",
+                "arch": {
+                  "level": "yok"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "grids[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman grubu reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz çizgi kalınlığı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ],
+            "lineWeight": 120.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_line_weight",
+              "message": "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı (0 en ince çizgidir). Bir kalınlık ya da “Katmana göre” seçin.",
+              "path": "lineWeight"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ],
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm değişince yazılmaz (çakışma)",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "grid",
+                "id": 10,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "name": "3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "aks",
+            "grids": [
+              {
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 9.0
+                  }
+                ],
+                "label": "3"
+              }
+            ],
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -136,6 +136,14 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
         }
         // An opening's wall (docs/adr/0341 §3).
         Entity::Opening(o) => Uuid::parse_str(&o.opening.host).into_iter().collect(),
+        // A column's grids (docs/adr/0343 §3).
+        Entity::Column(c) => c
+            .column
+            .grids
+            .iter()
+            .flatten()
+            .filter_map(|g| Uuid::parse_str(g).ok())
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -146,9 +154,13 @@ fn has_broken(stored: &Stored) -> bool {
         if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| !s.live())))
 }
 
-/// Whether a space lost its walls (docs/adr/0342 §3).
+/// Whether a space lost its walls (docs/adr/0342 §3), or a column its grids (docs/adr/0343 §3).
 fn has_lost(stored: &Stored) -> bool {
-    matches!(&*stored.entity, Entity::Space(s) if s.space.broken.is_some())
+    match &*stored.entity {
+        Entity::Space(s) => s.space.broken.is_some(),
+        Entity::Column(c) => c.column.broken.is_some(),
+        _ => false,
+    }
 }
 
 /// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
@@ -299,7 +311,7 @@ impl Store {
         self.broken.iter().copied()
     }
 
-    /// The spaces that lost their walls, in slot order (docs/adr/0342 §3).
+    /// The spaces that lost their walls and the columns their grids, in slot order (docs/adr/0342 §3, 0343 §3).
     pub fn lost_spaces(&self) -> impl Iterator<Item = Slot> + '_ {
         self.lost.iter().copied()
     }

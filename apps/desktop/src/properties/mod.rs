@@ -103,6 +103,9 @@ pub enum Event {
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, kentos_contracts::SpacesOperation),
+    /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
+    /// `cad.arch.edit`.
+    Arch(Slot, kentos_contracts::ArchOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -144,6 +147,26 @@ pub enum Event {
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
     DimensionStyle(Vec<Slot>, Option<String>),
+}
+
+/// A grid's, column's, stair's or ramp's field a cell edits (docs/adr/0343 §5): words, a length in the project's
+/// unit, degrees, a count, a per cent or paper millimetres; empty takes a nullable one away.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArchField {
+    Label,
+    Tag,
+    Type,
+    BubbleSize,
+    Width,
+    Depth,
+    Turn,
+    Risers,
+    RiserHeight,
+    Tread,
+    Landing,
+    Rise,
+    Slope,
+    Base,
 }
 
 /// The value a cell edits.
@@ -230,6 +253,8 @@ pub enum Field {
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
+    /// A grid's, column's, stair's or ramp's typed field (docs/adr/0343 §5).
+    Arch(Slot, ArchField),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
     CloudClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
@@ -686,6 +711,7 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
+            Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -1073,6 +1099,40 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_opening(model, *slot, op);
         }
+        Field::Arch(slot, which) => {
+            use kentos_contracts::{ArchChange, ArchOperation};
+            let t = kentos_interaction::js_trim(text);
+            let words = (!t.is_empty()).then(|| t.to_owned());
+            let n = web_number(text);
+            let length = || f.to_metres(n);
+            if !t.is_empty() && !n.is_finite() && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type) {
+                return Vec::new();
+            }
+            let c = match which {
+                ArchField::Label => match words {
+                    Some(w) => ArchChange { label: Some(w), ..Default::default() },
+                    None => return Vec::new(),
+                },
+                ArchField::Tag => ArchChange { tag: Some(words), ..Default::default() },
+                ArchField::Type => ArchChange { kind: Some(words), ..Default::default() },
+                ArchField::BubbleSize => ArchChange { bubble_size: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::Depth => ArchChange { depth: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Landing => ArchChange { landing: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Slope => ArchChange { slope: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::Base => ArchChange { base: Some(words.map(|_| length())), ..Default::default() },
+                _ if words.is_none() => return Vec::new(),
+                ArchField::Width => ArchChange { width: Some(length()), ..Default::default() },
+                ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },
+                ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => {
+                    ArchChange { risers: Some(n as u32), ..Default::default() }
+                }
+                ArchField::Risers => return Vec::new(),
+                ArchField::RiserHeight => ArchChange { riser_height: Some(length()), ..Default::default() },
+                ArchField::Tread => ArchChange { tread: Some(length()), ..Default::default() },
+                ArchField::Rise => ArchChange { rise: Some(length()), ..Default::default() },
+            };
+            return properties::edit_arch(model, *slot, ArchOperation::Set(Box::new(c)));
+        }
         Field::SpaceNumber(slot)
         | Field::SpaceName(slot)
         | Field::SpaceUsage(slot)
@@ -1264,6 +1324,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceFloor(_)
         | Field::SpaceWall(_)
         | Field::SpaceCeiling(_)
+        | Field::Arch(..)
         | Field::Elevation(..)
         | Field::PolylineWidth(_)
         | Field::Elevations(_)

@@ -680,6 +680,50 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 space: spec,
             }
         }
+        // Their paths map, their sizes scale; a mirror turns a grid's arc over (docs/adr/0343 §2).
+        Shape::Grid { pts, bulges, grid } => Shape::Grid {
+            pts: pts.iter().map(|q| apply(m, *q)).collect(),
+            bulges: bulges
+                .as_ref()
+                .map(|b| if is_reflection(m) { b.iter().map(|x| -x).collect() } else { b.clone() }),
+            grid: grid.clone(),
+        },
+        Shape::Column { at, column } => {
+            let theta = atan2(m[1], m[0]);
+            let mut spec = column.clone();
+            spec.width *= s;
+            spec.depth = column.depth.map(|d| d * s);
+            spec.rotation = norm_angle(if is_reflection(m) {
+                theta - column.rotation
+            } else {
+                theta + column.rotation
+            });
+            Shape::Column {
+                at: apply(m, *at),
+                column: spec,
+            }
+        }
+        Shape::Stair { pts, stair } => {
+            let mut spec = stair.clone();
+            spec.width *= s;
+            spec.tread *= s;
+            spec.riser_height *= s;
+            spec.landing = stair.landing.map(|l| l * s);
+            Shape::Stair {
+                pts: pts.iter().map(|q| apply(m, *q)).collect(),
+                stair: spec,
+            }
+        }
+        Shape::Ramp { pts, ramp } => {
+            let mut spec = ramp.clone();
+            spec.width *= s;
+            spec.rise *= s;
+            spec.landing = ramp.landing.map(|l| l * s);
+            Shape::Ramp {
+                pts: pts.iter().map(|q| apply(m, *q)).collect(),
+                ramp: spec,
+            }
+        }
         // Its jambs map (the document reads its place along its wall from them, docs/adr/0341 §3); its lengths scale.
         Shape::Opening {
             at,

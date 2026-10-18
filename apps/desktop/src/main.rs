@@ -396,6 +396,8 @@ mod wall_scenes;
 mod opening_scenes;
 #[cfg(test)]
 mod space_scenes;
+#[cfg(test)]
+mod arch_scenes;
 
 use kentos_ui::theme::typography;
 

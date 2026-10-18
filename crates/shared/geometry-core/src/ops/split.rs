@@ -389,7 +389,11 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Polygon { pts, .. }
         | Shape::Spline { pts, .. }
         | Shape::Leader { pts, .. }
-        | Shape::Wall { pts, .. } => pts.first()?.x,
+        | Shape::Wall { pts, .. }
+        | Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. } => pts.first()?.x,
+        Shape::Column { at, .. } => at.x,
         Shape::Opening { place, .. } => place.first()?.x,
         Shape::Space { parts, .. } => parts.first()?.outer.pts.first()?.x,
         Shape::Nurbs { ctrl, .. } => ctrl.first()?.x,

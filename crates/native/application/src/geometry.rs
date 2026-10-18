@@ -759,6 +759,10 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Wall(w) => kentos_formats::walls::core_wall(&w.wall),
         Entity::Opening(o) => kentos_formats::openings::core_opening(&o.opening),
         Entity::Space(s) => kentos_formats::spaces::core_space(&s.space),
+        Entity::Grid(g) => kentos_formats::arch_elements::core_grid(&g.grid),
+        Entity::Column(c) => kentos_formats::arch_elements::core_column(&c.column),
+        Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
+        Entity::Ramp(r) => kentos_formats::arch_elements::core_ramp(&r.ramp),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1300,6 +1304,30 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Space(e), Shape::Space { parts, space }) => {
             e.space.parts = parts.iter().map(kentos_formats::spaces::part).collect();
             e.space.seed = space.seed.map(|q| Point { x: q.x, y: q.y });
+        }
+        // A grid's, column's, stair's or ramp's path or centre and the sizes a transform scales (docs/adr/0343 §2).
+        (Entity::Grid(e), Shape::Grid { pts, bulges, .. }) => {
+            e.grid.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+            e.grid.bulges = bulges;
+        }
+        (Entity::Column(e), Shape::Column { at, column }) => {
+            e.column.at = Point { x: at.x, y: at.y };
+            e.column.width = column.width;
+            e.column.depth = column.depth;
+            e.column.rotation = column.rotation;
+        }
+        (Entity::Stair(e), Shape::Stair { pts, stair }) => {
+            e.stair.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+            e.stair.width = stair.width;
+            e.stair.tread = stair.tread;
+            e.stair.riser_height = stair.riser_height;
+            e.stair.landing = stair.landing;
+        }
+        (Entity::Ramp(e), Shape::Ramp { pts, ramp }) => {
+            e.ramp.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+            e.ramp.width = ramp.width;
+            e.ramp.rise = ramp.rise;
+            e.ramp.landing = ramp.landing;
         }
         (Entity::Opening(e), Shape::Opening { at, width, place, .. }) => {
             e.opening.at = at;
@@ -1958,7 +1986,14 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
         s @ Shape::Wall { .. } => EntityGeometry::Wall(kentos_formats::walls::contract_wall(&s)?),
         // A record has no geometry to edit (docs/adr/0410); an opening is edited by its own command (docs/adr/0341).
-        Shape::Record {} | Shape::Opening { .. } | Shape::Space { .. } => return None,
+        // A grid, column, stair or ramp by its own commands too (docs/adr/0343 §4).
+        Shape::Record {}
+        | Shape::Opening { .. }
+        | Shape::Space { .. }
+        | Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. } => return None,
     })
 }
 

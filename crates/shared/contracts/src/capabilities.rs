@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 23] = [
+pub const KINDS: [&str; 27] = [
     "point",
     "line",
     "polyline",
@@ -87,6 +87,10 @@ pub const KINDS: [&str; 23] = [
     "wall",
     "opening",
     "space",
+    "grid",
+    "column",
+    "stair",
+    "ramp",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -1245,6 +1249,105 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &[],
         targets: || vec![target(None, &["opening"], &[], Some("not_an_opening"), None)],
+    },
+    // Grids, columns, stairs and ramps (docs/adr/0343 §4).
+    Entry {
+        id: "cad.grids.create",
+        refusals: &[
+            &["no_objects", "not_finite", "invalid_grid", "level_not_found", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.columns.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_column",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_grid",
+                "grids_parallel",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.stairs.create",
+        refusals: &[
+            &["no_objects", "not_finite", "invalid_stair", "level_not_found", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "stair_short",
+            "stair_long",
+            "stair_step_rule",
+            "stair_rise_level",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "cad.ramps.create",
+        refusals: &[
+            &["no_objects", "not_finite", "invalid_ramp", "level_not_found", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden", "ramp_slope_mismatch", "ramp_no_run"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.arch.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_arch_element",
+                "nothing_to_set",
+                "field_not_for_kind",
+                "mixed_kinds",
+                "not_finite",
+                "invalid_grid",
+                "invalid_column",
+                "invalid_stair",
+                "invalid_ramp",
+                "not_a_grid",
+                "grids_parallel",
+                "level_not_found",
+            ],
+            REVISION,
+        ],
+        warnings: &[
+            "stair_short",
+            "stair_long",
+            "stair_step_rule",
+            "stair_rise_level",
+            "ramp_slope_mismatch",
+            "ramp_no_run",
+        ],
+        targets: || {
+            vec![target(
+                None,
+                &["grid", "column", "stair", "ramp"],
+                &[],
+                Some("not_arch_element"),
+                None,
+            )]
+        },
     },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
@@ -2599,6 +2702,10 @@ const ENTRIES: &[Entry] = &[
                         "wall",
                         "opening",
                         "space",
+                        "grid",
+                        "column",
+                        "stair",
+                        "ramp",
                         "image",
                         "raster",
                         "pointcloud",
@@ -2606,7 +2713,7 @@ const ENTRIES: &[Entry] = &[
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

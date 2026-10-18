@@ -2355,6 +2355,163 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Aks, Kolon, Merdiven, Rampa and Mimari nesneyi düzenle (docs/adr/0343 §4), held together by
+        // fixtures/commands/v1/cad.{grids,columns,stairs,ramps}.create.json and cad.arch.edit.json. The web is paused.
+        CommandDescriptor {
+            id: crate::CAD_GRIDS_CREATE.into(),
+            version: crate::CAD_GRIDS_CREATE_VERSION,
+            title: "Aks".into(),
+            summary: "Akslar ekler; tek geri alma adımı “Aks”. grids: her biri iki nokta (pts; bulges ile yaylı), etiket (label), balonlar (bubbles: both, start, end, none) ve balon çapı (bubbleSize, kâğıtta mm; yoksa 8). \
+                      series: paralel akslar: ilki from → to, her sonraki spacings'teki aralık kadar side (left, right) yana; ilk etiket start. \
+                      Etiket verilmezse bir öncekinin sıradakidir: harfler A … H, J … N, P … Z, AA (I ve O atlanır), sayılar 1, 2 …; çağrının ilki çizimin son aksından sonrakini, aks yoksa A alır. \
+                      Aksın çizimi (kesikli çizgi, balonlar, etiket) alanlarından türer. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::GridsCreate>(),
+            output: schema::<crate::GridsCreated>(),
+            plan: Some(schema::<crate::GridsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "A–D aksları 6 m arayla, 1–3 aksları 5 m arayla".into(),
+                    input: json!({ "layerId": "aks", "series": { "from": { "x": 0.0, "y": -2.0 }, "to": { "x": 0.0, "y": 12.0 }, "spacings": [6.0, 6.0, 4.5], "side": "right", "start": "A" } }),
+                    output: Some(json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e62", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e63", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e64"], "ids": [21, 22, 23, 24], "revision": "40" })),
+                },
+                CommandExample {
+                    title: "Yalnız başında balonlu tek aks".into(),
+                    input: json!({ "layerId": "aks", "grids": [{ "pts": [{ "x": -2.0, "y": 0.0 }, { "x": 20.0, "y": 0.0 }], "label": "1", "bubbles": "start" }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_COLUMNS_CREATE.into(),
+            version: crate::CAD_COLUMNS_CREATE_VERSION,
+            title: "Kolon".into(),
+            summary: "Kolonlar ekler; tek geri alma adımı “Kolon”. columns: her biri merkez (at) ya da iki aks (grids: kalıcı kimlikler; kolon kesişimlerinde durur, at verilirse ona en yakın kesişimde), biçim (shape: rect, round), en (width), boy (depth; yoksa en), dönüş (rotation, radyan), tür (type), etiket (tag), dolu (fill). \
+                      crossings: verilen aksların her çiftinin, ikisinin de içinde kalan kesişimlerinde birer kolon; aynı ölçülerle. Etiketsiz kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). \
+                      Akslara bağlı kolonun yerini belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı (place) iki aksın etiketlerinden “B-3” olur; aks silinir ya da akslar kesişmezse broken: gridGone. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ColumnsCreate>(),
+            output: schema::<crate::ColumnsCreated>(),
+            plan: Some(schema::<crate::ColumnsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün aks kesişimlerine 30 × 50 kolon".into(),
+                    input: json!({ "layerId": "kolon", "crossings": { "grids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e62", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e65"], "width": 0.3, "depth": 0.5, "fill": true }, "tagStart": "S1" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Tek yuvarlak kolon".into(),
+                    input: json!({ "layerId": "kolon", "columns": [{ "at": { "x": 3.0, "y": 4.0 }, "shape": "round", "width": 0.4, "tag": "S9" }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_STAIRS_CREATE.into(),
+            version: crate::CAD_STAIRS_CREATE_VERSION,
+            title: "Merdiven".into(),
+            summary: "Merdivenler ekler; tek geri alma adımı “Merdiven”. Her biri yürüme çizgisi (pts: 2 nokta düz, 3 L, 4 U; yolun yönü çıkış yönüdür), genişlik, rıht sayısı (risers), rıht yüksekliği (riserHeight), basamak derinliği (tread), dönüşteki sahanlığın boyu (landing; yoksa genişlik), kesme çizgisinin rıhtı (cut), basamak numaraları (numbering). \
+                      Basamak çizgileri başlangıçtan tread aralıkla, sahanlıkları atlayarak çizilir. Uymayanlar uyarıdır, ret değildir: yol rıhtlara yetmiyorsa stair_short, uzunsa stair_long; 2 × rıht + basamak 0,60–0,65 m dışındaysa stair_step_rule (yalnız bilgi); katın yüksekliği biliniyorsa rıht sayısı × rıht onu tutmuyorsa stair_rise_level. \
+                      Hiçbir söz yönetmeliğe uyum söylemez. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StairsCreate>(),
+            output: schema::<crate::StairsCreated>(),
+            plan: Some(schema::<crate::StairsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "U merdiven: 18 rıht, 17 cm rıht, 28 cm basamak".into(),
+                    input: json!({ "layerId": "merdiven", "stairs": [{ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 3.0, "y": 0.0 }, { "x": 3.0, "y": 2.0 }, { "x": 0.0, "y": 2.0 }], "width": 1.0, "risers": 18, "riserHeight": 0.17, "tread": 0.28, "cut": 9 }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_RAMPS_CREATE.into(),
+            version: crate::CAD_RAMPS_CREATE_VERSION,
+            title: "Rampa".into(),
+            summary: "Rampalar ekler; tek geri alma adımı “Rampa”. Her biri orta çizgi (pts: 2–4 nokta), genişlik, toplam yükseklik (rise), eğim (slope, yüzde; yoksa yükseklik ve eğimli uzunluktan), başlangıç kotu (base; yoksa 0), dönüşteki sahanlığın boyu (landing; yoksa genişlik). \
+                      Uçlarında kot yazısı (+0.00 gibi), eğimli kollarında ok. Verilen eğim yükseklik bölü eğimli uzunluktan 0,1 puandan çok farklıysa ramp_slope_mismatch, sahanlıklar bütün uzunluğu alıyorsa ramp_no_run uyarısı; ret değildir. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RampsCreate>(),
+            output: schema::<crate::RampsCreated>(),
+            plan: Some(schema::<crate::RampsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "10 m'lik %5 rampa".into(),
+                    input: json!({ "layerId": "rampa", "ramps": [{ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 10.0, "y": 0.0 }], "width": 1.5, "rise": 0.5, "slope": 5.0 }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ARCH_EDIT.into(),
+            version: crate::CAD_ARCH_EDIT_VERSION,
+            title: "Mimari nesneyi düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen aks, kolon, merdiven ve rampaları değiştirir; tek geri alma adımı “Mimari nesneyi düzenle”, hepsi ya da hiçbiri. \
+                      operation: set (türün alanları: aksın label, bubbles, bubbleSize; kolonun shape, width, depth, rotation, type, tag, fill; merdivenin width, risers, riserHeight, tread, landing, cut, numbering; rampanın width, rise, slope, base, landing; hepsinin level, phase; null alanı kaldırır; nesnenin türünde olmayan alan field_not_for_kind), renumber (akslar ya da kolonlar, tek tür, verildiği sırayla start'tan; aks etiketi değişince bağlı kolonların konum yazısı da), attach (kolonları iki aksın kesişimine bağlar, merkezlerine en yakın kesişime), detach (bağı koparır, kolon yerinde kalır). \
+                      Kilitli katmandaki nesne bütün değişikliği reddeder. Merdiven ve rampanın denetimleri uyarıdır. Plan yazmadan nesneleri olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchEdit>(),
+            output: schema::<crate::ArchEdited>(),
+            plan: Some(schema::<crate::ArchEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Aksları yeniden numarala".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e62"], "operation": { "kind": "renumber", "start": "A" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Merdivenin rıht sayısını değiştir".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e66"], "operation": { "kind": "set", "risers": 17, "riserHeight": 0.18 } }),
+                    output: None,
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_OPENINGS_CREATE.into(),
             version: crate::CAD_OPENINGS_CREATE_VERSION,
@@ -6912,6 +7069,21 @@ mod tests {
                     crate::CAD_SPACES_CREATE => {
                         serde_json::from_value::<crate::SpacesCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_GRIDS_CREATE => {
+                        serde_json::from_value::<crate::GridsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_COLUMNS_CREATE => {
+                        serde_json::from_value::<crate::ColumnsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STAIRS_CREATE => {
+                        serde_json::from_value::<crate::StairsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RAMPS_CREATE => {
+                        serde_json::from_value::<crate::RampsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ARCH_EDIT => {
+                        serde_json::from_value::<crate::ArchEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SPACES_EDIT => {
                         serde_json::from_value::<crate::SpacesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -7677,6 +7849,9 @@ mod tests {
                         }
                         crate::CAD_SPACES_CREATE => {
                             serde_json::from_value::<crate::SpacesCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_GRIDS_CREATE => {
+                            serde_json::from_value::<crate::GridsCreated>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_EDIT => {
                             serde_json::from_value::<crate::OpeningsEdited>(output.clone()).map(|_| ())

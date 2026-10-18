@@ -7,12 +7,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, spaces, standards, styles, tables, texts, ucs, units, views, walls
+from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, texts, ucs, units, views, walls
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
     "cad.annotations.scales": annotations.scales,
     "cad.arc.create": arc.create,
+    "cad.arch.edit": arch.edit,
     "cad.arrays.edit": arrays.edit,
     "cad.attachments.inspect": attachments.inspect,
     "cad.blocks.define": blocks.define,
@@ -25,6 +26,7 @@ COMMANDS: dict[str, Any] = {
     "cad.blocks.replace": blocks.replace,
     "cad.changeset.apply": changeset.apply,
     "cad.circle.create": circle.create,
+    "cad.columns.create": columns.create,
     "cad.constraints.edit": constraints.edit,
     "cad.constraints.query": constraints.query,
     "cad.curves.construct": curves.construct,
@@ -81,6 +83,7 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.test": forms.test,
     "cad.forms.transition": forms.transition,
     "cad.forms.validate": forms.validate,
+    "cad.grids.create": grids.create,
     "cad.hatches.edit": hatches.edit,
     "cad.hatchpatterns.edit": hatchpatterns.edit,
     "cad.labels.pin": labels.pin,
@@ -116,6 +119,7 @@ COMMANDS: dict[str, Any] = {
     "cad.polyline.create": polyline.create,
     "cad.processing.run": processing.run,
     "cad.processing.tools": processing.tools,
+    "cad.ramps.create": ramps.create,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,
     "cad.rectangle.create": rectangle.create,
@@ -131,6 +135,7 @@ COMMANDS: dict[str, Any] = {
     "cad.spaces.create": spaces.create,
     "cad.spaces.edit": spaces.edit,
     "cad.spaces.quantities": spaces.quantities,
+    "cad.stairs.create": stairs.create,
     "cad.standards.apply": standards.apply,
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
@@ -177,4 +182,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "spaces", "standards", "styles", "tables", "texts", "ucs", "units", "views", "walls",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "texts", "ucs", "units", "views", "walls",)

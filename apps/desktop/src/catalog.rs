@@ -837,6 +837,11 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
                 "edit.selectFilter.wall",
                 "edit.selectFilter.opening",
                 "edit.selectFilter.space",
+                // Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
+                "edit.selectFilter.grid",
+                "edit.selectFilter.column",
+                "edit.selectFilter.stair",
+                "edit.selectFilter.ramp",
             ] {
                 if !kinds.contains(&kind) {
                     kinds.push(kind);

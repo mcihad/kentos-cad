@@ -1226,6 +1226,38 @@ codes! {
     SPACES_NOT_TOUCHING = "spaces_not_touching", Failed, false, "Birleştirilecek mahaller değmiyor; birleşince tek parça olmuyorlar.";
     SPLIT_MISSED = "split_missed", Failed, false, "Çizgi mahali bölmüyor: mahalin içinden geçip sınırını iki yerde kesmeli.";
 
+    // ── Grids, columns, stairs and ramps (docs/adr/0343) ────────────────
+    /// A grid's fields that make none.
+    INVALID_GRID = "invalid_grid", Failed, false, "Aksın alanları bir aks tanımlamıyor: iki ayrı nokta, boş olmayan etiket, sonlu büküm ve balon çapı.";
+    /// A column's fields that make none.
+    INVALID_COLUMN = "invalid_column", Failed, false, "Kolonun alanları bir kolon tanımlamıyor: sonlu merkez ya da iki aks, sıfırdan büyük en ve boy.";
+    /// A stair's fields that make none.
+    INVALID_STAIR = "invalid_stair", Failed, false, "Merdivenin alanları bir merdiven tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, rıht ve basamak, rıht sayısı 1–400.";
+    /// A ramp's fields that make none.
+    INVALID_RAMP = "invalid_ramp", Failed, false, "Rampanın alanları bir rampa tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, sonlu yükseklik.";
+    /// An object that is no grid where a grid is asked.
+    NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
+    /// Two grids that do not cross.
+    GRIDS_PARALLEL = "grids_parallel", Failed, false, "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.";
+    /// An object no architectural element command takes.
+    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, merdiven ya da rampa değil.";
+    /// A field the object's kind does not have.
+    FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
+    /// Objects of more than one kind where one is asked.
+    MIXED_KINDS = "mixed_kinds", Failed, false, "Numaralanacak nesneler tek türden olmalı: ya akslar ya kolonlar.";
+    /// Risers that do not fit the stair's walking line.
+    STAIR_SHORT = "stair_short", Warning, false, "Merdivenin yolu rıhtlara yetmiyor: bazı basamaklar sığmadı. Yolu uzatın, basamağı daraltın ya da rıht sayısını azaltın.";
+    /// A walking line longer than the risers use.
+    STAIR_LONG = "stair_long", Warning, false, "Merdivenin yolu basamaklardan uzun; son basamaktan sonra boş kalıyor.";
+    /// Twice the riser and the tread outside 0.60–0.65 m (information only).
+    STAIR_STEP_RULE = "stair_step_rule", Warning, false, "2 × rıht + basamak 0,60–0,65 m dışında (Blondel oranı; yalnız bilgi, yönetmelik denetimi değildir).";
+    /// Risers that do not make the level's height.
+    STAIR_RISE_LEVEL = "stair_rise_level", Warning, false, "Rıht sayısı × rıht yüksekliği katın yüksekliğini tutmuyor.";
+    /// A ramp's given slope not its rise over its sloped length.
+    RAMP_SLOPE_MISMATCH = "ramp_slope_mismatch", Warning, false, "Rampanın verilen eğimi yüksekliğinin eğimli uzunluğuna oranından 0,1 puandan çok farklı.";
+    /// A ramp whose landings take its whole length.
+    RAMP_NO_RUN = "ramp_no_run", Warning, false, "Rampanın sahanlıkları bütün uzunluğunu alıyor; eğimli kolu yok.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

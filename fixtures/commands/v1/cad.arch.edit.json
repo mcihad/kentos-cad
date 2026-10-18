@@ -1,0 +1,4338 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arch.edit",
+  "commandVersion": 1,
+  "title": "Mimari nesneyi düzenle: değiştir, numarala, akslara bağla, bağı kopar; kolonun akslarla gitmesi; retler",
+  "note": "ADR 0343 §1–§4. Beklenenler scripts/fixtures/arch_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; akslar düz ve eksenlere paralel, kesişimleri kesirlerle. Kurulumdaki çizimde 9 nesne var; yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Taşıyıcılar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.06
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.06
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "merdiven",
+        "name": "Merdiven",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "aks",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "grid",
+        "id": 1,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 0.0,
+            "y": 12.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "grid",
+        "id": 2,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": -2.0
+          },
+          {
+            "x": 6.0,
+            "y": 12.0
+          }
+        ],
+        "name": "B"
+      },
+      {
+        "kind": "grid",
+        "id": 3,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 0.0
+          },
+          {
+            "x": 14.0,
+            "y": 0.0
+          }
+        ],
+        "name": "1"
+      },
+      {
+        "kind": "grid",
+        "id": 4,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": -2.0,
+            "y": 5.0
+          },
+          {
+            "x": 14.0,
+            "y": 5.0
+          }
+        ],
+        "name": "2"
+      },
+      {
+        "kind": "grid",
+        "id": 5,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "name": "K"
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 7,
+        "layerId": "aks",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 12.0,
+            "y": -2.0
+          },
+          {
+            "x": 12.0,
+            "y": 12.0
+          }
+        ],
+        "name": "C"
+      },
+      {
+        "kind": "stair",
+        "id": 8,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 0.0
+          },
+          {
+            "x": 23.75,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "merdiven",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 5.0
+          },
+          {
+            "x": 30.0,
+            "y": 5.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5,
+        "slope": 5.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Değiştir: aksın etiketi, balonları ve balon çapı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "A1",
+              "bubbles": "end",
+              "bubbleSize": 12.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "A1",
+                  "bubbles": "end",
+                  "bubbleSize": 12.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "A1",
+                "bubbles": "end",
+                "bubbleSize": 12.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null balon çapını kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "bubbleSize": 12.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 2,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 6.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "B",
+                  "bubbleSize": 12.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "2": {
+                "kind": "grid",
+                "id": 2,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "B",
+                "bubbleSize": 12.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "set",
+              "bubbleSize": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 2,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 6.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "B"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "2": {
+                "kind": "grid",
+                "id": 2,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "B"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kolonun biçimi, ölçüleri, dönüşü, türü, etiketi ve dolgusu",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "shape": "round",
+              "width": 0.45,
+              "rotation": 0.3,
+              "type": "Çelik",
+              "tag": "S4",
+              "fill": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.45,
+                  "shape": "round",
+                  "rotation": 0.3,
+                  "type": "Çelik",
+                  "tag": "S4",
+                  "fill": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.45,
+                "shape": "round",
+                "rotation": 0.3,
+                "type": "Çelik",
+                "tag": "S4",
+                "fill": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null kolonun boyunu ve türünü kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.6,
+                "type": "Betonarme"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "depth": 0.6,
+                "type": "Betonarme"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "depth": null,
+              "type": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdivenin rıhtları uyarılarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 17,
+              "riserHeight": 0.18
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 17,
+                  "riserHeight": 0.18,
+                  "tread": 0.25
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (3.75 m) 17 rıhta yetmiyor: 1 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 17,
+                "riserHeight": 0.18,
+                "tread": 0.25
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: merdivenin sahanlığı, kesmesi ve numaraları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": 1.0,
+              "cut": 8,
+              "numbering": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25,
+                  "landing": 1.0,
+                  "cut": 8,
+                  "numbering": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "landing": 1.0,
+                "cut": 8,
+                "numbering": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: rampanın eğimi uymayınca uyarı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "slope": 8.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "ramp_slope_mismatch",
+                "message": "Rampanın eğimi %8.00 verildi; yükseklik ve eğimli uzunlukla %5.00.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "slope": 8.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: null rampanın eğimini kaldırır, başlangıç kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "slope": null,
+              "base": 0.45
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "base": 0.45
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "base": 0.45
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: genişlik merdivene ve rampaya birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.4
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.4,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25
+                },
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.4,
+                  "rise": 0.5,
+                  "slope": 5.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.4,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25
+              },
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.4,
+                "rise": 0.5,
+                "slope": 5.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kat ve evre her türde, null kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "phase": "new"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "A",
+                  "arch": {
+                    "level": "kat-1",
+                    "phase": "new"
+                  }
+                },
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25,
+                  "arch": {
+                    "level": "kat-1",
+                    "phase": "new"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "A",
+                "arch": {
+                  "level": "kat-1",
+                  "phase": "new"
+                }
+              },
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "arch": {
+                  "level": "kat-1",
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "A",
+                  "arch": {
+                    "phase": "new"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "A",
+                "arch": {
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numarala: akslar verilen sırayla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2",
+              "$uidOf:1",
+              "$uidOf:7"
+            ],
+            "operation": {
+              "kind": "renumber",
+              "start": "1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 2,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 6.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "1"
+                },
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "2"
+                },
+                {
+                  "kind": "grid",
+                  "id": 7,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 12.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 12.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "3"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "2": {
+                "kind": "grid",
+                "id": 2,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 6.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "1"
+              },
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "2"
+              },
+              "7": {
+                "kind": "grid",
+                "id": 7,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 12.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "3"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Numarala: kolonların etiketleri",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                11
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "11": {
+                "kind": "column",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10",
+              "$uidOf:11"
+            ],
+            "operation": {
+              "kind": "renumber",
+              "start": "K1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.3,
+                  "tag": "K1"
+                },
+                {
+                  "kind": "column",
+                  "id": 11,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 4.0,
+                    "y": 4.0
+                  },
+                  "width": 0.3,
+                  "tag": "K2"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "tag": "K1"
+              },
+              "11": {
+                "kind": "column",
+                "id": 11,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3,
+                "tag": "K2"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Akslara bağla: kolon kesişime gider (B-2)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "attach",
+              "grids": [
+                "$uidOf:2",
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 6.0,
+                    "y": 5.0
+                  },
+                  "width": 0.3,
+                  "grids": [
+                    "$uidOf:2",
+                    "$uidOf:4"
+                  ],
+                  "place": "B-2"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 6.0,
+                  "y": 5.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:2",
+                  "$uidOf:4"
+                ],
+                "place": "B-2"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağı kopar: kolon yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "A-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "width": 0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aksın etiketi değişince bağlı kolonun konumu da değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "A-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "D"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "D"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "D"
+              },
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "D-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Akslar numaralanınca bağlı kolonun konumu izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "A-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:3"
+            ],
+            "operation": {
+              "kind": "renumber",
+              "start": "E"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "E"
+                },
+                {
+                  "kind": "grid",
+                  "id": 3,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": -2.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "name": "F"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "E"
+              },
+              "3": {
+                "kind": "grid",
+                "id": 3,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 0.0
+                  }
+                ],
+                "name": "F"
+              },
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "grids": [
+                  "$uidOf:1",
+                  "$uidOf:3"
+                ],
+                "place": "E-F"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kısa basamak yolu uzun bırakır, Blondel dışı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "tread": 0.2
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.2
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_long",
+                "message": "Son rıhttan sonra yürüme çizgisinde 0.75 m kalıyor; merdiven yoldan kısa.",
+                "path": "uids[0]"
+              },
+              {
+                "code": "stair_step_rule",
+                "message": "2 × rıht + basamak = 0.550 m; Blondel'in oranı 0.60–0.65 m. Bu bir bilgidir, yönetmelik denetimi değildir.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.2
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kat verilince rıhtlar katın yüksekliğiyle denetlenir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.25,
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_rise_level",
+                "message": "16 rıht × 0.175 m = 2.800 m; katın yüksekliği 3.060 m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "stair",
+                "id": 8,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 23.75,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.2,
+                "risers": 16,
+                "riserHeight": 0.175,
+                "tread": 0.25,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sahanlık bütün yolu alınca ramp_no_run",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.ramps.create",
+          "input": {
+            "layerId": "merdiven",
+            "ramps": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 44.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 44.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "landing": 20.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 10,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 4.0,
+                      "y": 40.0
+                    },
+                    {
+                      "x": 4.0,
+                      "y": 44.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.5,
+                  "landing": 20.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "ramp_no_run",
+                "message": "Sahanlıklardan sonra rampanın eğimli kolu kalmıyor; yolu uzatın ya da sahanlığı kısaltın.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "ramp",
+                "id": 10,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 40.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 44.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.5,
+                "landing": 20.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "tread": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (3.75 m) 16 rıhta yetmiyor: 3 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmadan gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "tread": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "stair",
+                  "id": 8,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 23.75,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 1.2,
+                  "risers": 16,
+                  "riserHeight": 0.175,
+                  "tread": 0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "stair_short",
+                "message": "Yürüme çizgisi (3.75 m) 16 rıhta yetmiyor: 3 rıht sığmıyor. Yolu uzatın, basamağı kısaltın ya da rıht sayısını azaltın.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazılır ve geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "rise": 0.6
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "ramp",
+                  "id": 9,
+                  "layerId": "merdiven",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 20.0,
+                      "y": 5.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 5.0
+                    }
+                  ],
+                  "width": 1.5,
+                  "rise": 0.6,
+                  "slope": 5.0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "ramp_slope_mismatch",
+                "message": "Rampanın eğimi %5.00 verildi; yükseklik ve eğimli uzunlukla %6.00.",
+                "path": "uids[0]"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "ramp",
+                "id": 9,
+                "layerId": "merdiven",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 20.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 30.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 1.5,
+                "rise": 0.6,
+                "slope": 5.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Mimari nesneyi düzenle",
+          "expect": {
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kimlik verilmezse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Düzenlenecek aks, kolon, merdiven ya da rampa verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "aks"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“aks” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan nesne reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mimari olmayan nesne reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_arch_element",
+              "message": "Nesne aks, kolon, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş değişiklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "Değiştirilecek bir alan verilmedi.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aksın genişliği yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“width” alanı aks nesnesinde yok.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "merdivenin etiketi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "M"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“label” alanı merdiven nesnesinde yok.",
+              "path": "operation.label"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rampanın rıhtı yok, merdiven ve rampa birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 12
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“risers” alanı rampa nesnesinde yok.",
+              "path": "operation.risers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz genişlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 1.0
+            }
+          },
+          "nonFinite": {
+            "operation.width": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Genişlik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır enli rampa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_ramp",
+              "message": "Rampanın genişliği 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "uids[0].width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır rıht reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "risers": 0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_stair",
+              "message": "Rıht sayısı 0; 1 ile 400 arasında olmalı.",
+              "path": "uids[0].risers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş aks etiketi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": " "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_grid",
+              "message": "Aksın etiketi boş olamaz.",
+              "path": "uids[0].name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "yok"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "operation.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks ve merdiven birlikte numaralanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "renumber",
+              "start": "A"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "mixed_kinds",
+              "message": "Numarala yalnız aksları ya da yalnız kolonları numaralar; ikisi birlikte ya da başka tür verilmez.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "merdiven numaralanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "renumber",
+              "start": "1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "mixed_kinds",
+              "message": "Numarala yalnız aksları ya da yalnız kolonları numaralar; ikisi birlikte ya da başka tür verilmez.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks akslara bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "attach",
+              "grids": [
+                "$uidOf:2",
+                "$uidOf:3"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "Akslara yalnız kolon bağlanır; aks bağlanmaz.",
+              "path": "operation.grids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rampanın bağı koparılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "detach"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "Bağı yalnız kolonun kopar; rampa bağlı değildir.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmandaki aks düzenlenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "L"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli; üzerindeki aks düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "Q"
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır enli kolon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun eni 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "uids[0].width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "paralel akslara bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "attach",
+              "grids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "grids_parallel",
+              "message": "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.",
+              "path": "operation.grids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aks olmayana bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "attach",
+              "grids": [
+                "$uidOf:6",
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_grid",
+              "message": "Nesne aks değil; kolon yalnız iki aksın kesişimine bağlanır.",
+              "path": "operation.grids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sürüm değişince yazılmaz (çakışma)",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "Q"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "grid",
+                  "id": 1,
+                  "layerId": "aks",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": -2.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 12.0
+                    }
+                  ],
+                  "name": "Q"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "1": {
+                "kind": "grid",
+                "id": 1,
+                "layerId": "aks",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -2.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 12.0
+                  }
+                ],
+                "name": "Q"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "R"
+            },
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

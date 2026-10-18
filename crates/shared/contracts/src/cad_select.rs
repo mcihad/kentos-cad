@@ -178,11 +178,16 @@ pub enum SelectKind {
     Opening,
     /// Mahal (docs/adr/0342 §5).
     Space,
+    /// Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
+    Grid,
+    Column,
+    Stair,
+    Ramp,
 }
 
 impl SelectKind {
     /// Every kind, in the filter's menu's order.
-    pub const ALL: [SelectKind; 20] = [
+    pub const ALL: [SelectKind; 24] = [
         SelectKind::Point,
         SelectKind::Line,
         SelectKind::Polyline,
@@ -203,6 +208,10 @@ impl SelectKind {
         SelectKind::Wall,
         SelectKind::Opening,
         SelectKind::Space,
+        SelectKind::Grid,
+        SelectKind::Column,
+        SelectKind::Stair,
+        SelectKind::Ramp,
     ];
 
     /// Its name on the wire, the entity kind's.
@@ -228,6 +237,10 @@ impl SelectKind {
             SelectKind::Wall => "wall",
             SelectKind::Opening => "opening",
             SelectKind::Space => "space",
+            SelectKind::Grid => "grid",
+            SelectKind::Column => "column",
+            SelectKind::Stair => "stair",
+            SelectKind::Ramp => "ramp",
         }
     }
 }

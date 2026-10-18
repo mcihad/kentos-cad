@@ -424,6 +424,36 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             }
             s.height(&mut f.height);
         }
+        // Their paths and sizes are lengths, their rises and levels heights; a bubble is on paper (docs/adr/0343 §1).
+        Entity::Grid(e) => s.points(&mut e.grid.pts),
+        Entity::Column(e) => {
+            let c = &mut e.column;
+            s.point(&mut c.at);
+            c.width = s.apply(c.width);
+            if let Some(d) = &mut c.depth {
+                *d = s.apply(*d);
+            }
+        }
+        Entity::Stair(e) => {
+            let f = &mut e.stair;
+            s.points(&mut f.pts);
+            f.width = s.apply(f.width);
+            f.riser_height = s.apply(f.riser_height);
+            f.tread = s.apply(f.tread);
+            if let Some(l) = &mut f.landing {
+                *l = s.apply(*l);
+            }
+        }
+        Entity::Ramp(e) => {
+            let f = &mut e.ramp;
+            s.points(&mut f.pts);
+            f.width = s.apply(f.width);
+            f.rise = s.apply(f.rise);
+            s.height(&mut f.base);
+            if let Some(l) = &mut f.landing {
+                *l = s.apply(*l);
+            }
+        }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}
     }

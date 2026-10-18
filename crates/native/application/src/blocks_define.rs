@@ -264,6 +264,10 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Wall(x) => &mut x.base,
         Entity::Opening(x) => &mut x.base,
         Entity::Space(x) => &mut x.base,
+        Entity::Grid(x) => &mut x.base,
+        Entity::Column(x) => &mut x.base,
+        Entity::Stair(x) => &mut x.base,
+        Entity::Ramp(x) => &mut x.base,
     }
 }
 

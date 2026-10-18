@@ -58,5 +58,6 @@ pub mod zip;
 pub mod walls;
 pub mod openings;
 pub mod spaces;
+pub mod arch_elements;
 
 pub use kentos_contracts as contracts;

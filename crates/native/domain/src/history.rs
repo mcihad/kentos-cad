@@ -701,6 +701,9 @@ impl Document {
         // Then: the spaces found from their walls (docs/adr/0342 §3).
         let spaces = self.follow_spaces(ops);
         ops.extend(spaces);
+        // Then: the columns with their grids (docs/adr/0343 §3).
+        let columns = self.follow_columns(ops);
+        ops.extend(columns);
         // Then: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
         let settled = self.settle_boundaries(ops);
         ops.extend(settled);

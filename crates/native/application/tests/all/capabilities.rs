@@ -88,6 +88,46 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.grids.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.grids.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.columns.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.columns.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.stairs.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.stairs.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.ramps.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.ramps.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
         "cad.spaces.create",
         "invalid_attribute",
         "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",

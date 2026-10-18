@@ -368,6 +368,39 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0343 §1); the drawing's only.
+        Grid(x) => {
+            if in_block {
+                return Err("Blok tanımında aks olamaz".into());
+            }
+            if let Some((_, why)) = x.grid.problem() {
+                return Err(why);
+            }
+        }
+        Column(x) => {
+            if in_block {
+                return Err("Blok tanımında kolon olamaz".into());
+            }
+            if let Some((_, why)) = x.column.problem() {
+                return Err(why);
+            }
+        }
+        Stair(x) => {
+            if in_block {
+                return Err("Blok tanımında merdiven olamaz".into());
+            }
+            if let Some((_, why)) = x.stair.problem() {
+                return Err(why);
+            }
+        }
+        Ramp(x) => {
+            if in_block {
+                return Err("Blok tanımında rampa olamaz".into());
+            }
+            if let Some((_, why)) = x.ramp.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0341 §1): its wall, place, width, leaves and jambs; the drawing's only.
         Opening(x) => {
             if in_block {
@@ -682,6 +715,10 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         }
         // Its area, as an area object's (docs/adr/0342 §1); its source is its definition.
         Entity::Space(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
+        // A grid's path, a column's, stair's or ramp's outline (docs/adr/0343 §5); its source is its definition.
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+            return projection(&kentos_formats::arch_elements::simple(e)?, blocks);
+        }
         // Its jambs' footprint (docs/adr/0341 §1); its source is its definition.
         Entity::Opening(x) => {
             let q = &x.opening.place;

@@ -85,6 +85,10 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
         Entity::Space(_) => "Mahal",
+        Entity::Grid(_) => "Aks",
+        Entity::Column(_) => "Kolon",
+        Entity::Stair(_) => "Merdiven",
+        Entity::Ramp(_) => "Rampa",
     }
 }
 
@@ -195,6 +199,10 @@ fn finite(e: &Entity) -> bool {
         Entity::Wall(w) => w.wall.pts.iter().all(|p| ok(*p)) && w.wall.width.is_finite(),
         Entity::Opening(o) => o.opening.place.iter().all(|p| ok(*p)) && o.opening.width.is_finite(),
         Entity::Space(s) => s.space.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts))),
+        Entity::Grid(g) => all_ok(&g.grid.pts),
+        Entity::Column(c) => ok(c.column.at) && nums_ok(&[c.column.width, c.column.rotation]),
+        Entity::Stair(s) => all_ok(&s.stair.pts) && nums_ok(&[s.stair.width, s.stair.tread]),
+        Entity::Ramp(r) => all_ok(&r.ramp.pts) && nums_ok(&[r.ramp.width, r.ramp.rise]),
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -705,6 +713,11 @@ impl Writer<'_> {
             // A space: its rings as closed polylines (`writer::plain_walls`, docs/adr/0342).
             Entity::Space(_) => {
                 self.report.skip("Mahal", "mahal halkalarına açılmadan yazılamaz", 0);
+                false
+            }
+            // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
+            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+                self.report.skip("Mimari nesne", "parçalarına açılmadan yazılamaz", 0);
                 false
             }
             // Nor an opening: its symbol's pieces (docs/adr/0341 §2).

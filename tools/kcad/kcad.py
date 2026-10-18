@@ -284,6 +284,11 @@ OPENING_FORMS = ("door", "window", "opening")
 # Schema 78: schema 77, the `space` kind (its boundary's parts and the rest of its fields as one map) and the settings'
 # `arch.spaceMethod` (docs/adr/0342 §1).
 SCHEMA_WITH_SPACES = 78
+# Schema 79: schema 78, the `grid`, `column`, `stair` and `ramp` kinds, each's fields as one map under its kind's name
+# (docs/adr/0343 §1).
+SCHEMA_WITH_ARCH_ELEMENTS = 79
+ARCH_ELEMENTS = ("grid", "column", "stair", "ramp")
+ARCH_NAMES = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
 SPACE_METHODS = ("net", "centerline", "gross")
 SPACE_MAX_POINTS = 10_000
 # A wall's bounds (kentos_contracts::arch).
@@ -476,7 +481,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2605,6 +2610,7 @@ class _Schema:
         self.wall_joins = version >= SCHEMA_WITH_WALL_JOINS
         self.openings = version >= SCHEMA_WITH_OPENINGS
         self.spaces = version >= SCHEMA_WITH_SPACES
+        self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4791,7 +4797,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4814,6 +4820,10 @@ class _Schema:
         if kind == "wall" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında duvar olamaz")
+        # Nor a grid, a column, a stair or a ramp (docs/adr/0343 §1).
+        if kind in ARCH_ELEMENTS and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında aks, kolon, merdiven ya da rampa olamaz")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -4847,6 +4857,8 @@ class _Schema:
                 self.opening_rules(fields)
             if kind == "space":
                 self.space_rules(fields)
+            if kind in ARCH_ELEMENTS:
+                self.arch_element_rules(kind, fields[kind])
             self.look_rules(fields)
             if "wipeout" in fields and kind != "polygon":
                 self.path.append("wipeout")
@@ -4911,6 +4923,8 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
+        if kind in ARCH_ELEMENTS:
+            fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
             return {"kind": kind, "id": len(self.uids), **fields}
@@ -6485,6 +6499,99 @@ class _Schema:
         if len(o["place"]) != 4:
             bad(f"Açıklığın pervazları dört noktadır; {len(o['place'])} verildi.")
 
+    def arch_element(self, kind):
+        """A grid's, column's, stair's or ramp's fields (schema 79, docs/adr/0343 §1), as the contract's JSON has them:
+        each only when it is not its default (both bubbles, a rectangle, no turn, not filled, no numbers)."""
+        def unless(default, read):
+            def f(x):
+                x = read(x)
+                if x == default:
+                    self.fail("bad_value", f"varsayılan değer ({default!r}) yazılmaz")
+                return x
+            return f
+        points = self.array(self.jpoint)
+        arch = (self.arch_info, False)
+        tables = {
+            "grid": {"pts": (points, True), "bulges": (self.array(self.float), False), "name": (self.text, True),
+                     "bubbles": (unless("both", self.enum(("both", "start", "end", "none"))), False),
+                     "bubbleSize": (self.float, False), "arch": arch},
+            "column": {"at": (self.jpoint, True), "shape": (unless("rect", self.enum(("rect", "round"))), False),
+                       "width": (self.float, True), "depth": (self.float, False), "rotation": (unless(0.0, self.float), False),
+                       "type": (self.text, False), "tag": (self.text, False), "fill": (unless(False, self.bool), False),
+                       "grids": (self.array(self.text), False), "place": (self.text, False),
+                       "broken": (self.enum(("gridGone",)), False), "arch": arch},
+            "stair": {"pts": (points, True), "width": (self.float, True), "risers": (self.uint(32), True),
+                      "riserHeight": (self.float, True), "tread": (self.float, True), "landing": (self.float, False),
+                      "cut": (self.uint(32), False), "numbering": (unless(False, self.bool), False), "arch": arch},
+            "ramp": {"pts": (points, True), "width": (self.float, True), "rise": (self.float, True),
+                     "slope": (self.float, False), "base": (self.float, False), "landing": (self.float, False), "arch": arch},
+        }
+        return self.fields(tables[kind])
+
+    def arch_element_rules(self, kind, f):
+        """The contract's problems of a grid, column, stair or ramp (docs/adr/0343 §1)."""
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        def positive(v, whose, top=100.0):
+            if not (math.isfinite(v) and 0 < v <= top):
+                bad(f"{whose} sıfırdan büyük, en çok {top:g} olmalı.")
+        def finite_points(pts):
+            if any(not (math.isfinite(p["x"]) and math.isfinite(p["y"])) for p in pts):
+                bad("Koordinatlar sonlu olmalı.")
+        def flight(pts, what):
+            if not 2 <= len(pts) <= 4:
+                bad(f"{what} yolu 2, 3 ya da 4 noktadır; {len(pts)} verildi.")
+            finite_points(pts)
+            if any(a == b for a, b in zip(pts, pts[1:])):
+                bad(f"{what} yolunun ard arda iki noktası aynı.")
+        if f.get("arch") == {}:
+            bad("boş mimari bilgi yazılmaz")
+        if kind == "grid":
+            if len(f["pts"]) != 2:
+                bad(f"Aks iki noktadır; {len(f['pts'])} verildi.")
+            finite_points(f["pts"])
+            if f["pts"][0] == f["pts"][1]:
+                bad("Aksın başı ve sonu aynı.")
+            if "bulges" in f and (len(f["bulges"]) != 2 or not all(math.isfinite(b) for b in f["bulges"])):
+                bad("Aksın iki sonlu bükümü olur.")
+            if f["name"].strip() == "":
+                bad("Aksın etiketi boş olamaz.")
+            if "bubbleSize" in f:
+                positive(f["bubbleSize"], "Balonun çapı")
+        elif kind == "column":
+            finite_points([f["at"]])
+            positive(f["width"], "Kolonun eni")
+            if "depth" in f:
+                positive(f["depth"], "Kolonun boyu")
+            if not math.isfinite(f.get("rotation", 0.0)):
+                bad("Kolonun dönüşü sonlu olmalı.")
+            g = f.get("grids")
+            if g is not None and (len(g) != 2 or g[0] == g[1]):
+                bad("Kolon iki ayrı aksın kesişimine bağlanır.")
+            for k in ("type", "tag"):
+                if k in f and f[k].strip() == "":
+                    bad("Boş metin yazılmaz.")
+        elif kind == "stair":
+            flight(f["pts"], "Merdivenin")
+            for k, whose in (("width", "Merdivenin genişliği"), ("riserHeight", "Rıht yüksekliği"), ("tread", "Basamak derinliği")):
+                positive(f[k], whose)
+            if not 1 <= f["risers"] <= 400:
+                bad(f"Rıht sayısı {f['risers']}; 1 ile 400 arasında olmalı.")
+            if "landing" in f:
+                positive(f["landing"], "Sahanlığın boyu")
+            if "cut" in f and not 1 <= f["cut"] <= f["risers"]:
+                bad("Kesme çizgisi rıhtların arasında olmalı.")
+        else:
+            flight(f["pts"], "Rampanın")
+            positive(f["width"], "Rampanın genişliği")
+            if not (math.isfinite(f["rise"]) and abs(f["rise"]) <= 1000):
+                bad("Rampanın yüksekliği sonlu ve en çok 1000 m olmalı.")
+            if "slope" in f:
+                positive(f["slope"], "Rampanın eğimi", 1000.0)
+            if "base" in f and not math.isfinite(f["base"]):
+                bad("Rampanın başlangıç kotu sonlu olmalı.")
+            if "landing" in f:
+                positive(f["landing"], "Sahanlığın boyu")
+
     def arch_info(self, v):
         return self.fields({"level": (self.text, False), "phase": (self.enum(ARCH_PHASES), False),
                             "status": (self.enum(ARCH_STATUSES), False), "discipline": (self.enum(ARCH_DISCIPLINES), False)})(v)
@@ -7119,6 +7226,11 @@ ENTITY_KINDS = {
         # Schema 76 (docs/adr/0340 §1): its joins, its cleanup only when off.
         **({"joins": (s.wall_joins_, False), "cleanup": (s.only_false, False)} if s.wall_joins else {}),
     },
+    # Schema 79 (docs/adr/0343 §1): a grid, a column, a stair, a ramp; its fields as one map under its kind's name.
+    "grid": lambda s: {"grid": (s.arch_element("grid"), True)},
+    "column": lambda s: {"column": (s.arch_element("column"), True)},
+    "stair": lambda s: {"stair": (s.arch_element("stair"), True)},
+    "ramp": lambda s: {"ramp": (s.arch_element("ramp"), True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

@@ -1470,6 +1470,11 @@ KINDS = {
         "joins": (opaque, False),
         "cleanup": (boolean, False),
     },
+    # Schema 79 (docs/adr/0343 §1): a grid, a column, a stair, a ramp; its fields as one map under its kind's name.
+    "grid": {"grid": (opaque, True)},
+    "column": {"column": (opaque, True)},
+    "stair": {"stair": (opaque, True)},
+    "ramp": {"ramp": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -1807,6 +1812,12 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
+    if kind in ("grid", "column", "stair", "ramp"):
+        assert uid is not None, "blok tanımında aks, kolon, merdiven ya da rampa olamaz"
+        keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
+                "lineType", "lineTypeScale", "transparency", "order", "linePattern")
+        own = {k: v for k, v in e.items() if k not in keep}
+        e = {**{k: v for k, v in e.items() if k in keep}, kind: own}
     if kind == "space":
         assert uid is not None, "blok tanımında mahal olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
@@ -2067,6 +2078,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 79 (docs/adr/0343): a grid, a column, a stair or a ramp.
+    if any(e["kind"] in ("grid", "column", "stair", "ramp") for e in entities):
+        return 79
     # Schema 78 (docs/adr/0342): a space, or the project's space method.
     if any(e["kind"] == "space" for e in entities) or "spaceMethod" in (settings or {}).get("arch", {}):
         return 78
@@ -2575,7 +2589,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-79.kcad"] = container(root(cmap(parts), version=uint(79)))
+    files["schema-version-80.kcad"] = container(root(cmap(parts), version=uint(80)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4163,6 +4177,25 @@ def build():
     priority_75 = copy.deepcopy(load("walls.json"))
     priority_75["entities"][0]["components"][1]["priority"] = 1
     out["broken/wall-priority-in-schema-75.kcad"] = container(document(priority_75).replace(b"\x67version\x18\x4c", b"\x67version\x18\x4b"))
+    # The grids, columns, stairs and ramps (docs/adr/0343 §1): schema 79's; in schema 78 unknown kinds; a blank name, one
+    # point, a width of 0, a default written, no risers, a cut past the risers and five points refused.
+    out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
+    arch_payload = document(load("arch-elements.json"))
+    assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"
+    out["broken/arch-elements-in-schema-78.kcad"] = container(arch_payload.replace(b"\x67version\x18\x4f", b"\x67version\x18\x4e"))
+
+    def arch_broken(change):
+        d = copy.deepcopy(load("arch-elements.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/grid-name-blank.kcad"] = arch_broken(lambda d: d["entities"][0].update(name=" "))
+    out["broken/grid-one-point.kcad"] = arch_broken(lambda d: d["entities"][0]["pts"].pop())
+    out["broken/column-width-zero.kcad"] = arch_broken(lambda d: d["entities"][3].update(width=0.0))
+    out["broken/column-default-shape.kcad"] = arch_broken(lambda d: d["entities"][3].update(shape="rect"))
+    out["broken/stair-no-risers.kcad"] = arch_broken(lambda d: d["entities"][4].update(risers=0))
+    out["broken/stair-cut-past.kcad"] = arch_broken(lambda d: d["entities"][4].update(cut=19))
+    out["broken/ramp-five-points.kcad"] = arch_broken(lambda d: d["entities"][5]["pts"].extend([{"x": 41.0, "y": 0.0}, {"x": 42.0, "y": 1.0}, {"x": 43.0, "y": 1.0}]))
     # The spaces (docs/adr/0342 §1): schema 78's; in schema 77 an unknown kind; a default method written, two vertices,
     # a height of 0, a blank name and the project's space method in schema 77 refused.
     out["spaces.kcad"] = container(document(load("spaces.json")))

@@ -1,0 +1,799 @@
+//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create` and `cad.ramps.create` v1 (docs/adr/0343 §4, plan/cad.md
+//! `CAD-ARCH-31`–`36`): grids, columns, stairs and ramps on a named layer, each call one undo step named for its kind
+//! (“Aks”, “Kolon”, “Merdiven”, “Rampa”). The tools preview the plan's objects and write through `execute`; Python and
+//! an agent give the same points and values and get the same objects. The shared cases are
+//! `fixtures/commands/v1/cad.{grids,columns,stairs,ramps}.create.json`.
+//!
+//! The checks, in order (the first that fails answers): 1. at least one object (`no_objects`), at most
+//! `MAX_ARCH_ELEMENTS` (the kind's `invalid_…`); 2. each object in the input's order: its numbers (`not_finite`), its
+//! grids (columns: `invalid_uid`, `entity_not_found`, `not_a_grid`, `grids_parallel`), its fields (the kind's
+//! `invalid_…`), its level (`level_not_found`); 3. the line weight; 4. the expected revision; 5. the layer; 6. the
+//! attributes. How a stair's or a ramp's fields fit are warnings, never a refusal.
+
+use std::collections::BTreeMap;
+
+use kentos_contracts::{
+    ArchInfo, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated, ColumnsPlan,
+    CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridsCreate,
+    GridsCreated, GridsPlan, RampEntity, RampFields, RampsCreate, RampsCreated, RampsPlan,
+    SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, Vec2,
+};
+use kentos_domain::Document;
+use kentos_domain::arch_follow;
+use kentos_geometry_core::geom::arch;
+
+use crate::ExecutionContext;
+use crate::checks::{self, Stop, error};
+use crate::codes;
+
+pub const GRID_STEP: &str = "Aks";
+pub const COLUMN_STEP: &str = "Kolon";
+pub const STAIR_STEP: &str = "Merdiven";
+pub const RAMP_STEP: &str = "Rampa";
+
+pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
+    Stop::failed(error(code, message, Some(path.into())))
+}
+
+type Attrs = Option<BTreeMap<String, String>>;
+/// The warnings and the objects as they would be stored, their `id` 0.
+type Checked = (Vec<CommandWarning>, Vec<Entity>);
+/// An object made: where the input names it, its attributes, and how it is built on its base.
+type Made = (String, Attrs, Box<dyn FnOnce(EntityBase) -> Entity>);
+
+/// The kind's `invalid_…` for fields that make none, the field under `path`.
+fn valid(problem: Option<(String, String)>, code: &str, path: &str) -> Result<(), Stop> {
+    match problem {
+        Some((field, words)) => Err(fail(code, words, &format!("{path}.{field}"))),
+        None => Ok(()),
+    }
+}
+
+pub(crate) fn grid_valid(g: &GridFields, path: &str) -> Result<(), Stop> {
+    valid(g.problem(), codes::INVALID_GRID, path)
+}
+
+pub(crate) fn column_valid(c: &ColumnFields, path: &str) -> Result<(), Stop> {
+    valid(c.problem(), codes::INVALID_COLUMN, path)
+}
+
+pub(crate) fn stair_valid(s: &StairFields, path: &str) -> Result<(), Stop> {
+    valid(s.problem(), codes::INVALID_STAIR, path)
+}
+
+pub(crate) fn ramp_valid(r: &RampFields, path: &str) -> Result<(), Stop> {
+    valid(r.problem(), codes::INVALID_RAMP, path)
+}
+
+fn finite_each(values: &[(Option<f64>, &str, &str)], path: &str) -> Result<(), Stop> {
+    for (v, field, name) in values {
+        if let Some(x) = v {
+            checks::finite(
+                *x,
+                name,
+                "Sonlu bir sayı verin.",
+                &format!("{path}.{field}"),
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn points(pts: &[Vec2], path: &str) -> Result<(), Stop> {
+    for (k, p) in pts.iter().enumerate() {
+        checks::point(
+            *p,
+            &format!("{}. noktanın", k + 1),
+            &format!("{path}.pts[{k}]"),
+        )?;
+    }
+    Ok(())
+}
+
+/// The stair's warnings: the core's checks (`stair_short`, `stair_long`, `stair_step_rule`) and, its level's height
+/// known, `stair_rise_level`.
+pub fn stair_warnings(doc: &Document, s: &StairFields, path: &str) -> Vec<CommandWarning> {
+    let shape = kentos_formats::arch_elements::core_stair(s);
+    let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
+        return Vec::new();
+    };
+    let mut out: Vec<CommandWarning> = arch::stair_checks(pts, stair)
+        .into_iter()
+        .map(|c| CommandWarning {
+            code: c.code.into(),
+            message: c.words,
+            path: Some(path.into()),
+        })
+        .collect();
+    let height = s.arch.level.as_deref().and_then(|id| {
+        doc.settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.levels.iter().find(|l| l.id == id))
+            .and_then(|l| l.height)
+    });
+    if let Some(h) = height {
+        let rise = f64::from(s.risers) * s.riser_height;
+        if (rise - h).abs() > 1e-3 {
+            out.push(CommandWarning {
+                code: codes::STAIR_RISE_LEVEL.into(),
+                message: format!(
+                    "{} rıht × {} m = {} m; katın yüksekliği {} m. Rıht sayısını ya da yüksekliğini düzeltin.",
+                    s.risers,
+                    kentos_geometry_core::display::fixed(s.riser_height, 3),
+                    kentos_geometry_core::display::fixed(rise, 3),
+                    kentos_geometry_core::display::fixed(h, 3)
+                ),
+                path: Some(path.into()),
+            });
+        }
+    }
+    out
+}
+
+/// The ramp's warnings: `ramp_slope_mismatch`, `ramp_no_run`.
+pub fn ramp_warnings(r: &RampFields, path: &str) -> Vec<CommandWarning> {
+    let shape = kentos_formats::arch_elements::core_ramp(r);
+    let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else {
+        return Vec::new();
+    };
+    arch::ramp_checks(pts, ramp)
+        .into_iter()
+        .map(|c| CommandWarning {
+            code: c.code.into(),
+            message: c.words,
+            path: Some(path.into()),
+        })
+        .collect()
+}
+
+/// The grid with persistent id `uid`, at `path`: `invalid_uid`, `entity_not_found`, `not_a_grid`.
+pub(crate) fn grid_named(doc: &Document, uid: &str, path: &str) -> Result<GridFields, Stop> {
+    if !checks::is_uid_text(uid) {
+        return Err(fail(
+            codes::INVALID_UID,
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; küçük harfli, tireli bir UUID verin."
+            ),
+            path,
+        ));
+    }
+    let found = kentos_domain::Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s));
+    match found {
+        None => Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok. Var olan bir aksın kimliğini verin."),
+            path,
+        )),
+        Some(Entity::Grid(g)) => Ok(g.grid.clone()),
+        Some(_) => Err(fail(
+            codes::NOT_A_GRID,
+            "Nesne aks değil; kolon yalnız iki aksın kesişimine bağlanır.".into(),
+            path,
+        )),
+    }
+}
+
+/// A column settled on two grids named at `path`: `grids_parallel` when they do not cross.
+pub(crate) fn settled_on(
+    doc: &Document,
+    mut c: ColumnFields,
+    has_at: bool,
+    path: &str,
+) -> Result<ColumnFields, Stop> {
+    if let Some(ids) = c.grids.clone() {
+        if ids.len() != 2 || ids[0] == ids[1] {
+            return Err(fail(
+                codes::INVALID_COLUMN,
+                "Kolon iki ayrı aksın kesişimine bağlanır; iki aks kimliği verin.".into(),
+                &format!("{path}.grids"),
+            ));
+        }
+        let a = grid_named(doc, &ids[0], &format!("{path}.grids[0]"))?;
+        grid_named(doc, &ids[1], &format!("{path}.grids[1]"))?;
+        if !has_at && a.pts.len() == 2 {
+            c.at = a.pts[0];
+        }
+        c = doc.column_settled(&c);
+        if c.broken.is_some() {
+            return Err(fail(
+                codes::GRIDS_PARALLEL,
+                "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz."
+                    .into(),
+                &format!("{path}.grids"),
+            ));
+        }
+    }
+    Ok(c)
+}
+
+fn base(layer: &str, color: &Option<String>, line_weight: Option<f64>, attrs: Attrs) -> EntityBase {
+    EntityBase {
+        look: Default::default(),
+        id: 0,
+        layer_id: layer.to_owned(),
+        color: color.clone(),
+        attrs: attrs.unwrap_or_default(),
+        label: None,
+        symbol: None,
+        line_weight,
+        label_pins: Vec::new(),
+        attachments: Vec::new(),
+    }
+}
+
+/// The common tail of every create: the line weight, the revision, the layer, the attributes; the objects made.
+fn finish(
+    doc: &Document,
+    layer: &str,
+    line_weight: Option<f64>,
+    expected: Option<&str>,
+    made: Vec<Made>,
+    color: &Option<String>,
+    mut warnings: Vec<CommandWarning>,
+) -> Result<Checked, Stop> {
+    checks::line_weight(line_weight, "lineWeight")?;
+    checks::revision(doc, expected)?;
+    let mut out = checks::layer(doc, layer)?;
+    let mut entities = Vec::with_capacity(made.len());
+    for (path, attrs, make) in made {
+        let attrs = checks::object_attrs(doc, layer, attrs.as_ref(), &format!("{path}.attrs"))?;
+        entities.push(make(base(layer, color, line_weight, attrs)));
+    }
+    out.append(&mut warnings);
+    Ok((out, entities))
+}
+
+fn too_many(n: usize, code: &str, what: &str, path: &str) -> Result<(), Stop> {
+    if n > kentos_contracts::MAX_ARCH_ELEMENTS {
+        return Err(fail(
+            code,
+            format!(
+                "Bir çağrıda en çok {} {what} yazılır; {n} verildi.",
+                kentos_contracts::MAX_ARCH_ELEMENTS
+            ),
+            path,
+        ));
+    }
+    Ok(())
+}
+
+/// The label of the drawing's last grid (by slot), for the first unlabelled grid's.
+fn last_grid_label(doc: &Document) -> Option<String> {
+    doc.entities()
+        .filter_map(|e| match e {
+            Entity::Grid(g) => Some(g.grid.label.clone()),
+            _ => None,
+        })
+        .last()
+}
+
+fn next_of(prev: &Option<String>) -> String {
+    prev.as_deref()
+        .map_or_else(|| "A".to_owned(), kentos_contracts::next_label)
+}
+
+fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
+    let series = input.series.as_ref().map_or(0, |s| s.spacings.len() + 1);
+    if input.grids.is_empty() && input.series.is_none() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak aks verilmedi. Akslar (grids) ya da bir seri (series) verin.".into(),
+            "grids",
+        ));
+    }
+    too_many(
+        input.grids.len() + series,
+        codes::INVALID_GRID,
+        "aks",
+        "grids",
+    )?;
+    let mut prev = last_grid_label(doc);
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.grids.iter().enumerate() {
+        let at = format!("grids[{i}]");
+        points(&n.pts, &at)?;
+        for (k, b) in n.bulges.iter().flatten().enumerate() {
+            checks::finite(
+                *b,
+                "Büküm",
+                "Sonlu bir sayı verin.",
+                &format!("{at}.bulges[{k}]"),
+            )?;
+        }
+        finite_each(&[(n.bubble_size, "bubbleSize", "Balon çapı")], &at)?;
+        let g = GridFields {
+            pts: n.pts.clone(),
+            bulges: n.bulges.clone(),
+            label: n.label.clone().unwrap_or_else(|| next_of(&prev)),
+            bubbles: n.bubbles.unwrap_or_default(),
+            bubble_size: n.bubble_size,
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        grid_valid(&g, &at)?;
+        crate::walls::level_known(doc, &g.arch, &format!("{at}.arch.level"))?;
+        prev = Some(g.label.clone());
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+        ));
+    }
+    if let Some(s) = &input.series {
+        checks::point(s.from, "Serinin başının", "series.from")?;
+        checks::point(s.to, "Serinin sonunun", "series.to")?;
+        for (k, d) in s.spacings.iter().enumerate() {
+            let path = format!("series.spacings[{k}]");
+            checks::finite(*d, "Aralık", "Sonlu bir sayı verin.", &path)?;
+            if *d <= 0.0 {
+                return Err(fail(
+                    codes::INVALID_GRID,
+                    format!("Akslar arası {d}; sıfırdan büyük olmalı."),
+                    &path,
+                ));
+            }
+        }
+        finite_each(&[(s.bubble_size, "bubbleSize", "Balon çapı")], "series")?;
+        let (dx, dy) = (s.to.x - s.from.x, s.to.y - s.from.y);
+        let len = dx.hypot(dy);
+        if len == 0.0 {
+            return Err(fail(
+                codes::INVALID_GRID,
+                "Serinin ilk aksının başı ve sonu aynı; aksın bir boyu olmalı.".into(),
+                "series.to",
+            ));
+        }
+        let (nx, ny) = match s.side.unwrap_or_default() {
+            SeriesSide::Left => (-dy / len, dx / len),
+            SeriesSide::Right => (dy / len, -dx / len),
+        };
+        let arch = s.arch.clone().unwrap_or_default();
+        crate::walls::level_known(doc, &arch, "series.arch.level")?;
+        let mut offset = 0.0;
+        let mut label = s.start.clone().unwrap_or_else(|| next_of(&prev));
+        for k in 0..=s.spacings.len() {
+            if k > 0 {
+                offset += s.spacings[k - 1];
+                label = kentos_contracts::next_label(&label);
+            }
+            let shift = |p: Vec2| Vec2 {
+                x: p.x + nx * offset,
+                y: p.y + ny * offset,
+            };
+            let g = GridFields {
+                pts: vec![shift(s.from), shift(s.to)],
+                bulges: None,
+                label: label.clone(),
+                bubbles: s.bubbles.unwrap_or_default(),
+                bubble_size: s.bubble_size,
+                arch: arch.clone(),
+            };
+            grid_valid(&g, "series")?;
+            made.push((
+                "series".into(),
+                None,
+                Box::new(move |base| Entity::Grid(GridEntity { base, grid: g })),
+            ));
+        }
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
+}
+
+fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop> {
+    if input.columns.is_empty() && input.crossings.is_none() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak kolon verilmedi. Kolonlar (columns) ya da aks kesişimleri (crossings) verin."
+                .into(),
+            "columns",
+        ));
+    }
+    too_many(
+        input.columns.len(),
+        codes::INVALID_COLUMN,
+        "kolon",
+        "columns",
+    )?;
+    let mut tag = input.tag_start.clone();
+    let mut next_tag = |own: &Option<String>| -> Option<String> {
+        if own.is_some() {
+            return own.clone();
+        }
+        let t = tag.clone()?;
+        tag = Some(kentos_contracts::next_label(&t));
+        Some(t)
+    };
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.columns.iter().enumerate() {
+        let at = format!("columns[{i}]");
+        if let Some(p) = n.at {
+            checks::point(p, "Kolonun merkezinin", &format!("{at}.at"))?;
+        }
+        finite_each(
+            &[
+                (Some(n.width), "width", "En"),
+                (n.depth, "depth", "Boy"),
+                (n.rotation, "rotation", "Dönüş"),
+            ],
+            &at,
+        )?;
+        if n.at.is_none() && n.grids.is_none() {
+            return Err(fail(
+                codes::INVALID_COLUMN,
+                "Kolonun yeri verilmedi: merkezini (at) ya da iki aksını (grids) verin.".into(),
+                &at,
+            ));
+        }
+        let c = ColumnFields {
+            at: n.at.unwrap_or(Vec2 { x: 0.0, y: 0.0 }),
+            shape: n.shape.unwrap_or_default(),
+            width: n.width,
+            depth: n.depth,
+            rotation: n.rotation.unwrap_or(0.0),
+            kind: n.kind.clone(),
+            tag: next_tag(&n.tag),
+            fill: n.fill.unwrap_or(false),
+            grids: n.grids.clone(),
+            place: None,
+            broken: None,
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        column_valid(&c, &at)?;
+        let c = settled_on(doc, c, n.at.is_some(), &at)?;
+        crate::walls::level_known(doc, &c.arch, &format!("{at}.arch.level"))?;
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Column(ColumnEntity { base, column: c })),
+        ));
+    }
+    if let Some(x) = &input.crossings {
+        finite_each(
+            &[
+                (Some(x.width), "width", "En"),
+                (x.depth, "depth", "Boy"),
+                (x.rotation, "rotation", "Dönüş"),
+            ],
+            "crossings",
+        )?;
+        if x.grids.len() < 2 {
+            return Err(fail(
+                codes::INVALID_COLUMN,
+                "Aks kesişimleri için en az iki aks verin.".into(),
+                "crossings.grids",
+            ));
+        }
+        let mut grids = Vec::with_capacity(x.grids.len());
+        for (k, uid) in x.grids.iter().enumerate() {
+            let g = grid_named(doc, uid, &format!("crossings.grids[{k}]"))?;
+            grids.push((uid.clone(), arch_follow::grid_edge(&g), g));
+        }
+        let arch = x.arch.clone().unwrap_or_default();
+        crate::walls::level_known(doc, &arch, "crossings.arch.level")?;
+        for (i, (ua, ea, ga)) in grids.iter().enumerate() {
+            for (ub, eb, gb) in &grids[i + 1..] {
+                let (Some(ea), Some(eb)) = (ea, eb) else {
+                    continue;
+                };
+                for p in arch::grid_crossings(ea, eb) {
+                    let c = ColumnFields {
+                        at: Vec2 { x: p.x, y: p.y },
+                        shape: x.shape.unwrap_or_default(),
+                        width: x.width,
+                        depth: x.depth,
+                        rotation: x.rotation.unwrap_or(0.0),
+                        kind: x.kind.clone(),
+                        tag: next_tag(&None),
+                        fill: x.fill.unwrap_or(false),
+                        grids: Some(vec![ua.clone(), ub.clone()]),
+                        place: Some(arch_follow::place_of(&ga.label, &gb.label)),
+                        broken: None,
+                        arch: arch.clone(),
+                    };
+                    column_valid(&c, "crossings")?;
+                    made.push((
+                        "crossings".into(),
+                        None,
+                        Box::new(move |base| Entity::Column(ColumnEntity { base, column: c })),
+                    ));
+                }
+            }
+        }
+        too_many(made.len(), codes::INVALID_COLUMN, "kolon", "crossings")?;
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
+}
+
+fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
+    if input.stairs.is_empty() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak merdiven verilmedi. En az bir merdivenin yürüme çizgisini ve ölçülerini verin."
+                .into(),
+            "stairs",
+        ));
+    }
+    too_many(
+        input.stairs.len(),
+        codes::INVALID_STAIR,
+        "merdiven",
+        "stairs",
+    )?;
+    let mut warnings = Vec::new();
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.stairs.iter().enumerate() {
+        let at = format!("stairs[{i}]");
+        points(&n.pts, &at)?;
+        finite_each(
+            &[
+                (Some(n.width), "width", "Genişlik"),
+                (Some(n.riser_height), "riserHeight", "Rıht yüksekliği"),
+                (Some(n.tread), "tread", "Basamak derinliği"),
+                (n.landing, "landing", "Sahanlık"),
+            ],
+            &at,
+        )?;
+        let s = StairFields {
+            pts: n.pts.clone(),
+            width: n.width,
+            risers: n.risers,
+            riser_height: n.riser_height,
+            tread: n.tread,
+            landing: n.landing,
+            cut: n.cut,
+            numbering: n.numbering.unwrap_or(false),
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        stair_valid(&s, &at)?;
+        crate::walls::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
+        warnings.extend(stair_warnings(doc, &s, &at));
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Stair(StairEntity { base, stair: s })),
+        ));
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        warnings,
+    )
+}
+
+fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
+    if input.ramps.is_empty() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak rampa verilmedi. En az bir rampanın orta çizgisini ve ölçülerini verin."
+                .into(),
+            "ramps",
+        ));
+    }
+    too_many(input.ramps.len(), codes::INVALID_RAMP, "rampa", "ramps")?;
+    let mut warnings = Vec::new();
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.ramps.iter().enumerate() {
+        let at = format!("ramps[{i}]");
+        points(&n.pts, &at)?;
+        finite_each(
+            &[
+                (Some(n.width), "width", "Genişlik"),
+                (Some(n.rise), "rise", "Yükseklik"),
+                (n.slope, "slope", "Eğim"),
+                (n.base, "base", "Başlangıç kotu"),
+                (n.landing, "landing", "Sahanlık"),
+            ],
+            &at,
+        )?;
+        let r = RampFields {
+            pts: n.pts.clone(),
+            width: n.width,
+            rise: n.rise,
+            slope: n.slope,
+            base: n.base,
+            landing: n.landing,
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        ramp_valid(&r, &at)?;
+        crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
+        warnings.extend(ramp_warnings(&r, &at));
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Ramp(RampEntity { base, ramp: r })),
+        ));
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        warnings,
+    )
+}
+
+fn validated(checked: Result<Checked, Stop>) -> CommandResult<()> {
+    match checked {
+        Ok((warnings, _)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
+        Err(stop) => stop.into(),
+    }
+}
+
+fn planned<P>(
+    doc: &Document,
+    checked: Result<Checked, Stop>,
+    make: impl FnOnce(Vec<Entity>, String) -> P,
+) -> CommandResult<P> {
+    match checked {
+        Ok((warnings, entities)) => CommandResult::Completed {
+            output: make(entities, doc.revision().to_string()),
+            warnings,
+        },
+        Err(stop) => stop.into(),
+    }
+}
+
+/// Writes the objects as one undo step: their ids, slots and the revision.
+fn written<P>(
+    doc: &mut Document,
+    checked: Result<Checked, Stop>,
+    step: &str,
+    make: impl FnOnce(Vec<String>, Vec<u32>, String) -> P,
+) -> CommandResult<P> {
+    let (warnings, entities) = match checked {
+        Ok(checked) => checked,
+        Err(stop) => return stop.into(),
+    };
+    let slots = match doc.add_many(entities, step) {
+        Ok(slots) => slots,
+        Err(full) => {
+            return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();
+        }
+    };
+    let uids = slots
+        .iter()
+        .filter_map(|s| doc.uid(*s))
+        .map(|u| u.to_string())
+        .collect();
+    CommandResult::Completed {
+        output: make(
+            uids,
+            slots.iter().map(|s| s.0).collect(),
+            doc.revision().to_string(),
+        ),
+        warnings,
+    }
+}
+
+macro_rules! create_command {
+    ($module:ident, $input:ty, $plan:ident, $field:ident, $created:ident, $check:ident, $step:expr, $id:ident, $version:ident) => {
+        pub mod $module {
+            use super::*;
+
+            pub fn validate(cx: &ExecutionContext<'_>, input: &$input) -> CommandResult<()> {
+                validated($check(cx.doc, input))
+            }
+
+            pub fn plan(cx: &ExecutionContext<'_>, input: &$input) -> CommandResult<$plan> {
+                plan_in(cx.doc, input)
+            }
+
+            /// [`plan`] on a document: what the tool draws as its preview.
+            pub fn plan_in(doc: &Document, input: &$input) -> CommandResult<$plan> {
+                planned(doc, $check(doc, input), |$field, revision| $plan {
+                    $field,
+                    revision,
+                })
+            }
+
+            pub fn execute(
+                cx: &mut ExecutionContext<'_>,
+                input: $input,
+            ) -> CommandResult<$created> {
+                crate::call::recorded(
+                    cx,
+                    kentos_contracts::$id,
+                    kentos_contracts::$version,
+                    input,
+                    write_execute,
+                )
+            }
+
+            fn write_execute(
+                cx: &mut ExecutionContext<'_>,
+                input: $input,
+            ) -> CommandResult<$created> {
+                let checked = $check(cx.doc, &input);
+                written(cx.doc, checked, $step, |uids, ids, revision| $created {
+                    uids,
+                    ids,
+                    revision,
+                })
+            }
+        }
+    };
+}
+
+create_command!(
+    grids_create,
+    GridsCreate,
+    GridsPlan,
+    grids,
+    GridsCreated,
+    grids_check,
+    GRID_STEP,
+    CAD_GRIDS_CREATE,
+    CAD_GRIDS_CREATE_VERSION
+);
+create_command!(
+    columns_create,
+    ColumnsCreate,
+    ColumnsPlan,
+    columns,
+    ColumnsCreated,
+    columns_check,
+    COLUMN_STEP,
+    CAD_COLUMNS_CREATE,
+    CAD_COLUMNS_CREATE_VERSION
+);
+create_command!(
+    stairs_create,
+    StairsCreate,
+    StairsPlan,
+    stairs,
+    StairsCreated,
+    stairs_check,
+    STAIR_STEP,
+    CAD_STAIRS_CREATE,
+    CAD_STAIRS_CREATE_VERSION
+);
+create_command!(
+    ramps_create,
+    RampsCreate,
+    RampsPlan,
+    ramps,
+    RampsCreated,
+    ramps_check,
+    RAMP_STEP,
+    CAD_RAMPS_CREATE,
+    CAD_RAMPS_CREATE_VERSION
+);
+
+/// The architectural information an object of these kinds carries; none for another.
+pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
+    match e {
+        Entity::Grid(g) => Some(&g.grid.arch),
+        Entity::Column(c) => Some(&c.column.arch),
+        Entity::Stair(s) => Some(&s.stair.arch),
+        Entity::Ramp(r) => Some(&r.ramp.arch),
+        _ => None,
+    }
+}

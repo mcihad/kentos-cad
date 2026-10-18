@@ -721,6 +721,10 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         Entity::Wall(w) => crate::walls::core_wall(&w.wall),
         Entity::Opening(o) => crate::openings::core_opening(&o.opening),
         Entity::Space(s) => crate::spaces::core_space(&s.space),
+        Entity::Grid(g) => crate::arch_elements::core_grid(&g.grid),
+        Entity::Column(c) => crate::arch_elements::core_column(&c.column),
+        Entity::Stair(s) => crate::arch_elements::core_stair(&s.stair),
+        Entity::Ramp(r) => crate::arch_elements::core_ramp(&r.ramp),
         // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
         Entity::Raster(r) => {
             let f = &r.raster;
@@ -763,6 +767,11 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             }),
         },
     }
+}
+
+/// A placed piece as the contract's object, on no layer (an architectural object's pieces, docs/adr/0343 §5).
+pub(crate) fn piece_entity(s: &Shape) -> Option<Entity> {
+    entity(s)
 }
 
 /// A placed piece as the contract's object (never an insert: the core opens them).
@@ -1047,7 +1056,13 @@ fn entity(s: &Shape) -> Option<Entity> {
             return None;
         }
         // A block holds no wall (docs/adr/0339 §4).
-        Shape::Wall { .. } | Shape::Opening { .. } | Shape::Space { .. } => return None,
+        Shape::Wall { .. }
+        | Shape::Opening { .. }
+        | Shape::Space { .. }
+        | Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. } => return None,
     })
 }
 

@@ -38,6 +38,10 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
         Entity::Space(_) => "Mahal",
+        Entity::Grid(_) => "Aks",
+        Entity::Column(_) => "Kolon",
+        Entity::Stair(_) => "Merdiven",
+        Entity::Ramp(_) => "Rampa",
     }
 }
 

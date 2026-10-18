@@ -187,6 +187,9 @@ pub mod openings_create;
 pub mod openings_edit;
 pub mod spaces;
 pub mod spaces_create;
+pub mod arch_elements;
+pub mod arch_edit;
+pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
 pub mod spaces_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
@@ -434,6 +437,27 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // Aks, Kolon, Merdiven, Rampa and Mimari nesneyi düzenle ([`arch_elements`], [`arch_edit`], docs/adr/0343).
+    (
+        kentos_contracts::CAD_GRIDS_CREATE,
+        kentos_contracts::CAD_GRIDS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_COLUMNS_CREATE,
+        kentos_contracts::CAD_COLUMNS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STAIRS_CREATE,
+        kentos_contracts::CAD_STAIRS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_RAMPS_CREATE,
+        kentos_contracts::CAD_RAMPS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_ARCH_EDIT,
+        kentos_contracts::CAD_ARCH_EDIT_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

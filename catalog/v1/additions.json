@@ -1776,6 +1776,118 @@
       "shortcuts": [],
       "category": "Düzen",
       "status": "implemented"
+    },
+    {
+      "id": "tool.grid",
+      "title": "Aks",
+      "icon": "archGrid",
+      "description": "İki tıklama bir aks çizer; etiketi sıradakidir (A, B … H, J … ya da 1, 2 …; I ve O atlanır), Etiket (E) yazdırır. Seri (S) aralıkları yazdırır (6 6 4.5 gibi): ilk aksın iki noktası, sonra diğerlerinin gideceği yana tıklama bütün akslarını tek adımda çizer. Uçlarda balon ve etiket.",
+      "aliases": [
+        "AKS",
+        "AKSCIZ",
+        "GRIDLINE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.column",
+      "title": "Kolon",
+      "icon": "column",
+      "description": "Tıklanan yere kolon koyar; iki aksın kesişimine yakın tıklama onu kesişime koyar ve akslara bağlar: aks taşınınca kolon izler, konum yazısı “B-3” olur. Biçim (B) dikdörtgen ya da daire, En (E), Boy (Y), Döndür (D), Etiket (K: S1'den artar); Aks kesişimleri (A) görünen bütün aksların kesişimlerine birer kolon koyar.",
+      "aliases": [
+        "KOLON",
+        "COLUMN"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.stair",
+      "title": "Merdiven",
+      "icon": "stair",
+      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Genişlik (G), Rıht sayısı (S), Rıht (R), Basamak (D), Sahanlık (H). Basamaklar yola sığmazsa, yol uzunsa, 2 × rıht + basamak 0,60–0,65 m dışındaysa ya da katın yüksekliğini tutmazsa söylenir; yönetmelik denetimi değildir.",
+      "aliases": [
+        "MERDIVEN",
+        "STAIR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.ramp",
+      "title": "Rampa",
+      "icon": "ramp",
+      "description": "Orta çizginin noktaları (2–4), Enter yazar. Genişlik (G), Yükseklik (Y), Eğim (E, yüzde; yoksa hesaplanır), Sahanlık (H). Uçlarında kot yazısı; verilen eğim uymazsa söylenir.",
+      "aliases": [
+        "RAMP",
+        "RAMPACIZ",
+        "RAMPAÇİZ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.gridNumber",
+      "title": "Aksları numarala",
+      "short": "Numarala",
+      "icon": "gridNumber",
+      "description": "Aksları tıklandığı sırayla Başlangıç'tan (B) numaralar: A, B, C … ya da 1, 2, 3 …; akslara bağlı kolonların konum yazıları da aynı adımda değişir.",
+      "aliases": [
+        "AKSNUMARALA",
+        "GRIDNUMBER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.grid",
+      "title": "Seçim süzgecinde Aks",
+      "short": "Aks",
+      "icon": "archGrid",
+      "description": "Seçim süzgecinde aksları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.column",
+      "title": "Seçim süzgecinde Kolon",
+      "short": "Kolon",
+      "icon": "column",
+      "description": "Seçim süzgecinde kolonları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.stair",
+      "title": "Seçim süzgecinde Merdiven",
+      "short": "Merdiven",
+      "icon": "stair",
+      "description": "Seçim süzgecinde merdivenleri seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.ramp",
+      "title": "Seçim süzgecinde Rampa",
+      "short": "Rampa",
+      "icon": "ramp",
+      "description": "Seçim süzgecinde rampaları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1979,7 +2091,12 @@
     "spaceMethod": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"1\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"1\"/><path d=\"M10 7.5v5M7.5 10h5\" stroke-width=\"1.2\"/>",
     "spaceNet": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"0.9\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"2\"/>",
     "spaceCenterline": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"0.9\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/><rect x=\"4\" y=\"4\" width=\"12\" height=\"12\" stroke-width=\"1.8\" stroke-dasharray=\"2 1.2\"/>",
-    "spaceGross": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"2\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/>"
+    "spaceGross": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"2\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/>",
+    "column": "<path d=\"M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3\" stroke-dasharray=\"1.6 1\" stroke-width=\"1\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\"/><path d=\"M5.5 5.5l9 9M14.5 5.5l-9 9\" stroke-width=\"0.9\"/>",
+    "stair": "<rect x=\"5\" y=\"2.5\" width=\"10\" height=\"15\"/><path d=\"M5 6.2h10M5 9.4h10M5 12.6h10\" stroke-width=\"0.9\"/><path d=\"M10 16V4.6M8.4 6.2 10 4.6l1.6 1.6\" stroke-width=\"1.2\"/>",
+    "ramp": "<path d=\"M2.5 15.5 17.5 6.5v9h-15z\"/><path d=\"M5 13.3 14 8M12.3 7.9 14 8l-.6 1.6\" stroke-width=\"1.1\"/>",
+    "gridNumber": "<circle cx=\"6\" cy=\"5.5\" r=\"3.3\"/><path d=\"M6 8.8v9.7\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><circle cx=\"14\" cy=\"14.5\" r=\"3.3\"/><path d=\"M14 11.2V1.5\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><path d=\"M5.3 4.6 6.3 3.9v3.3\" stroke-width=\"1\"/><path d=\"M12.9 13.6c.3-.9 2.2-.9 2.2.3 0 .9-2.2 1.5-2.2 2.6h2.3\" stroke-width=\"0.9\"/>",
+    "archGrid": "<circle cx=\"10\" cy=\"5\" r=\"3.3\"/><path d=\"M10 8.3v10.2\" stroke-dasharray=\"3 1.4 0.8 1.4\" stroke-width=\"1.2\"/>"
   },
   "tabs": [
     {
@@ -2975,6 +3092,46 @@
         {
           "command": "arch.spaceMerge",
           "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Taşıyıcı",
+      "icon": "archGrid",
+      "items": [
+        {
+          "command": "tool.grid",
+          "size": "large"
+        },
+        {
+          "command": "tool.column",
+          "size": "large"
+        },
+        {
+          "command": "tool.gridNumber",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Merdiven",
+      "icon": "stair",
+      "items": [
+        {
+          "command": "tool.stair",
+          "size": "large"
+        },
+        {
+          "command": "tool.ramp",
+          "size": "large"
         }
       ]
     },

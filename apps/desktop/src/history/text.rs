@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 143] = [
+pub(crate) const TITLES: [(&str, &str); 148] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -44,6 +44,11 @@ pub(crate) const TITLES: [(&str, &str); 143] = [
     ("cad.spaces.create", "Mahal oluştur"),
     ("cad.spaces.edit", "Mahali düzenle"),
     ("cad.spaces.quantities", "Metraj"),
+    ("cad.grids.create", "Aks"),
+    ("cad.columns.create", "Kolon"),
+    ("cad.stairs.create", "Merdiven"),
+    ("cad.ramps.create", "Rampa"),
+    ("cad.arch.edit", "Mimari nesneyi düzenle"),
     ("cad.openings.create", "Açıklık ekle"),
     ("cad.openings.edit", "Açıklığı düzenle"),
     ("cad.dimensions.reassociate", "Ölçüyü yeniden bağla"),
@@ -185,6 +190,20 @@ fn field_name(key: &str) -> Option<&'static str> {
         "openings" => "Açıklıklar",
         "spaces" => "Mahaller",
         "seed" => "İç nokta",
+        "grids" => "Akslar",
+        "columns" => "Kolonlar",
+        "stairs" => "Merdivenler",
+        "ramps" => "Rampalar",
+        "series" => "Seri",
+        "spacings" => "Aralıklar",
+        "crossings" => "Aks kesişimleri",
+        "tagStart" => "İlk etiket",
+        "risers" => "Rıht sayısı",
+        "riserHeight" => "Rıht",
+        "tread" => "Basamak",
+        "landing" => "Sahanlık",
+        "rise" => "Yükseklik farkı",
+        "slope" => "Eğim",
         "parts" => "Parçalar",
         "usage" | "usages" => "Kullanım",
         "levels" => "Katlar",

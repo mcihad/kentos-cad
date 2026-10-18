@@ -458,6 +458,10 @@ pub(crate) fn geometry(
         }
         // Its area, as an area object's (docs/adr/0342): GeoJSON, KML and GPX have no space.
         Entity::Space(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
+        // Its path, or its outline (docs/adr/0343 §5).
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+            return geometry(&crate::arch_elements::simple(e)?, blocks, rep, w);
+        }
         // Its jambs' footprint, an area (docs/adr/0341 §2): GeoJSON, KML and GPX have no opening.
         Entity::Opening(e) => {
             let p = &e.opening.place;

@@ -502,6 +502,35 @@ impl<'d> Encoder<'d> {
                     f.push(("cleanup", Val::Bool(false)));
                 }
             }
+            // A grid, a column, a stair or a ramp (docs/adr/0343 §1): its fields as one map under its kind's name.
+            Entity::Grid(e) => {
+                if let Some((_, problem)) = e.grid.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("grid", Val::Json(serde_json::to_value(&e.grid).unwrap_or_default())));
+            }
+            Entity::Column(e) => {
+                if let Some((_, problem)) = e.column.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("column", Val::Json(serde_json::to_value(&e.column).unwrap_or_default())));
+            }
+            Entity::Stair(e) => {
+                if let Some((_, problem)) = e.stair.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("stair", Val::Json(serde_json::to_value(&e.stair).unwrap_or_default())));
+            }
+            Entity::Ramp(e) => {
+                if let Some((_, problem)) = e.ramp.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("ramp", Val::Json(serde_json::to_value(&e.ramp).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

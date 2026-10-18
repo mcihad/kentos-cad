@@ -78,6 +78,10 @@ enum Kind {
     Wall,
     Opening,
     Space,
+    Grid,
+    Column,
+    Stair,
+    Ramp,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -108,6 +112,10 @@ const KINDS: &[(&str, Kind)] = &[
     ("wall", Kind::Wall),
     ("opening", Kind::Opening),
     ("space", Kind::Space),
+    ("grid", Kind::Grid),
+    ("column", Kind::Column),
+    ("stair", Kind::Stair),
+    ("ramp", Kind::Ramp),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -213,6 +221,8 @@ pub(super) struct Features {
     openings: bool,
     /// Schema 78: the space (docs/adr/0342).
     pub(super) spaces: bool,
+    /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
+    arch_elements: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -354,6 +364,7 @@ impl Features {
             wall_joins: schema >= crate::SCHEMA_WITH_WALL_JOINS,
             openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
+            arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -421,6 +432,10 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             ) || (has.wall_joins && matches!(key, "joins" | "cleanup")),
             Kind::Opening => matches!(key, "host" | "at" | "width" | "place" | "opening"),
             Kind::Space => matches!(key, "parts" | "space"),
+            Kind::Grid => key == "grid",
+            Kind::Column => key == "column",
+            Kind::Stair => key == "stair",
+            Kind::Ramp => key == "ramp",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -616,6 +631,10 @@ struct Fields {
     opening: Option<crate::opening::OpeningRest>,
     space_parts: Option<Vec<kentos_contracts::SpacePart>>,
     space: Option<crate::space::SpaceRest>,
+    grid_line: Option<kentos_contracts::GridFields>,
+    column: Option<kentos_contracts::ColumnFields>,
+    stair: Option<kentos_contracts::StairFields>,
+    ramp: Option<kentos_contracts::RampFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -882,6 +901,7 @@ pub(super) fn object(
             && (has.walls || *kind != Kind::Wall)
             && (has.openings || *kind != Kind::Opening)
             && (has.spaces || *kind != Kind::Space)
+            && (has.arch_elements || !matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp))
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -910,6 +930,10 @@ pub(super) fn object(
     // Nor a wall (docs/adr/0339 §4): a block holds its drawing, not its source.
     if kind == Kind::Wall && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında duvar olamaz"));
+    }
+    // Nor a grid, column, stair or ramp: they are the drawing's plan (docs/adr/0343 §1).
+    if matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp) && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında aks, kolon, merdiven ya da rampa olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1095,6 +1119,8 @@ pub(super) fn object(
                 }
                 f.header = Some(true);
             }
+            // Schema 79 (docs/adr/0343 §1): a grid's own fields, not a table's grid.
+            "grid" if kind == Kind::Grid => f.grid_line = Some(json_part(r, "aksın alanları")?.0),
             "grid" => {
                 let names: Vec<(&str, TableGrid)> =
                     TableGrid::ALL.iter().map(|g| (g.name(), *g)).collect();
@@ -1138,6 +1164,10 @@ pub(super) fn object(
             }
             "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r, has))?),
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
+            // Schema 79 (docs/adr/0343 §1): a column's, stair's or ramp's fields.
+            "column" => f.column = Some(json_part(r, "kolonun alanları")?.0),
+            "stair" => f.stair = Some(json_part(r, "merdivenin alanları")?.0),
+            "ramp" if kind == Kind::Ramp => f.ramp = Some(json_part(r, "rampanın alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) = json_part(r, "mahalin sınırı")?;
@@ -1971,6 +2001,34 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Wall(e)
+        }
+        Kind::Grid => {
+            let grid = required(r, f.grid_line.take(), "grid")?;
+            if let Some((_, problem)) = grid.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Grid(kentos_contracts::GridEntity { base, grid })
+        }
+        Kind::Column => {
+            let column = required(r, f.column.take(), "column")?;
+            if let Some((_, problem)) = column.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Column(kentos_contracts::ColumnEntity { base, column })
+        }
+        Kind::Stair => {
+            let stair = required(r, f.stair.take(), "stair")?;
+            if let Some((_, problem)) = stair.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Stair(kentos_contracts::StairEntity { base, stair })
+        }
+        Kind::Ramp => {
+            let ramp = required(r, f.ramp.take(), "ramp")?;
+            if let Some((_, problem)) = ramp.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Ramp(kentos_contracts::RampEntity { base, ramp })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

@@ -176,7 +176,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 24] = [
+pub const KINDS: [&str; 28] = [
     "point",
     "line",
     "polyline",
@@ -201,6 +201,10 @@ pub const KINDS: [&str; 24] = [
     "wall",
     "opening",
     "space",
+    "grid",
+    "column",
+    "stair",
+    "ramp",
 ];
 
 const COLOR: u32 = 1;
@@ -417,6 +421,10 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Wall(_) => 21,
         Entity::Opening(_) => 22,
         Entity::Space(_) => 23,
+        Entity::Grid(_) => 24,
+        Entity::Column(_) => 25,
+        Entity::Stair(_) => 26,
+        Entity::Ramp(_) => 27,
     }
 }
 
@@ -1476,6 +1484,11 @@ impl Packer {
                 }
                 self.text(&rest.to_string());
             }
+            // A grid, a column, a stair or a ramp (docs/adr/0343 §1): its fields as one JSON text.
+            Entity::Grid(e) => self.text(&serde_json::to_value(&e.grid).unwrap_or_default().to_string()),
+            Entity::Column(e) => self.text(&serde_json::to_value(&e.column).unwrap_or_default().to_string()),
+            Entity::Stair(e) => self.text(&serde_json::to_value(&e.stair).unwrap_or_default().to_string()),
+            Entity::Ramp(e) => self.text(&serde_json::to_value(&e.ramp).unwrap_or_default().to_string()),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
                 self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
@@ -3308,6 +3321,49 @@ fn geometry(
                 return Err(broken(&problem));
             }
             Entity::Wall(kentos_contracts::WallEntity { base, wall })
+        }
+        24..=27 => {
+            let what = match kind {
+                24 => "aksın alanları",
+                25 => "kolonun alanları",
+                26 => "merdivenin alanları",
+                _ => "rampanın alanları",
+            };
+            let text = c.text(|| what.into())?;
+            let parsed = |s: &str| -> Result<Entity, KcadError> {
+                Ok(match kind {
+                    24 => {
+                        let grid: kentos_contracts::GridFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        if let Some((_, problem)) = grid.problem() {
+                            return Err(broken(&problem));
+                        }
+                        Entity::Grid(kentos_contracts::GridEntity { base: base.clone(), grid })
+                    }
+                    25 => {
+                        let column: kentos_contracts::ColumnFields =
+                            serde_json::from_str(s).map_err(|_| broken(what))?;
+                        if let Some((_, problem)) = column.problem() {
+                            return Err(broken(&problem));
+                        }
+                        Entity::Column(kentos_contracts::ColumnEntity { base: base.clone(), column })
+                    }
+                    26 => {
+                        let stair: kentos_contracts::StairFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        if let Some((_, problem)) = stair.problem() {
+                            return Err(broken(&problem));
+                        }
+                        Entity::Stair(kentos_contracts::StairEntity { base: base.clone(), stair })
+                    }
+                    _ => {
+                        let ramp: kentos_contracts::RampFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        if let Some((_, problem)) = ramp.problem() {
+                            return Err(broken(&problem));
+                        }
+                        Entity::Ramp(kentos_contracts::RampEntity { base: base.clone(), ramp })
+                    }
+                })
+            };
+            parsed(&text)?
         }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;

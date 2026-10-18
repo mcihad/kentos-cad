@@ -399,6 +399,14 @@ Liste:
   `.quantities` (`product/`), Mahal ve Mahali böl araçları, Mahalleri birleştir, Metraj penceresi, Mimari'nin Mahal paneli ve ikonları,
   Öznitelikler'in mahal satırları, seçim süzgecinde Mahal (`SelectKind::Space`), Proje ayarları › Mimari'nin ölçme yöntemi, kapanmayan
   mahalin uyarı üçgeni; bilinen bozulmalar: şema 78 ve `FORMATS_VERSION` 85.
+- [ ] `CAD-ARCH-31`…`36` aks, kolon, merdiven ve rampa (ADR 0343, 18 Ekim): web'de gerekenler: `.kcad` şema 79 (`grid`, `column`,
+  `stair`, `ramp` türleri; sütunlu kayıtta tür 24–27; `FORMATS_VERSION` 86; aksın etiketi telde `name`), çekirdeğin `geom::arch`'ı WASM'da
+  (aksın balonları, kolonun çevresi, merdivenin şeridi, sahanlıkları ve basamakları, rampanın kotları, denetimler, aks kesişimleri),
+  deponun paket türleri 31–34, belgenin kolon izleyicisi (`model/` içinde `arch_follow`'un karşılığı) ve bağı kopan kolonların dizini,
+  `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create`, `cad.arch.edit` (`product/`), Aks (Seri), Kolon (Aks
+  kesişimleri), Merdiven, Rampa ve Aksları numarala araçları, Mimari'nin Taşıyıcı ve Merdiven panelleri ve ikonları, Öznitelikler'in
+  satırları ve Denetim'i, seçim süzgecinde Aks, Kolon, Merdiven, Rampa (`SelectKind`), bağı kopan kolonun uyarı üçgeni; bilinen
+  bozulmalar: şema 79 ve `FORMATS_VERSION` 86.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

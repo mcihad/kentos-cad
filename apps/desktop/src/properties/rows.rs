@@ -17,6 +17,7 @@ use kentos_ui::icon::Icon;
 
 use super::{Event, Field, Spot};
 
+mod arch;
 pub(crate) mod attachments;
 pub(crate) mod cloud;
 mod dimension;
@@ -1361,6 +1362,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
+        }
+        // A grid, column, stair or ramp (docs/adr/0343 §5): their rows below.
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+            geo.extend(arch::rows(doc, slot, e, locked, &f));
         }
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.

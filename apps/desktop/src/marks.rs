@@ -1293,10 +1293,15 @@ impl crate::app::App {
         // about the pole, four of its heights tall.
         let above = 4.0 * kentos_geometry_core::geom::space::LABEL_MM * model.settings().plot_scale / 1000.0;
         for slot in model.lost_spaces() {
-            if let Some(kentos_contracts::Entity::Space(s)) = model.get(slot)
-                && let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts)
-            {
-                out.push(Vec2::new(p.x, p.y + above));
+            match model.get(slot) {
+                Some(kentos_contracts::Entity::Space(s)) => {
+                    if let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts) {
+                        out.push(Vec2::new(p.x, p.y + above));
+                    }
+                }
+                // A column whose grid is gone (docs/adr/0343 §3), at its centre.
+                Some(kentos_contracts::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
+                _ => {}
             }
         }
         for slot in model.broken_dimensions() {

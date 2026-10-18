@@ -201,7 +201,9 @@ use crate::layer::LineType;
 ///    jambs' points, the rest of its source as one JSON text. The web's copy stays 53.
 /// 85 (docs/adr/0342): the space: `.kcad` document schema 78's `space` kind and the settings' `arch.spaceMethod`; in
 ///    the typed columns kind 23, its source as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 85;
+/// 86 (docs/adr/0343): the grid, column, stair and ramp: `.kcad` document schema 79's `grid`, `column`, `stair` and
+///    `ramp` kinds; in the typed columns kinds 24–27, each's source as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 86;
 
 // ── Every import ────────────────────────────────────────────────────────
 

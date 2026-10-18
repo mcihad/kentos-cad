@@ -502,6 +502,34 @@ fn defs(shape: &Shape) -> Defs {
             others.push(text(space.number.as_deref()));
             others.push(text(space.name.as_deref()));
         }
+        // Their paths, sizes and words (docs/adr/0343).
+        Shape::Grid { pts, bulges, grid } => {
+            comps.push(path(pts, bulges.as_deref()));
+            others.push(Other::Text(grid.label.clone()));
+            others.push(Other::Text(format!("{:?}", grid.bubbles)));
+            others.push(Other::Num(grid.bubble_size.unwrap_or(0.0)));
+        }
+        Shape::Column { at, column } => {
+            comps.push(path(&[*at], None));
+            lengths.extend([column.width, column.depth.unwrap_or(column.width)]);
+            others.push(Other::Num(column.rotation));
+            others.push(Other::Flag(column.round));
+            others.push(Other::Flag(column.fill));
+            others.push(text(column.tag.as_deref()));
+            others.push(text(column.place.as_deref()));
+        }
+        Shape::Stair { pts, stair } => {
+            comps.push(path(pts, None));
+            lengths.extend([stair.width, stair.riser_height, stair.tread, stair.landing()]);
+            others.push(Other::Num(stair.risers));
+            others.push(Other::Num(stair.cut.unwrap_or(0.0)));
+            others.push(Other::Flag(stair.numbering));
+        }
+        Shape::Ramp { pts, ramp } => {
+            comps.push(path(pts, None));
+            lengths.extend([ramp.width, ramp.rise, ramp.landing(), ramp.base.unwrap_or(0.0)]);
+            others.push(Other::Num(ramp.slope.unwrap_or(-1.0)));
+        }
         // Its jambs, its place along its wall, its width and what it is (docs/adr/0341).
         Shape::Opening {
             at,

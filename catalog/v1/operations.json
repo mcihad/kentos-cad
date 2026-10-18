@@ -1645,6 +1645,41 @@
       ],
       "note": "Mahal ve bölme çizgisi split'e verilir; parçalar komutun hesabı, önizleme planından (ADR 0342 §4, §5)."
     },
+    "tool.grid": {
+      "level": "semantic",
+      "via": [
+        "cad.grids.create"
+      ],
+      "note": "Tıklanan iki nokta, etiket ya da seri (aralıklar ve yan) komuta verilir; etiketlerin sırası komutun, önizleme planından (ADR 0343 §4, §5)."
+    },
+    "tool.column": {
+      "level": "semantic",
+      "via": [
+        "cad.columns.create"
+      ],
+      "note": "Tıklanan merkez ve yakın kesişimin iki aksı ya da görünen aksların kesişimleri komuta verilir; kesişim ve konum yazısı komutun hesabı (ADR 0343 §3–§5)."
+    },
+    "tool.stair": {
+      "level": "semantic",
+      "via": [
+        "cad.stairs.create"
+      ],
+      "note": "Yürüme çizgisinin noktaları ve ölçüler komuta verilir; basamaklar ve denetimler komutun, önizleme planından (ADR 0343 §2, §4)."
+    },
+    "tool.ramp": {
+      "level": "semantic",
+      "via": [
+        "cad.ramps.create"
+      ],
+      "note": "Orta çizginin noktaları, yükseklik ve eğim komuta verilir; eğimin denetimi komutun (ADR 0343 §2, §4)."
+    },
+    "tool.gridNumber": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.edit"
+      ],
+      "note": "Tıklanan akslar sırasıyla renumber'a verilir; bağlı kolonların konum yazıları belgede izler (ADR 0343 §3, §4)."
+    },
     "arch.spaceMerge": {
       "level": "semantic",
       "via": [

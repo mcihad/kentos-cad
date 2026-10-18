@@ -36,6 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
+use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -671,6 +672,88 @@ impl Input for kentos_domain::contracts::SpacesEdit {
             Op::Rebound { seed } => match path {
                 "operation.seed.x" => seed.as_mut().map(|p| &mut p.x),
                 "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::GridsCreate {
+    /// `grids[0].pts[k].x` and `.y`, `series.spacings[k]`, `lineWeight` (docs/adr/0343).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        if let Some(rest) = path.strip_prefix("series.spacings[") {
+            let k = rest.strip_suffix(']')?.parse::<usize>().ok()?;
+            return self.series.as_mut()?.spacings.get_mut(k);
+        }
+        let (i, rest) = path.strip_prefix("grids[")?.split_once("].")?;
+        let g = self.grids.get_mut(i.parse::<usize>().ok()?)?;
+        named_point(&mut g.pts, "pts", rest)
+    }
+}
+
+impl Input for kentos_domain::contracts::ColumnsCreate {
+    /// `columns[0].width`, `.at.x` and `.y`, `lineWeight` (docs/adr/0343).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("columns[")?.split_once("].")?;
+        let c = self.columns.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "width" => Some(&mut c.width),
+            "at.x" => c.at.as_mut().map(|p| &mut p.x),
+            "at.y" => c.at.as_mut().map(|p| &mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::StairsCreate {
+    /// `stairs[0].tread`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("stairs[")?.split_once("].")?;
+        let s = self.stairs.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "tread" => Some(&mut s.tread),
+            "width" => Some(&mut s.width),
+            _ => named_point(&mut s.pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::RampsCreate {
+    /// `ramps[0].rise`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("ramps[")?.split_once("].")?;
+        let r = self.ramps.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "rise" => Some(&mut r.rise),
+            "width" => Some(&mut r.width),
+            _ => named_point(&mut r.pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::ArchEdit {
+    /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::ArchOperation as Op;
+        match &mut self.operation {
+            Op::Set(c) => match path {
+                "operation.width" => c.width.as_mut(),
+                "operation.riserHeight" => c.riser_height.as_mut(),
+                "operation.tread" => c.tread.as_mut(),
+                "operation.rise" => c.rise.as_mut(),
                 _ => None,
             },
             _ => None,
@@ -2642,6 +2725,21 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_domain::contracts::SpacesCreate)
+        }
+        kentos_domain::contracts::CAD_GRIDS_CREATE => {
+            run!(grids_create, kentos_domain::contracts::GridsCreate)
+        }
+        kentos_domain::contracts::CAD_COLUMNS_CREATE => {
+            run!(columns_create, kentos_domain::contracts::ColumnsCreate)
+        }
+        kentos_domain::contracts::CAD_STAIRS_CREATE => {
+            run!(stairs_create, kentos_domain::contracts::StairsCreate)
+        }
+        kentos_domain::contracts::CAD_RAMPS_CREATE => {
+            run!(ramps_create, kentos_domain::contracts::RampsCreate)
+        }
+        kentos_domain::contracts::CAD_ARCH_EDIT => {
+            run!(arch_edit, kentos_domain::contracts::ArchEdit)
         }
         kentos_domain::contracts::CAD_SPACES_EDIT => {
             run!(spaces_edit, kentos_domain::contracts::SpacesEdit)
