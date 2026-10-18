@@ -35,6 +35,13 @@ pub enum Edit {
 }
 
 /// The detail list: by the scale, then each.
+/// The spaces' measurement methods Mimari offers (docs/adr/0342 §1): the office's profile; none: net.
+const METHODS: [(Option<kentos_contracts::SpaceMethod>, &str); 3] = [
+    (None, "Net (iç yüzler)"),
+    (Some(kentos_contracts::SpaceMethod::Centerline), "Duvar ekseni"),
+    (Some(kentos_contracts::SpaceMethod::Gross), "Brüt (dış yüzler)"),
+];
+
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
     (None, "Ölçeğe göre"),
     (Some(WallDetail::Schematic), "Şematik"),
@@ -111,7 +118,11 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
 }
 
 /// The rows and the detail read as the settings, or what does not hold.
-pub fn read(rows: &[Row], detail: Option<WallDetail>) -> Result<ArchSettings, String> {
+pub fn read(
+    rows: &[Row],
+    detail: Option<WallDetail>,
+    space_method: Option<kentos_contracts::SpaceMethod>,
+) -> Result<ArchSettings, String> {
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
         let elevation = match number(&r.elevation) {
@@ -127,7 +138,11 @@ pub fn read(rows: &[Row], detail: Option<WallDetail>) -> Result<ArchSettings, St
             height,
         });
     }
-    let arch = ArchSettings { levels, detail };
+    let arch = ArchSettings {
+        levels,
+        detail,
+        space_method,
+    };
     match arch.problem() {
         Some((_, why)) => Err(why),
         None => Ok(arch),
@@ -166,7 +181,24 @@ pub(super) fn view<'a>(
     on: impl Fn(usize, Edit) -> Message + Copy + 'a,
     on_add: Message,
     on_detail: impl Fn(Option<WallDetail>) -> Message + 'a,
+    method: Option<kentos_contracts::SpaceMethod>,
+    on_method: impl Fn(Option<kentos_contracts::SpaceMethod>) -> Message + 'a,
 ) -> Element<'a, Message> {
+    let methods = Select::new(
+        METHODS.iter().map(|(_, l)| Choice::new(*l)),
+        METHODS.iter().position(|(m, _)| *m == method),
+        move |i| on_method(METHODS.get(i).and_then(|(m, _)| *m)),
+    )
+    .searchable(false);
+    let method_box = super::group::<Message>(
+        "Mahallerin ölçme yöntemi",
+        Column::new()
+            .spacing(6)
+            .push(container(methods).width(typography::scaled(200.0)))
+            .push(label::caption(
+                "Yeni mahalin sınırı ve alanı bu yöntemle bulunur; ofisin ya da kurumun kuralıdır. KentOS bir yöntemin yürürlükteki mevzuata uyduğunu söylemez.",
+            )),
+    );
     let details = Select::new(
         DETAILS.iter().map(|(_, l)| Choice::new(*l)),
         DETAILS.iter().position(|(d, _)| *d == detail),
@@ -182,7 +214,7 @@ pub(super) fn view<'a>(
                 "Ölçeğe göre: 1:30 ve daha büyükte ayrıntılı (bileşenler ve taramaları), 1:75'e dek standart, daha küçükte şematik (dolgu). Paftanın haritası kendi ölçeğiyle çizer.",
             )),
     );
-    let read_now = read(rows, detail);
+    let read_now = read(rows, detail, method);
     let head = row![
         container(label::caption("Kat")).width(Length::FillPortion(5)),
         container(label::caption("Kot (m)")).width(Length::FillPortion(3)),
@@ -249,6 +281,7 @@ pub(super) fn view<'a>(
     Column::new()
         .spacing(14)
         .push(detail_box)
+        .push(method_box)
         .push(super::group::<Message>(
             "Katlar",
             Column::new().spacing(8).push(levels).push(add),

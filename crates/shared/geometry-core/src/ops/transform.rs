@@ -659,6 +659,27 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 wall: crate::geom::wall::scaled(wall, s),
             }
         }
+        // Its rings and its seed map (docs/adr/0342 §3); a mirror turns its rings over, the document orients them.
+        Shape::Space { parts, space } => {
+            let ring = |r: &crate::geom::arrangement::Ring| crate::geom::arrangement::Ring {
+                pts: r.pts.iter().map(|q| apply(m, *q)).collect(),
+                bulges: r.bulges.as_ref().map(|b| {
+                    if is_reflection(m) { b.iter().map(|x| -x).collect() } else { b.clone() }
+                }),
+            };
+            let mut spec = space.clone();
+            spec.seed = space.seed.map(|q| apply(m, q));
+            Shape::Space {
+                parts: parts
+                    .iter()
+                    .map(|a| crate::geom::arrangement::Area {
+                        outer: ring(&a.outer),
+                        holes: a.holes.iter().map(ring).collect(),
+                    })
+                    .collect(),
+                space: spec,
+            }
+        }
         // Its jambs map (the document reads its place along its wall from them, docs/adr/0341 §3); its lengths scale.
         Shape::Opening {
             at,

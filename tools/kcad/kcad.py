@@ -281,6 +281,11 @@ WALL_JOINS = ("auto", "none", "miter", "butt", "through")
 SCHEMA_WITH_OPENINGS = 77
 OPENING_MAX_WIDTH = 100.0
 OPENING_FORMS = ("door", "window", "opening")
+# Schema 78: schema 77, the `space` kind (its boundary's parts and the rest of its fields as one map) and the settings'
+# `arch.spaceMethod` (docs/adr/0342 §1).
+SCHEMA_WITH_SPACES = 78
+SPACE_METHODS = ("net", "centerline", "gross")
+SPACE_MAX_POINTS = 10_000
 # A wall's bounds (kentos_contracts::arch).
 WALL_MAX_POINTS = 10_000
 WALL_MAX_COMPONENTS = 16
@@ -471,7 +476,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2599,6 +2604,7 @@ class _Schema:
         self.walls = version >= SCHEMA_WITH_WALLS
         self.wall_joins = version >= SCHEMA_WITH_WALL_JOINS
         self.openings = version >= SCHEMA_WITH_OPENINGS
+        self.spaces = version >= SCHEMA_WITH_SPACES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4785,7 +4791,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4808,6 +4814,10 @@ class _Schema:
         if kind == "wall" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında duvar olamaz")
+        # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
+        if kind == "space" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında mahal olamaz")
         # Nor an opening: its wall is the drawing's (docs/adr/0341 §1).
         if kind == "opening" and self.inside is not None:
             self.path.append(kind)
@@ -4835,6 +4845,8 @@ class _Schema:
                 self.wall_rules(fields)
             if kind == "opening":
                 self.opening_rules(fields)
+            if kind == "space":
+                self.space_rules(fields)
             self.look_rules(fields)
             if "wipeout" in fields and kind != "polygon":
                 self.path.append("wipeout")
@@ -4897,6 +4909,8 @@ class _Schema:
         # An opening's map is its own fields, as the contract's JSON has them (docs/adr/0341 §1).
         if kind == "opening":
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
+        if kind == "space":
+            fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
         if self.inside is None:
             fields.pop("uid")
             return {"kind": kind, "id": len(self.uids), **fields}
@@ -6361,6 +6375,59 @@ class _Schema:
         if w.get("arch", {}).get("level", "x").strip() == "":
             self.fail("bad_value", "duvarın katı boş olamaz")
 
+    def space_ring(self, v):
+        r = self.fields({"pts": (self.array(self.jpoint), True), "bulges": (self.array(self.float), False)})(v)
+        n = len(r["pts"])
+        curved = any(b != 0 for b in r.get("bulges", []))
+        if n < 3 and not (n == 2 and curved):
+            self.fail("bad_value", f"Mahalin halkası en az üç köşedir; {n} verildi.")
+        if "bulges" in r and len(r["bulges"]) != n:
+            self.fail("bad_value", f"Halkanın {n} köşesi, {len(r['bulges'])} bükümü var; eşit olmalı.")
+        return r
+
+    def space_part(self, v):
+        return self.fields({"outer": (self.space_ring, True), "holes": (self.array(self.space_ring), False)})(v)
+
+    def space_fields(self, v):
+        """A space's fields beside its parts (schema 78, docs/adr/0342 §1): each only when not its default."""
+        def text_not_blank(x):
+            x = self.text(x)
+            if x.strip() == "":
+                self.fail("bad_value", "Boş metin yazılmaz; alanı kaldırın ya da bir değer yazın.")
+            return x
+        def method(x):
+            m = self.enum(SPACE_METHODS)(x)
+            if m == "net":
+                self.fail("bad_value", "varsayılan değer ('net') yazılmaz")
+            return m
+        return self.fields({
+            "seed": (self.jpoint, False),
+            "method": (method, False),
+            "number": (text_not_blank, False),
+            "name": (text_not_blank, False),
+            "usage": (text_not_blank, False),
+            "arch": (self.arch_info, False),
+            "height": (self.float, False),
+            "finishes": (self.fields({"floor": (text_not_blank, False), "wall": (text_not_blank, False),
+                                      "ceiling": (text_not_blank, False)}), False),
+            "broken": (self.enum(("lostEnclosure",)), False),
+        })(v)
+
+    def space_rules(self, s):
+        """A space (schema 78, docs/adr/0342 §1): one part or more, at most 10 000 vertices, a height above 0."""
+        if not s["parts"]:
+            self.fail("bad_value", "Mahalin sınırı yok: en az bir halka verin.")
+        total = sum(len(p["outer"]["pts"]) + sum(len(h["pts"]) for h in p.get("holes", [])) for p in s["parts"])
+        if total > SPACE_MAX_POINTS:
+            self.fail("bad_value", f"Mahalin halkalarında {total} köşe var; en çok {SPACE_MAX_POINTS}.")
+        h = s["space"].get("height")
+        if h is not None and not (math.isfinite(h) and 0 < h <= 1000):
+            self.fail("bad_value", "Mahalin yüksekliği sıfırdan büyük, en çok 1000 m olmalı.")
+        if s["space"].get("arch") == {}:
+            self.fail("bad_value", "boş mimari bilgi yazılmaz")
+        if s["space"].get("finishes") == {}:
+            self.fail("bad_value", "boş kaplama yazılmaz")
+
     def opening_fields(self, v):
         """An opening's fields beside its wall, place, width and jambs (schema 77, docs/adr/0341 §1): each only when it
         is not its default (a centred anchor, one leaf, a swinging operation, the start's hand, the left side, the
@@ -6469,7 +6536,9 @@ class _Schema:
         """The project's levels and the walls' detail (docs/adr/0339 §3); an empty one is not written."""
         a = self.fields({"levels": (self.array(self.fields({"id": (self.text, True), "name": (self.text, True),
                                                             "elevation": (self.float, True), "height": (self.float, False)})), False),
-                         "detail": (self.enum(WALL_DETAILS), False)})(v)
+                         "detail": (self.enum(WALL_DETAILS), False),
+                         # Schema 78 (docs/adr/0342 §1): the project's space method.
+                         **({"spaceMethod": (self.enum(SPACE_METHODS), False)} if self.spaces else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         ids, names = set(), set()
@@ -7049,6 +7118,11 @@ ENTITY_KINDS = {
         "arch": (s.arch_info, False),
         # Schema 76 (docs/adr/0340 §1): its joins, its cleanup only when off.
         **({"joins": (s.wall_joins_, False), "cleanup": (s.only_false, False)} if s.wall_joins else {}),
+    },
+    # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
+    "space": lambda s: {
+        "parts": (s.array(s.space_part), True),
+        "space": (s.space_fields, True),
     },
     # Schema 77 (docs/adr/0341 §1): an opening; its jambs written from its wall.
     "opening": lambda s: {

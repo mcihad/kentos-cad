@@ -203,6 +203,8 @@ pub struct State {
     /// `cad.settings.set`.
     arch: Vec<super::arch::Row>,
     arch_detail: Option<kentos_contracts::WallDetail>,
+    /// Mimari: the spaces' measurement method (docs/adr/0342 §1).
+    arch_method: Option<kentos_contracts::SpaceMethod>,
     /// Kaydet's question when a local project's unit changes with a drawing
     /// in it (docs/adr/0256 §2; unit_change.rs), over this window.
     pub(super) unit_question: Option<super::unit_change::Question>,
@@ -260,6 +262,7 @@ pub enum Event {
     Level(usize, super::arch::Edit),
     AddLevel,
     ArchDetail(Option<kentos_contracts::WallDetail>),
+    ArchMethod(Option<kentos_contracts::SpaceMethod>),
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
     Reduce(bool),
     /// The shown section's own values back to their defaults (the web's
@@ -301,6 +304,7 @@ impl State {
             variables: variable_form::rows(&doc.settings().variables),
             arch: super::arch::rows(doc.settings().arch.as_ref()),
             arch_detail: doc.settings().arch.as_ref().and_then(|a| a.detail),
+            arch_method: doc.settings().arch.as_ref().and_then(|a| a.space_method),
             unit_question: None,
         }
     }
@@ -329,7 +333,7 @@ impl State {
 
     /// Whether Mimari's levels have something to put right: Kaydet waits.
     fn arch_blocked(&self) -> bool {
-        super::arch::read(&self.arch, self.arch_detail).is_err()
+        super::arch::read(&self.arch, self.arch_detail, self.arch_method).is_err()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -510,9 +514,11 @@ impl App {
                 s.arch.push(row);
             }
             Event::ArchDetail(detail) => s.arch_detail = detail,
+            Event::ArchMethod(method) => s.arch_method = method,
             Event::ResetSection if s.section == Section::Arch => {
                 s.arch.clear();
                 s.arch_detail = None;
+                s.arch_method = None;
             }
             Event::ResetSection => {
                 reset_section(s.section, d);
@@ -669,7 +675,7 @@ impl App {
         }
         // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
         // saved then.
-        let arch = super::arch::read(&s.arch, s.arch_detail).unwrap_or_default();
+        let arch = super::arch::read(&s.arch, s.arch_detail, s.arch_method).unwrap_or_default();
         if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
         {
             let input = kentos_contracts::SettingsSet {
@@ -829,6 +835,8 @@ impl App {
                 |i, e| event(Event::Level(i, e)),
                 event(Event::AddLevel),
                 |d| event(Event::ArchDetail(d)),
+                s.arch_method,
+                |m| event(Event::ArchMethod(m)),
             ),
         };
         let content = column![

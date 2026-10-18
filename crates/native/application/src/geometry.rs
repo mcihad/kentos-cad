@@ -758,6 +758,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Record(_) => Shape::Record {},
         Entity::Wall(w) => kentos_formats::walls::core_wall(&w.wall),
         Entity::Opening(o) => kentos_formats::openings::core_opening(&o.opening),
+        Entity::Space(s) => kentos_formats::spaces::core_space(&s.space),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1295,6 +1296,11 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => e.cloud = contract_cloud(s)?,
         (Entity::Wall(e), s @ Shape::Wall { .. }) => e.wall = kentos_formats::walls::contract_wall(&s)?,
         // An opening's place along its wall, its width and its jambs (docs/adr/0341 §1); the rest is its own.
+        // A space's rings and seed (docs/adr/0342 §3); the rest is its own.
+        (Entity::Space(e), Shape::Space { parts, space }) => {
+            e.space.parts = parts.iter().map(kentos_formats::spaces::part).collect();
+            e.space.seed = space.seed.map(|q| Point { x: q.x, y: q.y });
+        }
         (Entity::Opening(e), Shape::Opening { at, width, place, .. }) => {
             e.opening.at = at;
             e.opening.width = width;
@@ -1952,7 +1958,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
         s @ Shape::Wall { .. } => EntityGeometry::Wall(kentos_formats::walls::contract_wall(&s)?),
         // A record has no geometry to edit (docs/adr/0410); an opening is edited by its own command (docs/adr/0341).
-        Shape::Record {} | Shape::Opening { .. } => return None,
+        Shape::Record {} | Shape::Opening { .. } | Shape::Space { .. } => return None,
     })
 }
 

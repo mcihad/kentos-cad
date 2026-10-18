@@ -100,6 +100,9 @@ pub enum Event {
     WallOp(Slot, kentos_contracts::WallsOperation),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
     Opening(Slot, kentos_contracts::OpeningsOperation),
+    /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
+    /// `cad.spaces.edit`.
+    Space(Slot, kentos_contracts::SpacesOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -219,6 +222,14 @@ pub enum Field {
     OpeningSill(Slot),
     OpeningHead(Slot),
     OpeningNumber(Slot),
+    /// A space's number, name, usage, height (empty: the level's) and finishes (empty: none; docs/adr/0342 §5).
+    SpaceNumber(Slot),
+    SpaceName(Slot),
+    SpaceUsage(Slot),
+    SpaceHeight(Slot),
+    SpaceFloor(Slot),
+    SpaceWall(Slot),
+    SpaceCeiling(Slot),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
     CloudClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
@@ -674,6 +685,7 @@ impl App {
             Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
+            Event::Space(slot, op) => properties::edit_space(model, slot, op),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -1061,6 +1073,58 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_opening(model, *slot, op);
         }
+        Field::SpaceNumber(slot)
+        | Field::SpaceName(slot)
+        | Field::SpaceUsage(slot)
+        | Field::SpaceHeight(slot)
+        | Field::SpaceFloor(slot)
+        | Field::SpaceWall(slot)
+        | Field::SpaceCeiling(slot) => {
+            use kentos_contracts::{SpaceChange, SpacesOperation};
+            let t = kentos_interaction::js_trim(text);
+            let words = (!t.is_empty()).then(|| t.to_owned());
+            let change = match field {
+                Field::SpaceNumber(_) => SpaceChange {
+                    number: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceName(_) => SpaceChange {
+                    name: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceUsage(_) => SpaceChange {
+                    usage: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceFloor(_) => SpaceChange {
+                    floor: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceWall(_) => SpaceChange {
+                    wall: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceCeiling(_) => SpaceChange {
+                    ceiling: Some(words),
+                    ..Default::default()
+                },
+                _ if t.is_empty() => SpaceChange {
+                    height: Some(None),
+                    ..Default::default()
+                },
+                _ => {
+                    let n = f.to_metres(web_number(text));
+                    if !n.is_finite() {
+                        return Vec::new();
+                    }
+                    SpaceChange {
+                        height: Some(Some(n)),
+                        ..Default::default()
+                    }
+                }
+            };
+            return properties::edit_space(model, *slot, SpacesOperation::Set(change));
+        }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
             let n = f.to_metres(web_number(text));
             let height = matches!(field, Field::WallHeight(_));
@@ -1193,6 +1257,13 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::OpeningSill(_)
         | Field::OpeningHead(_)
         | Field::OpeningNumber(_)
+        | Field::SpaceNumber(_)
+        | Field::SpaceName(_)
+        | Field::SpaceUsage(_)
+        | Field::SpaceHeight(_)
+        | Field::SpaceFloor(_)
+        | Field::SpaceWall(_)
+        | Field::SpaceCeiling(_)
         | Field::Elevation(..)
         | Field::PolylineWidth(_)
         | Field::Elevations(_)

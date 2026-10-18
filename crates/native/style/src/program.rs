@@ -408,7 +408,7 @@ pub fn layer_call(
             }
         };
         // A block's insert, a wall, an opening: each piece's own look (docs/adr/0144, 0339, 0341).
-        if let Entity::Insert(_) | Entity::Wall(_) | Entity::Opening(_) = e
+        if let Entity::Insert(_) | Entity::Wall(_) | Entity::Opening(_) | Entity::Space(_) = e
             && let Some(x) = store
                 .get(f64::from(base.id))
                 .and_then(|item| item.expanded.as_deref())

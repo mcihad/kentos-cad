@@ -1268,7 +1268,7 @@ impl crate::app::App {
 
     /// The points of the associative dimensions whose reference broke (docs/adr/0249 §3): from the document's index
     /// of such dimensions, not a walk over the drawing; and where walls meet and do not join (docs/adr/0340 §6), from
-    /// the store's joins.
+    /// the store's joins; the openings in no wall and the spaces that lost their walls.
     pub(crate) fn broken_marks(&self) -> Vec<Vec2> {
         let Some(doc) = &self.document else {
             return Vec::new();
@@ -1289,6 +1289,16 @@ impl crate::app::App {
                 .into_iter()
                 .map(|p| Vec2::new(p.x, p.y)),
         );
+        // The spaces whose walls no longer close round them (docs/adr/0342 §3), above their label: its lines stand
+        // about the pole, four of its heights tall.
+        let above = 4.0 * kentos_geometry_core::geom::space::LABEL_MM * model.settings().plot_scale / 1000.0;
+        for slot in model.lost_spaces() {
+            if let Some(kentos_contracts::Entity::Space(s)) = model.get(slot)
+                && let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts)
+            {
+                out.push(Vec2::new(p.x, p.y + above));
+            }
+        }
         for slot in model.broken_dimensions() {
             let Some(kentos_contracts::Entity::Dimension(d)) = model.get(slot) else {
                 continue;

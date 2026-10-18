@@ -491,6 +491,17 @@ fn defs(shape: &Shape) -> Defs {
                 others.push(text(c.hatch.as_ref().map(|h| h.pattern.as_str())));
             }
         }
+        // Its rings and its label's words (docs/adr/0342).
+        Shape::Space { parts, space } => {
+            for a in parts {
+                for r in std::iter::once(&a.outer).chain(&a.holes) {
+                    comps.push(path(&r.pts, r.bulges.as_deref()));
+                }
+            }
+            others.push(Other::Text(space.method.name().into()));
+            others.push(text(space.number.as_deref()));
+            others.push(text(space.name.as_deref()));
+        }
         // Its jambs, its place along its wall, its width and what it is (docs/adr/0341).
         Shape::Opening {
             at,

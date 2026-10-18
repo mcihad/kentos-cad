@@ -239,6 +239,8 @@ pub enum Dialog {
     WallStyles,
     /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
     WallJoins,
+    /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
+    Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
     LayerPurge,
     /// Başka çizimden al (drawing_exchange.rs, docs/adr/0193 §2); the window is `App::take_from`.
@@ -507,6 +509,7 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
+    Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
     FontReport(crate::font_report::Event),
@@ -979,6 +982,8 @@ pub struct App {
     pub(crate) wall_styles: Option<crate::wall_styles::Window>,
     /// Birleşimleri denetle's window (wall_joins.rs, docs/adr/0340 §6).
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
+    /// Metraj's window (quantities.rs, docs/adr/0342 §5).
+    pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
     pub(crate) layer_purge: Option<crate::layer_purge::Window>,
     /// Başka çizimden al's window (drawing_exchange.rs, docs/adr/0193 §2).
@@ -1297,6 +1302,7 @@ impl App {
             annotation_styles: None,
             wall_styles: None,
             wall_joins: None,
+            quantities: None,
             layer_purge: None,
             take_from: None,
             layer_list: None,
@@ -1838,6 +1844,7 @@ impl App {
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
+            Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
@@ -2473,6 +2480,9 @@ impl App {
             // Duvar stilleri (docs/adr/0339 §6).
             "arch.wallStyles" => self.open_wall_styles(),
             "arch.wallJoinCheck" => self.open_wall_joins(),
+            // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
+            "arch.quantities" => self.open_quantities(),
+            "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)
             }

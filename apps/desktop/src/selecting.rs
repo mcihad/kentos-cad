@@ -148,6 +148,7 @@ pub fn kind_title(kind: &str) -> &'static str {
         "image" => "Resim",
         "wall" => "Duvar",
         "opening" => "Açıklık",
+        "space" => "Mahal",
         "nurbs" => "NURBS eğrisi",
         "raster" => "Raster",
         "pointcloud" => "Nokta bulutu",

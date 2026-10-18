@@ -185,6 +185,10 @@ pub mod walls_create;
 pub(crate) mod openings;
 pub mod openings_create;
 pub mod openings_edit;
+pub mod spaces;
+pub mod spaces_create;
+pub mod spaces_edit;
+pub mod spaces_quantities;
 pub mod walls_edit;
 pub mod walls_joins;
 pub mod walls_from_lines;
@@ -430,6 +434,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
+    (
+        kentos_contracts::CAD_SPACES_CREATE,
+        kentos_contracts::CAD_SPACES_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SPACES_EDIT,
+        kentos_contracts::CAD_SPACES_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SPACES_QUANTITIES,
+        kentos_contracts::CAD_SPACES_QUANTITIES_VERSION,
     ),
     // Kapı, Pencere, Boşluk and Açıklığı düzenle ([`openings_create`], [`openings_edit`], docs/adr/0341).
     (

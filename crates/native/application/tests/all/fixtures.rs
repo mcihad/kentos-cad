@@ -43,7 +43,7 @@ use kentos_native_application::{
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
     set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
@@ -641,6 +641,46 @@ impl Input for kentos_domain::contracts::WallsFromLines {
             "angle" => self.angle.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_domain::contracts::SpacesCreate {
+    /// `spaces[0].seed.x` and `.y`, `.height`, `lineWeight` (docs/adr/0342).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("spaces[")?.split_once("].")?;
+        let s = self.spaces.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "seed.x" => s.seed.as_mut().map(|p| &mut p.x),
+            "seed.y" => s.seed.as_mut().map(|p| &mut p.y),
+            "height" => s.height.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::SpacesEdit {
+    /// Değiştir's `operation.height`; Böl's `operation.line[k].x` and `.y`; Duvarlardan bul's `operation.seed.x`, `.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::SpacesOperation as Op;
+        match &mut self.operation {
+            Op::Set(c) if path == "operation.height" => c.height.as_mut()?.as_mut(),
+            Op::Split { line } => named_point(line, "operation.line", path),
+            Op::Rebound { seed } => match path {
+                "operation.seed.x" => seed.as_mut().map(|p| &mut p.x),
+                "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::SpacesQuantities {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -2599,6 +2639,15 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_OPENINGS_EDIT => {
             run!(openings_edit, kentos_domain::contracts::OpeningsEdit)
+        }
+        kentos_domain::contracts::CAD_SPACES_CREATE => {
+            run!(spaces_create, kentos_domain::contracts::SpacesCreate)
+        }
+        kentos_domain::contracts::CAD_SPACES_EDIT => {
+            run!(spaces_edit, kentos_domain::contracts::SpacesEdit)
+        }
+        kentos_domain::contracts::CAD_SPACES_QUANTITIES => {
+            run!(spaces_quantities, kentos_domain::contracts::SpacesQuantities)
         }
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
         kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),

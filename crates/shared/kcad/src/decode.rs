@@ -826,6 +826,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }
+                if !has.spaces && a.space_method.is_some() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin ölçme yöntemi şema 78'den beri yazılır",
+                    ));
+                }
                 arch = Some(a);
             }
             "leaderStyles" if has.multileader => {

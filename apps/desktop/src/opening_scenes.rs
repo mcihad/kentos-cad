@@ -22,7 +22,7 @@ use crate::wall_scenes::joined_room;
 
 /// The joined room with its openings: slots 6 (Kapı 90), 7 (İki kanatlı kapı 140), 8 and 9 (Pencere 120), 10 (Sürme
 /// kapı 160), 11 (Boşluk 100).
-fn room(app: &mut App, scale: f64) {
+pub(crate) fn room(app: &mut App, scale: f64) {
     joined_room(app, scale);
     app.command_expanded = true;
     run(app, "tool.door");

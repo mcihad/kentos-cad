@@ -392,6 +392,13 @@ Liste:
   (`product/`), Kapı, Pencere, Boşluk, Açıklığı çevir, Açıklığı taşı ve Numarala araçları, Mimari'nin Açıklık paneli ve ikonları,
   Öznitelikler'in açıklık satırları, seçim süzgecinde Açıklık (`SelectKind::Opening`), Patlat'ın ve DXF'in açıklığı; bilinen bozulmalar:
   şema 77 ve `FORMATS_VERSION` 84.
+- [ ] `CAD-ARCH-23`…`30` mahal ve metraj (ADR 0342, 18 Ekim): web'de gerekenler: `.kcad` şema 78 (`space` türü; sütunlu kayıtta tür
+  23; `settings.arch.spaceMethod`; `FORMATS_VERSION` 85), çekirdeğin `geom::space`'i WASM'da (duvar yüzleri, net bölge, yönteme göre
+  kaydırma, alan, çevre, etiket), deponun mahal parçaları ve parçanın yazısının açılmış parçadan okunması (masaüstünde `Spatial::piece`),
+  belgenin mahal izleyicisi (`model/` içinde `space_follow`'un karşılığı) ve kapanmayan mahallerin dizini, `cad.spaces.create`, `.edit` ve
+  `.quantities` (`product/`), Mahal ve Mahali böl araçları, Mahalleri birleştir, Metraj penceresi, Mimari'nin Mahal paneli ve ikonları,
+  Öznitelikler'in mahal satırları, seçim süzgecinde Mahal (`SelectKind::Space`), Proje ayarları › Mimari'nin ölçme yöntemi, kapanmayan
+  mahalin uyarı üçgeni; bilinen bozulmalar: şema 78 ve `FORMATS_VERSION` 85.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

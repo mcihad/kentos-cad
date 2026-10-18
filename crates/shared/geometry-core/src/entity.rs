@@ -580,6 +580,12 @@ pub enum Shape {
         place: Vec<Vec2>,
         opening: crate::geom::opening::Spec,
     },
+    /// A space (docs/adr/0342): its boundary's parts, each an outer ring and holes, and what its label and its
+    /// following need; the store draws it by its rings and label (`geom::space::pieces`).
+    Space {
+        parts: Vec<crate::geom::arrangement::Area>,
+        space: crate::geom::space::Spec,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -609,6 +615,7 @@ crate::json_tagged!(Shape, "kind",
     Record => "record" {},
     Wall => "wall" { pts, bulges & wall: crate::geom::wall::Spec },
     Opening => "opening" { at, width, place & opening: crate::geom::opening::Spec },
+    Space => "space" { parts & space: crate::geom::space::Spec },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -778,6 +785,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } | Shape::Wall { pts, .. } => pts.clone(),
         // Its jambs' four points (docs/adr/0341 §2).
         Shape::Opening { place, .. } => place.clone(),
+        // Its rings' (docs/adr/0342 §2).
+        Shape::Space { parts, .. } => entity_vertices(&crate::geom::space::as_polygon(parts)),
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -864,6 +873,8 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
     match e {
         // Its jambs' ring (docs/adr/0341 §2).
         Shape::Opening { place, .. } if place.len() == 4 => vec![place[0], place[2], place[3], place[1]],
+        // Its largest part's outer ring (docs/adr/0342 §2).
+        Shape::Space { parts, .. } => entity_outline(&crate::geom::space::as_polygon(parts), segments),
         // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
         Shape::Wall { pts, bulges, wall } => crate::geom::wall::body(pts, bulges.as_deref(), wall)
             .map(|(ring, _)| ring)
@@ -1812,6 +1823,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         }
         // The middle between its jambs (docs/adr/0341 §2).
         Shape::Opening { place, .. } => return crate::geom::opening::centre(place),
+        // Its label's place (docs/adr/0342 §2).
+        Shape::Space { parts, .. } => return crate::geom::space::label_at(parts),
         // The point halfway along the curve (docs/adr/0259 §2).
         Shape::Nurbs { ctrl, .. } => match crate::geom::nurbs::of(e) {
             Some(n) => n.point(n.param_at_length(n.length() / 2.0)),

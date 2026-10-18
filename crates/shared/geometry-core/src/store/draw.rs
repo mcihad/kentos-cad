@@ -196,6 +196,24 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             out,
         ),
         Shape::Opening { .. } => {}
+        // Its rings until the store expands it into its pieces (docs/adr/0342).
+        Shape::Space { parts, .. } => match parts.first() {
+            Some(a) => drawn_record(
+                &Shape::Polyline {
+                    pts: a.outer.pts.clone(),
+                    bulges: a.outer.bulges.clone(),
+                    holes: None,
+                    parts: None,
+                    closed: true,
+                    widths: None,
+                },
+                oriented,
+                clip,
+                refs,
+                out,
+            ),
+            None => out.push(NONE),
+        },
         // Its path until the store expands it into its pieces (docs/adr/0339).
         Shape::Wall { pts, bulges, wall } => drawn_record(
             &crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),

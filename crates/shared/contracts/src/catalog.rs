@@ -2242,6 +2242,119 @@ pub fn catalog() -> CommandCatalog {
         },
         // Kapı, Pencere, Boşluk and Açıklığı düzenle (docs/adr/0341 §4), held together by
         // fixtures/commands/v1/cad.openings.{create,edit}.json. The web is paused (docs/adr/0228).
+        // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
+        // fixtures/commands/v1/cad.spaces.{create,edit,quantities}.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_SPACES_CREATE.into(),
+            version: crate::CAD_SPACES_CREATE_VERSION,
+            title: "Mahal oluştur".into(),
+            summary: "Mahaller (odalar) ekler; tek geri alma adımı “Mahal”. \
+                      Her mahal ya duvarlardan bulunur (seed: duvarlarla çevrili bir iç nokta; sınırı duvarların yüzlerinden, kapı boşlukları kapalı sayılarak, delikleriyle bulunur ve duvar değişince belge yeniden bulur) ya da sınırı çizilir (parts: dış halka ve delikler, birden çok parça olabilir). \
+                      method sınırın neyi gösterdiğidir: net (iç yüzler), centerline (duvar eksenleri: her kenar duvarın yarı kalınlığı kadar duvara kayar), gross (dış yüzler: tam kalınlık); verilmezse projenin yöntemi (settings.arch.spaceMethod), o da yoksa net. \
+                      number, name, usage, arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir mevzuata uyduğu söylenmez. \
+                      Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri sınırlarıyla gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SpacesCreate>(),
+            output: schema::<crate::SpacesCreated>(),
+            plan: Some(schema::<crate::SpacesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Duvarlarla çevrili odanın içine tıklanmış gibi: net alanlı Salon".into(),
+                    input: json!({
+                        "layerId": "mahal",
+                        "spaces": [{ "seed": { "x": 3.0, "y": 2.0 }, "number": "Z-01", "name": "Salon", "usage": "Oturma" }]
+                    }),
+                    output: Some(json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"], "ids": [21], "revision": "40" })),
+                },
+                CommandExample {
+                    title: "Çizilmiş sınırlı bir depo, duvar ekseninden".into(),
+                    input: json!({
+                        "layerId": "mahal",
+                        "spaces": [{
+                            "parts": [{ "outer": { "pts": [ { "x": 0.0, "y": 0.0 }, { "x": 3.0, "y": 0.0 }, { "x": 3.0, "y": 2.0 }, { "x": 0.0, "y": 2.0 } ] } }],
+                            "method": "centerline", "name": "Depo"
+                        }]
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SPACES_EDIT.into(),
+            version: crate::CAD_SPACES_EDIT_VERSION,
+            title: "Mahali düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. \
+                      operation: set (numara, ad, kullanım, yöntem, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). \
+                      Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SpacesEdit>(),
+            output: schema::<crate::SpacesEdited>(),
+            plan: Some(schema::<crate::SpacesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki mahali birleştir".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e62"],
+                        "operation": { "kind": "merge" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Mahali bir çizgiyle ikiye böl".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"],
+                        "operation": { "kind": "split", "line": [ { "x": 3.0, "y": -1.0 }, { "x": 3.0, "y": 5.0 } ] }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SPACES_QUANTITIES.into(),
+            version: crate::CAD_SPACES_QUANTITIES_VERSION,
+            title: "Metraj".into(),
+            summary: "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. \
+                      Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). \
+                      Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. \
+                      Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. \
+                      levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller)."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SpacesQuantities>(),
+            output: schema::<crate::SpacesQuantified>(),
+            plan: Some(schema::<crate::SpacesQuantified>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin katın metrajı".into(),
+                input: json!({ "levels": ["zemin"] }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_OPENINGS_CREATE.into(),
             version: crate::CAD_OPENINGS_CREATE_VERSION,
@@ -6796,6 +6909,15 @@ mod tests {
                     crate::CAD_OPENINGS_CREATE => {
                         serde_json::from_value::<crate::OpeningsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SPACES_CREATE => {
+                        serde_json::from_value::<crate::SpacesCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_EDIT => {
+                        serde_json::from_value::<crate::SpacesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_QUANTITIES => {
+                        serde_json::from_value::<crate::SpacesQuantities>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_EDIT => {
                         serde_json::from_value::<crate::OpeningsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -7552,6 +7674,9 @@ mod tests {
                         }
                         crate::CAD_OPENINGS_CREATE => {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_SPACES_CREATE => {
+                            serde_json::from_value::<crate::SpacesCreated>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_EDIT => {
                             serde_json::from_value::<crate::OpeningsEdited>(output.clone()).map(|_| ())

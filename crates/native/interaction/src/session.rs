@@ -66,7 +66,7 @@ use crate::{
     labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
     parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
     select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines, opening_tools,
+    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines, opening_tools, space_tools,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -92,6 +92,8 @@ pub const TOOLS: &[&str] = &[
     opening_tools::FLIP_ID,
     opening_tools::MOVE_ID,
     opening_tools::NUMBER_ID,
+    space_tools::SPACE_ID,
+    space_tools::SPLIT_ID,
     line::ID,
     path::POLYLINE_ID,
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
@@ -446,6 +448,8 @@ impl Session {
             opening_tools::FLIP_ID => Box::new(opening_tools::OpeningEditTool::flip()),
             opening_tools::MOVE_ID => Box::new(opening_tools::OpeningEditTool::mover()),
             opening_tools::NUMBER_ID => Box::new(opening_tools::OpeningEditTool::number()),
+            space_tools::SPACE_ID => Box::new(space_tools::SpaceTool::new()),
+            space_tools::SPLIT_ID => Box::new(space_tools::SpaceSplitTool::new()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),

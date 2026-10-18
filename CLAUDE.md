@@ -661,6 +661,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   copy); Mimari › Açıklık: Kapı, Pencere, Boşluk, Açıklığı çevir, Açıklığı taşı, Numarala; Öznitelikler'in açıklık satırları, seçim
   süzgecinde Açıklık, duvarsız açıklığın uyarı üçgeni; Patlat ve DXF simgenin düz parçalarıyla; Python `kentos.cad.openings`, MCP
   (ADR 0341);
+  mahal ve metraj: `space` türü (halkalar ve delikler `parts`, duvarlardan bulunanın tohumu `seed`, yöntem `method`: net, duvar ekseni,
+  brüt; numara, ad, kullanım, kat ve evre, yükseklik, kaplamalar, `broken`: lostEnclosure; `.kcad` şema 78, `FORMATS_VERSION` 85, sunucuda
+  göç 0025), projenin yöntemi `settings.arch.spaceMethod`; çekirdeğin `geom::space`'i (duvarların birleşmiş yüzleri, tohumun yüzü, yönteme
+  göre kenar kenar kaydırma, alan, çevre, kutup, tek çok satırlı etiket); belge duvarı değişen mahali aynı adımda yeniden bulur
+  (`kentos_domain::space_follow`), kapanmayan nedeniyle kalır; `cad.spaces.create`, `.edit` (set, merge, split, rebound) ve salt okunur
+  `.quantities` (mahaller, duvarlar, açıklıklar; kat, evre, kullanım, katman; kurallarıyla); Mimari › Mahal: Mahal (Yöntem, Numara, Ad,
+  Kullanım, Çiz), Metraj (pano, XLSX, ODS, CSV), Mahali böl, Mahalleri birleştir; Öznitelikler'in mahal satırları, seçim süzgecinde
+  Mahal, kapanmayan mahalin uyarı üçgeni; Python `kentos.cad.spaces`, MCP (ADR 0342);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1265,6 +1273,8 @@ python3 scripts/fixtures/wall_cases.py --check; python3 scripts/fixtures/wall_co
 KENTOS_SHOTS_ONLY=duvar-serit,duvar-ciz,duvar-yazildi,duvar-ayrintili,duvar-sematik,duvar-oznitelikler,duvar-stilleri,duvar-cizgiden,duvar-katlar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; KENTOS_TRACES_ONLY=wall-tool cargo test -p kentos-desktop every_trace_passes   # duvarın resimleri (.run/shots/arac-duvar-*) ve Duvar aracının izi (ADR 0339)
 python3 scripts/fixtures/opening_cases.py --check; python3 scripts/fixtures/opening_command_cases.py --check   # açıklığın pervazlarını, simgesini ve duvarın boşluğunu (çekirdeğin testi tests/all/openings.rs) ve cad.openings.create ile .edit'in 86 durumunu (duvarla gitmek dahil) KentOS kodu olmadan denetle; durumlar fixtures/walls/v1/openings.json, fixtures/commands/v1/cad.openings.*.json (ADR 0341)
 KENTOS_SHOTS_ONLY=acik-serit,acik-oda,acik-ayrintili,acik-kapi,acik-pencere,acik-oznitelikler,acik-tasi,acik-duvar-yok cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # açıklıkların resimleri, .run/shots/arac-acik-* (ADR 0341)
+python3 scripts/fixtures/space_cases.py --check; python3 scripts/fixtures/space_command_cases.py --check   # mahalin sınırını (duvarların yüzleri, delik, L oda, eğik oda, kalınlık basamağı, üç yöntem; çekirdeğin testi tests/all/spaces.rs) ve cad.spaces.create, .edit ile .quantities'in 84 durumunu (duvar taşınınca ve kalınlaşınca, kapanmayan mahal dahil) KentOS kodu olmadan kesirlerle denetle; durumlar fixtures/walls/v1/spaces.json, fixtures/commands/v1/cad.spaces.*.json (ADR 0342)
+KENTOS_SHOTS_ONLY=mahal-serit,mahal-oda,mahal-arac,mahal-brut,mahal-oznitelikler,mahal-bol,mahal-metraj,mahal-metraj-duvar,mahal-kayip cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # mahallerin ve Metraj'ın resimleri, .run/shots/arac-mahal-* (ADR 0342)
 python3 scripts/fixtures/wall_join_cases.py --check   # duvar birleşimlerini (köşe, alın, düz devam, T ve öncelikli geçiş, oda, X, üçlü uç, dört sorun ve onarımları) kesirlerle, KentOS kodu olmadan denetle; durumlar fixtures/walls/v1/joins.json, cad.walls.edit ve .joins'in birleşim uyarıları da bundan (ADR 0340)
 KENTOS_SHOTS_ONLY=duvar-birlesim,duvar-birlesim-ayrintili,duvar-birlesim-x,duvar-duzenle-serit,duvar-birlesim-araci,duvar-birlesim-denetle,duvar-birlesim-oznitelikler,duvar-bol cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; KENTOS_TRACES_ONLY=wall-edit cargo test -p kentos-desktop every_trace_passes   # duvar birleşimlerinin ve düzenlemelerinin resimleri ve izi (ADR 0340)
 cargo test -p kentos-interaction --test all constraint_marks; KENTOS_SHOTS_ONLY=kisit-isaretler,kisit-isaret-vurgu,kisit-parametreler,kisit-parametre-celiski cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # kısıt işaretleri, bağlı parçaların vurgusu ve Parametreler penceresi, çelişen değer; resimler .run/shots/arac-kisit-isaret*, arac-kisit-parametre* (ADR 0338)

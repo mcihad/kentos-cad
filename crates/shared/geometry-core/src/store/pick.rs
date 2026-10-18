@@ -209,6 +209,7 @@ impl Store {
                         | Shape::Insert { .. }
                         | Shape::Wall { .. }
                         | Shape::Opening { .. }
+                        | Shape::Space { .. }
                 )
             })
             .map(|it| (it.id, edge_distance(&it.shape, p, self.font)))

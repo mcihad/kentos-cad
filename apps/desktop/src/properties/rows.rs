@@ -1362,6 +1362,129 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
+        // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
+        // boundary, each written through `cad.spaces.edit`; why it lost its walls.
+        Entity::Space(sp) => {
+            use kentos_contracts::{SpaceChange, SpaceMethod, SpacesOperation};
+            let x = &sp.space;
+            let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
+            let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+                label,
+                swatch: None,
+                icon,
+                wide: false,
+                chosen,
+                enabled: true,
+                message,
+            };
+            let select = |text: String, items: Vec<Choice>| {
+                edit(Editor::Select {
+                    text,
+                    swatch: None,
+                    icon: None,
+                    items,
+                })
+            };
+            let words = |label: &'static str, v: &Option<String>, field: Field| {
+                Row::text(label, v.clone().unwrap_or_default()).editor(edit(Editor::Text(field)))
+            };
+            geo.push(words("Numara", &x.number, Field::SpaceNumber(slot)));
+            geo.push(words("Ad", &x.name, Field::SpaceName(slot)));
+            geo.push(words("Kullanım", &x.usage, Field::SpaceUsage(slot)));
+            let methods = SpaceMethod::ALL
+                .iter()
+                .map(|&m| {
+                    pick(
+                        m.label().to_owned(),
+                        m == x.method,
+                        set(SpaceChange { method: Some(m), ..Default::default() }),
+                        Some(kentos_interaction::space_tools::method_icon(Some(m))),
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Yöntem", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+            let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            let level_name = x
+                .arch
+                .level
+                .as_deref()
+                .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
+                .unwrap_or_else(|| "Yok".to_owned());
+            let mut level_items = vec![pick(
+                "Yok".to_owned(),
+                x.arch.level.is_none(),
+                set(SpaceChange { level: Some(None), ..Default::default() }),
+                None,
+            )];
+            level_items.extend(levels.iter().map(|l| {
+                pick(
+                    l.name.clone(),
+                    x.arch.level.as_deref() == Some(l.id.as_str()),
+                    set(SpaceChange { level: Some(Some(l.id.clone())), ..Default::default() }),
+                    None,
+                )
+            }));
+            level_items.push(Choice::Separator);
+            level_items.push(Choice::Command {
+                label: "Katlar…",
+                icon: crate::icons::from_web(Some("archSettings")),
+                id: "arch.settings",
+            });
+            geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
+            let phase_name = x.arch.phase.map_or("Yok", kentos_contracts::ArchPhase::label);
+            let mut phases = vec![pick(
+                "Yok".to_owned(),
+                x.arch.phase.is_none(),
+                set(SpaceChange { phase: Some(None), ..Default::default() }),
+                None,
+            )];
+            phases.extend(kentos_contracts::ArchPhase::ALL.iter().map(|&p| {
+                pick(
+                    p.label().to_owned(),
+                    x.arch.phase == Some(p),
+                    set(SpaceChange { phase: Some(Some(p)), ..Default::default() }),
+                    None,
+                )
+            }));
+            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            let level_height = x
+                .arch
+                .level
+                .as_deref()
+                .and_then(|id| levels.iter().find(|l| l.id == id))
+                .and_then(|l| l.height);
+            let height = x.height.or(level_height);
+            let shown = match (x.height, level_height) {
+                (Some(h), _) => f.length_bare(h),
+                (None, Some(h)) => format!("{} (katın)", f.length_bare(h)),
+                (None, None) => "Yok".to_owned(),
+            };
+            geo.push(
+                Row::figure("Yükseklik", shown)
+                    .unit(if height.is_some() { f.length_unit_label() } else { "" })
+                    .editor(number(Field::SpaceHeight(slot))),
+            );
+            geo.push(words("Zemin kaplaması", &x.finishes.floor, Field::SpaceFloor(slot)));
+            geo.push(words("Duvar kaplaması", &x.finishes.wall, Field::SpaceWall(slot)));
+            geo.push(words("Tavan kaplaması", &x.finishes.ceiling, Field::SpaceCeiling(slot)));
+            let a = kentos_native_application::spaces::area_of(&x.parts);
+            geo.extend(area(a));
+            geo.push(metres("Çevre", kentos_native_application::spaces::perimeter_of(&x.parts)));
+            if let Some(h) = height {
+                geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
+            }
+            let bound = if x.seed.is_some() { "Duvarlardan" } else { "Çizilmiş" };
+            let rebound = vec![pick(
+                "Duvarlardan yeniden bul".to_owned(),
+                false,
+                Message::Properties(Event::Space(slot, SpacesOperation::Rebound { seed: None })),
+                Some("space"),
+            )];
+            geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));
+            if let Some(b) = x.broken {
+                geo.push(Row::text("Durum", b.words()));
+            }
+        }
         // An opening (docs/adr/0341 §5): its form, type, width, place along its wall, side, hinge, leaves, operation,
         // swing, frame, sill, head and number, each written through `cad.openings.edit`; its wall, or why it is in none.
         Entity::Opening(o) => {

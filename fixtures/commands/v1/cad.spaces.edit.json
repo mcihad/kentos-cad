@@ -1,0 +1,5942 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.spaces.edit",
+  "commandVersion": 1,
+  "title": "Mahali düzenle ve duvarla güncellenmek: değiştir, birleştir, böl, duvarlardan bul; retler",
+  "note": "ADR 0342 §1–§4. Beklenenler scripts/fixtures/space_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvarlardan bulunan sınır space_cases.py'nin kesirli yüz bulmasından, ölçüleri Metraj adımıyla. Kurulumdaki çizimde 7 nesne var; yeni nesne 8'den başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mahaller",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "x": 5.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center",
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 7,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 34.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Değiştir: numara, ad ve kullanım",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "number": "Z-02",
+              "name": "Yatak odası",
+              "usage": "Yatak"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "number": "Z-02",
+                  "name": "Yatak odası",
+                  "usage": "Yatak"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "Z-02",
+                "name": "Yatak odası",
+                "usage": "Yatak"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "Z-02",
+                  "name": "Yatak odası",
+                  "usage": "Yatak",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kat, evre ve yükseklik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "zemin",
+              "phase": "existing",
+              "height": 2.7
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda",
+                  "arch": {
+                    "level": "zemin",
+                    "phase": "existing"
+                  },
+                  "height": 2.7
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "existing"
+                },
+                "height": 2.7
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 2.7,
+                  "volume": 62.532000000000004,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kaplamalar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "floor": "Seramik",
+              "wall": "Fayans",
+              "ceiling": "Asma tavan"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda",
+                  "finishes": {
+                    "floor": "Seramik",
+                    "wall": "Fayans",
+                    "ceiling": "Asma tavan"
+                  }
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "finishes": {
+                  "floor": "Seramik",
+                  "wall": "Fayans",
+                  "ceiling": "Asma tavan"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yöntem duvar ekseni, sınır duvarlardan yeniden",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "method": "centerline"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "method": "centerline",
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "method": "centerline",
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "centerline",
+                  "area": 25.0,
+                  "perimeter": 20.0,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 25.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yöntem brüt",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "method": "gross"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "method": "gross",
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "method": "gross",
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "gross",
+                  "area": 26.91,
+                  "perimeter": 20.75,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 26.91,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yüksekliği kaldırmak katınkini verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "height": 2.5,
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: değen iki mahal, ilki kimliğini korur, öbürü silinir; sınır çizilmiş olur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "A"
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 23.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "B"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "A"
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 23.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 23.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "B"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "number": "A"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "removed": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "number": "A"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "A",
+                  "method": "net",
+                  "area": 24.0,
+                  "perimeter": 20.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 24.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: üç mahal sırayla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:10",
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 10,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "removed": [
+                "$any",
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:10",
+                  "method": "net",
+                  "area": 24.0,
+                  "perimeter": 20.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 24.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: büyük parça kimliğini korur, küçüğü aynı alanlarla yeni mahal",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "C",
+                "name": "Ofis"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 26.0,
+                          "y": 4.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 4.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "C",
+                "name": "Ofis"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "split",
+              "line": [
+                {
+                  "x": 22.0,
+                  "y": -1.0
+                },
+                {
+                  "x": 22.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "number": "C",
+                  "name": "Ofis"
+                }
+              ],
+              "added": [
+                {
+                  "kind": "space",
+                  "id": 9,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "number": "C",
+                  "name": "Ofis"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "number": "C",
+                "name": "Ofis"
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "number": "C",
+                "name": "Ofis"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "C",
+                  "name": "Ofis",
+                  "method": "net",
+                  "area": 16.0,
+                  "perimeter": 16.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "C",
+                  "name": "Ofis",
+                  "method": "net",
+                  "area": 8.0,
+                  "perimeter": 12.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 24.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvarlardan bul: çizilmiş mahal verilen noktadan duvarlardan bulunan olur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "name": "Taslak"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 1.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 3.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 1.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "name": "Taslak"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "rebound",
+              "seed": {
+                "x": 2.0,
+                "y": 2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Taslak"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Taslak"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Taslak",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvarlardan bul: tohumsuz çizilmiş mahal etiketinin noktasından bulunur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "name": "Taslak"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 6.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 1.0
+                        },
+                        {
+                          "x": 7.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 6.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "name": "Taslak"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "rebound"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 6.5,
+                    "y": 2.0
+                  },
+                  "name": "Taslak"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 6.5,
+                  "y": 2.0
+                },
+                "name": "Taslak"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Taslak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 13.56,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara duvar taşınınca iki mahalin sınırı ve alanı aynı adımda değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "name": "Sağ"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "name": "Sağ"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 1.0,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Sol",
+                  "method": "net",
+                  "area": 27.96,
+                  "perimeter": 21.25,
+                  "byMethod": {
+                    "net": 27.96,
+                    "centerline": 30.0,
+                    "gross": 32.11
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "name": "Sağ",
+                  "method": "net",
+                  "area": 8.76,
+                  "perimeter": 13.25,
+                  "byMethod": {
+                    "net": 8.76,
+                    "centerline": 10.0,
+                    "gross": 11.31
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 36.72,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara duvar kalınlaşınca net mahal daralır, eksenden ölçülen değişmez; aynı adımda (CAD-ARCH-08)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "name": "Sağ",
+                "method": "centerline"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "method": "centerline",
+                "name": "Sağ"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.25
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Sol",
+                  "method": "net",
+                  "area": 22.919999999999998,
+                  "perimeter": 19.15,
+                  "byMethod": {
+                    "net": 22.919999999999998,
+                    "centerline": 25.0,
+                    "gross": 27.17
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "name": "Sağ",
+                  "method": "centerline",
+                  "area": 15.0,
+                  "perimeter": 16.0,
+                  "byMethod": {
+                    "net": 13.32,
+                    "centerline": 15.0,
+                    "gross": 16.77
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.25,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.75,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 37.92,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvar silinince mahal kapanmaz: sınırı son hâliyle kalır, nedeni lostEnclosure",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Sol"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "fields": {
+              "8": {
+                "broken": "lostEnclosure"
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan yazmadan mahali olacağı gibi gösterir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "Oda"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "validate",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "Oda"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek adım “Mahali düzenle”, geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "Oda"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Mahali düzenle",
+          "expect": {
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahal verilmezse ret",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Düzenlenecek mahal verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "D-1"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“D-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahal olmayan nesne reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_space",
+              "message": "Nesne mahal değil; Mahali düzenle yalnız mahalleri değiştirir.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş Değiştir reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 2.0
+            }
+          },
+          "nonFinite": {
+            "operation.height": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Yükseklik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Mahalin yüksekliği 0; sıfırdan büyük, en çok 1000 m olmalı.",
+              "path": "uids[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "bodrum"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “bodrum” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "operation.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek mahal birleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Birleştirmek için en az iki mahal verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "değmeyen mahaller birleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 32.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 32.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 30.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 32.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 32.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 30.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8",
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "merge"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "spaces_not_touching",
+              "message": "Mahaller birleşince 2 ayrı parça oluyor; birleştirilecek mahaller birbirine değmeli.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek noktalı bölme çizgisi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "split",
+              "line": [
+                {
+                  "x": 21.0,
+                  "y": 1.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "split_missed",
+              "message": "Bölme çizgisi en az iki noktadır.",
+              "path": "operation.line"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahali kesmeyen çizgi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "split",
+              "line": [
+                {
+                  "x": 25.0,
+                  "y": -1.0
+                },
+                {
+                  "x": 25.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "split_missed",
+              "message": "Çizgi mahali bölmüyor: mahalin içinden geçip sınırını iki yerde kesmeli.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz bölme noktası reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 22.0,
+                          "y": 2.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 2.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "split",
+              "line": [
+                {
+                  "x": 21.0,
+                  "y": -1.0
+                },
+                {
+                  "x": 21.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          },
+          "nonFinite": {
+            "operation.line[1].y": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "2. noktanın kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "operation.line[1].y"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvarların kapatmadığı noktadan bulunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "rebound",
+              "seed": {
+                "x": 40.0,
+                "y": 40.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "space_not_enclosed",
+              "message": "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "x"
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmandaki mahal düzenlenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.set",
+          "input": {
+            "operation": "locked",
+            "layer": "mahal",
+            "value": true
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "x"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Mahal” katmanı kilitli; üzerindeki mahal düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "x"
+            },
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

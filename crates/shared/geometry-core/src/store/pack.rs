@@ -203,7 +203,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 29.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 30.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -722,6 +722,15 @@ impl Reader<'_> {
                     width,
                     place,
                     opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                }
+            }
+            // docs/adr/0342: its parts and fields as one JSON text.
+            30 => {
+                let text = self.string()?.unwrap_or_default();
+                let v = Json::parse(&text).map_err(|e| format!("mahal okunamadı: {e}"))?;
+                Shape::Space {
+                    parts: <Vec<crate::geom::arrangement::Area> as crate::api::json::FromJson>::from_json(v.get("parts"))?,
+                    space: <crate::geom::space::Spec as crate::api::json::Flat>::read_flat(&v)?,
                 }
             }
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
@@ -1340,6 +1349,17 @@ impl Packer {
                 let mut text = String::from("{");
                 let mut first = true;
                 crate::api::json::Flat::write_flat(wall, &mut text, &mut first);
+                text.push('}');
+                let at = self.string(&text);
+                self.put(&[at]);
+            }
+            // docs/adr/0342, as the reader's kind 30 says: its parts and fields as one JSON text.
+            Shape::Space { parts, space } => {
+                self.put(&[30.0]);
+                let mut text = String::from("{");
+                let mut first = true;
+                crate::api::json::field(&mut text, &mut first, "parts", parts);
+                crate::api::json::Flat::write_flat(space, &mut text, &mut first);
                 text.push('}');
                 let at = self.string(&text);
                 self.put(&[at]);

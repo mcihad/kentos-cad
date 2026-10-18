@@ -544,7 +544,12 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
         .iter()
         .filter(|e| matches!(e, kentos_contracts::Entity::Opening(_)))
         .count();
-    if walls == 0 && openings == 0 {
+    let spaces = input
+        .entities
+        .iter()
+        .filter(|e| matches!(e, kentos_contracts::Entity::Space(_)))
+        .count();
+    if walls == 0 && openings == 0 && spaces == 0 {
         return None;
     }
     let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
@@ -569,8 +574,37 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
                 Some(pieces),
             ) => out.entities.extend(pieces),
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
+            // A space's rings, each a closed polyline (docs/adr/0342).
+            (kentos_contracts::Entity::Space(s), _) => {
+                for p in &s.space.parts {
+                    for r in std::iter::once(&p.outer).chain(&p.holes) {
+                        let mut base = s.base.clone();
+                        base.attachments.clear();
+                        base.label_pins.clear();
+                        out.entities.push(kentos_contracts::Entity::Polyline(kentos_contracts::PathEntity {
+                            base,
+                            pts: r.pts.clone(),
+                            bulges: r.bulges.clone(),
+                            holes: None,
+                            zs: None,
+                            ms: None,
+                            parts: None,
+                            closed: true,
+                            widths: None,
+                        }));
+                    }
+                }
+            }
             _ => out.entities.push(e.clone()),
         }
+    }
+    if spaces > 0 {
+        report.note_n(
+            "Mahal",
+            "DXF'te KentOS'un mahali yoktur: mahaller sınırlarının kapalı çoklu çizgileri olarak yazıldı; numaraları, adları, ölçme yöntemleri ve kaplamaları taşınmaz, mahal olarak geri okunmaz",
+            0,
+            u32::try_from(spaces).unwrap_or(u32::MAX),
+        );
     }
     if openings > 0 {
         report.note_n(

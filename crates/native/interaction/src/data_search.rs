@@ -31,6 +31,7 @@ pub fn kind_name(e: &Entity) -> &'static str {
         Entity::Nurbs(_) => "NURBS eğrisi",
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
+        Entity::Space(_) => "Mahal",
         Entity::Xline(_) => "Yardımcı çizgi",
         Entity::Ray(_) => "Işın",
         Entity::Text(_) => "Yazı",

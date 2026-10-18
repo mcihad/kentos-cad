@@ -720,6 +720,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         Entity::Record(_) => Shape::Record {},
         Entity::Wall(w) => crate::walls::core_wall(&w.wall),
         Entity::Opening(o) => crate::openings::core_opening(&o.opening),
+        Entity::Space(s) => crate::spaces::core_space(&s.space),
         // A raster is no block's piece either (docs/adr/0204 §2); its frame for what it covers.
         Entity::Raster(r) => {
             let f = &r.raster;
@@ -1046,7 +1047,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             return None;
         }
         // A block holds no wall (docs/adr/0339 §4).
-        Shape::Wall { .. } | Shape::Opening { .. } => return None,
+        Shape::Wall { .. } | Shape::Opening { .. } | Shape::Space { .. } => return None,
     })
 }
 

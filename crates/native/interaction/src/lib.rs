@@ -261,6 +261,7 @@ pub mod view_twist;
 pub mod wall;
 pub mod wall_edit_tools;
 pub mod opening_tools;
+pub mod space_tools;
 pub mod wall_from_lines;
 
 pub use clipboard::Clipboard;

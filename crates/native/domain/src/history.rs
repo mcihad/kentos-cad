@@ -698,6 +698,9 @@ impl Document {
         // Then: the openings with their walls (docs/adr/0341 §3), before the texts linked to them.
         let openings = self.follow_openings(ops);
         ops.extend(openings);
+        // Then: the spaces found from their walls (docs/adr/0342 §3).
+        let spaces = self.follow_spaces(ops);
+        ops.extend(spaces);
         // Then: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
         let settled = self.settle_boundaries(ops);
         ops.extend(settled);

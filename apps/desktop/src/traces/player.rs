@@ -168,6 +168,11 @@ impl Seen {
             ),
             // An opening's jambs (docs/adr/0341 §1).
             Entity::Opening(o) => (o.opening.place.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            // A space's first ring (docs/adr/0342 §1).
+            Entity::Space(s) => (
+                s.space.parts.first().map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect()).unwrap_or_default(),
+                Vec::new(),
+            ),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {
                     let (m, r) = (e.major, e.ratio);

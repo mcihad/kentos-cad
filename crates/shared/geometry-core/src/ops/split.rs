@@ -391,6 +391,7 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Leader { pts, .. }
         | Shape::Wall { pts, .. } => pts.first()?.x,
         Shape::Opening { place, .. } => place.first()?.x,
+        Shape::Space { parts, .. } => parts.first()?.outer.pts.first()?.x,
         Shape::Nurbs { ctrl, .. } => ctrl.first()?.x,
         Shape::Circle { c, .. } | Shape::Arc { c, .. } | Shape::Ellipse { c, .. } => c.x,
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => p.x,

@@ -1023,7 +1023,7 @@ fn shape_snaps(
         Shape::Hatch { .. } => return,
         // A record has nothing to snap to (docs/adr/0410); a wall is snapped through its pieces (docs/adr/0339).
         // An opening too, through its symbol's pieces (docs/adr/0341 §2).
-        Shape::Record {} | Shape::Wall { .. } | Shape::Opening { .. } => {}
+        Shape::Record {} | Shape::Wall { .. } | Shape::Opening { .. } | Shape::Space { .. } => {}
         // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's
         // (docs/adr/0204 §7).
         Shape::Image { .. } | Shape::Raster { .. } | Shape::PointCloud { .. } => {

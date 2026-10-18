@@ -456,6 +456,8 @@ pub(crate) fn geometry(
             let holes = holes.into_iter().flatten().map(plain).collect();
             area(plain(outer), holes, rep, w)
         }
+        // Its area, as an area object's (docs/adr/0342): GeoJSON, KML and GPX have no space.
+        Entity::Space(s) => return geometry(&Entity::Polygon(s.as_polygon()), blocks, rep, w),
         // Its jambs' footprint, an area (docs/adr/0341 §2): GeoJSON, KML and GPX have no opening.
         Entity::Opening(e) => {
             let p = &e.opening.place;

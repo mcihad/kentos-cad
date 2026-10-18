@@ -463,7 +463,10 @@ impl Store {
         }
         self.wall_view = view;
         let walls: Vec<u32> = (0..self.slots.len() as u32)
-            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. })))
+            // A space's label is sized on paper too (docs/adr/0342 §2).
+            .filter(|&s| {
+                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Space { .. }))
+            })
             .collect();
         for s in &walls {
             let fresh = self.slots[*s as usize]
@@ -516,6 +519,19 @@ impl Store {
                         attribute: None,
                     }]
                 }),
+            // Its rings and its label at the view's scale (docs/adr/0342 §2).
+            Shape::Space { parts, space } => crate::geom::space::pieces(parts, space, self.wall_view.scale)
+                .into_iter()
+                .map(|shape| crate::block::Piece {
+                    shape,
+                    color: None,
+                    line_weight: None,
+                    by_layer: Vec::new(),
+                    gates: Vec::new(),
+                    stroke: Default::default(),
+                    attribute: None,
+                })
+                .collect(),
             // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2).
             Shape::Opening { place, opening, .. } => crate::geom::opening::symbol(place, opening)
                 .into_iter()

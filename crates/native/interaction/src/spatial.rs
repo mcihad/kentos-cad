@@ -1197,11 +1197,22 @@ impl Spatial {
 
     /// Piece `place` of the insert `id`'s block, as its definition holds it.
     fn piece(&self, id: f64, place: f64) -> Option<kentos_geometry_core::block::Piece> {
-        let Shape::Insert { block, .. } = &self.store.get(id)?.shape else {
-            return None;
-        };
-        let flat = self.store.blocks().get(block)?;
-        flat.pieces.get(place as usize).cloned()
+        let it = self.store.get(id)?;
+        if let Shape::Insert { block, .. } = &it.shape {
+            let flat = self.store.blocks().get(block)?;
+            return flat.pieces.get(place as usize).cloned();
+        }
+        // Another object drawn by its pieces (a space's label, docs/adr/0342 §2): the piece as the store placed it.
+        let shape = it.expanded.as_deref()?.shapes.get(place as usize)?.clone();
+        Some(kentos_geometry_core::block::Piece {
+            shape,
+            color: None,
+            line_weight: None,
+            by_layer: Vec::new(),
+            gates: Vec::new(),
+            stroke: Default::default(),
+            attribute: None,
+        })
     }
 
     /// How many times every object was read again: once per opened drawing

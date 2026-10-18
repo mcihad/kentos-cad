@@ -49,6 +49,7 @@
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | record | | | |
 //! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch, joins, cleanup) as one JSON object (docs/adr/0339, 0340) |
+//! | space | | | its parts and the rest of its source (seed, method, number, name, usage, arch, height, finishes, broken) as one JSON object (docs/adr/0342) |
 //! | opening | n | place (2n) | the rest of its source (host, at, anchor, width, form, leaves, operation, hand, side, swing, showSwing, frame, sill, head, style, number, broken) as one JSON object (docs/adr/0341) |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
@@ -175,7 +176,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 23] = [
+pub const KINDS: [&str; 24] = [
     "point",
     "line",
     "polyline",
@@ -199,6 +200,7 @@ pub const KINDS: [&str; 23] = [
     "record",
     "wall",
     "opening",
+    "space",
 ];
 
 const COLOR: u32 = 1;
@@ -414,6 +416,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Record(_) => 20,
         Entity::Wall(_) => 21,
         Entity::Opening(_) => 22,
+        Entity::Space(_) => 23,
     }
 }
 
@@ -1472,6 +1475,10 @@ impl Packer {
                     o.remove("bulges");
                 }
                 self.text(&rest.to_string());
+            }
+            // A space (docs/adr/0342 §1): its source as one JSON text.
+            Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
+                self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
             }
             // An opening (docs/adr/0341 §1): its jambs, then the rest of its source as one JSON text.
             Entity::Opening(kentos_contracts::OpeningEntity { base: _, opening }) => {
@@ -3301,6 +3308,15 @@ fn geometry(
                 return Err(broken(&problem));
             }
             Entity::Wall(kentos_contracts::WallEntity { base, wall })
+        }
+        23 => {
+            let text = c.text(|| "mahalin alanları".into())?;
+            let space: kentos_contracts::SpaceFields =
+                serde_json::from_str(&text).map_err(|_| broken("mahalin alanları"))?;
+            if let Some((_, problem)) = space.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Space(kentos_contracts::SpaceEntity { base, space })
         }
         22 => {
             let place = c.points()?;

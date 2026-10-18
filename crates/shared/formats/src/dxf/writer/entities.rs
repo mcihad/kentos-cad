@@ -84,6 +84,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Record(_) => "Kayıt",
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
+        Entity::Space(_) => "Mahal",
     }
 }
 
@@ -193,6 +194,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Record(_) => true,
         Entity::Wall(w) => w.wall.pts.iter().all(|p| ok(*p)) && w.wall.width.is_finite(),
         Entity::Opening(o) => o.opening.place.iter().all(|p| ok(*p)) && o.opening.width.is_finite(),
+        Entity::Space(s) => s.space.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts))),
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -698,6 +700,11 @@ impl Writer<'_> {
             // A wall reaches here as its pieces (`writer::plain_walls`, docs/adr/0339 §4).
             Entity::Wall(_) => {
                 self.report.skip("Duvar", "duvar çizgilerine açılmadan yazılamaz", 0);
+                false
+            }
+            // A space: its rings as closed polylines (`writer::plain_walls`, docs/adr/0342).
+            Entity::Space(_) => {
+                self.report.skip("Mahal", "mahal halkalarına açılmadan yazılamaz", 0);
                 false
             }
             // Nor an opening: its symbol's pieces (docs/adr/0341 §2).

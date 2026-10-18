@@ -263,6 +263,7 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Record(x) => &mut x.base,
         Entity::Wall(x) => &mut x.base,
         Entity::Opening(x) => &mut x.base,
+        Entity::Space(x) => &mut x.base,
     }
 }
 

@@ -43,6 +43,7 @@ UNITS: dict[str, str] = {
     "length": "Projenin düzleminde uzunluk ya da koordinat: metre, coğrafi sistemde derece (units.length).",
     "area": "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
     "elevation": "Düşey metre: kot, z, yükseklik.",
+    "volume": "Hacim: m³ (alan × düşey metre).",
     "m": "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
     "measure": "Rotanın ölçüsü (M), rotanın kendi biriminde.",
     "constraint": "Ölçü kısıtının değeri: uzunlukta metre, açıda radyan.",
@@ -2799,6 +2800,7 @@ class SelectKind(_StrEnum):
     - ``image``
     - ``wall``: Duvar (docs/adr/0339 §6).
     - ``opening``: Açıklık: a door, a window or a bare opening (docs/adr/0341 §5).
+    - ``space``: Mahal (docs/adr/0342 §5).
     """
     POINT = "point"
     LINE = "line"
@@ -2819,9 +2821,10 @@ class SelectKind(_StrEnum):
     IMAGE = "image"
     WALL = "wall"
     OPENING = "opening"
+    SPACE = "space"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall", "opening"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall", "opening", "space"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -2918,6 +2921,29 @@ class SourceOverrides(_StrEnum):
 
 SourceOverridesName = Literal["keep", "replace"]
 """The names of :class:`SourceOverrides`, for a plain string."""
+
+
+class SpaceBreak(_StrEnum):
+    """Why a space's boundary is not what its walls say.
+
+    - ``lostEnclosure``: The walls no longer close round its seed.
+    """
+    LOST_ENCLOSURE = "lostEnclosure"
+
+
+SpaceBreakName = Literal["lostEnclosure"]
+"""The names of :class:`SpaceBreak`, for a plain string."""
+
+
+class SpaceMethod(_StrEnum):
+    """What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces."""
+    NET = "net"
+    CENTERLINE = "centerline"
+    GROSS = "gross"
+
+
+SpaceMethodName = Literal["net", "centerline", "gross"]
+"""The names of :class:`SpaceMethod`, for a plain string."""
 
 
 class SplitPolicy(_StrEnum):
@@ -3975,6 +4001,7 @@ class Entity(_Union):
     - :class:`PointcloudEntity` (``kind: pointcloud``)
     - :class:`WallEntity` (``kind: wall``)
     - :class:`OpeningEntity` (``kind: opening``)
+    - :class:`SpaceEntity` (``kind: space``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -4698,6 +4725,29 @@ class SourcesEditOp(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SourcesEditOp:
         return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
+
+
+class SpacesOperation(_Union):
+    """What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
+
+    One of:
+
+    - :class:`SetSpacesOperation` (``kind: set``)
+    - :class:`MergeSpacesOperation` (``kind: merge``)
+    - :class:`SplitSpacesOperation` (``kind: split``)
+    - :class:`ReboundSpacesOperation` (``kind: rebound``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesOperation:
+        return _variant(_SPACES_OPERATION, "SpacesOperation", "kind", data).from_json(data)
 
 
 class SubPlace(_Union):
@@ -5720,9 +5770,12 @@ class ArchLevel(_Model):
 class ArchSettings(_Model):
     """The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
     by the drawing's scale, `WallDetail::at_scale`).
+    Attributes:
+        space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
     """
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
+    space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -5730,6 +5783,8 @@ class ArchSettings(_Model):
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
+        if self.space_method is not UNSET:
+            out["spaceMethod"] = None if self.space_method is None else _enum_out(self.space_method)
         return out
 
     @classmethod
@@ -5737,6 +5792,7 @@ class ArchSettings(_Model):
         return cls(
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
+            space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
         )
 
 
@@ -22420,6 +22476,66 @@ class NewOpening(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewSpace(_Model):
+    """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
+    Attributes:
+        height: Unit: elevation.
+        method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
+        parts: Its boundary drawn, when no seed is given.
+        seed: A point inside it: its boundary is found from the walls round it. Unit: length.
+    """
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    finishes: SpaceFinishes | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    parts: list[SpacePart] | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.finishes is not UNSET:
+            out["finishes"] = None if self.finishes is None else self.finishes.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewSpace:
+        return cls(
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            finishes=UNSET if "finishes" not in data else None if data["finishes"] is None else SpaceFinishes.from_json(data["finishes"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            usage=data.get("usage", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewWall(_Model):
     """One wall to write: its path as drawn and what the user chose for it.
     Attributes:
@@ -23037,6 +23153,54 @@ class OpeningEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningRow(_Model):
+    """An opening measured.
+    Attributes:
+        width: Unit: length.
+        area: Unit: area.
+        height: Head less sill (sill absent: 0); none without a head. Unit: length.
+    """
+    uid: str
+    form: OpeningForm | OpeningFormName
+    width: float
+    area: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["form"] = _enum_out(self.form)
+        out["width"] = float(self.width)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningRow:
+        return cls(
+            uid=data["uid"],
+            form=_enum_in(OpeningForm, data["form"]),
+            width=float(data["width"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            number=data.get("number", UNSET),
+            style=data.get("style", UNSET),
+            wall=data.get("wall", UNSET),
         )
 
 
@@ -26371,6 +26535,42 @@ class ProjectVariable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class QuantityTotals(_Model):
+    """The rows' sums.
+    Attributes:
+        space_area: Unit: area.
+        wall_length: Unit: length.
+        wall_net_area: Unit: area.
+        openings: Unit: count.
+        opening_area: Unit: area.
+    """
+    space_area: float
+    wall_length: float
+    wall_net_area: float
+    openings: int
+    opening_area: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["spaceArea"] = float(self.space_area)
+        out["wallLength"] = float(self.wall_length)
+        out["wallNetArea"] = float(self.wall_net_area)
+        out["openings"] = self.openings
+        out["openingArea"] = float(self.opening_area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QuantityTotals:
+        return cls(
+            space_area=float(data["spaceArea"]),
+            wall_length=float(data["wallLength"]),
+            wall_net_area=float(data["wallNetArea"]),
+            openings=data["openings"],
+            opening_area=float(data["openingArea"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RasterDataset(_Model):
     """A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a
     UGRID mesh's dataset, one slice of its other dimensions.
@@ -28809,6 +29009,498 @@ class SourcesSynced(_Model):
             source=data["source"],
             revision=data["revision"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceEntity(Entity):
+    """A space (docs/adr/0342).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        parts: Its boundary: one part or more, each an outer ring and its holes.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        method: What its rings stand for. Absent: the walls' inner faces.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "space"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    parts: list[SpacePart]
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    finishes: SpaceFinishes | Unset = UNSET
+    height: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    order: int | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "space"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.finishes is not UNSET:
+            out["finishes"] = self.finishes.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.method is not UNSET:
+            out["method"] = _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            order=data.get("order", UNSET),
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            usage=data.get("usage", UNSET),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceFinishes(_Model):
+    """A space's finishes: its floor's, walls' and ceiling's."""
+    ceiling: str | None | Unset = UNSET
+    floor: str | None | Unset = UNSET
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.ceiling is not UNSET:
+            out["ceiling"] = self.ceiling
+        if self.floor is not UNSET:
+            out["floor"] = self.floor
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceFinishes:
+        return cls(
+            ceiling=data.get("ceiling", UNSET),
+            floor=data.get("floor", UNSET),
+            wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacePart(_Model):
+    """A part of a space: its outer ring and its holes."""
+    outer: SpaceRing
+    holes: list[SpaceRing] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["outer"] = self.outer.to_json()
+        if self.holes is not UNSET:
+            out["holes"] = [e0.to_json() for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacePart:
+        return cls(
+            outer=SpaceRing.from_json(data["outer"]),
+            holes=[SpaceRing.from_json(e0) for e0 in data["holes"]] if "holes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceRing(_Model):
+    """A closed ring: its vertices and, when an edge is an arc, one bulge per edge (absent: every edge straight).
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[Vec2]
+    bulges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceRing:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceRow(_Model):
+    """A space measured.
+    Attributes:
+        area: Its rings' area, m². Unit: area.
+        perimeter: Unit: length.
+        rule: The rule its numbers come from.
+        by_method: A space from the walls: its area by each method, m². Unit: area.
+        height: Unit: elevation.
+        volume: Unit: volume.
+    """
+    uid: str
+    method: SpaceMethod | SpaceMethodName
+    area: float
+    perimeter: float
+    rule: str
+    by_method: dict[str, float] | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+    volume: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["method"] = _enum_out(self.method)
+        out["area"] = float(self.area)
+        out["perimeter"] = float(self.perimeter)
+        out["rule"] = self.rule
+        if self.by_method is not UNSET:
+            out["byMethod"] = None if self.by_method is None else {k0: float(e0) for k0, e0 in self.by_method.items()}
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        if self.volume is not UNSET:
+            out["volume"] = None if self.volume is None else float(self.volume)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceRow:
+        return cls(
+            uid=data["uid"],
+            method=_enum_in(SpaceMethod, data["method"]),
+            area=float(data["area"]),
+            perimeter=float(data["perimeter"]),
+            rule=data["rule"],
+            by_method=UNSET if "byMethod" not in data else None if data["byMethod"] is None else {k0: float(e0) for k0, e0 in data["byMethod"].items()},
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            level=data.get("level", UNSET),
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            usage=data.get("usage", UNSET),
+            volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesCreate(_Model):
+    """Input of `cad.spaces.create` v1: spaces on a named layer, written as one undo step “Mahal”.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `space_not_enclosed`, `invalid_space`, `level_not_found`,
+    `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+    `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    spaces: list[NewSpace]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["spaces"] = [e0.to_json() for e0 in self.spaces]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesCreate:
+        return cls(
+            layer_id=data["layerId"],
+            spaces=[NewSpace.from_json(e0) for e0 in data["spaces"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesCreated(_Model):
+    """Output of `cad.spaces.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesEdit(_Model):
+    """Input of `cad.spaces.edit` v1: spaces named by their persistent ids changed as one undo step “Mahali düzenle”, all
+    or none.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_space`, `nothing_to_set`, `not_finite`,
+    `invalid_space`, `level_not_found`, `too_few_objects`, `spaces_not_touching`, `split_missed`, `space_not_enclosed`,
+    `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
+    """
+    uids: list[str]
+    operation: SpacesOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesEdit:
+        return cls(
+            uids=list(data["uids"]),
+            operation=SpacesOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesEdited(_Model):
+    """Output of `cad.spaces.edit` v1 (its plan's too: the spaces as they would be, nothing written): the spaces kept
+    (their ids kept), the new ones, the ids gone.
+    Attributes:
+        kept: The ids kept, in their order.
+    """
+    spaces: list[Entity]
+    kept: list[str]
+    revision: str
+    added: list[Entity] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["spaces"] = [e0.to_json() for e0 in self.spaces]
+        out["kept"] = list(self.kept)
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesEdited:
+        return cls(
+            spaces=[Entity.from_json(e0) for e0 in data["spaces"]],
+            kept=list(data["kept"]),
+            revision=data["revision"],
+            added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesPlan(_Model):
+    """What `cad.spaces.create` would write (plan mode)."""
+    spaces: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["spaces"] = [e0.to_json() for e0 in self.spaces]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesPlan:
+        return cls(
+            spaces=[Entity.from_json(e0) for e0 in data["spaces"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesQuantified(_Model):
+    """Output of `cad.spaces.quantities` v1 (its plan's too)."""
+    spaces: list[SpaceRow]
+    walls: list[WallRow]
+    openings: list[OpeningRow]
+    totals: QuantityTotals
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["spaces"] = [e0.to_json() for e0 in self.spaces]
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        out["totals"] = self.totals.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesQuantified:
+        return cls(
+            spaces=[SpaceRow.from_json(e0) for e0 in data["spaces"]],
+            walls=[WallRow.from_json(e0) for e0 in data["walls"]],
+            openings=[OpeningRow.from_json(e0) for e0 in data["openings"]],
+            totals=QuantityTotals.from_json(data["totals"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesQuantities(_Model):
+    """Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the
+    levels, phases, usages and layers given (each absent: every one).
+
+    Refusals: `level_not_found`, `layer_not_found`.
+    """
+    layers: list[str] | None | Unset = UNSET
+    levels: list[str] | None | Unset = UNSET
+    phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
+    usages: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
+        if self.phases is not UNSET:
+            out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
+        if self.usages is not UNSET:
+            out["usages"] = None if self.usages is None else list(self.usages)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesQuantities:
+        return cls(
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
+            phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
+            usages=UNSET if "usages" not in data else None if data["usages"] is None else list(data["usages"]),
         )
 
 
@@ -32034,6 +32726,73 @@ class WallJointMember(_Model):
         return cls(
             uid=data["uid"],
             end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallEnd, data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallRow(_Model):
+    """A wall measured.
+    Attributes:
+        length: Along its base line, metres. Unit: length.
+        width: Unit: length.
+        openings_area: Its openings' areas, m² (those with a height). Unit: area.
+        gross_area: length × height, m²; none without a height. Unit: area.
+        height: Unit: elevation.
+        net_area: Unit: area.
+        openings: Its openings' ids.
+        volume: Unit: volume.
+    """
+    uid: str
+    length: float
+    width: float
+    openings_area: float
+    rule: str
+    gross_area: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    net_area: float | None | Unset = UNSET
+    openings: list[str] | Unset = UNSET
+    style: str | None | Unset = UNSET
+    volume: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["length"] = float(self.length)
+        out["width"] = float(self.width)
+        out["openingsArea"] = float(self.openings_area)
+        out["rule"] = self.rule
+        if self.gross_area is not UNSET:
+            out["grossArea"] = None if self.gross_area is None else float(self.gross_area)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.net_area is not UNSET:
+            out["netArea"] = None if self.net_area is None else float(self.net_area)
+        if self.openings is not UNSET:
+            out["openings"] = list(self.openings)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.volume is not UNSET:
+            out["volume"] = None if self.volume is None else float(self.volume)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallRow:
+        return cls(
+            uid=data["uid"],
+            length=float(data["length"]),
+            width=float(data["width"]),
+            openings_area=float(data["openingsArea"]),
+            rule=data["rule"],
+            gross_area=UNSET if "grossArea" not in data else None if data["grossArea"] is None else float(data["grossArea"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            level=data.get("level", UNSET),
+            net_area=UNSET if "netArea" not in data else None if data["netArea"] is None else float(data["netArea"]),
+            openings=list(data["openings"]) if "openings" in data else UNSET,
+            style=data.get("style", UNSET),
+            volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
         )
 
 
@@ -39852,6 +40611,123 @@ class RelinkSourcesEditOp(SourcesEditOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetSpacesOperation(SpacesOperation):
+    """Değiştir: the fields given, on every space named.
+    Attributes:
+        height: Unit: elevation.
+        method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    ceiling: str | None | Unset = UNSET
+    floor: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+    wall: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.ceiling is not UNSET:
+            out["ceiling"] = self.ceiling
+        if self.floor is not UNSET:
+            out["floor"] = self.floor
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSpacesOperation:
+        return cls(
+            ceiling=data.get("ceiling", UNSET),
+            floor=data.get("floor", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            level=data.get("level", UNSET),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            usage=data.get("usage", UNSET),
+            wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MergeSpacesOperation(SpacesOperation):
+    """Birleştir: the spaces named one, the first's id kept; its boundary drawn."""
+    TAG_VALUE: ClassVar[str] = "merge"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "merge"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MergeSpacesOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class SplitSpacesOperation(SpacesOperation):
+    """Böl: each space named cut along the line `line` (two points or more); the largest part keeps its id.
+    Attributes:
+        line: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "split"
+    line: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "split"}
+        out["line"] = [_vec2_out(e0) for e0 in self.line]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SplitSpacesOperation:
+        return cls(
+            line=[Vec2.from_json(e0) for e0 in data["line"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReboundSpacesOperation(SpacesOperation):
+    """Duvarlardan bul: each space's boundary found again from the walls round `seed` (absent: its own seed, else
+    its pole of inaccessibility).
+    Attributes:
+        seed: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rebound"
+    seed: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rebound"}
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReboundSpacesOperation:
+        return cls(
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
     """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Attributes:
@@ -41804,7 +42680,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -41889,6 +42765,9 @@ _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "
 
 
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
+
+
+_SPACES_OPERATION: dict[str, type[SpacesOperation]] = {"set": SetSpacesOperation, "merge": MergeSpacesOperation, "split": SplitSpacesOperation, "rebound": ReboundSpacesOperation}
 
 
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
@@ -42722,6 +43601,7 @@ __all__ = [
     "MeasuredPoint",
     "MergePolicy",
     "MergePolicyName",
+    "MergeSpacesOperation",
     "MergeTableEdit",
     "MidPointConstruction",
     "MidSubPlace",
@@ -42756,6 +43636,7 @@ __all__ = [
     "NewConstraint",
     "NewObject",
     "NewOpening",
+    "NewSpace",
     "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
@@ -42797,6 +43678,7 @@ __all__ = [
     "OpeningHandName",
     "OpeningOperation",
     "OpeningOperationName",
+    "OpeningRow",
     "OpeningSide",
     "OpeningSideName",
     "OpeningsCreate",
@@ -42945,6 +43827,7 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PublishFormsOp",
+    "QuantityTotals",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",
     "RasterDataset",
@@ -42962,6 +43845,7 @@ __all__ = [
     "RasterStyle",
     "RayEntity",
     "RayEntityGeometry",
+    "ReboundSpacesOperation",
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
@@ -43064,6 +43948,7 @@ __all__ = [
     "SetCellTableEdit",
     "SetOpeningsOperation",
     "SetParameterEdit",
+    "SetSpacesOperation",
     "SetWallsOperation",
     "SettingsChanged",
     "SettingsSet",
@@ -43102,11 +43987,29 @@ __all__ = [
     "SourcesEdited",
     "SourcesSync",
     "SourcesSynced",
+    "SpaceBreak",
+    "SpaceBreakName",
     "SpaceDimensionEdit",
+    "SpaceEntity",
+    "SpaceFinishes",
+    "SpaceMethod",
+    "SpaceMethodName",
+    "SpacePart",
+    "SpaceRing",
+    "SpaceRow",
+    "SpacesCreate",
+    "SpacesCreated",
+    "SpacesEdit",
+    "SpacesEdited",
+    "SpacesOperation",
+    "SpacesPlan",
+    "SpacesQuantified",
+    "SpacesQuantities",
     "SplineEntity",
     "SplineEntityGeometry",
     "SplitPolicy",
     "SplitPolicyName",
+    "SplitSpacesOperation",
     "SplitTextEdit",
     "SplitWallsOperation",
     "StackMode",
@@ -43281,6 +44184,7 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallRow",
     "WallStyleDef",
     "WallsCreate",
     "WallsCreated",

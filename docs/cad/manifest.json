@@ -153,6 +153,22 @@
    "tests": 0
   },
   {
+   "id": "arch.quantities",
+   "kind": "command",
+   "title": "Metraj",
+   "level": "query",
+   "via": [
+    "cad.spaces.quantities"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Satırlar ve toplamlar cad.spaces.quantities'ten; dosya ve pano onları yazar (ADR 0342 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.settings",
    "kind": "command",
    "title": "Katlar",
@@ -164,6 +180,22 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "Katlar ve duvarların ayrıntısı arch anahtarıyla; duvarın andığı kat kaldırılmaz (ADR 0339 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.spaceMerge",
+   "kind": "command",
+   "title": "Mahalleri birleştir",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Seçili mahaller merge'e verilir (ADR 0342 §4).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -2507,6 +2539,20 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.selectFilter.space",
+   "kind": "command",
+   "title": "Seçim süzgecinde Mahal",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10520,6 +10566,38 @@
    "mcp": "cad.entities.edit",
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.space",
+   "kind": "command",
+   "title": "Mahal",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.create",
+   "mcp": "cad.spaces.create",
+   "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceSplit",
+   "kind": "command",
+   "title": "Mahali böl",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Mahal ve bölme çizgisi split'e verilir; parçalar komutun hesabı, önizleme planından (ADR 0342 §4, §5).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

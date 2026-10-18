@@ -392,6 +392,24 @@ impl Canvas {
             // A cloud's plan, filled (docs/adr/0207 §6).
             Shape::PointCloud { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
             Shape::Record {} => {}
+            // Its rings (docs/adr/0342).
+            Shape::Space { parts, .. } => {
+                for a in parts {
+                    for r in std::iter::once(&a.outer).chain(&a.holes) {
+                        self.shape(
+                            &Shape::Polyline {
+                                pts: r.pts.clone(),
+                                bulges: r.bulges.clone(),
+                                holes: None,
+                                parts: None,
+                                closed: true,
+                                widths: None,
+                            },
+                            c,
+                        );
+                    }
+                }
+            }
             // Its symbol's lines (docs/adr/0341).
             Shape::Opening { place, opening, .. } => {
                 for piece in crate::geom::opening::symbol(place, opening) {

@@ -60,6 +60,8 @@ pub(crate) struct Store {
     ties: HashMap<Uuid, BTreeSet<Slot>>,
     /// The dimensions with a broken reference (docs/adr/0249 §3): what the drawing marks.
     broken: BTreeSet<Slot>,
+    /// The spaces whose walls no longer close round them (docs/adr/0342 §3): what the drawing marks.
+    lost: BTreeSet<Slot>,
     /// The texts whose fields read an object, by that object's persistent id (docs/adr/0325 §2).
     fielded: HashMap<Uuid, BTreeSet<Slot>>,
     /// The texts with a project's or a layer's field: written again at every step.
@@ -142,6 +144,11 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
 fn has_broken(stored: &Stored) -> bool {
     matches!(&*stored.entity, Entity::Dimension(d)
         if d.refs.as_ref().is_some_and(|r| r.each().any(|(_, s)| !s.live())))
+}
+
+/// Whether a space lost its walls (docs/adr/0342 §3).
+fn has_lost(stored: &Stored) -> bool {
+    matches!(&*stored.entity, Entity::Space(s) if s.space.broken.is_some())
 }
 
 /// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
@@ -248,6 +255,9 @@ impl Store {
         if has_broken(stored) {
             self.broken.insert(stored.slot());
         }
+        if has_lost(stored) {
+            self.lost.insert(stored.slot());
+        }
     }
 
     fn unlink(&mut self, stored: &Stored) {
@@ -281,11 +291,17 @@ impl Store {
             }
         }
         self.broken.remove(&stored.slot());
+        self.lost.remove(&stored.slot());
     }
 
     /// The dimensions with a broken reference, in slot order (docs/adr/0249 §3).
     pub fn broken_dimensions(&self) -> impl Iterator<Item = Slot> + '_ {
         self.broken.iter().copied()
+    }
+
+    /// The spaces that lost their walls, in slot order (docs/adr/0342 §3).
+    pub fn lost_spaces(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.lost.iter().copied()
     }
 
     /// Every object in document order.

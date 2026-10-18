@@ -1,0 +1,451 @@
+//! The space commands of the product command catalog (docs/adr/0342 §4, plan/cad.md `CAD-ARCH-23`…`29`): spaces made
+//! from the walls round a point or from a drawn boundary (`cad.spaces.create`), changed, merged, split and found again
+//! (`cad.spaces.edit`), and the drawing's quantities (`cad.spaces.quantities`, read-only). Lengths are metres on the
+//! wire, whatever unit the project shows (docs/adr/0165 §2).
+
+use std::collections::BTreeMap;
+
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use ts_rs::TS;
+
+#[cfg(feature = "schema")]
+use crate::cad::{REVISION_TEXT, UID_TEXT};
+use crate::entity::{Entity, Vec2};
+use crate::{ArchInfo, ArchPhase, SpaceFinishes, SpaceMethod, SpacePart};
+
+pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
+pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
+pub const CAD_SPACES_EDIT: &str = "cad.spaces.edit";
+pub const CAD_SPACES_EDIT_VERSION: u32 = 1;
+pub const CAD_SPACES_QUANTITIES: &str = "cad.spaces.quantities";
+pub const CAD_SPACES_QUANTITIES_VERSION: u32 = 1;
+/// The most spaces one call writes.
+pub const MAX_SPACES: usize = 10_000;
+
+/// One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NewSpace {
+    /// A point inside it: its boundary is found from the walls round it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub seed: Option<Vec2>,
+    /// Its boundary drawn, when no seed is given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<Vec<SpacePart>>,
+    /// What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<SpaceMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub usage: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub finishes: Option<SpaceFinishes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+}
+
+/// Input of `cad.spaces.create` v1: spaces on a named layer, written as one undo step “Mahal”.
+///
+/// Refusals, in this order: `no_objects`, `not_finite`, `space_not_enclosed`, `invalid_space`, `level_not_found`,
+/// `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`,
+/// `invalid_attribute`, `attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesCreate {
+    pub layer_id: String,
+    pub spaces: Vec<NewSpace>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.spaces.create` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesCreated {
+    pub uids: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub ids: Vec<u32>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.spaces.create` would write (plan mode).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesPlan {
+    pub spaces: Vec<Entity>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// A space's own fields to change; absent ones stay, a nullable one's null takes it away.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceChange {
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub number: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub name: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub usage: Option<Option<String>>,
+    /// The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<SpaceMethod>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub level: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<ArchPhase>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<ArchPhase>"))]
+    pub phase: Option<Option<ArchPhase>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<Option<f64>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub floor: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub wall: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub ceiling: Option<Option<String>>,
+}
+
+/// What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SpacesOperation {
+    /// Değiştir: the fields given, on every space named.
+    Set(SpaceChange),
+    /// Birleştir: the spaces named one, the first's id kept; its boundary drawn.
+    Merge,
+    /// Böl: each space named cut along the line `line` (two points or more); the largest part keeps its id.
+    Split {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        line: Vec<Vec2>,
+    },
+    /// Duvarlardan bul: each space's boundary found again from the walls round `seed` (absent: its own seed, else
+    /// its pole of inaccessibility).
+    Rebound {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        seed: Option<Vec2>,
+    },
+}
+
+/// Input of `cad.spaces.edit` v1: spaces named by their persistent ids changed as one undo step “Mahali düzenle”, all
+/// or none.
+///
+/// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_space`, `nothing_to_set`, `not_finite`,
+/// `invalid_space`, `level_not_found`, `too_few_objects`, `spaces_not_touching`, `split_missed`, `space_not_enclosed`,
+/// `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesEdit {
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+    pub operation: SpacesOperation,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.spaces.edit` v1 (its plan's too: the spaces as they would be, nothing written): the spaces kept
+/// (their ids kept), the new ones, the ids gone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesEdited {
+    pub spaces: Vec<Entity>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub added: Vec<Entity>,
+    /// The ids kept, in their order.
+    pub kept: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub removed: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, those of the
+/// levels, phases, usages and layers given (each absent: every one).
+///
+/// Refusals: `level_not_found`, `layer_not_found`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesQuantities {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub levels: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phases: Option<Vec<ArchPhase>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub usages: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<Vec<String>>,
+}
+
+/// A space measured.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceRow {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub usage: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    pub method: SpaceMethod,
+    /// Its rings' area, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub perimeter: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: Option<f64>,
+    /// A space from the walls: its area by each method, m².
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub by_method: Option<BTreeMap<String, f64>>,
+    /// The rule its numbers come from.
+    pub rule: String,
+}
+
+/// A wall measured.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallRow {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub style: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// Along its base line, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+    /// length × height, m²; none without a height.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub gross_area: Option<f64>,
+    /// Its openings' areas, m² (those with a height).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub openings_area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub net_area: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: Option<f64>,
+    /// Its openings' ids.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub openings: Vec<String>,
+    pub rule: String,
+}
+
+/// An opening measured.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningRow {
+    pub uid: String,
+    pub form: crate::OpeningForm,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub style: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wall: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    /// Head less sill (sill absent: 0); none without a head.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: Option<f64>,
+}
+
+/// The rows' sums.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct QuantityTotals {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub space_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub wall_length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub wall_net_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub openings: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub opening_area: f64,
+}
+
+/// Output of `cad.spaces.quantities` v1 (its plan's too).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesQuantified {
+    pub spaces: Vec<SpaceRow>,
+    pub walls: Vec<WallRow>,
+    pub openings: Vec<OpeningRow>,
+    pub totals: QuantityTotals,
+}

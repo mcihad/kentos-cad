@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 22] = [
+pub const KINDS: [&str; 23] = [
     "point",
     "line",
     "polyline",
@@ -86,6 +86,7 @@ pub const KINDS: [&str; 22] = [
     "pointcloud",
     "wall",
     "opening",
+    "space",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -1155,6 +1156,51 @@ const ENTRIES: &[Entry] = &[
             "wall_join_unresolved",
         ],
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
+    },
+    // The spaces (docs/adr/0342 §4).
+    Entry {
+        id: "cad.spaces.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "space_not_enclosed",
+                "invalid_space",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.spaces.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_space",
+                "nothing_to_set",
+                "not_finite",
+                "invalid_space",
+                "level_not_found",
+                "too_few_objects",
+                "spaces_not_touching",
+                "split_missed",
+                "space_not_enclosed",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+    },
+    Entry {
+        id: "cad.spaces.quantities",
+        refusals: &[&["level_not_found", "layer_not_found"]],
+        warnings: &[],
+        targets: none,
     },
     // The openings (docs/adr/0341 §4).
     Entry {
@@ -2552,6 +2598,7 @@ const ENTRIES: &[Entry] = &[
                         "table",
                         "wall",
                         "opening",
+                        "space",
                         "image",
                         "raster",
                         "pointcloud",
@@ -2559,7 +2606,7 @@ const ENTRIES: &[Entry] = &[
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

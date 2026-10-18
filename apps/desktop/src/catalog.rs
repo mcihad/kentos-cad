@@ -816,7 +816,8 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
             size: Size::Large,
         });
     }
-    // Seçim süzgeci ▾ holds the kinds the desktop added after the web's (docs/adr/0339 §6: Duvar; 0341 §5: Açıklık).
+    // Seçim süzgeci ▾ holds the kinds the desktop added after the web's (docs/adr/0339 §6: Duvar; 0341 §5: Açıklık;
+    // 0342 §5: Mahal).
     for item in tabs
         .iter_mut()
         .flat_map(|tab| tab.panels.iter_mut())
@@ -831,8 +832,12 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
                 .iter_mut()
                 .find(|(title, _)| *title == "Seçilebilir türler")
         {
-            // And Açıklık (docs/adr/0341 §5).
-            for kind in ["edit.selectFilter.wall", "edit.selectFilter.opening"] {
+            // And Açıklık and Mahal (docs/adr/0341 §5, 0342 §5).
+            for kind in [
+                "edit.selectFilter.wall",
+                "edit.selectFilter.opening",
+                "edit.selectFilter.space",
+            ] {
                 if !kinds.contains(&kind) {
                     kinds.push(kind);
                 }

@@ -288,6 +288,7 @@ impl ObjectAction {
             Shape::Nurbs { .. } => "NURBS eğrisi",
             Shape::Wall { .. } => "duvar",
             Shape::Opening { .. } => "açıklık",
+            Shape::Space { .. } => "mahal",
             Shape::Xline { .. } => "yardımcı çizgi",
             Shape::Ray { .. } => "ışın",
             Shape::Text { .. } => "yazı",

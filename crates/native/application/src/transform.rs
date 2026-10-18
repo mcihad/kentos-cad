@@ -930,6 +930,12 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::Opening {
             at, width, place, ..
         } => at.is_finite() && width.is_finite() && pts(place),
+        Shape::Space { parts, space } => {
+            parts
+                .iter()
+                .all(|a| pts(&a.outer.pts) && a.holes.iter().all(|h| pts(&h.pts)))
+                && space.seed.as_ref().is_none_or(pt)
+        }
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,

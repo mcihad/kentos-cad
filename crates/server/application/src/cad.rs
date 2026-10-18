@@ -359,6 +359,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0342 §1): its rings, height and texts; the drawing's only.
+        Space(x) => {
+            if in_block {
+                return Err("Blok tanımında mahal olamaz".into());
+            }
+            if let Some((_, why)) = x.space.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0341 §1): its wall, place, width, leaves and jambs; the drawing's only.
         Opening(x) => {
             if in_block {
@@ -671,6 +680,8 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             rings.extend(holes.into_iter().flatten().map(ring));
             Geometry::Polygon(rings)
         }
+        // Its area, as an area object's (docs/adr/0342 §1); its source is its definition.
+        Entity::Space(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
         // Its jambs' footprint (docs/adr/0341 §1); its source is its definition.
         Entity::Opening(x) => {
             let q = &x.opening.place;

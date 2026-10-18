@@ -70,5 +70,6 @@ mod topology_rules;
 mod vertex_points;
 mod vertex_table;
 mod openings;
+mod spaces;
 mod wall_joins;
 mod walls;

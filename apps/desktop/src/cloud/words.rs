@@ -237,6 +237,7 @@ pub fn kind(kind: &str) -> &'static str {
         "leader" => "Kılavuz",
         "wall" => "Duvar",
         "opening" => "Açıklık",
+        "space" => "Mahal",
         _ => "Nesne",
     }
 }

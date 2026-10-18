@@ -83,6 +83,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Record(_) => {}
         Entity::Wall(e) => e.wall.pts.iter().for_each(&mut add),
         Entity::Opening(e) => e.opening.place.iter().for_each(&mut add),
+        Entity::Space(e) => e.space.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
     }
     b
 }

@@ -906,6 +906,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<WallDetail>,
+    /// The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub space_method: Option<crate::SpaceMethod>,
 }
 
 impl ArchSettings {
@@ -1133,6 +1137,7 @@ mod tests {
         let set = ArchSettings {
             levels: Vec::new(),
             detail: Some(WallDetail::Detailed),
+            space_method: None,
         };
         assert_eq!(set.detail_at(500.0), WallDetail::Detailed);
     }

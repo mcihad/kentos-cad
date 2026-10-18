@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 140] = [
+pub(crate) const TITLES: [(&str, &str); 143] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -41,6 +41,9 @@ pub(crate) const TITLES: [(&str, &str); 140] = [
     ("cad.walls.convert", "Çizgiden duvar"),
     ("cad.walls.edit", "Duvarı düzenle"),
     ("cad.walls.joins", "Duvar birleşimleri"),
+    ("cad.spaces.create", "Mahal oluştur"),
+    ("cad.spaces.edit", "Mahali düzenle"),
+    ("cad.spaces.quantities", "Metraj"),
     ("cad.openings.create", "Açıklık ekle"),
     ("cad.openings.edit", "Açıklığı düzenle"),
     ("cad.dimensions.reassociate", "Ölçüyü yeniden bağla"),
@@ -180,6 +183,12 @@ fn field_name(key: &str) -> Option<&'static str> {
         "blocks" => "Bloklar",
         "host" => "Duvar",
         "openings" => "Açıklıklar",
+        "spaces" => "Mahaller",
+        "seed" => "İç nokta",
+        "parts" => "Parçalar",
+        "usage" | "usages" => "Kullanım",
+        "levels" => "Katlar",
+        "phases" => "Evreler",
         "bothSides" => "İki yana",
         "boundaries" => "Sınırlar",
         "boundaryLayer" => "Sınır katmanı",

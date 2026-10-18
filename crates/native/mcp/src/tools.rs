@@ -543,6 +543,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.walls.convert"
             // An opening's fields, place and wall changed (docs/adr/0341 §4).
             | "cad.openings.edit"
+            // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
+            | "cad.spaces.edit"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

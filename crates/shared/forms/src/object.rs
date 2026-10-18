@@ -37,6 +37,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Record(_) => "Kayıt",
         Entity::Wall(_) => "Duvar",
         Entity::Opening(_) => "Açıklık",
+        Entity::Space(_) => "Mahal",
     }
 }
 

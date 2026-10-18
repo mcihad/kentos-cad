@@ -1,0 +1,6043 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.spaces.quantities",
+  "commandVersion": 1,
+  "title": "Metraj: mahaller, duvarlar, açıklıklar; kat, evre, kullanım ve katman süzgeçleri; retler",
+  "note": "ADR 0342 §1–§4. Beklenenler scripts/fixtures/space_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvarlardan bulunan sınır space_cases.py'nin kesirli yüz bulmasından, ölçüleri Metraj adımıyla. Kurulumdaki çizimde 7 nesne var; yeni nesne 8'den başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mahaller",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "x": 5.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center",
+        "arch": {
+          "level": "zemin",
+          "phase": "new"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 7,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.0,
+            "y": 0.0
+          },
+          {
+            "x": 34.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "bütün çizim: mahaller, duvarlar, toplamlar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "zemin katı süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "levels": [
+              "zemin"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 31.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. kat süzgeci",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "levels": [
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 12.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: yeni",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "phases": [
+              "new"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 5.0,
+                "wallNetArea": 15.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanım süzgeci yalnız mahalleri verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "usages": [
+              "Islak",
+              "Depo"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 25.560000000000002,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: yalnız duvar katmanı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layers": [
+              "duvar"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 31.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: kilitli katmanın duvarı yüksekliksiz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layers": [
+              "kilitli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 4.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katman süzgeci: yalnız mahaller",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layers": [
+              "mahal"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kat birden",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "levels": [
+              "zemin",
+              "kat-1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 35.16,
+                "wallLength": 31.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evre süzgeci: var olan (hiçbiri)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "phases": [
+              "existing"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanım süzgeci: tek kullanım",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "usages": [
+              "Oturma"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat ve kullanım birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "levels": [
+              "zemin"
+            ],
+            "usages": [
+              "Islak",
+              "Oturma"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş katman: hiçbir satır, toplamlar sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layers": [
+              "sinir"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapının alanı duvarının net yüzeyinden düşülür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 1.8900000000000001,
+                  "netArea": 22.11,
+                  "volume": 4.422,
+                  "openings": [
+                    "$uidOf:11"
+                  ],
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [
+                {
+                  "uid": "$uidOf:11",
+                  "form": "door",
+                  "style": "kentos-kapi-90",
+                  "wall": "$uidOf:1",
+                  "width": 0.9,
+                  "height": 2.1,
+                  "area": 1.8900000000000001
+                }
+              ],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 35.0,
+                "wallNetArea": 91.11,
+                "openings": 1,
+                "openingArea": 1.8900000000000001
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pencerenin yüksekliği lento eksi denizlik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:3",
+                "at": 6.0,
+                "type": "Pencere 120"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 1.5600000000000003,
+                  "netArea": 22.44,
+                  "volume": 4.488,
+                  "openings": [
+                    "$uidOf:11"
+                  ],
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [
+                {
+                  "uid": "$uidOf:11",
+                  "form": "window",
+                  "style": "kentos-pencere-120",
+                  "wall": "$uidOf:3",
+                  "width": 1.2,
+                  "height": 1.3000000000000003,
+                  "area": 1.5600000000000003
+                }
+              ],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 35.0,
+                "wallNetArea": 91.44,
+                "openings": 1,
+                "openingArea": 1.5600000000000003
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bir duvarda kapı ve pencere: ikisi de düşülür, toplamda iki açıklık",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 1.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 6.5,
+                "type": "Pencere 120"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 3.45,
+                  "netArea": 20.55,
+                  "volume": 4.11,
+                  "openings": [
+                    "$uidOf:11",
+                    "$uidOf:12"
+                  ],
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [
+                {
+                  "uid": "$uidOf:11",
+                  "form": "door",
+                  "style": "kentos-kapi-90",
+                  "wall": "$uidOf:1",
+                  "width": 0.9,
+                  "height": 2.1,
+                  "area": 1.8900000000000001
+                },
+                {
+                  "uid": "$uidOf:12",
+                  "form": "window",
+                  "style": "kentos-pencere-120",
+                  "wall": "$uidOf:1",
+                  "width": 1.2,
+                  "height": 1.3000000000000003,
+                  "area": 1.5600000000000003
+                }
+              ],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 35.0,
+                "wallNetArea": 89.55,
+                "openings": 2,
+                "openingArea": 3.45
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara duvarın kapısı: evre süzgeciyle açıklık da süzülür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:5",
+                "at": 2.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 6.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "phases": [
+              "new"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 1.8900000000000001,
+                  "netArea": 13.11,
+                  "volume": 1.9665,
+                  "openings": [
+                    "$uidOf:11"
+                  ],
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [
+                {
+                  "uid": "$uidOf:11",
+                  "form": "door",
+                  "style": "kentos-kapi-90",
+                  "wall": "$uidOf:5",
+                  "width": 0.9,
+                  "height": 2.1,
+                  "area": 1.8900000000000001
+                }
+              ],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 5.0,
+                "wallNetArea": 13.11,
+                "openings": 1,
+                "openingArea": 1.8900000000000001
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanım süzgecinde açıklık yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "usages": [
+              "Oturma"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 0.0,
+                "wallNetArea": 0.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı cevabı verir, çizim değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "height": 3.0,
+                  "volume": 69.48,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 48.72,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahalsiz çizim: yalnız duvarlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "brüt yöntemli mahal: alanı dış yüzlerden, üç yöntemin alanı satırda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "method": "gross"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "method": "gross",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "arch": {
+                    "level": "zemin",
+                    "phase": "new"
+                  }
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "method": "gross",
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          },
+          "command": "cad.spaces.edit"
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "number": "1",
+                  "usage": "Oturma",
+                  "level": "zemin",
+                  "method": "gross",
+                  "area": 26.91,
+                  "perimeter": 20.75,
+                  "height": 3.0,
+                  "volume": 80.73,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:9",
+                  "number": "2",
+                  "usage": "Islak",
+                  "method": "net",
+                  "area": 13.56,
+                  "perimeter": 15.25,
+                  "height": 2.4,
+                  "volume": 32.544,
+                  "byMethod": {
+                    "net": 13.56,
+                    "centerline": 15.0,
+                    "gross": 16.51
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                },
+                {
+                  "uid": "$uidOf:10",
+                  "usage": "Depo",
+                  "level": "kat-1",
+                  "method": "net",
+                  "area": 12.0,
+                  "perimeter": 14.0,
+                  "height": 3.0,
+                  "volume": 36.0,
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik"
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 52.47,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "levels": [
+              "bodrum"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “bodrum” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+              "path": "levels[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              {
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                8,
+                9,
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "number": "1",
+                "usage": "Oturma",
+                "arch": {
+                  "level": "zemin",
+                  "phase": "new"
+                }
+              },
+              "9": {
+                "kind": "space",
+                "id": 9,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                "number": "2",
+                "usage": "Islak",
+                "height": 2.4
+              },
+              "10": {
+                "kind": "space",
+                "id": 10,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "usage": "Depo",
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layers": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layers[0]"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

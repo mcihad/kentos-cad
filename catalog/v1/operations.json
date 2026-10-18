@@ -1631,6 +1631,34 @@
       ],
       "note": "Birleşmeyenler cad.walls.joins'ten; Öneriyi uygula cevabın fix'ini cad.walls.edit'e verir (ADR 0340 §2, §6)."
     },
+    "tool.space": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.create"
+      ],
+      "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5)."
+    },
+    "tool.spaceSplit": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Mahal ve bölme çizgisi split'e verilir; parçalar komutun hesabı, önizleme planından (ADR 0342 §4, §5)."
+    },
+    "arch.spaceMerge": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Seçili mahaller merge'e verilir (ADR 0342 §4)."
+    },
+    "arch.quantities": {
+      "level": "query",
+      "via": [
+        "cad.spaces.quantities"
+      ],
+      "note": "Satırlar ve toplamlar cad.spaces.quantities'ten; dosya ve pano onları yazar (ADR 0342 §4)."
+    },
     "arch.settings": {
       "level": "semantic",
       "via": [

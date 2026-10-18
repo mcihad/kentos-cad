@@ -875,6 +875,7 @@ fn finite(e: &Entity) -> bool {
             Entity::Spline(e) => ps(&e.pts),
             Entity::Wall(e) => ps(&e.wall.pts) && fs(&[e.wall.width, e.wall.offset]),
             Entity::Opening(e) => ps(&e.opening.place) && fs(&[e.opening.at, e.opening.width]),
+            Entity::Space(e) => e.space.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
             Entity::Nurbs(e) => {
                 ps(&e.ctrl)
                     && fs(&e.knots)

@@ -44,6 +44,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Record(_) => "record",
             Entity::Wall(_) => "wall",
             Entity::Opening(_) => "opening",
+            Entity::Space(_) => "space",
         })
         .collect();
     assert_eq!(

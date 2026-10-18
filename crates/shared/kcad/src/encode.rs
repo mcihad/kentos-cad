@@ -1686,6 +1686,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 78 (docs/adr/0342): a space, or the project's space method.
+    if doc.entities.iter().any(|e| matches!(e, Entity::Space(_)))
+        || doc.settings.arch.as_ref().is_some_and(|a| a.space_method.is_some())
+    {
+        return crate::SCHEMA_WITH_SPACES;
+    }
     // Schema 77 (docs/adr/0341): an opening.
     if doc.entities.iter().any(|e| matches!(e, Entity::Opening(_))) {
         return crate::SCHEMA_WITH_OPENINGS;

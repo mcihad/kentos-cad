@@ -35,6 +35,7 @@ pub const UNITS: &[(&str, &str)] = &[
         "Projenin düzleminde alan: m², coğrafi sistemde derece² (units.area).",
     ),
     ("elevation", "Düşey metre: kot, z, yükseklik."),
+    ("volume", "Hacim: m³ (alan × düşey metre)."),
     (
         "m",
         "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
@@ -408,6 +409,20 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             s.points(&mut o.place);
             s.height(&mut o.sill);
             s.height(&mut o.head);
+        }
+        // Its rings and seed are lengths, its height a height (docs/adr/0342 §1).
+        Entity::Space(e) => {
+            let f = &mut e.space;
+            for part in &mut f.parts {
+                s.points(&mut part.outer.pts);
+                for h in &mut part.holes {
+                    s.points(&mut h.pts);
+                }
+            }
+            if let Some(p) = &mut f.seed {
+                s.points(std::slice::from_mut(p));
+            }
+            s.height(&mut f.height);
         }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}

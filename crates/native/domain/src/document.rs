@@ -271,13 +271,18 @@ impl Document {
 
     // ── Saving ───────────────────────────────────────────────────────────
 
-    /// The revision of what a file would hold: it changes with every edit,
-    /// undo, redo and layer change. Only comparisons mean something.
     /// The dimensions with a broken reference, in slot order: what the drawing marks (docs/adr/0249 §3).
     pub fn broken_dimensions(&self) -> impl Iterator<Item = Slot> + '_ {
         self.store.broken_dimensions()
     }
 
+    /// The spaces whose walls no longer close round them (docs/adr/0342 §3), in slot order.
+    pub fn lost_spaces(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.store.lost_spaces()
+    }
+
+    /// The revision of what a file would hold: it changes with every edit,
+    /// undo, redo and layer change. Only comparisons mean something.
     ///
     /// While a command's step is open (`run_step`), it is the revision the
     /// step makes once recorded: a command's answer, made before its step

@@ -502,6 +502,19 @@ impl<'d> Encoder<'d> {
                     f.push(("cleanup", Val::Bool(false)));
                 }
             }
+            // A space (docs/adr/0342 §1): its parts and the rest of its fields.
+            Entity::Space(e) => {
+                let s = &e.space;
+                if let Some((_, problem)) = s.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("parts", Val::Json(serde_json::to_value(&s.parts).unwrap_or_default())));
+                f.push((
+                    "space",
+                    Val::Json(serde_json::to_value(crate::space::SpaceRest::of(s)).unwrap_or_default()),
+                ));
+            }
             // An opening (docs/adr/0341 §1): written only when it is one.
             Entity::Opening(e) => {
                 let o = &e.opening;

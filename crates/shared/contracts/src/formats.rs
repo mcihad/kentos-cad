@@ -199,7 +199,9 @@ use crate::layer::LineType;
 ///    typed columns inside the wall's JSON text. The web's copy stays 53.
 /// 84 (docs/adr/0341): the opening: `.kcad` document schema 77's `opening` kind; in the typed columns kind 22, its
 ///    jambs' points, the rest of its source as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 84;
+/// 85 (docs/adr/0342): the space: `.kcad` document schema 78's `space` kind and the settings' `arch.spaceMethod`; in
+///    the typed columns kind 23, its source as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 85;
 
 // ── Every import ────────────────────────────────────────────────────────
 

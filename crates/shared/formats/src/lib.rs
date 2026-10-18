@@ -57,5 +57,6 @@ pub mod xml_scan;
 pub mod zip;
 pub mod walls;
 pub mod openings;
+pub mod spaces;
 
 pub use kentos_contracts as contracts;
