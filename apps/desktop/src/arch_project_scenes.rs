@@ -211,7 +211,19 @@ fn dxf_back(app: &mut App) {
             input,
         );
     }
-    app.zoom_extents();
+    // The room (its walls and space): the space's words at their size, not grown over the others (docs/adr/0205 §5).
+    let room: Vec<f64> = app
+        .document
+        .as_ref()
+        .map(|d| {
+            d.model
+                .entities()
+                .filter(|e| matches!(e, Entity::Wall(_) | Entity::Space(_)))
+                .map(|e| f64::from(e.base().id))
+                .collect()
+        })
+        .unwrap_or_default();
+    app.zoom_to_objects(&room);
     let wall = app.document.as_ref().and_then(|d| {
         d.model
             .entities()
