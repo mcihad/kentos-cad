@@ -88,6 +88,16 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.openings.create",
+        "invalid_attribute",
+        "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
+        "cad.openings.create",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
+    ),
+    (
         "cad.walls.create",
         "invalid_attribute",
         "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",
@@ -406,6 +416,12 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             json!({ "edit": { "kind": "add", "constraints": [{ "rule": { "kind": "fix",
                     "a": { "uid": u, "element": { "kind": "circle" } } } }] } })
         }),
+        // Çevir: an opening turns, another kind is not one (docs/adr/0341 §4).
+        (
+            "cad.openings.edit",
+            None,
+            |u| json!({ "uids": [u], "operation": { "kind": "flip", "what": "side" } }),
+        ),
         (
             "cad.dimensions.reassociate",
             None,

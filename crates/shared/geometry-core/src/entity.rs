@@ -571,6 +571,15 @@ pub enum Shape {
         bulges: Option<Vec<f64>>,
         wall: crate::geom::wall::Spec,
     },
+    /// A door, window or bare opening in a wall (docs/adr/0341): its place along its wall, its width and its jambs'
+    /// four points (its own geometry); the store draws, picks and snaps it by its symbol (`geom::opening::symbol`) and
+    /// cuts its wall's lines where its jambs are (its wall's id the host's, `Store::set_hosts`).
+    Opening {
+        at: f64,
+        width: f64,
+        place: Vec<Vec2>,
+        opening: crate::geom::opening::Spec,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -599,6 +608,7 @@ crate::json_tagged!(Shape, "kind",
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
     Record => "record" {},
     Wall => "wall" { pts, bulges & wall: crate::geom::wall::Spec },
+    Opening => "opening" { at, width, place & opening: crate::geom::opening::Spec },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -766,6 +776,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Line { a, b } => vec![*a, *b],
         // A wall's are its path's (docs/adr/0339 §1): its faces' corners are its pieces'.
         Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } | Shape::Wall { pts, .. } => pts.clone(),
+        // Its jambs' four points (docs/adr/0341 §2).
+        Shape::Opening { place, .. } => place.clone(),
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -850,6 +862,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
 /// Outline as a point list (curves tessellated): previews, bounds and hit tests.
 pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
     match e {
+        // Its jambs' ring (docs/adr/0341 §2).
+        Shape::Opening { place, .. } if place.len() == 4 => vec![place[0], place[2], place[3], place[1]],
         // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
         Shape::Wall { pts, bulges, wall } => crate::geom::wall::body(pts, bulges.as_deref(), wall)
             .map(|(ring, _)| ring)
@@ -1796,6 +1810,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         | Shape::Wall { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
+        // The middle between its jambs (docs/adr/0341 §2).
+        Shape::Opening { place, .. } => return crate::geom::opening::centre(place),
         // The point halfway along the curve (docs/adr/0259 §2).
         Shape::Nurbs { ctrl, .. } => match crate::geom::nurbs::of(e) {
             Some(n) => n.point(n.param_at_length(n.length() / 2.0)),

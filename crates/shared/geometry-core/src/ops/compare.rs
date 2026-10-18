@@ -491,6 +491,24 @@ fn defs(shape: &Shape) -> Defs {
                 others.push(text(c.hatch.as_ref().map(|h| h.pattern.as_str())));
             }
         }
+        // Its jambs, its place along its wall, its width and what it is (docs/adr/0341).
+        Shape::Opening {
+            at,
+            width,
+            place,
+            opening,
+        } => {
+            comps.push(path(place, None));
+            lengths.extend([*at, *width, opening.frame]);
+            others.push(Other::Text(format!("{:?}", opening.form)));
+            others.push(Other::Text(format!("{:?}", opening.operation)));
+            others.push(Other::Text(format!("{:?}", opening.anchor)));
+            others.push(Other::Num(f64::from(opening.leaves)));
+            others.push(Other::Flag(opening.hand_end));
+            others.push(Other::Flag(opening.side_right));
+            others.push(Other::Num(opening.swing));
+            others.push(Other::Flag(opening.show_swing));
+        }
         // Its plan, its files and what it shows of them (docs/adr/0207).
         Shape::PointCloud {
             count,

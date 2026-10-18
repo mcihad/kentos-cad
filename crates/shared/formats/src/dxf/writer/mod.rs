@@ -539,7 +539,12 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
         .iter()
         .filter(|e| matches!(e, kentos_contracts::Entity::Wall(_)))
         .count();
-    if walls == 0 {
+    let openings = input
+        .entities
+        .iter()
+        .filter(|e| matches!(e, kentos_contracts::Entity::Opening(_)))
+        .count();
+    if walls == 0 && openings == 0 {
         return None;
     }
     let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
@@ -554,23 +559,38 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
     let mut left = 0;
     // Joined as the drawing shows them (docs/adr/0340 §5).
-    let plain = crate::walls::plain_joined(&input.entities, view);
+    let plain = crate::walls::plain_joined(&input.entities, view, |id| {
+        input.uids.get(&id).map(|u| u.to_text())
+    });
     for (e, pieces) in input.entities.iter().zip(plain) {
         match (e, pieces) {
-            (kentos_contracts::Entity::Wall(_), Some(pieces)) => out.entities.extend(pieces),
+            (
+                kentos_contracts::Entity::Wall(_) | kentos_contracts::Entity::Opening(_),
+                Some(pieces),
+            ) => out.entities.extend(pieces),
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
             _ => out.entities.push(e.clone()),
         }
     }
-    report.note_n(
-        "Duvar",
-        &format!(
-            "DXF'te KentOS'un duvarı yoktur: duvarlar {} ayrıntıda, birleşimleriyle çizgiler ve taramalar olarak yazıldı; stilleri, bileşenleri, katları, yükseklikleri ve birleşimleri taşınmaz, duvar olarak geri okunmaz",
-            detail.label().to_lowercase()
-        ),
-        0,
-        u32::try_from(walls - left).unwrap_or(u32::MAX),
-    );
+    if openings > 0 {
+        report.note_n(
+            "Açıklık",
+            "DXF'te KentOS'un açıklığı yoktur: kapılar, pencereler ve boşluklar simgelerinin çizgileri ve yayları olarak yazıldı, duvarlar onların yerinde açık; türleri, numaraları ve yükseklikleri taşınmaz, açıklık olarak geri okunmaz",
+            0,
+            u32::try_from(openings).unwrap_or(u32::MAX),
+        );
+    }
+    if walls > 0 {
+        report.note_n(
+            "Duvar",
+            &format!(
+                "DXF'te KentOS'un duvarı yoktur: duvarlar {} ayrıntıda, birleşimleriyle çizgiler ve taramalar olarak yazıldı; stilleri, bileşenleri, katları, yükseklikleri ve birleşimleri taşınmaz, duvar olarak geri okunmaz",
+                detail.label().to_lowercase()
+            ),
+            0,
+            u32::try_from(walls - left).unwrap_or(u32::MAX),
+        );
+    }
     if left > 0 {
         report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
     }

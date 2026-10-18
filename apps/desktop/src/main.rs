@@ -391,6 +391,8 @@ mod window_layers_tests;
 mod wipeout_scenes;
 #[cfg(test)]
 mod wall_scenes;
+#[cfg(test)]
+mod opening_scenes;
 
 use kentos_ui::theme::typography;
 

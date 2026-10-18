@@ -397,6 +397,18 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             }
             s.height(&mut w.height);
         }
+        // Its place along its wall, width, frame, jambs and heights are lengths (docs/adr/0341 §1).
+        Entity::Opening(e) => {
+            let o = &mut e.opening;
+            o.at = s.apply(o.at);
+            o.width = s.apply(o.width);
+            if let Some(f) = &mut o.frame {
+                *f = s.apply(*f);
+            }
+            s.points(&mut o.place);
+            s.height(&mut o.sill);
+            s.height(&mut o.head);
+        }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}
     }

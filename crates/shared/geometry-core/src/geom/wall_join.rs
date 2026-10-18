@@ -611,6 +611,8 @@ struct Solver<'a> {
     crosses: Vec<Cross>,
     joints: Vec<Joint>,
     issues: Vec<Issue>,
+    /// Each wall's openings' intervals along its base line (docs/adr/0341 §2).
+    openings: Vec<Vec<(f64, f64)>>,
 }
 
 /// The wall's base line as a path.
@@ -1247,15 +1249,54 @@ impl<'a> Solver<'a> {
         }
     }
 
+    /// Wall `i`'s openings on one edge of its base line within its ends (docs/adr/0341 §2): each its jambs and, on
+    /// each of the wall's lines, the span it leaves out.
+    fn opening_spans(&self, i: usize, lines: &[Line]) -> Vec<([Vec2; 4], Vec<Span>)> {
+        let Some(list) = self.openings.get(i).filter(|l| !l.is_empty()) else {
+            return Vec::new();
+        };
+        let Some(base) = base_path(&self.walls[i]) else {
+            return Vec::new();
+        };
+        let spec = self.spec(i);
+        let offsets = wall::boundaries(spec);
+        let paths: Vec<Option<(Path, Shape)>> = lines.iter().map(|l| line_path(l, spec.closed)).collect();
+        list.iter()
+            .filter_map(|&(s0, s1)| {
+                let jambs = crate::geom::opening::jambs(&base, spec, s0, s1)?;
+                let spans = offsets
+                    .iter()
+                    .zip(&paths)
+                    .map(|(&d, lp)| {
+                        let (lp, _) = lp.as_ref()?;
+                        let on = |s: f64| nearest_s(lp, crate::geom::opening::beside(&base, s, d));
+                        Some(Span {
+                            a: on(s0),
+                            b: on(s1),
+                            mid: on((s0 + s1) / 2.0),
+                        })
+                    })
+                    .collect::<Option<Vec<Span>>>()?;
+                Some((jambs, spans))
+            })
+            .collect()
+    }
+
     fn drawn(&self, i: usize) -> Option<Drawn> {
         let lines = self.lines[i].as_ref()?;
         let spec = self.spec(i);
         let closed = spec.closed;
         let mut d = wall::drawn_of(lines, spec);
+        let holes = self.opening_spans(i, lines);
+        let gaps_of = |k: usize| -> Vec<Span> {
+            let mut g = self.gaps[i][k].clone();
+            g.extend(holes.iter().map(|(_, spans)| spans[k]));
+            g
+        };
         d.lines = lines
             .iter()
             .enumerate()
-            .map(|(k, l)| strokes(l, closed, &self.gaps[i][k]))
+            .map(|(k, l)| strokes(l, closed, &gaps_of(k)))
             .collect();
         d.caps.clear();
         if !closed && !spec.caps_open {
@@ -1270,8 +1311,21 @@ impl<'a> Solver<'a> {
         }
         if !d.bands.is_empty() {
             d.bands = (0..d.bands.len())
-                .map(|c| bands_between(&lines[c], &lines[c + 1], closed, &self.cuts[i][c]))
+                .map(|c| {
+                    let mut cuts = self.cuts[i][c].clone();
+                    cuts.extend(holes.iter().map(|(_, spans)| (spans[c], spans[c + 1])));
+                    bands_between(&lines[c], &lines[c + 1], closed, &cuts)
+                })
                 .collect();
+        }
+        if !holes.is_empty() {
+            let last = lines.len() - 1;
+            let cuts: Vec<(Span, Span)> = holes.iter().map(|(_, spans)| (spans[0], spans[last])).collect();
+            d.fill = bands_between(&lines[0], &lines[last], closed, &cuts);
+            for (j, _) in &holes {
+                d.caps.push((j[0], j[1]));
+                d.caps.push((j[2], j[3]));
+            }
         }
         Some(d)
     }
@@ -1279,6 +1333,12 @@ impl<'a> Solver<'a> {
 
 /// The walls joined: their joints, what is not joined, and the drawings of those in `only` (all when none).
 pub fn solve(walls: &[WallIn<'_>], only: Option<&[usize]>) -> Solved {
+    solve_with(walls, &[], only)
+}
+
+/// [`solve`] with each wall's openings' intervals along its base line (docs/adr/0341 §2; a missing list: none): its
+/// lines, bands and fill cut out between each opening's jambs and the jambs drawn.
+pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<(f64, f64)>], only: Option<&[usize]>) -> Solved {
     let n = walls.len();
     let lines: Vec<Option<Vec<Line>>> = walls
         .iter()
@@ -1308,6 +1368,7 @@ pub fn solve(walls: &[WallIn<'_>], only: Option<&[usize]>) -> Solved {
         crosses: Vec::new(),
         joints: Vec::new(),
         issues: Vec::new(),
+        openings: openings.to_vec(),
     };
     let boxes: Vec<[f64; 4]> = (0..n)
         .map(|i| bounds_of(&walls[i], s.lines[i].as_ref()))

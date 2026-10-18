@@ -197,7 +197,9 @@ use crate::layer::LineType;
 ///    points and bulges, the rest of its source as one JSON text. The web's copy stays 53.
 /// 83 (docs/adr/0340): a wall's `joins` and `cleanup` and a component's `priority`: `.kcad` document schema 76; in the
 ///    typed columns inside the wall's JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 83;
+/// 84 (docs/adr/0341): the opening: `.kcad` document schema 77's `opening` kind; in the typed columns kind 22, its
+///    jambs' points, the rest of its source as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 84;
 
 // ── Every import ────────────────────────────────────────────────────────
 

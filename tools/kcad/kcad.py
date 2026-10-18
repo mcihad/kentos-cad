@@ -276,6 +276,11 @@ SCHEMA_WITH_WALLS = 75
 # false), and a wall component's `priority` (1 to 9) on a wall and in a wall style (docs/adr/0340 §1).
 SCHEMA_WITH_WALL_JOINS = 76
 WALL_JOINS = ("auto", "none", "miter", "butt", "through")
+# Schema 77: schema 76 and the `opening` kind: a door, a window or a bare opening in a wall (its wall, its place
+# along it, its width, its jambs and the rest of its fields as one map; docs/adr/0341 §1).
+SCHEMA_WITH_OPENINGS = 77
+OPENING_MAX_WIDTH = 100.0
+OPENING_FORMS = ("door", "window", "opening")
 # A wall's bounds (kentos_contracts::arch).
 WALL_MAX_POINTS = 10_000
 WALL_MAX_COMPONENTS = 16
@@ -466,7 +471,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2593,6 +2598,7 @@ class _Schema:
         self.sources = version >= SCHEMA_WITH_SOURCES
         self.walls = version >= SCHEMA_WITH_WALLS
         self.wall_joins = version >= SCHEMA_WITH_WALL_JOINS
+        self.openings = version >= SCHEMA_WITH_OPENINGS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4779,7 +4785,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4802,6 +4808,10 @@ class _Schema:
         if kind == "wall" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında duvar olamaz")
+        # Nor an opening: its wall is the drawing's (docs/adr/0341 §1).
+        if kind == "opening" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında açıklık olamaz")
         # Nor a record without a geometry (docs/adr/0410 §2).
         if kind == "record" and self.inside is not None:
             self.path.append(kind)
@@ -4823,6 +4833,8 @@ class _Schema:
                 self.nurbs_rules(fields)
             if kind == "wall":
                 self.wall_rules(fields)
+            if kind == "opening":
+                self.opening_rules(fields)
             self.look_rules(fields)
             if "wipeout" in fields and kind != "polygon":
                 self.path.append("wipeout")
@@ -4882,6 +4894,9 @@ class _Schema:
                 self.places_rule(fields, self.movable.get(fields["block"], set()))
         finally:
             self.path.pop()
+        # An opening's map is its own fields, as the contract's JSON has them (docs/adr/0341 §1).
+        if kind == "opening":
+            fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if self.inside is None:
             fields.pop("uid")
             return {"kind": kind, "id": len(self.uids), **fields}
@@ -6346,6 +6361,63 @@ class _Schema:
         if w.get("arch", {}).get("level", "x").strip() == "":
             self.fail("bad_value", "duvarın katı boş olamaz")
 
+    def opening_fields(self, v):
+        """An opening's fields beside its wall, place, width and jambs (schema 77, docs/adr/0341 §1): each only when it
+        is not its default (a centred anchor, one leaf, a swinging operation, the start's hand, the left side, the
+        swing's arc drawn), its form always."""
+        def unless(default, read):
+            def f(x):
+                x = read(x)
+                if x == default:
+                    self.fail("bad_value", f"varsayılan değer ({default!r}) yazılmaz")
+                return x
+            return f
+        return self.fields({
+            "anchor": (unless("center", self.enum(("start", "center", "end"))), False),
+            "form": (self.enum(OPENING_FORMS), True),
+            "leaves": (unless(1, self.uint(8)), False),
+            "operation": (unless("swing", self.enum(("swing", "slide", "fixed"))), False),
+            "hand": (unless("start", self.enum(("start", "end"))), False),
+            "side": (unless("left", self.enum(("left", "right"))), False),
+            "swing": (self.float, False),
+            "showSwing": (unless(True, self.bool), False),
+            "frame": (self.float, False),
+            "sill": (self.float, False),
+            "head": (self.float, False),
+            "style": (self.text, False),
+            "number": (self.text, False),
+            "broken": (self.enum(("hostGone", "offWall", "overlap")), False),
+        })(v)
+
+    def opening_rules(self, o):
+        """An opening (schema 77, docs/adr/0341 §1): a wall, a finite place along it, a width above 0 and at most
+        100 m, one or two leaves, a swing above 0° and at most 180°, a frame 0 or more and under half the width, finite
+        sill and head with the head above the sill, a number not blank, four finite jamb points."""
+        f = o["opening"]
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        if o["host"].strip() == "":
+            bad("Açıklığın duvarı belirtilmeli.")
+        if not math.isfinite(o["at"]):
+            bad("Açıklığın konumu sonlu olmalı.")
+        w = o["width"]
+        if not (math.isfinite(w) and 0 < w <= OPENING_MAX_WIDTH):
+            bad(f"Açıklığın genişliği {w:g}; sıfırdan büyük, en çok {OPENING_MAX_WIDTH:g} m olmalı.")
+        if f.get("leaves", 1) not in (1, 2):
+            bad(f"Açıklığın kanat sayısı {f['leaves']}; 1 ya da 2 olmalı.")
+        if "swing" in f and not (math.isfinite(f["swing"]) and 0 < f["swing"] <= 180):
+            bad("Kanadın açılma açısı sıfırdan büyük, en çok 180° olmalı.")
+        if "frame" in f and not (math.isfinite(f["frame"]) and 0 <= f["frame"] and 2 * f["frame"] < w):
+            bad("Kasa genişliği sıfır ya da daha büyük, açıklığın yarısından küçük olmalı.")
+        for k in ("sill", "head"):
+            if k in f and not (math.isfinite(f[k]) and abs(f[k]) <= 1000):
+                bad("Açıklığın denizlik ya da lento yüksekliği sonlu olmalı.")
+        if "sill" in f and "head" in f and f["head"] <= f["sill"]:
+            bad("Lento denizlikten yüksek olmalı.")
+        if "number" in f and f["number"].strip() == "":
+            bad("Açıklığın numarası boş olamaz.")
+        if len(o["place"]) != 4:
+            bad(f"Açıklığın pervazları dört noktadır; {len(o['place'])} verildi.")
+
     def arch_info(self, v):
         return self.fields({"level": (self.text, False), "phase": (self.enum(ARCH_PHASES), False),
                             "status": (self.enum(ARCH_STATUSES), False), "discipline": (self.enum(ARCH_DISCIPLINES), False)})(v)
@@ -6977,6 +7049,14 @@ ENTITY_KINDS = {
         "arch": (s.arch_info, False),
         # Schema 76 (docs/adr/0340 §1): its joins, its cleanup only when off.
         **({"joins": (s.wall_joins_, False), "cleanup": (s.only_false, False)} if s.wall_joins else {}),
+    },
+    # Schema 77 (docs/adr/0341 §1): an opening; its jambs written from its wall.
+    "opening": lambda s: {
+        "host": (s.text, True),
+        "at": (s.float, True),
+        "width": (s.float, True),
+        "place": (s.array(s.point), True),
+        "opening": (s.opening_fields, True),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.

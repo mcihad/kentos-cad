@@ -2441,6 +2441,20 @@
    "tests": 0
   },
   {
+   "id": "edit.selectFilter.opening",
+   "kind": "command",
+   "title": "Seçim süzgecinde Açıklık",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "edit.selectFilter.point",
    "kind": "command",
    "title": "Seçim süzgecinde Nokta",
@@ -8741,6 +8755,22 @@
    "tests": 3
   },
   {
+   "id": "tool.door",
+   "kind": "command",
+   "title": "Kapı",
+   "level": "semantic",
+   "via": [
+    "cad.openings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.create",
+   "mcp": "cad.openings.create",
+   "note": "Tıklanan duvar, nokta, tür ve seçenekler komuta verilir; yer ve pervazlar komutun hesabıdır, önizleme planından (ADR 0341 §4, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.drawOrderAbove",
    "kind": "command",
    "title": "Nesnenin üstüne",
@@ -9615,6 +9645,70 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.opening",
+   "kind": "command",
+   "title": "Boşluk",
+   "level": "semantic",
+   "via": [
+    "cad.openings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.create",
+   "mcp": "cad.openings.create",
+   "note": "Boşluk biçimiyle aynı komut (ADR 0341 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.openingFlip",
+   "kind": "command",
+   "title": "Açıklığı çevir",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Tıklanan açıklık flip işlemiyle (ADR 0341 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.openingMove",
+   "kind": "command",
+   "title": "Açıklığı taşı",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Açıklık ve tıklanan duvarın noktası rehost işlemiyle; yer komutun hesabıdır (ADR 0341 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.openingNumber",
+   "kind": "command",
+   "title": "Numarala",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Önek ve başlangıç renumber işlemiyle (ADR 0341 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.pan",
@@ -11105,6 +11199,22 @@
    "python": "kentos.cad.walls.edit",
    "mcp": "cad.walls.edit",
    "note": "Kesen duvarın kimliği ve kalacak parçanın noktası trim işlemiyle (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.window",
+   "kind": "command",
+   "title": "Pencere",
+   "level": "semantic",
+   "via": [
+    "cad.openings.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.create",
+   "mcp": "cad.openings.create",
+   "note": "Tıklanan duvar, nokta ve tür komuta verilir (ADR 0341 §5).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

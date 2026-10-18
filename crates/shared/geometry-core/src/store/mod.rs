@@ -214,6 +214,10 @@ pub struct Store {
     wall_dirty: Vec<Bounds>,
     wall_drawn: IdMap<Arc<crate::geom::wall::Drawn>>,
     wall_issues: Vec<wall_joins::WallIssue>,
+    /// Each opening's wall, by the opening's id (`set_hosts`, docs/adr/0341 §2): its wall's lines are cut where it is.
+    opening_hosts: IdMap<f64>,
+    /// The openings in no wall (broken, or their wall gone): each shows a warning (docs/adr/0341 §1).
+    opening_loose: IdSet,
     /// The drawing's block definitions, flattened (`set_blocks`).
     blocks: Blocks,
     /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
@@ -373,6 +377,7 @@ impl Store {
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
             self.note_wall(*id, None);
+            self.forget_opening(*id);
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
             self.masks.remove(&id.to_bits());
@@ -511,6 +516,19 @@ impl Store {
                         attribute: None,
                     }]
                 }),
+            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2).
+            Shape::Opening { place, opening, .. } => crate::geom::opening::symbol(place, opening)
+                .into_iter()
+                .map(|shape| crate::block::Piece {
+                    shape,
+                    color: None,
+                    line_weight: None,
+                    by_layer: Vec::new(),
+                    gates: Vec::new(),
+                    stroke: Default::default(),
+                    attribute: None,
+                })
+                .collect(),
             _ => return (None, b),
         };
         self.expanded_of(pieces, b)

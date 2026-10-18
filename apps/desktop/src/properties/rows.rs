@@ -1362,6 +1362,131 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
+        // An opening (docs/adr/0341 §5): its form, type, width, place along its wall, side, hinge, leaves, operation,
+        // swing, frame, sill, head and number, each written through `cad.openings.edit`; its wall, or why it is in none.
+        Entity::Opening(o) => {
+            use kentos_contracts::{OpeningChange, OpeningForm, OpeningHand, OpeningOperation, OpeningSide, OpeningsOperation};
+            let x = &o.opening;
+            let set = |c: OpeningChange| Message::Properties(Event::Opening(slot, OpeningsOperation::Set(c)));
+            let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+                label,
+                swatch: None,
+                icon,
+                wide: false,
+                chosen,
+                enabled: true,
+                message,
+            };
+            let select = |text: String, items: Vec<Choice>| {
+                edit(Editor::Select {
+                    text,
+                    swatch: None,
+                    icon: None,
+                    items,
+                })
+            };
+            let forms = OpeningForm::ALL
+                .iter()
+                .map(|&v| {
+                    let icon = match v {
+                        OpeningForm::Door => "door",
+                        OpeningForm::Window => "window",
+                        OpeningForm::Opening => "wallOpening",
+                    };
+                    pick(v.label().to_owned(), v == x.form, set(OpeningChange { form: Some(v), ..Default::default() }), Some(icon))
+                })
+                .collect();
+            geo.push(Row::text("Biçim", x.form.label()).editor(select(x.form.label().to_owned(), forms)));
+            let types = kentos_contracts::builtin_opening_types();
+            let type_name = x
+                .style
+                .as_deref()
+                .and_then(|id| types.iter().find(|t| t.id == id))
+                .map_or_else(|| "Yok".to_owned(), |t| t.name.clone());
+            let type_items = types
+                .iter()
+                .map(|t| {
+                    pick(
+                        t.name.clone(),
+                        x.style.as_deref() == Some(t.id.as_str()),
+                        Message::Properties(Event::Opening(
+                            slot,
+                            OpeningsOperation::ReplaceType { from: None, to: t.id.clone() },
+                        )),
+                        None,
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
+            geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
+            geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
+            if x.form == OpeningForm::Door {
+                let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]
+                    .into_iter()
+                    .map(|(v, l, i)| pick(l.to_owned(), v == x.side, set(OpeningChange { side: Some(v), ..Default::default() }), Some(i)))
+                    .collect();
+                let side = if x.side == OpeningSide::Right { "Sağ" } else { "Sol" };
+                geo.push(Row::text("Yan", side).editor(select(side.to_owned(), sides)));
+                let hands = [(OpeningHand::Start, "Baş"), (OpeningHand::End, "Son")]
+                    .into_iter()
+                    .map(|(v, l)| pick(l.to_owned(), v == x.hand, set(OpeningChange { hand: Some(v), ..Default::default() }), None))
+                    .collect();
+                let hand = if x.hand == OpeningHand::End { "Son" } else { "Baş" };
+                geo.push(Row::text("Menteşe", hand).editor(select(hand.to_owned(), hands)));
+            }
+            if x.form != OpeningForm::Opening {
+                let leaves = [1u8, 2]
+                    .into_iter()
+                    .map(|n| pick(n.to_string(), n == x.leaves, set(OpeningChange { leaves: Some(n), ..Default::default() }), None))
+                    .collect();
+                geo.push(Row::figure("Kanat", x.leaves.to_string()).editor(select(x.leaves.to_string(), leaves)));
+                let ops = OpeningOperation::ALL
+                    .iter()
+                    .map(|&v| pick(v.label().to_owned(), v == x.operation, set(OpeningChange { operation: Some(v), ..Default::default() }), None))
+                    .collect();
+                geo.push(Row::text("Açılış", x.operation.label()).editor(select(x.operation.label().to_owned(), ops)));
+            }
+            if x.form == OpeningForm::Door && x.operation == OpeningOperation::Swing {
+                geo.push(
+                    Row::figure("Açı", format!("{}", x.swing_angle()))
+                        .unit("°")
+                        .editor(number(Field::OpeningSwing(slot))),
+                );
+                let arcs = [(true, "Evet"), (false, "Hayır")]
+                    .into_iter()
+                    .map(|(v, l)| pick(l.to_owned(), v == x.show_swing, set(OpeningChange { show_swing: Some(v), ..Default::default() }), None))
+                    .collect();
+                let arc = if x.show_swing { "Evet" } else { "Hayır" };
+                geo.push(Row::text("Açılım yayı", arc).editor(select(arc.to_owned(), arcs)));
+            }
+            let optional = |label: &'static str, v: Option<f64>, field: Field| match v {
+                Some(v) => metres(label, v).editor(number(field)),
+                None => Row::figure(label, "Yok").editor(number(field)),
+            };
+            if x.form != OpeningForm::Opening {
+                geo.push(optional("Kasa", x.frame, Field::OpeningFrame(slot)));
+            }
+            if x.form == OpeningForm::Window {
+                geo.push(optional("Denizlik", x.sill, Field::OpeningSill(slot)));
+            }
+            geo.push(optional("Lento", x.head, Field::OpeningHead(slot)));
+            geo.push(
+                Row::text("Numara", x.number.clone().unwrap_or_default())
+                    .editor(edit(Editor::Text(Field::OpeningNumber(slot)))),
+            );
+            let wall = kentos_domain::Uuid::parse_str(&x.host)
+                .ok()
+                .and_then(|u| doc.model.slot_of(u))
+                .and_then(|s| match doc.model.get(s) {
+                    Some(Entity::Wall(w)) => Some(w.base.label.clone().unwrap_or_else(|| format!("Duvar {}", s.0))),
+                    _ => None,
+                })
+                .unwrap_or_else(|| "Duvar yok".to_owned());
+            geo.push(Row::text("Duvar", wall));
+            if let Some(b) = x.broken {
+                geo.push(Row::text("Durum", b.words()));
+            }
+        }
         // A NURBS curve (docs/adr/0259 §6): its degree, control and fit points, whether it is rational
         // and closed, its length and, closed, the area it encloses.
         Entity::Nurbs(n) => {

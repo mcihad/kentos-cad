@@ -1281,6 +1281,14 @@ impl crate::app::App {
             .iter()
             .map(|i| Vec2::new(i.at.x, i.at.y))
             .collect();
+        // The openings in no wall (docs/adr/0341 §1).
+        out.extend(
+            self.spatial
+                .store()
+                .loose_openings()
+                .into_iter()
+                .map(|p| Vec2::new(p.x, p.y)),
+        );
         for slot in model.broken_dimensions() {
             let Some(kentos_contracts::Entity::Dimension(d)) = model.get(slot) else {
                 continue;

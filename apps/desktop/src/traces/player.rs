@@ -166,6 +166,8 @@ impl Seen {
                 w.wall.pts.iter().map(|v| [v.x, v.y]).collect(),
                 w.wall.bulges.clone().unwrap_or_default(),
             ),
+            // An opening's jambs (docs/adr/0341 §1).
+            Entity::Opening(o) => (o.opening.place.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {
                     let (m, r) = (e.major, e.ratio);

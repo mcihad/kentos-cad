@@ -1623,6 +1623,95 @@
       "shortcuts": [],
       "category": "Düzen",
       "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.opening",
+      "title": "Seçim süzgecinde Açıklık",
+      "short": "Açıklık",
+      "icon": "door",
+      "description": "Seçim süzgecinde kapıları, pencereleri ve boşlukları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.door",
+      "title": "Kapı",
+      "icon": "door",
+      "description": "Duvara kapı koyar: imleç duvarın yanındayken kapı komutun planından çizilir, tıklama yazar ve araç açık kalır. Tür (T) Kapı 90, Kapı 80, İki kanatlı kapı 140 ya da Sürme kapı 160; Genişlik (E) türünkinin yerine; Yan (Y) kanadın açıldığı yan (Otomatik: imlecin yanı); Menteşe (M) Baş ya da Son; Uzaklık (U) yakın pervazın duvarın yakın ucuna uzaklığı; Orta (O) kenarın ortası.",
+      "aliases": [
+        "KAPI",
+        "DOOR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.window",
+      "title": "Pencere",
+      "icon": "window",
+      "description": "Duvara pencere koyar: imleç duvarın yanındayken pencere komutun planından çizilir, tıklama yazar. Tür (T) Pencere 120 ya da Sabit pencere 100 (kasa, denizlik ve lento türden); Genişlik (E), Uzaklık (U: yakın pervazın duvarın ucuna uzaklığı) ve Orta (O).",
+      "aliases": [
+        "PENCEREKOY",
+        "WINDOW"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.opening",
+      "title": "Boşluk",
+      "icon": "wallOpening",
+      "description": "Duvarda kapısız, penceresiz bir boşluk açar: duvarın çizgileri pervazlarda kesilir. Genişlik (E), Uzaklık (U) ve Orta (O).",
+      "aliases": [
+        "BOSLUK",
+        "WALLOPENING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.openingFlip",
+      "title": "Açıklığı çevir",
+      "icon": "openingFlip",
+      "description": "Tıklanan kapının açıldığı yanı çevirir; Shift ile tıklama menteşesini öbür pervaza alır. Kapı yerinde kalır; tek adımda.",
+      "aliases": [
+        "ACIKLIKCEVIR",
+        "FLIPDOOR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.openingMove",
+      "title": "Açıklığı taşı",
+      "icon": "openingMove",
+      "description": "Önce taşınacak kapıya, pencereye ya da boşluğa, sonra yeni yerine bir duvarın yanından tıklayın: aynı duvarda kayar, başka duvara geçer. Duvarın ucundan taşamaz, başka açıklığa binemez.",
+      "aliases": [
+        "ACIKLIKTASI",
+        "MOVEDOOR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.openingNumber",
+      "title": "Numarala",
+      "icon": "openingNumber",
+      "description": "Açıklıklara numara verir: Önek (Ö) ve Başlangıç (B) ile K1, K2 …; duvarların sırasıyla ve her duvar boyunca. Enter seçili açıklıkları, seçim yoksa bütün açıklıkları numaralar.",
+      "aliases": [
+        "ACIKLIKNO",
+        "DOORNUMBER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1806,7 +1895,19 @@
     "wallJoinNone": "<path d=\"M3 6h8M3 10h8M11 6v4\"/><path d=\"M13 12.5h4v5.5M13 12.5v5.5\"/>",
     "wallJoinMiter": "<path d=\"M3 5h12v12M3 9.5h7.5V17M10.5 9.5 15 5\"/>",
     "wallJoinButt": "<path d=\"M11 3v15M15 3v15M11 3h4\"/><path d=\"M3 7h8M3 11h8\"/>",
-    "wallJoinThrough": "<path d=\"M3 5h14M3 9h14M17 5v4\"/><path d=\"M8 9v9M12 9v9\"/>"
+    "wallJoinThrough": "<path d=\"M3 5h14M3 9h14M17 5v4\"/><path d=\"M8 9v9M12 9v9\"/>",
+    "door": "<path d=\"M1.5 15.5H6M16 15.5h2.5\"/><path d=\"M6 15.5v-10\"/><path d=\"M6 5.5a10 10 0 0 1 10 10\" stroke-width=\"1\"/>",
+    "doorDouble": "<path d=\"M1 15.5h3M16 15.5h3\"/><path d=\"M4 15.5v-6M16 15.5v-6\"/><path d=\"M4 9.5a6 6 0 0 1 6 6M16 9.5a6 6 0 0 0-6 6\" stroke-width=\"1\"/>",
+    "doorSliding": "<path d=\"M1.5 14.7H4M16 14.7h2.5\"/><path d=\"M4 13.2h7.5M8.5 16.2H16\"/><path d=\"M9 8.5h6.5m-2-2 2 2-2 2\" stroke-width=\"1\"/>",
+    "window": "<path d=\"M2 7.5h2.5v8H2M18 7.5h-2.5v8H18\"/><path d=\"M4.5 7.5h11M4.5 15.5h11\"/><path d=\"M4.5 11.5h11\" stroke-width=\"1\"/>",
+    "windowFixed": "<path d=\"M2 7.5h2.5v8H2M18 7.5h-2.5v8H18\"/><path d=\"M4.5 7.5h11M4.5 15.5h11\"/><path d=\"M7 9.5l6 4M13 9.5l-6 4\" stroke-width=\"1\"/>",
+    "wallOpening": "<path d=\"M2 7.5h5v8H2M18 7.5h-5v8h5\"/><path d=\"M7 11.5h6\" stroke-dasharray=\"1.5 1.5\" stroke-width=\"1\"/>",
+    "openingFlip": "<path d=\"M1.5 11H5M15 11h3.5\"/><path d=\"M5 11V3.5a7.5 7.5 0 0 1 7.5 7.5\"/><path d=\"M5 11v5.5M5 16.5a5.5 5.5 0 0 0 5.5-5.5\" stroke-dasharray=\"1.5 1.2\" stroke-width=\"1\"/>",
+    "openingMove": "<path d=\"M1.5 16H4.5M12.5 16h6\"/><path d=\"M4.5 16V8a8 8 0 0 1 8 8\" stroke-width=\"1\"/><path d=\"M10.5 4h7.5m-2-2 2 2-2 2\"/>",
+    "openingNumber": "<path d=\"M2.5 16.5h15\"/><rect x=\"5\" y=\"3\" width=\"10\" height=\"8.5\" rx=\"1.5\"/><path d=\"M8.3 5.3v4M11.5 5.3 8.6 7.5l2.9 1.8\" stroke-width=\"1.2\"/>",
+    "openingSideAuto": "<path d=\"M2 10h3.5M14.5 10H18\"/><path d=\"M5.5 10V3.5a6.5 6.5 0 0 1 6.5 6.5M5.5 10v6.5a6.5 6.5 0 0 0 6.5-6.5\" stroke-dasharray=\"1.5 1.2\" stroke-width=\"1\"/>",
+    "openingSideLeft": "<path d=\"M2 10h3.5M14.5 10H18\"/><path d=\"M5.5 10V3.5\"/><path d=\"M5.5 3.5a6.5 6.5 0 0 1 6.5 6.5\" stroke-width=\"1\"/>",
+    "openingSideRight": "<path d=\"M2 10h3.5M14.5 10H18\"/><path d=\"M5.5 10v6.5\"/><path d=\"M5.5 16.5a6.5 6.5 0 0 0 6.5-6.5\" stroke-width=\"1\"/>"
   },
   "tabs": [
     {
@@ -2742,6 +2843,40 @@
         {
           "command": "arch.wallJoinCheck",
           "size": "large"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Açıklık",
+      "icon": "door",
+      "items": [
+        {
+          "command": "tool.door",
+          "size": "large"
+        },
+        {
+          "command": "tool.window",
+          "size": "large"
+        },
+        {
+          "command": "tool.opening",
+          "size": "small"
+        },
+        {
+          "command": "tool.openingFlip",
+          "size": "small"
+        },
+        {
+          "command": "tool.openingMove",
+          "size": "small"
+        },
+        {
+          "command": "tool.openingNumber",
+          "size": "small"
         }
       ]
     },

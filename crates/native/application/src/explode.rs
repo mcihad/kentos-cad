@@ -197,6 +197,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let mut not: Option<(usize, String)> = None;
     let mut skipped = 0;
     let mut walls_made_plain = 0;
+    let mut openings_made_plain = 0;
     for (at, slot, e, uid) in open {
         // A wall goes as it is drawn, joined with the walls round it (docs/adr/0340 §5).
         if let Entity::Wall(w) = e {
@@ -225,6 +226,24 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
                 });
             }
             walls_made_plain += 1;
+            continue;
+        }
+        // An opening goes as its symbol's plain pieces (docs/adr/0341 §3).
+        if let Entity::Opening(o) = e {
+            changes.push(EntityEdit::Remove { uid: uid.clone() });
+            let place: Vec<kentos_geometry_core::Vec2> = o
+                .opening
+                .place
+                .iter()
+                .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+                .collect();
+            let spec = kentos_formats::openings::spec(&o.opening);
+            for piece in kentos_geometry_core::geom::opening::symbol(&place, &spec) {
+                if let Some(geometry) = edit_geometry(piece) {
+                    changes.push(EntityEdit::add(uid.clone(), geometry, None));
+                }
+            }
+            openings_made_plain += 1;
             continue;
         }
         let insert = matches!(e, Entity::Insert(_));
@@ -267,6 +286,15 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
             code: codes::SEMANTICS_LOST.into(),
             message: format!(
                 "{walls_made_plain} duvar düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor; komşu duvarlar onlarla birleşmez."
+            ),
+            path: Some("uids".into()),
+        });
+    }
+    if openings_made_plain > 0 {
+        warnings.push(CommandWarning {
+            code: codes::SEMANTICS_LOST.into(),
+            message: format!(
+                "{openings_made_plain} açıklık düz çizgiler ve yaylar oldu: türü, numarası, yükseklikleri ve duvarına bağı artık taşınmıyor; duvarı onun yerinde kapanır."
             ),
             path: Some("uids".into()),
         });

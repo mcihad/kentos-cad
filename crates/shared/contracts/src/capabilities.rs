@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 21] = [
+pub const KINDS: [&str; 22] = [
     "point",
     "line",
     "polyline",
@@ -85,6 +85,7 @@ pub const KINDS: [&str; 21] = [
     "raster",
     "pointcloud",
     "wall",
+    "opening",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -555,6 +556,7 @@ const ENTRIES: &[Entry] = &[
                     "insert",
                     "point",
                     "wall",
+                    "opening",
                 ],
                 &[],
                 Some("not_explodable"),
@@ -1154,6 +1156,50 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
     },
+    // The openings (docs/adr/0341 §4).
+    Entry {
+        id: "cad.openings.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_wall",
+                "style_not_found",
+                "invalid_opening",
+                "opening_off_wall",
+                "openings_overlap",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.openings.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_an_opening",
+                "nothing_to_set",
+                "not_finite",
+                "invalid_opening",
+                "style_not_found",
+                "style_not_used",
+                "not_a_wall",
+                "opening_host_gone",
+                "opening_off_wall",
+                "openings_overlap",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["opening"], &[], Some("not_an_opening"), None)],
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",
@@ -1683,20 +1729,20 @@ const ENTRIES: &[Entry] = &[
             vec![
                 target(
                     Some("radius"),
-                    &["circle", "arc"],
+                    &["circle", "arc", "opening"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan ya da çoklu çizginin ve alanın yay parçasından ölçülür; yay parçası olmayan çoklu çizgi ve alan not_measurable.",
+                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yay parçasından ölçülür; yay parçası olmayan çoklu çizgi, alan ve açıklık not_measurable.",
                     ),
                 ),
                 target(
                     Some("arcLength"),
-                    &["arc"],
+                    &["arc", "opening"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yay uzunluğu ve yayın açısı uçları olan yaydan ya da çoklu çizginin ve alanın yaylı kenarından ölçülür; tam daire not_measurable.",
+                        "Yay uzunluğu ve yayın açısı uçları olan yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yaylı kenarından ölçülür; tam daire ve yaysız açıklık not_measurable.",
                     ),
                 ),
             ]
@@ -2505,6 +2551,7 @@ const ENTRIES: &[Entry] = &[
                         "hatch",
                         "table",
                         "wall",
+                        "opening",
                         "image",
                         "raster",
                         "pointcloud",

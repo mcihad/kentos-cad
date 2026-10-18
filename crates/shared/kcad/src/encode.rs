@@ -1686,6 +1686,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 77 (docs/adr/0341): an opening.
+    if doc.entities.iter().any(|e| matches!(e, Entity::Opening(_))) {
+        return crate::SCHEMA_WITH_OPENINGS;
+    }
     // Schema 76 (docs/adr/0340): a wall's joins or cleanup, a component's priority.
     let ranked = |cs: &[kentos_contracts::WallComponent]| cs.iter().any(|c| c.priority.is_some());
     if doc.entities.iter().any(|e| {

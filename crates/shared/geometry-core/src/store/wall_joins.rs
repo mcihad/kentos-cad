@@ -6,10 +6,11 @@
 
 use std::sync::Arc;
 
-use super::{Expanded, IdSet, Store};
+use super::{Expanded, IdMap, IdSet, Store};
 use crate::entity::{Shape, entity_bounds_in};
 use crate::geom::wall;
 use crate::geom::wall_join::{self, IssueCode, JOIN_TOLERANCE, WallIn};
+use crate::geom::opening;
 use crate::geometry::Bounds;
 use crate::vec2::Vec2;
 
@@ -53,6 +54,74 @@ impl Store {
             self.wall_ids.remove(&key);
             self.wall_drawn.remove(&key);
         }
+    }
+
+    /// The walls the openings named are in (docs/adr/0341 §2), by their ids; none: the opening is in no wall (its wall
+    /// gone). The host sends them after it puts the openings; the walls an opening leaves and goes into are joined
+    /// again, the opening's gap with them.
+    pub fn set_hosts(&mut self, entries: impl IntoIterator<Item = (f64, Option<f64>)>) {
+        for (id, host) in entries {
+            let key = id.to_bits();
+            let old = match host {
+                Some(h) => {
+                    self.opening_loose.remove(&key);
+                    self.opening_hosts.insert(key, h)
+                }
+                None => {
+                    self.opening_loose.insert(key);
+                    self.opening_hosts.remove(&key)
+                }
+            };
+            for wall in old.into_iter().chain(host) {
+                self.touch_wall(wall);
+            }
+        }
+        self.maybe_rebuild();
+    }
+
+    /// An opening gone: its wall is joined again without its gap.
+    pub(super) fn forget_opening(&mut self, id: f64) {
+        self.opening_loose.remove(&id.to_bits());
+        if let Some(wall) = self.opening_hosts.remove(&id.to_bits()) {
+            self.touch_wall(wall);
+        }
+    }
+
+    /// A wall to draw again, whatever changed about its openings.
+    fn touch_wall(&mut self, wall: f64) {
+        let key = wall.to_bits();
+        if !self.wall_ids.contains(&key) {
+            return;
+        }
+        if let Some(it) = self.by_id.get(&key).and_then(|&s| self.slots[s as usize].as_ref()) {
+            self.wall_dirty.push(it.bounds);
+        }
+    }
+
+    /// Each wall's openings' intervals, for the walls of `keys` in their order.
+    fn intervals(&self, keys: &[u64]) -> Vec<Vec<(f64, f64)>> {
+        let mut by_wall: IdMap<Vec<(f64, f64)>> = IdMap::default();
+        for (&o, &w) in &self.opening_hosts {
+            let Some(it) = self.by_id.get(&o).and_then(|&s| self.slots[s as usize].as_ref()) else {
+                continue;
+            };
+            if let Shape::Opening {
+                at, width, opening, ..
+            } = &it.shape
+            {
+                by_wall
+                    .entry(w.to_bits())
+                    .or_default()
+                    .push(opening::span(*at, opening.anchor, *width));
+            }
+        }
+        keys.iter()
+            .map(|k| {
+                let mut v = by_wall.remove(k).unwrap_or_default();
+                v.sort_by(|a, b| a.0.total_cmp(&b.0));
+                v
+            })
+            .collect()
     }
 
     /// A wall's pieces at the view from its joined drawing; one not yet joined (or that cannot be drawn) as on its own.
@@ -127,7 +196,8 @@ impl Store {
             let only: Vec<usize> = (0..context.len())
                 .filter(|&p| affected[context[p]])
                 .collect();
-            wall_join::solve(&ins, Some(&only))
+            let keys: Vec<u64> = context.iter().map(|&i| walls[i].0).collect();
+            wall_join::solve_with(&ins, &self.intervals(&keys), Some(&only))
         };
         let affected_keys: IdSet = (0..n)
             .filter(|&i| affected[i])
@@ -189,5 +259,17 @@ impl Store {
     /// Walls that meet and are not joined (docs/adr/0340 §2), as of the last change.
     pub fn wall_issues(&self) -> &[WallIssue] {
         &self.wall_issues
+    }
+
+    /// Where the openings in no wall are (their jambs' centres): each shows a warning (docs/adr/0341 §1).
+    pub fn loose_openings(&self) -> Vec<Vec2> {
+        self.opening_loose
+            .iter()
+            .filter_map(|k| self.by_id.get(k).and_then(|&s| self.slots[s as usize].as_ref()))
+            .filter_map(|it| match &it.shape {
+                Shape::Opening { place, .. } => opening::centre(place),
+                _ => None,
+            })
+            .collect()
     }
 }

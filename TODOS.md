@@ -386,6 +386,12 @@ Liste:
   Duvar düzenle panelinin yedi aracı ve Birleşimleri denetle penceresi, uyarı üçgenleri, Öznitelikler'in birleşim satırları, Duvar
   stilleri'nin Öncelik sütunu, Patlat'ın duvarı ve DXF'in birleşmiş duvarları, ortak iz `wall-edit.json`; bilinen bozulmalar: şema 76 ve
   `FORMATS_VERSION` 83.
+- [ ] `CAD-ARCH-13`…`19` açıklık, kapı ve pencere (ADR 0341, 18 Ekim): web'de gerekenler: `.kcad` şema 77 (`opening` türü; sütunlu
+  kayıtta tür 22; `FORMATS_VERSION` 84), çekirdeğin `geom::opening`'i ve `wall_join::solve_with`'i WASM'da, deponun `set_hosts`'u ve
+  `loose_openings`'i, belgenin açıklık izleyicisi (`model/` içinde `opening_follow`'un karşılığı), `cad.openings.create` ve `.edit`
+  (`product/`), Kapı, Pencere, Boşluk, Açıklığı çevir, Açıklığı taşı ve Numarala araçları, Mimari'nin Açıklık paneli ve ikonları,
+  Öznitelikler'in açıklık satırları, seçim süzgecinde Açıklık (`SelectKind::Opening`), Patlat'ın ve DXF'in açıklığı; bilinen bozulmalar:
+  şema 77 ve `FORMATS_VERSION` 84.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

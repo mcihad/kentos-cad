@@ -180,6 +180,22 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         },
         // A record is not drawn (docs/adr/0410).
         Shape::Record {} => out.push(NONE),
+        // Its jambs' ring until the store expands it into its pieces (docs/adr/0341).
+        Shape::Opening { place, .. } if place.len() == 4 => drawn_record(
+            &Shape::Polyline {
+                pts: vec![place[0], place[2], place[3], place[1]],
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: true,
+                widths: None,
+            },
+            oriented,
+            clip,
+            refs,
+            out,
+        ),
+        Shape::Opening { .. } => {}
         // Its path until the store expands it into its pieces (docs/adr/0339).
         Shape::Wall { pts, bulges, wall } => drawn_record(
             &crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),

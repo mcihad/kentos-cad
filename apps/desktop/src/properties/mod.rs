@@ -98,6 +98,8 @@ pub enum Event {
     Wall(Slot, kentos_contracts::WallChange),
     /// A wall's joins (docs/adr/0340 §6).
     WallOp(Slot, kentos_contracts::WallsOperation),
+    /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
+    Opening(Slot, kentos_contracts::OpeningsOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -208,6 +210,15 @@ pub enum Field {
     WallWidth(Slot),
     WallOffset(Slot),
     WallHeight(Slot),
+    /// An opening's width, place along its wall, swing (degrees), frame, sill, head (empty: none) and number
+    /// (docs/adr/0341 §5).
+    OpeningWidth(Slot),
+    OpeningAt(Slot),
+    OpeningSwing(Slot),
+    OpeningFrame(Slot),
+    OpeningSill(Slot),
+    OpeningHead(Slot),
+    OpeningNumber(Slot),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
     CloudClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
@@ -662,6 +673,7 @@ impl App {
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
             Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
+            Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -1004,6 +1016,51 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::OpeningWidth(slot)
+        | Field::OpeningAt(slot)
+        | Field::OpeningSwing(slot)
+        | Field::OpeningFrame(slot)
+        | Field::OpeningSill(slot)
+        | Field::OpeningHead(slot)
+        | Field::OpeningNumber(slot) => {
+            use kentos_contracts::{OpeningChange, OpeningsOperation};
+            let blank = text.trim().is_empty();
+            let op = match field {
+                Field::OpeningNumber(_) => {
+                    let n = kentos_interaction::js_trim(text);
+                    OpeningsOperation::Set(OpeningChange {
+                        number: Some((!n.is_empty()).then(|| n.to_owned())),
+                        ..Default::default()
+                    })
+                }
+                Field::OpeningFrame(_) | Field::OpeningSill(_) | Field::OpeningHead(_) | Field::OpeningSwing(_)
+                    if blank =>
+                {
+                    OpeningsOperation::Set(match field {
+                        Field::OpeningFrame(_) => OpeningChange { frame: Some(None), ..Default::default() },
+                        Field::OpeningSill(_) => OpeningChange { sill: Some(None), ..Default::default() },
+                        Field::OpeningHead(_) => OpeningChange { head: Some(None), ..Default::default() },
+                        _ => OpeningChange { swing: Some(None), ..Default::default() },
+                    })
+                }
+                _ => {
+                    let raw = web_number(text);
+                    let n = if matches!(field, Field::OpeningSwing(_)) { raw } else { f.to_metres(raw) };
+                    if !n.is_finite() {
+                        return Vec::new();
+                    }
+                    match field {
+                        Field::OpeningWidth(_) => OpeningsOperation::Set(OpeningChange { width: Some(n), ..Default::default() }),
+                        Field::OpeningAt(_) => OpeningsOperation::Move { by: None, at: Some(n) },
+                        Field::OpeningSwing(_) => OpeningsOperation::Set(OpeningChange { swing: Some(Some(n)), ..Default::default() }),
+                        Field::OpeningFrame(_) => OpeningsOperation::Set(OpeningChange { frame: Some(Some(n)), ..Default::default() }),
+                        Field::OpeningSill(_) => OpeningsOperation::Set(OpeningChange { sill: Some(Some(n)), ..Default::default() }),
+                        _ => OpeningsOperation::Set(OpeningChange { head: Some(Some(n)), ..Default::default() }),
+                    }
+                }
+            };
+            return properties::edit_opening(model, *slot, op);
+        }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
             let n = f.to_metres(web_number(text));
             let height = matches!(field, Field::WallHeight(_));
@@ -1129,6 +1186,13 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         Field::WallWidth(_)
         | Field::WallOffset(_)
         | Field::WallHeight(_)
+        | Field::OpeningWidth(_)
+        | Field::OpeningAt(_)
+        | Field::OpeningSwing(_)
+        | Field::OpeningFrame(_)
+        | Field::OpeningSill(_)
+        | Field::OpeningHead(_)
+        | Field::OpeningNumber(_)
         | Field::Elevation(..)
         | Field::PolylineWidth(_)
         | Field::Elevations(_)

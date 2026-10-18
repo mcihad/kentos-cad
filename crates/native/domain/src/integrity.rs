@@ -58,7 +58,13 @@ impl Document {
             let Some(after) = &change.after else {
                 // Removed: nothing may still follow it.
                 let linked = self.store.linked_to(change.uid).next().is_some();
-                let tied = self.store.tied_to(change.uid).next().is_some();
+                // An opening stays with its wall gone, broken (`hostGone`, docs/adr/0341 §3).
+                let tied = self.store.tied_to(change.uid).any(|slot| {
+                    !matches!(
+                        self.store.get(slot).map(|s| &*s.entity),
+                        Some(kentos_contracts::Entity::Opening(_))
+                    )
+                });
                 if linked || tied {
                     out.push(Fault {
                         uid: change.uid,

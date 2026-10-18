@@ -83,6 +83,12 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         }
         // A cloud's place is its files' (docs/adr/0207 §3): it stays.
         Shape::PointCloud { .. } | Shape::Record {} => return None,
+        // It moves whole when its middle is in the window; the document puts it back on its wall (docs/adr/0341 §3).
+        Shape::Opening { place, .. } => {
+            let c = crate::geom::opening::centre(place)?;
+            inside(c, r)
+                .then(|| crate::ops::transform::translate_entity(&Entity::new(geom.shape.clone()), dx, dy).shape)?
+        }
         // Its path's vertices in the window move, as a polyline's; the wall follows its path (docs/adr/0339 §1).
         Shape::Wall { .. } => {
             let path = crate::geom::wall::path_of(&geom.shape)?;

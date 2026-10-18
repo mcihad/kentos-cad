@@ -159,6 +159,8 @@ impl Spatial {
         self.blocks = doc.blocks().to_vec();
         self.store.set_blocks(core_blocks(&self.blocks));
         self.store.put_many(doc.entities().map(record));
+        self.store
+            .set_hosts(kentos_native_application::geometry_store::opening_hosts(doc, doc.entities()));
         // The masks are picked by their boundary only (docs/adr/0310 §4).
         self.store.set_masks(
             doc.entities()
@@ -242,6 +244,11 @@ impl Spatial {
                 };
                 self.store.remove(&gone);
                 self.store.put_many(changed.iter().copied().map(record));
+                // The openings put, in their walls (docs/adr/0341 §2).
+                self.store.set_hosts(kentos_native_application::geometry_store::opening_hosts(
+                    doc,
+                    changed.iter().copied(),
+                ));
                 self.store.set_masks(
                     changed
                         .iter()

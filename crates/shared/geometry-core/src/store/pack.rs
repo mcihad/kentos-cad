@@ -203,7 +203,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 27.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 29.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -708,6 +708,20 @@ impl Reader<'_> {
                     pts,
                     bulges,
                     wall: <crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                }
+            }
+            // docs/adr/0341: its place along its wall, its width, its jambs, then the rest as its JSON text.
+            29 => {
+                let at = self.num()?;
+                let width = self.num()?;
+                let place = self.points()?;
+                let text = self.string()?.unwrap_or_default();
+                let v = Json::parse(&text).map_err(|e| format!("açıklık okunamadı: {e}"))?;
+                Shape::Opening {
+                    at,
+                    width,
+                    place,
+                    opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
                 }
             }
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
@@ -1326,6 +1340,22 @@ impl Packer {
                 let mut text = String::from("{");
                 let mut first = true;
                 crate::api::json::Flat::write_flat(wall, &mut text, &mut first);
+                text.push('}');
+                let at = self.string(&text);
+                self.put(&[at]);
+            }
+            // docs/adr/0341, as the reader's kind 29 says.
+            Shape::Opening {
+                at,
+                width,
+                place,
+                opening,
+            } => {
+                self.put(&[29.0, *at, *width]);
+                self.points(place);
+                let mut text = String::from("{");
+                let mut first = true;
+                crate::api::json::Flat::write_flat(opening, &mut text, &mut first);
                 text.push('}');
                 let at = self.string(&text);
                 self.put(&[at]);

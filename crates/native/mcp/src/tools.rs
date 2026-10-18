@@ -541,6 +541,8 @@ fn command_tool(c: &Value) -> Value {
             // A wall's fields changed; walls from lines take their sources away (docs/adr/0339 §5).
             | "cad.walls.edit"
             | "cad.walls.convert"
+            // An opening's fields, place and wall changed (docs/adr/0341 §4).
+            | "cad.openings.edit"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

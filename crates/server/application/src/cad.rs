@@ -359,6 +359,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0341 §1): its wall, place, width, leaves and jambs; the drawing's only.
+        Opening(x) => {
+            if in_block {
+                return Err("Blok tanımında açıklık olamaz".into());
+            }
+            if let Some((_, why)) = x.opening.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0192 §1): its size, one source, clip and opacity; the drawing's only.
         Image(x) => {
             if in_block {
@@ -661,6 +670,14 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             let mut rings = vec![ring(outer)];
             rings.extend(holes.into_iter().flatten().map(ring));
             Geometry::Polygon(rings)
+        }
+        // Its jambs' footprint (docs/adr/0341 §1); its source is its definition.
+        Entity::Opening(x) => {
+            let q = &x.opening.place;
+            if q.len() != 4 {
+                return None;
+            }
+            Geometry::Polygon(vec![[q[0], q[2], q[3], q[1], q[0]].into_iter().map(p).collect()])
         }
         // Its plan's rectangle (docs/adr/0207 §11): its points are its files'.
         Entity::PointCloud(x) => {

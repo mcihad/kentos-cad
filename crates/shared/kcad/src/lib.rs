@@ -45,6 +45,7 @@ mod decode;
 mod encode;
 mod error;
 mod header;
+mod opening;
 mod watch;
 
 use kentos_contracts::DocumentSnapshotV2;
@@ -498,11 +499,14 @@ pub const SCHEMA_WITH_WALLS: u32 = 75;
 /// (written only when false), and a wall component's `priority` (on a wall and in a wall style), written only when
 /// the drawing has one; older readers refuse the file instead of losing them.
 pub const SCHEMA_WITH_WALL_JOINS: u32 = 76;
+/// Schema 77 (docs/adr/0341 §1): the opening (`opening`: its wall, its place along it, its width, its jambs and the
+/// rest of its fields), written only when the drawing has one; older readers refuse the file instead of losing them.
+pub const SCHEMA_WITH_OPENINGS: u32 = 77;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 75] = [
+pub const SCHEMAS: [u32; 76] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -578,6 +582,7 @@ pub const SCHEMAS: [u32; 75] = [
     SCHEMA_WITH_SOURCES,
     SCHEMA_WITH_WALLS,
     SCHEMA_WITH_WALL_JOINS,
+    SCHEMA_WITH_OPENINGS,
 ];
 
 /// The file a drawing is saved as.

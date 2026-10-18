@@ -44,6 +44,8 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Wall { .. } => crate::geom::wall::path_of(e)
             .map(|p| entity_grips(&p))
             .unwrap_or_default(),
+        // Its middle: dragged, it slides along its wall (docs/adr/0341 §3).
+        Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             // A closed polyline's closing edge has its middle too (docs/adr/0258 §1).
@@ -319,6 +321,17 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Raster { .. } | Shape::PointCloud { .. } | Shape::Record {} => return None,
         // Moved above by its path.
         Shape::Wall { .. } => return None,
+        // Its jambs move with its middle; the document puts them back on its wall (docs/adr/0341 §3).
+        Shape::Opening { place, at, width, opening } => {
+            let c = crate::geom::opening::centre(place)?;
+            let (dx, dy) = (p.x - c.x, p.y - c.y);
+            Shape::Opening {
+                at: *at,
+                width: *width,
+                place: place.iter().map(|q| Vec2::new(q.x + dx, q.y + dy)).collect(),
+                opening: opening.clone(),
+            }
+        }
         // The lower left corner moves it; another corner scales it about the lower left, its
         // shape kept (docs/adr/0192 §4).
         Shape::Image { .. } => {

@@ -9,7 +9,7 @@
 //! are drawn from the walls); what then does not join is said, with what resolves it.
 
 use kentos_contracts::{
-    CommandResult, Entity, Vec2, WallChange, WallEnd, WallEntity, WallFields, WallJoin, WallJoins,
+    CommandResult, Entity, OpeningEntity, Vec2, WallChange, WallEnd, WallEntity, WallFields, WallJoin, WallJoins,
     WallJustify, WallStyleDef, WallsEdit, WallsEdited, WallsOperation, fixed_width,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -29,8 +29,82 @@ pub const STEP: &str = "Duvarı düzenle";
 struct Work {
     updates: Vec<(Slot, WallEntity)>,
     added: Vec<WallEntity>,
+    /// The wall each added one was split from.
+    origins: Vec<Slot>,
     removed: Vec<Slot>,
     styles: Vec<WallStyleDef>,
+    /// The openings the walls carry (docs/adr/0341 §3): each its slot, itself with its new place along its wall, and
+    /// its wall: an updated one by its slot, or an added one by its place in `added`.
+    openings: Vec<(Slot, OpeningEntity, Carrier)>,
+}
+
+/// The wall an opening goes into.
+#[derive(Clone, Copy)]
+enum Carrier {
+    Kept(Slot),
+    Added(usize),
+}
+
+/// The openings of the walls a path edit changed, each read back from its jambs onto the new base line of its wall,
+/// or of the part of it nearest its jambs (Böl), or of the wall it was joined into (Birleştir): its `at`, and its hand
+/// and side when the part runs the other way. One that falls off its wall's new line breaks (`offWall`) in the step.
+fn carry(doc: &Document, work: &Work) -> Vec<(Slot, OpeningEntity, Carrier)> {
+    use kentos_domain::opening_follow::{WallLine, anchor, wall_line};
+    use kentos_geometry_core::geom::opening::{centre, read_back};
+    use kentos_geometry_core::ops::path::{nearest_s, point_at_s};
+    let line = |w: &WallEntity| wall_line(&Entity::Wall(w.clone()));
+    let kept: Vec<(Slot, Option<WallLine>)> = work.updates.iter().map(|(s, w)| (*s, line(w))).collect();
+    let added: Vec<Option<WallLine>> = work.added.iter().map(line).collect();
+    let mut out = Vec::new();
+    let sources = work.updates.iter().map(|(s, _)| *s).chain(work.removed.iter().copied());
+    for source in sources {
+        let Some(uid) = doc.uid(source).map(|u| u.to_string()) else { continue };
+        let mut cands: Vec<(Carrier, &WallLine)> = Vec::new();
+        match kept.iter().find(|(s, _)| *s == source) {
+            Some((s, l)) => {
+                cands.extend(l.as_ref().map(|l| (Carrier::Kept(*s), l)));
+                for (k, o) in work.origins.iter().enumerate() {
+                    if *o == source {
+                        cands.extend(added[k].as_ref().map(|l| (Carrier::Added(k), l)));
+                    }
+                }
+            }
+            // A wall Birleştir removes: the openings go into the wall it was joined into.
+            None => {
+                if let Some((s, Some(l))) = kept.first() {
+                    cands.push((Carrier::Kept(*s), l));
+                }
+            }
+        }
+        for (slot, o) in doc.openings_of(&uid) {
+            let Some(Entity::Opening(e)) = doc.get(slot) else { continue };
+            let place: Vec<CoreVec2> = o.place.iter().map(|q| CoreVec2::new(q.x, q.y)).collect();
+            let Some(m) = centre(&place) else { continue };
+            let off = |l: &WallLine| {
+                let p = point_at_s(&l.path, nearest_s(&l.path, m));
+                (p.x - m.x).hypot(p.y - m.y)
+            };
+            let Some((carrier, l)) = cands
+                .iter()
+                .min_by(|a, b| off(a.1).total_cmp(&off(b.1)))
+                .copied()
+            else {
+                continue;
+            };
+            let mut next = e.clone();
+            if let Some(r) = read_back(&l.path, &place, anchor(&o), o.width) {
+                next.opening.at = r.at;
+                if r.hand_turned {
+                    next.opening.hand = o.hand.other();
+                }
+                if r.side_turned {
+                    next.opening.side = o.side.other();
+                }
+            }
+            out.push((slot, next, carrier));
+        }
+    }
+    out
 }
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
@@ -404,6 +478,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                         second.base.label_pins.clear();
                         second.base.attachments.clear();
                         work.added.push(checked(second, *at)?);
+                        work.origins.push(*slot);
                     }
                     None => first.wall.joins = WallJoins::default(),
                 }
@@ -582,6 +657,17 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             })?;
         }
     }
+    // The openings go with the walls whose paths changed (docs/adr/0341 §3).
+    if matches!(
+        input.operation,
+        WallsOperation::Split { .. }
+            | WallsOperation::Join
+            | WallsOperation::Extend { .. }
+            | WallsOperation::Trim { .. }
+            | WallsOperation::Flip
+    ) {
+        work.openings = carry(doc, &work);
+    }
     checks::revision(doc, input.expected_revision.as_deref())?;
     // All or none: a wall on a locked layer refuses the whole change.
     for (at, _, e, _) in &found {
@@ -686,6 +772,23 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
             STEP,
         );
         let slots = d.add_many(work.added.iter().cloned().map(Entity::Wall).collect(), STEP)?;
+        // The openings into their walls, an added one's by the id it was just given.
+        let carried: Vec<(Slot, Entity)> = work
+            .openings
+            .iter()
+            .filter_map(|(s, o, c)| {
+                let wall = match c {
+                    Carrier::Kept(w) => *w,
+                    Carrier::Added(k) => *slots.get(*k)?,
+                };
+                let mut o = o.clone();
+                o.opening.host = d.uid(wall)?.to_string();
+                Some((*s, Entity::Opening(o)))
+            })
+            .collect();
+        if !carried.is_empty() {
+            d.update_many(carried, STEP);
+        }
         d.remove(&work.removed);
         Ok::<_, kentos_domain::SlotsExhausted>(slots)
     });

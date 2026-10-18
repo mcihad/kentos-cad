@@ -174,11 +174,13 @@ pub enum SelectKind {
     Image,
     /// Duvar (docs/adr/0339 §6).
     Wall,
+    /// Açıklık: a door, a window or a bare opening (docs/adr/0341 §5).
+    Opening,
 }
 
 impl SelectKind {
     /// Every kind, in the filter's menu's order.
-    pub const ALL: [SelectKind; 18] = [
+    pub const ALL: [SelectKind; 19] = [
         SelectKind::Point,
         SelectKind::Line,
         SelectKind::Polyline,
@@ -197,6 +199,7 @@ impl SelectKind {
         SelectKind::Table,
         SelectKind::Image,
         SelectKind::Wall,
+        SelectKind::Opening,
     ];
 
     /// Its name on the wire, the entity kind's.
@@ -220,6 +223,7 @@ impl SelectKind {
             SelectKind::Table => "table",
             SelectKind::Image => "image",
             SelectKind::Wall => "wall",
+            SelectKind::Opening => "opening",
         }
     }
 }

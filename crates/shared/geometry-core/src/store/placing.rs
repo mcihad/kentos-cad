@@ -125,7 +125,8 @@ enum Kind {
 
 fn kind_of(s: &Shape) -> Option<Kind> {
     Some(match s {
-        Shape::Point { .. } | Shape::Insert { .. } => Kind::Point,
+        // An opening's label at its centre, as a point's (docs/adr/0341 §4).
+        Shape::Point { .. } | Shape::Insert { .. } | Shape::Opening { .. } => Kind::Point,
         Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } | Shape::Wall { .. } => {
             Kind::Line
         }
@@ -839,6 +840,10 @@ impl Store {
                     Kind::Point => {
                         let p = match &it.shape {
                             Shape::Point { p, .. } | Shape::Insert { p, .. } => page.px(*p),
+                            Shape::Opening { place, .. } => match crate::geom::opening::centre(place) {
+                                Some(c) => page.px(c),
+                                None => continue,
+                            },
                             _ => continue,
                         };
                         if cls.point == PointMode::Corner {
@@ -1229,6 +1234,7 @@ impl Store {
                         .chain(parts.iter().flatten().map(|q| q.p))
                         .collect(),
                     Shape::Insert { p, .. } => vec![*p],
+                    Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
                     _ => Vec::new(),
                 };
                 for p in points {

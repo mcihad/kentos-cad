@@ -190,6 +190,13 @@ pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => {
             path(out, 2.0, &[*p])
         }
+        // Its jambs' ring and its symbol (docs/adr/0341 §2).
+        Shape::Opening { place, opening, .. } => {
+            path(out, 1.0, &entity_outline(s, 64.0));
+            for piece in crate::geom::opening::symbol(place, opening) {
+                outline_paths(&piece, out);
+            }
+        }
         Shape::Dimension { .. } => {
             if let Some(l) = dimension_geom(s).and_then(|g| layout_dimension(&g)) {
                 for [a, b] in l.lines {

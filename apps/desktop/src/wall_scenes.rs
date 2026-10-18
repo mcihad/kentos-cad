@@ -29,7 +29,7 @@ use crate::files_testing::make_cad;
 use crate::tools_scenes::{E, N, Objects, click, hover, open_edited, run, typed};
 use crate::tools_screens::Scene;
 
-fn fit(app: &mut App, w: f64, h: f64) {
+pub(crate) fn fit(app: &mut App, w: f64, h: f64) {
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
             min_x: E - 1.5,
@@ -42,7 +42,7 @@ fn fit(app: &mut App, w: f64, h: f64) {
 }
 
 /// A CAD drawing at 1:`scale`, of `objects`.
-fn opened(app: &mut App, objects: Objects, scale: f64) {
+pub(crate) fn opened(app: &mut App, objects: Objects, scale: f64) {
     open_edited(app, objects, |d| {
         d["settings"]["plotScale"] = json!(scale);
     });
@@ -50,7 +50,7 @@ fn opened(app: &mut App, objects: Objects, scale: f64) {
 }
 
 /// Duvar with KentOS's Dış duvar 25 chosen by name.
-fn wall_tool(app: &mut App, style: &str) {
+pub(crate) fn wall_tool(app: &mut App, style: &str) {
     app.command_expanded = true;
     run(app, "tool.wall");
     typed(app, "S");
@@ -158,7 +158,7 @@ fn levels(app: &mut App) {
 }
 
 /// One open wall of `style` from `a` to `b`, drawn with Duvar and written with Enter.
-fn wall_between(app: &mut App, style: &str, a: [f64; 2], b: [f64; 2]) {
+pub(crate) fn wall_between(app: &mut App, style: &str, a: [f64; 2], b: [f64; 2]) {
     wall_tool(app, style);
     click(app, a);
     click(app, b);
@@ -168,7 +168,7 @@ fn wall_between(app: &mut App, style: &str, a: [f64; 2], b: [f64; 2]) {
 
 /// A 7 × 5 m room of four separate walls of Dış duvar 25 meeting at mitred corners (docs/adr/0340 §2), and an inner
 /// wall of İç duvar 15 teeing into both long walls; the walls' cores pass the plaster.
-fn joined_room(app: &mut App, scale: f64) {
+pub(crate) fn joined_room(app: &mut App, scale: f64) {
     opened(app, Objects::new(), scale);
     fit(app, 7.0, 5.0);
     let c = [[0.0, 0.0], [7.0, 0.0], [7.0, 5.0], [0.0, 5.0]];

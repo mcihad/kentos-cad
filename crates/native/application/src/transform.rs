@@ -927,6 +927,9 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             bounds, opacity, ..
         } => bounds.iter().all(|v| v.is_finite()) && opacity.is_none_or(f64::is_finite),
         Shape::Record {} => true,
+        Shape::Opening {
+            at, width, place, ..
+        } => at.is_finite() && width.is_finite() && pts(place),
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,

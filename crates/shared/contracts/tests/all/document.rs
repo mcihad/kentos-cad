@@ -43,6 +43,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Nurbs(_) => "nurbs",
             Entity::Record(_) => "record",
             Entity::Wall(_) => "wall",
+            Entity::Opening(_) => "opening",
         })
         .collect();
     assert_eq!(

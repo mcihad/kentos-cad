@@ -77,6 +77,7 @@ impl Document {
                 Entity::Dimension(d) => d.refs.is_some(),
                 Entity::Text(t) => t.label_of.is_some(),
                 Entity::Hatch(h) => h.assoc.is_some(),
+                Entity::Opening(_) => true,
                 _ => false,
             };
             self.store.linked_to(before.uid).next().is_some()

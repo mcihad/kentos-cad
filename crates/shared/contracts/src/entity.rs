@@ -1750,6 +1750,9 @@ pub enum Entity {
     PointCloud(crate::PointCloudEntity),
     /// A wall (docs/adr/0339): its path, width, justification and components; its faces drawn from them.
     Wall(crate::WallEntity),
+    /// A door, a window or a bare opening in a wall (docs/adr/0341): its wall's id, its place along it and its
+    /// jambs' points.
+    Opening(crate::OpeningEntity),
     /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
     /// attachments and label; not drawn, picked or snapped to.
     Record(RecordEntity),
@@ -1803,6 +1806,7 @@ impl Entity {
             Entity::Spline(e) => &e.base,
             Entity::Nurbs(e) => &e.base,
             Entity::Wall(e) => &e.base,
+            Entity::Opening(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1830,6 +1834,7 @@ impl Entity {
             Entity::Spline(e) => &mut e.base,
             Entity::Nurbs(e) => &mut e.base,
             Entity::Wall(e) => &mut e.base,
+            Entity::Opening(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1857,6 +1862,7 @@ impl Entity {
             Entity::Spline(_) => "spline",
             Entity::Nurbs(_) => "nurbs",
             Entity::Wall(_) => "wall",
+            Entity::Opening(_) => "opening",
             Entity::Xline(_) => "xline",
             Entity::Ray(_) => "ray",
             Entity::Text(_) => "text",

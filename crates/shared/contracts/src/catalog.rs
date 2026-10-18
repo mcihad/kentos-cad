@@ -2240,6 +2240,102 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kapı, Pencere, Boşluk and Açıklığı düzenle (docs/adr/0341 §4), held together by
+        // fixtures/commands/v1/cad.openings.{create,edit}.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_OPENINGS_CREATE.into(),
+            version: crate::CAD_OPENINGS_CREATE_VERSION,
+            title: "Açıklık ekle".into(),
+            summary: "Duvarlara kapı, pencere ya da boşluk koyar; tek geri alma adımı, ilkinin biçimiyle “Kapı”, “Pencere” ya da “Boşluk”. \
+                      Her açıklık duvarıyla (host: kalıcı kimliği) ve yeriyle verilir: at (duvarın taban çizgisi boyunca başından açıklığın ortasına, m), ya da point (duvarın yanında bir nokta: ortası taban çizgisinin ona en yakın yerinde), ya da point ile distance ve from (açıklığın yakın pervazı duvarın o ucundan, köşeden distance m; from start, end ya da near: noktaya yakın uç), ya da point ile middle (noktanın yanındaki kenarın ortası). \
+                      type KentOS'un açıklık türüdür (kimliği ya da adı: Kapı 90, Kapı 80, İki kanatlı kapı 140, Sürme kapı 160, Pencere 120, Sabit pencere 100, Boşluk 100); verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı, derece) ve number türün değerlerinin üstüne yazılır. \
+                      Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OpeningsCreate>(),
+            output: schema::<crate::OpeningsCreated>(),
+            plan: Some(schema::<crate::OpeningsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Duvarın başından 1,5 m'de 90'lık bir kapı, odaya doğru açılan".into(),
+                    input: json!({
+                        "layerId": "kapi",
+                        "openings": [{
+                            "host": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "at": 1.5,
+                            "type": "Kapı 90",
+                            "side": "left",
+                            "number": "K1"
+                        }]
+                    }),
+                    output: Some(json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "ids": [14],
+                        "revision": "39"
+                    })),
+                },
+                CommandExample {
+                    title: "Tıklanan yerin yakın köşesinden 40 cm'de bir pencere".into(),
+                    input: json!({
+                        "layerId": "pencere",
+                        "openings": [{
+                            "host": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "point": { "x": 5.2, "y": 0.4 },
+                            "distance": 0.4,
+                            "type": "kentos-pencere-120"
+                        }]
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_OPENINGS_EDIT.into(),
+            version: crate::CAD_OPENINGS_EDIT_VERSION,
+            title: "Açıklığı düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. \
+                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). \
+                      Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OpeningsEdit>(),
+            output: schema::<crate::OpeningsEdited>(),
+            plan: Some(schema::<crate::OpeningsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapının açılışını öbür yana çevir".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "operation": { "kind": "flip", "what": "side" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bütün kapıları K1'den numarala".into(),
+                    input: json!({
+                        "operation": { "kind": "renumber", "prefix": "K", "start": 1, "form": "door" }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -6697,6 +6793,12 @@ mod tests {
                     crate::CAD_WALLS_JOINS => {
                         serde_json::from_value::<crate::WallsJoins>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_OPENINGS_CREATE => {
+                        serde_json::from_value::<crate::OpeningsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_OPENINGS_EDIT => {
+                        serde_json::from_value::<crate::OpeningsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -7447,6 +7549,12 @@ mod tests {
                         }
                         crate::CAD_WALLS_JOINS => {
                             serde_json::from_value::<crate::WallsJoined>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_OPENINGS_CREATE => {
+                            serde_json::from_value::<crate::OpeningsCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_OPENINGS_EDIT => {
+                            serde_json::from_value::<crate::OpeningsEdited>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

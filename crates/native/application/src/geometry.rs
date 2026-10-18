@@ -757,6 +757,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::PointCloud(c) => core_cloud(&c.cloud),
         Entity::Record(_) => Shape::Record {},
         Entity::Wall(w) => kentos_formats::walls::core_wall(&w.wall),
+        Entity::Opening(o) => kentos_formats::openings::core_opening(&o.opening),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1293,6 +1294,12 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Raster(e), s @ Shape::Raster { .. }) => e.raster = contract_raster(s)?,
         (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => e.cloud = contract_cloud(s)?,
         (Entity::Wall(e), s @ Shape::Wall { .. }) => e.wall = kentos_formats::walls::contract_wall(&s)?,
+        // An opening's place along its wall, its width and its jambs (docs/adr/0341 §1); the rest is its own.
+        (Entity::Opening(e), Shape::Opening { at, width, place, .. }) => {
+            e.opening.at = at;
+            e.opening.width = width;
+            e.opening.place = place.iter().map(|q| Point { x: q.x, y: q.y }).collect();
+        }
         _ => return None,
     }
     Some(out)
@@ -1944,8 +1951,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
         s @ Shape::Wall { .. } => EntityGeometry::Wall(kentos_formats::walls::contract_wall(&s)?),
-        // A record has no geometry to edit (docs/adr/0410).
-        Shape::Record {} => return None,
+        // A record has no geometry to edit (docs/adr/0410); an opening is edited by its own command (docs/adr/0341).
+        Shape::Record {} | Shape::Opening { .. } => return None,
     })
 }
 

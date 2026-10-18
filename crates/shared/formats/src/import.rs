@@ -82,6 +82,7 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::PointCloud(e) => crate::blocks::cloud_corners(e).iter().for_each(&mut add),
         Entity::Record(_) => {}
         Entity::Wall(e) => e.wall.pts.iter().for_each(&mut add),
+        Entity::Opening(e) => e.opening.place.iter().for_each(&mut add),
     }
     b
 }

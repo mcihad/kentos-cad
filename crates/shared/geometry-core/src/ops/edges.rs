@@ -70,6 +70,11 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Record {} => Vec::new(),
         // Its faces and caps (docs/adr/0339 §1).
         Shape::Wall { .. } => crate::geom::wall::outline_edges(e),
+        // Its symbol's pieces' (docs/adr/0341 §2).
+        Shape::Opening { place, opening, .. } => crate::geom::opening::symbol(place, opening)
+            .iter()
+            .flat_map(entity_edges)
+            .collect(),
         // The lines it draws (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::lines_of(e)
             .into_iter()

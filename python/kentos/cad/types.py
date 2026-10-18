@@ -2154,6 +2154,126 @@ ObstacleKindName = Literal["interior", "boundary"]
 """The names of :class:`ObstacleKind`, for a plain string."""
 
 
+class OpeningAnchor(_StrEnum):
+    """Which point of the opening `at` names, along its wall's base line.
+
+    - ``center``
+    - ``start``: Its jamb nearer the wall's start.
+    - ``end``: Its jamb nearer the wall's end.
+    """
+    CENTER = "center"
+    START = "start"
+    END = "end"
+
+
+OpeningAnchorName = Literal["center", "start", "end"]
+"""The names of :class:`OpeningAnchor`, for a plain string."""
+
+
+class OpeningBreak(_StrEnum):
+    """Why an opening is not where its wall says (docs/adr/0341 §3): it stays, drawn from its jambs, until it is fixed.
+
+    - ``hostGone``: Its wall is gone, or is no wall.
+    - ``offWall``: It runs past its wall's end or round one of its corners.
+    - ``overlap``: It runs into another opening of its wall.
+    """
+    HOST_GONE = "hostGone"
+    OFF_WALL = "offWall"
+    OVERLAP = "overlap"
+
+
+OpeningBreakName = Literal["hostGone", "offWall", "overlap"]
+"""The names of :class:`OpeningBreak`, for a plain string."""
+
+
+class OpeningFlip(_StrEnum):
+    """What `cad.openings.flip` turns.
+
+    - ``both``
+    - ``side``: The side it opens to.
+    - ``hand``: Its hinge's end.
+    """
+    BOTH = "both"
+    SIDE = "side"
+    HAND = "hand"
+
+
+OpeningFlipName = Literal["both", "side", "hand"]
+"""The names of :class:`OpeningFlip`, for a plain string."""
+
+
+class OpeningForm(_StrEnum):
+    """What an opening is.
+
+    - ``door``: Kapı.
+    - ``window``: Pencere.
+    - ``opening``: Boşluk: a gap in the wall and nothing in it.
+    """
+    DOOR = "door"
+    WINDOW = "window"
+    OPENING = "opening"
+
+
+OpeningFormName = Literal["door", "window", "opening"]
+"""The names of :class:`OpeningForm`, for a plain string."""
+
+
+class OpeningFrom(_StrEnum):
+    """Where along its wall a new opening goes, measured from.
+
+    - ``start``
+    - ``end``
+    - ``near``: The wall's end nearer the point given.
+    """
+    START = "start"
+    END = "end"
+    NEAR = "near"
+
+
+OpeningFromName = Literal["start", "end", "near"]
+"""The names of :class:`OpeningFrom`, for a plain string."""
+
+
+class OpeningHand(_StrEnum):
+    """An end of the opening along its wall: where its hinge is.
+
+    - ``end``
+    - ``start``: At its jamb nearer the wall's start.
+    """
+    END = "end"
+    START = "start"
+
+
+OpeningHandName = Literal["end", "start"]
+"""The names of :class:`OpeningHand`, for a plain string."""
+
+
+class OpeningOperation(_StrEnum):
+    """How its leaves move.
+
+    - ``swing``: Kanatlı: about a hinge.
+    - ``slide``: Sürme: along the wall.
+    - ``fixed``: Sabit: it does not open.
+    """
+    SWING = "swing"
+    SLIDE = "slide"
+    FIXED = "fixed"
+
+
+OpeningOperationName = Literal["swing", "slide", "fixed"]
+"""The names of :class:`OpeningOperation`, for a plain string."""
+
+
+class OpeningSide(_StrEnum):
+    """A side of its wall's base line: where its leaves open to."""
+    LEFT = "left"
+    RIGHT = "right"
+
+
+OpeningSideName = Literal["left", "right"]
+"""The names of :class:`OpeningSide`, for a plain string."""
+
+
 class OrderTo(_StrEnum):
     """Where the objects go.
 
@@ -2678,6 +2798,7 @@ class SelectKind(_StrEnum):
     - ``table``
     - ``image``
     - ``wall``: Duvar (docs/adr/0339 §6).
+    - ``opening``: Açıklık: a door, a window or a bare opening (docs/adr/0341 §5).
     """
     POINT = "point"
     LINE = "line"
@@ -2697,9 +2818,10 @@ class SelectKind(_StrEnum):
     TABLE = "table"
     IMAGE = "image"
     WALL = "wall"
+    OPENING = "opening"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall", "opening"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -3852,6 +3974,7 @@ class Entity(_Union):
     - :class:`RasterEntity` (``kind: raster``)
     - :class:`PointcloudEntity` (``kind: pointcloud``)
     - :class:`WallEntity` (``kind: wall``)
+    - :class:`OpeningEntity` (``kind: opening``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -4360,6 +4483,32 @@ class OffsetBy(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> OffsetBy:
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
+
+
+class OpeningsOperation(_Union):
+    """What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
+
+    One of:
+
+    - :class:`SetOpeningsOperation` (``kind: set``)
+    - :class:`MoveOpeningsOperation` (``kind: move``)
+    - :class:`FlipOpeningsOperation` (``kind: flip``)
+    - :class:`RehostOpeningsOperation` (``kind: rehost``)
+    - :class:`ReplaceTypeOpeningsOperation` (``kind: replaceType``)
+    - :class:`RenumberOpeningsOperation` (``kind: renumber``)
+    - :class:`CopyOpeningsOperation` (``kind: copy``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsOperation:
+        return _variant(_OPENINGS_OPERATION, "OpeningsOperation", "kind", data).from_json(data)
 
 
 class ParameterEdit(_Union):
@@ -22181,6 +22330,96 @@ class NewObject(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewOpening(_Model):
+    """One opening to put in a wall.
+    Attributes:
+        host: The wall's persistent id.
+        at: Its centre's distance along the wall's base line from its start. Absent: from `point`. Unit: length.
+        distance: With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe). Unit: length.
+        form: Over the type's: a door, a window or a bare opening.
+        leaves: Unit: count.
+        middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
+        point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
+        side: The side it opens to. Absent: the side `point` is on, else the left.
+        swing: Unit: deg.
+        type: An opening type by its id or name (KentOS's own). Absent: the form's first.
+        width: Over the type's: the rough opening, metres. Unit: length.
+    """
+    host: str
+    at: float | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    distance: float | None | Unset = UNSET
+    form: OpeningForm | OpeningFormName | None | Unset = UNSET
+    from_: OpeningFrom | OpeningFromName | None | Unset = UNSET
+    hand: OpeningHand | OpeningHandName | None | Unset = UNSET
+    leaves: int | None | Unset = UNSET
+    middle: bool | Unset = UNSET
+    number: str | None | Unset = UNSET
+    operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
+    point: Vec2 | None | Unset = UNSET
+    side: OpeningSide | OpeningSideName | None | Unset = UNSET
+    swing: float | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["host"] = self.host
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else float(self.at)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else _enum_out(self.from_)
+        if self.hand is not UNSET:
+            out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.leaves is not UNSET:
+            out["leaves"] = self.leaves
+        if self.middle is not UNSET:
+            out["middle"] = self.middle
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.operation is not UNSET:
+            out["operation"] = None if self.operation is None else _enum_out(self.operation)
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else _vec2_out(self.point)
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.swing is not UNSET:
+            out["swing"] = None if self.swing is None else float(self.swing)
+        if self.type is not UNSET:
+            out["type"] = self.type
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewOpening:
+        return cls(
+            host=data["host"],
+            at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
+            from_=UNSET if "from" not in data else None if data["from"] is None else _enum_in(OpeningFrom, data["from"]),
+            hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
+            leaves=data.get("leaves", UNSET),
+            middle=data.get("middle", UNSET),
+            number=data.get("number", UNSET),
+            operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
+            point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
+            swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            type=data.get("type", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewWall(_Model):
     """One wall to write: its path as drawn and what the user chose for it.
     Attributes:
@@ -22613,6 +22852,345 @@ class ObjectEnd(_Model):
             uid=data["uid"],
             place=SubPlace.from_json(data["place"]),
             path=list(data["path"]) if "path" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningEntity(Entity):
+    """An opening in a wall (docs/adr/0341).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        host: Its wall's persistent id.
+        at: The distance along its wall's base line, from its start, to its `anchor`. Unit: length.
+        width: The rough opening in the wall, jamb to jamb, metres. Unit: length.
+        place: Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its
+            wall by the document. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        broken: Why it is not where its wall says; absent: it is.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        frame: Its frame's width at each jamb, along the wall, metres. Absent: none. Unit: length.
+        hand: Its hinge's end. Absent: its start.
+        head: Its head's height above the floor, metres. Unit: elevation.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        leaves: Its leaves, 1 or 2. Absent: 1. Unit: count.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        number: Its mark (K1, P3).
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        show_swing: The swing's arc is drawn. Absent: it is.
+        side: The side it opens to. Absent: the path's left.
+        sill: Its sill's height above the floor, metres. Unit: elevation.
+        style: The opening type it was made with, by its id (`builtin_opening_types`).
+        swing: How far a leaf swings open, degrees, above 0, at most 180. Absent: 90. Unit: deg.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "opening"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    host: str
+    at: float
+    width: float
+    place: list[Vec2]
+    anchor: OpeningAnchor | OpeningAnchorName | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    broken: OpeningBreak | OpeningBreakName | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    form: OpeningForm | OpeningFormName = OpeningForm.DOOR
+    frame: float | None | Unset = UNSET
+    hand: OpeningHand | OpeningHandName | Unset = UNSET
+    head: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    leaves: int | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    operation: OpeningOperation | OpeningOperationName | Unset = UNSET
+    order: int | None | Unset = UNSET
+    show_swing: bool | Unset = UNSET
+    side: OpeningSide | OpeningSideName | Unset = UNSET
+    sill: float | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    swing: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "opening"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["host"] = self.host
+        out["at"] = float(self.at)
+        out["width"] = float(self.width)
+        out["place"] = [_vec2_out(e0) for e0 in self.place]
+        if self.anchor is not UNSET:
+            out["anchor"] = _enum_out(self.anchor)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        out["form"] = _enum_out(self.form)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.hand is not UNSET:
+            out["hand"] = _enum_out(self.hand)
+        if self.head is not UNSET:
+            out["head"] = None if self.head is None else float(self.head)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.leaves is not UNSET:
+            out["leaves"] = self.leaves
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.operation is not UNSET:
+            out["operation"] = _enum_out(self.operation)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.show_swing is not UNSET:
+            out["showSwing"] = self.show_swing
+        if self.side is not UNSET:
+            out["side"] = _enum_out(self.side)
+        if self.sill is not UNSET:
+            out["sill"] = None if self.sill is None else float(self.sill)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.swing is not UNSET:
+            out["swing"] = None if self.swing is None else float(self.swing)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            host=data["host"],
+            at=float(data["at"]),
+            width=float(data["width"]),
+            place=[Vec2.from_json(e0) for e0 in data["place"]],
+            anchor=_enum_in(OpeningAnchor, data["anchor"]) if "anchor" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(OpeningBreak, data["broken"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            form=_enum_in(OpeningForm, data["form"]) if "form" in data else OpeningForm.DOOR,
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            hand=_enum_in(OpeningHand, data["hand"]) if "hand" in data else UNSET,
+            head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            leaves=data.get("leaves", UNSET),
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            number=data.get("number", UNSET),
+            operation=_enum_in(OpeningOperation, data["operation"]) if "operation" in data else UNSET,
+            order=data.get("order", UNSET),
+            show_swing=data.get("showSwing", UNSET),
+            side=_enum_in(OpeningSide, data["side"]) if "side" in data else UNSET,
+            sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
+            style=data.get("style", UNSET),
+            swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsCreate(_Model):
+    """Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step
+    (“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the
+    values chosen (TODOS.md CMD-07).
+
+    Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
+    with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
+    nearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
+    `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
+    `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        layer_id: The layer they go on: a layer's id, not a group's.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    openings: list[NewOpening]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            openings=[NewOpening.from_json(e0) for e0 in data["openings"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsCreated(_Model):
+    """Output of `cad.openings.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsEdit(_Model):
+    """Input of `cad.openings.edit` v1: openings named by their persistent ids changed as one undo step “Açıklığı
+    düzenle”, all or none. An opening that would run off its wall or into another: nothing is written.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
+    `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
+    `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
+    """
+    operation: OpeningsOperation
+    expected_revision: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsEdit:
+        return cls(
+            operation=OpeningsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsEdited(_Model):
+    """Output of `cad.openings.edit` v1 (its plan's too: the openings as they would be, nothing written).
+    Attributes:
+        openings: The openings as written, in their order.
+        added: The new openings (Kopyala).
+    """
+    openings: list[Entity]
+    revision: str
+    added: list[Entity] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsEdited:
+        return cls(
+            openings=[Entity.from_json(e0) for e0 in data["openings"]],
+            revision=data["revision"],
+            added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsPlan(_Model):
+    """What `cad.openings.create` would write (plan mode).
+    Attributes:
+        openings: The openings as they would be stored, their `id` 0.
+    """
+    openings: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsPlan:
+        return cls(
+            openings=[Entity.from_json(e0) for e0 in data["openings"]],
+            revision=data["revision"],
         )
 
 
@@ -38177,6 +38755,223 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetOpeningsOperation(OpeningsOperation):
+    """Değiştir: the fields given, on every opening named.
+    Attributes:
+        frame: Metres; null: no frame. Unit: length.
+        head: Unit: elevation.
+        leaves: Unit: count.
+        number: Its mark; null: none.
+        sill: Unit: elevation.
+        swing: Degrees; null: 90. Unit: deg.
+        width: The rough opening, metres; it grows about its anchor. Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    form: OpeningForm | OpeningFormName | None | Unset = UNSET
+    frame: float | None | Unset = UNSET
+    hand: OpeningHand | OpeningHandName | None | Unset = UNSET
+    head: float | None | Unset = UNSET
+    leaves: int | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
+    show_swing: bool | None | Unset = UNSET
+    side: OpeningSide | OpeningSideName | None | Unset = UNSET
+    sill: float | None | Unset = UNSET
+    swing: float | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.hand is not UNSET:
+            out["hand"] = None if self.hand is None else _enum_out(self.hand)
+        if self.head is not UNSET:
+            out["head"] = None if self.head is None else float(self.head)
+        if self.leaves is not UNSET:
+            out["leaves"] = self.leaves
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.operation is not UNSET:
+            out["operation"] = None if self.operation is None else _enum_out(self.operation)
+        if self.show_swing is not UNSET:
+            out["showSwing"] = self.show_swing
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.sill is not UNSET:
+            out["sill"] = None if self.sill is None else float(self.sill)
+        if self.swing is not UNSET:
+            out["swing"] = None if self.swing is None else float(self.swing)
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetOpeningsOperation:
+        return cls(
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
+            head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            leaves=data.get("leaves", UNSET),
+            number=data.get("number", UNSET),
+            operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
+            show_swing=data.get("showSwing", UNSET),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
+            sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
+            swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MoveOpeningsOperation(OpeningsOperation):
+    """Taşı: along its wall by `by` (toward its end positive), or its anchor to `at`.
+    Attributes:
+        at: Unit: length.
+        by: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "move"
+    at: float | None | Unset = UNSET
+    by: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "move"}
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else float(self.at)
+        if self.by is not UNSET:
+            out["by"] = None if self.by is None else float(self.by)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MoveOpeningsOperation:
+        return cls(
+            at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
+            by=UNSET if "by" not in data else None if data["by"] is None else float(data["by"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FlipOpeningsOperation(OpeningsOperation):
+    """Çevir: the side it opens to, its hinge's end, or both."""
+    TAG_VALUE: ClassVar[str] = "flip"
+    what: OpeningFlip | OpeningFlipName = OpeningFlip.SIDE
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "flip"}
+        out["what"] = _enum_out(self.what)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FlipOpeningsOperation:
+        return cls(
+            what=_enum_in(OpeningFlip, data["what"]) if "what" in data else OpeningFlip.SIDE,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RehostOpeningsOperation(OpeningsOperation):
+    """Başka duvara: each opening into the wall `to` (its persistent id), centred where the wall's base line passes
+    nearest `point`, else nearest its jambs' middle.
+    Attributes:
+        point: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rehost"
+    to: str
+    point: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rehost"}
+        out["to"] = self.to
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else _vec2_out(self.point)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RehostOpeningsOperation:
+        return cls(
+            to=data["to"],
+            point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReplaceTypeOpeningsOperation(OpeningsOperation):
+    """Türü değiştir: the type `to` (its id or name) for the openings named, or with no ids every opening of type
+    `from`.
+    """
+    TAG_VALUE: ClassVar[str] = "replaceType"
+    to: str
+    from_: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "replaceType"}
+        out["to"] = self.to
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReplaceTypeOpeningsOperation:
+        return cls(
+            to=data["to"],
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenumberOpeningsOperation(OpeningsOperation):
+    """Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
+    opening of the form `form` (all forms: absent).
+    Attributes:
+        start: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "renumber"
+    form: OpeningForm | OpeningFormName | None | Unset = UNSET
+    prefix: str = ""
+    start: int = 1
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "renumber"}
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        out["prefix"] = self.prefix
+        out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenumberOpeningsOperation:
+        return cls(
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
+            prefix=data["prefix"] if "prefix" in data else "",
+            start=data["start"] if "start" in data else 1,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CopyOpeningsOperation(OpeningsOperation):
+    """Kopyala: a copy of each opening along its wall at each offset (toward its end positive).
+    Attributes:
+        offsets: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "copy"
+    offsets: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "copy"}
+        out["offsets"] = [float(e0) for e0 in self.offsets]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CopyOpeningsOperation:
+        return cls(
+            offsets=[float(e0) for e0 in data["offsets"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddParameterEdit(ParameterEdit):
     """A user parameter: its name, kind, expression and optional range and description."""
     TAG_VALUE: ClassVar[str] = "add"
@@ -41009,7 +41804,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -41067,6 +41862,9 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 
 
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
+
+
+_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "copy": CopyOpeningsOperation}
 
 
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
@@ -41383,6 +42181,7 @@ __all__ = [
     "Convention",
     "ConventionName",
     "CoordinatesTableSource",
+    "CopyOpeningsOperation",
     "CornerHatchOrigin",
     "CornerPick",
     "CornersRectangleFrame",
@@ -41623,6 +42422,7 @@ __all__ = [
     "FlipBlockAction",
     "FlipBlockParameter",
     "FlipConstraintEdit",
+    "FlipOpeningsOperation",
     "FlipWallsOperation",
     "FontMatch",
     "FontMatchName",
@@ -41932,6 +42732,7 @@ __all__ = [
     "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
+    "MoveOpeningsOperation",
     "MoveTextDimensionEdit",
     "MoveTransform",
     "NamedFont",
@@ -41954,6 +42755,7 @@ __all__ = [
     "NetworkLayer",
     "NewConstraint",
     "NewObject",
+    "NewOpening",
     "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
@@ -41980,6 +42782,29 @@ __all__ = [
     "ObstacleKindName",
     "OffsetBy",
     "OpenCurveEdit",
+    "OpeningAnchor",
+    "OpeningAnchorName",
+    "OpeningBreak",
+    "OpeningBreakName",
+    "OpeningEntity",
+    "OpeningFlip",
+    "OpeningFlipName",
+    "OpeningForm",
+    "OpeningFormName",
+    "OpeningFrom",
+    "OpeningFromName",
+    "OpeningHand",
+    "OpeningHandName",
+    "OpeningOperation",
+    "OpeningOperationName",
+    "OpeningSide",
+    "OpeningSideName",
+    "OpeningsCreate",
+    "OpeningsCreated",
+    "OpeningsEdit",
+    "OpeningsEdited",
+    "OpeningsOperation",
+    "OpeningsPlan",
     "OptionsDimensionEdit",
     "OrderTo",
     "OrderToName",
@@ -42156,6 +42981,7 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RehostOpeningsOperation",
     "RelatePredicate",
     "RelatePredicateName",
     "RelatedFormItem",
@@ -42185,10 +43011,12 @@ __all__ = [
     "RenameParameterEdit",
     "RenameViewsOp",
     "RenamedBlock",
+    "RenumberOpeningsOperation",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ReplaceStyleWallsOperation",
     "ReplaceTextEdit",
+    "ReplaceTypeOpeningsOperation",
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
@@ -42234,6 +43062,7 @@ __all__ = [
     "ServiceLayer",
     "ServiceParam",
     "SetCellTableEdit",
+    "SetOpeningsOperation",
     "SetParameterEdit",
     "SetWallsOperation",
     "SettingsChanged",

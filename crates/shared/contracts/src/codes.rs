@@ -1198,7 +1198,7 @@ codes! {
     /// A wall that does not reach, or does not cross, the other wall's path.
     WALL_MISSES = "wall_misses", Failed, false, "Duvar diğer duvarın yoluna varmıyor: uzatınca ona ulaşmıyor ya da onu kesmiyor.";
     /// A style no wall named has.
-    STYLE_NOT_USED = "style_not_used", Failed, false, "Verilen duvarların hiçbiri bu stilde değil.";
+    STYLE_NOT_USED = "style_not_used", Failed, false, "Verilen nesnelerin hiçbiri bu stilde ya da türde değil.";
     /// Walls that meet running the same way, not joined.
     WALL_JOIN_OVERLAP = "wall_join_overlap", Warning, false, "İki duvar aynı doğrultuda üst üste geliyor; birleştirilmedi. Birinin ucunu Yok yapın ya da Birleştir ile tek duvar yapın.";
     /// More than two ends meeting with no two along one line, not joined.
@@ -1208,7 +1208,18 @@ codes! {
     /// A joint whose lines could not be cut, not joined.
     WALL_JOIN_UNRESOLVED = "wall_join_unresolved", Warning, false, "Birleşimin çizgileri kesilemedi: duvar birleşimden kısa ya da diğer duvar birleşimden önce bitiyor.";
     /// A wall made plain lines and hatches: what it was is lost.
-    SEMANTICS_LOST = "semantics_lost", Warning, false, "Duvar düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor.";
+    SEMANTICS_LOST = "semantics_lost", Warning, false, "Duvar ya da açıklık düz parçalar oldu: stili, türü, bileşenleri, katı, yükseklikleri, numarası ve bağları artık taşınmıyor.";
+    // ── Openings (docs/adr/0341) ────────────────────────────────────────
+    /// An object an opening command was given that is no opening.
+    NOT_AN_OPENING = "not_an_opening", Failed, false, "Nesne kapı, pencere ya da boşluk değil.";
+    /// An opening's fields that make none.
+    INVALID_OPENING = "invalid_opening", Failed, false, "Açıklığın alanları bir açıklık tanımlamıyor: genişlik sıfırdan büyük, kanat 1 ya da 2, açı 0'dan büyük ve en çok 180°, kasa açıklığın yarısından dar.";
+    /// An opening past its wall's end or round its corner.
+    OPENING_OFF_WALL = "opening_off_wall", Failed, false, "Açıklık duvarın ucundan ya da köşesinden taşıyor: duvarın tek bir kenarında, uçlarının arasında kalmalı. Açıklığı kaydırın ya da daraltın.";
+    /// Two openings of one wall running into each other.
+    OPENINGS_OVERLAP = "openings_overlap", Failed, false, "Açıklık aynı duvardaki başka bir açıklığa biniyor. Açıklığı kaydırın ya da daraltın.";
+    /// An opening whose wall is gone, moved along a wall it has not.
+    OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

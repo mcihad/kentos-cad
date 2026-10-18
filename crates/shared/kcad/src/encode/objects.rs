@@ -502,6 +502,22 @@ impl<'d> Encoder<'d> {
                     f.push(("cleanup", Val::Bool(false)));
                 }
             }
+            // An opening (docs/adr/0341 §1): written only when it is one.
+            Entity::Opening(e) => {
+                let o = &e.opening;
+                if let Some((_, problem)) = o.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("host", Val::Text(&o.host)));
+                f.push(("at", Val::Float(o.at)));
+                f.push(("width", Val::Float(o.width)));
+                f.push(("place", Val::Points(&o.place)));
+                f.push((
+                    "opening",
+                    Val::Json(serde_json::to_value(crate::opening::OpeningRest::of(o)).unwrap_or_default()),
+                ));
+            }
             Entity::Text(e) => {
                 f.push(("p", Val::Point(&e.p)));
                 f.push(("text", Val::Text(&e.text)));

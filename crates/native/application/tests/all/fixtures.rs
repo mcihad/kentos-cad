@@ -43,7 +43,7 @@ use kentos_native_application::{
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
     set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
@@ -639,6 +639,56 @@ impl Input for kentos_domain::contracts::WallsFromLines {
             "width" => self.width.as_mut(),
             "maxWidth" => self.max_width.as_mut(),
             "angle" => self.angle.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::OpeningsCreate {
+    /// `openings[0].at`, `.distance`, `.width`, `.swing`, `.point.x` and `.y`, `lineWeight` (docs/adr/0341).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("openings[")?.split_once("].")?;
+        let o = self.openings.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "at" => o.at.as_mut(),
+            "distance" => o.distance.as_mut(),
+            "width" => o.width.as_mut(),
+            "swing" => o.swing.as_mut(),
+            "point.x" => o.point.as_mut().map(|p| &mut p.x),
+            "point.y" => o.point.as_mut().map(|p| &mut p.y),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::OpeningsEdit {
+    /// Değiştir's `operation.width`, `.swing`, `.frame`, `.sill`, `.head`; Taşı's `operation.by` and `.at`; Başka
+    /// duvara's `operation.point.x` and `.y`; Kopyala's `operation.offsets[k]` (docs/adr/0341).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::OpeningsOperation as Op;
+        match &mut self.operation {
+            Op::Set(c) => match path {
+                "operation.width" => c.width.as_mut(),
+                "operation.swing" => c.swing.as_mut()?.as_mut(),
+                "operation.frame" => c.frame.as_mut()?.as_mut(),
+                "operation.sill" => c.sill.as_mut()?.as_mut(),
+                "operation.head" => c.head.as_mut()?.as_mut(),
+                _ => None,
+            },
+            Op::Move { by, at } => match path {
+                "operation.by" => by.as_mut(),
+                "operation.at" => at.as_mut(),
+                _ => None,
+            },
+            Op::Rehost { point, .. } => match path {
+                "operation.point.x" => point.as_mut().map(|p| &mut p.x),
+                "operation.point.y" => point.as_mut().map(|p| &mut p.y),
+                _ => None,
+            },
+            Op::Copy { offsets } => list_number(offsets, "operation.offsets", path),
             _ => None,
         }
     }
@@ -2543,6 +2593,12 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_WALLS_JOINS => {
             run!(walls_joins, kentos_domain::contracts::WallsJoins)
+        }
+        kentos_domain::contracts::CAD_OPENINGS_CREATE => {
+            run!(openings_create, kentos_domain::contracts::OpeningsCreate)
+        }
+        kentos_domain::contracts::CAD_OPENINGS_EDIT => {
+            run!(openings_edit, kentos_domain::contracts::OpeningsEdit)
         }
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
         kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),

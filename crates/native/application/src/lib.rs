@@ -182,6 +182,9 @@ pub mod network_define;
 pub mod nurbs;
 pub mod walls;
 pub mod walls_create;
+pub(crate) mod openings;
+pub mod openings_create;
+pub mod openings_edit;
 pub mod walls_edit;
 pub mod walls_joins;
 pub mod walls_from_lines;
@@ -427,6 +430,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // Kapı, Pencere, Boşluk and Açıklığı düzenle ([`openings_create`], [`openings_edit`], docs/adr/0341).
+    (
+        kentos_contracts::CAD_OPENINGS_CREATE,
+        kentos_contracts::CAD_OPENINGS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_OPENINGS_EDIT,
+        kentos_contracts::CAD_OPENINGS_EDIT_VERSION,
     ),
     // Duvar, Çizgiden duvar, Duvarı düzenle and Duvar birleşimleri ([`walls_create`], [`walls_from_lines`], [`walls_edit`],
     // [`walls_joins`], docs/adr/0339, 0340).

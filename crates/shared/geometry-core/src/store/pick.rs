@@ -200,13 +200,15 @@ impl Store {
             .near(p, tol)
             .into_iter()
             .filter(|it| {
-                // A wall's faces are its pieces, no edge an edge tool acts on (docs/adr/0339 §1).
+                // A wall's faces are its pieces, no edge an edge tool acts on (docs/adr/0339 §1); an opening's symbol
+                // likewise (docs/adr/0341 §2).
                 !matches!(
                     it.shape,
                     Shape::Point { .. }
                         | Shape::Text { .. }
                         | Shape::Insert { .. }
                         | Shape::Wall { .. }
+                        | Shape::Opening { .. }
                 )
             })
             .map(|it| (it.id, edge_distance(&it.shape, p, self.font)))

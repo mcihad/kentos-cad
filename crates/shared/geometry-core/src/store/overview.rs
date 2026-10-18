@@ -392,6 +392,12 @@ impl Canvas {
             // A cloud's plan, filled (docs/adr/0207 §6).
             Shape::PointCloud { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
             Shape::Record {} => {}
+            // Its symbol's lines (docs/adr/0341).
+            Shape::Opening { place, opening, .. } => {
+                for piece in crate::geom::opening::symbol(place, opening) {
+                    self.shape(&piece, c);
+                }
+            }
             // Its body, filled (docs/adr/0339).
             Shape::Wall { pts, bulges, wall } => {
                 if let Ok((ring, holes)) = crate::geom::wall::body(pts, bulges.as_deref(), wall) {

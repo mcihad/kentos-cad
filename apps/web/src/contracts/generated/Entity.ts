@@ -10,6 +10,7 @@ import type { InsertEntity } from "./InsertEntity";
 import type { LeaderEntity } from "./LeaderEntity";
 import type { LineEntity } from "./LineEntity";
 import type { NurbsEntity } from "./NurbsEntity";
+import type { OpeningEntity } from "./OpeningEntity";
 import type { PathEntity } from "./PathEntity";
 import type { PointCloudEntity } from "./PointCloudEntity";
 import type { PointEntity } from "./PointEntity";
@@ -23,4 +24,4 @@ import type { WallEntity } from "./WallEntity";
 /**
  * Any drawing object, tagged by `kind` as in the TypeScript model.
  */
-export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "nurbs" } & NurbsEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity | { "kind": "leader" } & LeaderEntity | { "kind": "table" } & TableEntity | { "kind": "image" } & ImageEntity | { "kind": "raster" } & RasterEntity | { "kind": "pointcloud" } & PointCloudEntity | { "kind": "wall" } & WallEntity | { "kind": "record" } & RecordEntity;
+export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "nurbs" } & NurbsEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity | { "kind": "leader" } & LeaderEntity | { "kind": "table" } & TableEntity | { "kind": "image" } & ImageEntity | { "kind": "raster" } & RasterEntity | { "kind": "pointcloud" } & PointCloudEntity | { "kind": "wall" } & WallEntity | { "kind": "opening" } & OpeningEntity | { "kind": "record" } & RecordEntity;

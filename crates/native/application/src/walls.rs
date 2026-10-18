@@ -414,8 +414,23 @@ pub(crate) fn joined_pieces(
     w: &kentos_contracts::WallEntity,
 ) -> Option<Vec<kentos_geometry_core::block::Piece>> {
     use kentos_geometry_core::entity::Shape;
-    use kentos_geometry_core::geom::wall_join::{WallIn, solve};
-    let (shapes, _) = neighbourhood(doc, &[(Some(slot), w)], &[]);
+    use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};
+    let (shapes, others) = neighbourhood(doc, &[(Some(slot), w)], &[]);
+    // Each wall's openings' gaps (docs/adr/0341 §2).
+    let spans: Vec<Vec<(f64, f64)>> = std::iter::once(slot)
+        .chain(others)
+        .map(|s| {
+            doc.uid(s)
+                .map(|u| {
+                    doc.openings_of(&u.to_string())
+                        .into_iter()
+                        .filter(|(_, o)| o.broken.is_none())
+                        .map(|(_, o)| kentos_domain::opening_follow::span(&o))
+                        .collect()
+                })
+                .unwrap_or_default()
+        })
+        .collect();
     let ins: Vec<WallIn<'_>> = shapes
         .iter()
         .filter_map(|s| match s {
@@ -427,7 +442,7 @@ pub(crate) fn joined_pieces(
             _ => None,
         })
         .collect();
-    let drawn = solve(&ins, Some(&[0])).drawn.into_iter().next()??;
+    let drawn = solve_with(&ins, &spans, Some(&[0])).drawn.into_iter().next()??;
     let Shape::Wall { pts, wall, .. } = &shapes[0] else {
         return None;
     };

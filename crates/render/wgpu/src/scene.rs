@@ -1374,6 +1374,8 @@ fn shape(entity: &Entity) -> Shape {
         Entity::Record(_) => Shape::Record {},
         // A wall (docs/adr/0339): as the application turns one.
         Entity::Wall(_) => kentos_native_style::entity_shape(entity),
+        // An opening (docs/adr/0341): its symbol, likewise.
+        Entity::Opening(_) => kentos_native_style::entity_shape(entity),
         // A point cloud (docs/adr/0207): its plan, the points pass's paint.
         Entity::PointCloud(c) => Shape::PointCloud {
             bounds: c.cloud.bounds,

@@ -35,6 +35,7 @@ pub(crate) fn kind_icon(kind: &str) -> &'static str {
         "table" => "table",
         "image" => "imageInsert",
         "wall" => "wall",
+        "opening" => "door",
         _ => "more",
     }
 }

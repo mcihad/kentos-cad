@@ -695,6 +695,9 @@ impl Document {
         // below see them gone or unlinked.
         let related = self.follow_relations(ops);
         ops.extend(related);
+        // Then: the openings with their walls (docs/adr/0341 §3), before the texts linked to them.
+        let openings = self.follow_openings(ops);
+        ops.extend(openings);
         // Then: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
         let settled = self.settle_boundaries(ops);
         ops.extend(settled);

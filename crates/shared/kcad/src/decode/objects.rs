@@ -76,6 +76,7 @@ enum Kind {
     PointCloud,
     Record,
     Wall,
+    Opening,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -104,6 +105,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("pointcloud", Kind::PointCloud),
     ("record", Kind::Record),
     ("wall", Kind::Wall),
+    ("opening", Kind::Opening),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -205,6 +207,8 @@ pub(super) struct Features {
     /// Schema 75: the wall and the settings' `wallStyles` and `arch` (docs/adr/0339).
     pub(super) walls: bool,
     pub(super) wall_joins: bool,
+    /// Schema 77: the opening (docs/adr/0341).
+    openings: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -344,6 +348,7 @@ impl Features {
             nurbs: schema >= SCHEMA_WITH_NURBS,
             walls: schema >= crate::SCHEMA_WITH_WALLS,
             wall_joins: schema >= crate::SCHEMA_WITH_WALL_JOINS,
+            openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -409,6 +414,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 "pts" | "bulges" | "closed" | "width" | "justify" | "offset" | "style" | "components" | "caps" | "fill"
                     | "height" | "arch"
             ) || (has.wall_joins && matches!(key, "joins" | "cleanup")),
+            Kind::Opening => matches!(key, "host" | "at" | "width" | "place" | "opening"),
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -598,6 +604,10 @@ struct Fields {
     wall_fill: Option<String>,
     wall_components: Vec<kentos_contracts::WallComponent>,
     wall_arch: Option<kentos_contracts::ArchInfo>,
+    opening_host: Option<String>,
+    opening_at: Option<f64>,
+    opening_place: Option<Vec<Vec2>>,
+    opening: Option<crate::opening::OpeningRest>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -862,6 +872,7 @@ pub(super) fn object(
             && (has.point_clouds || *kind != Kind::PointCloud)
             && (has.nurbs || *kind != Kind::Nurbs)
             && (has.walls || *kind != Kind::Wall)
+            && (has.openings || *kind != Kind::Opening)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -890,6 +901,10 @@ pub(super) fn object(
     // Nor a wall (docs/adr/0339 §4): a block holds its drawing, not its source.
     if kind == Kind::Wall && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında duvar olamaz"));
+    }
+    // Nor an opening: its wall is the drawing's (docs/adr/0341 §1).
+    if kind == Kind::Opening && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında açıklık olamaz"));
     }
     // Nor a record without a geometry (docs/adr/0410 §2).
     if kind == Kind::Record && !has.uids {
@@ -1186,6 +1201,14 @@ pub(super) fn object(
                 f.text = Some(note);
             }
             "text" => f.text = Some(text(r)?),
+            // Schema 77 (docs/adr/0341 §1): an opening's wall, place along it, jambs and the rest.
+            "host" if kind == Kind::Opening => f.opening_host = Some(text(r)?),
+            "at" if kind == Kind::Opening => f.opening_at = Some(r.float()?),
+            "place" if kind == Kind::Opening => f.opening_place = Some(points(r)?),
+            "opening" => {
+                let (v, _): (crate::opening::OpeningRest, usize) = json_part(r, "açıklığın alanları")?;
+                f.opening = Some(v);
+            }
             // Schema 75 (docs/adr/0339 §4): a wall's style, justification, ends, fill, components and information.
             "style" if kind == Kind::Wall => f.wall_style = Some(text(r)?),
             "justify" => {
@@ -1926,6 +1949,19 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Wall(e)
+        }
+        Kind::Opening => {
+            let rest = required(r, f.opening.take(), "opening")?;
+            let fields = rest.with(
+                required(r, f.opening_host.take(), "host")?,
+                required(r, f.opening_at, "at")?,
+                required(r, f.width, "width")?,
+                required(r, f.opening_place.take(), "place")?,
+            );
+            if let Some((_, problem)) = fields.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Opening(kentos_contracts::OpeningEntity { base, opening: fields })
         }
         Kind::Xline | Kind::Ray => {
             let line = ConstructionEntity {

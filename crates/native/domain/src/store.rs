@@ -132,6 +132,8 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
             of.dedup();
             of
         }
+        // An opening's wall (docs/adr/0341 §3).
+        Entity::Opening(o) => Uuid::parse_str(&o.opening.host).into_iter().collect(),
         _ => Vec::new(),
     }
 }

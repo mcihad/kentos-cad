@@ -874,6 +874,7 @@ fn finite(e: &Entity) -> bool {
             Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
             Entity::Spline(e) => ps(&e.pts),
             Entity::Wall(e) => ps(&e.wall.pts) && fs(&[e.wall.width, e.wall.offset]),
+            Entity::Opening(e) => ps(&e.opening.place) && fs(&[e.opening.at, e.opening.width]),
             Entity::Nurbs(e) => {
                 ps(&e.ctrl)
                     && fs(&e.knots)

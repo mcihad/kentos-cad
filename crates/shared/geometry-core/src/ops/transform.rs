@@ -659,6 +659,22 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 wall: crate::geom::wall::scaled(wall, s),
             }
         }
+        // Its jambs map (the document reads its place along its wall from them, docs/adr/0341 §3); its lengths scale.
+        Shape::Opening {
+            at,
+            width,
+            place,
+            opening,
+        } => {
+            let mut spec = opening.clone();
+            spec.frame *= s;
+            Shape::Opening {
+                at: *at * s,
+                width: *width * s,
+                place: place.iter().map(|q| apply(m, *q)).collect(),
+                opening: spec,
+            }
+        }
         // Its affine composed: every pixel's corner goes where the drawing goes (docs/adr/0204 §7).
         Shape::Raster { affine, .. } => {
             let mut out = shape.clone();

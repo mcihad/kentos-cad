@@ -206,10 +206,15 @@ pub fn plain_pieces(base: &EntityBase, w: &WallFields, view: View) -> Option<Vec
     Some(plain_of(base, pieces))
 }
 
-/// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5): one entry per
-/// entity, none for one that is not a wall or cannot be drawn.
-pub fn plain_joined(entities: &[Entity], view: View) -> Vec<Option<Vec<Entity>>> {
-    use kentos_geometry_core::geom::wall_join::{WallIn, solve};
+/// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5) and cut by its
+/// openings (docs/adr/0341 §2; the walls' persistent ids `uid_of` their object ids), and every opening as its symbol:
+/// one entry per entity, none for one that is neither or cannot be drawn.
+pub fn plain_joined(
+    entities: &[Entity],
+    view: View,
+    uid_of: impl Fn(u32) -> Option<String>,
+) -> Vec<Option<Vec<Entity>>> {
+    use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};
     let walls: Vec<(usize, Shape)> = entities
         .iter()
         .enumerate()
@@ -229,8 +234,15 @@ pub fn plain_joined(entities: &[Entity], view: View) -> Vec<Option<Vec<Entity>>>
             _ => None,
         })
         .collect();
-    let solved = solve(&ins, None);
+    let at: Vec<usize> = walls.iter().map(|(i, _)| *i).collect();
+    let spans = crate::openings::spans_by_wall(entities, &at, uid_of);
+    let solved = solve_with(&ins, &spans, None);
     let mut out = vec![None; entities.len()];
+    for (i, e) in entities.iter().enumerate() {
+        if let Entity::Opening(o) = e {
+            out[i] = Some(crate::openings::plain_pieces(&o.base, &o.opening));
+        }
+    }
     for ((i, shape), drawn) in walls.iter().zip(solved.drawn) {
         let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) =
             (drawn, shape, &entities[*i])

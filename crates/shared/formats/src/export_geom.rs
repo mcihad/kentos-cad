@@ -456,6 +456,19 @@ pub(crate) fn geometry(
             let holes = holes.into_iter().flatten().map(plain).collect();
             area(plain(outer), holes, rep, w)
         }
+        // Its jambs' footprint, an area (docs/adr/0341 §2): GeoJSON, KML and GPX have no opening.
+        Entity::Opening(e) => {
+            let p = &e.opening.place;
+            if p.len() != 4 {
+                rep.skip("Açıklık", "pervazları olmayan açıklık yazılmadı", 0);
+                return None;
+            }
+            let ring = Ring::new(
+                vec![p[0], p[2], p[3], p[1]],
+                std::iter::empty::<Option<f64>>(),
+            );
+            area(ring, Vec::new(), rep, w)
+        }
         // A record has no geometry (docs/adr/0410 §4); GeoJSON writes it itself, with a null one.
         Entity::Record(_) => {
             rep.skip("Kayıt", w.record, 0);

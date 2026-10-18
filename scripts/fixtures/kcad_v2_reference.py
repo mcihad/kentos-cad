@@ -1470,6 +1470,14 @@ KINDS = {
         "joins": (opaque, False),
         "cleanup": (boolean, False),
     },
+    # Schema 77 (docs/adr/0341 §1): an opening; its wall, place along it, width and jambs, the rest as one map.
+    "opening": {
+        "host": (text, True),
+        "at": (f64, True),
+        "width": (f64, True),
+        "place": (points, True),
+        "opening": (opaque, True),
+    },
     # Schema 7 (docs/adr/0145): an alignment by name, a width factor, `mask` only when true.
     "text": {
         "p": (point, True),
@@ -1791,6 +1799,9 @@ def entity(e, uid, index):
         cloud_shape(e)
     if kind == "record":
         assert uid is not None, "blok tanımında geometrisiz kayıt olamaz"
+    if kind == "opening":
+        assert uid is not None, "blok tanımında açıklık olamaz"
+        e = opening_parts(e)
     if kind == "polyline":
         polyline_extras(e)
     if kind == "nurbs":
@@ -1807,6 +1818,23 @@ def entity(e, uid, index):
     if uid is not None:
         body["uid"] = blob(uid_bytes(uid))
     return cmap({kind: cmap(body)})
+
+
+# An opening's fields that are written beside it, not in its map (docs/adr/0341 §1).
+OPENING_OWN = ("host", "at", "width", "place")
+OPENING_DEFAULTS = {"anchor": "center", "leaves": 1, "operation": "swing", "hand": "start", "side": "left", "showSwing": True}
+
+
+def opening_parts(e):
+    """An opening's object with the rest of its fields gathered into its `opening` map, defaults left out."""
+    keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
+            "lineType", "lineTypeScale", "transparency", "order", "linePattern", *OPENING_OWN)
+    rest = {k: v for k, v in e.items() if k not in keep}
+    for k, d in OPENING_DEFAULTS.items():
+        if rest.get(k) == d:
+            del rest[k]
+    assert "form" in rest, "açıklığın biçimi her zaman yazılır"
+    return {**{k: v for k, v in e.items() if k in keep}, "opening": rest}
 
 
 def attribute(a):
@@ -2027,6 +2055,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 77 (docs/adr/0341): an opening.
+    if any(e["kind"] == "opening" for e in entities):
+        return 77
     # Schema 76 (docs/adr/0340): a wall's joins or cleanup, a wall component's priority.
     def ranked(cs):
         return any("priority" in c for c in cs)
@@ -2529,7 +2560,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-77.kcad"] = container(root(cmap(parts), version=uint(77)))
+    files["schema-version-78.kcad"] = container(root(cmap(parts), version=uint(78)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4117,6 +4148,23 @@ def build():
     priority_75 = copy.deepcopy(load("walls.json"))
     priority_75["entities"][0]["components"][1]["priority"] = 1
     out["broken/wall-priority-in-schema-75.kcad"] = container(document(priority_75).replace(b"\x67version\x18\x4c", b"\x67version\x18\x4b"))
+    # The openings (docs/adr/0341 §1): schema 77's; in schema 76 an unknown kind; a default written, a width of 0, three
+    # leaves, a head under the sill, a blank number and three jambs refused.
+    out["openings.kcad"] = container(document(load("openings.json")))
+    openings_payload = document(load("openings.json"))
+    assert openings_payload.count(b"\x67version\x18\x4d") == 1, "the openings are schema 77"
+    out["broken/openings-in-schema-76.kcad"] = container(openings_payload.replace(b"\x67version\x18\x4d", b"\x67version\x18\x4c"))
+
+    def openings_broken(change):
+        d = copy.deepcopy(load("openings.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/opening-width-zero.kcad"] = openings_broken(lambda d: d["entities"][1].update(width=0.0))
+    out["broken/opening-leaves-three.kcad"] = openings_broken(lambda d: d["entities"][1].update(leaves=3))
+    out["broken/opening-head-under-sill.kcad"] = openings_broken(lambda d: d["entities"][2].update(head=0.5))
+    out["broken/opening-number-blank.kcad"] = openings_broken(lambda d: d["entities"][1].update(number=" "))
+    out["broken/opening-three-jambs.kcad"] = openings_broken(lambda d: d["entities"][1]["place"].pop())
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))
