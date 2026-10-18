@@ -73,7 +73,7 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         // Its rings' (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_edges(&crate::geom::space::as_polygon(parts)),
         // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
             crate::geom::arch::outline(e).map(|o| entity_edges(&o)).unwrap_or_default()
         }
         // Its symbol's pieces' (docs/adr/0341 §2).

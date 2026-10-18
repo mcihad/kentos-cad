@@ -1,0 +1,195 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Etiketler",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kolon",
+      "name": "Kolon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#808080",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "etiket",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000081",
+    "0192f5a1-2590-7000-8000-000000000082",
+    "0192f5a1-2590-7000-8000-000000000083",
+    "0192f5a1-2590-7000-8000-000000000084"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "column",
+      "id": 1,
+      "layerId": "kolon",
+      "attrs": {},
+      "at": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "width": 0.4,
+      "tag": "S1"
+    },
+    {
+      "kind": "tag",
+      "id": 2,
+      "layerId": "etiket",
+      "attrs": {},
+      "of": "0192f5a1-2590-7000-8000-000000000081",
+      "at": {
+        "x": 0.0,
+        "y": 0.5
+      },
+      "shape": "rectangle",
+      "text": "S1",
+      "anchor": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "kind": "tag",
+      "id": 3,
+      "layerId": "etiket",
+      "attrs": {},
+      "of": "0192f5a1-2590-7000-8000-0000000000ff",
+      "at": {
+        "x": 5.0,
+        "y": 5.0
+      },
+      "content": "{tag}\n{attr:Kat}",
+      "size": 3.5,
+      "leader": true,
+      "text": "X1",
+      "broken": "targetGone"
+    },
+    {
+      "kind": "table",
+      "id": 4,
+      "layerId": "etiket",
+      "attrs": {},
+      "p": {
+        "x": 10.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "height": 0.125,
+      "rows": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "columns": [
+        0.5,
+        0.6
+      ],
+      "cells": [
+        [
+          "Etiket",
+          "Adet"
+        ],
+        [
+          "S1",
+          "1"
+        ],
+        [
+          "Toplam",
+          "1"
+        ]
+      ],
+      "aligns": [
+        "left",
+        "right"
+      ],
+      "header": true,
+      "source": {
+        "kind": "schedule",
+        "of": "columns",
+        "columns": [
+          {
+            "field": "tag"
+          },
+          {
+            "field": "count",
+            "title": "Sayı"
+          }
+        ],
+        "total": true,
+        "members": [
+          [
+            "0192f5a1-2590-7000-8000-000000000081"
+          ]
+        ]
+      },
+      "styles": [
+        {
+          "row": 1,
+          "col": 1,
+          "rows": 1,
+          "cols": 1,
+          "color": "#7f8790"
+        },
+        {
+          "row": 2,
+          "col": 0,
+          "rows": 1,
+          "cols": 2,
+          "bold": true
+        }
+      ]
+    }
+  ]
+}

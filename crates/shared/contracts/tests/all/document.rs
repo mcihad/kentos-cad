@@ -49,6 +49,7 @@ fn the_typescript_snapshot_round_trips_through_the_contracts() {
             Entity::Column(_) => "column",
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
+            Entity::Tag(_) => "tag",
         })
         .collect();
     assert_eq!(

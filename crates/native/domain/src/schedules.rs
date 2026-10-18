@@ -1,0 +1,314 @@
+//! A schedule's rows (docs/adr/0344 §3), as the document writes them before a step is recorded.
+//!
+//! - Its objects: those of its kind in the drawing's order that its filter takes (an opening's level and phase are its
+//!   wall's).
+//! - Its cells: each column's value of each object (`arch_values`), written without units; empty when it has none.
+//! - Its order: by its sort keys in turn, numbers by value, words in the natural order, the empty ones last whatever the
+//!   direction; ties keep the drawing's order.
+//! - Grouped: rows alike in every column that is not summed (count, area, perimeter, volume, length) become the first
+//!   one's place, their summed columns added up (an empty value adds nothing; none at all stays empty).
+//! - Its heading: each column's title, else its field's with its unit (`Genişlik (m)`, `Alan (m²)`, `Hacim (m³)`).
+//! - Its total: the summed columns added up over its rows, `Toplam` in its first column unless that column is summed.
+//! - Its look: the heading row, numbers to the right, a worked-out column's data cells in grey, the total in bold.
+//!
+//! `scripts/fixtures/tag_command_cases.py` writes the same without KentOS's code.
+
+use std::cmp::Ordering;
+
+use kentos_contracts::{
+    CellRange, CellStyle, Entity, OpeningForm, ScheduleColumn, ScheduleField, ScheduleFilter,
+    ScheduleOf, ScheduleSort, TableAlign,
+};
+use kentos_geometry_core::text::natural::natural_cmp;
+
+use crate::arch_values::ArchValue;
+use crate::document::Document;
+use crate::identity::Slot;
+
+/// The words of a schedule's total row's first cell.
+pub const SCHEDULE_TOTAL: &str = "Toplam";
+/// A worked-out column's data cells' colour.
+pub const COMPUTED_COLOR: &str = "#7f8790";
+
+/// A schedule written out.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ScheduleRows {
+    /// Its heading, its data rows and its total, if any.
+    pub rows: Vec<Vec<String>>,
+    /// Each data row's objects, by their persistent ids.
+    pub members: Vec<Vec<String>>,
+    pub aligns: Vec<TableAlign>,
+    pub styles: Vec<CellStyle>,
+}
+
+/// Whether a field's cells are numbers, written to the right.
+pub fn numeric(f: ScheduleField) -> bool {
+    f.length()
+        || matches!(
+            f,
+            ScheduleField::Count | ScheduleField::Area | ScheduleField::Volume
+        )
+}
+
+struct Row {
+    values: Vec<Option<ArchValue>>,
+    texts: Vec<String>,
+    uids: Vec<String>,
+}
+
+fn by_value(a: &Option<ArchValue>, at: &str, b: &Option<ArchValue>, bt: &str) -> Ordering {
+    match (
+        a.as_ref().and_then(ArchValue::number),
+        b.as_ref().and_then(ArchValue::number),
+    ) {
+        (Some(x), Some(y)) => x.partial_cmp(&y).unwrap_or(Ordering::Equal),
+        _ => natural_cmp(at, bt),
+    }
+}
+
+impl Document {
+    /// Whether `e` (of the schedule's kind) is one its filter takes.
+    fn schedule_takes(&self, e: &Entity, filter: Option<&ScheduleFilter>) -> bool {
+        let Some(f) = filter else { return true };
+        let arch = match e {
+            Entity::Opening(o) => self.tag_target(&o.opening.host).and_then(|w| match w {
+                Entity::Wall(w) => Some(w.wall.arch),
+                _ => None,
+            }),
+            Entity::Space(s) => Some(s.space.arch.clone()),
+            Entity::Column(c) => Some(c.column.arch.clone()),
+            Entity::Wall(w) => Some(w.wall.arch.clone()),
+            _ => None,
+        }
+        .unwrap_or_default();
+        f.layers
+            .as_ref()
+            .is_none_or(|ls| ls.contains(&e.base().layer_id))
+            && f.levels
+                .as_ref()
+                .is_none_or(|ls| arch.level.as_ref().is_some_and(|l| ls.contains(l)))
+            && f.phases
+                .as_ref()
+                .is_none_or(|ps| arch.phase.is_some_and(|p| ps.contains(&p)))
+            && f.forms.as_ref().is_none_or(|fs| match e {
+                Entity::Opening(o) => fs.contains(&o.opening.form),
+                _ => false,
+            })
+    }
+
+    /// A column's heading: its title, else its field's with its unit.
+    pub fn schedule_heading(&self, c: &ScheduleColumn) -> String {
+        if c.title.is_some() || c.field == ScheduleField::Attr {
+            return c.heading();
+        }
+        let s = self.settings();
+        let unit = if c.field.length() {
+            Some(crate::text_fields::unit_name(
+                s.drawing_unit.unwrap_or_default(),
+            ))
+        } else {
+            match c.field {
+                ScheduleField::Area => Some(match s.area_unit {
+                    kentos_contracts::AreaUnit::M2 => "m²",
+                    kentos_contracts::AreaUnit::Donum => "dönüm",
+                    kentos_contracts::AreaUnit::Ha => "ha",
+                }),
+                ScheduleField::Volume => Some("m³"),
+                _ => None,
+            }
+        };
+        match unit {
+            Some(u) => format!("{} ({u})", c.field.title()),
+            None => c.field.title().to_owned(),
+        }
+    }
+
+    /// A schedule's rows from the drawing (the module's rule).
+    pub fn schedule_rows(
+        &self,
+        of: ScheduleOf,
+        columns: &[ScheduleColumn],
+        filter: Option<&ScheduleFilter>,
+        sort: &[ScheduleSort],
+        group: bool,
+        total: bool,
+    ) -> ScheduleRows {
+        let mut rows: Vec<Row> = Vec::new();
+        for e in self.entities() {
+            if e.kind() != of.kind() || !self.schedule_takes(e, filter) {
+                continue;
+            }
+            let values: Vec<Option<ArchValue>> = columns
+                .iter()
+                .map(|c| self.arch_value(e, c.field.name(), c.attr.as_deref()))
+                .collect();
+            let texts = values
+                .iter()
+                .map(|v| {
+                    v.as_ref()
+                        .map(|v| self.arch_value_text(v, false))
+                        .unwrap_or_default()
+                })
+                .collect();
+            let uid = self
+                .uid(Slot(e.base().id))
+                .map(|u| u.to_string())
+                .unwrap_or_default();
+            rows.push(Row {
+                values,
+                texts,
+                uids: vec![uid],
+            });
+        }
+        rows.sort_by(|a, b| {
+            for k in sort {
+                let j = k.column as usize;
+                let (ea, eb) = (a.texts[j].is_empty(), b.texts[j].is_empty());
+                let o = match (ea, eb) {
+                    (true, true) => Ordering::Equal,
+                    (true, false) => Ordering::Greater,
+                    (false, true) => Ordering::Less,
+                    _ => {
+                        let o = by_value(&a.values[j], &a.texts[j], &b.values[j], &b.texts[j]);
+                        if k.descending { o.reverse() } else { o }
+                    }
+                };
+                if o != Ordering::Equal {
+                    return o;
+                }
+            }
+            Ordering::Equal
+        });
+        let summed: Vec<bool> = columns.iter().map(|c| c.field.summed()).collect();
+        if group {
+            let mut merged: Vec<Row> = Vec::new();
+            for r in rows {
+                let key = |x: &Row| -> Vec<String> {
+                    x.texts
+                        .iter()
+                        .zip(&summed)
+                        .filter(|(_, s)| !**s)
+                        .map(|(t, _)| t.clone())
+                        .collect()
+                };
+                match merged.iter_mut().find(|m| key(m) == key(&r)) {
+                    Some(m) => {
+                        for (j, _) in summed.iter().enumerate().filter(|(_, s)| **s) {
+                            m.values[j] = add(&m.values[j], &r.values[j]);
+                        }
+                        m.uids.extend(r.uids);
+                    }
+                    None => merged.push(r),
+                }
+            }
+            for m in &mut merged {
+                for (j, _) in summed.iter().enumerate().filter(|(_, s)| **s) {
+                    m.texts[j] = m.values[j]
+                        .as_ref()
+                        .map(|v| self.arch_value_text(v, false))
+                        .unwrap_or_default();
+                }
+            }
+            rows = merged;
+        }
+        let n = rows.len();
+        let heading: Vec<String> = columns.iter().map(|c| self.schedule_heading(c)).collect();
+        let mut out = ScheduleRows {
+            rows: vec![heading],
+            members: Vec::with_capacity(n),
+            aligns: columns
+                .iter()
+                .map(|c| {
+                    if numeric(c.field) {
+                        TableAlign::Right
+                    } else {
+                        TableAlign::Left
+                    }
+                })
+                .collect(),
+            styles: Vec::new(),
+        };
+        let mut sums: Vec<Option<ArchValue>> = vec![None; columns.len()];
+        for r in rows {
+            for j in 0..columns.len() {
+                if summed[j] {
+                    sums[j] = add(&sums[j], &r.values[j]);
+                }
+            }
+            out.rows.push(r.texts);
+            out.members.push(r.uids);
+        }
+        for (j, c) in columns.iter().enumerate() {
+            if !c.field.editable() && n > 0 {
+                out.styles.push(CellStyle {
+                    range: CellRange {
+                        row: 1,
+                        col: j as u32,
+                        rows: n as u32,
+                        cols: 1,
+                    },
+                    align: None,
+                    bold: None,
+                    color: Some(COMPUTED_COLOR.to_owned()),
+                    fill: None,
+                    decimals: None,
+                });
+            }
+        }
+        if total {
+            let mut last: Vec<String> = sums
+                .iter()
+                .zip(&summed)
+                .map(|(v, s)| match (s, v) {
+                    (true, Some(v)) => self.arch_value_text(v, false),
+                    _ => String::new(),
+                })
+                .collect();
+            for (j, c) in columns.iter().enumerate() {
+                if c.field == ScheduleField::Count && last[j].is_empty() {
+                    last[j] = "0".into();
+                }
+            }
+            if !summed[0] {
+                last[0] = SCHEDULE_TOTAL.to_owned();
+            }
+            out.rows.push(last);
+            out.styles.push(CellStyle {
+                range: CellRange {
+                    row: (n + 1) as u32,
+                    col: 0,
+                    rows: 1,
+                    cols: columns.len() as u32,
+                },
+                align: None,
+                bold: Some(true),
+                color: None,
+                fill: None,
+                decimals: None,
+            });
+        }
+        out
+    }
+}
+
+/// Two values added: the first one's kind; an empty one adds nothing.
+fn add(a: &Option<ArchValue>, b: &Option<ArchValue>) -> Option<ArchValue> {
+    use ArchValue::*;
+    match (a, b) {
+        (None, x) | (x, None) => x.clone(),
+        (Some(Length(x)), Some(y)) => y.number().map(|y| Length(x + y)),
+        (Some(Area(x)), Some(y)) => y.number().map(|y| Area(x + y)),
+        (Some(Volume(x)), Some(y)) => y.number().map(|y| Volume(x + y)),
+        (Some(Count(x)), Some(Count(y))) => Some(Count(x + y)),
+        (Some(x), _) => Some(x.clone()),
+    }
+}
+
+/// An openings filter's forms as words (for the window's summary).
+pub fn forms_label(forms: &[OpeningForm]) -> String {
+    forms
+        .iter()
+        .map(|f| f.label())
+        .collect::<Vec<_>>()
+        .join(", ")
+}

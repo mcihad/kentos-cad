@@ -21,6 +21,7 @@ mod annotation_scale;
 mod annotative;
 mod annotation_styles;
 mod wall_joins;
+mod tags_check;
 mod quantities;
 mod wall_styles;
 mod app;
@@ -398,6 +399,8 @@ mod opening_scenes;
 mod space_scenes;
 #[cfg(test)]
 mod arch_scenes;
+#[cfg(test)]
+mod tag_scenes;
 
 use kentos_ui::theme::typography;
 

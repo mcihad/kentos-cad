@@ -2800,6 +2800,70 @@ ScenarioOperationName = Literal["create", "apply"]
 """The names of :class:`ScenarioOperation`, for a plain string."""
 
 
+class ScheduleField(_StrEnum):
+    """What one column of a schedule reads.
+
+    - ``number``
+    - ``type``
+    - ``form``
+    - ``width``
+    - ``height``
+    - ``sill``
+    - ``head``
+    - ``wall``
+    - ``level``
+    - ``phase``
+    - ``count``
+    - ``area``
+    - ``perimeter``
+    - ``volume``
+    - ``name``
+    - ``usage``
+    - ``tag``
+    - ``place``
+    - ``length``
+    - ``thickness``
+    - ``attr``: The attribute the column's `attr` names.
+    """
+    NUMBER = "number"
+    TYPE = "type"
+    FORM = "form"
+    WIDTH = "width"
+    HEIGHT = "height"
+    SILL = "sill"
+    HEAD = "head"
+    WALL = "wall"
+    LEVEL = "level"
+    PHASE = "phase"
+    COUNT = "count"
+    AREA = "area"
+    PERIMETER = "perimeter"
+    VOLUME = "volume"
+    NAME = "name"
+    USAGE = "usage"
+    TAG = "tag"
+    PLACE = "place"
+    LENGTH = "length"
+    THICKNESS = "thickness"
+    ATTR = "attr"
+
+
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr"]
+"""The names of :class:`ScheduleField`, for a plain string."""
+
+
+class ScheduleOf(_StrEnum):
+    """What a schedule lists."""
+    OPENINGS = "openings"
+    SPACES = "spaces"
+    COLUMNS = "columns"
+    WALLS = "walls"
+
+
+ScheduleOfName = Literal["openings", "spaces", "columns", "walls"]
+"""The names of :class:`ScheduleOf`, for a plain string."""
+
+
 class SchemaKind(_StrEnum):
     """What the schema holds."""
     LAYERS = "layers"
@@ -2839,6 +2903,7 @@ class SelectKind(_StrEnum):
     - ``opening``: Açıklık: a door, a window or a bare opening (docs/adr/0341 §5).
     - ``space``: Mahal (docs/adr/0342 §5).
     - ``grid``: Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
+    - ``tag``: Etiket (docs/adr/0344 §5).
     """
     POINT = "point"
     LINE = "line"
@@ -2864,9 +2929,10 @@ class SelectKind(_StrEnum):
     OPENING = "opening"
     SPACE = "space"
     GRID = "grid"
+    TAG = "tag"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -3151,6 +3217,47 @@ class TableRefresh(_StrEnum):
 
 TableRefreshName = Literal["updated", "unchanged", "missing", "unreadable", "unlinked", "live"]
 """The names of :class:`TableRefresh`, for a plain string."""
+
+
+class TagBreak(_StrEnum):
+    """Why a tag's words are no longer its object's.
+
+    - ``targetGone``: Its object is gone.
+    """
+    TARGET_GONE = "targetGone"
+
+
+TagBreakName = Literal["targetGone"]
+"""The names of :class:`TagBreak`, for a plain string."""
+
+
+class TagShape(_StrEnum):
+    """A tag's frame."""
+    CIRCLE = "circle"
+    HEXAGON = "hexagon"
+    RECTANGLE = "rectangle"
+    ROUNDED = "rounded"
+    NONE = "none"
+
+
+TagShapeName = Literal["circle", "hexagon", "rectangle", "rounded", "none"]
+"""The names of :class:`TagShape`, for a plain string."""
+
+
+class TaggedKind(_StrEnum):
+    """The kinds of object a tag is put on."""
+    OPENING = "opening"
+    SPACE = "space"
+    COLUMN = "column"
+    GRID = "grid"
+    WALL = "wall"
+    STAIR = "stair"
+    RAMP = "ramp"
+    INSERT = "insert"
+
+
+TaggedKindName = Literal["opening", "space", "column", "grid", "wall", "stair", "ramp", "insert"]
+"""The names of :class:`TaggedKind`, for a plain string."""
 
 
 class TenantKind(_StrEnum):
@@ -4081,6 +4188,7 @@ class Entity(_Union):
     - :class:`ColumnEntity` (``kind: column``)
     - :class:`StairEntity` (``kind: stair``)
     - :class:`RampEntity` (``kind: ramp``)
+    - :class:`TagEntity` (``kind: tag``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -4754,6 +4862,27 @@ class RelationsOp(_Union):
         return _variant(_RELATIONS_OP, "RelationsOp", "kind", data).from_json(data)
 
 
+class ScheduleOperation(_Union):
+    """What `cad.schedules.edit` does.
+
+    One of:
+
+    - :class:`CellScheduleOperation` (``kind: cell``)
+    - :class:`SetScheduleOperation` (``kind: set``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleOperation:
+        return _variant(_SCHEDULE_OPERATION, "ScheduleOperation", "kind", data).from_json(data)
+
+
 class SelectRegion(_Union):
     """Where the objects are, or which they are.
 
@@ -4903,6 +5032,7 @@ class TableSource(_Union):
     - :class:`AttributesTableSource` (``kind: attributes``)
     - :class:`FileTableSource` (``kind: file``)
     - :class:`BlocksTableSource` (``kind: blocks``)
+    - :class:`ScheduleTableSource` (``kind: schedule``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -23461,6 +23591,50 @@ class NewStair(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewTag(_Model):
+    """One tag to put.
+    Attributes:
+        of: The object it tags, by its persistent id.
+        at: Its middle; absent: its object's point (a space's), else 4 times its words' height above it. Unit: length.
+        content: Its template; absent: its object's kind's.
+        shape: Its frame; absent: its object's kind's (an opening's hexagon, a space's rectangle, else a circle).
+        size: Its words' height on paper, millimetres; absent: 2.5. Unit: paper-mm.
+    """
+    of: str
+    at: Vec2 | None | Unset = UNSET
+    content: str | None | Unset = UNSET
+    leader: bool | None | Unset = UNSET
+    shape: TagShape | TagShapeName | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["of"] = self.of
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.content is not UNSET:
+            out["content"] = self.content
+        if self.leader is not UNSET:
+            out["leader"] = self.leader
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewTag:
+        return cls(
+            of=data["of"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            content=data.get("content", UNSET),
+            leader=data.get("leader", UNSET),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewWall(_Model):
     """One wall to write: its path as drawn and what the user chose for it.
     Attributes:
@@ -28986,6 +29160,270 @@ class ScenariosEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ScheduleColumn(_Model):
+    """One column of a schedule.
+    Attributes:
+        attr: The attribute an `attr` column reads.
+        title: Its heading; absent: the field's.
+    """
+    field: ScheduleField | ScheduleFieldName
+    attr: str | None | Unset = UNSET
+    title: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = _enum_out(self.field)
+        if self.attr is not UNSET:
+            out["attr"] = self.attr
+        if self.title is not UNSET:
+            out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleColumn:
+        return cls(
+            field=_enum_in(ScheduleField, data["field"]),
+            attr=data.get("attr", UNSET),
+            title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScheduleFilter(_Model):
+    """Which objects a schedule lists: those of every list given.
+    Attributes:
+        forms: An openings schedule's forms.
+        layers: Their layers' ids.
+        levels: Their levels' ids (an opening's its wall's).
+    """
+    forms: list[OpeningForm | OpeningFormName] | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    levels: list[str] | None | Unset = UNSET
+    phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.forms is not UNSET:
+            out["forms"] = None if self.forms is None else [_enum_out(e0) for e0 in self.forms]
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
+        if self.phases is not UNSET:
+            out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleFilter:
+        return cls(
+            forms=UNSET if "forms" not in data else None if data["forms"] is None else [_enum_in(OpeningForm, e0) for e0 in data["forms"]],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
+            phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScheduleSort(_Model):
+    """A sort key: a column by its index, in order or reversed.
+    Attributes:
+        column: Unit: index.
+    """
+    column: int
+    descending: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        if self.descending is not UNSET:
+            out["descending"] = self.descending
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleSort:
+        return cls(
+            column=data["column"],
+            descending=data.get("descending", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesCreate(_Model):
+    """Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its
+    rows written from the drawing, as one undo step.
+
+    Refusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
+    `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        at: Unit: length.
+        columns: Absent: the kind's columns.
+        height: Its words' height, metres; absent: the project's table height at its plot scale. Unit: length.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    at: Vec2
+    of: ScheduleOf | ScheduleOfName
+    color: str | None | Unset = UNSET
+    columns: list[ScheduleColumn] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    filter: ScheduleFilter | None | Unset = UNSET
+    group: bool | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    sort: list[ScheduleSort] | Unset = UNSET
+    total: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["at"] = _vec2_out(self.at)
+        out["of"] = _enum_out(self.of)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else [e0.to_json() for e0 in self.columns]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.sort is not UNSET:
+            out["sort"] = [e0.to_json() for e0 in self.sort]
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesCreate:
+        return cls(
+            layer_id=data["layerId"],
+            at=Vec2.from_json(data["at"]),
+            of=_enum_in(ScheduleOf, data["of"]),
+            color=data.get("color", UNSET),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else [ScheduleColumn.from_json(e0) for e0 in data["columns"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else ScheduleFilter.from_json(data["filter"]),
+            group=data.get("group", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            sort=[ScheduleSort.from_json(e0) for e0 in data["sort"]] if "sort" in data else UNSET,
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesCreated(_Model):
+    """Output of `cad.schedules.create` v1.
+    Attributes:
+        id: Unit: id.
+        rows: Its data rows (neither its heading nor its total). Unit: count.
+    """
+    uid: str
+    id: int
+    rows: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["id"] = self.id
+        out["rows"] = self.rows
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesCreated:
+        return cls(
+            uid=data["uid"],
+            id=data["id"],
+            rows=data["rows"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesEdit(_Model):
+    """Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.
+
+    Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
+    `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`, `invalid_revision`,
+    `revision_conflict`, `layer_locked`.
+    """
+    uid: str
+    operation: ScheduleOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesEdit:
+        return cls(
+            uid=data["uid"],
+            operation=ScheduleOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesEdited(_Model):
+    """Output of `cad.schedules.edit` v1 (its plan's too: as it would be, nothing written).
+    Attributes:
+        table: The schedule as written again.
+        edited: The objects a cell was written to, in the drawing's order.
+    """
+    table: Entity
+    edited: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table.to_json()
+        out["edited"] = list(self.edited)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesEdited:
+        return cls(
+            table=Entity.from_json(data["table"]),
+            edited=list(data["edited"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SchedulesPlan(_Model):
+    """What `cad.schedules.create` would write (plan mode): the table as it would be stored, its `id` 0."""
+    table: Entity
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SchedulesPlan:
+        return cls(
+            table=Entity.from_json(data["table"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SchemaDescribe(_Model):
     """Input of `cad.schema.describe` v1.
 
@@ -32256,6 +32694,434 @@ class TablesPlan(_Model):
             tables=[Entity.from_json(e0) for e0 in data["tables"]],
             revision=data["revision"],
             report=[TableReport.from_json(e0) for e0 in data["report"]] if "report" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagAll(_Model):
+    """Tags on every shown object of the kinds given that has none, each at its object's point as a `NewTag` without `at`.
+    Attributes:
+        layers: Their layers' ids; absent: every layer shown.
+        size: Unit: paper-mm.
+    """
+    kinds: list[TaggedKind | TaggedKindName]
+    content: str | None | Unset = UNSET
+    layers: list[str] | None | Unset = UNSET
+    shape: TagShape | TagShapeName | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kinds"] = [_enum_out(e0) for e0 in self.kinds]
+        if self.content is not UNSET:
+            out["content"] = self.content
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagAll:
+        return cls(
+            kinds=[_enum_in(TaggedKind, e0) for e0 in data["kinds"]],
+            content=data.get("content", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagChange(_Model):
+    """The fields of tags to change; absent ones stay, a nullable one's null takes it away (its kind's template, 2.5 mm).
+    Attributes:
+        size: Unit: paper-mm.
+    """
+    content: str | None | Unset = UNSET
+    leader: bool | None | Unset = UNSET
+    shape: TagShape | TagShapeName | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.content is not UNSET:
+            out["content"] = self.content
+        if self.leader is not UNSET:
+            out["leader"] = self.leader
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else _enum_out(self.shape)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagChange:
+        return cls(
+            content=data.get("content", UNSET),
+            leader=data.get("leader", UNSET),
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagEntity(Entity):
+    """A tag (docs/adr/0344).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        of: The object it tags, by its persistent id.
+        at: Its middle. Unit: length.
+        anchor: The point of its object it ties to, which the document writes. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        content: Its template; absent: its object's kind's.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        leader: A line from its frame to the point it ties to.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        size: Its words' height on paper, millimetres; absent: 2.5. Unit: paper-mm.
+        symbol: Library symbol overriding the layer's style.
+        text: Its words: its template filled with its object's values, which the document writes.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "tag"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    of: str
+    at: Vec2
+    anchor: Vec2 | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    broken: TagBreak | TagBreakName | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    content: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    leader: bool | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    order: int | None | Unset = UNSET
+    shape: TagShape | TagShapeName | Unset = UNSET
+    size: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    text: str | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "tag"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["of"] = self.of
+        out["at"] = _vec2_out(self.at)
+        if self.anchor is not UNSET:
+            out["anchor"] = None if self.anchor is None else _vec2_out(self.anchor)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.content is not UNSET:
+            out["content"] = self.content
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.leader is not UNSET:
+            out["leader"] = self.leader
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.shape is not UNSET:
+            out["shape"] = _enum_out(self.shape)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.text is not UNSET:
+            out["text"] = self.text
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            of=data["of"],
+            at=Vec2.from_json(data["at"]),
+            anchor=UNSET if "anchor" not in data else None if data["anchor"] is None else Vec2.from_json(data["anchor"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(TagBreak, data["broken"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            content=data.get("content", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            leader=data.get("leader", UNSET),
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            order=data.get("order", UNSET),
+            shape=_enum_in(TagShape, data["shape"]) if "shape" in data else UNSET,
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+            symbol=data.get("symbol", UNSET),
+            text=data.get("text", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagFinding(_Model):
+    """One thing `cad.tags.check` found.
+    Attributes:
+        code: `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+        uids: The objects, in the drawing's order.
+        at: Where to look: the first object's point. Unit: length.
+    """
+    code: str
+    message: str
+    uids: list[str]
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["message"] = self.message
+        out["uids"] = list(self.uids)
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagFinding:
+        return cls(
+            code=data["code"],
+            message=data["message"],
+            uids=list(data["uids"]),
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsCheck(_Model):
+    """Input of `cad.tags.check` v1 (“Etiketleri denetle”), read-only: the openings and spaces of the layers given (absent:
+    every layer) and every tag checked.
+
+    Refusals: `layer_not_found`.
+    """
+    layers: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsCheck:
+        return cls(
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsChecked(_Model):
+    """Output of `cad.tags.check` v1 (its plan's too).
+    Attributes:
+        findings: By code (in the order above), then by their first object's place in the drawing.
+    """
+    findings: list[TagFinding]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsChecked:
+        return cls(
+            findings=[TagFinding.from_json(e0) for e0 in data["findings"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsCreate(_Model):
+    """Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
+
+    Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
+    `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    all: TagAll | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    tags: list[NewTag] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.all is not UNSET:
+            out["all"] = None if self.all is None else self.all.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.tags is not UNSET:
+            out["tags"] = [e0.to_json() for e0 in self.tags]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            all=UNSET if "all" not in data else None if data["all"] is None else TagAll.from_json(data["all"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            tags=[NewTag.from_json(e0) for e0 in data["tags"]] if "tags" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsCreated(_Model):
+    """Output of `cad.tags.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsEdit(_Model):
+    """Input of `cad.tags.edit` v1 (“Etiketi düzenle”): the tags' template, frame, words' height or leader changed, their
+    words written again from their objects; one undo step, all or none.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_tag`, `nothing_to_set`,
+    `not_finite`, `invalid_tag`, `invalid_revision`, `revision_conflict`, `layer_locked`.
+    """
+    uids: list[str]
+    change: TagChange
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["change"] = self.change.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsEdit:
+        return cls(
+            uids=list(data["uids"]),
+            change=TagChange.from_json(data["change"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsEdited(_Model):
+    """Output of `cad.tags.edit` v1 (its plan's too: the tags as they would be, nothing written)."""
+    tags: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tags"] = [e0.to_json() for e0 in self.tags]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsEdited:
+        return cls(
+            tags=[Entity.from_json(e0) for e0 in data["tags"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TagsPlan(_Model):
+    """What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0."""
+    tags: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tags"] = [e0.to_json() for e0 in self.tags]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TagsPlan:
+        return cls(
+            tags=[Entity.from_json(e0) for e0 in data["tags"]],
+            revision=data["revision"],
         )
 
 
@@ -41823,6 +42689,70 @@ class RemoveRelationsOp(RelationsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class CellScheduleOperation(ScheduleOperation):
+    """The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`
+    written to each of the row's objects. Empty words clear an optional field.
+    Attributes:
+        row: Unit: index.
+        column: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "cell"
+    row: int
+    column: int
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "cell"}
+        out["row"] = self.row
+        out["column"] = self.column
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CellScheduleOperation:
+        return cls(
+            row=data["row"],
+            column=data["column"],
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetScheduleOperation(ScheduleOperation):
+    """Its columns, filter, sort, grouping or total changed; its rows written again."""
+    TAG_VALUE: ClassVar[str] = "set"
+    columns: list[ScheduleColumn] | None | Unset = UNSET
+    filter: ScheduleFilter | None | Unset = UNSET
+    group: bool | None | Unset = UNSET
+    sort: list[ScheduleSort] | None | Unset = UNSET
+    total: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else [e0.to_json() for e0 in self.columns]
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.sort is not UNSET:
+            out["sort"] = None if self.sort is None else [e0.to_json() for e0 in self.sort]
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetScheduleOperation:
+        return cls(
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else [ScheduleColumn.from_json(e0) for e0 in data["columns"]],
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else ScheduleFilter.from_json(data["filter"]),
+            group=data.get("group", UNSET),
+            sort=UNSET if "sort" not in data else None if data["sort"] is None else [ScheduleSort.from_json(e0) for e0 in data["sort"]],
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WindowSelectRegion(SelectRegion):
     """Pencere: wholly inside the box from `a` to `b` (an infinite line never is).
     Attributes:
@@ -43072,6 +44002,50 @@ class BlocksTableSource(TableSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class ScheduleTableSource(TableSource):
+    """Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter
+    takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
+    by the document at every step, which writes `members` too: each data row's objects by their persistent ids.
+    """
+    TAG_VALUE: ClassVar[str] = "schedule"
+    of: ScheduleOf | ScheduleOfName
+    columns: list[ScheduleColumn]
+    filter: ScheduleFilter | None | Unset = UNSET
+    group: bool | Unset = UNSET
+    members: list[list[str]] | Unset = UNSET
+    sort: list[ScheduleSort] | Unset = UNSET
+    total: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "schedule"}
+        out["of"] = _enum_out(self.of)
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        if self.filter is not UNSET:
+            out["filter"] = None if self.filter is None else self.filter.to_json()
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.members is not UNSET:
+            out["members"] = [list(e0) for e0 in self.members]
+        if self.sort is not UNSET:
+            out["sort"] = [e0.to_json() for e0 in self.sort]
+        if self.total is not UNSET:
+            out["total"] = self.total
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScheduleTableSource:
+        return cls(
+            of=_enum_in(ScheduleOf, data["of"]),
+            columns=[ScheduleColumn.from_json(e0) for e0 in data["columns"]],
+            filter=UNSET if "filter" not in data else None if data["filter"] is None else ScheduleFilter.from_json(data["filter"]),
+            group=data.get("group", UNSET),
+            members=[list(e0) for e0 in data["members"]] if "members" in data else UNSET,
+            sort=[ScheduleSort.from_json(e0) for e0 in data["sort"]] if "sort" in data else UNSET,
+            total=data.get("total", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EditTablesOperation(TablesOperation):
     """Tabloyu düzenle: the edits in order, as one step."""
     TAG_VALUE: ClassVar[str] = "edit"
@@ -44225,7 +45199,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -44306,6 +45280,9 @@ _REGULAR_FRAME: dict[str, type[RegularFrame]] = {"inscribed": InscribedRegularFr
 _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "update": UpdateRelationsOp, "remove": RemoveRelationsOp}
 
 
+_SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
+
+
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
@@ -44321,7 +45298,7 @@ _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSub
 _TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "unlink": UnlinkTableEdit}
 
 
-_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource}
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource}
 
 
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
@@ -44529,6 +45506,7 @@ __all__ = [
     "CellField",
     "CellFormula",
     "CellRange",
+    "CellScheduleOperation",
     "CellStyle",
     "CenterLineDimensionMeasure",
     "CenterMarkDimensionMeasure",
@@ -45207,6 +46185,7 @@ __all__ = [
     "NewRamp",
     "NewSpace",
     "NewStair",
+    "NewTag",
     "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
@@ -45505,6 +46484,20 @@ __all__ = [
     "ScenariosEditPlan",
     "ScenariosEdited",
     "ScheduleCell",
+    "ScheduleColumn",
+    "ScheduleField",
+    "ScheduleFieldName",
+    "ScheduleFilter",
+    "ScheduleOf",
+    "ScheduleOfName",
+    "ScheduleOperation",
+    "ScheduleSort",
+    "ScheduleTableSource",
+    "SchedulesCreate",
+    "SchedulesCreated",
+    "SchedulesEdit",
+    "SchedulesEdited",
+    "SchedulesPlan",
     "SchemaDescribe",
     "SchemaDescribed",
     "SchemaItem",
@@ -45526,6 +46519,7 @@ __all__ = [
     "SetCellTableEdit",
     "SetOpeningsOperation",
     "SetParameterEdit",
+    "SetScheduleOperation",
     "SetSpacesOperation",
     "SetWallsOperation",
     "SettingsChanged",
@@ -45648,6 +46642,23 @@ __all__ = [
     "TablesEdited",
     "TablesOperation",
     "TablesPlan",
+    "TagAll",
+    "TagBreak",
+    "TagBreakName",
+    "TagChange",
+    "TagEntity",
+    "TagFinding",
+    "TagShape",
+    "TagShapeName",
+    "TaggedKind",
+    "TaggedKindName",
+    "TagsCheck",
+    "TagsChecked",
+    "TagsCreate",
+    "TagsCreated",
+    "TagsEdit",
+    "TagsEdited",
+    "TagsPlan",
     "TangentConstraintRule",
     "TangentsCurveEdit",
     "TenantKind",

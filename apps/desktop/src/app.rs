@@ -239,6 +239,8 @@ pub enum Dialog {
     WallStyles,
     /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
     WallJoins,
+    /// Etiketleri denetle (tags_check.rs, docs/adr/0344 §2); the window is `App::tags_check`.
+    TagsCheck,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
     Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
@@ -509,6 +511,7 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
+    TagsCheck(crate::tags_check::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -982,6 +985,8 @@ pub struct App {
     pub(crate) wall_styles: Option<crate::wall_styles::Window>,
     /// Birleşimleri denetle's window (wall_joins.rs, docs/adr/0340 §6).
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
+    /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
+    pub(crate) tags_check: Option<crate::tags_check::Window>,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1302,6 +1307,7 @@ impl App {
             annotation_styles: None,
             wall_styles: None,
             wall_joins: None,
+            tags_check: None,
             quantities: None,
             layer_purge: None,
             take_from: None,
@@ -1844,6 +1850,7 @@ impl App {
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
+            Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2480,6 +2487,7 @@ impl App {
             // Duvar stilleri (docs/adr/0339 §6).
             "arch.wallStyles" => self.open_wall_styles(),
             "arch.wallJoinCheck" => self.open_wall_joins(),
+            "arch.tagsCheck" => self.open_tags_check(),
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
             "arch.quantities" => self.open_quantities(),
             "arch.spaceMerge" => self.space_merge(),

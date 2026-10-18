@@ -1301,6 +1301,8 @@ impl crate::app::App {
                 }
                 // A column whose grid is gone (docs/adr/0343 §3), at its centre.
                 Some(kentos_contracts::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
+                // A tag whose object is gone (docs/adr/0344 §1), above its middle.
+                Some(kentos_contracts::Entity::Tag(t)) => out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above)),
                 _ => {}
             }
         }

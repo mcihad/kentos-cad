@@ -510,11 +510,15 @@ pub const SCHEMA_WITH_SPACES: u32 = 78;
 /// Schema 79 (docs/adr/0343 §1): the grid, the column, the stair and the ramp (each its fields as one map under its
 /// kind's name), written only when the drawing has one.
 pub const SCHEMA_WITH_ARCH_ELEMENTS: u32 = 79;
+/// Schema 80 (docs/adr/0344 §1, §3): the tag (its fields as one map under `tag`) and a table's schedule of openings,
+/// spaces, columns or walls (as a block schedule, its source's JSON under `schedule`), written only when the drawing
+/// has one.
+pub const SCHEMA_WITH_TAGS: u32 = 80;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 78] = [
+pub const SCHEMAS: [u32; 79] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -593,6 +597,7 @@ pub const SCHEMAS: [u32; 78] = [
     SCHEMA_WITH_OPENINGS,
     SCHEMA_WITH_SPACES,
     SCHEMA_WITH_ARCH_ELEMENTS,
+    SCHEMA_WITH_TAGS,
 ];
 
 /// The file a drawing is saved as.

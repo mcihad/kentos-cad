@@ -51,6 +51,8 @@
 //! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch, joins, cleanup) as one JSON object (docs/adr/0339, 0340) |
 //! | space | | | its parts and the rest of its source (seed, method, number, name, usage, arch, height, finishes, broken) as one JSON object (docs/adr/0342) |
 //! | opening | n | place (2n) | the rest of its source (host, at, anchor, width, form, leaves, operation, hand, side, swing, showSwing, frame, sill, head, style, number, broken) as one JSON object (docs/adr/0341) |
+//! | grid, column, stair, ramp | | | its fields as one JSON object (docs/adr/0343) |
+//! | tag | | | its fields (of, at, content, shape, size, leader, text, anchor, broken) as one JSON object (docs/adr/0344) |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
@@ -176,7 +178,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 28] = [
+pub const KINDS: [&str; 29] = [
     "point",
     "line",
     "polyline",
@@ -205,6 +207,7 @@ pub const KINDS: [&str; 28] = [
     "column",
     "stair",
     "ramp",
+    "tag",
 ];
 
 const COLOR: u32 = 1;
@@ -425,6 +428,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Column(_) => 25,
         Entity::Stair(_) => 26,
         Entity::Ramp(_) => 27,
+        Entity::Tag(_) => 28,
     }
 }
 
@@ -1489,6 +1493,8 @@ impl Packer {
             Entity::Column(e) => self.text(&serde_json::to_value(&e.column).unwrap_or_default().to_string()),
             Entity::Stair(e) => self.text(&serde_json::to_value(&e.stair).unwrap_or_default().to_string()),
             Entity::Ramp(e) => self.text(&serde_json::to_value(&e.ramp).unwrap_or_default().to_string()),
+            // A tag (docs/adr/0344 §1): its fields as one JSON text.
+            Entity::Tag(e) => self.text(&serde_json::to_value(&e.tag).unwrap_or_default().to_string()),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
                 self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
@@ -1707,7 +1713,10 @@ impl Packer {
                     flags |= OPT[10];
                     self.float(*f);
                 }
-                if let Some(source) = source.as_ref().filter(|s| !matches!(s, TableSource::Blocks { .. })) {
+                if let Some(source) = source
+                    .as_ref()
+                    .filter(|s| !matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. }))
+                {
                     flags |= OPT[9];
                     match source {
                         TableSource::File { name, sheet, .. } => {
@@ -3365,6 +3374,15 @@ fn geometry(
             };
             parsed(&text)?
         }
+        28 => {
+            let text = c.text(|| "etiketin alanları".into())?;
+            let tag: kentos_contracts::TagFields =
+                serde_json::from_str(&text).map_err(|_| broken("etiketin alanları"))?;
+            if let Some((_, problem)) = tag.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Tag(kentos_contracts::TagEntity { base, tag })
+        }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;
             let space: kentos_contracts::SpaceFields =
@@ -3670,7 +3688,9 @@ fn table_cells_json(
         }),
         _ => None,
     };
-    let schedule = source.filter(|s| matches!(s, TableSource::Blocks { .. })).cloned();
+    let schedule = source
+        .filter(|s| matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. }))
+        .cloned();
     if styles.is_empty() && formulas.is_empty() && fields.is_empty() && link.is_none() && schedule.is_none() {
         return None;
     }

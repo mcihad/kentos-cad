@@ -232,6 +232,23 @@ fn size_holds(x: f64, what: &str, path: &str) -> Result<(), Stop> {
 
 /// `t` with edit `e` applied.
 fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Result<TableEntity, Stop> {
+    // A schedule's rows and cells are the document's (docs/adr/0344 §3): only its sizes and lines change here.
+    if matches!(t.source, Some(TableSource::Schedule { .. }))
+        && !matches!(
+            e,
+            TableEdit::RowHeight { .. }
+                | TableEdit::ColumnWidth { .. }
+                | TableEdit::Fit { .. }
+                | TableEdit::Grid { .. }
+                | TableEdit::Frame { .. }
+        )
+    {
+        return Err(fail(
+            codes::SCHEDULE_CELL,
+            "Çizelgenin hücreleri tablo olarak düzenlenmez; Çizelgeyi düzenle onları nesnelere yazar.".into(),
+            path,
+        ));
+    }
     match e {
         TableEdit::SetCell { row, col, words } => {
             let (r, c) = cell_in(&t, *row, *col, path)?;

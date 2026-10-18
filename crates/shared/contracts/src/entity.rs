@@ -1762,6 +1762,8 @@ pub enum Entity {
     Stair(crate::StairEntity),
     /// A ramp (docs/adr/0343): its centre line, width, rise and landings.
     Ramp(crate::RampEntity),
+    /// A tag (docs/adr/0344): its object, its words and frame.
+    Tag(crate::TagEntity),
     /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
     /// attachments and label; not drawn, picked or snapped to.
     Record(RecordEntity),
@@ -1821,6 +1823,7 @@ impl Entity {
             Entity::Column(e) => &e.base,
             Entity::Stair(e) => &e.base,
             Entity::Ramp(e) => &e.base,
+            Entity::Tag(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1854,6 +1857,7 @@ impl Entity {
             Entity::Column(e) => &mut e.base,
             Entity::Stair(e) => &mut e.base,
             Entity::Ramp(e) => &mut e.base,
+            Entity::Tag(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1887,6 +1891,7 @@ impl Entity {
             Entity::Column(_) => "column",
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
+            Entity::Tag(_) => "tag",
             Entity::Xline(_) => "xline",
             Entity::Ray(_) => "ray",
             Entity::Text(_) => "text",

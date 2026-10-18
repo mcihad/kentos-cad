@@ -242,6 +242,7 @@ pub fn kind(kind: &str) -> &'static str {
         "column" => "Kolon",
         "stair" => "Merdiven",
         "ramp" => "Rampa",
+        "tag" => "Etiket",
         _ => "Nesne",
     }
 }

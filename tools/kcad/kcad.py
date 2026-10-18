@@ -289,6 +289,13 @@ SCHEMA_WITH_SPACES = 78
 SCHEMA_WITH_ARCH_ELEMENTS = 79
 ARCH_ELEMENTS = ("grid", "column", "stair", "ramp")
 ARCH_NAMES = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
+# Schema 80: schema 79, the `tag` kind (its fields as one map under `tag`) and a table's schedule of the drawing's
+# openings, spaces, columns or walls under `schedule` (docs/adr/0344 §1, §3).
+SCHEMA_WITH_TAGS = 80
+TAG_PLACES = ("number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
+              "phase", "tag", "place", "label", "style", "risers", "slope")
+SCHEDULE_FIELDS = ("number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area",
+                   "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr")
 SPACE_METHODS = ("net", "centerline", "gross")
 SPACE_MAX_POINTS = 10_000
 # A wall's bounds (kentos_contracts::arch).
@@ -481,7 +488,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2611,6 +2618,7 @@ class _Schema:
         self.openings = version >= SCHEMA_WITH_OPENINGS
         self.spaces = version >= SCHEMA_WITH_SPACES
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
+        self.tags = version >= SCHEMA_WITH_TAGS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4797,7 +4805,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4824,6 +4832,10 @@ class _Schema:
         if kind in ARCH_ELEMENTS and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında aks, kolon, merdiven ya da rampa olamaz")
+        # Nor a tag: its object is the drawing's (docs/adr/0344 §1).
+        if kind == "tag" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında etiket olamaz")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -4923,7 +4935,7 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
-        if kind in ARCH_ELEMENTS:
+        if kind in ARCH_ELEMENTS or kind == "tag":
             fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
@@ -5860,11 +5872,79 @@ class _Schema:
         return d
 
     def table_schedule(self, v):
+        if self.tags and isinstance(v, dict) and v.get("kind") == "schedule":
+            return self.arch_schedule(v)
         d = self.fields({"kind": (self.enum(("blocks",)), True), "names": (self.array(self.text), False), "by": (self.text, False)})(v)
         if "names" in d and not d["names"]:
             self.path.append("names")
             self.fail("bad_value", "boş ad listesi yazılmaz")
         return d
+
+    def arch_schedule(self, v):
+        """A schedule of the drawing's objects (schema 80, docs/adr/0344 §3): its kind, columns, filter, sort, grouping,
+        total and the members the document wrote; a flag only when true, no empty list."""
+        def true_only(x):
+            x = self.bool(x)
+            if x is not True:
+                self.fail("bad_value", "false yazılmaz; varsayılandır")
+            return x
+        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS), True), "title": (self.text, False), "attr": (self.text, False)})
+        flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
+                           "forms": (self.array(self.enum(("door", "window", "opening"))), False), "layers": (self.array(self.text), False)})
+        sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False)})
+        d = self.fields({"kind": (self.enum(("schedule",)), True), "of": (self.enum(("openings", "spaces", "columns", "walls")), True),
+                         "columns": (self.array(column), True), "filter": (flt, False), "sort": (self.array(sort), False),
+                         "group": (true_only, False), "total": (true_only, False),
+                         "members": (self.array(self.array(self.text)), False)})(v)
+        if not 1 <= len(d["columns"]) <= 30:
+            self.path.append("columns")
+            self.fail("bad_value", "çizelgenin 1 ile 30 arası sütunu olur")
+        for c in d["columns"]:
+            if (c["field"] == "attr") != ("attr" in c):
+                self.fail("bad_value", "öznitelik adı yalnız ve her öznitelik sütununda verilir")
+        for s in d.get("sort", []):
+            if s["column"] >= len(d["columns"]):
+                self.fail("bad_value", "sıralama olmayan bir sütunu istiyor")
+        for key in ("sort", "members"):
+            if key in d and not d[key]:
+                self.path.append(key)
+                self.fail("bad_value", "boş liste yazılmaz")
+        return d
+
+    def tag_fields(self, v):
+        """A tag's fields (schema 80, docs/adr/0344 §1), as the contract's JSON has them; the frame only when not a circle,
+        the leader only when on, no empty words."""
+        def not_circle(x):
+            x = self.enum(("circle", "hexagon", "rectangle", "rounded", "none"))(x)
+            if x == "circle":
+                self.fail("bad_value", "varsayılan çerçeve (circle) yazılmaz")
+            return x
+        def true_only(x):
+            x = self.bool(x)
+            if x is not True:
+                self.fail("bad_value", "false yazılmaz; varsayılandır")
+            return x
+        f = self.fields({"of": (self.text, True), "at": (self.jpoint, True), "content": (self.text, False),
+                         "shape": (not_circle, False), "size": (self.float, False), "leader": (true_only, False),
+                         "text": (self.text, False), "anchor": (self.jpoint, False),
+                         "broken": (self.enum(("targetGone",)), False)})(v)
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        if not f["of"].strip():
+            bad("Etiketin nesnesi verilmeli.")
+        if not (math.isfinite(f["at"]["x"]) and math.isfinite(f["at"]["y"])):
+            bad("Etiketin yerinin koordinatları sonlu olmalı.")
+        if "content" in f:
+            c = f["content"]
+            if not c.strip() or len(c) > 200 or c.count("\n") + 1 > 6:
+                bad("Etiketin şablonu boş olamaz, en çok 200 harf ve 6 satırdır.")
+            for name in [part.split("}")[0] for part in c.split("{")[1:]]:
+                if not (name in TAG_PLACES or (name.startswith("attr:") and name[5:].strip())):
+                    bad(f"Şablonda bilinmeyen yer “{{{name}}}”.")
+        if "size" in f and not (math.isfinite(f["size"]) and 0 < f["size"] <= 50):
+            bad("Etiketin yazı yüksekliği sıfırdan büyük, en çok 50 mm olmalı.")
+        if f.get("text") == "":
+            bad("boş yazı yazılmaz")
+        return f
 
     def table_sources(self, t):
         """A table's schedule is its source; a link joins its file source (docs/adr/0327 §4–§5)."""
@@ -6000,6 +6080,8 @@ class _Schema:
                     refuse("source", "kaynak dosyanın adı boş olamaz")
                 if "sheet" in src and not src["sheet"].strip():
                     refuse("source", "kaynak sayfanın adı boş olamaz")
+            elif src["kind"] == "schedule":
+                pass  # Its columns are checked as it is read (`arch_schedule`); its rows are the document's.
             elif not 0 < len(src["objects"]) <= MAX_SOURCE_OBJECTS:
                 refuse("source", f"tablonun kaynağı {len(src['objects'])} nesne gösteriyor")
         self.cells_rules(t, n, m, refuse)
@@ -7231,6 +7313,8 @@ ENTITY_KINDS = {
     "column": lambda s: {"column": (s.arch_element("column"), True)},
     "stair": lambda s: {"stair": (s.arch_element("stair"), True)},
     "ramp": lambda s: {"ramp": (s.arch_element("ramp"), True)},
+    # Schema 80 (docs/adr/0344 §1): a tag; its fields as one map.
+    "tag": lambda s: {"tag": (s.tag_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

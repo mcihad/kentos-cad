@@ -763,6 +763,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Column(c) => kentos_formats::arch_elements::core_column(&c.column),
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
         Entity::Ramp(r) => kentos_formats::arch_elements::core_ramp(&r.ramp),
+        Entity::Tag(t) => kentos_formats::arch_elements::core_tag(&t.tag),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1322,6 +1323,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.stair.tread = stair.tread;
             e.stair.riser_height = stair.riser_height;
             e.stair.landing = stair.landing;
+        }
+        // A tag's middle (docs/adr/0344 §1): its words are sized on paper.
+        (Entity::Tag(e), Shape::Tag { at, .. }) => {
+            e.tag.at = Point { x: at.x, y: at.y };
         }
         (Entity::Ramp(e), Shape::Ramp { pts, ramp }) => {
             e.ramp.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
@@ -1993,7 +1998,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         | Shape::Grid { .. }
         | Shape::Column { .. }
         | Shape::Stair { .. }
-        | Shape::Ramp { .. } => return None,
+        | Shape::Ramp { .. }
+        | Shape::Tag { .. } => return None,
     })
 }
 

@@ -20,6 +20,17 @@ use crate::store::Stored;
 /// The words of a block schedule's last row's first cell.
 pub const TOTAL: &str = "Toplam";
 
+/// The kinds a schedule's cells read: its own and those its values come from.
+fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
+    use kentos_contracts::ScheduleOf;
+    match of {
+        ScheduleOf::Openings => &["opening", "wall"],
+        ScheduleOf::Spaces => &["space"],
+        ScheduleOf::Columns => &["column", "grid"],
+        ScheduleOf::Walls => &["wall", "opening"],
+    }
+}
+
 fn core(e: &Entity) -> Option<CoreEntity> {
     let json = serde_json::to_string(e).ok()?;
     CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
@@ -133,6 +144,28 @@ impl Document {
             let rows = self.blocks_schedule(names, by.as_deref());
             self.take_rows(&mut out, rows);
         }
+        // A schedule of the drawing's objects (docs/adr/0344 §3): its rows, members and look.
+        if let Some(TableSource::Schedule {
+            of,
+            columns,
+            filter,
+            sort,
+            group,
+            total,
+            ..
+        }) = &t.source
+        {
+            let written = self.schedule_rows(*of, columns, filter.as_ref(), sort, *group, *total);
+            self.take_rows(&mut out, written.rows);
+            out.aligns = Some(written.aligns);
+            out.header = true;
+            out.styles = written.styles;
+            out.formulas.clear();
+            out.fields.clear();
+            if let Some(TableSource::Schedule { members, .. }) = &mut out.source {
+                *members = written.members;
+            }
+        }
         for i in 0..out.fields.len() {
             let f = &out.fields[i];
             let (words, broken) = match self.cell_field_value(&f.source, f.format.as_ref()) {
@@ -198,6 +231,17 @@ impl Document {
                 _ => None,
             })
             .collect();
+        let kinds: std::collections::HashSet<&'static str> = ops
+            .iter()
+            .filter_map(|op| match op {
+                Op::Add(s) | Op::Remove(s) | Op::Update { after: s, .. } => Some(s.entity.kind()),
+                _ => None,
+            })
+            .chain(ops.iter().filter_map(|op| match op {
+                Op::Update { before, .. } => Some(before.entity.kind()),
+                _ => None,
+            }))
+            .collect();
         let mut out = Vec::new();
         for slot in self.store.computed_table_slots().collect::<Vec<_>>() {
             let Some(current) = self.store.get(slot).cloned() else {
@@ -206,9 +250,11 @@ impl Document {
             let Entity::Table(t) = &*current.entity else {
                 continue;
             };
-            // A table only of formulas changes only with itself; fields and schedules read the drawing.
-            let reads_drawing =
-                !t.fields.is_empty() || matches!(t.source, Some(TableSource::Blocks { .. }));
+            // A table only of formulas changes only with itself; fields and schedules read the drawing; a schedule of
+            // the drawing's objects only the objects of its kinds (docs/adr/0344 §3).
+            let reads_drawing = !t.fields.is_empty()
+                || matches!(t.source, Some(TableSource::Blocks { .. }))
+                || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if schedule_kinds(*of).iter().any(|k| kinds.contains(k)));
             if !reads_drawing && !touched.contains(&current.uid) {
                 continue;
             }

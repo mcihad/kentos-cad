@@ -454,6 +454,13 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
                 *l = s.apply(*l);
             }
         }
+        // Its place is a length, its words' height on paper (docs/adr/0344 §1).
+        Entity::Tag(e) => {
+            s.point(&mut e.tag.at);
+            if let Some(a) = &mut e.tag.anchor {
+                s.point(a);
+            }
+        }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}
     }

@@ -1364,7 +1364,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
         // A grid, column, stair or ramp (docs/adr/0343 §5): their rows below.
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) => {
             geo.extend(arch::rows(doc, slot, e, locked, &f));
         }
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and

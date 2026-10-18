@@ -201,6 +201,22 @@
    "tests": 0
   },
   {
+   "id": "arch.tagsCheck",
+   "kind": "command",
+   "title": "Etiketleri denetle",
+   "level": "query",
+   "via": [
+    "cad.tags.check"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.wallJoinCheck",
    "kind": "command",
    "title": "Birleşimleri denetle",
@@ -2637,6 +2653,20 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.selectFilter.tag",
+   "kind": "command",
+   "title": "Seçim süzgecinde Etiket",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10497,6 +10527,38 @@
    "tests": 2
   },
   {
+   "id": "tool.scheduleOpenings",
+   "kind": "command",
+   "title": "Kapı ve pencere çizelgesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Tür, grup, toplam, sıra ve tıklanan köşe komuta verilir; satırlar komutun ve belgenin hesabı, önizleme planından (ADR 0344 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.scheduleSpaces",
+   "kind": "command",
+   "title": "Mahal çizelgesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Mahal çizelgesi: Tür, grup, toplam, sıra ve köşe komuta verilir (ADR 0344 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.sector",
    "kind": "tool",
    "title": "Daire dilimi",
@@ -10906,6 +10968,38 @@
    "scope": "gis",
    "desktop": "pending",
    "tests": 1
+  },
+  {
+   "id": "tool.tag",
+   "kind": "command",
+   "title": "Etiket",
+   "level": "semantic",
+   "via": [
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.tags.create",
+   "mcp": "cad.tags.create",
+   "note": "Tıklanan nesne, yer, şablon, çerçeve ve kol komuta verilir; yazı ve bağ noktası komutun hesabı, önizleme planından (ADR 0344 §1, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.tagAll",
+   "kind": "command",
+   "title": "Hepsini etiketle",
+   "level": "semantic",
+   "via": [
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.tags.create",
+   "mcp": "cad.tags.create",
+   "note": "Seçilen türler all'a verilir; etiketsiz ve görünenleri komut bulur (ADR 0344 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.tangentLine",

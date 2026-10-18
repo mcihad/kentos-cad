@@ -407,6 +407,14 @@ Liste:
   kesişimleri), Merdiven, Rampa ve Aksları numarala araçları, Mimari'nin Taşıyıcı ve Merdiven panelleri ve ikonları, Öznitelikler'in
   satırları ve Denetim'i, seçim süzgecinde Aks, Kolon, Merdiven, Rampa (`SelectKind`), bağı kopan kolonun uyarı üçgeni; bilinen
   bozulmalar: şema 79 ve `FORMATS_VERSION` 86.
+- [ ] `CAD-ARCH-20`…`22`, `39` etiketler ve çizelgeler (ADR 0344, 18 Ekim): web'de gerekenler: `.kcad` şema 80 (`tag` türü;
+  tablonun `schedule` kaynağı; sütunlu kayıtta tür 28; `FORMATS_VERSION` 87), çekirdeğin `geom::tag`'ı WASM'da (çerçeve, satırlar, kol),
+  deponun paket türü 35 ve etiketin yazısının gerçek boy kuralı (`legible`), belgenin etiket izleyicisi ve çizelgenin satırları
+  (`model/` içinde `tag_follow`, `arch_values`, `schedules`'ın karşılıkları), `cad.tags.create`, `cad.tags.edit`, `cad.tags.check`,
+  `cad.schedules.create`, `cad.schedules.edit` (`product/`), `cad.tables.edit`'in `schedule_cell` reddi, Etiket, Hepsini etiketle,
+  Etiketleri denetle, Kapı ve pencere çizelgesi, Mahal çizelgesi, Tabloyu düzenle'nin çizelge yolu, Mimari'nin Etiket ve Çizelge
+  panelleri ve ikonları, Öznitelikler'in etiket satırları, seçim süzgecinde Etiket, kopuk etiketin uyarı üçgeni; bilinen bozulmalar:
+  şema 80 ve `FORMATS_VERSION` 87.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

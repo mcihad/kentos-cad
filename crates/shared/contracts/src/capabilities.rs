@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 27] = [
+pub const KINDS: [&str; 28] = [
     "point",
     "line",
     "polyline",
@@ -91,6 +91,7 @@ pub const KINDS: [&str; 27] = [
     "column",
     "stair",
     "ramp",
+    "tag",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -1349,6 +1350,79 @@ const ENTRIES: &[Entry] = &[
             )]
         },
     },
+    // Tags and schedules (docs/adr/0344 §4).
+    Entry {
+        id: "cad.tags.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "invalid_uid",
+                "not_finite",
+                "entity_not_found",
+                "not_taggable",
+                "invalid_tag",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: || {
+            vec![target(
+                None,
+                &["opening", "space", "column", "grid", "wall", "stair", "ramp", "insert"],
+                &[],
+                Some("not_taggable"),
+                None,
+            )]
+        },
+    },
+    Entry {
+        id: "cad.tags.edit",
+        refusals: &[
+            OBJECTS,
+            &["not_a_tag", "nothing_to_set", "not_finite", "invalid_tag"],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["tag"], &[], Some("not_a_tag"), None)],
+    },
+    Entry {
+        id: "cad.tags.check",
+        refusals: &[&["layer_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.schedules.create",
+        refusals: &[
+            &["not_finite", "invalid_schedule", "level_not_found", "invalid_line_weight"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.schedules.edit",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "not_schedule",
+                "cell_out_of_range",
+                "cell_computed",
+                "schedule_group_number",
+                "invalid_cell_value",
+                "invalid_schedule",
+                "level_not_found",
+            ],
+            REVISION,
+            &["layer_locked"],
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["table"], &[], Some("not_schedule"), None)],
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",
@@ -1821,6 +1895,7 @@ const ENTRIES: &[Entry] = &[
             &[
                 "not_a_table",
                 "cell_out_of_range",
+                "schedule_cell",
                 "invalid_table",
                 "not_finite",
                 "no_source",

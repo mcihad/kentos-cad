@@ -59,11 +59,15 @@ impl Document {
                 // Removed: nothing may still follow it.
                 let linked = self.store.linked_to(change.uid).next().is_some();
                 // An opening stays with its wall gone, broken (`hostGone`, docs/adr/0341 §3); a column with its grid gone
-                // (`gridGone`, docs/adr/0343 §3).
+                // (`gridGone`, docs/adr/0343 §3); a tag with its object gone (`targetGone`, docs/adr/0344 §1).
                 let tied = self.store.tied_to(change.uid).any(|slot| {
                     !matches!(
                         self.store.get(slot).map(|s| &*s.entity),
-                        Some(kentos_contracts::Entity::Opening(_) | kentos_contracts::Entity::Column(_))
+                        Some(
+                            kentos_contracts::Entity::Opening(_)
+                                | kentos_contracts::Entity::Column(_)
+                                | kentos_contracts::Entity::Tag(_)
+                        )
                     )
                 });
                 if linked || tied {

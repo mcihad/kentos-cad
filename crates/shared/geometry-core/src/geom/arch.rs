@@ -828,6 +828,12 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         }
         Shape::Stair { pts, stair } => polygon(band(pts, stair.width / 2.0)),
         Shape::Ramp { pts, ramp } => polygon(band(pts, ramp.width / 2.0)),
+        // A tag's middle: its frame is sized on paper (docs/adr/0344 §1).
+        Shape::Tag { at, .. } => Shape::Point {
+            p: *at,
+            z: None,
+            parts: None,
+        },
         _ => return None,
     })
 }
@@ -839,6 +845,7 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
         Shape::Column { at, column } => column_pieces(*at, column, scale),
         Shape::Stair { pts, stair } => stair_pieces(pts, stair, scale),
         Shape::Ramp { pts, ramp } => ramp_pieces(pts, ramp, scale),
+        Shape::Tag { at, tag } => crate::geom::tag::pieces(*at, tag, scale),
         _ => Vec::new(),
     }
 }

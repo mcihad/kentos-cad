@@ -94,6 +94,20 @@ pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_contracts::S
     said(kentos_native_application::spaces_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A tag's template, frame, words' height or leader from Öznitelikler (docs/adr/0344 §5): through `cad.tags.edit`;
+/// what to say.
+pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_contracts::TagChange) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::TagsEdit {
+        uids: vec![uid.to_string()],
+        change,
+        expected_revision: None,
+    };
+    said(kentos_native_application::tags_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
 /// `cad.arch.edit`; what to say.
 pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_contracts::ArchOperation) -> Vec<String> {

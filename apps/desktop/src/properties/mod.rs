@@ -106,6 +106,8 @@ pub enum Event {
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
     Arch(Slot, kentos_contracts::ArchOperation),
+    /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
+    Tag(Slot, kentos_contracts::TagChange),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -167,6 +169,10 @@ pub enum ArchField {
     Rise,
     Slope,
     Base,
+    /// A tag's template (docs/adr/0344 §5): `\n` its line breaks; empty its kind's.
+    TagContent,
+    /// A tag's words' height on paper, mm; empty 2.5.
+    TagSize,
 }
 
 /// The value a cell edits.
@@ -712,6 +718,7 @@ impl App {
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
+            Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -1099,6 +1106,26 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_opening(model, *slot, op);
         }
+        Field::Arch(slot, which @ (ArchField::TagContent | ArchField::TagSize)) => {
+            use kentos_contracts::TagChange;
+            let t = kentos_interaction::js_trim(text);
+            let c = if *which == ArchField::TagContent {
+                TagChange {
+                    content: Some((!t.is_empty()).then(|| t.replace("\\n", "\n"))),
+                    ..Default::default()
+                }
+            } else {
+                let n = web_number(text);
+                if !t.is_empty() && !n.is_finite() {
+                    return Vec::new();
+                }
+                TagChange {
+                    size: Some((!t.is_empty()).then_some(n)),
+                    ..Default::default()
+                }
+            };
+            return properties::edit_tag(model, *slot, c);
+        }
         Field::Arch(slot, which) => {
             use kentos_contracts::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
@@ -1130,6 +1157,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::RiserHeight => ArchChange { riser_height: Some(length()), ..Default::default() },
                 ArchField::Tread => ArchChange { tread: Some(length()), ..Default::default() },
                 ArchField::Rise => ArchChange { rise: Some(length()), ..Default::default() },
+                ArchField::TagContent | ArchField::TagSize => return Vec::new(),
             };
             return properties::edit_arch(model, *slot, ArchOperation::Set(Box::new(c)));
         }

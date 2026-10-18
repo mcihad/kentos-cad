@@ -30,6 +30,9 @@ pub fn source_words(t: &TableEntity) -> String {
                 None => format!("Blok çizelgesi: {what}"),
             }
         }
+        Some(TableSource::Schedule { of, members, .. }) => {
+            format!("{}: {} satır, nesnelerinden", of.label(), members.len())
+        }
         Some(s) => {
             let what = match s {
                 TableSource::Coordinates { .. } => "Koordinat çizelgesi",

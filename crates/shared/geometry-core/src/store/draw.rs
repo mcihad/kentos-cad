@@ -215,7 +215,7 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             None => out.push(NONE),
         },
         // Its outline until the store expands it into its pieces (docs/adr/0343).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
             match crate::geom::arch::outline(s) {
                 Some(o) => drawn_record(&o, oriented, clip, refs, out),
                 None => out.push(NONE),

@@ -518,6 +518,14 @@ fn defs(shape: &Shape) -> Defs {
             others.push(text(column.tag.as_deref()));
             others.push(text(column.place.as_deref()));
         }
+        // Its middle and words (docs/adr/0344).
+        Shape::Tag { at, tag } => {
+            comps.push(path(&[*at], None));
+            others.push(Other::Text(tag.text.clone()));
+            others.push(Other::Text(format!("{:?}", tag.frame)));
+            others.push(Other::Num(tag.size.unwrap_or(0.0)));
+            others.push(Other::Flag(tag.leader));
+        }
         Shape::Stair { pts, stair } => {
             comps.push(path(pts, None));
             lengths.extend([stair.width, stair.riser_height, stair.tread, stair.landing()]);

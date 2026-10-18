@@ -225,6 +225,29 @@ pub enum TableSource {
         #[cfg_attr(feature = "ts", ts(optional))]
         by: Option<String>,
     },
+    /// Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter
+    /// takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
+    /// by the document at every step, which writes `members` too: each data row's objects by their persistent ids.
+    #[serde(rename_all = "camelCase")]
+    Schedule {
+        of: crate::ScheduleOf,
+        columns: Vec<crate::ScheduleColumn>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        filter: Option<crate::ScheduleFilter>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ScheduleSort>>", optional))]
+        sort: Vec<crate::ScheduleSort>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        group: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        total: bool,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
+        members: Vec<Vec<String>>,
+    },
 }
 
 impl TableSource {
@@ -236,6 +259,7 @@ impl TableSource {
             TableSource::Attributes { .. } => "attributes",
             TableSource::File { .. } => "file",
             TableSource::Blocks { .. } => "blocks",
+            TableSource::Schedule { .. } => "schedule",
         }
     }
 
@@ -245,7 +269,7 @@ impl TableSource {
             TableSource::Coordinates { objects }
             | TableSource::Areas { objects }
             | TableSource::Attributes { objects } => objects,
-            TableSource::File { .. } | TableSource::Blocks { .. } => &[],
+            TableSource::File { .. } | TableSource::Blocks { .. } | TableSource::Schedule { .. } => &[],
         }
     }
 }
@@ -445,6 +469,24 @@ impl TableShape<'_> {
                     return Some((
                         "source",
                         "Blok çizelgesinin blok ve öznitelik adları boş olamaz.".to_owned(),
+                    ));
+                }
+            }
+            Some(TableSource::Schedule {
+                of,
+                columns,
+                filter,
+                sort,
+                members,
+                ..
+            }) => {
+                if let Some((_, words)) = crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref()) {
+                    return Some(("source", words));
+                }
+                if members.len() > MAX_TABLE_ROWS || members.iter().flatten().any(|u| u.trim().is_empty()) {
+                    return Some((
+                        "source",
+                        "Çizelgenin satırlarının nesneleri boş kimlik tutamaz.".to_owned(),
                     ));
                 }
             }

@@ -153,6 +153,7 @@ pub fn kind_title(kind: &str) -> &'static str {
         "column" => "Kolon",
         "stair" => "Merdiven",
         "ramp" => "Rampa",
+        "tag" => "Etiket",
         "nurbs" => "NURBS eğrisi",
         "raster" => "Raster",
         "pointcloud" => "Nokta bulutu",

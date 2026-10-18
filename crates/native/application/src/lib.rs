@@ -190,6 +190,10 @@ pub mod spaces_create;
 pub mod arch_elements;
 pub mod arch_edit;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
+pub mod tags;
+pub mod schedules;
+pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
+pub use schedules::{create as schedules_create, edit as schedules_edit};
 pub mod spaces_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
@@ -458,6 +462,27 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ARCH_EDIT,
         kentos_contracts::CAD_ARCH_EDIT_VERSION,
+    ),
+    // Etiket, Etiketleri denetle, Çizelge and Çizelgeyi düzenle ([`tags`], [`schedules`], docs/adr/0344).
+    (
+        kentos_contracts::CAD_TAGS_CREATE,
+        kentos_contracts::CAD_TAGS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TAGS_CHECK,
+        kentos_contracts::CAD_TAGS_CHECK_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_TAGS_EDIT,
+        kentos_contracts::CAD_TAGS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SCHEDULES_CREATE,
+        kentos_contracts::CAD_SCHEDULES_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SCHEDULES_EDIT,
+        kentos_contracts::CAD_SCHEDULES_EDIT_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

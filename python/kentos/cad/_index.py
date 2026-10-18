@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, texts, ucs, units, views, walls
+from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, texts, ucs, units, views, walls
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -125,6 +125,8 @@ COMMANDS: dict[str, Any] = {
     "cad.rectangle.create": rectangle.create,
     "cad.relations.edit": relations.edit,
     "cad.scenarios.edit": scenarios.edit,
+    "cad.schedules.create": schedules.create,
+    "cad.schedules.edit": schedules.edit,
     "cad.schema.describe": schema.describe,
     "cad.settings.set": settings.set,
     "cad.sheets.edit": sheets.edit,
@@ -141,6 +143,9 @@ COMMANDS: dict[str, Any] = {
     "cad.styles.edit": styles.edit,
     "cad.styles.impact": styles.impact,
     "cad.tables.edit": tables.edit,
+    "cad.tags.check": tags.check,
+    "cad.tags.create": tags.create,
+    "cad.tags.edit": tags.edit,
     "cad.texts.check": texts.check,
     "cad.texts.edit": texts.edit,
     "cad.ucs.set": ucs.set,
@@ -182,4 +187,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "texts", "ucs", "units", "views", "walls",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "texts", "ucs", "units", "views", "walls",)

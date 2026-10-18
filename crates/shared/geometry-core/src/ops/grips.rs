@@ -50,7 +50,7 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Space { parts, .. } => crate::geom::space::label_at(parts).into_iter().collect(),
         // A grid's ends, a stair's or ramp's walking line's points, a column's centre (docs/adr/0343 §2).
         Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => pts.clone(),
-        Shape::Column { at, .. } => vec![*at],
+        Shape::Column { at, .. } | Shape::Tag { at, .. } => vec![*at],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             // A closed polyline's closing edge has its middle too (docs/adr/0258 §1).
@@ -335,6 +335,10 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Column { column, .. } => Shape::Column {
             at: p,
             column: column.clone(),
+        },
+        Shape::Tag { tag, .. } => Shape::Tag {
+            at: p,
+            tag: tag.clone(),
         },
         // It moves whole with its label (docs/adr/0342 §3).
         Shape::Space { parts, .. } => {

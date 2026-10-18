@@ -531,6 +531,14 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("ramp", Val::Json(serde_json::to_value(&e.ramp).unwrap_or_default())));
             }
+            // A tag (docs/adr/0344 §1): its fields as one map.
+            Entity::Tag(e) => {
+                if let Some((_, problem)) = e.tag.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("tag", Val::Json(serde_json::to_value(&e.tag).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;
@@ -1029,8 +1037,9 @@ impl<'d> Encoder<'d> {
                         );
                     }
                     match source {
-                        // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON.
-                        TableSource::Blocks { .. } => {
+                        // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON; schema 80's
+                        // schedule of the drawing's objects too (docs/adr/0344 §3).
+                        TableSource::Blocks { .. } | TableSource::Schedule { .. } => {
                             f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
                         }
                         TableSource::File {

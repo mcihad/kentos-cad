@@ -1,0 +1,5915 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.tags.check",
+  "commandVersion": 1,
+  "title": "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar",
+  "note": "ADR 0344 §1–§4. Beklenenler scripts/fixtures/tag_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvarlar düz ve eksenlere paralel, mahaller dikdörtgen. Kurulumdaki çizimde 16 nesne var; yeni nesne 17'den başlar. Çizelgenin satır ve sütun boyları yazı tiplerinin ölçüsündendir, burada denetlenmez ($any).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Etiketler ve çizelgeler",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kolon",
+        "name": "Kolon",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "etiket",
+        "name": "Etiket",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizelge",
+        "name": "Çizelge",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "etiket",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "style": "D20",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 10.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "style": "D20"
+      },
+      {
+        "kind": "space",
+        "id": 3,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 24.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 24.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 20.0,
+                  "y": 3.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "usage": "Oturma",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 4,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 25.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 28.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 28.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 25.0,
+                  "y": 2.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "102",
+        "name": "Mutfak",
+        "usage": "Islak",
+        "height": 2.4
+      },
+      {
+        "kind": "column",
+        "id": 5,
+        "layerId": "kolon",
+        "attrs": {},
+        "at": {
+          "x": 40.0,
+          "y": 0.0
+        },
+        "width": 0.4,
+        "depth": 0.5,
+        "type": "C30",
+        "tag": "S1"
+      },
+      {
+        "kind": "column",
+        "id": 6,
+        "layerId": "kilitli",
+        "attrs": {},
+        "at": {
+          "x": 45.0,
+          "y": 0.0
+        },
+        "width": 0.3,
+        "tag": "S2"
+      },
+      {
+        "kind": "line",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "grid",
+        "id": 8,
+        "layerId": "kolon",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 50.0,
+            "y": -2.0
+          },
+          {
+            "x": 50.0,
+            "y": 8.0
+          }
+        ],
+        "name": "A"
+      },
+      {
+        "kind": "ramp",
+        "id": 9,
+        "layerId": "kolon",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 60.0,
+            "y": 0.0
+          },
+          {
+            "x": 70.0,
+            "y": 0.0
+          }
+        ],
+        "width": 1.5,
+        "rise": 0.5
+      },
+      {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+        "at": 9.0,
+        "width": 0.6,
+        "form": "opening",
+        "head": 2.1,
+        "number": "B1",
+        "place": [
+          {
+            "x": 8.7,
+            "y": 0.1
+          },
+          {
+            "x": 8.7,
+            "y": -0.1
+          },
+          {
+            "x": 9.3,
+            "y": 0.1
+          },
+          {
+            "x": 9.3,
+            "y": -0.1
+          }
+        ],
+        "broken": "hostGone"
+      },
+      {
+        "kind": "tag",
+        "id": 11,
+        "layerId": "kilitli",
+        "attrs": {},
+        "of": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+        "at": {
+          "x": 80.0,
+          "y": 0.0
+        },
+        "text": "X1",
+        "broken": "targetGone"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "bütün çizim: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrula yazmaz ve bulgu vermez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "validate",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı bulguları verir, yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "plan",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız Mahal katmanı: iki etiketsiz mahal",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "mahal"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız Kapı katmanı: açıklıkların bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız Kilitli katman: nesnesiz etiket",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kilitli"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı ve Mahal katmanları birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi",
+              "mahal"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bulgusu olmayan katman boş liste verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "cizim"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "yok"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layers[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mahaller etiketlenince etiketsiz mahal kalmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "all": {
+              "kinds": [
+                "space"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                17,
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:3",
+                "at": {
+                  "x": 22.0,
+                  "y": 1.5
+                },
+                "shape": "rectangle",
+                "text": "101\nSalon\n12.00 m²",
+                "anchor": {
+                  "x": 22.0,
+                  "y": 1.5
+                }
+              },
+              "18": {
+                "kind": "tag",
+                "id": 18,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:4",
+                "at": {
+                  "x": 26.5,
+                  "y": 1.0
+                },
+                "shape": "rectangle",
+                "text": "102\nMutfak\n6.00 m²",
+                "anchor": {
+                  "x": 26.5,
+                  "y": 1.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hepsi etiketlenince yalnız yinelenen, türsüz ve kopuklar kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "all": {
+              "kinds": [
+                "opening",
+                "space"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                17,
+                18,
+                19,
+                20,
+                21,
+                22
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:3",
+                "at": {
+                  "x": 22.0,
+                  "y": 1.5
+                },
+                "shape": "rectangle",
+                "text": "101\nSalon\n12.00 m²",
+                "anchor": {
+                  "x": 22.0,
+                  "y": 1.5
+                }
+              },
+              "18": {
+                "kind": "tag",
+                "id": 18,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:4",
+                "at": {
+                  "x": 26.5,
+                  "y": 1.0
+                },
+                "shape": "rectangle",
+                "text": "102\nMutfak\n6.00 m²",
+                "anchor": {
+                  "x": 26.5,
+                  "y": 1.0
+                }
+              },
+              "19": {
+                "kind": "tag",
+                "id": 19,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:10",
+                "at": {
+                  "x": 9.0,
+                  "y": 0.5
+                },
+                "shape": "hexagon",
+                "text": "B1",
+                "anchor": {
+                  "x": 9.0,
+                  "y": 0.0
+                }
+              },
+              "20": {
+                "kind": "tag",
+                "id": 20,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:13",
+                "at": {
+                  "x": 6.0,
+                  "y": 0.5
+                },
+                "shape": "hexagon",
+                "text": "P01",
+                "anchor": {
+                  "x": 6.0,
+                  "y": 0.0
+                }
+              },
+              "21": {
+                "kind": "tag",
+                "id": 21,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:14",
+                "at": {
+                  "x": 3.0,
+                  "y": 5.5
+                },
+                "shape": "hexagon",
+                "text": "K01",
+                "anchor": {
+                  "x": 3.0,
+                  "y": 5.0
+                }
+              },
+              "22": {
+                "kind": "tag",
+                "id": 22,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:15",
+                "at": {
+                  "x": 8.0,
+                  "y": 5.5
+                },
+                "shape": "hexagon",
+                "anchor": {
+                  "x": 8.0,
+                  "y": 5.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kolon silinince etiketi nesnesiz bulunur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:5"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:5",
+                "at": {
+                  "x": 40.0,
+                  "y": 0.5
+                },
+                "text": "S1",
+                "anchor": {
+                  "x": 40.0,
+                  "y": 0.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "as": "gone5",
+          "id": 5
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uid:gone5",
+                "at": {
+                  "x": 40.0,
+                  "y": 0.5
+                },
+                "text": "S1",
+                "anchor": {
+                  "x": 40.0,
+                  "y": 0.0
+                },
+                "broken": "targetGone"
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "etiket"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_target_gone",
+                  "message": "“S1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:17"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 0.5
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yinelenen açıklık silinince numara bulgusu kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "as": "gone14",
+          "id": 14
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:14"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              15,
+              16
+            ],
+            "entities": {},
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "etiketli açıklık silinince etiketi nesnesiz kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "as": "gone12",
+          "id": 12
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              13,
+              14,
+              15,
+              16
+            ],
+            "entities": {
+              "16": {
+                "kind": "tag",
+                "id": 16,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uid:gone12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                "shape": "hexagon",
+                "text": "K01",
+                "anchor": {
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                "broken": "targetGone"
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "etiket",
+              "kapi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“K01” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:16"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etiket katmanında yalnız ilk etiket: bulgusu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "etiket"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizelgede numara düzeltilince yinelenen kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 17,
+              "rows": 5,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.edit",
+          "input": {
+            "uid": "$uidOf:17",
+            "operation": {
+              "kind": "cell",
+              "row": 4,
+              "column": 0,
+              "value": "K02"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K02",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "edited": [
+                "$uidOf:14"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "14": {
+                "kind": "opening",
+                "id": 14,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.55,
+                    "y": 5.1
+                  },
+                  {
+                    "x": 2.55,
+                    "y": 4.9
+                  },
+                  {
+                    "x": 3.45,
+                    "y": 5.1
+                  },
+                  {
+                    "x": 3.45,
+                    "y": 4.9
+                  }
+                ],
+                "number": "K02"
+              },
+              "17": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K02",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K02” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizelgede tür yazılınca türsüz bulgusu kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 17,
+              "rows": 5,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.edit",
+          "input": {
+            "uid": "$uidOf:17",
+            "operation": {
+              "kind": "cell",
+              "row": 1,
+              "column": 2,
+              "value": "Kapı 80"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "Kapı 80",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "edited": [
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "10": {
+                "kind": "opening",
+                "id": 10,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "at": 9.0,
+                "width": 0.6,
+                "form": "opening",
+                "head": 2.1,
+                "number": "B1",
+                "place": [
+                  {
+                    "x": 8.7,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.7,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 9.3,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 9.3,
+                    "y": -0.1
+                  }
+                ],
+                "broken": "hostGone",
+                "style": "kentos-kapi-80"
+              },
+              "17": {
+                "kind": "table",
+                "id": 17,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "Kapı 80",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek pencere etiketlenince etiketsizlerden çıkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:13"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:13",
+                "at": {
+                  "x": 6.0,
+                  "y": 0.5
+                },
+                "shape": "hexagon",
+                "text": "P01",
+                "anchor": {
+                  "x": 6.0,
+                  "y": 0.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "kapi",
+              "etiket"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek mahal etiketlenince öbürü etiketsiz kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:3"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:3",
+                "at": {
+                  "x": 22.0,
+                  "y": 1.5
+                },
+                "shape": "rectangle",
+                "text": "101\nSalon\n12.00 m²",
+                "anchor": {
+                  "x": 22.0,
+                  "y": 1.5
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {
+            "layers": [
+              "mahal"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kez sorulunca aynı cevap",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kolon etiketi bulgu değiştirmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:5"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:5",
+                "at": {
+                  "x": 40.0,
+                  "y": 0.5
+                },
+                "text": "S1",
+                "anchor": {
+                  "x": 40.0,
+                  "y": 0.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.check",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "uids": [
+                    "$uidOf:12",
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_missing_type",
+                  "message": "“B1” açıklığının türü yok.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_host_broken",
+                  "message": "Açıklığın duvarı yok. Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_target_gone",
+                  "message": "“X1” etiketinin nesnesi çizimde yok.",
+                  "uids": [
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 80.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“101” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:3"
+                  ],
+                  "at": {
+                    "x": 22.0,
+                    "y": 1.5
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“102” mahal etiketsiz.",
+                  "uids": [
+                    "$uidOf:4"
+                  ],
+                  "at": {
+                    "x": 26.5,
+                    "y": 1.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“B1” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“P01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:13"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "“K01” açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:14"
+                  ],
+                  "at": {
+                    "x": 3.0,
+                    "y": 5.0
+                  }
+                },
+                {
+                  "code": "tag_untagged",
+                  "message": "Numarasız açıklık etiketsiz.",
+                  "uids": [
+                    "$uidOf:15"
+                  ],
+                  "at": {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

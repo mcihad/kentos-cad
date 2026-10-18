@@ -934,6 +934,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::Column { at, column } => pt(at) && column.width.is_finite() && column.rotation.is_finite(),
         Shape::Stair { pts: p, stair } => pts(p) && stair.width.is_finite() && stair.tread.is_finite(),
         Shape::Ramp { pts: p, ramp } => pts(p) && ramp.width.is_finite() && ramp.rise.is_finite(),
+        Shape::Tag { at, .. } => pt(at),
         Shape::Space { parts, space } => {
             parts
                 .iter()

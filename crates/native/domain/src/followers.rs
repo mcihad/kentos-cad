@@ -79,6 +79,7 @@ impl Document {
                 Entity::Hatch(h) => h.assoc.is_some(),
                 Entity::Opening(_) => true,
                 Entity::Column(c) => c.column.grids.is_some(),
+                Entity::Tag(_) => true,
                 _ => false,
             };
             self.store.linked_to(before.uid).next().is_some()

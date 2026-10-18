@@ -2513,6 +2513,155 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_TAGS_CREATE.into(),
+            version: crate::CAD_TAGS_CREATE_VERSION,
+            title: "Etiket".into(),
+            summary: "Nesnelere etiket koyar; tek geri alma adımı “Etiket”. Her etiket nesnesinin kalıcı kimliğiyle (of) verilir: açıklık, mahal, kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. \
+                      content şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). \
+                      shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. \
+                      all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TagsCreate>(),
+            output: schema::<crate::TagsCreated>(),
+            plan: Some(schema::<crate::TagsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapıya numara etiketi".into(),
+                    input: json!({ "layerId": "etiket", "tags": [{ "of": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61" }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bütün mahalleri etiketle".into(),
+                    input: json!({ "layerId": "etiket", "all": { "kinds": ["space"] } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_TAGS_EDIT.into(),
+            version: crate::CAD_TAGS_EDIT_VERSION,
+            title: "Etiketi düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen etiketlerin şablonunu (content; null türün şablonu), çerçevesini (shape), yazı yüksekliğini (size, kâğıtta mm; null 2,5) ya da kolunu (leader) değiştirir; yazıları nesnelerinden yeniden yazılır. Tek geri alma adımı “Etiketi düzenle”, hepsi ya da hiçbiri; kilitli katmandaki etiket bütün değişikliği reddeder. Plan yazmadan etiketleri olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TagsEdit>(),
+            output: schema::<crate::TagsEdited>(),
+            plan: Some(schema::<crate::TagsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Etiketi dikdörtgen çerçeveye al, numara ve tür yaz".into(),
+                input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e71"], "change": { "shape": "rectangle", "content": "{number}\n{type}" } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_TAGS_CHECK.into(),
+            version: crate::CAD_TAGS_CHECK_VERSION,
+            title: "Etiketleri denetle".into(),
+            summary: "Açıklıkları, mahalleri ve etiketleri denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). \
+                      Her bulgu nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TagsCheck>(),
+            output: schema::<crate::TagsChecked>(),
+            plan: Some(schema::<crate::TagsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün çizimi denetle".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SCHEDULES_CREATE.into(),
+            version: crate::CAD_SCHEDULES_CREATE_VERSION,
+            title: "Çizelge".into(),
+            summary: "Çizimin açıklıklarından, mahallerinden, kolonlarından ya da duvarlarından (of: openings, spaces, columns, walls) bir çizelge tablosu yerleştirir; sol üst köşesi at. Tek geri alma adımı “Çizelge”. \
+                      columns sütunlardır (field: number, type, form, width, height, sill, head, wall, level, phase, count, area, perimeter, volume, name, usage, tag, place, length, thickness, attr; title başlık, attr öznitelik adı); verilmezse türün sütunları. filter kat, evre, biçim (yalnız açıklıkta) ve katmanla süzer; sort sütunlara göre sıralar (yoksa çizimin sırası); group aynı satırları birleştirir (adet, alan, çevre, hacim ve uzunluk toplanır); total toplam satırı ekler. \
+                      Çizelgenin satırları her adımda belgece yeniden yazılır: kapı değişince satırı da değişir. Uzunluklar projenin biriminde ve basamağında, alanlar alan biriminde. height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Katman açıkça verilir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SchedulesCreate>(),
+            output: schema::<crate::SchedulesCreated>(),
+            plan: Some(schema::<crate::SchedulesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kapı ve pencere çizelgesi, numaraya göre".into(),
+                    input: json!({ "layerId": "cizelge", "at": { "x": 20.0, "y": 10.0 }, "of": "openings", "sort": [{ "column": 0 }], "total": true }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Zemin katın mahal çizelgesi".into(),
+                    input: json!({ "layerId": "cizelge", "at": { "x": 20.0, "y": 0.0 }, "of": "spaces", "filter": { "levels": ["zemin"] }, "total": true }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SCHEDULES_EDIT.into(),
+            version: crate::CAD_SCHEDULES_EDIT_VERSION,
+            title: "Çizelgeyi düzenle".into(),
+            summary: "Bir çizelgeyi değiştirir; tek geri alma adımı “Çizelgeyi düzenle”. operation: cell (row tablonun satırı, 0 başlıktır; column sütun; value hücrenin yazısı) satırın nesnelerinin kendi alanına yazılır: numara, tür, genişlik, denizlik, lento, ad, kullanım, etiket, kalınlık ve öznitelik düzenlenir, uzunluk projenin biriminde okunur, boş yazı isteğe bağlı alanı kaldırır; \
+                      adet, alan, çevre, hacim, yükseklik, uzunluk, duvar, kat, evre, konum ve biçim hesaplanır (cell_computed); birden çok nesneli gruplu satırın numarası yazılmaz (schedule_group_number). set sütunları, süzgeci (null kaldırır), sıralamayı, grubu ve toplamı değiştirir. \
+                      Satırın nesnelerinden biri kilitli katmandaysa hiçbir şey yazılmaz. Plan yazmadan çizelgeyi olacağı gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SchedulesEdit>(),
+            output: schema::<crate::SchedulesEdited>(),
+            plan: Some(schema::<crate::SchedulesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İkinci satırın numarasını yaz".into(),
+                    input: json!({ "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70", "operation": { "kind": "cell", "row": 2, "column": 0, "value": "K02" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Türe göre grupla".into(),
+                    input: json!({ "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e70", "operation": { "kind": "set", "columns": [{ "field": "type" }, { "field": "width" }, { "field": "count" }], "group": true } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_OPENINGS_CREATE.into(),
             version: crate::CAD_OPENINGS_CREATE_VERSION,
             title: "Açıklık ekle".into(),
@@ -7083,6 +7232,21 @@ mod tests {
                     }
                     crate::CAD_ARCH_EDIT => {
                         serde_json::from_value::<crate::ArchEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TAGS_CREATE => {
+                        serde_json::from_value::<crate::TagsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TAGS_CHECK => {
+                        serde_json::from_value::<crate::TagsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TAGS_EDIT => {
+                        serde_json::from_value::<crate::TagsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SCHEDULES_CREATE => {
+                        serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SCHEDULES_EDIT => {
+                        serde_json::from_value::<crate::SchedulesEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SPACES_EDIT => {
                         serde_json::from_value::<crate::SpacesEdit>(e.input.clone()).map(|_| ())

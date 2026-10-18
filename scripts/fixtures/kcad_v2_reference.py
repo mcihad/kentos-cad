@@ -1333,10 +1333,11 @@ def table_parts(e):
     """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
     `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
     src = e.get("source")
-    if src is None or src["kind"] not in ("blocks", "file"):
+    if src is None or src["kind"] not in ("blocks", "file", "schedule"):
         return e
     e = dict(e)
-    if src["kind"] == "blocks":
+    # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule.
+    if src["kind"] in ("blocks", "schedule"):
         assert src.get("names", [None]), "boş ad listesi yazılmaz"
         e["schedule"] = e.pop("source")
         return e
@@ -1475,6 +1476,8 @@ KINDS = {
     "column": {"column": (opaque, True)},
     "stair": {"stair": (opaque, True)},
     "ramp": {"ramp": (opaque, True)},
+    # Schema 80 (docs/adr/0344 §1): a tag; its fields as one map.
+    "tag": {"tag": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -1812,8 +1815,8 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
-    if kind in ("grid", "column", "stair", "ramp"):
-        assert uid is not None, "blok tanımında aks, kolon, merdiven ya da rampa olamaz"
+    if kind in ("grid", "column", "stair", "ramp", "tag"):
+        assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa ya da etiket olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern")
         own = {k: v for k, v in e.items() if k not in keep}
@@ -2078,6 +2081,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 80 (docs/adr/0344): a tag, or a schedule of the drawing's objects.
+    if any(e["kind"] == "tag" or (e["kind"] == "table" and e.get("source", {}).get("kind") == "schedule") for e in entities):
+        return 80
     # Schema 79 (docs/adr/0343): a grid, a column, a stair or a ramp.
     if any(e["kind"] in ("grid", "column", "stair", "ramp") for e in entities):
         return 79
@@ -2589,7 +2595,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-80.kcad"] = container(root(cmap(parts), version=uint(80)))
+    files["schema-version-81.kcad"] = container(root(cmap(parts), version=uint(81)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4179,6 +4185,22 @@ def build():
     out["broken/wall-priority-in-schema-75.kcad"] = container(document(priority_75).replace(b"\x67version\x18\x4c", b"\x67version\x18\x4b"))
     # The grids, columns, stairs and ramps (docs/adr/0343 §1): schema 79's; in schema 78 unknown kinds; a blank name, one
     # point, a width of 0, a default written, no risers, a cut past the risers and five points refused.
+    # The tags and a schedule of the drawing's objects (docs/adr/0344 §1, §3): schema 80's; in schema 79 an unknown kind;
+    # a circle frame written, a size of 0, an unknown place and a schedule without columns refused.
+    out["tags.kcad"] = container(document(load("tags.json")))
+    tags_payload = document(load("tags.json"))
+    assert tags_payload.count(b"\x67version\x18\x50") == 1, "the tags are schema 80"
+    out["broken/tags-in-schema-79.kcad"] = container(tags_payload.replace(b"\x67version\x18\x50", b"\x67version\x18\x4f"))
+
+    def tags_broken(change):
+        d = copy.deepcopy(load("tags.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/tag-default-shape.kcad"] = tags_broken(lambda d: d["entities"][1].update(shape="circle"))
+    out["broken/tag-size-zero.kcad"] = tags_broken(lambda d: d["entities"][2].update(size=0.0))
+    out["broken/tag-unknown-place.kcad"] = tags_broken(lambda d: d["entities"][2].update(content="{nummer}"))
+    out["broken/schedule-no-columns.kcad"] = tags_broken(lambda d: d["entities"][3]["source"].update(columns=[]))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

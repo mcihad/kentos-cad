@@ -714,6 +714,11 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
                 stair: spec,
             }
         }
+        // Its middle maps; its words are sized on paper and the document writes the point it ties to (docs/adr/0344 §1).
+        Shape::Tag { at, tag } => Shape::Tag {
+            at: apply(m, *at),
+            tag: tag.clone(),
+        },
         Shape::Ramp { pts, ramp } => {
             let mut spec = ramp.clone();
             spec.width *= s;

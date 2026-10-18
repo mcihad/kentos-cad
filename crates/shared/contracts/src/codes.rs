@@ -1258,6 +1258,36 @@ codes! {
     /// A ramp whose landings take its whole length.
     RAMP_NO_RUN = "ramp_no_run", Warning, false, "Rampanın sahanlıkları bütün uzunluğunu alıyor; eğimli kolu yok.";
 
+    // ── Tags and schedules (docs/adr/0344) ──────────────────────────────
+    /// A tag's fields that make none.
+    INVALID_TAG = "invalid_tag", Failed, false, "Etiketin alanları bir etiket tanımlamıyor: sonlu yer, bilinen yerleri olan şablon (en çok 6 satır), 0–50 mm yazı yüksekliği.";
+    /// An object no tag is put on.
+    NOT_TAGGABLE = "not_taggable", Failed, false, "Bu nesne etiketlenmez: açıklık, mahal, kolon, aks, duvar, merdiven, rampa ya da blok etiketlenir.";
+    /// An object that is no tag where one is asked.
+    NOT_A_TAG = "not_a_tag", Failed, false, "Nesne etiket değil.";
+    /// A table that is no schedule where one is asked.
+    NOT_SCHEDULE = "not_schedule", Failed, false, "Tablo bir mimari çizelge değil.";
+    /// A schedule's columns, sort or filter that make none.
+    INVALID_SCHEDULE = "invalid_schedule", Failed, false, "Çizelgenin sütunları, sıralaması ya da süzgeci çizelgenin türüne uymuyor.";
+    /// A schedule's cell worked out from the drawing, not an object's own field.
+    CELL_COMPUTED = "cell_computed", Failed, false, "Bu hücre çizimden hesaplanır (adet, alan, yükseklik …); düzenlenmez. Kaynağın kendi alanını değiştirin.";
+    /// A schedule's cell edited as a table's.
+    SCHEDULE_CELL = "schedule_cell", Failed, false, "Çizelgenin hücreleri tablo olarak düzenlenmez; Çizelgeyi düzenle onları nesnelere yazar.";
+    /// A number given to a grouped row of several objects.
+    SCHEDULE_GROUP_NUMBER = "schedule_group_number", Failed, false, "Gruplu satır birden çok nesnedir; aynı numara hepsine yazılmaz. Grubu kaldırıp tek tek numaralayın.";
+    /// A value a field does not take.
+    INVALID_CELL_VALUE = "invalid_cell_value", Failed, false, "Değer bu alana yazılmaz: uzunluk sıfırdan büyük bir sayı, metin tek satırdır.";
+    /// Two openings or spaces with one number (Etiketleri denetle).
+    TAG_DUPLICATE_NUMBER = "tag_duplicate_number", Warning, false, "Aynı numara birden çok açıklıkta ya da mahalde.";
+    /// An opening without a type (Etiketleri denetle).
+    TAG_MISSING_TYPE = "tag_missing_type", Warning, false, "Açıklığın türü yok.";
+    /// An opening off its wall (Etiketleri denetle).
+    TAG_HOST_BROKEN = "tag_host_broken", Warning, false, "Açıklığın duvarı yok, duvarının dışında ya da başka açıklıkla çakışıyor.";
+    /// A tag whose object is gone (Etiketleri denetle).
+    TAG_TARGET_GONE = "tag_target_gone", Warning, false, "Etiketin nesnesi çizimde yok.";
+    /// An opening or space without a tag (Etiketleri denetle).
+    TAG_UNTAGGED = "tag_untagged", Warning, false, "Açıklığın ya da mahalin etiketi yok.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

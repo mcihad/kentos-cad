@@ -880,6 +880,7 @@ fn finite(e: &Entity) -> bool {
             Entity::Column(e) => p(&e.column.at) && fs(&[e.column.width, e.column.rotation]),
             Entity::Stair(e) => ps(&e.stair.pts) && fs(&[e.stair.width, e.stair.tread, e.stair.riser_height]),
             Entity::Ramp(e) => ps(&e.ramp.pts) && fs(&[e.ramp.width, e.ramp.rise]),
+            Entity::Tag(e) => p(&e.tag.at),
             Entity::Nurbs(e) => {
                 ps(&e.ctrl)
                     && fs(&e.knots)

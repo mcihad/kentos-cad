@@ -70,6 +70,8 @@ pub(crate) struct Store {
     with_fields: BTreeSet<Slot>,
     /// The tables with fields, formulas or a block schedule (docs/adr/0327): worked out before a step is recorded.
     computed: BTreeSet<Slot>,
+    /// The tags (docs/adr/0344 §1): written again when their objects change.
+    tags: BTreeSet<Slot>,
 }
 
 /// Whether a table has cells the document works out (docs/adr/0327).
@@ -77,7 +79,10 @@ fn computed_table(stored: &Stored) -> bool {
     matches!(&*stored.entity, Entity::Table(t)
         if !t.fields.is_empty()
             || !t.formulas.is_empty()
-            || matches!(t.source, Some(kentos_contracts::TableSource::Blocks { .. })))
+            || matches!(
+                t.source,
+                Some(kentos_contracts::TableSource::Blocks { .. } | kentos_contracts::TableSource::Schedule { .. })
+            ))
 }
 
 /// The objects a text's fields read, and whether one reads the project or a layer's name (docs/adr/0325 §2).
@@ -136,6 +141,8 @@ fn ties_of(stored: &Stored) -> Vec<Uuid> {
         }
         // An opening's wall (docs/adr/0341 §3).
         Entity::Opening(o) => Uuid::parse_str(&o.opening.host).into_iter().collect(),
+        // A tag's object (docs/adr/0344 §1).
+        Entity::Tag(t) => Uuid::parse_str(&t.tag.of).into_iter().collect(),
         // A column's grids (docs/adr/0343 §3).
         Entity::Column(c) => c
             .column
@@ -159,6 +166,7 @@ fn has_lost(stored: &Stored) -> bool {
     match &*stored.entity {
         Entity::Space(s) => s.space.broken.is_some(),
         Entity::Column(c) => c.column.broken.is_some(),
+        Entity::Tag(t) => t.tag.broken.is_some(),
         _ => false,
     }
 }
@@ -245,9 +253,17 @@ impl Store {
         self.computed.iter().copied()
     }
 
+    /// Whether the drawing has a tag.
+    pub fn has_tags(&self) -> bool {
+        !self.tags.is_empty()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if computed_table(stored) {
             self.computed.insert(stored.slot());
+        }
+        if matches!(&*stored.entity, Entity::Tag(_)) {
+            self.tags.insert(stored.slot());
         }
         if let Some((of, always)) = fields_of(stored) {
             for uid in of {
@@ -274,6 +290,7 @@ impl Store {
 
     fn unlink(&mut self, stored: &Stored) {
         self.computed.remove(&stored.slot());
+        self.tags.remove(&stored.slot());
         if let Some((of, _)) = fields_of(stored) {
             for uid in of {
                 if let Some(texts) = self.fielded.get_mut(&uid) {

@@ -415,7 +415,8 @@ pub fn layer_call(
         | Entity::Grid(_)
         | Entity::Column(_)
         | Entity::Stair(_)
-        | Entity::Ramp(_) = e
+        | Entity::Ramp(_)
+        | Entity::Tag(_) = e
             && let Some(x) = store
                 .get(f64::from(base.id))
                 .and_then(|item| item.expanded.as_deref())

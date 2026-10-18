@@ -1,7 +1,9 @@
 //! Grids, columns, stairs and ramps between the contract and the shared core (docs/adr/0343 §2): their fields as the
 //! core's shapes, which draw them.
 
-use kentos_contracts::{ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, StairFields, Vec2};
+use kentos_contracts::{
+    ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, StairFields, TagFields, TagShape, Vec2,
+};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arch::{Bubbles, ColumnSpec, GridSpec, RampSpec, StairSpec};
@@ -74,13 +76,35 @@ pub fn core_ramp(r: &RampFields) -> Shape {
     }
 }
 
-/// One of the four as the core's shape; none for another object.
+/// The tag as the core's shape (docs/adr/0344 §1).
+pub fn core_tag(t: &TagFields) -> Shape {
+    use kentos_geometry_core::geom::tag::{Frame, Spec};
+    Shape::Tag {
+        at: CoreVec2::new(t.at.x, t.at.y),
+        tag: Spec {
+            text: t.text.clone(),
+            frame: match t.shape {
+                TagShape::Circle => Frame::Circle,
+                TagShape::Hexagon => Frame::Hexagon,
+                TagShape::Rectangle => Frame::Rectangle,
+                TagShape::Rounded => Frame::Rounded,
+                TagShape::None => Frame::None,
+            },
+            size: t.size,
+            leader: t.leader,
+            anchor: t.anchor.map(|a| CoreVec2::new(a.x, a.y)),
+        },
+    }
+}
+
+/// One of the four, or a tag, as the core's shape; none for another object.
 pub fn core_of(e: &Entity) -> Option<Shape> {
     Some(match e {
         Entity::Grid(g) => core_grid(&g.grid),
         Entity::Column(c) => core_column(&c.column),
         Entity::Stair(s) => core_stair(&s.stair),
         Entity::Ramp(r) => core_ramp(&r.ramp),
+        Entity::Tag(t) => core_tag(&t.tag),
         _ => return None,
     })
 }
@@ -151,6 +175,19 @@ pub fn simple(e: &Entity) -> Option<Entity> {
         }
         Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
             Entity::Polygon(path(e.base(), outline_points(e)?, None))
+        }
+        // A tag a point at its middle, its words its label (docs/adr/0344 §1).
+        Entity::Tag(t) => {
+            let mut base = t.base.clone();
+            if base.label.is_none() && !t.tag.text.is_empty() {
+                base.label = Some(t.tag.text.replace('\n', " "));
+            }
+            Entity::Point(kentos_contracts::PointEntity {
+                base,
+                p: t.tag.at,
+                z: None,
+                parts: None,
+            })
         }
         _ => return None,
     })

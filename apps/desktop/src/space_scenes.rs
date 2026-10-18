@@ -52,7 +52,7 @@ fn on_level(app: &mut App) {
 }
 
 /// The room with its openings and its two spaces on Zemin kat: slots 12 (Z-01 Salon) and 13 (Z-02 Mutfak).
-fn spaces(app: &mut App) {
+pub(crate) fn spaces(app: &mut App) {
     crate::opening_scenes::room(app, 50.0);
     on_level(app);
     run(app, "tool.space");

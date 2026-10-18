@@ -514,7 +514,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Wall(w) => w.wall.pts.clone(),
         Entity::Opening(o) => o.opening.place.clone(),
         Entity::Space(s) => s.as_polygon().pts,
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) => {
             crate::arch_elements::outline_points(e).unwrap_or_default()
         }
     }

@@ -1686,6 +1686,16 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 80 (docs/adr/0344): a tag, or a table's schedule of the drawing's objects.
+    let scheduled = |list: &[Entity]| {
+        list.iter().any(|e| {
+            matches!(e, Entity::Tag(_))
+                || matches!(e, Entity::Table(t) if matches!(t.source, Some(kentos_contracts::TableSource::Schedule { .. })))
+        })
+    };
+    if scheduled(&doc.entities) {
+        return crate::SCHEMA_WITH_TAGS;
+    }
     // Schema 79 (docs/adr/0343): a grid, a column, a stair or a ramp.
     if doc.entities.iter().any(|e| {
         matches!(

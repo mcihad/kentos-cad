@@ -842,6 +842,8 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
                 "edit.selectFilter.column",
                 "edit.selectFilter.stair",
                 "edit.selectFilter.ramp",
+                // Etiket (docs/adr/0344 §5).
+                "edit.selectFilter.tag",
             ] {
                 if !kinds.contains(&kind) {
                     kinds.push(kind);

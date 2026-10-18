@@ -236,7 +236,8 @@ fn count(t: &str, most: usize) -> Option<usize> {
 
 /// The cells the source gives now, with their source; or why none.
 enum Now {
-    Cells(Cells, Option<TableSource>),
+    /// The source boxed: a schedule's source is large and `Why` is the common answer.
+    Cells(Cells, Option<Box<TableSource>>),
     Why(Kind, String),
 }
 
@@ -317,14 +318,14 @@ impl App {
                     Some(p) => Now::Why(Kind::Error, p.clone()),
                     None => Now::Cells(
                         cells,
-                        Some(TableSource::File {
+                        Some(Box::new(TableSource::File {
                             path: None,
                             overrides: Default::default(),
                             digest: None,
                             copy: None,
                             name: name.clone(),
                             sheet: sheet.name.clone(),
-                        }),
+                        })),
                     ),
                 }
             }
@@ -342,7 +343,7 @@ impl App {
                 let cells = table::schedule(&doc.model, kind, &slots, &self.format());
                 match &cells.problem {
                     Some(p) => Now::Why(Kind::Error, p.clone()),
-                    None => Now::Cells(cells, Some(table::source_of(&doc.model, kind, &slots))),
+                    None => Now::Cells(cells, Some(Box::new(table::source_of(&doc.model, kind, &slots)))),
                 }
             }
         }
@@ -487,7 +488,7 @@ impl App {
             &cells,
             &look,
             kentos_interaction::Vec2::new(0.0, 0.0),
-            source,
+            source.map(|s| *s),
         );
         self.memory.text_style = self
             .table_insert
@@ -858,7 +859,7 @@ impl App {
                             cells,
                             look,
                             kentos_interaction::Vec2::new(0.0, 0.0),
-                            source.clone(),
+                            source.as_deref().cloned(),
                         );
                         if let kentos_contracts::EntityGeometry::Table { rows, columns, .. } = &t {
                             lines.push(words::text_line(

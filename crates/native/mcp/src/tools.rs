@@ -547,6 +547,9 @@ fn command_tool(c: &Value) -> Value {
             | "cad.spaces.edit"
             // A grid's, column's, stair's or ramp's fields changed; columns tied to grids move (docs/adr/0343 §4).
             | "cad.arch.edit"
+            // A tag's template and frame changed (docs/adr/0344 §4); a schedule's cell written to its objects.
+            | "cad.tags.edit"
+            | "cad.schedules.edit"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

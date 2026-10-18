@@ -82,6 +82,7 @@ enum Kind {
     Column,
     Stair,
     Ramp,
+    Tag,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -116,6 +117,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("column", Kind::Column),
     ("stair", Kind::Stair),
     ("ramp", Kind::Ramp),
+    ("tag", Kind::Tag),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -223,6 +225,8 @@ pub(super) struct Features {
     pub(super) spaces: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
+    /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
+    tags: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -365,6 +369,7 @@ impl Features {
             openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
+            tags: schema >= crate::SCHEMA_WITH_TAGS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -436,6 +441,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Column => key == "column",
             Kind::Stair => key == "stair",
             Kind::Ramp => key == "ramp",
+            Kind::Tag => key == "tag",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -635,6 +641,7 @@ struct Fields {
     column: Option<kentos_contracts::ColumnFields>,
     stair: Option<kentos_contracts::StairFields>,
     ramp: Option<kentos_contracts::RampFields>,
+    tag: Option<kentos_contracts::TagFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -902,6 +909,7 @@ pub(super) fn object(
             && (has.openings || *kind != Kind::Opening)
             && (has.spaces || *kind != Kind::Space)
             && (has.arch_elements || !matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp))
+            && (has.tags || *kind != Kind::Tag)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -934,6 +942,10 @@ pub(super) fn object(
     // Nor a grid, column, stair or ramp: they are the drawing's plan (docs/adr/0343 §1).
     if matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp) && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında aks, kolon, merdiven ya da rampa olamaz"));
+    }
+    // Nor a tag: its object is the drawing's (docs/adr/0344 §1).
+    if kind == Kind::Tag && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında etiket olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1168,6 +1180,8 @@ pub(super) fn object(
             "column" => f.column = Some(json_part(r, "kolonun alanları")?.0),
             "stair" => f.stair = Some(json_part(r, "merdivenin alanları")?.0),
             "ramp" if kind == Kind::Ramp => f.ramp = Some(json_part(r, "rampanın alanları")?.0),
+            // Schema 80 (docs/adr/0344 §1): a tag's fields.
+            "tag" if kind == Kind::Tag => f.tag = Some(json_part(r, "etiketin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) = json_part(r, "mahalin sınırı")?;
@@ -1410,8 +1424,11 @@ pub(super) fn object(
             }
             "schedule" if kind == Kind::Table => {
                 let (v, at): (TableSource, usize) = json_part(r, "tablonun blok çizelgesi")?;
-                if !matches!(v, TableSource::Blocks { .. }) || f.source.is_some() {
-                    return Err(r.fail_at(Code::BadValue, at, "çizelge yalnız blok çizelgesidir ve kaynakla birlikte yazılmaz"));
+                // Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects too.
+                let schedule = matches!(v, TableSource::Blocks { .. })
+                    || (has.tags && matches!(v, TableSource::Schedule { .. }));
+                if !schedule || f.source.is_some() {
+                    return Err(r.fail_at(Code::BadValue, at, "çizelge yalnız blok ya da mimari çizelgedir ve kaynakla birlikte yazılmaz"));
                 }
                 f.table_at.source = at;
                 f.source = Some(v);
@@ -2029,6 +2046,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Ramp(kentos_contracts::RampEntity { base, ramp })
+        }
+        Kind::Tag => {
+            let tag = required(r, f.tag.take(), "tag")?;
+            if let Some((_, problem)) = tag.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Tag(kentos_contracts::TagEntity { base, tag })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

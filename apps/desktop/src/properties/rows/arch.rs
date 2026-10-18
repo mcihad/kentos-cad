@@ -1,8 +1,9 @@
 //! A grid's, column's, stair's and ramp's rows of docs/adr/0343 §5 in Öznitelikler: their own fields, each written
-//! through `cad.arch.edit`, their level and phase, and a stair's or ramp's checks (information, never a refusal).
+//! through `cad.arch.edit`, their level and phase, and a stair's or ramp's checks (information, never a refusal); a
+//! tag's of docs/adr/0344 §5, written through `cad.tags.edit`.
 
 use kentos_contracts::{
-    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnShape, Entity, GridBubbles,
+    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnShape, Entity, GridBubbles, TagChange, TagShape,
 };
 use kentos_domain::Slot;
 use kentos_interaction::{Format, fixed};
@@ -346,6 +347,63 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.extend(checks(
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),
             ));
+        }
+        Entity::Tag(t) => {
+            let x = &t.tag;
+            let tag = |c: TagChange| Message::Properties(Event::Tag(slot, c));
+            let target = doc.model.tag_target(&x.of);
+            let of = match &target {
+                Some(e) => crate::selecting::kind_title(e.kind()).to_owned(),
+                None => "Yok".to_owned(),
+            };
+            out.push(Row::text("Nesnesi", of));
+            let content = x.content.clone().unwrap_or_default().replace('\n', "\\n");
+            out.push(
+                Row::text(
+                    "Şablon",
+                    if content.is_empty() {
+                        "Türün".to_owned()
+                    } else {
+                        content
+                    },
+                )
+                .editor(edit(Editor::Text(Field::Arch(slot, ArchField::TagContent)))),
+            );
+            out.push(Row::text("Yazısı", x.text.replace('\n', " / ")));
+            let shapes = TagShape::ALL
+                .iter()
+                .map(|&sh| {
+                    pick(
+                        sh.label().to_owned(),
+                        sh == x.shape,
+                        tag(TagChange {
+                            shape: Some(sh),
+                            ..Default::default()
+                        }),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(Row::text("Çerçeve", x.shape.label()).editor(edit(select(x.shape.label().to_owned(), shapes))));
+            out.push(
+                Row::figure("Yazı yüksekliği", fixed(x.size(), 1))
+                    .unit("mm")
+                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::TagSize)))),
+            );
+            let lead = if x.leader { "Var" } else { "Yok" };
+            out.push(Row::text("Kol", lead).editor(edit(select(
+                lead.to_owned(),
+                vec![
+                    pick("Var".into(), x.leader, tag(TagChange { leader: Some(true), ..Default::default() }), None),
+                    pick("Yok".into(), !x.leader, tag(TagChange { leader: Some(false), ..Default::default() }), None),
+                ],
+            ))));
+            if let Some(b) = x.broken {
+                out.push(Row {
+                    warn: true,
+                    ..Row::text("Durum", b.words())
+                });
+            }
         }
         _ => {}
     }

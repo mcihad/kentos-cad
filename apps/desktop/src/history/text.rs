@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 148] = [
+pub(crate) const TITLES: [(&str, &str); 153] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -49,6 +49,11 @@ pub(crate) const TITLES: [(&str, &str); 148] = [
     ("cad.stairs.create", "Merdiven"),
     ("cad.ramps.create", "Rampa"),
     ("cad.arch.edit", "Mimari nesneyi düzenle"),
+    ("cad.tags.create", "Etiket"),
+    ("cad.tags.edit", "Etiketi düzenle"),
+    ("cad.tags.check", "Etiketleri denetle"),
+    ("cad.schedules.create", "Çizelge"),
+    ("cad.schedules.edit", "Çizelgeyi düzenle"),
     ("cad.openings.create", "Açıklık ekle"),
     ("cad.openings.edit", "Açıklığı düzenle"),
     ("cad.dimensions.reassociate", "Ölçüyü yeniden bağla"),
@@ -204,6 +209,17 @@ fn field_name(key: &str) -> Option<&'static str> {
         "landing" => "Sahanlık",
         "rise" => "Yükseklik farkı",
         "slope" => "Eğim",
+        "tags" => "Etiketler",
+        "of" => "Nesne",
+        "content" => "Şablon",
+        "leader" => "Kol",
+        "all" => "Hepsi",
+        "change" => "Değişiklik",
+        "sort" => "Sıra",
+        "group" => "Grup",
+        "total" => "Toplam",
+        "row" => "Satır",
+        "column" => "Sütun",
         "parts" => "Parçalar",
         "usage" | "usages" => "Kullanım",
         "levels" => "Katlar",

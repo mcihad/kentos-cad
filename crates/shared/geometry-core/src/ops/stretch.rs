@@ -103,6 +103,11 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             at: mv(*at),
             column: column.clone(),
         })?,
+        // A tag moves whole when its middle is (docs/adr/0344 §1).
+        Shape::Tag { at, tag } => inside(*at, r).then(|| Shape::Tag {
+            at: mv(*at),
+            tag: tag.clone(),
+        })?,
         // Its path's vertices in the window move, as a polyline's; the wall follows its path (docs/adr/0339 §1).
         Shape::Wall { .. } => {
             let path = crate::geom::wall::path_of(&geom.shape)?;

@@ -37,6 +37,7 @@ use kentos_native_application::standards::{apply as standards_apply, check as st
 use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
+use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -741,6 +742,58 @@ impl Input for kentos_domain::contracts::RampsCreate {
             "width" => Some(&mut r.width),
             _ => named_point(&mut r.pts, "pts", rest),
         }
+    }
+}
+
+impl Input for kentos_domain::contracts::TagsCreate {
+    /// `tags[0].at.x` and `.y`, `tags[0].size`, `lineWeight` (docs/adr/0344).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("tags[")?.split_once("].")?;
+        let t = self.tags.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "at.x" => t.at.as_mut().map(|p| &mut p.x),
+            "at.y" => t.at.as_mut().map(|p| &mut p.y),
+            "size" => t.size.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::TagsEdit {
+    /// `change.size` (docs/adr/0344).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "change.size" => self.change.size.as_mut().and_then(Option::as_mut),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::TagsCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SchedulesCreate {
+    /// `at.x` and `.y`, `height`, `lineWeight` (docs/adr/0344).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "at.x" => Some(&mut self.at.x),
+            "at.y" => Some(&mut self.at.y),
+            "height" => self.height.as_mut(),
+            "lineWeight" => self.line_weight.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::SchedulesEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -2740,6 +2793,21 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ARCH_EDIT => {
             run!(arch_edit, kentos_domain::contracts::ArchEdit)
+        }
+        kentos_domain::contracts::CAD_TAGS_CREATE => {
+            run!(tags_create, kentos_domain::contracts::TagsCreate)
+        }
+        kentos_domain::contracts::CAD_TAGS_CHECK => {
+            run!(tags_check, kentos_domain::contracts::TagsCheck)
+        }
+        kentos_domain::contracts::CAD_TAGS_EDIT => {
+            run!(tags_edit, kentos_domain::contracts::TagsEdit)
+        }
+        kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
+            run!(schedules_create, kentos_domain::contracts::SchedulesCreate)
+        }
+        kentos_domain::contracts::CAD_SCHEDULES_EDIT => {
+            run!(schedules_edit, kentos_domain::contracts::SchedulesEdit)
         }
         kentos_domain::contracts::CAD_SPACES_EDIT => {
             run!(spaces_edit, kentos_domain::contracts::SpacesEdit)

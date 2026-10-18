@@ -268,6 +268,7 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Column(x) => &mut x.base,
         Entity::Stair(x) => &mut x.base,
         Entity::Ramp(x) => &mut x.base,
+        Entity::Tag(x) => &mut x.base,
     }
 }
 

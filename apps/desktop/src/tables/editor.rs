@@ -656,7 +656,8 @@ impl App {
         task
     }
 
-    /// Kaydet: the edits run in one step “Tabloyu düzenle” (`cad.tables.edit`).
+    /// Kaydet: the edits run in one step “Tabloyu düzenle” (`cad.tables.edit`); a schedule's cells are written to its
+    /// objects instead (`cad.schedules.edit`, docs/adr/0344 §3), its sizes as a table's, in one step.
     fn save_table_editor(&mut self) {
         let Some(e) = self.table_editor.as_ref() else {
             return;
@@ -664,6 +665,10 @@ impl App {
         if e.edits.is_empty() || e.draft == e.saved {
             self.table_editor = None;
             self.dialog = None;
+            return;
+        }
+        if matches!(e.saved.source, Some(kentos_contracts::TableSource::Schedule { .. })) {
+            self.save_schedule_editor();
             return;
         }
         let input = TablesEdit {
@@ -694,6 +699,77 @@ impl App {
                 }
             }
             _ => {}
+        }
+    }
+
+    /// Kaydet on a schedule: each cell written to its row's objects, the sizes as a table's; one step, all or none.
+    fn save_schedule_editor(&mut self) {
+        use kentos_contracts::{ScheduleOperation, SchedulesEdit};
+        let Some(e) = self.table_editor.as_ref() else {
+            return;
+        };
+        let uid = e.uid.to_string();
+        let edits = e.edits.clone();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let group = doc.model.begin_group(kentos_native_application::schedules::EDIT_STEP);
+        let mut problem = None;
+        let mut sizes = Vec::new();
+        for edit in edits {
+            let result = match edit {
+                TableEdit::SetCell { row, col, words } => kentos_native_application::schedules_edit::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    SchedulesEdit {
+                        uid: uid.clone(),
+                        operation: ScheduleOperation::Cell { row, column: col, value: words },
+                        expected_revision: None,
+                    },
+                ),
+                size @ (TableEdit::RowHeight { .. } | TableEdit::ColumnWidth { .. } | TableEdit::Fit { .. }) => {
+                    sizes.push(size);
+                    continue;
+                }
+                _ => {
+                    problem = Some(
+                        "Çizelgenin satırları, sütunları ve biçimi belgenin yazdığıdır; yalnız hücreler, boylar ve genişlikler düzenlenir."
+                            .to_owned(),
+                    );
+                    break;
+                }
+            };
+            if let CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } =
+                result
+            {
+                problem = Some(error.message);
+                break;
+            }
+        }
+        if problem.is_none() && !sizes.is_empty() {
+            let input = TablesEdit {
+                operation: TablesOperation::Edit { uid, edits: sizes },
+                expected_revision: None,
+            };
+            if let CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } =
+                tables_edit::execute(&mut ExecutionContext::new(&mut doc.model), input)
+            {
+                problem = Some(error.message);
+            }
+        }
+        match problem {
+            Some(why) => {
+                doc.model.cancel_group(group);
+                if let Some(e) = self.table_editor.as_mut() {
+                    e.problem = Some(why);
+                    e.asking = false;
+                }
+            }
+            None => {
+                doc.model.end_group(group);
+                self.announce(Level::Success, "Çizelge kaydedildi: hücreler nesnelere yazıldı. Ctrl+Z geri alır.");
+                self.table_editor = None;
+                self.dialog = None;
+            }
         }
     }
 
@@ -1233,6 +1309,10 @@ impl App {
                     kentos_contracts::TableSource::Areas { .. } => "tableAreas",
                     kentos_contracts::TableSource::Attributes { .. } => "tableAttributes",
                     kentos_contracts::TableSource::Blocks { .. } => "tableBlocks",
+                    kentos_contracts::TableSource::Schedule { of, .. } => match of {
+                        kentos_contracts::ScheduleOf::Spaces => "scheduleSpaces",
+                        _ => "scheduleOpenings",
+                    },
                 };
                 row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),

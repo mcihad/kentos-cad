@@ -1700,6 +1700,41 @@
         "cad.settings.set"
       ],
       "note": "Katlar ve duvarların ayrıntısı arch anahtarıyla; duvarın andığı kat kaldırılmaz (ADR 0339 §3)."
+    },
+    "tool.tag": {
+      "level": "semantic",
+      "via": [
+        "cad.tags.create"
+      ],
+      "note": "Tıklanan nesne, yer, şablon, çerçeve ve kol komuta verilir; yazı ve bağ noktası komutun hesabı, önizleme planından (ADR 0344 §1, §5)."
+    },
+    "tool.tagAll": {
+      "level": "semantic",
+      "via": [
+        "cad.tags.create"
+      ],
+      "note": "Seçilen türler all'a verilir; etiketsiz ve görünenleri komut bulur (ADR 0344 §4)."
+    },
+    "arch.tagsCheck": {
+      "level": "query",
+      "via": [
+        "cad.tags.check"
+      ],
+      "note": "Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2)."
+    },
+    "tool.scheduleOpenings": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Tür, grup, toplam, sıra ve tıklanan köşe komuta verilir; satırlar komutun ve belgenin hesabı, önizleme planından (ADR 0344 §3, §5)."
+    },
+    "tool.scheduleSpaces": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Mahal çizelgesi: Tür, grup, toplam, sıra ve köşe komuta verilir (ADR 0344 §3, §5)."
     }
   },
   "tools": {

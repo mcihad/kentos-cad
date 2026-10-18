@@ -4,8 +4,8 @@
 //! (every text as high as it is on paper at 96 dpi). A grown text keeps apart
 //! from the others and from the texts drawn as they are: one that would
 //! cover another is left out of this view (8 px cells, the layer labels'
-//! rule). A table's cells and a text along a curve stay as they are, under
-//! the true rule. The overlays draw a grown record through a camera zoomed by
+//! rule). A table's cells, a text along a curve and a tag's words stay as
+//! they are, under the true rule. The overlays draw a grown record through a camera zoomed by
 //! its factor about its anchor (the web's `drawLabels`, the desktop's
 //! labels.rs); hit tests and the sheet keep the true sizes.
 
@@ -212,8 +212,11 @@ impl Store {
             _ => return Some(label(true)),
         };
         let px = height * scale;
-        // A table's cells and a curve's letters keep the true rule (docs/adr/0205 §5).
-        let fixed = kind == LABEL_CELL || matches!(shape, Shape::Text { path: Some(_), .. });
+        // A table's cells and a curve's letters keep the true rule (docs/adr/0205 §5); a tag's words too, its frame
+        // sized round them (docs/adr/0344 §1).
+        let fixed = kind == LABEL_CELL
+            || matches!(shape, Shape::Text { path: Some(_), .. })
+            || matches!(item.shape, Shape::Tag { .. });
         if fixed {
             if !(TRUE_MIN_PX..=TRUE_MAX_PX).contains(&px) {
                 return None;
