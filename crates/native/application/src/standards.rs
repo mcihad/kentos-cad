@@ -44,7 +44,7 @@ fn count(n: usize) -> u32 {
 }
 
 /// The standard an input names or gives; or why not.
-fn standard_of(
+pub(crate) fn standard_of(
     name: Option<&str>,
     given: Option<&DrawingStandard>,
 ) -> Result<DrawingStandard, Stop> {
@@ -663,7 +663,7 @@ fn write_execute(
     write(cx.doc, &input, &standard, &|_| Uuid::now_v7().to_string())
 }
 
-fn write(
+pub(crate) fn write(
     doc: &mut Document,
     input: &StandardsApply,
     standard: &DrawingStandard,

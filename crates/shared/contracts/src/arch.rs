@@ -293,6 +293,82 @@ impl ArchPhase {
     }
 }
 
+/// Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PhaseView {
+    #[default]
+    All,
+    Existing,
+    Demolition,
+    Proposed,
+}
+
+/// How a phase view draws an object of a phase.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PhaseLook {
+    /// As it is.
+    Shown,
+    /// Not drawn, picked nor snapped to.
+    Hidden,
+    /// Its lines dashed.
+    Dashed,
+    /// 60 % transparent, its fills too.
+    Faded,
+}
+
+/// The transparency a faded object is drawn at.
+pub const PHASE_FADED: f64 = 0.6;
+
+impl PhaseView {
+    pub const ALL: [PhaseView; 4] = [
+        PhaseView::All,
+        PhaseView::Existing,
+        PhaseView::Demolition,
+        PhaseView::Proposed,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            PhaseView::All => "Tümü",
+            PhaseView::Existing => "Mevcut durum",
+            PhaseView::Demolition => "Yıkım planı",
+            PhaseView::Proposed => "Yeni durum",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            PhaseView::All => "all",
+            PhaseView::Existing => "existing",
+            PhaseView::Demolition => "demolition",
+            PhaseView::Proposed => "proposed",
+        }
+    }
+
+    /// How the view draws an object of `phase` (none: it has no phase, drawn as it is).
+    pub fn look(self, phase: Option<ArchPhase>) -> PhaseLook {
+        use ArchPhase as P;
+        use PhaseLook as L;
+        let Some(p) = phase else { return L::Shown };
+        match (self, p) {
+            (PhaseView::All, _) => L::Shown,
+            (PhaseView::Existing, P::Existing | P::Demolish) => L::Shown,
+            (PhaseView::Existing, P::New | P::Temporary) => L::Hidden,
+            (PhaseView::Demolition, P::Existing) => L::Shown,
+            (PhaseView::Demolition, P::Demolish) => L::Dashed,
+            (PhaseView::Demolition, P::New | P::Temporary) => L::Hidden,
+            (PhaseView::Proposed, P::Existing) => L::Faded,
+            (PhaseView::Proposed, P::Demolish) => L::Hidden,
+            (PhaseView::Proposed, P::New) => L::Shown,
+            (PhaseView::Proposed, P::Temporary) => L::Dashed,
+        }
+    }
+}
+
 /// Where an architectural object is in its construction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -910,6 +986,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub space_method: Option<crate::SpaceMethod>,
+    /// The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase_view: Option<PhaseView>,
 }
 
 impl ArchSettings {
@@ -1138,6 +1218,7 @@ mod tests {
             levels: Vec::new(),
             detail: Some(WallDetail::Detailed),
             space_method: None,
+            phase_view: None,
         };
         assert_eq!(set.detail_at(500.0), WallDetail::Detailed);
     }

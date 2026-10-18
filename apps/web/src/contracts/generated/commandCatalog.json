@@ -584,6 +584,17 @@
                 },
                 "type": "array"
               },
+              "phaseView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PhaseView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
+              },
               "spaceMethod": {
                 "anyOf": [
                   {
@@ -11990,6 +12001,16 @@
               }
             ]
           },
+          "PhaseView": {
+            "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
+            "enum": [
+              "all",
+              "existing",
+              "demolition",
+              "proposed"
+            ],
+            "type": "string"
+          },
           "PointCloudEntity": {
             "description": "A point cloud (docs/adr/0207 §3).",
             "properties": {
@@ -18817,6 +18838,17 @@
                 },
                 "type": "array"
               },
+              "phaseView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PhaseView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
+              },
               "spaceMethod": {
                 "anyOf": [
                   {
@@ -24621,6 +24653,16 @@
               }
             ]
           },
+          "PhaseView": {
+            "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
+            "enum": [
+              "all",
+              "existing",
+              "demolition",
+              "proposed"
+            ],
+            "type": "string"
+          },
           "PointLabelMode": {
             "description": "Where a point's label goes (docs/adr/0212 §3.3).",
             "oneOf": [
@@ -27452,6 +27494,17 @@
                   "$ref": "#/$defs/ArchLevel"
                 },
                 "type": "array"
+              },
+              "phaseView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PhaseView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
               },
               "spaceMethod": {
                 "anyOf": [
@@ -38785,6 +38838,16 @@
                 "type": "string"
               }
             ]
+          },
+          "PhaseView": {
+            "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
+            "enum": [
+              "all",
+              "existing",
+              "demolition",
+              "proposed"
+            ],
+            "type": "string"
           },
           "PointCloudEntity": {
             "description": "A point cloud (docs/adr/0207 §3).",
@@ -448222,6 +448285,16 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "ArchPhase": {
+            "description": "An architectural object's phase (renovation): what is there, what goes, what is new.",
+            "enum": [
+              "existing",
+              "demolish",
+              "new",
+              "temporary"
+            ],
+            "type": "string"
+          },
           "NewTag": {
             "additionalProperties": false,
             "description": "One tag to put.",
@@ -448302,6 +448375,16 @@
                 "description": "Their layers' ids; absent: every layer shown.",
                 "items": {
                   "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "phases": {
+                "description": "Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.",
+                "items": {
+                  "$ref": "#/$defs/ArchPhase"
                 },
                 "type": [
                   "array",
@@ -528971,6 +529054,289 @@
             "uids": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e91"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.templates.apply",
+      "version": 1,
+      "title": "Mimari şablonu",
+      "summary": "Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its\nlayers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).\n\nRefusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:\n`template_unit_kept`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The template's name: `mimari`.",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DrawingUnit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TemplatesApply",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).",
+        "properties": {
+          "blocks": {
+            "description": "The blocks added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "levels": {
+            "description": "The levels added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The sheets added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "styles": {
+            "description": "The text and dimension styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unit": {
+            "$ref": "#/$defs/DrawingUnit",
+            "description": "The drawing's unit afterwards."
+          },
+          "wallStyles": {
+            "description": "The wall styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "unit",
+          "layers",
+          "styles",
+          "blocks",
+          "wallStyles",
+          "levels",
+          "sheets",
+          "revision"
+        ],
+        "title": "TemplatesApplied",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "oneOf": [
+              {
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "in",
+                "description": "The inch, 0.0254 m exactly (docs/adr/0262 §1).",
+                "type": "string"
+              },
+              {
+                "const": "ft",
+                "description": "The international foot, 0.3048 m exactly.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).",
+        "properties": {
+          "blocks": {
+            "description": "The blocks added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "levels": {
+            "description": "The levels added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sheets": {
+            "description": "The sheets added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "styles": {
+            "description": "The text and dimension styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unit": {
+            "$ref": "#/$defs/DrawingUnit",
+            "description": "The drawing's unit afterwards."
+          },
+          "wallStyles": {
+            "description": "The wall styles added, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "unit",
+          "layers",
+          "styles",
+          "blocks",
+          "wallStyles",
+          "levels",
+          "sheets",
+          "revision"
+        ],
+        "title": "TemplatesApplied",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_template",
+          "invalid_template_unit",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "template_unit_kept"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Boş çizime mimari şablonu, milimetre",
+          "input": {
+            "name": "mimari",
+            "unit": "mm"
           }
         }
       ]
@@ -928290,6 +928656,17 @@
                 },
                 "type": "array"
               },
+              "phaseView": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PhaseView"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
+              },
               "spaceMethod": {
                 "anyOf": [
                   {
@@ -928372,6 +928749,16 @@
                 "type": "string"
               }
             ]
+          },
+          "PhaseView": {
+            "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
+            "enum": [
+              "all",
+              "existing",
+              "demolition",
+              "proposed"
+            ],
+            "type": "string"
           },
           "SpaceMethod": {
             "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
@@ -998454,6 +998841,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Mahalin aynı yüzdeki eski kaplaması kaldırıldı."
+    },
+    {
+      "code": "unknown_template",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "KentOS'un bu adda çalışma şablonu yok."
+    },
+    {
+      "code": "invalid_template_unit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Şablonun birimi mm ya da cm olur."
+    },
+    {
+      "code": "template_unit_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin."
     },
     {
       "code": "already_committed",

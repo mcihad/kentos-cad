@@ -196,6 +196,7 @@ pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edi
 pub use schedules::{create as schedules_create, edit as schedules_edit};
 pub mod viewmarks;
 pub mod spaces_finish;
+pub mod templates_apply;
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
 pub mod spaces_quantities;
@@ -504,6 +505,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SPACES_FINISH,
         kentos_contracts::CAD_SPACES_FINISH_VERSION,
+    ),
+    // Mimari şablonu ([`templates_apply`], docs/adr/0346).
+    (
+        kentos_contracts::CAD_TEMPLATES_APPLY,
+        kentos_contracts::CAD_TEMPLATES_APPLY_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

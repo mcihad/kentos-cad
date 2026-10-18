@@ -1300,6 +1300,14 @@ codes! {
     /// A space's earlier finish of the same face taken away.
     FINISH_REPLACED = "finish_replaced", Warning, false, "Mahalin aynı yüzdeki eski kaplaması kaldırıldı.";
 
+    // ── Work templates (docs/adr/0346) ──────────────────────────────────
+    /// A template KentOS has not.
+    UNKNOWN_TEMPLATE = "unknown_template", Failed, false, "KentOS'un bu adda çalışma şablonu yok.";
+    /// A template's unit that is not one a template takes.
+    INVALID_TEMPLATE_UNIT = "invalid_template_unit", Failed, false, "Şablonun birimi mm ya da cm olur.";
+    /// A drawing with objects keeps its unit.
+    TEMPLATE_UNIT_KEPT = "template_unit_kept", Warning, false, "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

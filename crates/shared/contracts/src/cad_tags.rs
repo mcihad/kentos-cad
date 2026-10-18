@@ -144,6 +144,10 @@ pub struct TagAll {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub size: Option<f64>,
+    /// Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phases: Option<Vec<crate::ArchPhase>>,
 }
 
 /// Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.

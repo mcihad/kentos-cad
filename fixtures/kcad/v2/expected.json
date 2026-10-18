@@ -55,7 +55,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-82.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-83.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },
@@ -342,6 +342,9 @@
     { "file": "arch-elements.kcad", "sniff": "kcad", "content": "arch-elements.json" },
     { "file": "tags.kcad", "sniff": "kcad", "content": "tags.json" },
     { "file": "viewmarks.kcad", "sniff": "kcad", "content": "viewmarks.json" },
+    { "file": "phases.kcad", "sniff": "kcad", "content": "phases.json" },
+    { "file": "broken/phase-view-in-schema-81.kcad", "sniff": "kcad", "error": "unknown_field" },
+    { "file": "broken/phase-view-unknown.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/viewmarks-in-schema-80.kcad", "sniff": "kcad", "error": "unknown_kind" },
     { "file": "broken/viewmark-flip-false.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/viewmark-detail-no-radius.kcad", "sniff": "kcad", "error": "bad_value" },

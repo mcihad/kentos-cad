@@ -1,0 +1,515 @@
+{
+ "format": "kentos.phase-cases",
+ "version": 1,
+ "note": "ADR 0346 §2. scripts/fixtures/phase_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
+ "table": [
+  {
+   "view": "all",
+   "phase": null,
+   "look": "shown"
+  },
+  {
+   "view": "all",
+   "phase": "existing",
+   "look": "shown"
+  },
+  {
+   "view": "all",
+   "phase": "demolish",
+   "look": "shown"
+  },
+  {
+   "view": "all",
+   "phase": "new",
+   "look": "shown"
+  },
+  {
+   "view": "all",
+   "phase": "temporary",
+   "look": "shown"
+  },
+  {
+   "view": "existing",
+   "phase": null,
+   "look": "shown"
+  },
+  {
+   "view": "existing",
+   "phase": "existing",
+   "look": "shown"
+  },
+  {
+   "view": "existing",
+   "phase": "demolish",
+   "look": "shown"
+  },
+  {
+   "view": "existing",
+   "phase": "new",
+   "look": "hidden"
+  },
+  {
+   "view": "existing",
+   "phase": "temporary",
+   "look": "hidden"
+  },
+  {
+   "view": "demolition",
+   "phase": null,
+   "look": "shown"
+  },
+  {
+   "view": "demolition",
+   "phase": "existing",
+   "look": "shown"
+  },
+  {
+   "view": "demolition",
+   "phase": "demolish",
+   "look": "dashed"
+  },
+  {
+   "view": "demolition",
+   "phase": "new",
+   "look": "hidden"
+  },
+  {
+   "view": "demolition",
+   "phase": "temporary",
+   "look": "hidden"
+  },
+  {
+   "view": "proposed",
+   "phase": null,
+   "look": "shown"
+  },
+  {
+   "view": "proposed",
+   "phase": "existing",
+   "look": "faded"
+  },
+  {
+   "view": "proposed",
+   "phase": "demolish",
+   "look": "hidden"
+  },
+  {
+   "view": "proposed",
+   "phase": "new",
+   "look": "shown"
+  },
+  {
+   "view": "proposed",
+   "phase": "temporary",
+   "look": "dashed"
+  }
+ ],
+ "objects": [
+  {
+   "name": "yıkılacak duvar Yıkım planında kesikli",
+   "view": "demolition",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    }
+   },
+   "look": "dashed",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    },
+    "lineType": "dashed"
+   }
+  },
+  {
+   "name": "yıkılacak duvarın kendi deseni kesikliye bırakır",
+   "view": "demolition",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "linePattern": "Sınır",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    }
+   },
+   "look": "dashed",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    },
+    "lineType": "dashed"
+   }
+  },
+  {
+   "name": "mevcut duvar Yeni durumda soluk",
+   "view": "proposed",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    }
+   },
+   "look": "faded",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    },
+    "transparency": 0.6
+   }
+  },
+  {
+   "name": "kendi saydamlığı daha çok olan soluk kalır",
+   "view": "proposed",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "transparency": 0.8,
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    }
+   },
+   "look": "faded",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "transparency": 0.8,
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    }
+   }
+  },
+  {
+   "name": "az saydam mevcut duvar soluklaşır",
+   "view": "proposed",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "transparency": 0.2,
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    }
+   },
+   "look": "faded",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "transparency": 0.6,
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "existing"
+    }
+   }
+  },
+  {
+   "name": "yeni duvar Mevcut durumda gizli",
+   "view": "existing",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "new"
+    }
+   },
+   "look": "hidden",
+   "drawn": null
+  },
+  {
+   "name": "geçici duvar Yeni durumda kesikli",
+   "view": "proposed",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "temporary"
+    }
+   },
+   "look": "dashed",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "temporary"
+    },
+    "lineType": "dashed"
+   }
+  },
+  {
+   "name": "evresiz duvar her görünümde olduğu gibi",
+   "view": "demolition",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center"
+   },
+   "look": "shown",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center"
+   }
+  },
+  {
+   "name": "yeni duvar Tümü'nde olduğu gibi",
+   "view": "all",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "new"
+    }
+   },
+   "look": "shown",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "new"
+    }
+   }
+  }
+ ]
+}

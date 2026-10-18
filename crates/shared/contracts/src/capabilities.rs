@@ -1474,6 +1474,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["finish_replaced", "layer_hidden"],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
+    // Work templates (docs/adr/0346 §1).
+    Entry {
+        id: "cad.templates.apply",
+        refusals: &[&["unknown_template", "invalid_template_unit"], REVISION],
+        warnings: &["template_unit_kept"],
+        targets: none,
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",

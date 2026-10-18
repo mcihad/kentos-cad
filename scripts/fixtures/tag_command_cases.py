@@ -72,9 +72,9 @@ def opening(host, at, width, y, **kw):
 # opening by persistent id, which a setup cannot: every case writes them first (`PRELUDE`).
 SEED = {
     1: ("wall", "duvar", {"pts": [P(0, 0), P(10, 0)], "width": 0.2, "justify": "center", "style": "D20", "arch": {"level": "zemin"}}, {}),
-    2: ("wall", "duvar", {"pts": [P(0, 5), P(10, 5)], "width": 0.2, "justify": "center", "style": "D20"}, {}),
+    2: ("wall", "duvar", {"pts": [P(0, 5), P(10, 5)], "width": 0.2, "justify": "center", "style": "D20", "arch": {"phase": "demolish"}}, {}),
     3: ("space", "mahal", {"parts": rect(20, 0, 24, 3), "number": "101", "name": "Salon", "usage": "Oturma", "arch": {"level": "zemin"}}, {}),
-    4: ("space", "mahal", {"parts": rect(25, 0, 28, 2), "number": "102", "name": "Mutfak", "usage": "Islak", "height": 2.4}, {}),
+    4: ("space", "mahal", {"parts": rect(25, 0, 28, 2), "number": "102", "name": "Mutfak", "usage": "Islak", "height": 2.4, "arch": {"phase": "new"}}, {}),
     5: ("column", "kolon", {"at": P(40, 0), "width": 0.4, "depth": 0.5, "type": "C30", "tag": "S1"}, {}),
     6: ("column", "kilitli", {"at": P(45, 0), "width": 0.3, "tag": "S2"}, {}),
     7: ("line", "cizim", {"a": P(0, 20), "b": P(5, 20)}, {}),
@@ -484,6 +484,9 @@ def tags_create(d, inp, conflict=False):
         for i, (k, ly, f, _) in sorted(d.objs.items()):
             if k not in al["kinds"] or not is_visible(ly) or (al.get("layers") is not None and ly not in al["layers"]):
                 continue
+            # Only the objects of these phases (docs/adr/0346 §2): an opening's its wall's.
+            if al.get("phases") is not None and phase_of(d, i) not in al["phases"]:
+                continue
             if uid_of(i) in done:
                 continue
             done.add(uid_of(i))
@@ -492,6 +495,17 @@ def tags_create(d, inp, conflict=False):
         if found == 0 and not inp.get("tags"):
             return refusal("no_objects", "Verilen türlerde etiketsiz ve görünen nesne yok.", "all.kinds"), None
     return finish(inp, conflict, made)
+
+
+def phase_of(d, i):
+    """An object's phase: its own; an opening's its wall's (docs/adr/0346 §2)."""
+    k, _, f, _ = d.objs[i]
+    if k == "opening":
+        host = f.get("host", "")
+        if host.startswith("$uidOf:") and int(host.split(":")[1]) in d.objs:
+            return phase_of(d, int(host.split(":")[1]))
+        return None
+    return (f.get("arch") or {}).get("phase")
 
 
 def finish(inp, conflict, made):
@@ -624,6 +638,8 @@ def tag_create_cases():
         ("bütün mahaller etiketlenir", {"layerId": "etiket", "all": {"kinds": ["space"]}}),
         ("bütün açıklıklar: etiketli olan atlanır", {"layerId": "etiket", "all": {"kinds": ["opening"]}}),
         ("bütün kolonlar, yalnız Kolon katmanında", {"layerId": "etiket", "all": {"kinds": ["column"], "layers": ["kolon"]}}),
+        ("yalnız yıkılacak duvarın açıklıkları (evre süzgeci)", {"layerId": "etiket", "all": {"kinds": ["opening"], "phases": ["demolish"]}}),
+        ("yalnız yeni mahaller (evre süzgeci)", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["new"]}}),
         ("etiketler ve türler birlikte: aynı nesne iki kez etiketlenmez", {"layerId": "etiket", "tags": [{"of": uid_of(13)}], "all": {"kinds": ["opening"], "shape": "circle"}}),
         ("renkli ve kalın etiket", {"layerId": "etiket", "tags": [{"of": uid_of(5)}], "color": "#cc0000", "lineWeight": 0.35}),
     ]:
@@ -641,6 +657,7 @@ def tag_create_cases():
         ("türsüz toplu etiket reddedilir", {"layerId": "etiket", "all": {"kinds": []}}, {}),
         ("etiketsiz nesnesi olmayan tür reddedilir", {"layerId": "etiket", "all": {"kinds": ["stair"]}}, {}),
         ("toplu etiketin olmayan katmanı reddedilir", {"layerId": "etiket", "all": {"kinds": ["space"], "layers": ["yok"]}}, {}),
+        ("evresi geçici olan mahal yoksa reddedilir", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["temporary"]}}, {}),
         ("olmayan katman reddedilir", {**one, "layerId": "yok"}, {}),
         ("katman grubu reddedilir", {**one, "layerId": "pafta"}, {}),
         ("kilitli katman reddedilir", {**one, "layerId": "kilitli"}, {}),

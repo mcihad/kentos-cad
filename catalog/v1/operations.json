@@ -1779,6 +1779,41 @@
         "cad.spaces.finish"
       ],
       "note": "Tıklanan mahal, aralıklar ve başlangıç komuta verilir; ızgara komutun hesabı, mahale bağlı (ADR 0345 §4)."
+    },
+    "arch.template": {
+      "level": "semantic",
+      "via": [
+        "cad.templates.apply"
+      ],
+      "note": "Şablonun adı komuta verilir; eklenenler komutun hesabı (ADR 0346 §1)."
+    },
+    "arch.phase.all": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
+    },
+    "arch.phase.existing": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
+    },
+    "arch.phase.demolition": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
+    },
+    "arch.phase.proposed": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
     }
   },
   "tools": {

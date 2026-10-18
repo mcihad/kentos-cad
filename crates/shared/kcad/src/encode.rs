@@ -1686,6 +1686,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 82 (docs/adr/0346 §2): the project's phase view.
+    if doc.settings.arch.as_ref().is_some_and(|a| a.phase_view.is_some()) {
+        return crate::SCHEMA_WITH_PHASES;
+    }
     // Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
     if doc.entities.iter().any(|e| matches!(e, Entity::ViewMark(_)))
         || doc.settings.named_views.iter().any(|v| !v.id.is_empty())

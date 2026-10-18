@@ -162,7 +162,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "requests/0/version",
         ),
-        ("broken/schema-version-82.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-83.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

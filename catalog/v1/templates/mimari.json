@@ -1,0 +1,21 @@
+{
+  "format": "kentos.template",
+  "version": 1,
+  "name": "mimari",
+  "title": "Mimari çalışma şablonu",
+  "description": "Mimari projenin başlangıcı: santimetre, 1:50, iki kat, mimari ofis standardının katmanları ve stilleri, KentOS blok kitaplığı, KentOS'un duvar stilleri ve üç A3 pafta (kat planı, kesitler, detaylar), 300 dpi çıktı profiliyle.",
+  "unit": "cm",
+  "plotScale": 50.0,
+  "levels": [
+    { "id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0 },
+    { "id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0 }
+  ],
+  "spaceMethod": "net",
+  "standard": "mimari-ofis",
+  "blocks": "kentos-temel",
+  "sheets": [
+    { "id": "a-101", "name": "A-101 Zemin kat planı", "frame": "Kat planı", "scale": 50 },
+    { "id": "a-301", "name": "A-301 Kesitler", "frame": "Kesitler", "scale": 50 },
+    { "id": "a-501", "name": "A-501 Detaylar", "frame": "Detaylar", "scale": 20 }
+  ]
+}

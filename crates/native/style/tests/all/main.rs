@@ -5,6 +5,7 @@
 mod classify;
 mod designer;
 mod generator_timing;
+mod phases;
 mod kstil;
 mod legend;
 mod line_type_timing;

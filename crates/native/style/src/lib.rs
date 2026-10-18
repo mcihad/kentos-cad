@@ -41,6 +41,7 @@ pub mod color;
 pub mod designer;
 pub mod legend;
 pub mod line_types;
+pub mod phases;
 pub mod preview;
 pub mod program;
 pub mod renderer;

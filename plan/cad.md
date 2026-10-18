@@ -502,8 +502,8 @@ Architecture toolset'te duvarlar katmanlı bileşenler taşıyabilir; kapı/penc
 
 ### 14.5 Mimari üretim paketi
 
-- [ ] **CAD-ARCH-41:** Mimari çalışma şablonu; mm veya cm kullanıcı birimi, layer/style/block, annotation scale, plot profile ve pafta şablonlarıyla bir ürün paketi olsun.
-- [ ] **CAD-ARCH-42:** Mevcut/yıkılacak/yeni phase gösterimi; görünürlük, linetype/hatch, tag ve schedule filtreleriyle çalışsın.
+- [x] **CAD-ARCH-41:** Mimari çalışma şablonu; mm veya cm kullanıcı birimi, layer/style/block, annotation scale, plot profile ve pafta şablonlarıyla bir ürün paketi olsun. — *18 Ekim; [ADR 0346](../docs/adr/0346-architecture-template-and-phases.md) §1: `catalog/v1/templates/mimari.json` (cm, 1:50, katlar, mimari ofis standardı, KentOS blok kitaplığı, duvar stilleri, A3 paftalar) ve `cad.templates.apply`; Mimari › Proje › Mimari şablonu. Sihirbaza bağlanması ayrı iş.*
+- [x] **CAD-ARCH-42:** Mevcut/yıkılacak/yeni phase gösterimi; görünürlük, linetype/hatch, tag ve schedule filtreleriyle çalışsın. — *18 Ekim; [ADR 0346](../docs/adr/0346-architecture-template-and-phases.md) §2: projenin `arch.phaseView`'u (Tümü, Mevcut durum, Yıkım planı, Yeni durum; `.kcad` şema 82), gizli, kesikli, soluk görünüş çizimde ve paftada, gizliler seçilmez; etiketin `phases` süzgeci, çizelgenin evre süzgeci; Mimari › Evre.*
 - [ ] **CAD-ARCH-43:** Kat planları ve detay dosyalarını drawing set içinde organize et; değişen kaynaklardan etkilenen paftalar bulunabilsin.
 - [ ] **CAD-ARCH-44:** Mimari nesnelerin basic DXF/DWG görünüşü ile KentOS semantic metadata'sı ayrı doğrulansın.
 - [ ] **CAD-ARCH-45:** Tam otomatik section/elevation için gerekli yükseklik/katman/material modeli ve doğruluk sınırları ayrıca tasarlansın; bu teslim için elle 2D üretim zorunlu kalsın.

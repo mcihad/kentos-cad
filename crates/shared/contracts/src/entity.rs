@@ -1877,6 +1877,32 @@ impl Entity {
     }
 
     /// The `kind` tag as written in files and on the wire.
+    /// Its own phase (docs/adr/0346 §2): a wall's, a space's, a grid's, a column's, a stair's or a ramp's.
+    pub fn own_phase(&self) -> Option<crate::ArchPhase> {
+        match self {
+            Entity::Wall(x) => x.wall.arch.phase,
+            Entity::Space(x) => x.space.arch.phase,
+            Entity::Grid(x) => x.grid.arch.phase,
+            Entity::Column(x) => x.column.arch.phase,
+            Entity::Stair(x) => x.stair.arch.phase,
+            Entity::Ramp(x) => x.ramp.arch.phase,
+            _ => None,
+        }
+    }
+
+    /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening's its wall's, a tag's its object's
+    /// (`by_uid` finds an object by its persistent id).
+    pub fn phase<'a>(&'a self, by_uid: impl Fn(&str) -> Option<&'a Entity>) -> Option<crate::ArchPhase> {
+        match self {
+            Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+            Entity::Tag(t) => by_uid(&t.tag.of).and_then(|e| match e {
+                Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+                other => other.own_phase(),
+            }),
+            other => other.own_phase(),
+        }
+    }
+
     pub fn kind(&self) -> &'static str {
         match self {
             Entity::Point(_) => "point",

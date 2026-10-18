@@ -239,7 +239,10 @@
         ],
         "width": 0.2,
         "justify": "center",
-        "style": "D20"
+        "style": "D20",
+        "arch": {
+          "phase": "demolish"
+        }
       },
       {
         "kind": "space",
@@ -309,7 +312,10 @@
         "number": "102",
         "name": "Mutfak",
         "usage": "Islak",
-        "height": 2.4
+        "height": 2.4,
+        "arch": {
+          "phase": "new"
+        }
       },
       {
         "kind": "column",
@@ -3183,6 +3189,317 @@
       ]
     },
     {
+      "name": "yalnız yıkılacak duvarın açıklıkları (evre süzgeci)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "all": {
+              "kinds": [
+                "opening"
+              ],
+              "phases": [
+                "demolish"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any",
+                "$any"
+              ],
+              "ids": [
+                17,
+                18
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:14",
+                "at": {
+                  "x": 3.0,
+                  "y": 5.5
+                },
+                "shape": "hexagon",
+                "text": "K01",
+                "anchor": {
+                  "x": 3.0,
+                  "y": 5.0
+                }
+              },
+              "18": {
+                "kind": "tag",
+                "id": 18,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:15",
+                "at": {
+                  "x": 8.0,
+                  "y": 5.5
+                },
+                "shape": "hexagon",
+                "anchor": {
+                  "x": 8.0,
+                  "y": 5.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız yeni mahaller (evre süzgeci)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "all": {
+              "kinds": [
+                "space"
+              ],
+              "phases": [
+                "new"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                17
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "entities": {
+              "17": {
+                "kind": "tag",
+                "id": 17,
+                "layerId": "etiket",
+                "attrs": {},
+                "of": "$uidOf:4",
+                "at": {
+                  "x": 26.5,
+                  "y": 1.0
+                },
+                "shape": "rectangle",
+                "text": "102\nMutfak\n6.00 m²",
+                "anchor": {
+                  "x": 26.5,
+                  "y": 1.0
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "etiketler ve türler birlikte: aynı nesne iki kez etiketlenmez",
       "steps": [
         {
@@ -4895,6 +5212,124 @@
               "code": "layer_not_found",
               "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
               "path": "all.layers[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "evresi geçici olan mahal yoksa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "input": {
+            "layerId": "etiket",
+            "all": {
+              "kinds": [
+                "space"
+              ],
+              "phases": [
+                "temporary"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_objects",
+              "message": "Verilen türlerde etiketsiz ve görünen nesne yok.",
+              "path": "all.kinds"
             }
           },
           "expect": {

@@ -231,6 +231,8 @@ pub struct Store {
     filtered: IdSet,
     /// The areas that are masks (`set_masks`, docs/adr/0310 §4): picked by their boundary only.
     masks: IdSet,
+    /// The objects the project's phase view hides (`set_phase_hidden`, docs/adr/0346 §2).
+    phase_hidden: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
     /// objects' texts and pins.
     labelling: placing::Labels,
@@ -381,6 +383,7 @@ impl Store {
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
             self.masks.remove(&id.to_bits());
+            self.phase_hidden.remove(&id.to_bits());
             self.labelling.objects.remove(&id.to_bits());
             self.labelling.pins.remove(&id.to_bits());
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
@@ -674,6 +677,20 @@ impl Store {
         !self.masks.is_empty() && self.masks.contains(&id.to_bits())
     }
 
+    /// The objects the project's phase view hides (docs/adr/0346 §2), all of them: they are not picked nor snapped to,
+    /// as a layer's filter leaves its objects out.
+    pub fn set_phase_hidden(&mut self, ids: impl IntoIterator<Item = f64>) {
+        self.phase_hidden.clear();
+        for id in ids {
+            self.phase_hidden.insert(id.to_bits());
+        }
+    }
+
+    /// Whether the phase view hides none.
+    pub fn no_phase_hidden(&self) -> bool {
+        self.phase_hidden.is_empty()
+    }
+
     /// Lets every object in again (the drawing reloaded, or its last filter gone).
     pub fn clear_filtered(&mut self) {
         self.filtered.clear();
@@ -687,7 +704,9 @@ impl Store {
     /// Whether the view shows the object: it passes its layer's filter and
     /// shows at the slider's window (docs/adr/0210 §6, 0211 §3).
     pub fn view_shown(&self, id: f64) -> bool {
-        self.filter_shown(id) && self.time_shown(id)
+        self.filter_shown(id)
+            && self.time_shown(id)
+            && (self.phase_hidden.is_empty() || !self.phase_hidden.contains(&id.to_bits()))
     }
 
     /// For each of `ids`, 1 when the view shows it (a renderer's filter, in one call).

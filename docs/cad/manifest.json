@@ -153,6 +153,70 @@
    "tests": 0
   },
   {
+   "id": "arch.phase.all",
+   "kind": "command",
+   "title": "Evre: Tümü",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u (ADR 0346 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.phase.demolition",
+   "kind": "command",
+   "title": "Evre: Yıkım planı",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u (ADR 0346 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.phase.existing",
+   "kind": "command",
+   "title": "Evre: Mevcut durum",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u (ADR 0346 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.phase.proposed",
+   "kind": "command",
+   "title": "Evre: Yeni durum",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u (ADR 0346 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.quantities",
    "kind": "command",
    "title": "Metraj",
@@ -212,6 +276,22 @@
    "python": null,
    "mcp": null,
    "note": "Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.template",
+   "kind": "command",
+   "title": "Mimari şablonu",
+   "level": "semantic",
+   "via": [
+    "cad.templates.apply"
+   ],
+   "operation": null,
+   "python": "kentos.cad.templates.apply",
+   "mcp": "cad.templates.apply",
+   "note": "Şablonun adı komuta verilir; eklenenler komutun hesabı (ADR 0346 §1).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

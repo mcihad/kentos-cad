@@ -630,7 +630,10 @@ impl StyledCache {
                 // A renderer's classes were made from the values in the project's unit (docs/adr/0165 §2).
                 reading_unit: look.reading_unit,
             };
-            build_layer(store, &node.style, entities, &opts)
+            // The phase view's looks (docs/adr/0346 §2).
+            let phased = kentos_native_style::phases::phased(entities, &look.phasing);
+            let entities: Vec<&Entity> = phased.iter().map(|e| e.as_ref()).collect();
+            build_layer(store, &node.style, &entities, &opts)
                 .and_then(|(call, batches)| {
                     decode(
                         batches,

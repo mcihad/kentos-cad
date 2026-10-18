@@ -157,6 +157,19 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
     })
 }
 
+/// The sheet core's operations `ops` applied to the project's book, as `cad.sheets.edit` applies them, inside another
+/// command's write (Mimari şablonu's sheets, docs/adr/0346 §1).
+pub(crate) fn apply_ops(doc: &mut Document, ops: Vec<serde_json::Value>) -> Result<SheetsEdited, Stop> {
+    let next = check(
+        doc,
+        &SheetsEdit {
+            ops,
+            expected_revision: None,
+        },
+    )?;
+    write(doc, next)
+}
+
 pub fn validate(cx: &ExecutionContext<'_>, input: &SheetsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
         Ok(_) => CommandResult::Completed {

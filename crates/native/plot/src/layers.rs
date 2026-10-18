@@ -39,6 +39,24 @@ pub struct Look {
     pub reading_unit: kentos_native_style::ReadingUnit,
     /// The project's line types and line type scale (docs/adr/0313 §3), as the drawing area draws them.
     pub line_types: std::sync::Arc<kentos_native_style::line_types::LineTypes>,
+    /// The project's phase view's looks (docs/adr/0346 §2): the hidden objects left out, the dashed and faded drawn so.
+    pub phasing: std::sync::Arc<kentos_native_style::phases::Phasing>,
+}
+
+/// The phase view's looks of `doc`'s objects (docs/adr/0346 §2); nothing to change in Tümü.
+pub fn phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
+    let view = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.phase_view)
+        .unwrap_or_default();
+    kentos_native_style::phases::Phasing::of(doc.entities(), view, |u| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    })
 }
 
 /// The shown layers a sheet prints, bottom first: [`shown_layers`] without
@@ -227,7 +245,9 @@ pub fn build_whole(
         frame: sheet_frame(node, look.symbol_scale),
         reading_unit: look.reading_unit,
     };
-    build_layer(store, &node.style, entities, &opts)
+    let phased = kentos_native_style::phases::phased(entities, &look.phasing);
+    let entities: Vec<&Entity> = phased.iter().map(|e| e.as_ref()).collect();
+    build_layer(store, &node.style, &entities, &opts)
         .and_then(|(_, batches)| {
             decode(
                 batches,

@@ -2718,6 +2718,31 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_TEMPLATES_APPLY.into(),
+            version: crate::CAD_TEMPLATES_APPLY_VERSION,
+            title: "Mimari şablonu".into(),
+            summary: "Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). \
+                      Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TemplatesApply>(),
+            output: schema::<crate::TemplatesApplied>(),
+            plan: Some(schema::<crate::TemplatesApplied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Boş çizime mimari şablonu, milimetre".into(),
+                input: json!({ "name": "mimari", "unit": "mm" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_SCHEDULES_CREATE.into(),
             version: crate::CAD_SCHEDULES_CREATE_VERSION,
             title: "Çizelge".into(),
@@ -7375,6 +7400,9 @@ mod tests {
                     }
                     crate::CAD_SPACES_FINISH => {
                         serde_json::from_value::<crate::SpacesFinish>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TEMPLATES_APPLY => {
+                        serde_json::from_value::<crate::TemplatesApply>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

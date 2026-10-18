@@ -826,6 +826,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }
+                if !has.phases && a.phase_view.is_some() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin evre görünümü şema 82'den beri yazılır",
+                    ));
+                }
                 if !has.spaces && a.space_method.is_some() {
                     return Err(r.fail_at(
                         Code::UnknownField,

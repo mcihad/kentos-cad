@@ -182,6 +182,36 @@ impl Spatial {
         self.label_keys.clear();
         let all: Vec<&Entity> = doc.entities().collect();
         self.sync_labels(doc, &all, true);
+        self.sync_phases(doc);
+    }
+
+    /// The objects the project's phase view hides (docs/adr/0346 §2): every object again while a view other than
+    /// Tümü is set (an object's phase may come from its wall or its tag's object), none to do otherwise.
+    fn sync_phases(&mut self, doc: &Document) {
+        let view = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        if view == kentos_contracts::PhaseView::All {
+            if !self.store.no_phase_hidden() {
+                self.store.set_phase_hidden(std::iter::empty());
+            }
+            return;
+        }
+        let by_uid = |u: &str| {
+            Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        };
+        let hidden: Vec<f64> = doc
+            .entities()
+            .filter(|e| view.look(e.phase(by_uid)) == kentos_contracts::PhaseLook::Hidden)
+            .map(|e| f64::from(e.base().id))
+            .collect();
+        self.store.set_phase_hidden(hidden);
     }
 
     /// Brings the store up to date with `doc`: the block definitions and the
@@ -261,6 +291,7 @@ impl Spatial {
                 self.sync_times(doc, &changed);
                 self.sync_filters(doc, &changed, !gone.is_empty());
                 self.sync_labels(doc, &changed, false);
+                self.sync_phases(doc);
                 for e in fresh {
                     if self.store.filter_shown(f64::from(e.base().id)) {
                         continue;

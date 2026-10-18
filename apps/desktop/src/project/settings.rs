@@ -675,7 +675,9 @@ impl App {
         }
         // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
         // saved then.
-        let arch = super::arch::read(&s.arch, s.arch_detail, s.arch_method).unwrap_or_default();
+        let mut arch = super::arch::read(&s.arch, s.arch_detail, s.arch_method).unwrap_or_default();
+        // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
+        arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
         {
             let input = kentos_contracts::SettingsSet {

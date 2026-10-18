@@ -698,6 +698,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ya da tavan ızgarası, aynı yüzün eskisinin yerine; tarama izleyicisi mahali dış sınır alır); Mimari › Görünüm (Kesit, Görünüş, Detay,
   Başvurular), Mahal'de Döşeme deseni ve Tavan ızgarası, Donatı (KentOS blok kitaplığı, Blok ekle); Öznitelikler'in işaret satırları,
   seçim süzgecinde Görünüm işareti, kopuk işaretin uyarı üçgeni; Python `kentos.cad.viewmarks`, MCP (ADR 0345);
+  mimari şablonu ve evreler: çalışma şablonu veri olarak (`catalog/v1/templates/mimari.json`: cm, 1:50, katlar, mimari ofis standardı,
+  KentOS blok kitaplığı, duvar stilleri, A3 paftalar) ve `cad.templates.apply` (eksik parçaları, var olanı koruyarak; katmanlar,
+  stiller ve bloklar tek adım); projenin `arch.phaseView`'u (Tümü, Mevcut durum, Yıkım planı, Yeni durum; `.kcad` şema 82, `FORMATS_VERSION`
+  89), görünüş kuralı `PhaseView::look` (gizli, kesikli, soluk; açıklık duvarının, etiket nesnesinin evresiyle), çizimde ve paftada
+  `kentos_native_style::phases`, deponun `set_phase_hidden`'ı; etiketin `phases` süzgeci; Mimari › Proje'de Mimari şablonu ve Evre (ADR 0346);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

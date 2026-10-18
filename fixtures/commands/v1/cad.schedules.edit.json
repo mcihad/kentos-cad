@@ -239,7 +239,10 @@
         ],
         "width": 0.2,
         "justify": "center",
-        "style": "D20"
+        "style": "D20",
+        "arch": {
+          "phase": "demolish"
+        }
       },
       {
         "kind": "space",
@@ -309,7 +312,10 @@
         "number": "102",
         "name": "Mutfak",
         "usage": "Islak",
-        "height": 2.4
+        "height": 2.4,
+        "arch": {
+          "phase": "new"
+        }
       },
       {
         "kind": "column",
@@ -5977,7 +5983,10 @@
                 "number": "102",
                 "name": "Mutfak",
                 "usage": "Islak",
-                "height": 2.4
+                "height": 2.4,
+                "arch": {
+                  "phase": "new"
+                }
               },
               "17": {
                 "kind": "table",
@@ -6445,7 +6454,10 @@
                 ],
                 "width": 0.25,
                 "justify": "center",
-                "style": "D20"
+                "style": "D20",
+                "arch": {
+                  "phase": "demolish"
+                }
               },
               "17": {
                 "kind": "table",

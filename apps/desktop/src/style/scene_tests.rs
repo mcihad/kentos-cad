@@ -203,6 +203,7 @@ fn look(doc: &Document) -> Look {
         origin: scene::scene_origin(doc),
         view_build: Default::default(),
         view_colors: Default::default(),
+        phasing: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
     }
 }

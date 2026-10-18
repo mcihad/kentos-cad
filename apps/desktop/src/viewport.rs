@@ -294,6 +294,10 @@ pub fn highlight_color(key: &str, accent: Rgba8) -> Rgba8 {
 }
 
 /// The project's line types as last made, by the drawing's session and generation (docs/adr/0313 §3).
+type KeptPhasing = (
+    (u64, u64),
+    std::sync::Arc<kentos_native_style::phases::Phasing>,
+);
 type KeptLineTypes = ((u64, u64), std::sync::Arc<kentos_native_style::line_types::LineTypes>);
 
 /// The drawing area's state in the app.
@@ -326,6 +330,8 @@ pub struct Viewport {
     /// The project's line types as the style engine draws them, by the drawing's session and generation: made again
     /// only when the drawing changed, not every frame (docs/adr/0313 §3).
     line_types: RefCell<Option<KeptLineTypes>>,
+    /// The phase view's looks (docs/adr/0346 §2) by the drawing's session and generation.
+    phasings: RefCell<Option<KeptPhasing>>,
     /// The wheel's last zoom: screen-sized symbols wait for it to settle.
     zoomed_at: Option<Instant>,
     /// The second model view of a split area, not the active one (split_view.rs, docs/adr/0285 §3): its
@@ -429,6 +435,7 @@ impl Viewport {
             status: Arc::new(Mutex::new(Status::default())),
             styled: RefCell::new(crate::style::scene::StyledCache::default()),
             line_types: RefCell::new(None),
+            phasings: RefCell::new(None),
             zoomed_at: None,
             other: false,
         }
@@ -661,7 +668,20 @@ impl Viewport {
                 }
             }
         };
+        // The phase view's looks (docs/adr/0346 §2), made again only when the drawing changed.
+        let phasing = {
+            let mut kept = self.phasings.borrow_mut();
+            match kept.as_ref() {
+                Some((k, p)) if *k == key => std::sync::Arc::clone(p),
+                _ => {
+                    let p = std::sync::Arc::new(kentos_plot::layers::phasing_of(&doc.model));
+                    *kept = Some((key, std::sync::Arc::clone(&p)));
+                    p
+                }
+            }
+        };
         let look = crate::style::scene::Look {
+            phasing,
             line_types,
             palette: kentos_native_style::StylePalette {
                 fg: hex(palette.fg),

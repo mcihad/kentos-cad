@@ -1,0 +1,2981 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.templates.apply",
+  "commandVersion": 1,
+  "title": "Mimari şablonu",
+  "note": "scripts/fixtures/template_command_cases.py yazar; ADR 0346'nın kurallarından ve şablonun verisinden, KentOS kodu olmadan.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Şablon",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": []
+  },
+  "cases": [
+    {
+      "name": "Boş çizime: santimetre, katmanlar, stiller, bloklar, duvar stilleri, katlar, paftalar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş çizime milimetreyle",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "unit": "mm"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "mm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ad kırpılır ve büyük harfi sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "  Mimari "
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yazmadan söyler",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrula yazmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesneli çizimin birimi korunur ve söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "m",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "template_unit_kept",
+                "message": "Çizimde nesne var; birimi (m) değişmedi. Birimi Proje ayarları ya da Birimi değiştir ile değiştirin.",
+                "path": "unit"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesneli çizimin planı da birimi korur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "unit": "mm"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "m",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "template_unit_kept",
+                "message": "Çizimde nesne var; birimi (m) değişmedi. Birimi Proje ayarları ya da Birimi değiştir ile değiştirin.",
+                "path": "unit"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birimi zaten santimetre olan nesneli çizimde uyarı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "drawingUnit": "cm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Var olan standart katman korunur, görünüşü değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "A-DUVAR",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#E5484D",
+              "lineType": "continuous",
+              "lineWeight": 0.5
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Var olan blok korunur, kitaplığın öbürleri eklenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [],
+        "blocks": [
+          {
+            "id": "0192f5b0-0000-7000-8000-0000000000aa",
+            "name": "Masa",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 1.2,
+                  "y": 0.0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Var olan kat korunur, eksik kat eklenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.2
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adlı kat kimliği başka olsa da var sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3.2
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projenin mahal yöntemi korunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0
+              }
+            ],
+            "spaceMethod": "gross"
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Var olan yazı stili korunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5a0-0000-7000-8000-000000000001",
+              "name": "A-Yazı",
+              "font": "barlow",
+              "height": 2.5
+            }
+          ]
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "İkinci kez uygulamak bir şey eklemez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [],
+              "styles": [],
+              "blocks": [],
+              "wallStyles": [],
+              "levels": [],
+              "sheets": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kitapta olan pafta korunur, öbürleri eklenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "kitapta var olan pafta",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a-101",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "a-101-h",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "Var olan a-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kitapta hepsi varsa pafta eklenmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sheets.edit",
+          "note": "kitapta var olan pafta",
+          "input": {
+            "ops": [
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a-101",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "a-101-h",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "Var olan a-101",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              },
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a-301",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "a-301-h",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "Var olan a-301",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              },
+              {
+                "op": "addSheet",
+                "sheet": {
+                  "export": {
+                    "dpi": 300,
+                    "fileName": "[% @pafta_adi %]",
+                    "format": "svg"
+                  },
+                  "guides": [],
+                  "id": "a-501",
+                  "items": [
+                    {
+                      "bindings": [],
+                      "constraints": {
+                        "h": "left",
+                        "relativeTo": "margins",
+                        "v": "top"
+                      },
+                      "frame": {
+                        "height": 120000,
+                        "left": 20000,
+                        "top": 10000,
+                        "width": 180000
+                      },
+                      "hidden": false,
+                      "id": "a-501-h",
+                      "kind": {
+                        "clipToAtlasFeature": false,
+                        "grids": [],
+                        "labelBand": 0,
+                        "layers": {
+                          "type": "all"
+                        },
+                        "overviewFrame": {
+                          "cap": "butt",
+                          "color": "#d0021b",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 500
+                        },
+                        "type": "map",
+                        "view": {
+                          "center": {
+                            "x": 4.0,
+                            "y": 1.5
+                          },
+                          "rotation": 0,
+                          "scale": 50,
+                          "type": "fixed"
+                        }
+                      },
+                      "locked": false,
+                      "name": "Harita",
+                      "opacity": 100,
+                      "padding": 0,
+                      "printable": true,
+                      "rotation": 0
+                    }
+                  ],
+                  "name": "Var olan a-501",
+                  "page": {
+                    "margins": {
+                      "bottom": 10000,
+                      "left": 20000,
+                      "right": 10000,
+                      "top": 10000
+                    },
+                    "orientation": "landscape",
+                    "paper": "a3",
+                    "size": {
+                      "height": 297000,
+                      "width": 420000
+                    }
+                  },
+                  "snapGrid": {
+                    "enabled": false,
+                    "spacing": 5000,
+                    "visible": false
+                  },
+                  "variables": [],
+                  "variants": []
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geri almada katmanlar ve bloklar gider, ayarlar ve paftalar kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Mimari şablonu",
+          "expect": {
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen şablon reddedilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_template",
+              "message": "“peyzaj” adlı çalışma şablonu yok; KentOS'un şablonu: mimari.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metre şablonun birimi olamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "unit": "m"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_template_unit",
+              "message": "Şablonun birimi mm ya da cm olur.",
+              "path": "unit"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ayak şablonun birimi olamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "unit": "ft"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_template_unit",
+              "message": "Şablonun birimi mm ya da cm olur.",
+              "path": "unit"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geçersiz beklenen sürüm reddedilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm değişince yazılmaz (çakışma)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": []
+      },
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "cm",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

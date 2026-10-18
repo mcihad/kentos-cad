@@ -142,6 +142,7 @@ pub fn read(
         levels,
         detail,
         space_method,
+        phase_view: None,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

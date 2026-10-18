@@ -2416,6 +2416,18 @@ PatternUnitName = Literal["paper", "drawing"]
 """The names of :class:`PatternUnit`, for a plain string."""
 
 
+class PhaseView(_StrEnum):
+    """Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum."""
+    ALL = "all"
+    EXISTING = "existing"
+    DEMOLITION = "demolition"
+    PROPOSED = "proposed"
+
+
+PhaseViewName = Literal["all", "existing", "demolition", "proposed"]
+"""The names of :class:`PhaseView`, for a plain string."""
+
+
 class PointLabelMode(_StrEnum):
     """Where a point's label goes (docs/adr/0212 §3.3).
 
@@ -6118,10 +6130,12 @@ class ArchSettings(_Model):
     """The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
     by the drawing's scale, `WallDetail::at_scale`).
     Attributes:
+        phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
     """
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
+    phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6130,6 +6144,8 @@ class ArchSettings(_Model):
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
+        if self.phase_view is not UNSET:
+            out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.space_method is not UNSET:
             out["spaceMethod"] = None if self.space_method is None else _enum_out(self.space_method)
         return out
@@ -6139,6 +6155,7 @@ class ArchSettings(_Model):
         return cls(
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
+            phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
         )
 
@@ -32994,11 +33011,13 @@ class TagAll(_Model):
     """Tags on every shown object of the kinds given that has none, each at its object's point as a `NewTag` without `at`.
     Attributes:
         layers: Their layers' ids; absent: every layer shown.
+        phases: Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
         size: Unit: paper-mm.
     """
     kinds: list[TaggedKind | TaggedKindName]
     content: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
     shape: TagShape | TagShapeName | None | Unset = UNSET
     size: float | None | Unset = UNSET
 
@@ -33009,6 +33028,8 @@ class TagAll(_Model):
             out["content"] = self.content
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.phases is not UNSET:
+            out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
         if self.shape is not UNSET:
             out["shape"] = None if self.shape is None else _enum_out(self.shape)
         if self.size is not UNSET:
@@ -33021,6 +33042,7 @@ class TagAll(_Model):
             kinds=[_enum_in(TaggedKind, e0) for e0 in data["kinds"]],
             content=data.get("content", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
             size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
         )
@@ -33450,6 +33472,86 @@ class TargetReference(_Model):
             number=data["number"],
             marks=list(data["marks"]),
             order=data.get("order", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplatesApplied(_Model):
+    """Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).
+    Attributes:
+        unit: The drawing's unit afterwards.
+        layers: The layers added, by name.
+        styles: The text and dimension styles added, by name.
+        blocks: The blocks added, by name.
+        wall_styles: The wall styles added, by name.
+        levels: The levels added, by name.
+        sheets: The sheets added, by name.
+    """
+    unit: DrawingUnit | DrawingUnitName
+    layers: list[str]
+    styles: list[str]
+    blocks: list[str]
+    wall_styles: list[str]
+    levels: list[str]
+    sheets: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["unit"] = _enum_out(self.unit)
+        out["layers"] = list(self.layers)
+        out["styles"] = list(self.styles)
+        out["blocks"] = list(self.blocks)
+        out["wallStyles"] = list(self.wall_styles)
+        out["levels"] = list(self.levels)
+        out["sheets"] = list(self.sheets)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatesApplied:
+        return cls(
+            unit=_enum_in(DrawingUnit, data["unit"]),
+            layers=list(data["layers"]),
+            styles=list(data["styles"]),
+            blocks=list(data["blocks"]),
+            wall_styles=list(data["wallStyles"]),
+            levels=list(data["levels"]),
+            sheets=list(data["sheets"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplatesApply(_Model):
+    """Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its
+    layers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).
+
+    Refusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:
+    `template_unit_kept`.
+    Attributes:
+        name: The template's name: `mimari`.
+        unit: The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects.
+    """
+    name: str
+    expected_revision: str | None | Unset = UNSET
+    unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatesApply:
+        return cls(
+            name=data["name"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
         )
 
 
@@ -47069,6 +47171,8 @@ __all__ = [
     "PdfExported",
     "PercentLengthenChange",
     "PerpendicularConstraintRule",
+    "PhaseView",
+    "PhaseViewName",
     "PickedEntity",
     "PinnedObject",
     "PlaceMeasuredPoint",
@@ -47461,6 +47565,8 @@ __all__ = [
     "TangentConstraintRule",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplatesApplied",
+    "TemplatesApply",
     "TenantKind",
     "TenantKindName",
     "TextAlign",

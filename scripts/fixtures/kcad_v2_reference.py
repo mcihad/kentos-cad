@@ -2085,6 +2085,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 82 (docs/adr/0346): the project's phase view.
+    if "phaseView" in (settings or {}).get("arch", {}):
+        return 82
     # Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
     if any(e["kind"] == "viewmark" for e in entities) or any("id" in v for v in (settings or {}).get("namedViews", [])):
         return 81
@@ -2602,7 +2605,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-82.kcad"] = container(root(cmap(parts), version=uint(82)))
+    files["schema-version-83.kcad"] = container(root(cmap(parts), version=uint(83)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4226,6 +4229,13 @@ def build():
     out["broken/viewmark-words-empty.kcad"] = marks_broken(lambda d: d["entities"][3].update(words={"top": "", "bottom": ""}))
     assert marks_payload.count(b"\x62id\x67v-kesit") == 1
     out["broken/view-id-empty.kcad"] = container(marks_payload.replace(b"\x62id\x67v-kesit", b"\x62id\x60"))
+    # The phase view (docs/adr/0346 §2): schema 82's; in schema 81 an unknown field; an unknown view refused.
+    out["phases.kcad"] = container(document(load("phases.json")))
+    phases_payload = document(load("phases.json"))
+    assert phases_payload.count(b"\x67version\x18\x52") == 1, "the phase view is schema 82"
+    out["broken/phase-view-in-schema-81.kcad"] = container(phases_payload.replace(b"\x67version\x18\x52", b"\x67version\x18\x51"))
+    assert phases_payload.count(b"jdemolition") == 1
+    out["broken/phase-view-unknown.kcad"] = container(phases_payload.replace(b"jdemolition", b"jdemolished"))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

@@ -423,6 +423,11 @@ Liste:
   Görünüş, Detay, Döşeme deseni, Tavan ızgarası araçları, Başvurular penceresi, Mimari'nin Görünüm ve Donatı panelleri ve ikonları,
   Öznitelikler'in işaret satırları, seçim süzgecinde Görünüm işareti, kopuk işaretin uyarı üçgeni; bilinen bozulmalar: şema 81 ve
   `FORMATS_VERSION` 88.
+- [ ] `CAD-ARCH-41`, `42` mimari şablonu ve evre gösterimi (ADR 0346, 18 Ekim): web'de gerekenler: `.kcad` şema 82 (ayarların
+  `arch.phaseView`'u; `FORMATS_VERSION` 89), `cad.templates.apply` (`product/`; şablon verisi `catalog/v1/templates/mimari.json`),
+  evre görünüşünün çizimde ve paftada uygulanması (`PhaseView::look`'un karşılığı: gizli, kesikli, soluk) ve deponun gizlileri,
+  etiketin `phases` süzgeci, Mimari › Proje'de Mimari şablonu ve Evre paneli ve ikonları; bilinen bozulmalar: şema 82 ve
+  `FORMATS_VERSION` 89.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

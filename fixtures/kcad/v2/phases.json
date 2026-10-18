@@ -1,0 +1,232 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Evreler",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "phaseView": "demolition",
+      "spaceMethod": "net"
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "aks",
+      "name": "Aks",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#808080",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kolon",
+      "name": "Kolon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "merdiven",
+      "name": "Merdiven",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#1E88E5",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "aks",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000071",
+    "0192f5a1-2590-7000-8000-000000000072",
+    "0192f5a1-2590-7000-8000-000000000073",
+    "0192f5a1-2590-7000-8000-000000000074",
+    "0192f5a1-2590-7000-8000-000000000075",
+    "0192f5a1-2590-7000-8000-000000000076"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "grid",
+      "id": 1,
+      "layerId": "aks",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -2.0
+        },
+        {
+          "x": 0.0,
+          "y": 12.0
+        }
+      ],
+      "name": "A"
+    },
+    {
+      "kind": "grid",
+      "id": 2,
+      "layerId": "aks",
+      "attrs": {},
+      "pts": [
+        {
+          "x": -2.0,
+          "y": 0.0
+        },
+        {
+          "x": 14.0,
+          "y": 0.0
+        }
+      ],
+      "name": "1",
+      "bubbles": "start",
+      "bubbleSize": 10.0,
+      "arch": {
+        "phase": "existing"
+      }
+    },
+    {
+      "kind": "grid",
+      "id": 3,
+      "layerId": "aks",
+      "attrs": {},
+      "pts": [
+        {
+          "x": -5.0,
+          "y": 8.0
+        },
+        {
+          "x": 5.0,
+          "y": 8.0
+        }
+      ],
+      "bulges": [
+        0.25,
+        0.0
+      ],
+      "name": "R"
+    },
+    {
+      "kind": "column",
+      "id": 4,
+      "layerId": "kolon",
+      "attrs": {
+        "Beton sınıfı": "C30"
+      },
+      "at": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "width": 0.3,
+      "depth": 0.5,
+      "rotation": 0.5,
+      "type": "Betonarme",
+      "tag": "S1",
+      "fill": true,
+      "grids": [
+        "0192f5a1-2590-7000-8000-000000000071",
+        "0192f5a1-2590-7000-8000-000000000072"
+      ],
+      "place": "A-1"
+    },
+    {
+      "kind": "stair",
+      "id": 5,
+      "layerId": "merdiven",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 23.0,
+          "y": 0.0
+        },
+        {
+          "x": 23.0,
+          "y": 2.0
+        },
+        {
+          "x": 20.0,
+          "y": 2.0
+        }
+      ],
+      "width": 1.0,
+      "risers": 18,
+      "riserHeight": 0.17,
+      "tread": 0.28,
+      "landing": 1.2,
+      "cut": 9,
+      "numbering": true
+    },
+    {
+      "kind": "ramp",
+      "id": 6,
+      "layerId": "merdiven",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 30.0,
+          "y": 0.0
+        },
+        {
+          "x": 40.0,
+          "y": 0.0
+        }
+      ],
+      "width": 1.5,
+      "rise": 0.5,
+      "slope": 5.0,
+      "base": -0.3,
+      "arch": {
+        "phase": "new"
+      }
+    }
+  ]
+}

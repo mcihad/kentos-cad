@@ -195,11 +195,21 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             leader: None,
         };
         let mut found = 0usize;
+        let by_uid = |u: &str| {
+            kentos_domain::Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        };
         for e in doc.entities() {
             let layer = &e.base().layer_id;
             if !kinds.contains(&e.kind())
                 || !doc.layers().is_visible(layer)
                 || all.layers.as_ref().is_some_and(|ls| !ls.contains(layer))
+                || all
+                    .phases
+                    .as_ref()
+                    .is_some_and(|ps| !e.phase(by_uid).is_some_and(|p| ps.contains(&p)))
             {
                 continue;
             }

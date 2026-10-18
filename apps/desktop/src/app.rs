@@ -2496,6 +2496,8 @@ impl App {
             "arch.wallJoinCheck" => self.open_wall_joins(),
             "arch.tagsCheck" => self.open_tags_check(),
             "arch.viewRefs" => self.open_view_refs(),
+            "arch.template" => self.apply_arch_template(),
+            id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
             "arch.quantities" => self.open_quantities(),
             "arch.spaceMerge" => self.space_merge(),
@@ -2849,6 +2851,7 @@ impl App {
             id if id.starts_with("edit.selectFilter.") => {
                 self.select_kind_checked(&id["edit.selectFilter.".len()..])
             }
+            id if id.starts_with("arch.phase.") => self.phase_view().name() == &id["arch.phase.".len()..],
             "draft.lock.keep" => self.locks.keep,
             "draft.lock.construction" => self.session.construction(),
             "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,

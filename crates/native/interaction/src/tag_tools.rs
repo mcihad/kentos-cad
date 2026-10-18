@@ -431,6 +431,7 @@ impl Tool for TagAllTool {
                 content: None,
                 shape: None,
                 size: None,
+                phases: None,
             }),
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
