@@ -280,6 +280,10 @@ fn text_value(s: &str) -> (String, bool) {
     (out, changed)
 }
 
+/// The architectural objects written as blocks (docs/adr/0347 §2): by their ids, their persistent ids in the drawing
+/// (the references between them are written with these) and their pieces.
+pub(super) type Wholes = BTreeMap<u32, (Option<String>, Vec<Entity>)>;
+
 pub(super) struct Writer<'a> {
     pub out: &'a mut Out,
     /// The dimensions' own blocks (BLOCKS section), and their block records.
@@ -328,6 +332,9 @@ pub(super) struct Writer<'a> {
     pub forms: kentos_contracts::DxfAnnotations,
     /// The associative hatches and their sources (docs/adr/0333 §3).
     pub ties: &'a super::hatch_ties::Ties,
+    /// The architectural objects' pieces by their ids, drawn in an anonymous block whose INSERT carries the object
+    /// (docs/adr/0347 §2); empty: the objects came as their pieces.
+    pub wholes: &'a Wholes,
 }
 
 /// What the report says of a table, a dimension or a leader as `forms` writes it (docs/adr/0327 §6).
@@ -709,6 +716,21 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // An architectural object with KentOS's data: its pieces' block and the INSERT carrying it
+            // (docs/adr/0347 §2).
+            Entity::Wall(_)
+            | Entity::Opening(_)
+            | Entity::Space(_)
+            | Entity::Grid(_)
+            | Entity::Column(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Tag(_)
+            | Entity::ViewMark(_)
+                if self.wholes.contains_key(&e.base().id) =>
+            {
+                self.arch_whole(e)
+            }
             // A wall reaches here as its pieces (`writer::plain_walls`, docs/adr/0339 §4).
             Entity::Wall(_) => {
                 self.report.skip("Duvar", "duvar çizgilerine açılmadan yazılamaz", 0);
@@ -1757,6 +1779,19 @@ impl Writer<'_> {
         whole: &Entity,
         what: &str,
     ) {
+        self.insert_object(base, name, serde_json::to_string(whole).ok(), what);
+        let words = form_words(what, true, self.forms.metadata);
+        self.report.note(what, &words, 0);
+    }
+
+    /// [`insert_whole`](Self::insert_whole)'s INSERT, with the object's JSON as given.
+    fn insert_object(
+        &mut self,
+        base: &kentos_contracts::EntityBase,
+        name: &str,
+        object: Option<String>,
+        what: &str,
+    ) {
         self.begin("INSERT", base);
         self.out.str(100, "AcDbBlockReference");
         self.out.str(2, name);
@@ -1764,7 +1799,7 @@ impl Writer<'_> {
         let mut meta = Meta::default();
         if self.forms.metadata {
             meta = Self::base_meta(base);
-            meta.object = serde_json::to_string(whole).ok();
+            meta.object = object;
             let bare = Meta {
                 label: None,
                 attrs: Default::default(),
@@ -1780,9 +1815,79 @@ impl Writer<'_> {
                 );
             }
         }
-        let words = form_words(what, true, self.forms.metadata);
-        self.report.note(what, &words, 0);
         self.end(meta);
+    }
+
+    /// An architectural object as its pieces' anonymous block and an INSERT at the origin carrying the object and its
+    /// persistent id as KentOS's data (docs/adr/0347 §2): other programs see the block, KentOS reads the object back.
+    fn arch_whole(&mut self, e: &Entity) -> bool {
+        let Some((uid, pieces)) = self.wholes.get(&e.base().id) else {
+            return false;
+        };
+        let what = kind_label(e);
+        let record = self.handles.take();
+        *self.anonymous += 1;
+        let name = format!("*U{}", *self.anonymous);
+        self.records.push((record, name.clone(), 0));
+        // The pieces as a definition's objects (BYBLOCK where they have nothing of their own), into their own buffer.
+        let mut objects = Out::default();
+        let (extent, points) = {
+            let mut w = Writer {
+                out: &mut objects,
+                blocks: &mut *self.blocks,
+                records: &mut *self.records,
+                dimensions: &mut *self.dimensions,
+                anonymous: &mut *self.anonymous,
+                values: self.values,
+                decimals: self.decimals,
+                grads: self.grads,
+                handles: &mut *self.handles,
+                layers: self.layers,
+                report: &mut *self.report,
+                extent: None,
+                points: false,
+                owner: record,
+                defining: true,
+                names: self.names,
+                defined: self.defined,
+                placing: self.placing,
+                styles: self.styles,
+                per_metre: self.per_metre,
+                ltypes: &mut *self.ltypes,
+                arrows: &mut *self.arrows,
+                pen: Pen::default(),
+                forms: self.forms,
+                ties: self.ties,
+                wholes: self.wholes,
+            };
+            for p in pieces {
+                w.entity(p);
+            }
+            (w.extent, w.points)
+        };
+        if let Some(b) = extent {
+            self.grow(v(b.min_x, b.min_y));
+            self.grow(v(b.max_x, b.max_y));
+        }
+        self.points |= points;
+        self.block_begin(record, &name);
+        self.blocks.s.push_str(&objects.s);
+        self.block_end(record);
+        // The object, its persistent id beside its fields (`uid`, which the reader takes off).
+        let object = serde_json::to_value(e).ok().map(|mut j| {
+            if let (Some(map), Some(u)) = (j.as_object_mut(), uid) {
+                map.insert("uid".into(), u.clone().into());
+            }
+            j.to_string()
+        });
+        self.insert_object(e.base(), &name, object, what);
+        let words = if self.forms.metadata {
+            "blok görünüşü olarak (adsız blok ve INSERT) yazıldı; başka programlar bloğun çizgilerini görür, KentOS nesneyi KentOS verisinden geri okur"
+        } else {
+            "blok görünüşü olarak (adsız blok ve INSERT) yazıldı"
+        };
+        self.report.note(what, words, 0);
+        true
     }
 
     /// The groups of a dimension's kind (its subclass and points).

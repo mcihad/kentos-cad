@@ -249,6 +249,22 @@
    "tests": 0
   },
   {
+   "id": "arch.sheetSet",
+   "kind": "command",
+   "title": "Pafta seti",
+   "level": "query",
+   "via": [
+    "cad.sheets.set"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.spaceMerge",
    "kind": "command",
    "title": "Mahalleri birleştir",

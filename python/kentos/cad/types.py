@@ -139,6 +139,22 @@ AddressesDefineOperationName = Literal["set", "remove"]
 """The names of :class:`AddressesDefineOperation`, for a plain string."""
 
 
+class AffectReason(_StrEnum):
+    """Why a frame is affected.
+
+    - ``shows``: An object's box meets the frame's ground box.
+    - ``marked``: One of the objects is a view mark pointing at the frame.
+    - ``unknown``: The frame's ground is not known (no fixed view): it may show them.
+    """
+    SHOWS = "shows"
+    MARKED = "marked"
+    UNKNOWN = "unknown"
+
+
+AffectReasonName = Literal["shows", "marked", "unknown"]
+"""The names of :class:`AffectReason`, for a plain string."""
+
+
 class AngleUnit(_StrEnum):
     GRAD = "grad"
     DEG = "deg"
@@ -5466,6 +5482,36 @@ class AddressesDefined(_Model):
         return cls(
             locators=[AddressLocator.from_json(e0) for e0 in data["locators"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AffectedFrame(_Model):
+    """A frame the objects' change affects.
+    Attributes:
+        reasons: Its reasons, in this order: shows, marked, unknown.
+        uids: The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).
+    """
+    sheet: str
+    item: str
+    reasons: list[AffectReason | AffectReasonName]
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["item"] = self.item
+        out["reasons"] = [_enum_out(e0) for e0 in self.reasons]
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AffectedFrame:
+        return cls(
+            sheet=data["sheet"],
+            item=data["item"],
+            reasons=[_enum_in(AffectReason, e0) for e0 in data["reasons"]],
+            uids=list(data["uids"]),
         )
 
 
@@ -30007,6 +30053,78 @@ class ServiceParam(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetFrame(_Model):
+    """A map frame of the set.
+    Attributes:
+        item: The item's id.
+        marks: The view marks that point at it, by persistent id, in the drawing's order.
+        bounds: The corners' box: west, south, east, north (metres); none with no corners. Unit: length.
+        corners: The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty
+            for a map without a fixed view and centre (`unknown`). Unit: length.
+        scale: Its scale (1:N); none for a map that follows something else (an atlas). Unit: scale.
+    """
+    item: str
+    name: str
+    marks: list[str]
+    bounds: list[float] | None | Unset = UNSET
+    corners: list[Vec2] | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        out["name"] = self.name
+        out["marks"] = list(self.marks)
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.corners is not UNSET:
+            out["corners"] = [_vec2_out(e0) for e0 in self.corners]
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetFrame:
+        return cls(
+            item=data["item"],
+            name=data["name"],
+            marks=list(data["marks"]),
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            corners=[Vec2.from_json(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetSheet(_Model):
+    """A sheet of the set.
+    Attributes:
+        frames: Its map frames, in its drawing order.
+    """
+    id: str
+    name: str
+    series: str
+    frames: list[SetFrame]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["series"] = self.series
+        out["frames"] = [e0.to_json() for e0 in self.frames]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSheet:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            series=data["series"],
+            frames=[SetFrame.from_json(e0) for e0 in data["frames"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SettingsChanged(_Model):
     """Output of `cad.settings.set` v1, and what plan says it would do.
     Attributes:
@@ -30254,6 +30372,35 @@ class SheetPicture(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetSeries(_Model):
+    """A series of the set.
+    Attributes:
+        series: `A-1` …, or `Diğer`.
+        sheets: Its sheets' ids, in the book's order.
+        title: Its title (`Planlar` …); empty for a series KentOS does not name.
+    """
+    series: str
+    sheets: list[str]
+    title: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["series"] = self.series
+        out["sheets"] = list(self.sheets)
+        if self.title is not UNSET:
+            out["title"] = self.title
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetSeries:
+        return cls(
+            series=data["series"],
+            sheets=list(data["sheets"]),
+            title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetsEdit(_Model):
     """Input of `cad.sheets.edit` v1: the sheet core's operations applied to the
     project's book in order, as one change. Lengths on the paper are
@@ -30325,6 +30472,61 @@ class SheetsEdited(_Model):
             inverse=list(data["inverse"]),
             sheets=[SheetInfo.from_json(e0) for e0 in data["sheets"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsSet(_Model):
+    """Input of `cad.sheets.set` v1 (“Pafta seti”): the set; with `uids`, the sheets those objects' change affects.
+
+    Refusals, in this order: `entity_not_found` (at `uids[i]`), `book_unreadable`.
+    Attributes:
+        uids: The changed objects' persistent ids; absent: no affected list.
+    """
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsSet:
+        return cls(
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetsSetResult(_Model):
+    """Output of `cad.sheets.set` v1 (its plan's too).
+    Attributes:
+        series: The series, sorted by their letters and digit; `Diğer` last.
+        sheets: The sheets, in the book's order.
+        affected: With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
+    """
+    series: list[SheetSeries]
+    sheets: list[SetSheet]
+    revision: str
+    affected: list[AffectedFrame] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["series"] = [e0.to_json() for e0 in self.series]
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["revision"] = self.revision
+        if self.affected is not UNSET:
+            out["affected"] = None if self.affected is None else [e0.to_json() for e0 in self.affected]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetsSetResult:
+        return cls(
+            series=[SheetSeries.from_json(e0) for e0 in data["series"]],
+            sheets=[SetSheet.from_json(e0) for e0 in data["sheets"]],
+            revision=data["revision"],
+            affected=UNSET if "affected" not in data else None if data["affected"] is None else [AffectedFrame.from_json(e0) for e0 in data["affected"]],
         )
 
 
@@ -46230,6 +46432,9 @@ __all__ = [
     "AddressesDefineOperation",
     "AddressesDefineOperationName",
     "AddressesDefined",
+    "AffectReason",
+    "AffectReasonName",
+    "AffectedFrame",
     "AffineCrsPlane",
     "AffineTransform",
     "AlignHatchEdit",
@@ -47417,9 +47622,11 @@ __all__ = [
     "ServiceParam",
     "SetArchOperation",
     "SetCellTableEdit",
+    "SetFrame",
     "SetOpeningsOperation",
     "SetParameterEdit",
     "SetScheduleOperation",
+    "SetSheet",
     "SetSpacesOperation",
     "SetViewMarksOperation",
     "SetWallsOperation",
@@ -47429,8 +47636,11 @@ __all__ = [
     "SheetInfo",
     "SheetMapInfo",
     "SheetPicture",
+    "SheetSeries",
     "SheetsEdit",
     "SheetsEdited",
+    "SheetsSet",
+    "SheetsSetResult",
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",

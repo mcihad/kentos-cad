@@ -13,6 +13,7 @@ mod inputs;
 mod legend;
 pub(crate) mod map;
 mod marks;
+pub use map::fixed_corners;
 pub use marks::{DateSource, DeclinationSource, NorthInfo, NorthMissing};
 mod table;
 mod title;

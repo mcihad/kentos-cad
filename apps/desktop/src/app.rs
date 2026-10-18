@@ -243,6 +243,8 @@ pub enum Dialog {
     TagsCheck,
     /// Başvurular (viewmark_refs.rs, docs/adr/0345 §3); the window is `App::view_refs`.
     ViewRefs,
+    /// Pafta seti (sheet_set.rs, docs/adr/0347 §1); the window is `App::sheet_set`.
+    SheetSet,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
     Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
@@ -515,6 +517,7 @@ pub enum Message {
     WallJoins(crate::wall_joins::Event),
     TagsCheck(crate::tags_check::Event),
     ViewRefs(crate::viewmark_refs::Event),
+    SheetSet(crate::sheet_set::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -992,6 +995,7 @@ pub struct App {
     pub(crate) tags_check: Option<crate::tags_check::Window>,
     /// Başvurular' window (viewmark_refs.rs, docs/adr/0345 §3).
     pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
+    pub(crate) sheet_set: Option<crate::sheet_set::Window>,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1314,6 +1318,7 @@ impl App {
             wall_joins: None,
             tags_check: None,
             view_refs: None,
+            sheet_set: None,
             quantities: None,
             layer_purge: None,
             take_from: None,
@@ -1858,6 +1863,7 @@ impl App {
             Message::WallJoins(event) => return self.wall_joins_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::ViewRefs(event) => return self.view_refs_event(event),
+            Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2496,6 +2502,7 @@ impl App {
             "arch.wallJoinCheck" => self.open_wall_joins(),
             "arch.tagsCheck" => self.open_tags_check(),
             "arch.viewRefs" => self.open_view_refs(),
+            "arch.sheetSet" => self.open_sheet_set(),
             "arch.template" => self.apply_arch_template(),
             id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).

@@ -1333,3 +1333,125 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
         .expect("written");
     }
 }
+
+/// A room's architectural objects as `arch_dxf_goes_round` writes them: grids and a column where they cross, four
+/// walls, a door, the space they close, a tag on the door, a section mark, a stair and a ramp.
+fn arch_room() -> Session {
+    let mut s = Session::new(&NewDrawing {
+        name: "Mimari DXF".into(),
+        srid: 0,
+        plot_scale: 50.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: None,
+    })
+    .expect("a new project");
+    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let mut call = |command: &str, input: Value| -> Value {
+        let answer = s.call(json!({ "command": command, "input": input })).expect("answers");
+        assert_eq!(answer["status"], "completed", "{command}: {answer}");
+        answer["output"].clone()
+    };
+    let p = |x: f64, y: f64| json!({ "x": x, "y": y });
+    let grids = call("cad.grids.create", json!({ "layerId": layer, "grids": [
+        { "label": "A", "pts": [p(0.0, -1.5), p(0.0, 5.5)] },
+        { "label": "1", "pts": [p(-1.5, 0.0), p(7.5, 0.0)] } ] }));
+    let g: Vec<String> = grids["uids"].as_array().expect("ids").iter().map(|u| u.as_str().expect("an id").to_owned()).collect();
+    call("cad.columns.create", json!({ "layerId": layer, "crossings": { "grids": g, "width": 0.3, "depth": 0.3 } }));
+    let walls = call("cad.walls.create", json!({ "layerId": layer, "walls": [
+        { "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0), p(0.0, 4.0)], "closed": true, "width": 0.2 } ] }));
+    let wall = walls["uids"][0].as_str().expect("a wall").to_owned();
+    let door = call("cad.openings.create", json!({ "layerId": layer, "openings": [
+        { "host": wall, "at": 2.0, "type": "Kapı 90", "number": "K1" } ] }));
+    let door = door["uids"][0].as_str().expect("a door").to_owned();
+    call("cad.spaces.create", json!({ "layerId": layer, "spaces": [
+        { "seed": p(3.0, 2.0), "number": "Z-01", "name": "Salon" } ] }));
+    call("cad.tags.create", json!({ "layerId": layer, "tags": [{ "of": door }] }));
+    call("cad.viewmarks.create", json!({ "layerId": layer, "marks": [
+        { "form": "section", "mark": "A", "points": [p(-1.0, 2.0), p(7.0, 2.0)] } ] }));
+    call("cad.stairs.create", json!({ "layerId": layer, "stairs": [
+        { "pts": [p(1.0, 1.0), p(4.0, 1.0)], "width": 1.0, "risers": 10, "riserHeight": 0.17, "tread": 0.28 } ] }));
+    call("cad.ramps.create", json!({ "layerId": layer, "ramps": [
+        { "pts": [p(8.0, 0.0), p(14.0, 0.0)], "width": 1.5, "rise": 0.3, "slope": 5.0 } ] }));
+    s
+}
+
+fn arch_kind(e: &kentos_contracts::Entity) -> bool {
+    use kentos_contracts::Entity as E;
+    matches!(
+        e,
+        E::Wall(_) | E::Opening(_) | E::Space(_) | E::Grid(_) | E::Column(_) | E::Stair(_) | E::Ramp(_) | E::Tag(_) | E::ViewMark(_)
+    )
+}
+
+#[test]
+fn arch_dxf_goes_round() {
+    // Every architectural object goes to DXF as its pieces' block and an INSERT carrying it, and comes back as itself,
+    // its references to the others tied to their new ids (docs/adr/0347 §2).
+    let dir = scratch("arch-dxf");
+    let mut s = arch_room();
+    let file = dir.join("mimari.dxf");
+    s.export_dxf(&file).expect("written");
+    let mut back = Session::new(&NewDrawing {
+        name: "Geri".into(),
+        srid: 0,
+        plot_scale: 50.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: None,
+    })
+    .expect("a new project");
+    let answer = back
+        .call(json!({ "command": "file.import.dxf", "input": { "path": file.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = |d: &kentos_domain::Document, e: &kentos_contracts::Entity| {
+        d.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).expect("an id")
+    };
+    let before: Vec<(String, Value)> = s
+        .document()
+        .entities()
+        .filter(|e| arch_kind(e))
+        .map(|e| (uid(s.document(), e), serde_json::to_value(e).expect("json")))
+        .collect();
+    let after: Vec<(String, Value)> = back
+        .document()
+        .entities()
+        .filter(|e| arch_kind(e))
+        .map(|e| (uid(back.document(), e), serde_json::to_value(e).expect("json")))
+        .collect();
+    let kinds: std::collections::BTreeSet<&str> = before.iter().filter_map(|(_, e)| e["kind"].as_str()).collect();
+    assert_eq!(kinds.len(), 9, "every architectural kind: {kinds:?}");
+    assert_eq!(before.len(), after.len(), "{answer}");
+    // The ids in the writing drawing → in the reading one, by the objects' order.
+    let ids: std::collections::HashMap<&str, &str> =
+        before.iter().zip(&after).map(|((a, _), (b, _))| (a.as_str(), b.as_str())).collect();
+    for ((_, a), (_, b)) in before.iter().zip(&after) {
+        let mut want = a.clone();
+        let map = want.as_object_mut().expect("an object");
+        map.insert("id".into(), b["id"].clone());
+        map.insert("layerId".into(), b["layerId"].clone());
+        for key in ["host", "of"] {
+            if let Some(Value::String(r)) = map.get_mut(key) {
+                *r = ids.get(r.as_str()).copied().unwrap_or("?").to_owned();
+            }
+        }
+        if let Some(Value::Array(list)) = map.get_mut("grids") {
+            for r in list {
+                if let Value::String(r) = r {
+                    *r = ids.get(r.as_str()).copied().unwrap_or("?").to_owned();
+                }
+            }
+        }
+        assert_eq!(&want, b, "{}", a["kind"]);
+    }
+    // The pair the independent check reads (scripts/fixtures/arch_dxf_cases.py).
+    if std::env::var_os("KENTOS_WRITE_DXF").is_some() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/dxf-arch");
+        std::fs::create_dir_all(&root).expect("the folder");
+        std::fs::copy(&file, root.join("mimari.dxf")).expect("kept");
+        s.save(Some(&root.join("mimari.kcad"))).expect("saved");
+    }
+}

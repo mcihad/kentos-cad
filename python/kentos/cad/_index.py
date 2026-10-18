@@ -130,6 +130,7 @@ COMMANDS: dict[str, Any] = {
     "cad.schema.describe": schema.describe,
     "cad.settings.set": settings.set,
     "cad.sheets.edit": sheets.edit,
+    "cad.sheets.set": sheets.set,
     "cad.snap.find": snap.find,
     "cad.sources.describe": sources.describe,
     "cad.sources.edit": sources.edit,

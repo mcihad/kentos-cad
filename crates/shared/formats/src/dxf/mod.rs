@@ -848,6 +848,8 @@ fn read_once(
     em.merge_holes();
     // After the holes: the associative hatches are tied to their objects by place (docs/adr/0333 §2).
     em.tie_hatches();
+    // And the architectural objects' references to each other (docs/adr/0347 §2).
+    em.tie_arch();
     let blocks = if opts.explode_blocks {
         Vec::new()
     } else {

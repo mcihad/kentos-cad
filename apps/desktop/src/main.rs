@@ -23,6 +23,7 @@ mod annotation_styles;
 mod wall_joins;
 mod tags_check;
 mod viewmark_refs;
+mod sheet_set;
 mod arch_project;
 mod quantities;
 mod wall_styles;

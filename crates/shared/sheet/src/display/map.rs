@@ -98,6 +98,26 @@ impl MapFrame {
     }
 }
 
+/// A map item's content corners on the ground (east, north, metres), clockwise from the content's top left, for a map
+/// with a fixed view and a centre; none for any other item (an atlas map shows a different ground on each page).
+/// Pafta seti finds the sheets a change affects with them (docs/adr/0347 §1).
+pub fn fixed_corners(item: &Item) -> Option<[[f64; 2]; 4]> {
+    let ItemKind::Map(m) = &item.kind else {
+        return None;
+    };
+    let MapView::Fixed(f) = &m.view else {
+        return None;
+    };
+    MapFrame {
+        content: content_rect(item, m),
+        center: f.center,
+        scale: f.scale,
+        view_rot: f.rotation,
+        item_rot: item.rotation,
+    }
+    .ground_corners()
+}
+
 /// The content's rectangle: the frame less its padding and its label band.
 pub(crate) fn content_rect(item: &Item, m: &MapItem) -> RectUm {
     let r = item.content_rect().inset(m.label_band);

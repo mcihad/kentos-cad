@@ -1,10 +1,12 @@
 //! The pictures of docs/adr/0346 (the work template and the phase view): Mimari şablonu on an empty CAD drawing, its
 //! layers and the message; the room of docs/adr/0342 with its outer wall existing, its inner wall to be demolished and a
-//! new partition, in Tümü, Yıkım planı and Yeni durum. `tools_screens` takes them in both themes at 1440×900 and
-//! 1100×650:
+//! new partition, in Tümü, Yıkım planı and Yeni durum. And of docs/adr/0347: Pafta seti over the room with the template's
+//! sheets (their frames on the room, a section mark on the sections' frame), alone and with a wall and the mark
+//! selected; the room's DXF read back into an empty drawing, a wall selected. `tools_screens` takes them in both themes
+//! at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=mimari-sablon,evre-tumu,evre-yikim,evre-yeni cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=mimari-sablon,evre-tumu,evre-yikim,evre-yeni,pafta-seti,pafta-seti-etkilenen,dxf-mimari cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -108,11 +110,128 @@ fn proposed(app: &mut App) {
     run(app, "arch.phase.proposed");
 }
 
+/// A sheet's map frame looking at `(x, y)` of the room at `scale`, through `cad.sheets.edit`.
+fn look_at(app: &mut App, item: &str, x: f64, y: f64, scale: u32) {
+    let Some(doc) = app.document.as_mut() else {
+        return;
+    };
+    let kind = serde_json::json!({"clipToAtlasFeature": false, "grids": [], "labelBand": 0, "layers": {"type": "all"},
+        "overviewFrame": {"cap": "butt", "color": "#d0021b", "dash": [], "join": "miter", "width": 500},
+        "type": "map", "view": {"center": {"x": crate::tools_scenes::E + x, "y": crate::tools_scenes::N + y},
+        "rotation": 0, "scale": scale, "type": "fixed"}});
+    if let Ok(input) = serde_json::from_value(serde_json::json!({
+        "ops": [{"op": "setItemProps", "id": item, "patch": {"kind": kind}}]
+    })) {
+        let _ = kentos_native_application::sheets_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+    }
+}
+
+/// The room with the template's sheets: the plan and the sections on the room, the details on the kitchen, a section
+/// mark through the room pointing at the sections' frame.
+fn sheet_set(app: &mut App) {
+    crate::space_scenes::spaces(app);
+    fit(app, 7.0, 5.0);
+    run(app, "arch.template");
+    look_at(app, "a-101-harita", 3.5, 2.5, 50);
+    look_at(app, "a-301-harita", 3.5, 2.5, 50);
+    look_at(app, "a-501-harita", 5.6, 1.0, 20);
+    if let Some(doc) = app.document.as_mut() {
+        let layer = doc.model.layers().active().to_owned();
+        let at = |x: f64, y: f64| kentos_contracts::Vec2 {
+            x: crate::tools_scenes::E + x,
+            y: crate::tools_scenes::N + y,
+        };
+        let _ = kentos_native_application::viewmarks_create::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_contracts::ViewMarksCreate {
+                layer_id: layer,
+                marks: vec![kentos_contracts::NewViewMark {
+                    form: kentos_contracts::ViewMarkForm::Section,
+                    points: vec![at(-1.6, 2.2), at(8.6, 2.2)],
+                    radius: None,
+                    at: None,
+                    angle: None,
+                    flip: false,
+                    mark: "A".into(),
+                    target: Some(kentos_contracts::ViewTarget::sheet("a-301", "a-301-harita")),
+                    size: None,
+                }],
+                color: None,
+                line_weight: None,
+                expected_revision: None,
+            },
+        );
+    }
+    app.tab = "arch";
+}
+
+fn set_alone(app: &mut App) {
+    sheet_set(app);
+    app.selection.set([]);
+    run(app, "arch.sheetSet");
+}
+
+/// The kitchen's wall and the section mark selected: the sheets they affect.
+fn set_affected(app: &mut App) {
+    sheet_set(app);
+    let chosen: Vec<Slot> = app
+        .document
+        .as_ref()
+        .map(|d| {
+            let wall = walls(app).into_iter().find(|(s, _)| !s.contains("dis")).map(|(_, u)| u);
+            d.model
+                .entities()
+                .filter(|e| match e {
+                    Entity::ViewMark(_) => true,
+                    Entity::Wall(_) => d.model.uid(Slot(e.base().id)).map(|u| u.to_string()) == wall,
+                    _ => false,
+                })
+                .map(|e| Slot(e.base().id))
+                .collect()
+        })
+        .unwrap_or_default();
+    app.selection.set(chosen);
+    run(app, "arch.sheetSet");
+}
+
+/// The room written to DXF (`fixtures/formats/v1/dxf-arch/mimari.dxf`) read into an empty drawing: its walls,
+/// door, space, grids, column, stair, ramp, tag and mark are themselves again; a wall selected.
+fn dxf_back(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 50.0);
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/formats/v1/dxf-arch/mimari.dxf");
+    if let Some(doc) = app.document.as_mut()
+        && let Ok(input) = serde_json::from_value(serde_json::json!({ "path": path.display().to_string() }))
+    {
+        let _ = kentos_native_application::file_import::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        );
+    }
+    app.zoom_extents();
+    let wall = app.document.as_ref().and_then(|d| {
+        d.model
+            .entities()
+            .find(|e| matches!(e, Entity::Wall(_)))
+            .map(|e| Slot(e.base().id))
+    });
+    if let Some(w) = wall {
+        app.selection.set([w]);
+    }
+    app.tab = "arch";
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("mimari-sablon", template),
         ("evre-tumu", all),
         ("evre-yikim", demolition),
         ("evre-yeni", proposed),
+        ("pafta-seti", set_alone),
+        ("pafta-seti-etkilenen", set_affected),
+        ("dxf-mimari", dxf_back),
     ]
 }

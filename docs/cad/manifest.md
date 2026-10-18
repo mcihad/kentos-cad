@@ -21,17 +21,17 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | geometry | 16 | 59 | 0 | 8 | 83 |
 | processing | 0 | 11 | 2 | 140 | 153 |
 | none | 0 | 20 | 0 | 6 | 26 |
-| query | 6 | 23 | 2 | 4 | 35 |
+| query | 7 | 23 | 2 | 4 | 36 |
 | session | 0 | 82 | 57 | 5 | 144 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 146 | 350 | 115 | 218 | 829 |
+| **toplam** | 147 | 350 | 115 | 218 | 830 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 611 satırdan 135'i: geometry 75, none 20, processing 13, query 27.
+CBS'ye özgü olmayan 612 satırdan 136'i: geometry 75, none 20, processing 13, query 28.
 
 ### Sonucu çağıran hesaplar (geometry) — 75
 
@@ -156,11 +156,12 @@ CBS'ye özgü olmayan 611 satırdan 135'i: geometry 75, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 27
+### Okuma, Python'da yok (query) — 28
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
 | `arch.quantities` | Metraj | cad | cad.spaces.quantities | Satırlar ve toplamlar cad.spaces.quantities'ten; dosya ve pano onları yazar (ADR 0342 §4). |
+| `arch.sheetSet` | Pafta seti | cad | cad.sheets.set | Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1). |
 | `arch.tagsCheck` | Etiketleri denetle | cad | cad.tags.check | Bulgular cad.tags.check'ten; Göster nesnelerine gider (ADR 0344 §2). |
 | `arch.wallJoinCheck` | Birleşimleri denetle | cad | cad.walls.joins | Birleşmeyenler cad.walls.joins'ten; Öneriyi uygula cevabın fix'ini cad.walls.edit'e verir (ADR 0340 §2, §6). |
 | `block.schedule` | Blok çizelgesi | cad | cad.blocks.query | count, instances ve schedule raporları (ADR 0317 §3). |

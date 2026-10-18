@@ -1827,6 +1827,7 @@ impl App {
             Asking::WallJoins => self.wall_joins_view(),
             Asking::TagsCheck => self.tags_check_view(),
             Asking::ViewRefs => self.view_refs_view(),
+            Asking::SheetSet => self.sheet_set_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),

@@ -3495,9 +3495,23 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             cleanup: true,
         },
     });
+    // With KentOS's data the wall goes as its pieces' block and comes back as itself (docs/adr/0347 §2).
+    let mut whole = input(vec![wall.clone()]);
+    whole.wall_detail = Some(WallDetail::Standard);
+    let (text, report) = write(&whole);
+    assert!(report.notes.iter().any(|n| n.what == "Duvar"), "{:?}", report.notes);
+    let back = read(&text);
+    let Entity::Wall(sent) = &wall else { unreachable!() };
+    assert!(
+        matches!(back.entities.as_slice(), [Entity::Wall(w)] if w.wall == sent.wall),
+        "{:?}",
+        back.entities
+    );
+    // Without it, the pieces themselves (another program's file).
     let kinds = |detail: WallDetail| {
         let mut i = input(vec![wall.clone()]);
         i.wall_detail = Some(detail);
+        i.annotations.metadata = false;
         let (text, report) = write(&i);
         assert!(report.notes.iter().any(|n| n.what == "Duvar"), "{:?}", report.notes);
         let r = read(&text);

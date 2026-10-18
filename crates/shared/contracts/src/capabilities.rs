@@ -1474,6 +1474,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["finish_replaced", "layer_hidden"],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
+    // Pafta seti (docs/adr/0347 §1).
+    Entry {
+        id: "cad.sheets.set",
+        refusals: &[&["entity_not_found", "book_unreadable"]],
+        warnings: &[],
+        targets: none,
+    },
     // Work templates (docs/adr/0346 §1).
     Entry {
         id: "cad.templates.apply",

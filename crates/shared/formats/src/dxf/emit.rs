@@ -175,6 +175,10 @@ pub struct Out {
     /// The associative hatches of model space and their boundary objects by handle (docs/adr/0333 §2), tied once
     /// every object is read ([`Emitter::tie_hatches`]).
     pub ties: Vec<Tie>,
+    /// The persistent ids the architectural objects read from KentOS's data had in the writing drawing, in their order
+    /// among the objects (docs/adr/0347 §2): the references between them are tied once every object is read
+    /// ([`Emitter::tie_arch`]).
+    pub arch_uids: Vec<Option<String>>,
     /// The attribute definitions of the block being read (docs/adr/0144 §7).
     pub attributes: Vec<AttributeDefinition>,
 }
@@ -205,6 +209,7 @@ impl Out {
             handles: HashMap::new(),
             holes: Vec::new(),
             ties: Vec::new(),
+            arch_uids: Vec::new(),
             attributes: Vec::new(),
         }
     }
@@ -1542,7 +1547,15 @@ impl<'l> Emitter<'l> {
                     && let Some(json) = e.meta.as_ref().and_then(|m| m.object.as_deref())
                 {
                     match self.whole_of(e, ctx, &layer, json, &placed) {
-                        Ok(o) => return self.push(o),
+                        Ok((o, uid)) => {
+                            let arch = is_arch(&o);
+                            let before = self.out.entities.len();
+                            self.push(o);
+                            if arch && !self.defining && self.out.entities.len() > before {
+                                self.out.arch_uids.push(uid);
+                            }
+                            return;
+                        }
                         Err(why) => self.note("KentOS nesnesi", why, e.line),
                     }
                 }
@@ -2720,7 +2733,7 @@ impl<'l> Emitter<'l> {
         layer: &str,
         json: &str,
         placed: &Placed,
-    ) -> Result<Entity, &'static str> {
+    ) -> Result<(Entity, Option<String>), &'static str> {
         let still = placed.p[0] == 0.0
             && placed.p[1] == 0.0
             && placed.scale[0] == 1.0
@@ -2734,8 +2747,20 @@ impl<'l> Emitter<'l> {
         let broken = "KentOS verisi okunamadı; bloğunun çizgi ve yazıları alındı";
         let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
         let map = value.as_object_mut().ok_or(broken)?;
+        let uid = map
+            .remove("uid")
+            .and_then(|u| u.as_str().map(str::to_owned));
         map.insert("id".into(), 0.into());
         map.insert("layerId".into(), layer.into());
+        let arch = matches!(
+            map.get("kind").and_then(|k| k.as_str()),
+            Some("wall" | "opening" | "space" | "grid" | "column" | "stair" | "ramp" | "tag" | "viewmark")
+        );
+        // An architectural object keeps its own look, attributes and label (docs/adr/0347 §2).
+        if arch {
+            let o: Entity = serde_json::from_value(value).map_err(|_| broken)?;
+            return Ok((o, uid));
+        }
         map.insert(
             "attrs".into(),
             serde_json::Value::Object(Default::default()),
@@ -2757,7 +2782,57 @@ impl<'l> Emitter<'l> {
             }
             _ => return Err(broken),
         }
-        Ok(o)
+        Ok((o, None))
+    }
+
+    /// The references between the architectural objects read from KentOS's data (an opening's wall, a column's grids,
+    /// a tag's object; docs/adr/0347 §2), written with the writing drawing's ids, put as stand-ins for the objects'
+    /// places among the objects read ([`kentos_contracts::import_placeholder`]); the import puts their ids in their
+    /// place. One naming an object the file does not hold names none (its own broken rule then holds).
+    pub fn tie_arch(&mut self) {
+        let uids = std::mem::take(&mut self.out.arch_uids);
+        if uids.is_empty() {
+            return;
+        }
+        let mut places: HashMap<String, usize> = HashMap::new();
+        let mut k = 0;
+        for (i, e) in self.out.entities.iter().enumerate() {
+            if is_arch(e) {
+                if let Some(Some(u)) = uids.get(k) {
+                    places.insert(u.clone(), i);
+                }
+                k += 1;
+            }
+        }
+        let gone = kentos_contracts::import_placeholder(u32::MAX).to_text();
+        let at = |u: &str| match places.get(u) {
+            Some(&i) => kentos_contracts::import_placeholder(i as u32).to_text(),
+            None => gone.clone(),
+        };
+        let mut unknown = 0u32;
+        for e in &mut self.out.entities {
+            let mut tie = |r: &mut String| {
+                let next = at(r);
+                if next == gone {
+                    unknown += 1;
+                }
+                *r = next;
+            };
+            match e {
+                Entity::Opening(o) => tie(&mut o.opening.host),
+                Entity::Column(c) => c.column.grids.iter_mut().flatten().for_each(&mut tie),
+                Entity::Tag(t) => tie(&mut t.tag.of),
+                _ => {}
+            }
+        }
+        if unknown > 0 {
+            self.out.report.note_n(
+                "Mimari nesne",
+                "bağlı olduğu nesne (açıklığın duvarı, kolonun aksı, etiketin nesnesi) dosyada yok; bağı kopuk alındı",
+                0,
+                unknown,
+            );
+        }
     }
 
     /// A text along a curve from its INSERT's KentOS data (docs/adr/0196 §5):
@@ -3412,6 +3487,22 @@ fn kept_fields(e: &Parsed, text: &str) -> Vec<kentos_contracts::TextField> {
         .unwrap_or_default()
 }
 
+/// A KentOS architectural object (docs/adr/0339–0345), which DXF holds only through KentOS's data.
+fn is_arch(e: &Entity) -> bool {
+    matches!(
+        e,
+        Entity::Wall(_)
+            | Entity::Opening(_)
+            | Entity::Space(_)
+            | Entity::Grid(_)
+            | Entity::Column(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Tag(_)
+            | Entity::ViewMark(_)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3466,4 +3557,3 @@ mod tests {
         assert_eq!((b.pts.len(), b.curved, b.rough), (6, true, true));
     }
 }
-

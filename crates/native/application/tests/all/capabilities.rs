@@ -88,6 +88,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.sheets.set",
+        "book_unreadable",
+        "çekirdeğin okuyamadığı pafta kitabını hiçbir komut yazmaz (cad.sheets.edit kitabı çekirdekle denetler); kurulum kitap vermez (ADR 0347 §1)",
+    ),
+    (
         "cad.grids.create",
         "invalid_attribute",
         "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",

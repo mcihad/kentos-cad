@@ -428,6 +428,10 @@ Liste:
   evre görünüşünün çizimde ve paftada uygulanması (`PhaseView::look`'un karşılığı: gizli, kesikli, soluk) ve deponun gizlileri,
   etiketin `phases` süzgeci, Mimari › Proje'de Mimari şablonu ve Evre paneli ve ikonları; bilinen bozulmalar: şema 82 ve
   `FORMATS_VERSION` 89.
+- [ ] `CAD-ARCH-43`, `44` pafta seti ve mimari nesnelerin DXF'i (ADR 0347, 19 Ekim): web'de gerekenler: `cad.sheets.set`
+  (`product/`; çerçevenin zemini pafta çekirdeğinin `fixed_corners`'ı, WASM'a bağlayıcı), Pafta seti penceresi ve ikonu (Mimari ›
+  Görünüm); DXF'in yazıcısı ve okuyucusu ortak çekirdekte (`formats`), web'in içe aktarmasında bağların yer tutucuları
+  (`io/apply.ts`'te `tie_placeholders`'ın mimari bağları).
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

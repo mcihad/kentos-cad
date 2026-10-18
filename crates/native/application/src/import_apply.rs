@@ -627,6 +627,41 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
         Some(i) => ids.get(&(i as usize)).copied(),
         None => Some(*id),
     };
+    // An opening's wall, a column's grids, a tag's object (docs/adr/0347 §2): a stand-in found takes its object's id;
+    // one not found stays, naming nothing.
+    let text = |r: &str| {
+        EntityId::parse(r)
+            .and_then(|id| import_placeholder_index(&id))
+            .and_then(|i| ids.get(&(i as usize)))
+            .map(|id| id.to_text())
+    };
+    for &(_, slot) in placed {
+        let next = match doc.get(slot) {
+            Some(Entity::Opening(o)) => text(&o.opening.host).map(|host| {
+                let mut x = o.clone();
+                x.opening.host = host;
+                Entity::Opening(x)
+            }),
+            Some(Entity::Column(c)) if c.column.grids.iter().flatten().any(|g| text(g).is_some()) => {
+                let mut x = c.clone();
+                for g in x.column.grids.iter_mut().flatten() {
+                    if let Some(t) = text(g) {
+                        *g = t;
+                    }
+                }
+                Some(Entity::Column(x))
+            }
+            Some(Entity::Tag(t)) => text(&t.tag.of).map(|of| {
+                let mut x = t.clone();
+                x.tag.of = of;
+                Entity::Tag(x)
+            }),
+            _ => None,
+        };
+        if let Some(next) = next {
+            doc.update(slot, next);
+        }
+    }
     for &(_, slot) in placed {
         let Some(Entity::Hatch(h)) = doc.get(slot) else {
             continue;

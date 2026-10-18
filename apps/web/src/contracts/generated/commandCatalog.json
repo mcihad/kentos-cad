@@ -529342,6 +529342,510 @@
       ]
     },
     {
+      "id": "cad.sheets.set",
+      "version": 1,
+      "title": "Pafta seti",
+      "summary": "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sheets.set` v1 (“Pafta seti”): the set; with `uids`, the sheets those objects' change affects.\n\nRefusals, in this order: `entity_not_found` (at `uids[i]`), `book_unreadable`.",
+        "properties": {
+          "uids": {
+            "description": "The changed objects' persistent ids; absent: no affected list.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "SheetsSet",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AffectReason": {
+            "description": "Why a frame is affected.",
+            "oneOf": [
+              {
+                "const": "shows",
+                "description": "An object's box meets the frame's ground box.",
+                "type": "string"
+              },
+              {
+                "const": "marked",
+                "description": "One of the objects is a view mark pointing at the frame.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "The frame's ground is not known (no fixed view): it may show them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AffectedFrame": {
+            "description": "A frame the objects' change affects.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "reasons": {
+                "description": "Its reasons, in this order: shows, marked, unknown.",
+                "items": {
+                  "$ref": "#/$defs/AffectReason"
+                },
+                "type": "array"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "uids": {
+                "description": "The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "sheet",
+              "item",
+              "reasons",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "SetFrame": {
+            "description": "A map frame of the set.",
+            "properties": {
+              "bounds": {
+                "description": "The corners' box: west, south, east, north (metres); none with no corners.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "corners": {
+                "description": "The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty\nfor a map without a fixed view and centre (`unknown`).",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array",
+                "x-unit": "length"
+              },
+              "item": {
+                "description": "The item's id.",
+                "type": "string"
+              },
+              "marks": {
+                "description": "The view marks that point at it, by persistent id, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "scale": {
+                "description": "Its scale (1:N); none for a map that follows something else (an atlas).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "scale"
+              }
+            },
+            "required": [
+              "item",
+              "name",
+              "marks"
+            ],
+            "type": "object"
+          },
+          "SetSheet": {
+            "description": "A sheet of the set.",
+            "properties": {
+              "frames": {
+                "description": "Its map frames, in its drawing order.",
+                "items": {
+                  "$ref": "#/$defs/SetFrame"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "series": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "series",
+              "frames"
+            ],
+            "type": "object"
+          },
+          "SheetSeries": {
+            "description": "A series of the set.",
+            "properties": {
+              "series": {
+                "description": "`A-1` …, or `Diğer`.",
+                "type": "string"
+              },
+              "sheets": {
+                "description": "Its sheets' ids, in the book's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "description": "Its title (`Planlar` …); empty for a series KentOS does not name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "series",
+              "sheets"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.set` v1 (its plan's too).",
+        "properties": {
+          "affected": {
+            "description": "With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.",
+            "items": {
+              "$ref": "#/$defs/AffectedFrame"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "series": {
+            "description": "The series, sorted by their letters and digit; `Diğer` last.",
+            "items": {
+              "$ref": "#/$defs/SheetSeries"
+            },
+            "type": "array"
+          },
+          "sheets": {
+            "description": "The sheets, in the book's order.",
+            "items": {
+              "$ref": "#/$defs/SetSheet"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "series",
+          "sheets",
+          "revision"
+        ],
+        "title": "SheetsSetResult",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AffectReason": {
+            "description": "Why a frame is affected.",
+            "oneOf": [
+              {
+                "const": "shows",
+                "description": "An object's box meets the frame's ground box.",
+                "type": "string"
+              },
+              {
+                "const": "marked",
+                "description": "One of the objects is a view mark pointing at the frame.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "The frame's ground is not known (no fixed view): it may show them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AffectedFrame": {
+            "description": "A frame the objects' change affects.",
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "reasons": {
+                "description": "Its reasons, in this order: shows, marked, unknown.",
+                "items": {
+                  "$ref": "#/$defs/AffectReason"
+                },
+                "type": "array"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "uids": {
+                "description": "The objects that affect it, by persistent id, in the input's order (none for `unknown` alone).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "sheet",
+              "item",
+              "reasons",
+              "uids"
+            ],
+            "type": "object"
+          },
+          "SetFrame": {
+            "description": "A map frame of the set.",
+            "properties": {
+              "bounds": {
+                "description": "The corners' box: west, south, east, north (metres); none with no corners.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "corners": {
+                "description": "The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty\nfor a map without a fixed view and centre (`unknown`).",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array",
+                "x-unit": "length"
+              },
+              "item": {
+                "description": "The item's id.",
+                "type": "string"
+              },
+              "marks": {
+                "description": "The view marks that point at it, by persistent id, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "scale": {
+                "description": "Its scale (1:N); none for a map that follows something else (an atlas).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "scale"
+              }
+            },
+            "required": [
+              "item",
+              "name",
+              "marks"
+            ],
+            "type": "object"
+          },
+          "SetSheet": {
+            "description": "A sheet of the set.",
+            "properties": {
+              "frames": {
+                "description": "Its map frames, in its drawing order.",
+                "items": {
+                  "$ref": "#/$defs/SetFrame"
+                },
+                "type": "array"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "series": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "series",
+              "frames"
+            ],
+            "type": "object"
+          },
+          "SheetSeries": {
+            "description": "A series of the set.",
+            "properties": {
+              "series": {
+                "description": "`A-1` …, or `Diğer`.",
+                "type": "string"
+              },
+              "sheets": {
+                "description": "Its sheets' ids, in the book's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "title": {
+                "description": "Its title (`Planlar` …); empty for a series KentOS does not name.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "series",
+              "sheets"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sheets.set` v1 (its plan's too).",
+        "properties": {
+          "affected": {
+            "description": "With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.",
+            "items": {
+              "$ref": "#/$defs/AffectedFrame"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "series": {
+            "description": "The series, sorted by their letters and digit; `Diğer` last.",
+            "items": {
+              "$ref": "#/$defs/SheetSeries"
+            },
+            "type": "array"
+          },
+          "sheets": {
+            "description": "The sheets, in the book's order.",
+            "items": {
+              "$ref": "#/$defs/SetSheet"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "series",
+          "sheets",
+          "revision"
+        ],
+        "title": "SheetsSetResult",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "entity_not_found",
+          "book_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Pafta seti",
+          "input": {}
+        },
+        {
+          "title": "Bir duvarın etkilediği paftalar",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.schedules.create",
       "version": 1,
       "title": "Çizelge",

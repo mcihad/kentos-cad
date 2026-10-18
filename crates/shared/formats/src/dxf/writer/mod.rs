@@ -304,9 +304,11 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     }
     // A wall goes as the lines and hatches it draws at its detail (docs/adr/0339 §4): DXF has no wall of KentOS's.
     let plain;
+    let mut wholes = BTreeMap::new();
     let input = match plain_walls(input, &mut report) {
-        Some(p) => {
+        Some((p, w)) => {
             plain = p;
+            wholes = w;
             &plain
         }
         None => input,
@@ -337,6 +339,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut defined: HashMap<BlockId, Written> = HashMap::new();
     let mut points = false;
     let no_values = BTreeMap::new();
+    let no_wholes = BTreeMap::new();
     // The dimensions' own blocks are numbered on their own: *D1, *D2 … after the drawing's;
     // the tables' (docs/adr/0184 §7) too: *U1, *U2 ….
     let mut dimensions = 0usize;
@@ -389,6 +392,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 pen: entities::Pen::default(),
                 forms: Default::default(),
                 ties: &ties,
+                wholes: &no_wholes,
             };
             for e in &def.entities {
                 w.entity(e);
@@ -449,6 +453,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             pen: entities::Pen::default(),
             forms: input.annotations,
             ties: &ties,
+            wholes: &wholes,
         };
         // In their drawing order (docs/adr/0260 §5): AutoCAD draws a file's objects in its order.
         let mut drawn: Vec<&kentos_contracts::Entity> = input.entities.iter().collect();
@@ -533,7 +538,12 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
 /// The objects and definitions to write in a local project's unit: every
 /// coordinate and length scaled, the rest as it is.
 /// `input` with every wall as its plain pieces at the input's detail and scale, said in the report; none without walls.
-fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInput> {
+/// With KentOS's data (`annotations.metadata`, docs/adr/0347 §2) each architectural object stays and its pieces go in
+/// `wholes` by its id: the writer draws them in an anonymous block whose INSERT carries the object.
+fn plain_walls(
+    input: &DxfWriteInput,
+    report: &mut Report,
+) -> Option<(DxfWriteInput, entities::Wholes)> {
     let walls = input
         .entities
         .iter()
@@ -568,6 +578,17 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
     let mut left = 0;
+    let keep = input.annotations.metadata;
+    let mut wholes = entities::Wholes::new();
+    let mut put = |out: &mut DxfWriteInput, e: &kentos_contracts::Entity, pieces: Vec<kentos_contracts::Entity>| {
+        if keep {
+            out.entities.push(e.clone());
+            let uid = input.uids.get(&e.base().id).map(|u| u.to_text());
+            wholes.insert(e.base().id, (uid, pieces));
+        } else {
+            out.entities.extend(pieces);
+        }
+    };
     // Joined as the drawing shows them (docs/adr/0340 §5).
     let plain = crate::walls::plain_joined(&input.entities, view, |id| {
         input.uids.get(&id).map(|u| u.to_text())
@@ -577,16 +598,17 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
             (
                 kentos_contracts::Entity::Wall(_) | kentos_contracts::Entity::Opening(_),
                 Some(pieces),
-            ) => out.entities.extend(pieces),
+            ) => put(&mut out, e, pieces),
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
             // A space's rings, each a closed polyline (docs/adr/0342).
             (kentos_contracts::Entity::Space(s), _) => {
+                let mut pieces = Vec::new();
                 for p in &s.space.parts {
                     for r in std::iter::once(&p.outer).chain(&p.holes) {
                         let mut base = s.base.clone();
                         base.attachments.clear();
                         base.label_pins.clear();
-                        out.entities.push(kentos_contracts::Entity::Polyline(kentos_contracts::PathEntity {
+                        pieces.push(kentos_contracts::Entity::Polyline(kentos_contracts::PathEntity {
                             base,
                             pts: r.pts.clone(),
                             bulges: r.bulges.clone(),
@@ -599,13 +621,20 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
                         }));
                     }
                 }
+                put(&mut out, e, pieces);
             }
             // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
             (e, _) if crate::arch_elements::core_of(e).is_some() => {
-                out.entities.extend(crate::arch_elements::plain_pieces(e, scale).unwrap_or_default());
+                put(&mut out, e, crate::arch_elements::plain_pieces(e, scale).unwrap_or_default());
             }
             _ => out.entities.push(e.clone()),
         }
+    }
+    if keep {
+        if left > 0 {
+            report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
+        }
+        return Some((out, wholes));
     }
     if elements > 0 {
         report.note_n(
@@ -645,7 +674,7 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
     if left > 0 {
         report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
     }
-    Some(out)
+    Some((out, wholes))
 }
 
 fn in_unit(input: &DxfWriteInput, to: units::Scale) -> DxfWriteInput {

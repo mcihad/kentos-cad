@@ -38,7 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
-use kentos_native_application::{spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references};
+use kentos_native_application::{sheets_set, spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -814,6 +814,12 @@ impl Input for kentos_domain::contracts::ViewMarksEdit {
 }
 
 impl Input for kentos_domain::contracts::ViewMarksReferences {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SheetsSet {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2877,6 +2883,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_TEMPLATES_APPLY => {
             run!(templates_apply, kentos_domain::contracts::TemplatesApply)
+        }
+        kentos_domain::contracts::CAD_SHEETS_SET => {
+            run!(sheets_set, kentos_domain::contracts::SheetsSet)
         }
         kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
             run!(schedules_create, kentos_domain::contracts::SchedulesCreate)

@@ -1757,6 +1757,13 @@
       ],
       "note": "Orta, yarıçap, balonun yeri, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5)."
     },
+    "arch.sheetSet": {
+      "level": "query",
+      "via": [
+        "cad.sheets.set"
+      ],
+      "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1)."
+    },
     "arch.viewRefs": {
       "level": "semantic",
       "via": [

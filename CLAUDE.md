@@ -703,6 +703,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   stiller ve bloklar tek adım); projenin `arch.phaseView`'u (Tümü, Mevcut durum, Yıkım planı, Yeni durum; `.kcad` şema 82, `FORMATS_VERSION`
   89), görünüş kuralı `PhaseView::look` (gizli, kesikli, soluk; açıklık duvarının, etiket nesnesinin evresiyle), çizimde ve paftada
   `kentos_native_style::phases`, deponun `set_phase_hidden`'ı; etiketin `phases` süzgeci; Mimari › Proje'de Mimari şablonu ve Evre (ADR 0346);
+  pafta seti ve mimari DXF: salt okunur `cad.sheets.set` (paftalar adlarının numarasıyla serilerde: A-1 Planlar … Diğer; harita
+  çerçevesinin zemini sabit görünümünden, `kentos_sheet::display::fixed_corners`; ona bakan işaretler; `uids` ile etkilenen
+  çerçeveler: kutusu kesişen `shows`, işaretin hedefi `marked`, zemini bilinmeyen `unknown`), Pafta seti penceresi (Mimari › Görünüm,
+  Paftaya git); mimari nesneler DXF'e parçalarının adsız bloğu ve nesneyi ve kalıcı kimliğini KENTOS verisinde taşıyan INSERT'le
+  (`Writer::arch_whole`), geri okumada kendileri, aralarındaki bağlar yer tutucularla (`Emitter::tie_arch`, `tie_placeholders`);
+  otomatik kesit ve görünüşün modeli yalnız tasarım (ADR 0347);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

@@ -2743,6 +2743,38 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_SHEETS_SET.into(),
+            version: crate::CAD_SHEETS_SET_VERSION,
+            title: "Pafta seti".into(),
+            summary: "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. \
+                      uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SheetsSet>(),
+            output: schema::<crate::SheetsSetResult>(),
+            plan: Some(schema::<crate::SheetsSetResult>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Pafta seti".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir duvarın etkilediği paftalar".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_SCHEDULES_CREATE.into(),
             version: crate::CAD_SCHEDULES_CREATE_VERSION,
             title: "Çizelge".into(),
@@ -7403,6 +7435,9 @@ mod tests {
                     }
                     crate::CAD_TEMPLATES_APPLY => {
                         serde_json::from_value::<crate::TemplatesApply>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SHEETS_SET => {
+                        serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())
