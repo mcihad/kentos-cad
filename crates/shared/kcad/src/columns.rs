@@ -48,7 +48,7 @@
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | record | | | |
-//! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch) as one JSON object (docs/adr/0339) |
+//! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch, joins, cleanup) as one JSON object (docs/adr/0339, 0340) |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8

@@ -241,6 +241,8 @@ pub(crate) fn build(
         fill,
         height: w.height,
         arch: w.arch.clone().unwrap_or_default(),
+        joins: Default::default(),
+        cleanup: true,
     };
     valid(&wall, prefix)?;
     drawable(&wall, &format!("{prefix}.pts"))?;
@@ -293,4 +295,146 @@ pub fn view_at(
         detail: kentos_formats::walls::detail(detail),
         scale,
     }
+}
+
+/// A wall as the joins take it: its core shape.
+pub(crate) fn core_shape(w: &kentos_contracts::WallEntity) -> kentos_geometry_core::entity::Shape {
+    kentos_formats::walls::core_wall(&w.wall)
+}
+
+/// The box of a wall's path grown by its body's reach and `grow`.
+fn reach_box(w: &WallFields, grow: f64) -> [f64; 4] {
+    let r = w.width + w.offset.abs() + grow;
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
+    for p in &w.pts {
+        b[0] = b[0].min(p.x - r);
+        b[1] = b[1].min(p.y - r);
+        b[2] = b[2].max(p.x + r);
+        b[3] = b[3].max(p.y + r);
+    }
+    b
+}
+
+fn meets(a: &[f64; 4], b: &[f64; 4]) -> bool {
+    a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3]
+}
+
+/// The walls `changed` (as they will be; a slot when they replace one) among the drawing's walls round them, the slots
+/// `gone` left out: the core's walls, `changed` first, and the slots of the others.
+pub(crate) fn neighbourhood(
+    doc: &Document,
+    changed: &[(Option<kentos_domain::Slot>, &kentos_contracts::WallEntity)],
+    gone: &[kentos_domain::Slot],
+) -> (
+    Vec<kentos_geometry_core::entity::Shape>,
+    Vec<kentos_domain::Slot>,
+) {
+    use kentos_contracts::Entity;
+    let boxes: Vec<[f64; 4]> = changed
+        .iter()
+        .map(|(_, w)| {
+            reach_box(
+                &w.wall,
+                kentos_geometry_core::geom::wall_join::JOIN_TOLERANCE,
+            )
+        })
+        .collect();
+    let mut shapes: Vec<_> = changed.iter().map(|(_, w)| core_shape(w)).collect();
+    let mut others = Vec::new();
+    for e in doc.entities() {
+        let Entity::Wall(w) = e else { continue };
+        let slot = kentos_domain::Slot(e.base().id);
+        if gone.contains(&slot) || changed.iter().any(|(s, _)| *s == Some(slot)) {
+            continue;
+        }
+        let b = reach_box(&w.wall, 0.0);
+        if boxes.iter().any(|x| meets(x, &b)) {
+            shapes.push(core_shape(w));
+            others.push(slot);
+        }
+    }
+    (shapes, others)
+}
+
+/// The walls `changed` joined with those round them: what does not join and names one of them, as the commands'
+/// warnings (docs/adr/0340 §2), each with what resolves it.
+pub(crate) fn join_warnings(
+    doc: &Document,
+    changed: &[(Option<kentos_domain::Slot>, &kentos_contracts::WallEntity)],
+    gone: &[kentos_domain::Slot],
+) -> Vec<kentos_contracts::CommandWarning> {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::wall_join::{WallIn, solve};
+    let (shapes, _) = neighbourhood(doc, changed, gone);
+    let ins: Vec<WallIn<'_>> = shapes
+        .iter()
+        .filter_map(|s| match s {
+            Shape::Wall { pts, bulges, wall } => Some(WallIn {
+                pts,
+                bulges: bulges.as_deref(),
+                spec: wall,
+            }),
+            _ => None,
+        })
+        .collect();
+    let mut out: Vec<kentos_contracts::CommandWarning> = Vec::new();
+    for issue in solve(&ins, Some(&[])).issues {
+        if !issue.walls.iter().any(|&w| w < changed.len()) {
+            continue;
+        }
+        let (what, repair) = issue.code.message();
+        let message = format!("{what} ({:.3}, {:.3}) {repair}", issue.at.x, issue.at.y);
+        if out.iter().any(|w| w.message == message) {
+            continue;
+        }
+        out.push(kentos_contracts::CommandWarning {
+            code: issue.code.code().into(),
+            message,
+            path: None,
+        });
+    }
+    out
+}
+
+/// A wall's fields as the core takes them.
+pub(crate) fn core_spec(w: &WallFields) -> kentos_geometry_core::geom::wall::Spec {
+    kentos_formats::walls::spec(w)
+}
+
+/// The wall in `slot` as it is drawn (docs/adr/0340 §5): its pieces at the drawing's view, joined with the walls round
+/// it; none when it cannot be drawn.
+pub(crate) fn joined_pieces(
+    doc: &Document,
+    slot: kentos_domain::Slot,
+    w: &kentos_contracts::WallEntity,
+) -> Option<Vec<kentos_geometry_core::block::Piece>> {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::wall_join::{WallIn, solve};
+    let (shapes, _) = neighbourhood(doc, &[(Some(slot), w)], &[]);
+    let ins: Vec<WallIn<'_>> = shapes
+        .iter()
+        .filter_map(|s| match s {
+            Shape::Wall { pts, bulges, wall } => Some(WallIn {
+                pts,
+                bulges: bulges.as_deref(),
+                spec: wall,
+            }),
+            _ => None,
+        })
+        .collect();
+    let drawn = solve(&ins, Some(&[0])).drawn.into_iter().next()??;
+    let Shape::Wall { pts, wall, .. } = &shapes[0] else {
+        return None;
+    };
+    Some(kentos_geometry_core::geom::wall::pieces_of(
+        &drawn,
+        pts,
+        wall,
+        view_of(doc.settings()),
+    ))
 }

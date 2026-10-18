@@ -259,6 +259,7 @@ pub mod vertex_points;
 pub mod view_history;
 pub mod view_twist;
 pub mod wall;
+pub mod wall_edit_tools;
 pub mod wall_from_lines;
 
 pub use clipboard::Clipboard;

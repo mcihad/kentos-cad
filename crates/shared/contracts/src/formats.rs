@@ -195,7 +195,9 @@ use crate::layer::LineType;
 ///    columns kind 20, with no fields of its own. The web's copy stays 53.
 /// 82 (docs/adr/0339): the wall: `.kcad` document schema 75's `wall` kind; in the typed columns kind 21, its path's
 ///    points and bulges, the rest of its source as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 82;
+/// 83 (docs/adr/0340): a wall's `joins` and `cleanup` and a component's `priority`: `.kcad` document schema 76; in the
+///    typed columns inside the wall's JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 83;
 
 // ── Every import ────────────────────────────────────────────────────────
 

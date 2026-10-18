@@ -2145,7 +2145,11 @@ pub fn catalog() -> CommandCatalog {
             title: "Duvarı düzenle".into(),
             summary: "Kalıcı kimlikleriyle verilen duvarların kendi alanlarını değiştirir; tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri. \
                       operation.kind set: genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. \
-                      Stilin bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar yazılmaz. Yolu değişmez: yolu tutamaçlar, dönüşümler ve Esnet değiştirir. Plan yazmadan duvarları gösterir."
+                      Stilin bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar yazılmaz. \
+                      split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye; nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end); kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin kimliğiyle (ters yöndeki gövdesi yerinde çevrilir; walls_not_touching, walls_differ); uçları buluşursa kapanır. \
+                      extend (Uzat): her duvarın ucu (end, verilmezse to duvarına yakın olanı) son kenarının doğrultusunda to duvarının yoluna dek; trim (Buda): her duvar to duvarının yolunu kestiği yerde kısalır, keep noktasına en yakın parça (verilmezse uzun olanı) kalır (wall_misses, wall_closed). flip (Çevir): yol ters döner, gövde yolun öbür yanına aynalanır, uçların birleşimi yer değiştirir. \
+                      replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala döndürür. \
+                      Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap, wall_join_crowded, wall_join_acute, wall_join_unresolved). Plan yazmadan duvarları gösterir."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -2176,7 +2180,65 @@ pub fn catalog() -> CommandCatalog {
                     }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Duvarı kapı yerinde ikiye böl".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "operation": { "kind": "split", "at": { "x": 3.2, "y": 0.0 } }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bölme duvarını dış duvara uzat ki T birleşsin".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "operation": { "kind": "extend", "to": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Köşede bu duvar öbürünün yüzünde dursun (Alın)".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "operation": { "kind": "joins", "end": "butt" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Çizimdeki bütün Gazbeton 20 duvarlarını İç duvar 15 yap".into(),
+                    input: json!({
+                        "uids": [],
+                        "operation": { "kind": "replaceStyle", "from": "Gazbeton 20", "to": "İç duvar 15" }
+                    }),
+                    output: None,
+                },
             ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_WALLS_JOINS.into(),
+            version: crate::CAD_WALLS_JOINS_VERSION,
+            title: "Duvar birleşimleri".into(),
+            summary: "Verilen duvarların (uids boşsa çizimin bütün duvarlarının) çevrelerindeki duvarlarla birleşimlerini söyler: köşe (corner: gönye ya da alın), düz devam (inline), T (tee: duvarın ucu öbürünün içinde) ve kesişme (cross); her birleşimin yeri ve duvarları (uçlarıyla). \
+                      Buluşup birleşmeyen duvarlar issues'tadır: aynı doğrultuda üst üste (wall_join_overlap), ikiden çok uç bir doğruda değil (wall_join_crowded), köşe çok dar (wall_join_acute), çizgiler kesilemedi (wall_join_unresolved); her birinin ne olduğu, nasıl onarılacağı ve fix: olduğu gibi cad.walls.edit'e verilecek bir girdi (bir ucun birleşimi). \
+                      T'de bağlanan duvarın bileşenleri öncelikleri (1 en güçlü) konağınkinden güçlü oldukça geçer; temizlik kapalıysa yalnız yüzler buluşur. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsJoins>(),
+            output: schema::<crate::WallsJoined>(),
+            plan: Some(schema::<crate::WallsJoined>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin bütün duvarlarında birleşmeyenler".into(),
+                input: json!({}),
+                output: None,
+            }],
         },
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
@@ -6632,6 +6694,9 @@ mod tests {
                     crate::CAD_WALLS_EDIT => {
                         serde_json::from_value::<crate::WallsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_WALLS_JOINS => {
+                        serde_json::from_value::<crate::WallsJoins>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -7379,6 +7444,9 @@ mod tests {
                         }
                         crate::CAD_WALLS_EDIT => {
                             serde_json::from_value::<crate::WallsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_WALLS_JOINS => {
+                            serde_json::from_value::<crate::WallsJoined>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

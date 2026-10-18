@@ -3186,6 +3186,49 @@ WallDetailName = Literal["schematic", "standard", "detailed"]
 """The names of :class:`WallDetail`, for a plain string."""
 
 
+class WallEnd(_StrEnum):
+    """A wall's end."""
+    START = "start"
+    END = "end"
+
+
+WallEndName = Literal["start", "end"]
+"""The names of :class:`WallEnd`, for a plain string."""
+
+
+class WallJoin(_StrEnum):
+    """How one end of a wall joins another (docs/adr/0340 §1, `CAD-ARCH-07`): by the rule; not at all (its end line
+    drawn); at a corner mitred; butting the other (it stops at the other's face); running through it (the other butts).
+    """
+    AUTO = "auto"
+    NONE = "none"
+    MITER = "miter"
+    BUTT = "butt"
+    THROUGH = "through"
+
+
+WallJoinName = Literal["auto", "none", "miter", "butt", "through"]
+"""The names of :class:`WallJoin`, for a plain string."""
+
+
+class WallJointKind(_StrEnum):
+    """A joint's kind.
+
+    - ``corner``: Two ends at an angle, mitred or butt.
+    - ``inline``: Two ends along one line.
+    - ``tee``: An end in another wall.
+    - ``cross``: Two paths crossing.
+    """
+    CORNER = "corner"
+    INLINE = "inline"
+    TEE = "tee"
+    CROSS = "cross"
+
+
+WallJointKindName = Literal["corner", "inline", "tee", "cross"]
+"""The names of :class:`WallJointKind`, for a plain string."""
+
+
 class WallJustify(_StrEnum):
     """Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's
     left face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.
@@ -4752,28 +4795,22 @@ class ViewsOp(_Union):
 
 
 class WallsOperation(_Union):
-    """What `cad.walls.edit` does to the walls.
+    """What `cad.walls.edit` does to the walls (docs/adr/0339 §5, 0340 §4).
 
     One of:
 
     - :class:`SetWallsOperation` (``kind: set``)
+    - :class:`SplitWallsOperation` (``kind: split``)
+    - :class:`JoinWallsOperation` (``kind: join``)
+    - :class:`ExtendWallsOperation` (``kind: extend``)
+    - :class:`TrimWallsOperation` (``kind: trim``)
+    - :class:`FlipWallsOperation` (``kind: flip``)
+    - :class:`ReplaceStyleWallsOperation` (``kind: replaceStyle``)
+    - :class:`JoinsWallsOperation` (``kind: joins``)
+    - :class:`ResetJoinsWallsOperation` (``kind: resetJoins``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
-
-    if TYPE_CHECKING:
-        # Every variant has these.
-        caps: WallCaps | WallCapsName | None | Unset
-        discipline: ArchDiscipline | ArchDisciplineName | None | Unset
-        fill: str | None | Unset
-        height: float | None | Unset
-        justify: WallJustify | WallJustifyName | None | Unset
-        level: str | None | Unset
-        offset: float | None | Unset
-        phase: ArchPhase | ArchPhaseName | None | Unset
-        status: ArchStatus | ArchStatusName | None | Unset
-        style: str | None | Unset
-        width: float | None | Unset
 
     @property
     def kind(self) -> str:
@@ -31023,6 +31060,8 @@ class WallComponent(_Model):
     Attributes:
         detail: The least detail it is drawn at as its own (its lines and hatch); below, it is part of the body.
         edge: The lines along its sides; absent: the wall's.
+        priority: Its strength where walls meet (docs/adr/0340 §1), 1 to 9, the smaller the stronger: a joining wall's component
+            passes the host's weaker ones and stops at the first as strong. Absent: 3 (between a core's 1 and a finish's 5). Unit: 1.
         thickness: Its thickness, metres; absent: what the wall's width leaves of the others (one component at most). Unit: length.
     """
     name: str
@@ -31030,6 +31069,7 @@ class WallComponent(_Model):
     edge: ComponentEdge | None | Unset = UNSET
     hatch: ComponentHatch | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    priority: int | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -31042,6 +31082,8 @@ class WallComponent(_Model):
             out["hatch"] = None if self.hatch is None else self.hatch.to_json()
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.priority is not UNSET:
+            out["priority"] = self.priority
         if self.thickness is not UNSET:
             out["thickness"] = None if self.thickness is None else float(self.thickness)
         return out
@@ -31054,6 +31096,7 @@ class WallComponent(_Model):
             edge=UNSET if "edge" not in data else None if data["edge"] is None else ComponentEdge.from_json(data["edge"]),
             hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
             material=data.get("material", UNSET),
+            priority=data.get("priority", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
         )
 
@@ -31076,11 +31119,14 @@ class WallEntity(Entity):
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
+        cleanup: Its components are cleaned up by their priorities where another wall tees into or crosses it; false: the
+            walls meet at their faces only.
         closed: Its path's last vertex joins its first: a ring of wall.
         color: Colour override; absent = the layer's colour ("katmana göre").
         components: Its body's layers from its left face; none: one plain body.
         fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
         height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
+        joins: How its ends join (docs/adr/0340 §1); absent: both by the rule.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -31111,11 +31157,13 @@ class WallEntity(Entity):
     bulges: list[float] | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     caps: WallCaps | WallCapsName | Unset = UNSET
+    cleanup: bool | Unset = UNSET
     closed: bool | Unset = UNSET
     color: str | None | Unset = UNSET
     components: list[WallComponent] | Unset = UNSET
     fill: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    joins: WallJoins | Unset = UNSET
     justify: WallJustify | WallJustifyName = WallJustify.CENTER
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -31147,6 +31195,8 @@ class WallEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.caps is not UNSET:
             out["caps"] = _enum_out(self.caps)
+        if self.cleanup is not UNSET:
+            out["cleanup"] = self.cleanup
         if self.closed is not UNSET:
             out["closed"] = self.closed
         if self.color is not UNSET:
@@ -31157,6 +31207,8 @@ class WallEntity(Entity):
             out["fill"] = self.fill
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.joins is not UNSET:
+            out["joins"] = self.joins.to_json()
         out["justify"] = _enum_out(self.justify)
         if self.label is not UNSET:
             out["label"] = self.label
@@ -31197,11 +31249,13 @@ class WallEntity(Entity):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
+            cleanup=data.get("cleanup", UNSET),
             closed=data.get("closed", UNSET),
             color=data.get("color", UNSET),
             components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
             fill=data.get("fill", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            joins=WallJoins.from_json(data["joins"]) if "joins" in data else UNSET,
             justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else WallJustify.CENTER,
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -31225,10 +31279,13 @@ class WallFields(_Model):
         pts: Unit: length.
         width: Unit: length.
         bulges: Unit: 1.
+        cleanup: Its components are cleaned up by their priorities where another wall tees into or crosses it; false: the
+            walls meet at their faces only.
         closed: Its path's last vertex joins its first: a ring of wall.
         components: Its body's layers from its left face; none: one plain body.
         fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
         height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
+        joins: How its ends join (docs/adr/0340 §1); absent: both by the rule.
         offset: The base line offset: the justification line is the path moved this far to its left (negative: right). Unit: length.
         style: The project's wall style it was made with, by its id; its components are the style's.
     """
@@ -31237,10 +31294,12 @@ class WallFields(_Model):
     arch: ArchInfo | Unset = UNSET
     bulges: list[float] | None | Unset = UNSET
     caps: WallCaps | WallCapsName | Unset = UNSET
+    cleanup: bool | Unset = UNSET
     closed: bool | Unset = UNSET
     components: list[WallComponent] | Unset = UNSET
     fill: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    joins: WallJoins | Unset = UNSET
     justify: WallJustify | WallJustifyName = WallJustify.CENTER
     offset: float | Unset = UNSET
     style: str | None | Unset = UNSET
@@ -31255,6 +31314,8 @@ class WallFields(_Model):
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
         if self.caps is not UNSET:
             out["caps"] = _enum_out(self.caps)
+        if self.cleanup is not UNSET:
+            out["cleanup"] = self.cleanup
         if self.closed is not UNSET:
             out["closed"] = self.closed
         if self.components is not UNSET:
@@ -31263,6 +31324,8 @@ class WallFields(_Model):
             out["fill"] = self.fill
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.joins is not UNSET:
+            out["joins"] = self.joins.to_json()
         out["justify"] = _enum_out(self.justify)
         if self.offset is not UNSET:
             out["offset"] = float(self.offset)
@@ -31278,13 +31341,121 @@ class WallFields(_Model):
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
+            cleanup=data.get("cleanup", UNSET),
             closed=data.get("closed", UNSET),
             components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
             fill=data.get("fill", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            joins=WallJoins.from_json(data["joins"]) if "joins" in data else UNSET,
             justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else WallJustify.CENTER,
             offset=float(data["offset"]) if "offset" in data else UNSET,
             style=data.get("style", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallJoinIssue(_Model):
+    """Walls that meet and do not join: the code, what is wrong and what resolves it, where, the walls, and the edit that
+    resolves it (an end's join), to run as it is.
+    Attributes:
+        at: Unit: length.
+    """
+    code: str
+    message: str
+    repair: str
+    at: Vec2
+    uids: list[str]
+    fix: WallsEdit | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["message"] = self.message
+        out["repair"] = self.repair
+        out["at"] = _vec2_out(self.at)
+        out["uids"] = list(self.uids)
+        if self.fix is not UNSET:
+            out["fix"] = None if self.fix is None else self.fix.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallJoinIssue:
+        return cls(
+            code=data["code"],
+            message=data["message"],
+            repair=data["repair"],
+            at=Vec2.from_json(data["at"]),
+            uids=list(data["uids"]),
+            fix=UNSET if "fix" not in data else None if data["fix"] is None else WallsEdit.from_json(data["fix"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallJoins(_Model):
+    """A wall's start's and end's join."""
+    end: WallJoin | WallJoinName | Unset = UNSET
+    start: WallJoin | WallJoinName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.end is not UNSET:
+            out["end"] = _enum_out(self.end)
+        if self.start is not UNSET:
+            out["start"] = _enum_out(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallJoins:
+        return cls(
+            end=_enum_in(WallJoin, data["end"]) if "end" in data else UNSET,
+            start=_enum_in(WallJoin, data["start"]) if "start" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallJoint(_Model):
+    """
+    Attributes:
+        at: Unit: length.
+    """
+    kind: WallJointKind | WallJointKindName
+    at: Vec2
+    walls: list[WallJointMember]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["at"] = _vec2_out(self.at)
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallJoint:
+        return cls(
+            kind=_enum_in(WallJointKind, data["kind"]),
+            at=Vec2.from_json(data["at"]),
+            walls=[WallJointMember.from_json(e0) for e0 in data["walls"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallJointMember(_Model):
+    """A wall in a joint: by its end, or along it (a tee's host, a cross's walls)."""
+    uid: str
+    end: WallEnd | WallEndName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else _enum_out(self.end)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallJointMember:
+        return cls(
+            uid=data["uid"],
+            end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallEnd, data["end"]),
         )
 
 
@@ -31419,11 +31590,14 @@ class WallsCreated(_Model):
 class WallsEdit(_Model):
     """Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
     or none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:
-    nothing is written.
+    nothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);
+    what then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,
+    `wall_join_unresolved`, each with its fix).
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
-    `style_not_found`, `invalid_wall`, `wall_collapses`, `level_not_found`, `invalid_revision`, `revision_conflict`,
-    `layer_locked`.
+    `style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,
+    `split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,
+    `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
     """
     uids: list[str]
     operation: WallsOperation
@@ -31450,16 +31624,24 @@ class WallsEdit(_Model):
 class WallsEdited(_Model):
     """Output of `cad.walls.edit` v1 (its plan's too: the walls as they would be, nothing written).
     Attributes:
-        walls: The walls as written, in the input's order.
+        walls: The walls as written, in the input's order (Birleştir: the one they became).
+        added: The new walls (Böl: each second part).
+        removed: The walls gone, by their ids (Birleştir: all but the first).
     """
     walls: list[Entity]
     revision: str
+    added: list[Entity] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
     styles_added: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = [e0.to_json() for e0 in self.added]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
         if self.styles_added is not UNSET:
             out["stylesAdded"] = list(self.styles_added)
         return out
@@ -31469,6 +31651,8 @@ class WallsEdited(_Model):
         return cls(
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
+            added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
             styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
         )
 
@@ -31611,6 +31795,49 @@ class WallsFromLinesPlan(_Model):
             left=list(data["left"]) if "left" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             styles_added=[WallStyleDef.from_json(e0) for e0 in data["stylesAdded"]] if "stylesAdded" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsJoined(_Model):
+    """Output of `cad.walls.joins` v1."""
+    joints: list[WallJoint]
+    issues: list[WallJoinIssue]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["joints"] = [e0.to_json() for e0 in self.joints]
+        out["issues"] = [e0.to_json() for e0 in self.issues]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsJoined:
+        return cls(
+            joints=[WallJoint.from_json(e0) for e0 in data["joints"]],
+            issues=[WallJoinIssue.from_json(e0) for e0 in data["issues"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsJoins(_Model):
+    """Input of `cad.walls.joins` v1 (read-only, docs/adr/0340 §2): how the walls named (none: every wall) join the walls
+    round them, and where walls meet but do not join, each with what resolves it.
+    """
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsJoins:
+        return cls(
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -40553,6 +40780,175 @@ class SetWallsOperation(WallsOperation):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class SplitWallsOperation(WallsOperation):
+    """Böl: each wall named cut in two where its path passes nearest `at` (a point on the wall, within its body);
+    a closed wall opened there. The second part is a new wall with the first's fields; the parts join inline.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "split"
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "split"}
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SplitWallsOperation:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinWallsOperation(WallsOperation):
+    """Birleştir: two walls or more whose path ends meet (within 1 mm) and whose fields are the same (a wall the other
+    way round reversed with its body in place) made one, the first named keeping its id; their ends meeting at the
+    last closes it.
+    """
+    TAG_VALUE: ClassVar[str] = "join"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "join"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinWallsOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtendWallsOperation(WallsOperation):
+    """Uzat: each wall's end (the one given, else the nearer to `to`) run on along its last edge's direction to where
+    it meets the path of the wall `to` (its persistent id), so the two join there.
+    """
+    TAG_VALUE: ClassVar[str] = "extend"
+    to: str
+    end: WallEnd | WallEndName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "extend"}
+        out["to"] = self.to
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else _enum_out(self.end)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtendWallsOperation:
+        return cls(
+            to=data["to"],
+            end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallEnd, data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TrimWallsOperation(WallsOperation):
+    """Buda: each wall cut back where its path crosses the path of the wall `to`: the part `keep` is nearest stays
+    (absent: the longer).
+    Attributes:
+        keep: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "trim"
+    to: str
+    keep: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "trim"}
+        out["to"] = self.to
+        if self.keep is not UNSET:
+            out["keep"] = None if self.keep is None else _vec2_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TrimWallsOperation:
+        return cls(
+            to=data["to"],
+            keep=UNSET if "keep" not in data else None if data["keep"] is None else Vec2.from_json(data["keep"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FlipWallsOperation(WallsOperation):
+    """Çevir: each wall's path reversed with its fields as they are: its body mirrored about its path (its layers
+    facing the other way), its start's and end's joins swapped.
+    """
+    TAG_VALUE: ClassVar[str] = "flip"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "flip"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FlipWallsOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ReplaceStyleWallsOperation(WallsOperation):
+    """Stili değiştir: the walls of the style `from` (its id or name) given the style `to` (the project's or KentOS's
+    own, taken in): the named ones, or with no ids every wall of `from` in the drawing.
+    """
+    TAG_VALUE: ClassVar[str] = "replaceStyle"
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "replaceStyle"}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReplaceStyleWallsOperation:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsWallsOperation(WallsOperation):
+    """Birleşim: the ends' joins (a closed wall has none) and the components' cleanup, the ones given."""
+    TAG_VALUE: ClassVar[str] = "joins"
+    cleanup: bool | None | Unset = UNSET
+    end: WallJoin | WallJoinName | None | Unset = UNSET
+    start: WallJoin | WallJoinName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "joins"}
+        if self.cleanup is not UNSET:
+            out["cleanup"] = self.cleanup
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else _enum_out(self.end)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else _enum_out(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsWallsOperation:
+        return cls(
+            cleanup=data.get("cleanup", UNSET),
+            end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallJoin, data["end"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else _enum_in(WallJoin, data["start"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetJoinsWallsOperation(WallsOperation):
+    """Birleşimleri sıfırla: both ends by the rule, the cleanup on."""
+    TAG_VALUE: ClassVar[str] = "resetJoins"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resetJoins"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetJoinsWallsOperation:
+        return cls()
+
+
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
@@ -40724,7 +41120,7 @@ _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "or
 _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
 
 
-_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation}
+_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation}
 
 
 __all__ = [
@@ -41177,6 +41573,7 @@ __all__ = [
     "ExportDxf",
     "ExportGpkg",
     "ExportPdf",
+    "ExtendWallsOperation",
     "ExtensionPointConstruction",
     "FeatureChange",
     "FeatureFeed",
@@ -41226,6 +41623,7 @@ __all__ = [
     "FlipBlockAction",
     "FlipBlockParameter",
     "FlipConstraintEdit",
+    "FlipWallsOperation",
     "FontMatch",
     "FontMatchName",
     "FontsReport",
@@ -41358,6 +41756,8 @@ __all__ = [
     "IslandStyleName",
     "ItemWords",
     "JoggedDimensionMeasure",
+    "JoinWallsOperation",
+    "JoinsWallsOperation",
     "JunctionLayer",
     "JunctionRole",
     "JunctionRoleName",
@@ -41787,9 +42187,11 @@ __all__ = [
     "RenamedBlock",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
+    "ReplaceStyleWallsOperation",
     "ReplaceTextEdit",
     "ReselectHatchEdit",
     "ResetArrayEdit",
+    "ResetJoinsWallsOperation",
     "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
@@ -41877,6 +42279,7 @@ __all__ = [
     "SplitPolicy",
     "SplitPolicyName",
     "SplitTextEdit",
+    "SplitWallsOperation",
     "StackMode",
     "StackModeName",
     "StandardDimensionStyle",
@@ -41982,6 +42385,7 @@ __all__ = [
     "TrimEdgeMode",
     "TrimEdgeModeName",
     "TrimPick",
+    "TrimWallsOperation",
     "TrimWindow",
     "TwoPointsUcsTo",
     "Ucs",
@@ -42033,9 +42437,19 @@ __all__ = [
     "WallComponent",
     "WallDetail",
     "WallDetailName",
+    "WallEnd",
+    "WallEndName",
     "WallEntity",
     "WallEntityGeometry",
     "WallFields",
+    "WallJoin",
+    "WallJoinIssue",
+    "WallJoinName",
+    "WallJoins",
+    "WallJoint",
+    "WallJointKind",
+    "WallJointKindName",
+    "WallJointMember",
     "WallJustify",
     "WallJustifyName",
     "WallStyleDef",
@@ -42048,6 +42462,8 @@ __all__ = [
     "WallsFromLinesPlan",
     "WallsFromMode",
     "WallsFromModeName",
+    "WallsJoined",
+    "WallsJoins",
     "WallsOperation",
     "WallsPlan",
     "WeightCurveEdit",

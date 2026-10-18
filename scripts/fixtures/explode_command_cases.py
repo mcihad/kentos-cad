@@ -13,6 +13,8 @@ Writes fixtures/commands/v1/cad.entities.explode.json. The ADR's rules, computed
   its colour and line weight (else the insert's).
 - Objects are written in the input's order: each object's removal, then its pieces; the pieces get the next slots.
 - An item of an associative array (docs/adr/0300) brings every item of its array, which is gone in the same step.
+- A wall (docs/adr/0340 §5) opens to what it draws at the drawing's detail, joined with the walls round it: here its
+  faces and caps, on its layer with its colour; it is said its style, components, level, height and joins are lost.
 - A line or a point does not explode: left out with a warning naming the count and the first one's words (a circle
   becomes a polyline, docs/adr/0308; its cases are explode_curve_cases.py's),
   the refusal when none explodes; an object on a locked layer the same with the locked words (docs/adr/0278).
@@ -63,10 +65,13 @@ INSERT = {"kind": "insert", **base(6, color="#0000ff"), "block": BLOCK, "p": p(6
 PARTS = {"kind": "polyline", **base(7), "pts": [p(0, 40), p(5, 40)], "parts": [{"pts": [p(0, 45), p(5, 45)]}]}
 CLOSED = {"kind": "polyline", **base(8), "pts": [p(70, 0), p(75, 0), p(75, 5)], "closed": True}
 POINT = {"kind": "point", **base(9), "p": p(80, 0)}
-ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT]
+# A plain wall 0.2 m wide along the x axis (docs/adr/0340 §5): at 1:100 drawn schematically, its two faces and caps.
+WALL = {"kind": "wall", **base(10, color="#404040"), "pts": [p(90, 0), p(94, 0)], "width": 0.2, "justify": "center"}
+ENTITIES = [OPEN, AREA, LINE, CIRCLE, LOCKED_PATH, INSERT, PARTS, CLOSED, POINT, WALL]
 BY_ID = {e["id"]: e for e in ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
-NEXT = 10
+NEXT = 11
+LOST = "düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor; komşu duvarlar onlarla birleşmez."
 DEFINITION = {"id": BLOCK, "name": "Rögar", "base": p(0, 0), "entities": [
     {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": p(0, 0), "b": p(1, 0)},
     {"kind": "circle", "id": 2, "layerId": "agac", "attrs": {}, "color": "#00ff00", "lineWeight": 0.35, "c": p(0, 1), "r": 0.5},
@@ -112,6 +117,13 @@ def pieces(e):
         rings = [(e["pts"], bool(e.get("closed")))] + [(part["pts"], False) for part in e.get("parts", [])]
     elif kind == "polygon":
         rings = [(e["pts"], True)] + [(h["pts"], True) for h in e.get("holes", [])]
+    elif kind == "wall":
+        # Its faces (the path moved half its width to either side), then its caps across its two ends.
+        (a, b), h = e["pts"], e["width"] / 2
+        left = [p(a["x"], a["y"] + h), p(b["x"], b["y"] + h)]
+        right = [p(a["x"], a["y"] - h), p(b["x"], b["y"] - h)]
+        return [{"kind": "polyline", **look(e), "pts": left}, {"kind": "polyline", **look(e), "pts": right},
+                {"kind": "line", **look(e), "a": left[0], "b": right[0]}, {"kind": "line", **look(e), "a": left[1], "b": right[1]}]
     elif kind == "insert":
         out = []
         s, at = e["scale"], e["p"]
@@ -187,6 +199,8 @@ def cases():
                 [6], undo=True),
         written("İki nesne birlikte, verildikleri sırayla: silme ve parçaları", [1, 2]),
         written("Aynı kimlik iki kez: bir kez patlar", [1], input_ids=[1, 1]),
+        written("Duvar görünüşünün çizgilerine açılır: iki yüzü ve uçları, rengi geçer; anlamını yitirdiği söylenir; geri alınır",
+                [10], warnings=[{"code": "semantics_lost", "message": f"1 duvar {LOST}", "path": "uids"}], undo=True),
         written("Çizgi ile çoklu çizgi: çizgi uyarıyla atlanır", [1], input_ids=[3, 1], warnings=[skipped(1, NOT_BASIC)]),
         written("Kilitli katmandaki ile açık olan: kilitli uyarıyla atlanır", [1], input_ids=[5, 1],
                 warnings=[{"code": "layer_locked", "path": "uids",

@@ -4,7 +4,7 @@
   "command": "cad.walls.edit",
   "commandVersion": 1,
   "title": "Duvarı düzenle: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik ve mimari bilgi; hepsi ya da hiçbiri",
-  "note": "ADR 0339 §5. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
+  "note": "ADR 0339 §5, 0340 §4. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; birleşmeyen duvarların uyarıları scripts/fixtures/wall_join_cases.py'nin kesirli çözücüsünden.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -520,6 +520,293 @@
           1.0,
           0.0
         ]
+      },
+      {
+        "kind": "wall",
+        "id": 23,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 100.0,
+            "y": 0.0
+          },
+          {
+            "x": 108.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 24,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 103.0,
+            "y": 4.0
+          },
+          {
+            "x": 103.0,
+            "y": 1.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 25,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 110.0,
+            "y": 0.0
+          },
+          {
+            "x": 114.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 26,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 114.0,
+            "y": 0.0
+          },
+          {
+            "x": 118.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 27,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 120.0,
+            "y": 0.0
+          },
+          {
+            "x": 124.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "left"
+      },
+      {
+        "kind": "wall",
+        "id": 28,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 128.0,
+            "y": 0.0
+          },
+          {
+            "x": 124.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "right"
+      },
+      {
+        "kind": "wall",
+        "id": 29,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 130.0,
+            "y": 0.0
+          },
+          {
+            "x": 134.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 30,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 134.0,
+            "y": 0.0
+          },
+          {
+            "x": 138.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 31,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 140.0,
+            "y": 0.0
+          },
+          {
+            "x": 144.0,
+            "y": 0.0
+          },
+          {
+            "x": 144.0,
+            "y": 3.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 32,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 144.0,
+            "y": 3.0
+          },
+          {
+            "x": 140.0,
+            "y": 3.0
+          },
+          {
+            "x": 140.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 33,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 150.0,
+            "y": -2.0
+          },
+          {
+            "x": 150.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 34,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 148.0,
+            "y": 0.0
+          },
+          {
+            "x": 156.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 35,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 160.0,
+            "y": 0.0
+          },
+          {
+            "x": 164.0,
+            "y": 0.0
+          },
+          {
+            "x": 164.0,
+            "y": 3.0
+          },
+          {
+            "x": 160.0,
+            "y": 3.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "closed": true
+      },
+      {
+        "kind": "wall",
+        "id": 36,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 180.0,
+            "y": 0.0
+          },
+          {
+            "x": 184.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 37,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 184.0,
+            "y": 0.0
+          },
+          {
+            "x": 180.0625,
+            "y": 1.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
       }
     ]
   },
@@ -588,7 +875,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -664,7 +966,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -759,7 +1076,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -871,7 +1203,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -965,7 +1312,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -1060,7 +1422,8 @@
                       "name": "İç sıva",
                       "material": "İç sıva",
                       "thickness": 0.02,
-                      "detail": "detailed"
+                      "detail": "detailed",
+                      "priority": 5
                     },
                     {
                       "name": "Tuğla",
@@ -1070,7 +1433,8 @@
                         "scale": 1.0,
                         "angle": 0.0
                       },
-                      "detail": "standard"
+                      "detail": "standard",
+                      "priority": 1
                     },
                     {
                       "name": "Isı yalıtımı",
@@ -1081,13 +1445,15 @@
                         "scale": 0.5,
                         "angle": 0.0
                       },
-                      "detail": "standard"
+                      "detail": "standard",
+                      "priority": 3
                     },
                     {
                       "name": "Dış sıva",
                       "material": "Dış sıva",
                       "thickness": 0.03,
-                      "detail": "detailed"
+                      "detail": "detailed",
+                      "priority": 5
                     }
                   ],
                   "fill": "#5A5A5A"
@@ -1123,7 +1489,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -1149,7 +1530,8 @@
                     "name": "İç sıva",
                     "material": "İç sıva",
                     "thickness": 0.02,
-                    "detail": "detailed"
+                    "detail": "detailed",
+                    "priority": 5
                   },
                   {
                     "name": "Tuğla",
@@ -1159,7 +1541,8 @@
                       "scale": 1.0,
                       "angle": 0.0
                     },
-                    "detail": "standard"
+                    "detail": "standard",
+                    "priority": 1
                   },
                   {
                     "name": "Isı yalıtımı",
@@ -1170,13 +1553,15 @@
                       "scale": 0.5,
                       "angle": 0.0
                     },
-                    "detail": "standard"
+                    "detail": "standard",
+                    "priority": 3
                   },
                   {
                     "name": "Dış sıva",
                     "material": "Dış sıva",
                     "thickness": 0.03,
-                    "detail": "detailed"
+                    "detail": "detailed",
+                    "priority": 5
                   }
                 ],
                 "fill": "#5A5A5A"
@@ -1214,7 +1599,8 @@
                       "name": "İç sıva",
                       "material": "İç sıva",
                       "thickness": 0.02,
-                      "detail": "detailed"
+                      "detail": "detailed",
+                      "priority": 5
                     },
                     {
                       "name": "Tuğla",
@@ -1224,7 +1610,8 @@
                         "scale": 1.0,
                         "angle": 0.0
                       },
-                      "detail": "standard"
+                      "detail": "standard",
+                      "priority": 1
                     },
                     {
                       "name": "Isı yalıtımı",
@@ -1235,13 +1622,15 @@
                         "scale": 0.5,
                         "angle": 0.0
                       },
-                      "detail": "standard"
+                      "detail": "standard",
+                      "priority": 3
                     },
                     {
                       "name": "Dış sıva",
                       "material": "Dış sıva",
                       "thickness": 0.03,
-                      "detail": "detailed"
+                      "detail": "detailed",
+                      "priority": 5
                     }
                   ],
                   "fill": "#5A5A5A",
@@ -1333,7 +1722,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -1473,7 +1877,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "13": {
@@ -1598,7 +2017,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -1737,7 +2171,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "13": {
@@ -1876,7 +2325,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -2022,7 +2486,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "13": {
@@ -2184,7 +2663,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "13": {
@@ -2350,7 +2844,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -2494,7 +3003,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2546,7 +3070,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2599,7 +3138,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2654,7 +3208,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2709,7 +3278,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2764,7 +3348,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2818,7 +3417,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2876,7 +3490,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2931,7 +3560,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2986,7 +3630,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3041,7 +3700,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3096,7 +3770,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3151,7 +3840,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3207,7 +3911,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3263,7 +3982,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3341,7 +4075,22 @@
               19,
               20,
               21,
-              22
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
             ],
             "entities": {
               "12": {
@@ -3416,6 +4165,3899 @@
           "expect": {
             "canUndo": true,
             "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: duvar yolunun noktaya en yakın yerinde ikiye; ikinci parça yeni duvar, uçlar düz devam eder",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "split",
+              "at": {
+                "x": 102.0,
+                "y": 0.05
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 23,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 100.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 102.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "added": [
+                {
+                  "kind": "wall",
+                  "id": 38,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 102.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 108.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38
+            ],
+            "entities": {
+              "23": {
+                "kind": "wall",
+                "id": 23,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 100.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 102.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "38": {
+                "kind": "wall",
+                "id": 38,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 102.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 108.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: kapalı duvar noktada açılır, uçları orada buluşur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35"
+            ],
+            "operation": {
+              "kind": "split",
+              "at": {
+                "x": 162.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 35,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 162.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 164.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 164.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 160.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 160.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 162.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "35": {
+                "kind": "wall",
+                "id": 35,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 162.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 164.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 164.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 160.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 160.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 162.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: uç uca iki duvar tek duvar olur, ortadaki köşe kalır, ilkinin kimliğiyle",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 26,
+          "as": "o26"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:25",
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 25,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 110.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 114.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 118.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "removed": [
+                "$uid:o26"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "25": {
+                "kind": "wall",
+                "id": 25,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 110.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 114.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 118.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: ters yöndeki sağa hizalı duvar gövdesi yerinde çevrilip sola hizalıya katılır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 28,
+          "as": "o28"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:27",
+              "$uidOf:28"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 27,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 120.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 124.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 128.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "left"
+                }
+              ],
+              "removed": [
+                "$uid:o28"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "27": {
+                "kind": "wall",
+                "id": 27,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 120.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 124.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 128.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "left"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: uçları buluşan iki duvar kapalı duvar olur",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 32,
+          "as": "o32"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:31",
+              "$uidOf:32"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 31,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 140.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 144.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 144.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 140.0,
+                      "y": 3.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "closed": true
+                }
+              ],
+              "removed": [
+                "$uid:o32"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "31": {
+                "kind": "wall",
+                "id": 31,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 140.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 144.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 144.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 140.0,
+                    "y": 3.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "closed": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uzat: bölme duvarının ucu diğer duvarın yoluna dek uzar, T birleşir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:24"
+            ],
+            "operation": {
+              "kind": "extend",
+              "to": "$uidOf:23"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 24,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 103.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 103.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "24": {
+                "kind": "wall",
+                "id": 24,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 103.0,
+                    "y": 4.0
+                  },
+                  {
+                    "x": 103.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Buda: duvar diğerini kestiği yerde kısalır, keep noktası yanındaki parça kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:34"
+            ],
+            "operation": {
+              "kind": "trim",
+              "to": "$uidOf:33",
+              "keep": {
+                "x": 153.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 34,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 150.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 156.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "34": {
+                "kind": "wall",
+                "id": 34,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 150.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 156.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Buda: keep verilmezse uzun parça kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:34"
+            ],
+            "operation": {
+              "kind": "trim",
+              "to": "$uidOf:33"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 34,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 150.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 156.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "34": {
+                "kind": "wall",
+                "id": 34,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 150.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 156.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Buda: keep diğer yanda: kısa parça kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:34"
+            ],
+            "operation": {
+              "kind": "trim",
+              "to": "$uidOf:33",
+              "keep": {
+                "x": 149.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 34,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 148.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 150.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "34": {
+                "kind": "wall",
+                "id": 34,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 148.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 150.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çevir: yol ters döner, uçların birleşimi yer değiştirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:24"
+            ],
+            "operation": {
+              "kind": "flip"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 24,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 103.0,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 103.0,
+                      "y": 4.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "24": {
+                "kind": "wall",
+                "id": 24,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 103.0,
+                    "y": 1.0
+                  },
+                  {
+                    "x": 103.0,
+                    "y": 4.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stili değiştir: kimlik verilmezse stilin bütün duvarları, KentOS'un stili projeye eklenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [],
+            "operation": {
+              "kind": "replaceStyle",
+              "from": "Perde 20",
+              "to": "İç duvar 15"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 13,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 8.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 24.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "style": "kentos-ic-duvar-15",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard",
+                      "priority": 1
+                    },
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "stylesAdded": [
+                "kentos-ic-duvar-15"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "13": {
+                "kind": "wall",
+                "id": 13,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 24.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "kentos-ic-duvar-15",
+                "components": [
+                  {
+                    "name": "Sıva",
+                    "material": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed",
+                    "priority": 5
+                  },
+                  {
+                    "name": "Tuğla",
+                    "material": "Tuğla",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "detail": "standard",
+                    "priority": 1
+                  },
+                  {
+                    "name": "Sıva",
+                    "material": "Sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed",
+                    "priority": 5
+                  }
+                ],
+                "fill": "#5A5A5A",
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                },
+                {
+                  "id": "kentos-ic-duvar-15",
+                  "name": "İç duvar 15",
+                  "components": [
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard",
+                      "priority": 1
+                    },
+                    {
+                      "name": "Sıva",
+                      "material": "Sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed",
+                      "priority": 5
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.15
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: başlangıç Yok, temizlik kapalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "joins",
+              "start": "none",
+              "cleanup": false
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 23,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 100.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 108.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "joins": {
+                    "start": "none"
+                  },
+                  "cleanup": false
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "23": {
+                "kind": "wall",
+                "id": 23,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 100.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 108.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "joins": {
+                  "start": "none"
+                },
+                "cleanup": false
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: dar köşede Alın verilince köşe birleşir, uyarı kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:36"
+            ],
+            "operation": {
+              "kind": "joins",
+              "end": "butt"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 36,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 180.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 184.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "joins": {
+                    "end": "butt"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "36": {
+                "kind": "wall",
+                "id": 36,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 180.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 184.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "joins": {
+                  "end": "butt"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: dar köşede Gönye zorlanınca birleşir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:36"
+            ],
+            "operation": {
+              "kind": "joins",
+              "end": "miter"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 36,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 180.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 184.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "joins": {
+                    "end": "miter"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "36": {
+                "kind": "wall",
+                "id": 36,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 180.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 184.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "joins": {
+                  "end": "miter"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: kapalı duvarda yalnız temizlik değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35"
+            ],
+            "operation": {
+              "kind": "joins",
+              "cleanup": false
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 35,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 160.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 164.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 164.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 160.0,
+                      "y": 3.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "closed": true,
+                  "cleanup": false
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "35": {
+                "kind": "wall",
+                "id": 35,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 160.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 164.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 164.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 160.0,
+                    "y": 3.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "closed": true,
+                "cleanup": false
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: dar köşedeki duvar kalınlaşır, köşenin birleşmediği uyarıyla söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:37"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.25
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 37,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 184.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 180.0625,
+                      "y": 1.0
+                    }
+                  ],
+                  "width": 0.25,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "wall_join_acute",
+                "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi. (184.000, 0.000) Bir ucu Alın yapın: o duvar diğerinin yüzünde durur."
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "37": {
+                "kind": "wall",
+                "id": 37,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 184.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 180.0625,
+                    "y": 1.0
+                  }
+                ],
+                "width": 0.25,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşimleri sıfırla: iki uç kurala, temizlik açık; duvar ilk hâline döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "joins",
+              "start": "none",
+              "cleanup": false
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 23,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 100.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 108.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "joins": {
+                    "start": "none"
+                  },
+                  "cleanup": false
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "23": {
+                "kind": "wall",
+                "id": 23,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 100.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 108.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "joins": {
+                  "start": "none"
+                },
+                "cleanup": false
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "resetJoins"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 23,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 100.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 108.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "entities": {
+              "23": {
+                "kind": "wall",
+                "id": 23,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 100.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 108.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan yazmadan bölünen duvarı ve yeni parçayı gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "split",
+              "at": {
+                "x": 102.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 23,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 100.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 102.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "added": [
+                {
+                  "kind": "wall",
+                  "id": 0,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 102.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 108.0,
+                      "y": 0.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 26,
+          "as": "o26"
+        },
+        {
+          "op": "validate",
+          "input": {
+            "uids": [
+              "$uidOf:25",
+              "$uidOf:26"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: duvarın dışındaki nokta reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "split",
+              "at": {
+                "x": 102.0,
+                "y": 0.5
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "point_off_wall",
+              "message": "Nokta duvarın üzerinde değil: duvarın yolundan 0.500 m uzakta, iki yüzünün arasında olmalı.",
+              "path": "operation.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Böl: uçtan bölünmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "split",
+              "at": {
+                "x": 100.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "split_at_end",
+              "message": "Duvar ucundan bölünmez: bölme noktası duvarın iki ucunun arasında olmalı.",
+              "path": "operation.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: tek duvar birleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:25"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_objects",
+              "message": "Birleştirmek için uç uca iki ya da daha çok duvar verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: uçları buluşmayan duvarlar reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:25",
+              "$uidOf:27"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "walls_not_touching",
+              "message": "Duvarların uçları buluşmuyor: birleştirilecek duvarlar uç uca olmalı (1 mm içinde).",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: genişliği farklı duvarlar reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:29",
+              "$uidOf:30"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "walls_differ",
+              "message": "Duvarların genişliği, hizası, ötelemesi, stili, bileşenleri ya da diğer alanları farklı; tek duvar olmaz. Önce Stili değiştir ya da Değiştir ile eşitleyin.",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleştir: kapalı duvar birleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35",
+              "$uidOf:25"
+            ],
+            "operation": {
+              "kind": "join"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_closed",
+              "message": "Kapalı duvar başka duvarla birleştirilmez.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uzat: diğer duvara varmayan uç reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:24"
+            ],
+            "operation": {
+              "kind": "extend",
+              "to": "$uidOf:25"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_misses",
+              "message": "Duvar uzatınca diğer duvarın yoluna varmıyor: ucu ona doğru bakmalı.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uzat: kapalı duvarın ucu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35"
+            ],
+            "operation": {
+              "kind": "extend",
+              "to": "$uidOf:23"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_closed",
+              "message": "Kapalı duvarın ucu yok; uzatılmaz.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uzat: hedef duvar değilse ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:24"
+            ],
+            "operation": {
+              "kind": "extend",
+              "to": "$uidOf:1"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_wall",
+              "message": "Nesne duvar değil; duvarlar yalnız duvarlara uzatılır ve budanır.",
+              "path": "operation.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Buda: kesişmeyen duvar reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:34"
+            ],
+            "operation": {
+              "kind": "trim",
+              "to": "$uidOf:23"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_misses",
+              "message": "Duvarın yolu diğer duvarın yolunu kesmiyor; budanacak yer yok.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stili değiştir: verilen duvarlar o stilde değilse ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "replaceStyle",
+              "from": "Gazbeton 20",
+              "to": "İç duvar 15"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_used",
+              "message": "Verilen duvarların hiçbiri “Gazbeton 20” stilinde değil.",
+              "path": "operation.from"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stili değiştir: olmayan stil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "replaceStyle",
+              "from": "Perde 20",
+              "to": "Ahşap 12"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“Ahşap 12” adında ya da kimliğinde duvar stili yok. Var olanlar: Perde 20, Dış duvar 25, İç duvar 15, Gazbeton 20, Betonarme perde 25, Bölme duvar 10.",
+              "path": "operation.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: hiçbir alan verilmezse ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23"
+            ],
+            "operation": {
+              "kind": "joins"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "Değiştirilecek bir alan verilmedi: başlangıcın ya da sonun birleşimini, ya da temizliği verin.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birleşim: kapalı duvara uç birleşimi verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35"
+            ],
+            "operation": {
+              "kind": "joins",
+              "start": "butt"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_closed",
+              "message": "Kapalı duvarın ucu yok; uç birleşimi verilmez, yalnız temizlik.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çevir: kilitli katmandaki duvar bütün düzenlemeyi reddeder",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:24",
+              "$uidOf:14"
+            ],
+            "operation": {
+              "kind": "flip"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli; üzerindeki duvar düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
             "revision": "same"
           }
         }

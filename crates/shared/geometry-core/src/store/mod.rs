@@ -21,6 +21,7 @@
 pub mod draw;
 #[cfg(test)]
 mod inserts;
+mod wall_joins;
 #[cfg(test)]
 mod walls;
 pub mod labels;
@@ -207,6 +208,12 @@ pub struct Store {
     font: Font,
     /// What walls are drawn for: the detail and the drawing's scale (`set_wall_view`, docs/adr/0339 §3).
     wall_view: crate::geom::wall::View,
+    /// The walls' ids, the boxes where walls changed since they were last joined, each wall's drawing as its joins
+    /// left it and what is not joined (`wall_joins.rs`, docs/adr/0340 §3).
+    wall_ids: IdSet,
+    wall_dirty: Vec<Bounds>,
+    wall_drawn: IdMap<Arc<crate::geom::wall::Drawn>>,
+    wall_issues: Vec<wall_joins::WallIssue>,
     /// The drawing's block definitions, flattened (`set_blocks`).
     blocks: Blocks,
     /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
@@ -295,6 +302,7 @@ impl Store {
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
         let (expanded, bounds) = self.expansion(&shape);
+        self.note_wall(id, matches!(shape, Shape::Wall { .. }).then_some(bounds));
         let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();
         // Its labels' texts and pins come again with it (docs/adr/0212 §3.1).
@@ -364,6 +372,7 @@ impl Store {
     /// Removes objects; unknown ids are ignored.
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
+            self.note_wall(*id, None);
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
             self.masks.remove(&id.to_bits());
@@ -454,7 +463,7 @@ impl Store {
         for s in &walls {
             let fresh = self.slots[*s as usize]
                 .as_ref()
-                .map(|it| self.expansion(&it.shape));
+                .map(|it| self.wall_expansion(it.id, &it.shape));
             if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
                 it.bounds = bounds;
                 it.expanded = expanded;
@@ -504,6 +513,11 @@ impl Store {
                 }),
             _ => return (None, b),
         };
+        self.expanded_of(pieces, b)
+    }
+
+    /// Pieces as an object's expansion, its box grown around them.
+    fn expanded_of(&self, pieces: Vec<crate::block::Piece>, b: Bounds) -> (Option<Arc<Expanded>>, Bounds) {
         if pieces.is_empty() {
             return (None, b);
         }
@@ -874,6 +888,7 @@ impl Store {
     }
 
     fn maybe_rebuild(&mut self) {
+        self.settle_walls();
         if self.loose.len() > REBUILD_AFTER.max(self.live / 16) {
             self.rebuild();
         }

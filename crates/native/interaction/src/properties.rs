@@ -80,6 +80,19 @@ pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_contracts::WallC
     said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A wall's joins from Öznitelikler (docs/adr/0340 §6): `operation` through `cad.walls.edit`; what to say.
+pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_contracts::WallsOperation) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::WallsEdit {
+        uids: vec![uid.to_string()],
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
 /// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
 pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_contracts::BoundaryForm) -> Vec<String> {

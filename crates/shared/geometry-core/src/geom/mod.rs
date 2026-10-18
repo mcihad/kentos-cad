@@ -33,3 +33,4 @@ pub mod table;
 pub mod tangent_circle;
 pub mod tiles;
 pub mod wall;
+pub mod wall_join;

@@ -272,6 +272,10 @@ SCHEMA_WITH_SOURCES = 74
 # Schema 75: schema 74, the `wall` kind (its path, width, justification, offset, style, components, ends, fill, height
 # and architectural information) and the settings' `wallStyles` and `arch` (docs/adr/0339).
 SCHEMA_WITH_WALLS = 75
+# Schema 76: schema 75, a wall's `joins` (its start's and end's join when not automatic) and `cleanup` (only when
+# false), and a wall component's `priority` (1 to 9) on a wall and in a wall style (docs/adr/0340 §1).
+SCHEMA_WITH_WALL_JOINS = 76
+WALL_JOINS = ("auto", "none", "miter", "butt", "through")
 # A wall's bounds (kentos_contracts::arch).
 WALL_MAX_POINTS = 10_000
 WALL_MAX_COMPONENTS = 16
@@ -462,7 +466,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2588,6 +2592,7 @@ class _Schema:
         self.constraints = version >= SCHEMA_WITH_CONSTRAINTS
         self.sources = version >= SCHEMA_WITH_SOURCES
         self.walls = version >= SCHEMA_WITH_WALLS
+        self.wall_joins = version >= SCHEMA_WITH_WALL_JOINS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -6272,8 +6277,14 @@ class _Schema:
                             "lineType": (self.enum(("continuous", "dashed", "dashdot", "dotted")), False)})
         hatch = self.fields({"pattern": (self.text, True), "scale": (self.float, True), "angle": (self.float, True),
                              "color": (self.wall_colour("bileşenin tarama rengi"), False)})
+        def priority(v):
+            p = self.uint(8)(v)
+            if not 1 <= p <= 9:
+                self.fail("bad_value", f"bileşenin önceliği {p}; 1 ile 9 arasında olmalı")
+            return p
         return self.fields({"name": (self.text, True), "material": (self.text, False), "thickness": (self.float, False),
-                            "edge": (edge, False), "hatch": (hatch, False), "detail": (self.enum(WALL_DETAILS), True)})(v)
+                            "edge": (edge, False), "hatch": (hatch, False), "detail": (self.enum(WALL_DETAILS), True),
+                            **({"priority": (priority, False)} if self.wall_joins else {})})(v)
 
     def wall_components_rules(self, comps, width, owner):
         """A wall's (or a style's, `width` None) components: names, thicknesses above 0, at most one without (it takes
@@ -6338,6 +6349,18 @@ class _Schema:
     def arch_info(self, v):
         return self.fields({"level": (self.text, False), "phase": (self.enum(ARCH_PHASES), False),
                             "status": (self.enum(ARCH_STATUSES), False), "discipline": (self.enum(ARCH_DISCIPLINES), False)})(v)
+
+    def wall_joins_(self, v):
+        """A wall's joins (schema 76, docs/adr/0340 §1): an automatic end is not written, nor are both."""
+        j = self.fields({"start": (self.enum(WALL_JOINS), False), "end": (self.enum(WALL_JOINS), False)})(v)
+        if any(x == "auto" for x in j.values()) or not j:
+            self.fail("bad_value", "otomatik birleşim yazılmaz; iki ucu da otomatikse alan yazılmaz")
+        return j
+
+    def only_false(self, v):
+        if self.bool(v):
+            self.fail("bad_value", "temizlik açıkken yazılmaz; alan yalnız false iken yazılır")
+        return False
 
     def wall_caps(self, v):
         if self.text(v) != "open":
@@ -6952,6 +6975,8 @@ ENTITY_KINDS = {
         "fill": (s.wall_colour("duvarın dolgu rengi"), False),
         "height": (s.float, False),
         "arch": (s.arch_info, False),
+        # Schema 76 (docs/adr/0340 §1): its joins, its cleanup only when off.
+        **({"joins": (s.wall_joins_, False), "cleanup": (s.only_false, False)} if s.wall_joins else {}),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.

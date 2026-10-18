@@ -1258,6 +1258,45 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 .collect();
             let caps_text = if open { "Açık" } else { "Kapalı" };
             geo.push(Row::text("Uçlar", caps_text).editor(select(caps_text.to_owned(), caps)));
+            // Its ends' joins and its cleanup (docs/adr/0340 §6).
+            let op = |o: kentos_contracts::WallsOperation| Message::Properties(Event::WallOp(slot, o));
+            let join_icon = |j: kentos_contracts::WallJoin| match j {
+                kentos_contracts::WallJoin::Auto => "wallJoinAuto",
+                kentos_contracts::WallJoin::None => "wallJoinNone",
+                kentos_contracts::WallJoin::Miter => "wallJoinMiter",
+                kentos_contracts::WallJoin::Butt => "wallJoinButt",
+                kentos_contracts::WallJoin::Through => "wallJoinThrough",
+            };
+            if !x.closed {
+                for (title, now, at_end) in [("Başlangıç birleşimi", x.joins.start, false), ("Son birleşimi", x.joins.end, true)] {
+                    let items = kentos_contracts::WallJoin::ALL
+                        .iter()
+                        .map(|&j| {
+                            let (start, end) = if at_end { (None, Some(j)) } else { (Some(j), None) };
+                            pick(
+                                j.label().to_owned(),
+                                j == now,
+                                op(kentos_contracts::WallsOperation::Joins { start, end, cleanup: None }),
+                                Some(join_icon(j)),
+                            )
+                        })
+                        .collect();
+                    geo.push(Row::text(title, now.label()).editor(select(now.label().to_owned(), items)));
+                }
+            }
+            let clean = [(true, "Önceliğe göre"), (false, "Kapalı")]
+                .into_iter()
+                .map(|(c, l)| {
+                    pick(
+                        l.to_owned(),
+                        c == x.cleanup,
+                        op(kentos_contracts::WallsOperation::Joins { start: None, end: None, cleanup: Some(c) }),
+                        None,
+                    )
+                })
+                .collect();
+            let clean_text = if x.cleanup { "Önceliğe göre" } else { "Kapalı" };
+            geo.push(Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)));
             let height = x.height.map_or_else(|| "Katın".to_owned(), |h| f.length_bare(h));
             geo.push(
                 Row::figure("Yükseklik", height)

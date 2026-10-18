@@ -139,6 +139,7 @@ COMMANDS: dict[str, Any] = {
     "cad.walls.convert": walls.convert,
     "cad.walls.create": walls.create,
     "cad.walls.edit": walls.edit,
+    "cad.walls.joins": walls.joins,
     "file.export.block": file.export.block,
     "file.export.dxf": file.export.dxf,
     "file.export.gpkg": file.export.gpkg,

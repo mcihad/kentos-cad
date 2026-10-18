@@ -106,7 +106,11 @@ crate::json_struct!(ComponentEdge {
     line_type => "lineType"
 });
 
-/// A layer of the body, from the left face: its thickness (none: the rest), its look, the least detail it shows.
+/// A component's priority when it has none (docs/adr/0340 §1): between a core's 1 and a finish's 5.
+pub const DEFAULT_PRIORITY: u8 = 3;
+
+/// A layer of the body, from the left face: its thickness (none: the rest), its look, the least detail it shows and
+/// its priority at a join (1 the strongest; none [`DEFAULT_PRIORITY`]).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Component {
     pub name: Option<String>,
@@ -115,6 +119,49 @@ pub struct Component {
     pub edge: Option<ComponentEdge>,
     pub hatch: Option<ComponentFill>,
     pub detail: Detail,
+    pub priority: Option<u8>,
+}
+
+impl Component {
+    pub fn rank(&self) -> u8 {
+        self.priority.unwrap_or(DEFAULT_PRIORITY)
+    }
+}
+
+/// How one end of a wall joins (docs/adr/0340 §1, the contract's `WallJoin`): by the rule (`Auto`), not at all, or
+/// at a corner mitred, butting the other wall, or running through it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum JoinMode {
+    #[default]
+    Auto,
+    None,
+    Miter,
+    Butt,
+    Through,
+}
+
+impl JoinMode {
+    pub fn name(self) -> &'static str {
+        match self {
+            JoinMode::Auto => "auto",
+            JoinMode::None => "none",
+            JoinMode::Miter => "miter",
+            JoinMode::Butt => "butt",
+            JoinMode::Through => "through",
+        }
+    }
+
+    pub fn of(name: &str) -> Option<JoinMode> {
+        [
+            JoinMode::Auto,
+            JoinMode::None,
+            JoinMode::Miter,
+            JoinMode::Butt,
+            JoinMode::Through,
+        ]
+        .into_iter()
+        .find(|m| m.name() == name)
+    }
 }
 
 impl ToJson for Component {
@@ -127,6 +174,7 @@ impl ToJson for Component {
         field(out, &mut first, "edge", &self.edge);
         field(out, &mut first, "hatch", &self.hatch);
         field(out, &mut first, "detail", self.detail.name());
+        field(out, &mut first, "priority", &self.priority.map(f64::from));
         out.push('}');
     }
 }
@@ -144,13 +192,19 @@ impl FromJson for Component {
             edge: Option::from_json(v.get("edge"))?,
             hatch: Option::from_json(v.get("hatch"))?,
             detail,
+            priority: match Option::<f64>::from_json(v.get("priority"))? {
+                None => None,
+                Some(p) if (1.0..=9.0).contains(&p) && p.fract() == 0.0 => Some(p as u8),
+                Some(p) => return Err(format!("bileşenin önceliği 1 ile 9 arası bir tam sayıdır, {p} değil")),
+            },
         })
     }
 }
 
 /// A wall's fields beside its path: whether the path closes, its width, justification, base line offset, components,
-/// whether its ends are left open and its schematic fill; and, carried through untouched, its style, height and
-/// architectural information (the contract's JSON).
+/// whether its ends are left open, its schematic fill, how its start and end join and whether its components are
+/// cleaned up at a join; and, carried through untouched, its style, height and architectural information (the
+/// contract's JSON).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Spec {
     pub closed: bool,
@@ -163,6 +217,10 @@ pub struct Spec {
     pub style: Option<String>,
     pub height: Option<f64>,
     pub arch: Option<Json>,
+    /// Its start's and its end's join.
+    pub joins: [JoinMode; 2],
+    /// Its components are cleaned up by their priorities where another wall tees into or crosses it.
+    pub cleanup: bool,
 }
 
 impl Default for Spec {
@@ -178,6 +236,8 @@ impl Default for Spec {
             style: None,
             height: None,
             arch: None,
+            joins: [JoinMode::Auto; 2],
+            cleanup: true,
         }
     }
 }
@@ -194,6 +254,8 @@ impl crate::api::json::Flat for Spec {
         "style",
         "height",
         "arch",
+        "joins",
+        "cleanup",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -216,6 +278,14 @@ impl crate::api::json::Flat for Spec {
                 Json::Null => None,
                 a => Some(a.clone()),
             },
+            joins: {
+                let at = |name: &str| match v.get("joins").get(name) {
+                    Json::Str(s) => JoinMode::of(s).ok_or_else(|| format!("bilinmeyen birleşim “{s}”")),
+                    _ => Ok(JoinMode::Auto),
+                };
+                [at("start")?, at("end")?]
+            },
+            cleanup: !matches!(v.get("cleanup"), Json::Bool(false)),
         })
     }
 
@@ -239,6 +309,19 @@ impl crate::api::json::Flat for Spec {
         field(out, first, "height", &self.height);
         if let Some(a) = &self.arch {
             field(out, first, "arch", a);
+        }
+        if self.joins != [JoinMode::Auto; 2] {
+            let joins = Json::Obj(
+                [("start", self.joins[0]), ("end", self.joins[1])]
+                    .into_iter()
+                    .filter(|(_, m)| *m != JoinMode::Auto)
+                    .map(|(k, m)| (k.to_owned(), Json::Str(m.name().to_owned())))
+                    .collect(),
+            );
+            field(out, first, "joins", &joins);
+        }
+        if !self.cleanup {
+            field(out, first, "cleanup", &false);
         }
     }
 }
@@ -326,7 +409,7 @@ pub struct Line {
 }
 
 impl Line {
-    fn shape(&self, closed: bool) -> Shape {
+    pub fn shape(&self, closed: bool) -> Shape {
         Shape::Polyline {
             pts: self.pts.clone(),
             bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
@@ -372,7 +455,7 @@ pub type Body = (Vec<Vec2>, Option<Vec<Vec<Vec2>>>);
 
 /// The region between two of its lines: an open wall's the first line on, the second back; a closed wall's the larger
 /// ring and the smaller as its hole.
-fn band(a: &Line, b: &Line, closed: bool) -> Body {
+pub(crate) fn band(a: &Line, b: &Line, closed: bool) -> Body {
     let (pa, pb) = (a.outline(closed), b.outline(closed));
     if closed {
         let (outer, inner) = if signed_area(&pa).abs() >= signed_area(&pb).abs() {
@@ -461,6 +544,66 @@ fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> P
     }
 }
 
+/// A piece of one of the wall's lines: an open stretch, or the whole line of a closed wall.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Stroke {
+    pub line: Line,
+    pub closed: bool,
+}
+
+/// What a wall draws, whatever the detail (docs/adr/0340 §2): its lines as the joins left them, the lines across its
+/// free ends, each component's band and the body between its faces, each in its pieces. A wall on its own is its
+/// whole lines, caps at both ends of an open wall (unless they are open) and one band each; `geom::wall_join` cuts,
+/// extends and interrupts them where walls meet.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Drawn {
+    /// Each of the wall's lines (`boundaries`' order), its pieces.
+    pub lines: Vec<Vec<Stroke>>,
+    pub caps: Vec<(Vec2, Vec2)>,
+    /// Each component's band, its pieces; none when the components do not fit.
+    pub bands: Vec<Vec<Body>>,
+    /// The body between the faces, its pieces.
+    pub fill: Vec<Body>,
+}
+
+/// A wall's drawing on its own, or why it cannot be drawn.
+pub fn drawn(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Result<Drawn, String> {
+    let all = lines(pts, bulges, spec)?;
+    Ok(drawn_of(&all, spec))
+}
+
+/// The drawing of a wall's own lines.
+pub fn drawn_of(all: &[Line], spec: &Spec) -> Drawn {
+    let closed = spec.closed;
+    let (left, right) = (&all[0], &all[all.len() - 1]);
+    let mut caps = Vec::new();
+    if !closed && !spec.caps_open {
+        caps.push((left.pts[0], right.pts[0]));
+        caps.push((left.pts[left.pts.len() - 1], right.pts[right.pts.len() - 1]));
+    }
+    let bands = if all.len() == spec.components.len() + 1 {
+        (0..spec.components.len())
+            .map(|k| vec![band(&all[k], &all[k + 1], closed)])
+            .collect()
+    } else {
+        Vec::new()
+    };
+    Drawn {
+        lines: all
+            .iter()
+            .map(|l| {
+                vec![Stroke {
+                    line: l.clone(),
+                    closed,
+                }]
+            })
+            .collect(),
+        caps,
+        bands,
+        fill: vec![band(left, right, closed)],
+    }
+}
+
 /// The wall's pieces at `view`, hatches and fill first, then its lines; or why it cannot be drawn.
 pub fn pieces(
     pts: &[Vec2],
@@ -468,30 +611,34 @@ pub fn pieces(
     spec: &Spec,
     view: View,
 ) -> Result<Vec<Piece>, String> {
-    let all = lines(pts, bulges, spec)?;
-    let closed = spec.closed;
-    let (left, right) = (&all[0], &all[all.len() - 1]);
+    Ok(pieces_of(&drawn(pts, bulges, spec)?, pts, spec, view))
+}
+
+/// A drawing's pieces at `view`, hatches and fill first, then its lines.
+pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece> {
     let mut out = Vec::new();
     let shown = |c: &Component| view.detail >= Detail::Standard && view.detail >= c.detail;
-    let comps = if all.len() == spec.components.len() + 1 {
+    let comps = if d.bands.len() == spec.components.len() {
         &spec.components[..]
     } else {
         &[]
     };
+    let hatch = |ring: &Vec<Vec2>, holes: &Option<Vec<Vec<Vec2>>>, pattern: HatchPattern| Shape::Hatch {
+        ring: ring.clone(),
+        holes: holes.clone(),
+        pattern,
+        assoc: None,
+        boundary: None,
+    };
     if view.detail == Detail::Schematic {
         if let Some(fill) = &spec.fill {
-            let (ring, holes) = band(left, right, closed);
-            out.push(piece(
-                Shape::Hatch {
-                    ring,
-                    holes,
-                    pattern: HatchPattern::user("solid", 0.0, 1.0),
-                    assoc: None,
-                    boundary: None,
-                },
-                Some(fill.clone()),
-                None,
-            ));
+            for (ring, holes) in &d.fill {
+                out.push(piece(
+                    hatch(ring, holes, HatchPattern::user("solid", 0.0, 1.0)),
+                    Some(fill.clone()),
+                    None,
+                ));
+            }
         }
     } else {
         let turn = first_direction(pts);
@@ -502,37 +649,29 @@ pub fn pieces(
             let Some(pattern) = hatch_of(fill, turn, view.scale) else {
                 continue;
             };
-            let (ring, holes) = band(&all[k], &all[k + 1], closed);
-            out.push(piece(
-                Shape::Hatch {
-                    ring,
-                    holes,
-                    pattern,
-                    assoc: None,
-                    boundary: None,
-                },
-                fill.color.clone(),
-                None,
-            ));
+            for (ring, holes) in &d.bands[k] {
+                out.push(piece(hatch(ring, holes, pattern.clone()), fill.color.clone(), None));
+            }
         }
     }
-    out.push(piece(left.shape(closed), None, None));
-    out.push(piece(right.shape(closed), None, None));
-    if !closed && !spec.caps_open {
-        for (a, b) in [
-            (left.pts[0], right.pts[0]),
-            (left.pts[left.pts.len() - 1], right.pts[right.pts.len() - 1]),
-        ] {
-            out.push(piece(Shape::Line { a, b }, None, None));
+    let last = d.lines.len() - 1;
+    for k in [0, last] {
+        for st in &d.lines[k] {
+            out.push(piece(st.line.shape(st.closed), None, None));
         }
+    }
+    for &(a, b) in &d.caps {
+        out.push(piece(Shape::Line { a, b }, None, None));
     }
     for k in 1..comps.len() {
         if shown(&comps[k - 1]) && shown(&comps[k]) {
             let edge = comps[k - 1].edge.as_ref().or(comps[k].edge.as_ref());
-            out.push(piece(all[k].shape(closed), None, edge));
+            for st in &d.lines[k] {
+                out.push(piece(st.line.shape(st.closed), None, edge));
+            }
         }
     }
-    Ok(out)
+    out
 }
 
 /// The wall's base line as a polyline (what its grips, its stretch and its transforms act on).

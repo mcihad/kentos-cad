@@ -5,14 +5,35 @@
 use kentos_contracts::{
     ArchInfo, ComponentEdge, ComponentHatch, Entity, EntityBase, HatchEntity, HatchPattern,
     HatchPatternType, LineEntity, LineType, PathEntity, Vec2, WallCaps, WallComponent, WallDetail,
-    WallFields, WallJustify,
+    WallFields, WallJoin, WallJoins, WallJustify,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::wall::{
-    self, Component, ComponentFill, Detail, Justify, Spec, View,
+    self, Component, ComponentFill, Detail, JoinMode, Justify, Spec, View,
 };
+
+/// The contract's join in the core's terms.
+pub fn join_mode(j: WallJoin) -> JoinMode {
+    match j {
+        WallJoin::Auto => JoinMode::Auto,
+        WallJoin::None => JoinMode::None,
+        WallJoin::Miter => JoinMode::Miter,
+        WallJoin::Butt => JoinMode::Butt,
+        WallJoin::Through => JoinMode::Through,
+    }
+}
+
+pub fn join_back(m: JoinMode) -> WallJoin {
+    match m {
+        JoinMode::Auto => WallJoin::Auto,
+        JoinMode::None => WallJoin::None,
+        JoinMode::Miter => WallJoin::Miter,
+        JoinMode::Butt => WallJoin::Butt,
+        JoinMode::Through => WallJoin::Through,
+    }
+}
 
 fn justify(j: WallJustify) -> Justify {
     match j {
@@ -64,6 +85,7 @@ fn component(c: &WallComponent) -> Component {
             color: h.color.clone(),
         }),
         detail: detail(c.detail),
+        priority: c.priority,
     }
 }
 
@@ -84,6 +106,7 @@ fn component_back(c: &Component) -> WallComponent {
             color: h.color.clone(),
         }),
         detail: detail_back(c.detail),
+        priority: c.priority,
     }
 }
 
@@ -103,6 +126,8 @@ pub fn spec(w: &WallFields) -> Spec {
             .then(|| serde_json::to_string(&w.arch).ok())
             .flatten()
             .and_then(|t| Json::parse(&t).ok()),
+        joins: [join_mode(w.joins.start), join_mode(w.joins.end)],
+        cleanup: w.cleanup,
     }
 }
 
@@ -152,6 +177,11 @@ pub fn contract_wall(shape: &Shape) -> Option<WallFields> {
         fill: wall.fill.clone(),
         height: wall.height,
         arch,
+        joins: WallJoins {
+            start: join_back(wall.joins[0]),
+            end: join_back(wall.joins[1]),
+        },
+        cleanup: wall.cleanup,
     })
 }
 
@@ -173,6 +203,47 @@ pub fn plain_pieces(base: &EntityBase, w: &WallFields, view: View) -> Option<Vec
         view,
     )
     .ok()?;
+    Some(plain_of(base, pieces))
+}
+
+/// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5): one entry per
+/// entity, none for one that is not a wall or cannot be drawn.
+pub fn plain_joined(entities: &[Entity], view: View) -> Vec<Option<Vec<Entity>>> {
+    use kentos_geometry_core::geom::wall_join::{WallIn, solve};
+    let walls: Vec<(usize, Shape)> = entities
+        .iter()
+        .enumerate()
+        .filter_map(|(i, e)| match e {
+            Entity::Wall(w) => Some((i, core_wall(&w.wall))),
+            _ => None,
+        })
+        .collect();
+    let ins: Vec<WallIn<'_>> = walls
+        .iter()
+        .filter_map(|(_, s)| match s {
+            Shape::Wall { pts, bulges, wall } => Some(WallIn {
+                pts,
+                bulges: bulges.as_deref(),
+                spec: wall,
+            }),
+            _ => None,
+        })
+        .collect();
+    let solved = solve(&ins, None);
+    let mut out = vec![None; entities.len()];
+    for ((i, shape), drawn) in walls.iter().zip(solved.drawn) {
+        let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) =
+            (drawn, shape, &entities[*i])
+        else {
+            continue;
+        };
+        out[*i] = Some(plain_of(&w.base, wall::pieces_of(&d, pts, wall, view)));
+    }
+    out
+}
+
+/// A wall's pieces as the contract's plain objects with its look.
+fn plain_of(base: &EntityBase, pieces: Vec<kentos_geometry_core::block::Piece>) -> Vec<Entity> {
     let mut out = Vec::new();
     for piece in pieces {
         let mut b = base.clone();
@@ -239,7 +310,7 @@ pub fn plain_pieces(base: &EntityBase, w: &WallFields, view: View) -> Option<Vec
             _ => continue,
         });
     }
-    Some(out)
+    out
 }
 
 #[cfg(test)]
@@ -272,6 +343,11 @@ mod tests {
                 status: None,
                 discipline: Some(kentos_contracts::ArchDiscipline::Architecture),
             },
+            joins: WallJoins {
+                start: WallJoin::Butt,
+                end: WallJoin::Auto,
+            },
+            cleanup: false,
         };
         assert_eq!(contract_wall(&core_wall(&w)), Some(w));
     }

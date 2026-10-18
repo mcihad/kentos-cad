@@ -73,5 +73,6 @@ pub mod trim;
 pub mod vertex;
 pub mod vertex_points;
 pub mod vertex_table;
+pub mod wall_edit;
 pub mod warp;
 pub mod widths;

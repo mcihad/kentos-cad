@@ -66,7 +66,7 @@ use crate::{
     labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
     parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
     select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points, wall, wall_from_lines,
+    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -77,6 +77,14 @@ pub const TOOLS: &[&str] = &[
     // Duvar and Çizgiden duvar (docs/adr/0339 §6).
     wall::ID,
     wall_from_lines::ID,
+    // The wall edits by a click (docs/adr/0340 §6).
+    wall_edit_tools::SPLIT_ID,
+    wall_edit_tools::JOIN_ID,
+    wall_edit_tools::EXTEND_ID,
+    wall_edit_tools::TRIM_ID,
+    wall_edit_tools::FLIP_ID,
+    wall_edit_tools::RESTYLE_ID,
+    wall_edit_tools::JOINS_ID,
     line::ID,
     path::POLYLINE_ID,
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
@@ -418,6 +426,13 @@ impl Session {
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
+            wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
+            wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),
+            wall_edit_tools::EXTEND_ID => Box::new(wall_edit_tools::WallEditTool::extend()),
+            wall_edit_tools::TRIM_ID => Box::new(wall_edit_tools::WallEditTool::trim()),
+            wall_edit_tools::FLIP_ID => Box::new(wall_edit_tools::WallEditTool::flip()),
+            wall_edit_tools::RESTYLE_ID => Box::new(wall_edit_tools::WallEditTool::restyle()),
+            wall_edit_tools::JOINS_ID => Box::new(wall_edit_tools::WallEditTool::joins()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),

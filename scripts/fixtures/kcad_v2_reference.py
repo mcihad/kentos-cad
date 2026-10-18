@@ -1465,6 +1465,10 @@ KINDS = {
         "fill": (text, False),
         "height": (f64, False),
         "arch": (opaque, False),
+        # Schema 76 (docs/adr/0340 §1): its joins as their JSON, its cleanup as given (only off makes a wall; a broken
+        # sample writes it on).
+        "joins": (opaque, False),
+        "cleanup": (boolean, False),
     },
     # Schema 7 (docs/adr/0145): an alignment by name, a width factor, `mask` only when true.
     "text": {
@@ -2023,6 +2027,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 76 (docs/adr/0340): a wall's joins or cleanup, a wall component's priority.
+    def ranked(cs):
+        return any("priority" in c for c in cs)
+    if any(e["kind"] == "wall" and ("joins" in e or "cleanup" in e or ranked(e.get("components", []))) for e in entities) \
+            or any(ranked(st["components"]) for st in (settings or {}).get("wallStyles", [])):
+        return 76
     # Schema 75 (docs/adr/0339): a wall, a wall style or the architectural settings.
     if any(e["kind"] == "wall" for e in entities) or "wallStyles" in (settings or {}) or "arch" in (settings or {}):
         return 75
@@ -2519,7 +2529,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-76.kcad"] = container(root(cmap(parts), version=uint(76)))
+    files["schema-version-77.kcad"] = container(root(cmap(parts), version=uint(77)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4088,6 +4098,25 @@ def build():
     out["broken/wall-styles-name-twice.kcad"] = walls_broken(
         lambda d: d["settings"]["wallStyles"].append({**d["settings"]["wallStyles"][0], "id": "kentos-baska"}))
     out["broken/wall-levels-id-twice.kcad"] = walls_broken(lambda d: d["settings"]["arch"]["levels"][1].update(id="zemin"))
+    # The walls' joins (docs/adr/0340 §1): schema 76's; in schema 75 unknown fields; an automatic end, a cleanup on and
+    # a priority outside 1 to 9 refused, nor is a priority written in schema 75.
+    out["wall-joins.kcad"] = container(document(load("wall-joins.json")))
+    joins_payload = document(load("wall-joins.json"))
+    assert joins_payload.count(b"\x67version\x18\x4c") == 1, "the walls' joins are schema 76"
+    out["broken/wall-joins-in-schema-75.kcad"] = container(joins_payload.replace(b"\x67version\x18\x4c", b"\x67version\x18\x4b"))
+
+    def joins_broken(change):
+        d = copy.deepcopy(load("wall-joins.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/wall-joins-auto.kcad"] = joins_broken(lambda d: d["entities"][0]["joins"].update(end="auto"))
+    out["broken/wall-cleanup-true.kcad"] = joins_broken(lambda d: d["entities"][1].update(cleanup=True))
+    out["broken/wall-priority-zero.kcad"] = joins_broken(lambda d: d["entities"][0]["components"][0].update(priority=0))
+    out["broken/wall-priority-ten.kcad"] = joins_broken(lambda d: d["settings"]["wallStyles"][0]["components"][1].update(priority=10))
+    priority_75 = copy.deepcopy(load("walls.json"))
+    priority_75["entities"][0]["components"][1]["priority"] = 1
+    out["broken/wall-priority-in-schema-75.kcad"] = container(document(priority_75).replace(b"\x67version\x18\x4c", b"\x67version\x18\x4b"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))

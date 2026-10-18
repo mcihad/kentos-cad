@@ -98,6 +98,21 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in durumlarında (ADR 0199 §2)",
     ),
     (
+        "cad.walls.edit",
+        "wall_join_overlap",
+        "birleşmeyen duvarların uyarısı her duvar komutunun ortak kuralıdır (walls::join_warnings); cad.walls.create'in durumlarında dördü de, cad.walls.edit'te dar köşe (ADR 0340 §2)",
+    ),
+    (
+        "cad.walls.edit",
+        "wall_join_crowded",
+        "birleşmeyen duvarların uyarısı her duvar komutunun ortak kuralıdır (walls::join_warnings); cad.walls.create'in durumlarında (ADR 0340 §2)",
+    ),
+    (
+        "cad.walls.edit",
+        "wall_join_unresolved",
+        "birleşmeyen duvarların uyarısı her duvar komutunun ortak kuralıdır (walls::join_warnings); cad.walls.create'in durumlarında (ADR 0340 §2)",
+    ),
+    (
         "cad.entities.delete",
         "relation_too_large",
         "on bin alt kayıt gerektirir; ortak durum dosyası için çok büyük, sınır delete.rs'in MOST_FOLLOWED'ıdır ve relation_effects onu sayar (ADR 0440 §1)",

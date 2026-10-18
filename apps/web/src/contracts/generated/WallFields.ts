@@ -3,6 +3,7 @@ import type { ArchInfo } from "./ArchInfo";
 import type { Vec2 } from "./Vec2";
 import type { WallCaps } from "./WallCaps";
 import type { WallComponent } from "./WallComponent";
+import type { WallJoins } from "./WallJoins";
 import type { WallJustify } from "./WallJustify";
 
 /**
@@ -32,4 +33,13 @@ fill?: string,
 /**
  * Its height above its level's floor, metres; absent: the level's height.
  */
-height?: number, arch?: ArchInfo, };
+height?: number, arch?: ArchInfo, 
+/**
+ * How its ends join (docs/adr/0340 §1); absent: both by the rule.
+ */
+joins?: WallJoins, 
+/**
+ * Its components are cleaned up by their priorities where another wall tees into or crosses it; false: the
+ * walls meet at their faces only.
+ */
+cleanup?: boolean, };

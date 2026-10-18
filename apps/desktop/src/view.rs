@@ -1824,6 +1824,7 @@ impl App {
             Asking::FormAudit => self.form_audit_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::WallStyles => self.wall_styles_view(),
+            Asking::WallJoins => self.wall_joins_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),
             Asking::LayerList => self.layer_list_view(),

@@ -184,8 +184,19 @@ fn family(shape: &Shape) -> u8 {
         Shape::Circle { .. } => 3,
         Shape::Arc { .. } => 4,
         Shape::Ellipse { .. } => 5,
+        Shape::Wall { .. } => 7,
         _ => 6,
     }
+}
+
+/// A wall's line `part` (0 its left face, the last its right face, the components' boundaries between; docs/adr/0340
+/// §5): a wall's places are its lines' vertices and edges' middles, ring 0, at its path's vertices.
+fn wall_line(shape: &Shape, part: usize) -> Option<(crate::geom::wall::Line, bool)> {
+    let Shape::Wall { pts, bulges, wall } = shape else {
+        return None;
+    };
+    let lines = crate::geom::wall::lines(pts, bulges.as_deref(), wall).ok()?;
+    lines.into_iter().nth(part).map(|l| (l, wall.closed))
 }
 
 /// Where `place` is on `e`; none when `e` has no such place.
@@ -249,6 +260,17 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
                 if place == Place::Start { *t0 } else { *t1 },
             ))
         }
+        (Shape::Wall { .. }, Place::Vertex { part, ring: 0, index }) => {
+            wall_line(&e.shape, part)?.0.pts.get(index).copied()
+        }
+        (Shape::Wall { .. }, Place::Mid { part, ring: 0, index }) => {
+            let (l, closed) = wall_line(&e.shape, part)?;
+            let n = l.pts.len();
+            if index >= n || (!closed && index + 1 >= n) {
+                return None;
+            }
+            Some(segment_mid(l.pts[index], l.pts[(index + 1) % n], l.bulges[index]))
+        }
         (_, Place::Vertex { part, ring, index }) => {
             ring_of(&e.shape, part, ring)?.pts.get(index).copied()
         }
@@ -280,6 +302,12 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
 fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
     // Only a path's rings and a multi-point's points have a structure; a line's middle has none.
     let path = matches!(before, Shape::Polyline { .. } | Shape::Polygon { .. });
+    // A wall's: as many path vertices, closed alike, as many lines (docs/adr/0340 §5).
+    if let (Shape::Wall { pts: p0, wall: w0, .. }, Shape::Wall { pts: p1, wall: w1, .. }) = (before, after) {
+        return p0.len() == p1.len()
+            && w0.closed == w1.closed
+            && crate::geom::wall::boundaries(w0).len() == crate::geom::wall::boundaries(w1).len();
+    }
     match place {
         Place::Vertex { part, ring, .. }
         | Place::Mid { part, ring, .. }
@@ -313,6 +341,18 @@ fn vertex_places(shape: &Shape) -> Vec<(Place, Vec2)> {
             out.push((Place::Node { part: 0 }, *p));
             for (k, q) in parts.iter().flatten().enumerate() {
                 out.push((Place::Node { part: k + 1 }, q.p));
+            }
+            return out;
+        }
+        Shape::Wall { pts, bulges, wall } => {
+            for (part, l) in crate::geom::wall::lines(pts, bulges.as_deref(), wall)
+                .unwrap_or_default()
+                .into_iter()
+                .enumerate()
+            {
+                for (index, p) in l.pts.into_iter().enumerate() {
+                    out.push((Place::Vertex { part, ring: 0, index }, p));
+                }
             }
             return out;
         }

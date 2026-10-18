@@ -16,7 +16,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, WallCaps, WallJustify, WallStyleDef};
+use crate::{ArchInfo, WallCaps, WallJoin, WallJustify, WallStyleDef};
 
 pub const CAD_WALLS_CREATE: &str = "cad.walls.create";
 pub const CAD_WALLS_CREATE_VERSION: u32 = 1;
@@ -24,6 +24,8 @@ pub const CAD_WALLS_FROM_LINES: &str = "cad.walls.convert";
 pub const CAD_WALLS_FROM_LINES_VERSION: u32 = 1;
 pub const CAD_WALLS_EDIT: &str = "cad.walls.edit";
 pub const CAD_WALLS_EDIT_VERSION: u32 = 1;
+pub const CAD_WALLS_JOINS: &str = "cad.walls.joins";
+pub const CAD_WALLS_JOINS_VERSION: u32 = 1;
 /// The most walls one call writes.
 pub const MAX_WALLS: usize = 10_000;
 /// Fromlines' pairs: the widest wall two lines make, metres, when none is given.
@@ -382,7 +384,18 @@ pub struct WallChange {
     pub discipline: Option<Option<crate::ArchDiscipline>>,
 }
 
-/// What `cad.walls.edit` does to the walls.
+/// A wall's end.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallEnd {
+    Start,
+    End,
+}
+
+/// What `cad.walls.edit` does to the walls (docs/adr/0339 §5, 0340 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -391,15 +404,67 @@ pub struct WallChange {
 pub enum WallsOperation {
     /// Değiştir: the fields given, on every wall named.
     Set(WallChange),
+    /// Böl: each wall named cut in two where its path passes nearest `at` (a point on the wall, within its body);
+    /// a closed wall opened there. The second part is a new wall with the first's fields; the parts join inline.
+    Split {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+    },
+    /// Birleştir: two walls or more whose path ends meet (within 1 mm) and whose fields are the same (a wall the other
+    /// way round reversed with its body in place) made one, the first named keeping its id; their ends meeting at the
+    /// last closes it.
+    Join,
+    /// Uzat: each wall's end (the one given, else the nearer to `to`) run on along its last edge's direction to where
+    /// it meets the path of the wall `to` (its persistent id), so the two join there.
+    Extend {
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        to: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        end: Option<WallEnd>,
+    },
+    /// Buda: each wall cut back where its path crosses the path of the wall `to`: the part `keep` is nearest stays
+    /// (absent: the longer).
+    Trim {
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        to: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        keep: Option<Vec2>,
+    },
+    /// Çevir: each wall's path reversed with its fields as they are: its body mirrored about its path (its layers
+    /// facing the other way), its start's and end's joins swapped.
+    Flip,
+    /// Stili değiştir: the walls of the style `from` (its id or name) given the style `to` (the project's or KentOS's
+    /// own, taken in): the named ones, or with no ids every wall of `from` in the drawing.
+    ReplaceStyle { from: String, to: String },
+    /// Birleşim: the ends' joins (a closed wall has none) and the components' cleanup, the ones given.
+    Joins {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        start: Option<WallJoin>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        end: Option<WallJoin>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        cleanup: Option<bool>,
+    },
+    /// Birleşimleri sıfırla: both ends by the rule, the cleanup on.
+    ResetJoins,
 }
 
 /// Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
 /// or none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:
-/// nothing is written.
+/// nothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);
+/// what then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,
+/// `wall_join_unresolved`, each with its fix).
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
-/// `style_not_found`, `invalid_wall`, `wall_collapses`, `level_not_found`, `invalid_revision`, `revision_conflict`,
-/// `layer_locked`.
+/// `style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,
+/// `split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,
+/// `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -422,11 +487,107 @@ pub struct WallsEdit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct WallsEdited {
-    /// The walls as written, in the input's order.
+    /// The walls as written, in the input's order (Birleştir: the one they became).
     pub walls: Vec<Entity>,
+    /// The new walls (Böl: each second part).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub added: Vec<Entity>,
+    /// The walls gone, by their ids (Birleştir: all but the first).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub removed: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub styles_added: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.walls.joins` v1 (read-only, docs/adr/0340 §2): how the walls named (none: every wall) join the walls
+/// round them, and where walls meet but do not join, each with what resolves it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallsJoins {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+}
+
+/// A joint's kind.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallJointKind {
+    /// Two ends at an angle, mitred or butt.
+    Corner,
+    /// Two ends along one line.
+    Inline,
+    /// An end in another wall.
+    Tee,
+    /// Two paths crossing.
+    Cross,
+}
+
+/// A wall in a joint: by its end, or along it (a tee's host, a cross's walls).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallJointMember {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end: Option<WallEnd>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallJoint {
+    pub kind: WallJointKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    pub walls: Vec<WallJointMember>,
+}
+
+/// Walls that meet and do not join: the code, what is wrong and what resolves it, where, the walls, and the edit that
+/// resolves it (an end's join), to run as it is.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallJoinIssue {
+    pub code: String,
+    pub message: String,
+    pub repair: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    pub uids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fix: Option<WallsEdit>,
+}
+
+/// Output of `cad.walls.joins` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallsJoined {
+    pub joints: Vec<WallJoint>,
+    pub issues: Vec<WallJoinIssue>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

@@ -805,6 +805,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some(problem) = kentos_contracts::wall_styles_problem(&l) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
+                if !has.wall_joins
+                    && l.iter()
+                        .any(|s| s.components.iter().any(|c| c.priority.is_some()))
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "bileşenin önceliği şema 76'dan beri yazılır",
+                    ));
+                }
                 wall_styles = l;
             }
             "arch" if has.walls => {

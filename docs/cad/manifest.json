@@ -169,6 +169,22 @@
    "tests": 0
   },
   {
+   "id": "arch.wallJoinCheck",
+   "kind": "command",
+   "title": "Birleşimleri denetle",
+   "level": "query",
+   "via": [
+    "cad.walls.joins"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Birleşmeyenler cad.walls.joins'ten; Öneriyi uygula cevabın fix'ini cad.walls.edit'e verir (ADR 0340 §2, §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.wallStyles",
    "kind": "command",
    "title": "Duvar stilleri",
@@ -2521,6 +2537,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "edit.selectFilter.wall",
+   "kind": "command",
+   "title": "Seçim süzgecinde Duvar",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "edit.selectFilter.xline",
@@ -10952,6 +10982,38 @@
    "tests": 0
   },
   {
+   "id": "tool.wallExtend",
+   "kind": "command",
+   "title": "Duvarı uzat",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Varılacak duvarın kimliği ve uç extend işlemiyle; uzama komutun hesabıdır (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallFlip",
+   "kind": "command",
+   "title": "Duvarı çevir",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Duvarlar flip işlemiyle (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.wallFromLines",
    "kind": "command",
    "title": "Çizgiden duvar",
@@ -10963,6 +11025,86 @@
    "python": "kentos.cad.walls.convert",
    "mcp": "cad.walls.convert",
    "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallJoin",
+   "kind": "command",
+   "title": "Duvarları birleştir",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Seçilen ya da tıklanan duvarlar join işlemiyle tek duvar (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallJoins",
+   "kind": "command",
+   "title": "Duvar birleşimi",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Tıklanan ucun birleşimi ve duvarın temizliği joins ve resetJoins işlemleriyle; birleşim duvarlardan çizilir (ADR 0340 §4, §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallRestyle",
+   "kind": "command",
+   "title": "Stili değiştir",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Tıklanan duvarın stili ve yeni stil replaceStyle işlemiyle (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallSplit",
+   "kind": "command",
+   "title": "Duvarı böl",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Tıklanan duvar ve nokta split işlemiyle; parçalar komutun hesabıdır (ADR 0340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallTrim",
+   "kind": "command",
+   "title": "Duvarı buda",
+   "level": "semantic",
+   "via": [
+    "cad.walls.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.edit",
+   "mcp": "cad.walls.edit",
+   "note": "Kesen duvarın kimliği ve kalacak parçanın noktası trim işlemiyle (ADR 0340 §4).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

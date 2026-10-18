@@ -204,6 +204,7 @@ pub(super) struct Features {
     nurbs: bool,
     /// Schema 75: the wall and the settings' `wallStyles` and `arch` (docs/adr/0339).
     pub(super) walls: bool,
+    pub(super) wall_joins: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -342,6 +343,7 @@ impl Features {
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
             walls: schema >= crate::SCHEMA_WITH_WALLS,
+            wall_joins: schema >= crate::SCHEMA_WITH_WALL_JOINS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -406,7 +408,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 key,
                 "pts" | "bulges" | "closed" | "width" | "justify" | "offset" | "style" | "components" | "caps" | "fill"
                     | "height" | "arch"
-            ),
+            ) || (has.wall_joins && matches!(key, "joins" | "cleanup")),
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -591,6 +593,8 @@ struct Fields {
     wall_style: Option<String>,
     wall_justify: Option<kentos_contracts::WallJustify>,
     wall_caps: Option<kentos_contracts::WallCaps>,
+    wall_joins: Option<kentos_contracts::WallJoins>,
+    wall_cleanup: Option<bool>,
     wall_fill: Option<String>,
     wall_components: Vec<kentos_contracts::WallComponent>,
     wall_arch: Option<kentos_contracts::ArchInfo>,
@@ -1209,7 +1213,25 @@ pub(super) fn object(
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş bileşen listesi yazılmaz"));
                 }
+                if !has.wall_joins && v.iter().any(|c| c.priority.is_some()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "bileşenin önceliği şema 76'dan beri yazılır"));
+                }
                 f.wall_components = v;
+            }
+            // Schema 76 (docs/adr/0340 §1): a wall's joins and cleanup.
+            "joins" => {
+                let (v, at): (kentos_contracts::WallJoins, usize) = json_part(r, "duvarın birleşimleri")?;
+                if v.is_auto() {
+                    return Err(r.fail_at(Code::BadValue, at, "iki ucu da otomatik birleşim yazılmaz"));
+                }
+                f.wall_joins = Some(v);
+            }
+            "cleanup" => {
+                let at = r.position();
+                if r.bool()? {
+                    return Err(r.fail_at(Code::BadValue, at, "temizlik açıkken yazılmaz; alan yalnız false iken yazılır"));
+                }
+                f.wall_cleanup = Some(false);
             }
             "arch" => {
                 let (v, at): (kentos_contracts::ArchInfo, usize) = json_part(r, "duvarın mimari bilgisi")?;
@@ -1890,6 +1912,8 @@ fn build(
                     fill: f.wall_fill.take(),
                     height: f.height,
                     arch: f.wall_arch.take().unwrap_or_default(),
+                    joins: f.wall_joins.unwrap_or_default(),
+                    cleanup: f.wall_cleanup.unwrap_or(true),
                 },
             };
             if f.offset == Some(0.0) {

@@ -4,10 +4,13 @@ import type { WallsOperation } from "./WallsOperation";
 /**
  * Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
  * or none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:
- * nothing is written.
+ * nothing is written. Their joins with the walls round them follow in the same step (they are drawn from the walls);
+ * what then does not join is said (`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`,
+ * `wall_join_unresolved`, each with its fix).
  *
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
- * `style_not_found`, `invalid_wall`, `wall_collapses`, `level_not_found`, `invalid_revision`, `revision_conflict`,
- * `layer_locked`.
+ * `style_not_found`, `style_not_used`, `invalid_wall`, `wall_collapses`, `level_not_found`, `point_off_wall`,
+ * `split_at_end`, `walls_not_touching`, `walls_differ`, `too_few_objects`, `wall_closed`, `no_crossing`,
+ * `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also `slots_exhausted`.
  */
 export type WallsEdit = { uids: Array<string>, operation: WallsOperation, expectedRevision?: string, };

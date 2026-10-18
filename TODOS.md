@@ -380,6 +380,12 @@ Liste:
   `wall` türü, `cad.settings.set`'in `arch`'ı (`product/`), Duvar ve Çizgiden duvar araçları (`tools/`), Duvar stilleri penceresi,
   Proje ayarları › Mimari, Öznitelikler'in duvar satırları, seçim süzgecinde Duvar (`SelectKind::Wall`), şeridin Mimari sekmesi
   (`catalog/v1/additions.json`'un `tabs`'ı) ve ikonları, ortak iz `wall-tool.json`; bilinen bozulmalar: şema 75 ve `FORMATS_VERSION` 82.
+- [ ] `CAD-ARCH-06`, `07`, `08`, `10`, `11` duvar birleşimleri ve düzenlemeleri (ADR 0340, 18 Ekim): web'de gerekenler: `.kcad` şema 76
+  (`joins`, `cleanup`, bileşenin `priority`'si; `FORMATS_VERSION` 83), çekirdeğin `geom::wall_join`'ı ve `ops::wall_edit`'i WASM'da,
+  deponun birleşimleri (`store/wall_joins.rs`, `wall_issues`), `cad.walls.edit`'in yeni işlemleri ve `cad.walls.joins` (`product/`),
+  Duvar düzenle panelinin yedi aracı ve Birleşimleri denetle penceresi, uyarı üçgenleri, Öznitelikler'in birleşim satırları, Duvar
+  stilleri'nin Öncelik sütunu, Patlat'ın duvarı ve DXF'in birleşmiş duvarları, ortak iz `wall-edit.json`; bilinen bozulmalar: şema 76 ve
+  `FORMATS_VERSION` 83.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

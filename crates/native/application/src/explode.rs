@@ -196,7 +196,37 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let mut changes = Vec::new();
     let mut not: Option<(usize, String)> = None;
     let mut skipped = 0;
-    for (at, _, e, uid) in open {
+    let mut walls_made_plain = 0;
+    for (at, slot, e, uid) in open {
+        // A wall goes as it is drawn, joined with the walls round it (docs/adr/0340 §5).
+        if let Entity::Wall(w) = e {
+            let Some(pieces) = crate::walls::joined_pieces(doc, slot, w) else {
+                skipped += 1;
+                not.get_or_insert((
+                    at,
+                    "Duvar çizilemiyor: bir yayı duvarın genişliğinden dar.".into(),
+                ));
+                continue;
+            };
+            changes.push(EntityEdit::Remove { uid: uid.clone() });
+            for piece in pieces {
+                let Some(geometry) = edit_geometry(piece.shape.clone()) else {
+                    continue;
+                };
+                changes.push(EntityEdit::Add {
+                    from: uid.clone(),
+                    geometry,
+                    keep_data: None,
+                    layer_id: None,
+                    color: piece.color.clone(),
+                    line_weight: piece.line_weight,
+                    attrs: None,
+                    label: None,
+                });
+            }
+            walls_made_plain += 1;
+            continue;
+        }
         let insert = matches!(e, Entity::Insert(_));
         let cut = match (e, blocks) {
             (Entity::Insert(_), Some(blocks)) => blocks.explode(&core_entity(e)),
@@ -232,6 +262,15 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
         )));
     }
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
+    if walls_made_plain > 0 {
+        warnings.push(CommandWarning {
+            code: codes::SEMANTICS_LOST.into(),
+            message: format!(
+                "{walls_made_plain} duvar düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor; komşu duvarlar onlarla birleşmez."
+            ),
+            path: Some("uids".into()),
+        });
+    }
     if let Some((_, message)) = not {
         warnings.push(CommandWarning {
             code: codes::NOT_EXPLODABLE.into(),

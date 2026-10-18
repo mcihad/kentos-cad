@@ -18,4 +18,9 @@ edge?: ComponentEdge, hatch?: ComponentHatch,
 /**
  * The least detail it is drawn at as its own (its lines and hatch); below, it is part of the body.
  */
-detail: WallDetail, };
+detail: WallDetail, 
+/**
+ * Its strength where walls meet (docs/adr/0340 §1), 1 to 9, the smaller the stronger: a joining wall's component
+ * passes the host's weaker ones and stops at the first as strong. Absent: 3 (between a core's 1 and a finish's 5).
+ */
+priority?: number, };

@@ -1533,6 +1533,62 @@
       ],
       "note": "Her stil kind wall'la oluşturulur, güncellenir ya da silinir; izleyen duvarlar aynı adımda (ADR 0339 §2)."
     },
+    "tool.wallJoins": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Tıklanan ucun birleşimi ve duvarın temizliği joins ve resetJoins işlemleriyle; birleşim duvarlardan çizilir (ADR 0340 §4, §6)."
+    },
+    "tool.wallSplit": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Tıklanan duvar ve nokta split işlemiyle; parçalar komutun hesabıdır (ADR 0340 §4)."
+    },
+    "tool.wallJoin": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Seçilen ya da tıklanan duvarlar join işlemiyle tek duvar (ADR 0340 §4)."
+    },
+    "tool.wallExtend": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Varılacak duvarın kimliği ve uç extend işlemiyle; uzama komutun hesabıdır (ADR 0340 §4)."
+    },
+    "tool.wallTrim": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Kesen duvarın kimliği ve kalacak parçanın noktası trim işlemiyle (ADR 0340 §4)."
+    },
+    "tool.wallFlip": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Duvarlar flip işlemiyle (ADR 0340 §4)."
+    },
+    "tool.wallRestyle": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.edit"
+      ],
+      "note": "Tıklanan duvarın stili ve yeni stil replaceStyle işlemiyle (ADR 0340 §4)."
+    },
+    "arch.wallJoinCheck": {
+      "level": "query",
+      "via": [
+        "cad.walls.joins"
+      ],
+      "note": "Birleşmeyenler cad.walls.joins'ten; Öneriyi uygula cevabın fix'ini cad.walls.edit'e verir (ADR 0340 §2, §6)."
+    },
     "arch.settings": {
       "level": "semantic",
       "via": [

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The wall commands' shared cases (docs/adr/0339 §5), from the ADR's rules, without KentOS code.
 
-Writes fixtures/commands/v1/cad.walls.{create,convert,edit}.json; `--check` compares and writes nothing. Whether
+Writes fixtures/commands/v1/cad.walls.{create,convert,edit,joins}.json; `--check` compares and writes nothing. Whether
 a wall's faces can be drawn is the drawing reference's (scripts/fixtures/wall_cases.py: the path offset to each face).
 
 The rules, as ADR 0339 §5 gives them:
@@ -101,9 +101,26 @@ SETUP_ENTITIES = [
     {"kind": "line", **base(20, "cizim"), "a": P(40, 10), "b": P(44, 10)},
     {"kind": "line", **base(21, "cizim"), "a": P(40, 10.2), "b": P(44, 10.2 + 4 * math.tan(math.radians(2.0)))},
     wall(22, "duvar", [P(0, 30), P(4, 30)], 0.2, bulges=[1.0, 0.0]),
+    # ADR 0340 §4: walls to split, join, run on, cut back, turn and join otherwise, far from the others.
+    wall(23, "duvar", [P(100, 0), P(108, 0)], 0.2),
+    wall(24, "duvar", [P(103, 4), P(103, 1)], 0.2),
+    wall(25, "duvar", [P(110, 0), P(114, 0)], 0.2),
+    wall(26, "duvar", [P(114, 0), P(118, 0)], 0.2),
+    wall(27, "duvar", [P(120, 0), P(124, 0)], 0.2, justify="left"),
+    wall(28, "duvar", [P(128, 0), P(124, 0)], 0.2, justify="right"),
+    wall(29, "duvar", [P(130, 0), P(134, 0)], 0.2),
+    wall(30, "duvar", [P(134, 0), P(138, 0)], 0.3),
+    wall(31, "duvar", [P(140, 0), P(144, 0), P(144, 3)], 0.2),
+    wall(32, "duvar", [P(144, 3), P(140, 3), P(140, 0)], 0.2),
+    wall(33, "duvar", [P(150, -2), P(150, 4)], 0.2),
+    wall(34, "duvar", [P(148, 0), P(156, 0)], 0.2),
+    wall(35, "duvar", [P(160, 0), P(164, 0), P(164, 3), P(160, 3)], 0.2, closed=True),
+    wall(36, "duvar", [P(180, 0), P(184, 0)], 0.2),
+    # 14.25° from the first (63, 16, 65): too sharp to mitre by the rule.
+    wall(37, "duvar", [P(184, 0), P(180.0625, 1)], 0.2),
 ]
 IDS = [e["id"] for e in SETUP_ENTITIES]
-FIRST_NEW = 23
+FIRST_NEW = max(IDS) + 1
 
 SETUP = {
     "format": "kentos.document",
@@ -128,7 +145,7 @@ LAYERS = {"duvar": "Duvar", "cizim": "Çizim", "kilitli": "Kilitli katman", "giz
 # ── KentOS's own wall styles (ADR 0339 §2's table), metres ──────────────────────────────────────────────────────
 
 
-def comp(name, thickness, detail, hatch=None):
+def comp(name, thickness, detail, hatch=None, priority=1):
     c = {"name": name, "material": name}
     if thickness is not None:
         c["thickness"] = thickness
@@ -138,17 +155,19 @@ def comp(name, thickness, detail, hatch=None):
         if color:
             c["hatch"]["color"] = color
     c["detail"] = detail
+    # ADR 0340 §1: KentOS's styles' priorities: plaster and boards 5, insulation 3 (2 in a partition), the core 1.
+    c["priority"] = priority
     return c
 
 
 def plaster(t, name):
-    return comp(name, t, "detailed")
+    return comp(name, t, "detailed", priority=5)
 
 
 BUILTIN = [
     {"id": "kentos-dis-duvar-25", "name": "Dış duvar 25",
      "components": [plaster(0.02, "İç sıva"), comp("Tuğla", None, "standard", ("ANSI31", 1.0, None)),
-                    comp("Isı yalıtımı", 0.05, "standard", ("ANSI37", 0.5, None)), plaster(0.03, "Dış sıva")],
+                    comp("Isı yalıtımı", 0.05, "standard", ("ANSI37", 0.5, None), 3), plaster(0.03, "Dış sıva")],
      "fill": "#5A5A5A", "width": 0.25},
     {"id": "kentos-ic-duvar-15", "name": "İç duvar 15",
      "components": [plaster(0.02, "Sıva"), comp("Tuğla", None, "standard", ("ANSI31", 1.0, None)), plaster(0.02, "Sıva")],
@@ -159,7 +178,7 @@ BUILTIN = [
     {"id": "kentos-betonarme-25", "name": "Betonarme perde 25",
      "components": [comp("Betonarme", None, "standard", ("SOLID", 1.0, "#A6A6A6"))], "fill": "#3C3C3C", "width": 0.25},
     {"id": "kentos-bolme-10", "name": "Bölme duvar 10",
-     "components": [plaster(0.0125, "Alçı levha"), comp("Yalıtım", None, "detailed", ("ANSI37", 0.5, None)), plaster(0.0125, "Alçı levha")],
+     "components": [plaster(0.0125, "Alçı levha"), comp("Yalıtım", None, "detailed", ("ANSI37", 0.5, None), 2), plaster(0.0125, "Alçı levha")],
      "width": 0.10},
 ]
 
@@ -474,7 +493,10 @@ def create_step(op, inp, non_finite=None, conflict=False, note=None):
         s["result"] = result
         s["expect"] = dict(BEFORE)
         return s, None
-    warnings = result["warnings"]
+    # What the new walls do not join among the drawing's (ADR 0340 §2).
+    warnings = result["warnings"] + join_warnings(
+        BY_ID, [(None, {k: v for k, v in w.items() if k not in ("kind", "id", "layerId", "attrs", "color", "lineWeight",
+                                                                   "lineType", "label")}) for w in walls])
     if op == "validate":
         s["result"] = {"status": "completed", "output": None, "warnings": warnings}
         s["expect"] = dict(BEFORE)
@@ -525,6 +547,13 @@ def create_cases():
     c.add("iki duvar tek çağrıda, tek adım; renk, kalınlık ve çizgi tipi ikisinin de", [create_step("execute", {
         "layerId": "duvar", "color": "#7F7F7F", "lineWeight": 0.5, "lineType": "dashed",
         "walls": [{"pts": [P(0, 40), P(5, 40)]}, {"pts": [P(5, 40), P(5, 45)], "style": "kentos-ic-duvar-15"}]})[0]])
+    for name, kw in [
+        ("aynı doğrultuda üst üste gelen duvar uyarıyla yazılır, onaran öneriyle", dict(pts=[P(108, 0), P(104, 0)])),
+        ("üç uç bir doğruda değilse uyarıyla yazılır", dict(pts=[P(184, 0), P(184, -3)])),
+        ("çok dar köşe uyarıyla yazılır: Alın önerilir", dict(pts=[P(180, 0), P(183.9375, 1)])),
+        ("birleşimden kısa duvar uyarıyla yazılır", dict(pts=[P(108, 0), P(108, 0.05)])),
+    ]:
+        c.add(name, [create_step("execute", one(**kw))[0]])
     c.add("plan yazmadan duvarı ve alınacak stili gösterir", [create_step("plan", one(pts=[P(0, 40), P(8, 40)], style="Dış duvar 25"))[0]])
     c.add("doğrulama yazmaz", [create_step("validate", one(pts=[P(0, 40), P(8, 40)]))[0]])
     c.add("gizli katmana uyarıyla yazılır", [create_step("execute", {"layerId": "gizli", "walls": [{"pts": [P(0, 40), P(5, 40)]}]})[0]])
@@ -1066,9 +1095,582 @@ def edit_cases():
     return c.cases
 
 
-def document(command, title, note, cases):
+# ── Joins said after an edit (ADR 0340 §2) ──────────────────────────────────────────────────────────────────
+
+import wall_join_cases  # noqa: E402  (the joins' reference: exact fractions, straight walls)
+
+JOIN_TOLERANCE = 1e-3
+
+
+def reach_box(w, grow):
+    r = w["width"] + abs(w.get("offset", 0.0)) + grow
+    xs, ys = [p["x"] for p in w["pts"]], [p["y"] for p in w["pts"]]
+    return (min(xs) - r, min(ys) - r, max(xs) + r, max(ys) + r)
+
+
+def boxes_meet(a, b):
+    return a[0] <= b[2] and b[0] <= a[2] and a[1] <= b[3] and b[1] <= a[3]
+
+
+def join_warnings(entities, changed, gone=()):
+    """What the walls `changed` (their JSON as they will be; the setup's id they replace or None) do not join among the
+    drawing's walls round them (`entities`, by id; `gone` left out): the warnings, each said once."""
+    boxes = [reach_box(w, JOIN_TOLERANCE) for _, w in changed]
+    walls = [w for _, w in changed]
+    for i, e in sorted(entities.items()):
+        if e["kind"] != "wall" or i in gone or any(c == i for c, _ in changed):
+            continue
+        if any(boxes_meet(b, reach_box(e, 0.0)) for b in boxes):
+            walls.append(e)
+    # A wall alone joins nothing (unless its ends meet).
+    if len(walls) == 1 and (walls[0].get("closed") or walls[0]["pts"][0] != walls[0]["pts"][-1]):
+        return []
+    if any(any(x != 0 for x in w.get("bulges", [])) for w in walls):
+        raise ValueError("the joins' reference takes straight walls only")
+    solver = wall_join_cases.Solver([wall_join_cases.from_json(w) for w in walls])
+    solver.solve()
+    out = []
+    for issue in solver.issues:
+        if not any(k < len(changed) for k in issue["walls"]):
+            continue
+        what, repair = wall_join_cases.MESSAGES[issue["code"]]
+        message = f"{what} ({issue['at'][0]:.3f}, {issue['at'][1]:.3f}) {repair}"
+        if any(w["message"] == message for w in out):
+            continue
+        out.append({"code": issue["code"], "message": message})
+    return out
+
+
+# ── cad.walls.edit's path, style and join operations (ADR 0340 §4) ───────────────────────────────────────────
+
+def plen(a, b):
+    return math.hypot(b["x"] - a["x"], b["y"] - a["y"])
+
+
+def edges(w):
+    n = len(w["pts"])
+    return [(w["pts"][i], w["pts"][(i + 1) % n]) for i in range(n if w.get("closed") else n - 1)]
+
+
+def nearest(w, q):
+    """The arc length of the point of the wall's (straight) path nearest `q`, and `q`'s distance to its left."""
+    best, s = None, 0.0
+    for a, b in edges(w):
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        ln2 = dx * dx + dy * dy
+        t = max(0.0, min(1.0, ((q["x"] - a["x"]) * dx + (q["y"] - a["y"]) * dy) / ln2))
+        fx, fy = a["x"] + dx * t, a["y"] + dy * t
+        d = math.hypot(q["x"] - fx, q["y"] - fy)
+        ln = math.sqrt(ln2)
+        if best is None or d < best[0]:
+            across = ((q["x"] - fx) * -dy + (q["y"] - fy) * dx) / ln
+            best = (d, s + t * ln, across)
+        s += ln
+    return best[1], best[2]
+
+
+def point_on(w, s):
+    for a, b in edges(w):
+        ln = plen(a, b)
+        if s <= ln + 1e-12:
+            t = min(1.0, s / ln)
+            return P(a["x"] + (b["x"] - a["x"]) * t, a["y"] + (b["y"] - a["y"]) * t)
+        s -= ln
+    return copy.deepcopy(w["pts"][0] if w.get("closed") else w["pts"][-1])
+
+
+def stretch(w, s0, s1):
+    """The path's points from s0 to s1 (past its length round a closed one)."""
+    total = sum(plen(a, b) for a, b in edges(w))
+    out, cum = [point_on(w, s0 % total if w.get("closed") else s0)], 0.0
+    for r in range(2 if w.get("closed") else 1):
+        for a, b in edges(w):
+            cum += plen(a, b)
+            if s0 + 1e-12 < cum < s1 - 1e-12:
+                out.append(copy.deepcopy(b))
+    out.append(point_on(w, s1 - total if w.get("closed") and s1 > total else s1))
+    return out
+
+
+def body_of(e):
+    return {k: v for k, v in e.items() if k not in ("kind", "id", "layerId", "attrs")}
+
+
+def as_entity(i, layer_id, w, attrs=None):
+    return {"kind": "wall", "id": i, "layerId": layer_id, "attrs": attrs or {}, **w}
+
+
+def joins_of(w):
+    j = w.get("joins", {})
+    return j.get("start", "auto"), j.get("end", "auto")
+
+
+def set_joins(w, start, end):
+    j = {k: m for k, m in (("start", start), ("end", end)) if m != "auto"}
+    if j:
+        w["joins"] = j
+    else:
+        w.pop("joins", None)
+
+
+def reversed_path(w):
+    out = copy.deepcopy(w)
+    out["pts"] = list(reversed(w["pts"]))
+    a, b = joins_of(w)
+    set_joins(out, b, a)
+    return out
+
+
+def turned(w):
+    """The wall the other way round with its body in place."""
+    out = reversed_path(w)
+    out["justify"] = {"left": "right", "center": "center", "right": "left"}[w["justify"]]
+    if w.get("offset"):
+        out["offset"] = -w["offset"]
+    if "components" in w:
+        out["components"] = list(reversed(w["components"]))
+    return out
+
+
+def same_kind(a, b):
+    def strip(w):
+        x = {k: v for k, v in w.items() if k not in ("pts", "bulges", "closed", "joins")}
+        if x.get("offset") in (0, 0.0):
+            x.pop("offset", None)
+        return x
+    return strip(a) == strip(b)
+
+
+def near(a, b):
+    return math.hypot(a["x"] - b["x"], a["y"] - b["y"]) <= JOIN_TOLERANCE
+
+
+def dist_to(w, q):
+    """How far `q` lies from the wall's (straight) path."""
+    best = None
+    for a, b in edges(w):
+        dx, dy = b["x"] - a["x"], b["y"] - a["y"]
+        t = max(0.0, min(1.0, ((q["x"] - a["x"]) * dx + (q["y"] - a["y"]) * dy) / (dx * dx + dy * dy)))
+        d = math.hypot(q["x"] - (a["x"] + dx * t), q["y"] - (a["y"] + dy * t))
+        best = d if best is None else min(best, d)
+    return best
+
+
+def wall_named(uid, path):
+    if not uid.startswith("$uidOf:"):
+        if len(uid) != 36 or any(ch not in UID_TEXT for ch in uid):
+            return refusal("invalid_uid", f"“{uid}” bir kalıcı kimlik (UUID) değil.", path)
+        return refusal("entity_not_found", f"Çizimde “{uid}” kimlikli nesne yok.", path)
+    i = int(uid[len("$uidOf:"):])
+    if BY_ID[i]["kind"] != "wall":
+        return refusal("not_a_wall", "Nesne duvar değil; duvarlar yalnız duvarlara uzatılır ve budanır.", path)
+    return i
+
+
+def ray_hit(o, d, w):
+    """How far along d from o the first edge of the wall's path lies ahead; None when none is."""
+    best = None
+    for a, b in edges(w):
+        ex, ey = b["x"] - a["x"], b["y"] - a["y"]
+        den = d[0] * ey - d[1] * ex
+        if den == 0:
+            continue
+        t = ((a["x"] - o["x"]) * ey - (a["y"] - o["y"]) * ex) / den
+        u = ((a["x"] - o["x"]) * d[1] - (a["y"] - o["y"]) * d[0]) / den
+        if t > 1e-12 and -1e-9 <= u <= 1 + 1e-9 and (best is None or t < best):
+            best = t
+    return best
+
+
+def crossings(w, other):
+    out, s = [], 0.0
+    total = sum(plen(a, b) for a, b in edges(w))
+    for a, b in edges(w):
+        for c, d in edges(other):
+            r = (b["x"] - a["x"], b["y"] - a["y"])
+            q = (d["x"] - c["x"], d["y"] - c["y"])
+            den = r[0] * q[1] - r[1] * q[0]
+            if den == 0:
+                continue
+            t = ((c["x"] - a["x"]) * q[1] - (c["y"] - a["y"]) * q[0]) / den
+            u = ((c["x"] - a["x"]) * r[1] - (c["y"] - a["y"]) * r[0]) / den
+            if 0 <= t <= 1 and 0 <= u <= 1:
+                out.append(s + t * plen(a, b))
+        s += plen(a, b)
+    eps = 1e-9 * max(1.0, total)
+    return sorted({x for x in out if eps < x < total - eps}), total
+
+
+def style_matches(settings, w, key):
+    if "style" not in w:
+        return False
+    if w["style"] == key:
+        return True
+    st, _ = find_style(settings["wallStyles"], key)
+    return st is not None and st["id"] == w["style"]
+
+
+def path_edit(settings, inp, conflict=False):
+    """(result, updates [(id, entity)], added [entity], removed [id], styles taken) of the path, style and join
+    operations; the refusal alone when refused."""
+    op = inp["operation"]
+    kind = op["kind"]
+    if kind == "replaceStyle" and not inp["uids"]:
+        uids = [uid_of(i) for i in IDS if BY_ID[i]["kind"] == "wall" and style_matches(settings, BY_ID[i], op["from"])]
+        found = [(at, int(u[len("$uidOf:"):])) for at, u in enumerate(uids)]
+    else:
+        found = named(inp, "Düzenlenecek duvar verilmedi.")
+        if is_refusal(found):
+            return found, None
+    for at, i in found:
+        if BY_ID[i]["kind"] != "wall":
+            return refusal("not_a_wall", "Nesne duvar değil; Duvarı düzenle yalnız duvarları değiştirir.", f"uids[{at}]"), None
+    updates, added, removed, styles = [], [], [], []
+    walls = [(at, i, body_of(BY_ID[i])) for at, i in found]
+    if kind == "split":
+        q = op["at"]
+        for at, i, w in walls:
+            s, across = nearest(w, q)
+            total = sum(plen(a, b) for a, b in edges(w))
+            if not w.get("closed") and (s <= 1e-9 * max(1.0, total) or s >= total - 1e-9 * max(1.0, total)):
+                return refusal("split_at_end", "Duvar ucundan bölünmez: bölme noktası duvarın iki ucunun arasında olmalı.", "operation.at"), None
+            lf = w.get("offset", 0.0) + {"left": 0.0, "center": w["width"] / 2, "right": w["width"]}[w["justify"]]
+            if across > lf + JOIN_TOLERANCE or across < lf - w["width"] - JOIN_TOLERANCE:
+                return refusal("point_off_wall", f"Nokta duvarın üzerinde değil: duvarın yolundan {abs(across):.3f} m uzakta, iki yüzünün arasında olmalı.", "operation.at"), None
+            if w.get("closed"):
+                first = dict(w, pts=stretch(w, s, s + total))
+                first.pop("closed", None)
+                first.pop("joins", None)
+                updates.append((i, first))
+                continue
+            a, b = dict(w, pts=stretch(w, 0.0, s)), dict(w, pts=stretch(w, s, total))
+            sa, ea = joins_of(w)
+            set_joins(a, sa, "auto")
+            set_joins(b, "auto", ea)
+            updates.append((i, a))
+            added.append(b)
+    elif kind == "join":
+        if len(walls) < 2:
+            return refusal("too_few_objects", "Birleştirmek için uç uca iki ya da daha çok duvar verin.", "uids"), None
+        chain = walls[0][2]
+        if chain.get("closed"):
+            return refusal("wall_closed", "Kapalı duvar başka duvarla birleştirilmez.", "uids[0]"), None
+        left = walls[1:]
+        while left:
+            start, end = chain["pts"][0], chain["pts"][-1]
+            took = None
+            for k, (at, i, w) in enumerate(left):
+                if w.get("closed"):
+                    return refusal("wall_closed", "Kapalı duvar başka duvarla birleştirilmez.", f"uids[{at}]"), None
+                ws, we = w["pts"][0], w["pts"][-1]
+                nxt = (False, w) if near(ws, end) else (False, turned(w)) if near(we, end) else \
+                    (True, w) if near(we, start) else (True, turned(w)) if near(ws, start) else None
+                if nxt:
+                    if not same_kind(chain, nxt[1]):
+                        return refusal("walls_differ", "Duvarların genişliği, hizası, ötelemesi, stili, bileşenleri ya da diğer alanları farklı; tek duvar olmaz. Önce Stili değiştir ya da Değiştir ile eşitleyin.", f"uids[{at}]"), None
+                    took = (k, nxt[0], nxt[1])
+                    break
+            if took is None:
+                return refusal("walls_not_touching", "Duvarların uçları buluşmuyor: birleştirilecek duvarlar uç uca olmalı (1 mm içinde).", f"uids[{left[0][0]}]"), None
+            k, before, w = took
+            x, y = (w, chain) if before else (chain, w)
+            merged = dict(x, pts=x["pts"] + y["pts"][1:])
+            set_joins(merged, joins_of(x)[0], joins_of(y)[1])
+            chain = merged
+            left.pop(k)
+        if len(chain["pts"]) > 2 and near(chain["pts"][0], chain["pts"][-1]):
+            chain = dict(chain, pts=chain["pts"][:-1], closed=True)
+            chain.pop("joins", None)
+        updates.append((walls[0][1], chain))
+        removed = [i for _, i, _ in walls[1:]]
+    elif kind in ("extend", "trim"):
+        t = wall_named(op["to"], "operation.to")
+        if is_refusal(t):
+            return t, None
+        target = body_of(BY_ID[t])
+        for at, i, w in walls:
+            if i == t:
+                continue
+            if w.get("closed"):
+                word = "uzatılmaz" if kind == "extend" else "budanmaz"
+                return refusal("wall_closed", f"Kapalı duvarın ucu yok; {word}.", f"uids[{at}]"), None
+            if kind == "extend":
+                if op.get("end"):
+                    at_end = op["end"] == "end"
+                else:
+                    at_end = dist_to(target, w["pts"][-1]) <= dist_to(target, w["pts"][0])
+                pts = w["pts"] if at_end else list(reversed(w["pts"]))
+                a, b = pts[-2], pts[-1]
+                ln = plen(a, b)
+                dvec = ((b["x"] - a["x"]) / ln, (b["y"] - a["y"]) / ln)
+                hit = ray_hit(b, dvec, target)
+                if hit is None:
+                    return refusal("wall_misses", "Duvar uzatınca diğer duvarın yoluna varmıyor: ucu ona doğru bakmalı.", f"uids[{at}]"), None
+                pts = pts[:-1] + [P(b["x"] + dvec[0] * hit, b["y"] + dvec[1] * hit)]
+                updates.append((i, dict(w, pts=pts if at_end else list(reversed(pts)))))
+            else:
+                cuts, total = crossings(w, target)
+                if not cuts:
+                    return refusal("wall_misses", "Duvarın yolu diğer duvarın yolunu kesmiyor; budanacak yer yok.", f"uids[{at}]"), None
+                bounds = [0.0] + cuts + [total]
+                parts = list(zip(bounds, bounds[1:]))
+                if op.get("keep"):
+                    sk, _ = nearest(w, op["keep"])
+                    pick = next((p for p in parts if p[0] <= sk <= p[1]), parts[0])
+                else:
+                    pick = max(parts, key=lambda p: p[1] - p[0])
+                updates.append((i, dict(w, pts=stretch(w, pick[0], pick[1]))))
+    elif kind == "flip":
+        for at, i, w in walls:
+            updates.append((i, reversed_path(w)))
+    elif kind == "replaceStyle":
+        style, builtin = find_style(settings["wallStyles"], op["to"])
+        if style is None:
+            return no_style(settings["wallStyles"], op["to"], "operation.to"), None
+        of_style = [(at, i, w) for at, i, w in walls if style_matches(settings, w, op["from"])]
+        if not of_style:
+            return refusal("style_not_used", f"Verilen duvarların hiçbiri “{op['from']}” stilinde değil.", "operation.from"), None
+        if builtin:
+            styles.append(style)
+        for at, i, w in of_style:
+            nw = changed(settings, w, {"style": op["to"]}, style, f"uids[{at}]")
+            if is_refusal(nw):
+                return nw, None
+            updates.append((i, nw))
+    elif kind == "joins":
+        if all(op.get(k) is None for k in ("start", "end", "cleanup")):
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: başlangıcın ya da sonun birleşimini, ya da temizliği verin.", "operation"), None
+        for at, i, w in walls:
+            if w.get("closed") and (op.get("start") or op.get("end")):
+                return refusal("wall_closed", "Kapalı duvarın ucu yok; uç birleşimi verilmez, yalnız temizlik.", f"uids[{at}]"), None
+            nw = copy.deepcopy(w)
+            s0, e0 = joins_of(w)
+            set_joins(nw, op.get("start") or s0, op.get("end") or e0)
+            if op.get("cleanup") is not None:
+                if op["cleanup"]:
+                    nw.pop("cleanup", None)
+                else:
+                    nw["cleanup"] = False
+            updates.append((i, nw))
+    elif kind == "resetJoins":
+        for at, i, w in walls:
+            nw = copy.deepcopy(w)
+            nw.pop("joins", None)
+            nw.pop("cleanup", None)
+            updates.append((i, nw))
+    r = revision(inp, conflict)
+    if r:
+        return r, None
+    for at, i in found:
+        if BY_ID[i]["layerId"] == "kilitli":
+            return refusal("layer_locked", "“Kilitli katman” katmanı kilitli; üzerindeki duvar düzenlenemez. Kilidi Katmanlar panelinden açın.", f"uids[{at}]"), None
+    return None, (updates, added, removed, styles)
+
+
+def path_step(op_name, inp, conflict=False):
+    refused, work = path_edit(SETUP["settings"], inp, conflict)
+    s = {"op": op_name, "input": inp}
+    if refused:
+        s["result"] = refused
+        s["expect"] = dict(BEFORE)
+        return [s]
+    updates, added, removed, styles = work
+    upd = [(i, as_entity(i, BY_ID[i]["layerId"], w, BY_ID[i]["attrs"])) for i, w in updates]
+    new_ids = list(range(FIRST_NEW, FIRST_NEW + len(added)))
+    # A plan's new wall has no slot yet: its id is 0.
+    adds = [as_entity(n if op_name == "execute" else 0, BY_ID[updates[k][0]]["layerId"], w)
+            for k, (n, w) in enumerate(zip(new_ids, added))]
+    entities = {i: e for i, e in BY_ID.items()}
+    for i, e in upd:
+        entities[i] = e
+    warnings = [dict(w) for w in join_warnings(entities, [(i, body_of(e)) for i, e in upd] + [(None, body_of(e)) for e in adds], removed)]
+    out = {"walls": [e for _, e in upd]}
+    if op_name != "validate":
+        if added:
+            out["added"] = adds
+        if removed:
+            out["removed"] = [captured(i) for i in removed]
+    if styles:
+        out["stylesAdded"] = [st["id"] for st in styles]
+    out["revision"] = "$current"
+    steps = [{"op": "captureUid", "id": i, "as": f"o{i}"} for i in removed]
+    if op_name == "validate":
+        s["result"] = {"status": "completed", "output": None, "warnings": []}
+        s["expect"] = dict(BEFORE)
+        return steps + [s]
+    s["result"] = {"status": "completed", "output": out, "warnings": warnings}
+    if op_name == "plan":
+        s["expect"] = dict(BEFORE)
+        return steps + [s]
+    ids = [i for i in IDS if i not in removed] + new_ids
+    s["expect"] = {"ids": ids, "entities": {str(i): e for i, e in upd} | {str(e["id"]): e for e in adds}, "canUndo": True,
+                   "dirty": True, "revision": "changed", "settings": settings_after(styles)}
+    return steps + [s]
+
+
+def path_cases():
+    c = []
+    u = uid_of
+
+    def add(name, steps):
+        assert len(name) > 10
+        c.append({"name": name, "steps": steps})
+
+    for name, inp in [
+        ("Böl: duvar yolunun noktaya en yakın yerinde ikiye; ikinci parça yeni duvar, uçlar düz devam eder",
+         {"uids": [u(23)], "operation": {"kind": "split", "at": P(102, 0.05)}}),
+        ("Böl: kapalı duvar noktada açılır, uçları orada buluşur",
+         {"uids": [u(35)], "operation": {"kind": "split", "at": P(162, 0)}}),
+        ("Birleştir: uç uca iki duvar tek duvar olur, ortadaki köşe kalır, ilkinin kimliğiyle",
+         {"uids": [u(25), u(26)], "operation": {"kind": "join"}}),
+        ("Birleştir: ters yöndeki sağa hizalı duvar gövdesi yerinde çevrilip sola hizalıya katılır",
+         {"uids": [u(27), u(28)], "operation": {"kind": "join"}}),
+        ("Birleştir: uçları buluşan iki duvar kapalı duvar olur",
+         {"uids": [u(31), u(32)], "operation": {"kind": "join"}}),
+        ("Uzat: bölme duvarının ucu diğer duvarın yoluna dek uzar, T birleşir",
+         {"uids": [u(24)], "operation": {"kind": "extend", "to": u(23)}}),
+        ("Buda: duvar diğerini kestiği yerde kısalır, keep noktası yanındaki parça kalır",
+         {"uids": [u(34)], "operation": {"kind": "trim", "to": u(33), "keep": P(153, 0)}}),
+        ("Buda: keep verilmezse uzun parça kalır",
+         {"uids": [u(34)], "operation": {"kind": "trim", "to": u(33)}}),
+        ("Buda: keep diğer yanda: kısa parça kalır",
+         {"uids": [u(34)], "operation": {"kind": "trim", "to": u(33), "keep": P(149, 0)}}),
+        ("Çevir: yol ters döner, uçların birleşimi yer değiştirir",
+         {"uids": [u(24)], "operation": {"kind": "flip"}}),
+        ("Stili değiştir: kimlik verilmezse stilin bütün duvarları, KentOS'un stili projeye eklenir",
+         {"uids": [], "operation": {"kind": "replaceStyle", "from": "Perde 20", "to": "İç duvar 15"}}),
+        ("Birleşim: başlangıç Yok, temizlik kapalı",
+         {"uids": [u(23)], "operation": {"kind": "joins", "start": "none", "cleanup": False}}),
+        ("Birleşim: dar köşede Alın verilince köşe birleşir, uyarı kalkar",
+         {"uids": [u(36)], "operation": {"kind": "joins", "end": "butt"}}),
+        ("Birleşim: dar köşede Gönye zorlanınca birleşir",
+         {"uids": [u(36)], "operation": {"kind": "joins", "end": "miter"}}),
+        ("Birleşim: kapalı duvarda yalnız temizlik değişir",
+         {"uids": [u(35)], "operation": {"kind": "joins", "cleanup": False}}),
+        ("Değiştir: dar köşedeki duvar kalınlaşır, köşenin birleşmediği uyarıyla söylenir",
+         {"uids": [u(37)], "operation": {"kind": "set", "width": 0.25}}),
+    ]:
+        if inp["operation"]["kind"] == "set":
+            st = edit_step("execute", inp)
+            st["result"]["warnings"] = join_warnings({**BY_ID, 37: {**BY_ID[37], "width": 0.25}}, [(37, {**body_of(BY_ID[37]), "width": 0.25})])
+            add(name, [st])
+            continue
+        add(name, path_step("execute", inp))
+    first = path_step("execute", {"uids": [u(23)], "operation": {"kind": "joins", "start": "none", "cleanup": False}})
+    reset = path_step("execute", {"uids": [u(23)], "operation": {"kind": "resetJoins"}})
+    add("Birleşimleri sıfırla: iki uç kurala, temizlik açık; duvar ilk hâline döner", first + reset)
+    add("plan yazmadan bölünen duvarı ve yeni parçayı gösterir", path_step("plan", {"uids": [u(23)], "operation": {"kind": "split", "at": P(102, 0)}}))
+    add("doğrulama yazmaz", path_step("validate", {"uids": [u(25), u(26)], "operation": {"kind": "join"}}))
+    for name, inp in [
+        ("Böl: duvarın dışındaki nokta reddedilir", {"uids": [u(23)], "operation": {"kind": "split", "at": P(102, 0.5)}}),
+        ("Böl: uçtan bölünmez", {"uids": [u(23)], "operation": {"kind": "split", "at": P(100, 0)}}),
+        ("Birleştir: tek duvar birleştirilmez", {"uids": [u(25)], "operation": {"kind": "join"}}),
+        ("Birleştir: uçları buluşmayan duvarlar reddedilir", {"uids": [u(25), u(27)], "operation": {"kind": "join"}}),
+        ("Birleştir: genişliği farklı duvarlar reddedilir", {"uids": [u(29), u(30)], "operation": {"kind": "join"}}),
+        ("Birleştir: kapalı duvar birleştirilmez", {"uids": [u(35), u(25)], "operation": {"kind": "join"}}),
+        ("Uzat: diğer duvara varmayan uç reddedilir", {"uids": [u(24)], "operation": {"kind": "extend", "to": u(25)}}),
+        ("Uzat: kapalı duvarın ucu yok", {"uids": [u(35)], "operation": {"kind": "extend", "to": u(23)}}),
+        ("Uzat: hedef duvar değilse ret", {"uids": [u(24)], "operation": {"kind": "extend", "to": u(1)}}),
+        ("Buda: kesişmeyen duvar reddedilir", {"uids": [u(34)], "operation": {"kind": "trim", "to": u(23)}}),
+        ("Stili değiştir: verilen duvarlar o stilde değilse ret", {"uids": [u(12)], "operation": {"kind": "replaceStyle", "from": "Gazbeton 20", "to": "İç duvar 15"}}),
+        ("Stili değiştir: olmayan stil reddedilir", {"uids": [u(13)], "operation": {"kind": "replaceStyle", "from": "Perde 20", "to": "Ahşap 12"}}),
+        ("Birleşim: hiçbir alan verilmezse ret", {"uids": [u(23)], "operation": {"kind": "joins"}}),
+        ("Birleşim: kapalı duvara uç birleşimi verilmez", {"uids": [u(35)], "operation": {"kind": "joins", "start": "butt"}}),
+        ("Çevir: kilitli katmandaki duvar bütün düzenlemeyi reddeder", {"uids": [u(24), u(14)], "operation": {"kind": "flip"}}),
+    ]:
+        add(name, path_step("execute", inp))
+    return c
+
+
+# ── cad.walls.joins ─────────────────────────────────────────────────────────────────────────────────────────────
+
+JOINS_SCENARIOS = [k for k in range(len(wall_join_cases.cases()))]
+
+
+def joins_setup():
+    """Every scenario of the joins' reference, 100 m apart along y, its walls numbered from 1 in order."""
+    ents, groups, n = [], [], 1
+    for k, case in enumerate(wall_join_cases.cases()):
+        ids = []
+        for w in case["walls"]:
+            body = copy.deepcopy(w)
+            body["pts"] = [P(x, y + 100 * k) for x, y in body["pts"]]
+            for c, comp_ in enumerate(body.get("components", [])):
+                comp_["name"] = f"Katman {c + 1}"
+            ents.append(wall(n, "duvar", body.pop("pts"), body.pop("width"), body.pop("justify"), **body))
+            ids.append(n)
+            n += 1
+        groups.append((case["name"], ids))
+    # And a line, which is no wall.
+    ents.append({"kind": "line", **base(n, "cizim"), "a": P(0, -50), "b": P(5, -50)})
+    setup = copy.deepcopy(SETUP)
+    setup["entities"] = ents
+    setup["name"] = "Duvar birleşimleri"
+    return setup, groups
+
+
+def joins_answer(setup, ids):
+    """The joints and issues of the walls `ids` among their own scenario's walls."""
+    by = {e["id"]: e for e in setup["entities"]}
+    changed = [(i, body_of(by[i])) for i in ids]
+    boxes = [reach_box(w, JOIN_TOLERANCE) for _, w in changed]
+    order = list(ids) + [i for i in sorted(by) if i not in ids and by[i]["kind"] == "wall"
+                         and any(boxes_meet(b, reach_box(by[i], 0.0)) for b in boxes)]
+    solver = wall_join_cases.Solver([wall_join_cases.from_json(body_of(by[i])) for i in order])
+    solver.solve()
+    joints, issues = [], []
+    # The solver lists joints without their walls: rebuild them from its own records, as the core lists them.
+    for j in solver.member_joints:
+        if not any(m[0] < len(ids) for m in j["members"]):
+            continue
+        joints.append({"kind": j["kind"], "at": P(*j["at"]),
+                       "walls": [dict({"uid": uid_of(order[m[0]])}, **({"end": m[1]} if m[1] else {})) for m in j["members"]]})
+    for i in solver.issues:
+        if not any(k < len(ids) for k in i["walls"]):
+            continue
+        what, repair = wall_join_cases.MESSAGES[i["code"]]
+        f = i["fix"]
+        fix = {"uids": [uid_of(order[f["wall"]])], "operation": {"kind": "joins", f["end"]: f["mode"]}}
+        issues.append({"code": i["code"], "message": what, "repair": repair, "at": P(*i["at"]),
+                       "uids": [uid_of(order[k]) for k in i["walls"]], "fix": fix})
+    # In order along x, then y, then the kind's name.
+    joints.sort(key=lambda j: (j["at"]["x"], j["at"]["y"], j["kind"]))
+    issues.sort(key=lambda i: (i["at"]["x"], i["at"]["y"], i["code"]))
+    return {"joints": joints, "issues": issues, "revision": "$current"}
+
+
+def joins_cases():
+    setup, groups = joins_setup()
+    before = {"ids": [e["id"] for e in setup["entities"]], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+    c = []
+    for name, ids in groups:
+        inp = {"uids": [uid_of(i) for i in ids]}
+        c.append({"name": f"{name}: birleşimleri ve birleşmeyenleri",
+                  "steps": [{"op": "execute", "input": inp,
+                             "result": {"status": "completed", "output": joins_answer(setup, ids), "warnings": []},
+                             "within": 1e-9, "expect": dict(before)}]})
+    first = groups[0][1]
+    c.append({"name": "plan aynı cevabı verir, çizim değişmez",
+              "steps": [{"op": "plan", "input": {"uids": [uid_of(i) for i in first]},
+                         "result": {"status": "completed", "output": joins_answer(setup, first), "warnings": []},
+                         "within": 1e-9, "expect": dict(before)}]})
+    for name, inp in [
+        ("geçersiz kimlik reddedilir", {"uids": ["D-1"]}),
+        ("çizimde olmayan kimlik reddedilir", {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]}),
+    ]:
+        r = named(inp, "Birleşimleri sorulacak duvar verilmedi.")
+        c.append({"name": name, "steps": [{"op": "execute", "input": inp, "result": r, "expect": dict(before)}]})
+    line = setup["entities"][-1]["id"]
+    c.append({"name": "duvar olmayan nesne reddedilir", "steps": [{
+        "op": "execute", "input": {"uids": [uid_of(line)]},
+        "result": refusal("not_a_wall", "Nesne duvar değil; birleşimler yalnız duvarlarda sorulur.", "uids[0]"),
+        "expect": dict(before)}]})
+    return setup, c
+
+
+def document(command, title, note, cases, setup=None):
     return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title, "note": note,
-            "setup": SETUP, "cases": cases}
+            "setup": setup or SETUP, "cases": cases}
 
 
 def files():
@@ -1077,19 +1679,26 @@ def files():
             "cad.walls.create",
             "Duvar oluştur: yol, genişlik, hiza, öteleme, stil, uçlar ve mimari bilgi; doğrulama, plan, yazma, geri alma, retler",
             "ADR 0339 §5. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; "
-            "yüzlerin çizilebilirliği scripts/fixtures/wall_cases.py'nin ötelemesinden. Kurulumdaki çizimde 22 nesne var; yeni nesne 23'ten başlar.",
+            "yüzlerin çizilebilirliği scripts/fixtures/wall_cases.py'nin ötelemesinden. Kurulumdaki çizimde 37 nesne var; yeni nesne 38'den başlar.",
             create_cases()),
         "cad.walls.convert.json": document(
             "cad.walls.convert",
             "Çizgiden duvar: tek tek ve çiftler; kaynakların silinmesi ve korunması, bırakılanlar, retler",
             "ADR 0339 §5. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından (eşlemenin sırası, örtüşme, "
-            "duvarın yeri), KentOS kodu olmadan. Kurulumdaki çizimde 22 nesne var; yeni nesne 23'ten başlar.",
+            "duvarın yeri), KentOS kodu olmadan. Kurulumdaki çizimde 37 nesne var; yeni nesne 38'den başlar.",
             from_cases()),
         "cad.walls.edit.json": document(
             "cad.walls.edit",
             "Duvarı düzenle: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik ve mimari bilgi; hepsi ya da hiçbiri",
-            "ADR 0339 §5. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
-            edit_cases()),
+            "ADR 0339 §5, 0340 §4. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu "
+            "olmadan; birleşmeyen duvarların uyarıları scripts/fixtures/wall_join_cases.py'nin kesirli çözücüsünden.",
+            edit_cases() + path_cases()),
+        "cad.walls.joins.json": document(
+            "cad.walls.joins",
+            "Duvar birleşimleri: köşe, alın, düz devam, T, öncelikli geçiş, kesişme; birleşmeyenler onaran önerileriyle; retler",
+            "ADR 0340 §2. Kurulum scripts/fixtures/wall_join_cases.py'nin durumlarının duvarları, her durum 100 m kuzeyde; beklenenler "
+            "onun kesirli çözücüsünden, KentOS kodu olmadan.",
+            *reversed(joins_cases())),
     }
 
 

@@ -1686,6 +1686,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 76 (docs/adr/0340): a wall's joins or cleanup, a component's priority.
+    let ranked = |cs: &[kentos_contracts::WallComponent]| cs.iter().any(|c| c.priority.is_some());
+    if doc.entities.iter().any(|e| {
+        matches!(e, Entity::Wall(w) if !w.wall.joins.is_auto() || !w.wall.cleanup || ranked(&w.wall.components))
+    }) || doc.settings.wall_styles.iter().any(|s| ranked(&s.components))
+    {
+        return crate::SCHEMA_WITH_WALL_JOINS;
+    }
     // Schema 75 (docs/adr/0339): a wall, a wall style or the architectural settings.
     if doc.entities.iter().any(|e| matches!(e, Entity::Wall(_)))
         || !doc.settings.wall_styles.is_empty()

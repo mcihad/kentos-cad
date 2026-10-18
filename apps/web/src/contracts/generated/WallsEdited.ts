@@ -6,6 +6,14 @@ import type { Entity } from "./Entity";
  */
 export type WallsEdited = { 
 /**
- * The walls as written, in the input's order.
+ * The walls as written, in the input's order (Birleştir: the one they became).
  */
-walls: Array<Entity>, stylesAdded?: Array<string>, revision: string, };
+walls: Array<Entity>, 
+/**
+ * The new walls (Böl: each second part).
+ */
+added?: Array<Entity>, 
+/**
+ * The walls gone, by their ids (Birleştir: all but the first).
+ */
+removed?: Array<string>, stylesAdded?: Array<string>, revision: string, };

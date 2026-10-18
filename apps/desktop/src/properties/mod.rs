@@ -96,6 +96,8 @@ pub enum Event {
     EmbedRaster(Slot),
     /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Evre): written through `cad.walls.edit` (docs/adr/0339 §6).
     Wall(Slot, kentos_contracts::WallChange),
+    /// A wall's joins (docs/adr/0340 §6).
+    WallOp(Slot, kentos_contracts::WallsOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -659,6 +661,7 @@ impl App {
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
             Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
+            Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }

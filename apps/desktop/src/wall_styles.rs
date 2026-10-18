@@ -82,6 +82,8 @@ pub enum Event {
     Component(usize, Field, String),
     Pattern(usize, Option<String>),
     Detail(usize, WallDetail),
+    /// A component's priority at a join (docs/adr/0340 §1), 1 to 9; none: the rule's 3.
+    Priority(usize, Option<u8>),
     Add,
     Drop(usize),
     Up(usize),
@@ -467,6 +469,11 @@ impl App {
                     c.detail = detail;
                 }
             }
+            Event::Priority(i, p) => {
+                if let Some(c) = w.own().and_then(|s| s.components.get_mut(i)) {
+                    c.priority = p;
+                }
+            }
             Event::Add => {
                 if let Some(s) = w.own() {
                     let n = s.components.len() + 1;
@@ -477,6 +484,7 @@ impl App {
                         edge: None,
                         hatch: None,
                         detail: WallDetail::Standard,
+                        priority: None,
                     });
                 }
                 w.fill();
@@ -710,6 +718,7 @@ impl App {
                 head("Tarama", 4),
                 head("Ölçek", 2),
                 head("Gösterim", 4),
+                head("Öncelik", 3),
                 iced::widget::space().width(iced::Length::Fixed(2.0 * 26.0 + 6.0)),
             ]
             .spacing(6),
@@ -766,6 +775,21 @@ impl App {
                 },
             )
             .searchable(false);
+            // 1 the strongest: a joining wall's component passes the host's weaker ones (docs/adr/0340 §1).
+            let ranks: Vec<String> = std::iter::once("Kural".to_owned())
+                .chain((1..=9).map(|r: u8| r.to_string()))
+                .collect();
+            let priority = Select::new(
+                ranks.into_iter().map(Choice::new),
+                Some(c.priority.map_or(0, usize::from)),
+                move |k| {
+                    msg(Event::Priority(
+                        i,
+                        (k > 0).then(|| u8::try_from(k).unwrap_or(3)),
+                    ))
+                },
+            )
+            .searchable(false);
             let scale: Element<'_, Message> = if c.hatch.is_some() {
                 input(Field::Scale, 2, "1", number(&typed(Field::Scale)).is_err()).into()
             } else {
@@ -781,6 +805,7 @@ impl App {
                     container(pattern).width(iced::Length::FillPortion(4)),
                     scale,
                     container(detail).width(iced::Length::FillPortion(4)),
+                    container(priority).width(iced::Length::FillPortion(3)),
                     small("chevronUp", i > 0, msg(Event::Up(i))),
                     small("trash", true, msg(Event::Drop(i))),
                 ]
@@ -800,7 +825,7 @@ impl App {
                 "Bileşenler (duvarın sol yüzünden)",
                 table,
                 Some(
-                    "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır."
+                    "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür."
                         .to_owned(),
                 ),
             ))
@@ -837,7 +862,10 @@ fn components_text<'a>(s: &WallStyleDef, format: &Format) -> Element<'a, Message
             .hatch
             .as_ref()
             .map_or_else(String::new, |h| format!(", {}", h.pattern));
-        col = col.push(label::caption(format!("{}: {t}{h}", c.name)));
+        let p = c
+            .priority
+            .map_or_else(String::new, |p| format!(", öncelik {p}"));
+        col = col.push(label::caption(format!("{}: {t}{h}{p}", c.name)));
     }
     col.into()
 }
@@ -891,6 +919,8 @@ impl canvas::Program<Message> for Sample {
             fill: style.fill.clone(),
             height: None,
             arch: Default::default(),
+            joins: Default::default(),
+            cleanup: true,
         };
         let Shape::Wall {
             pts,

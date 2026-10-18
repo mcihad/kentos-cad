@@ -9,6 +9,14 @@
 //! KENTOS_SHOTS_ONLY=duvar-serit,duvar-ciz,duvar-yazildi,duvar-ayrintili,duvar-sematik,duvar-oznitelikler,duvar-stilleri,duvar-cizgiden,duvar-katlar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0340's: a room of four separate walls at mitred corners with an inner wall teeing in, at 1:50 and its
+//! tee at 1:20; two walls crossing and a corner too sharp, its mark; the Mimari tab's Duvar düzenle; Duvar birleşimi
+//! with an end picked; Birleşimleri denetle; Öznitelikler's join rows; Duvarı böl:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=duvar-birlesim,duvar-birlesim-ayrintili,duvar-birlesim-x,duvar-duzenle-serit,duvar-birlesim-araci,duvar-birlesim-denetle,duvar-birlesim-oznitelikler,duvar-bol cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -149,8 +157,106 @@ fn levels(app: &mut App) {
     let _ = app.update(add());
 }
 
+/// One open wall of `style` from `a` to `b`, drawn with Duvar and written with Enter.
+fn wall_between(app: &mut App, style: &str, a: [f64; 2], b: [f64; 2]) {
+    wall_tool(app, style);
+    click(app, a);
+    click(app, b);
+    typed(app, "");
+    typed(app, "");
+}
+
+/// A 7 × 5 m room of four separate walls of Dış duvar 25 meeting at mitred corners (docs/adr/0340 §2), and an inner
+/// wall of İç duvar 15 teeing into both long walls; the walls' cores pass the plaster.
+fn joined_room(app: &mut App, scale: f64) {
+    opened(app, Objects::new(), scale);
+    fit(app, 7.0, 5.0);
+    let c = [[0.0, 0.0], [7.0, 0.0], [7.0, 5.0], [0.0, 5.0]];
+    for k in 0..4 {
+        wall_between(app, "Dış duvar 25", c[k], c[(k + 1) % 4]);
+    }
+    wall_between(app, "İç duvar 15", [4.2, 0.0], [4.2, 5.0]);
+    hover(app, [9.0, -1.0]);
+}
+
+fn joins_written(app: &mut App) {
+    joined_room(app, 50.0);
+}
+
+/// At 1:20, the inner wall's tee into the outer wall near: its brick passes the plaster, the plaster lines broken.
+fn joins_detailed(app: &mut App) {
+    joined_room(app, 20.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E + 3.4,
+            min_y: N - 0.6,
+            max_x: E + 5.0,
+            max_y: N + 0.9,
+        },
+        24.0,
+    );
+    hover(app, [4.9, -0.5]);
+}
+
+/// Two walls crossing and a corner too sharp to mitre: the cross cleans up, the corner is said with its mark.
+fn joins_cross(app: &mut App) {
+    opened(app, Objects::new(), 50.0);
+    fit(app, 8.0, 5.0);
+    wall_between(app, "İç duvar 15", [0.0, 2.0], [6.0, 2.0]);
+    wall_between(app, "Dış duvar 25", [3.0, -0.5], [3.0, 4.5]);
+    wall_between(app, "İç duvar 15", [5.0, 4.5], [8.0, 4.5]);
+    wall_between(app, "İç duvar 15", [8.0, 4.5], [5.0625, 5.25]);
+    hover(app, [9.0, -1.0]);
+}
+
+/// CAD's Mimari tab with Duvar düzenle over the joined room.
+fn edit_ribbon(app: &mut App) {
+    joined_room(app, 50.0);
+    app.tab = "arch";
+}
+
+/// Duvar birleşimi with the room's top right corner picked: the joins in the command line.
+fn joins_tool(app: &mut App) {
+    joined_room(app, 50.0);
+    app.command_expanded = true;
+    run(app, "tool.wallJoins");
+    click(app, [6.9, 5.0]);
+    hover(app, [6.2, 4.2]);
+}
+
+/// The sharp corner's issue in Birleşimleri denetle.
+fn joins_check(app: &mut App) {
+    joins_cross(app);
+    run(app, "arch.wallJoinCheck");
+}
+
+/// The room's bottom wall selected: Öznitelikler's joins rows.
+fn joins_props(app: &mut App) {
+    joined_room(app, 50.0);
+    app.selection.set([Slot(1)]);
+    let upper = docking::Slot::Docked(docking::Side::Right, 0);
+    let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
+}
+
+/// Duvarı böl: the room's bottom wall split at the door's place, the two parts joined inline.
+fn split(app: &mut App) {
+    joined_room(app, 50.0);
+    app.command_expanded = true;
+    run(app, "tool.wallSplit");
+    click(app, [2.0, 0.0]);
+    hover(app, [2.6, -0.4]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("duvar-birlesim", joins_written),
+        ("duvar-birlesim-ayrintili", joins_detailed),
+        ("duvar-birlesim-x", joins_cross),
+        ("duvar-duzenle-serit", edit_ribbon),
+        ("duvar-birlesim-araci", joins_tool),
+        ("duvar-birlesim-denetle", joins_check),
+        ("duvar-birlesim-oznitelikler", joins_props),
+        ("duvar-bol", split),
         ("duvar-serit", ribbon),
         ("duvar-ciz", drawing),
         ("duvar-yazildi", written),

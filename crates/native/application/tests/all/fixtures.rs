@@ -43,7 +43,7 @@ use kentos_native_application::{
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
     set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
@@ -644,10 +644,27 @@ impl Input for kentos_domain::contracts::WallsFromLines {
     }
 }
 
+impl Input for kentos_domain::contracts::WallsJoins {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::WallsEdit {
-    /// `operation.width`, `operation.offset`, `operation.height`.
+    /// `operation.width`, `operation.offset`, `operation.height`; `operation.at.x` and `.y` of Böl.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        let kentos_domain::contracts::WallsOperation::Set(c) = &mut self.operation;
+        use kentos_domain::contracts::WallsOperation;
+        let c = match &mut self.operation {
+            WallsOperation::Split { at } => {
+                return match path {
+                    "operation.at.x" => Some(&mut at.x),
+                    "operation.at.y" => Some(&mut at.y),
+                    _ => None,
+                };
+            }
+            WallsOperation::Set(c) => c,
+            _ => return None,
+        };
         match path {
             "operation.width" => c.width.as_mut(),
             "operation.offset" => c.offset.as_mut(),
@@ -2523,6 +2540,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_WALLS_EDIT => {
             run!(walls_edit, kentos_domain::contracts::WallsEdit)
+        }
+        kentos_domain::contracts::CAD_WALLS_JOINS => {
+            run!(walls_joins, kentos_domain::contracts::WallsJoins)
         }
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
         kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),

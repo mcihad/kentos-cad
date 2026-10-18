@@ -194,7 +194,7 @@ codes! {
     /// A transparency not from 0 to 0.9 (docs/adr/0260 §3).
     INVALID_TRANSPARENCY = "invalid_transparency", Failed, false, "Saydamlık 0 ile 0,9 (%0–90) arasında olmalı.";
     /// A layer's drawing orders at the 32-bit bound: nothing can go further front or back (docs/adr/0260 §5).
-    ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; öbür nesneleri ters yöne taşıyarak yer açın.";
+    ORDER_LIMIT = "order_limit", Failed, false, "Katmanın çizim sırası sınıra geldi; diğer nesneleri ters yöne taşıyarak yer açın.";
     /// Above or under without a reference, front or back with one, or the reference among the objects moved (docs/adr/0310 §3).
     INVALID_REFERENCE = "invalid_reference", Failed, false, "Nesnenin üstüne ve altına bir başvuru nesnesi ister, öne ve arkaya istemez; başvuru taşınan nesnelerden biri olamaz.";
     /// An object on another layer than the reference's: the drawing order is a layer's (docs/adr/0310 §3).
@@ -584,7 +584,7 @@ codes! {
     /// An object that is neither a polyline nor a NURBS curve (Eğriyi düzenle, docs/adr/0303).
     NOT_A_CURVE = "not_a_curve", Failed, false, "Eğriyi düzenle çoklu çizgide ve NURBS eğrisinde çalışır.";
     /// An edit the other kind takes, or one the curve already is (Eğriyi düzenle: an open curve opened).
-    EDIT_NOT_APPLICABLE = "edit_not_applicable", Failed, false, "Bu düzenleme bu eğride yapılmaz: öbür türün düzenlemesi ya da eğri zaten öyle.";
+    EDIT_NOT_APPLICABLE = "edit_not_applicable", Failed, false, "Bu düzenleme bu eğride yapılmaz: diğer türün düzenlemesi ya da eğri zaten öyle.";
     /// A fit point edit on a curve drawn by its control points (Eğriyi düzenle).
     NO_FIT_POINTS = "no_fit_points", Failed, false, "Eğrinin geçiş noktası yok: denetim noktalarıyla çizilmiş ya da denetim noktası düzenlenmiş.";
     /// A point or control point number out of the curve's (Eğriyi düzenle).
@@ -1094,7 +1094,7 @@ codes! {
     /// Values a whole-or-nothing write would not take (docs/adr/0507).
     INVALID_VALUES = "invalid_values", Failed, false, "Bazı değerler alanların kurallarına uymuyor; hiçbiri yazılmadı. Sorunlar nesne ve alanıyla plan'da.";
     /// Values a write left out, the others written (docs/adr/0507).
-    VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı.";
+    VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; diğerleri yazıldı.";
     /// An area a bound layer cannot hold (docs/adr/0510).
     INVALID_EXTENT = "invalid_extent", Failed, false, "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler.";
     /// A processing tool not among İşlemler's (docs/adr/0508).
@@ -1130,7 +1130,7 @@ codes! {
     /// Parameters that read each other round.
     PARAMETER_CYCLE = "parameter_cycle", Failed, false, "Parametreler birbirini döngüyle okuyor.";
     /// A dimension named a parameter of another kind (an angle's a length …).
-    PARAMETER_KIND = "parameter_kind", Failed, false, "Parametrenin türü ölçü kısıtına uymuyor (açıya açı, öbürlerine uzunluk).";
+    PARAMETER_KIND = "parameter_kind", Failed, false, "Parametrenin türü ölçü kısıtına uymuyor (açıya açı, diğerlerine uzunluk).";
     /// A parameter another dimension already has.
     PARAMETER_IN_USE = "parameter_in_use", Failed, false, "Bu parametre başka bir ölçü kısıtının.";
     /// A value outside its parameter's range, or a radius or diameter not above nought.
@@ -1183,6 +1183,32 @@ codes! {
     SOURCE_KEPT = "source_kept", Warning, false, "Duvarın örtmediği parçası kalan kaynak çizgi silinmedi.";
     /// A wall among a block definition's objects.
     WALL_IN_BLOCK = "wall_in_block", Failed, false, "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır.";
+
+    // ── Wall joins and edits (docs/adr/0340) ────────────────────────────
+    /// A point not on the wall to split.
+    POINT_OFF_WALL = "point_off_wall", Failed, false, "Nokta duvarın üzerinde değil: duvarın iki yüzü arasında bir nokta verin.";
+    /// A split at a wall's end: nothing to split off.
+    SPLIT_AT_END = "split_at_end", Failed, false, "Duvar ucundan bölünmez: bölme noktası duvarın iki ucunun arasında olmalı.";
+    /// Walls to join whose ends do not meet.
+    WALLS_NOT_TOUCHING = "walls_not_touching", Failed, false, "Duvarların uçları buluşmuyor: birleştirilecek duvarlar uç uca olmalı (1 mm içinde).";
+    /// Walls to join of other fields.
+    WALLS_DIFFER = "walls_differ", Failed, false, "Duvarların genişliği, hizası, ötelemesi, stili ya da bileşenleri farklı; tek duvar olmaz. Önce Stili değiştir ya da Değiştir ile eşitleyin.";
+    /// A closed wall where an end is asked.
+    WALL_CLOSED = "wall_closed", Failed, false, "Kapalı duvarın ucu yok: uzatılmaz, budanmaz, uç birleşimi verilmez.";
+    /// A wall that does not reach, or does not cross, the other wall's path.
+    WALL_MISSES = "wall_misses", Failed, false, "Duvar diğer duvarın yoluna varmıyor: uzatınca ona ulaşmıyor ya da onu kesmiyor.";
+    /// A style no wall named has.
+    STYLE_NOT_USED = "style_not_used", Failed, false, "Verilen duvarların hiçbiri bu stilde değil.";
+    /// Walls that meet running the same way, not joined.
+    WALL_JOIN_OVERLAP = "wall_join_overlap", Warning, false, "İki duvar aynı doğrultuda üst üste geliyor; birleştirilmedi. Birinin ucunu Yok yapın ya da Birleştir ile tek duvar yapın.";
+    /// More than two ends meeting with no two along one line, not joined.
+    WALL_JOIN_CROWDED = "wall_join_crowded", Warning, false, "Bir noktada ikiden çok duvar ucu buluşuyor ve ikisi bir doğruda değil; birleştirilmedi.";
+    /// A corner too sharp to mitre, not joined.
+    WALL_JOIN_ACUTE = "wall_join_acute", Warning, false, "Köşe çok dar, gönye birleşimi duvarın çok dışına taşar; birleştirilmedi. Bir ucu Alın yapın.";
+    /// A joint whose lines could not be cut, not joined.
+    WALL_JOIN_UNRESOLVED = "wall_join_unresolved", Warning, false, "Birleşimin çizgileri kesilemedi: duvar birleşimden kısa ya da diğer duvar birleşimden önce bitiyor.";
+    /// A wall made plain lines and hatches: what it was is lost.
+    SEMANTICS_LOST = "semantics_lost", Warning, false, "Duvar düz çizgiler ve taramalar oldu: stili, bileşenleri, katı, yüksekliği ve birleşimleri artık taşınmıyor.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

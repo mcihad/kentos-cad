@@ -995,6 +995,7 @@ impl App {
                 self.dialog = Some(Dialog::WallStyles);
             }
             Some(Dialog::WallStyles) => self.wall_styles = None,
+            Some(Dialog::WallJoins) => self.wall_joins = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::TakeFrom) => self.take_from = None,
             Some(Dialog::LayerList) => self.layer_list = None,

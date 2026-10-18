@@ -190,6 +190,76 @@ pub struct WallComponent {
     /// The least detail it is drawn at as its own (its lines and hatch); below, it is part of the body.
     #[serde(default)]
     pub detail: WallDetail,
+    /// Its strength where walls meet (docs/adr/0340 §1), 1 to 9, the smaller the stronger: a joining wall's component
+    /// passes the host's weaker ones and stops at the first as strong. Absent: 3 (between a core's 1 and a finish's 5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 9), extend("x-unit" = "1")))]
+    pub priority: Option<u8>,
+}
+
+/// A component's priority when it has none.
+pub const DEFAULT_COMPONENT_PRIORITY: u8 = 3;
+
+/// How one end of a wall joins another (docs/adr/0340 §1, `CAD-ARCH-07`): by the rule; not at all (its end line
+/// drawn); at a corner mitred; butting the other (it stops at the other's face); running through it (the other butts).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallJoin {
+    #[default]
+    Auto,
+    None,
+    Miter,
+    Butt,
+    Through,
+}
+
+impl WallJoin {
+    pub const ALL: [WallJoin; 5] = [
+        WallJoin::Auto,
+        WallJoin::None,
+        WallJoin::Miter,
+        WallJoin::Butt,
+        WallJoin::Through,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            WallJoin::Auto => "Otomatik",
+            WallJoin::None => "Yok",
+            WallJoin::Miter => "Gönye",
+            WallJoin::Butt => "Alın",
+            WallJoin::Through => "Geçen",
+        }
+    }
+}
+
+/// A wall's start's and end's join.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallJoins {
+    #[serde(default, skip_serializing_if = "is_auto")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<WallJoin>", optional))]
+    pub start: WallJoin,
+    #[serde(default, skip_serializing_if = "is_auto")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<WallJoin>", optional))]
+    pub end: WallJoin,
+}
+
+impl WallJoins {
+    pub fn is_auto(&self) -> bool {
+        *self == WallJoins::default()
+    }
+}
+
+fn is_auto(j: &WallJoin) -> bool {
+    *j == WallJoin::Auto
 }
 
 /// An architectural object's phase (renovation): what is there, what goes, what is new.
@@ -390,6 +460,23 @@ pub struct WallFields {
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
+    /// How its ends join (docs/adr/0340 §1); absent: both by the rule.
+    #[serde(default, skip_serializing_if = "WallJoins::is_auto")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<WallJoins>", optional))]
+    pub joins: WallJoins,
+    /// Its components are cleaned up by their priorities where another wall tees into or crosses it; false: the
+    /// walls meet at their faces only.
+    #[serde(default = "yes", skip_serializing_if = "is_yes")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub cleanup: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+fn is_yes(v: &bool) -> bool {
+    *v
 }
 
 fn is_zero(v: &f64) -> bool {
@@ -482,6 +569,17 @@ pub fn components_problem(
             }
             None => rest = Some(i),
             Some(_) => {}
+        }
+        if let Some(p) = c.priority
+            && !(1..=9).contains(&p)
+        {
+            return Some((
+                at("priority"),
+                format!(
+                    "“{}” bileşeninin önceliği {p}; 1 ile 9 arasında olmalı (küçük olan güçlü).",
+                    c.name
+                ),
+            ));
         }
         if let Some(e) = &c.edge {
             if !colour_holds(&e.color) {
@@ -862,8 +960,10 @@ fn component(
     thickness: Option<f64>,
     detail: WallDetail,
     hatch: Option<(&str, f64, Option<&str>)>,
+    priority: u8,
 ) -> WallComponent {
     WallComponent {
+        priority: Some(priority),
         name: name.into(),
         material: Some(name.into()),
         thickness,
@@ -882,19 +982,21 @@ fn component(
 /// the same id. Thicknesses metres.
 pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
     use WallDetail::{Detailed, Standard};
-    let plaster = |t: f64, name: &str| component(name, Some(t), Detailed, None);
+    // Plaster and boards are finishes (5), insulation between (3), the masonry and concrete the core (1).
+    let plaster = |t: f64, name: &str| component(name, Some(t), Detailed, None, 5);
     vec![
         WallStyleDef {
             id: "kentos-dis-duvar-25".into(),
             name: "Dış duvar 25".into(),
             components: vec![
                 plaster(0.02, "İç sıva"),
-                component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None))),
+                component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None)), 1),
                 component(
                     "Isı yalıtımı",
                     Some(0.05),
                     Standard,
                     Some(("ANSI37", 0.5, None)),
+                    3,
                 ),
                 plaster(0.03, "Dış sıva"),
             ],
@@ -907,7 +1009,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "İç duvar 15".into(),
             components: vec![
                 plaster(0.02, "Sıva"),
-                component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None))),
+                component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None)), 1),
                 plaster(0.02, "Sıva"),
             ],
             caps: WallCaps::Closed,
@@ -919,7 +1021,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "Gazbeton 20".into(),
             components: vec![
                 plaster(0.02, "Sıva"),
-                component("Gazbeton", None, Standard, Some(("DOTS", 1.0, None))),
+                component("Gazbeton", None, Standard, Some(("DOTS", 1.0, None)), 1),
                 plaster(0.02, "Sıva"),
             ],
             caps: WallCaps::Closed,
@@ -934,6 +1036,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
                 None,
                 Standard,
                 Some(("SOLID", 1.0, Some("#A6A6A6"))),
+                1,
             )],
             caps: WallCaps::Closed,
             fill: Some("#3C3C3C".into()),
@@ -944,7 +1047,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "Bölme duvar 10".into(),
             components: vec![
                 plaster(0.0125, "Alçı levha"),
-                component("Yalıtım", None, Detailed, Some(("ANSI37", 0.5, None))),
+                component("Yalıtım", None, Detailed, Some(("ANSI37", 0.5, None)), 2),
                 plaster(0.0125, "Alçı levha"),
             ],
             caps: WallCaps::Closed,
@@ -972,6 +1075,8 @@ mod tests {
             fill: None,
             height: None,
             arch: ArchInfo::default(),
+            joins: WallJoins::default(),
+            cleanup: true,
         }
     }
 

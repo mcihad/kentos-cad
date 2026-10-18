@@ -145,6 +145,19 @@ fn check(doc: &Document, input: &WallsCreate) -> Result<Checked, Stop> {
         )?;
         walls.push((wall, attrs));
     }
+    // What the new walls do not join (docs/adr/0340 §2), said with what resolves it.
+    let mut warnings = warnings;
+    let made: Vec<WallEntity> = walls
+        .iter()
+        .zip(&input.walls)
+        .filter_map(|((w, _), n)| match entity(input, n, w.clone(), None) {
+            Entity::Wall(e) => Some(e),
+            _ => None,
+        })
+        .collect();
+    let changed: Vec<(Option<kentos_domain::Slot>, &WallEntity)> =
+        made.iter().map(|e| (None, e)).collect();
+    warnings.extend(walls::join_warnings(doc, &changed, &[]));
     Ok((warnings, walls, added))
 }
 

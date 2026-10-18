@@ -3474,6 +3474,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             color: None,
         }),
         detail: WallDetail::Standard,
+        priority: None,
     };
     let wall = Entity::Wall(WallEntity {
         base: base("yapi"),
@@ -3490,6 +3491,8 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             fill: Some("#5A5A5A".into()),
             height: None,
             arch: Default::default(),
+            joins: Default::default(),
+            cleanup: true,
         },
     });
     let kinds = |detail: WallDetail| {

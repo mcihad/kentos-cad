@@ -348,3 +348,40 @@ fn a_click_falls_on_the_sub_object_the_reference_names() {
         }
     }
 }
+
+/// A wall's places are its lines' vertices and middles (docs/adr/0340 §5): a dimension on its inner face follows it
+/// when the wall gets thicker, and a snap on the face finds the place.
+#[test]
+fn a_wall_face_place_follows_a_new_width() {
+    use kentos_geometry_core::api::json::{Flat, Json};
+    use kentos_geometry_core::geom::wall::Spec;
+    use kentos_geometry_core::ops::subref::{Followed, Place, follow, place_at, point};
+    use kentos_geometry_core::store::snap::SnapKind;
+    let wall = |width: f64| {
+        let spec = Spec::read_flat(&Json::parse(&format!(r#"{{"width":{width},"justify":"center","closed":true}}"#)).unwrap()).unwrap();
+        kentos_geometry_core::entity::Entity::new(kentos_geometry_core::entity::Shape::Wall {
+            pts: vec![
+                kentos_geometry_core::Vec2::new(0.0, 0.0),
+                kentos_geometry_core::Vec2::new(5.0, 0.0),
+                kentos_geometry_core::Vec2::new(5.0, 4.0),
+                kentos_geometry_core::Vec2::new(0.0, 4.0),
+            ],
+            bulges: None,
+            wall: spec,
+        })
+    };
+    let before = wall(0.2);
+    // The inner face (left of a counter-clockwise ring) at the second vertex.
+    let corner = kentos_geometry_core::Vec2::new(4.9, 0.1);
+    let place = place_at(&before, SnapKind::Endpoint, corner).unwrap();
+    assert_eq!(place, Place::Vertex { part: 0, ring: 0, index: 1 });
+    let after = wall(0.3);
+    match follow(place, &before, Some(&after)) {
+        Followed::At(p, at) => {
+            assert_eq!(p, place);
+            assert!((at.x - 4.85).abs() < 1e-12 && (at.y - 0.15).abs() < 1e-12, "{at:?}");
+        }
+        other => panic!("{other:?}"),
+    }
+    assert!(point(&after, Place::Mid { part: 1, ring: 0, index: 0 }).is_some());
+}

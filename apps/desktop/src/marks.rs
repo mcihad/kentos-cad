@@ -1267,13 +1267,20 @@ impl crate::app::App {
     }
 
     /// The points of the associative dimensions whose reference broke (docs/adr/0249 §3): from the document's index
-    /// of such dimensions, not a walk over the drawing.
+    /// of such dimensions, not a walk over the drawing; and where walls meet and do not join (docs/adr/0340 §6), from
+    /// the store's joins.
     pub(crate) fn broken_marks(&self) -> Vec<Vec2> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
         let model = &doc.model;
-        let mut out = Vec::new();
+        let mut out: Vec<Vec2> = self
+            .spatial
+            .store()
+            .wall_issues()
+            .iter()
+            .map(|i| Vec2::new(i.at.x, i.at.y))
+            .collect();
         for slot in model.broken_dimensions() {
             let Some(kentos_contracts::Entity::Dimension(d)) = model.get(slot) else {
                 continue;

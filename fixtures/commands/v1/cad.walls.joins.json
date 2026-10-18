@@ -1,0 +1,5606 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.walls.joins",
+  "commandVersion": 1,
+  "title": "Duvar birleşimleri: köşe, alın, düz devam, T, öncelikli geçiş, kesişme; birleşmeyenler onaran önerileriyle; retler",
+  "note": "ADR 0340 §2. Kurulum scripts/fixtures/wall_join_cases.py'nin durumlarının duvarları, her durum 100 m kuzeyde; beklenenler onun kesirli çözücüsünden, KentOS kodu olmadan.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Duvar birleşimleri",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "wallStyles": [
+        {
+          "id": "proje-perde-20",
+          "name": "Perde 20",
+          "components": [
+            {
+              "name": "Betonarme",
+              "material": "Betonarme",
+              "thickness": 0.2,
+              "hatch": {
+                "pattern": "SOLID",
+                "scale": 1.0,
+                "angle": 0.0,
+                "color": "#A6A6A6"
+              },
+              "detail": "standard"
+            }
+          ],
+          "fill": "#3C3C3C"
+        }
+      ],
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 3.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 100.0
+          },
+          {
+            "x": 4.0,
+            "y": 100.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "left"
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 100.0
+          },
+          {
+            "x": 4.0,
+            "y": 103.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "right"
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 200.0
+          },
+          {
+            "x": 4.0,
+            "y": 200.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 6,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 200.0
+          },
+          {
+            "x": 0.0,
+            "y": 203.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 7,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 300.0
+          },
+          {
+            "x": 4.0,
+            "y": 300.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 8,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 300.0
+          },
+          {
+            "x": 7.0,
+            "y": 304.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 9,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 400.0
+          },
+          {
+            "x": 4.0,
+            "y": 400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "joins": {
+          "end": "butt"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 10,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 400.0
+          },
+          {
+            "x": 4.0,
+            "y": 403.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 11,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 500.0
+          },
+          {
+            "x": 4.0,
+            "y": 500.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "joins": {
+          "end": "through"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 12,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 500.0
+          },
+          {
+            "x": 4.0,
+            "y": 503.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 13,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 600.0
+          },
+          {
+            "x": 4.0,
+            "y": 600.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "joins": {
+          "end": "none"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 14,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 600.0
+          },
+          {
+            "x": 4.0,
+            "y": 603.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 15,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 700.0
+          },
+          {
+            "x": 4.0,
+            "y": 700.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 16,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 700.0
+          },
+          {
+            "x": 8.0,
+            "y": 700.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 17,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 800.0
+          },
+          {
+            "x": 4.0,
+            "y": 800.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 18,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 800.0
+          },
+          {
+            "x": 8.0,
+            "y": 800.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 19,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 900.0
+          },
+          {
+            "x": 4.0,
+            "y": 900.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 20,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 900.0
+          },
+          {
+            "x": 4.0,
+            "y": 900.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 21,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1000.0
+          },
+          {
+            "x": 6.0,
+            "y": 1000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 22,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1004.0
+          },
+          {
+            "x": 3.0,
+            "y": 1000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 23,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1100.0
+          },
+          {
+            "x": 6.0,
+            "y": 1100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 24,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1104.0
+          },
+          {
+            "x": 3.0,
+            "y": 1100.1
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 25,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1200.0
+          },
+          {
+            "x": 6.0,
+            "y": 1200.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 26,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1204.0
+          },
+          {
+            "x": 3.0,
+            "y": 1199.95
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 27,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1300.0
+          },
+          {
+            "x": 6.0,
+            "y": 1300.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 28,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1296.0
+          },
+          {
+            "x": 3.0,
+            "y": 1300.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 29,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1400.0
+          },
+          {
+            "x": 6.0,
+            "y": 1400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 30,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1404.0
+          },
+          {
+            "x": 3.0,
+            "y": 1400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 31,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1500.0
+          },
+          {
+            "x": 6.0,
+            "y": 1500.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 3,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 32,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1504.0
+          },
+          {
+            "x": 3.0,
+            "y": 1500.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 33,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1600.0
+          },
+          {
+            "x": 6.0,
+            "y": 1600.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "cleanup": false
+      },
+      {
+        "kind": "wall",
+        "id": 34,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1604.0
+          },
+          {
+            "x": 3.0,
+            "y": 1600.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 35,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1700.0
+          },
+          {
+            "x": 6.0,
+            "y": 1700.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "left",
+        "components": [
+          {
+            "thickness": 0.03,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 3,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 36,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1696.0
+          },
+          {
+            "x": 3.0,
+            "y": 1700.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 37,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1800.0
+          },
+          {
+            "x": 8.0,
+            "y": 1800.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 38,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 1.0,
+            "y": 1804.0
+          },
+          {
+            "x": 4.0,
+            "y": 1800.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 39,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1900.0
+          },
+          {
+            "x": 6.0,
+            "y": 1900.0
+          },
+          {
+            "x": 6.0,
+            "y": 1904.0
+          },
+          {
+            "x": 0.0,
+            "y": 1904.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "closed": true
+      },
+      {
+        "kind": "wall",
+        "id": 40,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 1904.0
+          },
+          {
+            "x": 3.0,
+            "y": 1900.0
+          }
+        ],
+        "width": 0.15,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 41,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2000.0
+          },
+          {
+            "x": 6.0,
+            "y": 2000.0
+          },
+          {
+            "x": 6.0,
+            "y": 2004.0
+          },
+          {
+            "x": 0.0,
+            "y": 2004.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "closed": true,
+        "components": [
+          {
+            "thickness": 0.03,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.03,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 42,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 2004.0
+          },
+          {
+            "x": 3.0,
+            "y": 2000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 43,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2100.0
+          },
+          {
+            "x": 6.0,
+            "y": 2100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 44,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 2097.0
+          },
+          {
+            "x": 3.0,
+            "y": 2103.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 45,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2200.0
+          },
+          {
+            "x": 6.0,
+            "y": 2200.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 46,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 2197.0
+          },
+          {
+            "x": 3.0,
+            "y": 2203.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 47,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2300.0
+          },
+          {
+            "x": 6.0,
+            "y": 2300.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 48,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 3.0,
+            "y": 2297.0
+          },
+          {
+            "x": 3.0,
+            "y": 2303.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 49,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2400.0
+          },
+          {
+            "x": 4.0,
+            "y": 2400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 50,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2400.0
+          },
+          {
+            "x": 8.0,
+            "y": 2400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 51,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2403.0
+          },
+          {
+            "x": 4.0,
+            "y": 2400.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 52,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2500.0
+          },
+          {
+            "x": 4.0,
+            "y": 2500.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 53,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2500.0
+          },
+          {
+            "x": 0.0625,
+            "y": 2501.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 54,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2600.0
+          },
+          {
+            "x": 4.0,
+            "y": 2600.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "joins": {
+          "end": "butt"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 55,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2600.0
+          },
+          {
+            "x": 0.0625,
+            "y": 2601.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 56,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2700.0
+          },
+          {
+            "x": 4.0,
+            "y": 2700.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 57,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2700.0
+          },
+          {
+            "x": 0.0009765625,
+            "y": 2700.125
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 58,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2800.0
+          },
+          {
+            "x": 4.0,
+            "y": 2800.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 59,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2800.0
+          },
+          {
+            "x": -3.0,
+            "y": 2804.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 60,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2800.0
+          },
+          {
+            "x": -3.0,
+            "y": 2796.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 61,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2900.0
+          },
+          {
+            "x": 4.0,
+            "y": 2900.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 62,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 2900.0
+          },
+          {
+            "x": 4.0,
+            "y": 2900.05
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 63,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 3000.0
+          },
+          {
+            "x": 4.0,
+            "y": 3000.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 64,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 3000.0
+          },
+          {
+            "x": 4.0,
+            "y": 3003.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "caps": "open"
+      },
+      {
+        "kind": "line",
+        "id": 65,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": -50.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": -50.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Köşe: eşit iki duvar, gönye: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:1",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:2",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: farklı genişlik ve hiza: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:3",
+              "$uidOf:4"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 100.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:3",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:4",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: iki başlangıç: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5",
+              "$uidOf:6"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 0.0,
+                    "y": 200.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:5",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:6",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: eğik (3-4-5): birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:7",
+              "$uidOf:8"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 300.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:7",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:8",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: Alın: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:9",
+              "$uidOf:10"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 400.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:9",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:10",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: Geçen: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:11",
+              "$uidOf:12"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 500.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:12",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:11",
+                      "end": "end"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe: bir uç Yok: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13",
+              "$uidOf:14"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düz devam: eşit: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:15",
+              "$uidOf:16"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "inline",
+                  "at": {
+                    "x": 4.0,
+                    "y": 700.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:15",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:16",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düz devam: farklı genişlik: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:17",
+              "$uidOf:18"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "inline",
+                  "at": {
+                    "x": 4.0,
+                    "y": 800.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:17",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:18",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düz devam: biri ters: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:19",
+              "$uidOf:20"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "inline",
+                  "at": {
+                    "x": 4.0,
+                    "y": 900.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:19",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:20",
+                      "end": "end"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: yalın: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:21",
+              "$uidOf:22"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1000.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:22",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:21"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: yüzde biten: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:23",
+              "$uidOf:24"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1100.1
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:24",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:23"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: içeri taşan: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:25",
+              "$uidOf:26"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1199.95
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:26",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:25"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: alttan: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:27",
+              "$uidOf:28"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1300.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:28",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:27"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: çekirdek sıvadan geçer: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:29",
+              "$uidOf:30"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1400.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:30",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:29"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: çekirdek bütün duvardan geçer: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:31",
+              "$uidOf:32"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1500.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:32",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:31"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: temizlik kapalı: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:33",
+              "$uidOf:34"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1600.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:34",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:33"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: sola hizalı katmanlı konak, sağdan: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:35",
+              "$uidOf:36"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1700.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:36",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:35"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: eğik (3-4-5): birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:37",
+              "$uidOf:38"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 4.0,
+                    "y": 1800.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:38",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:37"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: odanın iki duvarına: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:39",
+              "$uidOf:40"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1900.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:40",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:39"
+                    }
+                  ]
+                },
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 1904.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:40",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:39"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T: odaya katmanlı: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:41",
+              "$uidOf:42"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 2000.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:42",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:41"
+                    }
+                  ]
+                },
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 3.0,
+                    "y": 2004.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:42",
+                      "end": "start"
+                    },
+                    {
+                      "uid": "$uidOf:41"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "X: eşit iki duvar: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:43",
+              "$uidOf:44"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "cross",
+                  "at": {
+                    "x": 3.0,
+                    "y": 2100.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:43"
+                    },
+                    {
+                      "uid": "$uidOf:44"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "X: güçlü çekirdekli duvar konak: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:45",
+              "$uidOf:46"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "cross",
+                  "at": {
+                    "x": 3.0,
+                    "y": 2200.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:46"
+                    },
+                    {
+                      "uid": "$uidOf:45"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "X: katmanlı iki duvar: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:47",
+              "$uidOf:48"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "cross",
+                  "at": {
+                    "x": 3.0,
+                    "y": 2300.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:47"
+                    },
+                    {
+                      "uid": "$uidOf:48"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Üç uç: düz devam ve T: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:49",
+              "$uidOf:50",
+              "$uidOf:51"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "inline",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2400.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:49",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:50",
+                      "end": "start"
+                    }
+                  ]
+                },
+                {
+                  "kind": "tee",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2400.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:51",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:49"
+                    },
+                    {
+                      "uid": "$uidOf:50"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sorun: dar köşe: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:52",
+              "$uidOf:53"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [
+                {
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2500.0
+                  },
+                  "uids": [
+                    "$uidOf:52",
+                    "$uidOf:53"
+                  ],
+                  "fix": {
+                    "uids": [
+                      "$uidOf:52"
+                    ],
+                    "operation": {
+                      "kind": "joins",
+                      "end": "butt"
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dar köşe Alın ile: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:54",
+              "$uidOf:55"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2600.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:54",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:55",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sorun: aynı doğrultu: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:56",
+              "$uidOf:57"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [
+                {
+                  "code": "wall_join_overlap",
+                  "message": "İki duvar aynı doğrultuda üst üste geliyor; birleştirilmedi.",
+                  "repair": "Duvarlardan birinin ucunu Yok yapın ya da duvarları Birleştir ile tek duvar yapın.",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2700.0
+                  },
+                  "uids": [
+                    "$uidOf:56",
+                    "$uidOf:57"
+                  ],
+                  "fix": {
+                    "uids": [
+                      "$uidOf:57"
+                    ],
+                    "operation": {
+                      "kind": "joins",
+                      "start": "none"
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sorun: üç uç bir doğruda değil: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:58",
+              "$uidOf:59",
+              "$uidOf:60"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [
+                {
+                  "code": "wall_join_crowded",
+                  "message": "Bu noktada ikiden çok duvar ucu buluşuyor ve ikisi bir doğru üzerinde değil; birleştirilmedi.",
+                  "repair": "En kısa duvarın ucunu Yok yapın ya da duvarlardan birini diğerinin ortasına uzatın.",
+                  "at": {
+                    "x": 0.0,
+                    "y": 2800.0
+                  },
+                  "uids": [
+                    "$uidOf:58",
+                    "$uidOf:59",
+                    "$uidOf:60"
+                  ],
+                  "fix": {
+                    "uids": [
+                      "$uidOf:58"
+                    ],
+                    "operation": {
+                      "kind": "joins",
+                      "start": "none"
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sorun: duvar birleşimden kısa: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:61",
+              "$uidOf:62"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [],
+              "issues": [
+                {
+                  "code": "wall_join_unresolved",
+                  "message": "Birleşimin çizgileri kesilemedi: duvar birleşimden kısa ya da diğer duvar birleşimden önce bitiyor.",
+                  "repair": "Duvarı uzatın ya da bu ucu Yok yapın.",
+                  "at": {
+                    "x": 4.0,
+                    "y": 2900.0
+                  },
+                  "uids": [
+                    "$uidOf:62",
+                    "$uidOf:61"
+                  ],
+                  "fix": {
+                    "uids": [
+                      "$uidOf:62"
+                    ],
+                    "operation": {
+                      "kind": "joins",
+                      "start": "none"
+                    }
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uçları açık duvarlar: birleşimleri ve birleşmeyenleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:63",
+              "$uidOf:64"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 3000.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:63",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:64",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan aynı cevabı verir, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "$uidOf:1",
+              "$uidOf:2"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "joints": [
+                {
+                  "kind": "corner",
+                  "at": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "walls": [
+                    {
+                      "uid": "$uidOf:1",
+                      "end": "end"
+                    },
+                    {
+                      "uid": "$uidOf:2",
+                      "end": "start"
+                    }
+                  ]
+                }
+              ],
+              "issues": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "D-1"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“D-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvar olmayan nesne reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:65"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_wall",
+              "message": "Nesne duvar değil; birleşimler yalnız duvarlarda sorulur.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

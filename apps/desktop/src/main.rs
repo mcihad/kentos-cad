@@ -20,6 +20,7 @@ mod alias_profile_scenes;
 mod annotation_scale;
 mod annotative;
 mod annotation_styles;
+mod wall_joins;
 mod wall_styles;
 mod app;
 mod app_menu;

@@ -553,19 +553,19 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
     let mut left = 0;
-    for e in &input.entities {
-        match e {
-            kentos_contracts::Entity::Wall(w) => match crate::walls::plain_pieces(&w.base, &w.wall, view) {
-                Some(pieces) => out.entities.extend(pieces),
-                None => left += 1,
-            },
+    // Joined as the drawing shows them (docs/adr/0340 §5).
+    let plain = crate::walls::plain_joined(&input.entities, view);
+    for (e, pieces) in input.entities.iter().zip(plain) {
+        match (e, pieces) {
+            (kentos_contracts::Entity::Wall(_), Some(pieces)) => out.entities.extend(pieces),
+            (kentos_contracts::Entity::Wall(_), None) => left += 1,
             _ => out.entities.push(e.clone()),
         }
     }
     report.note_n(
         "Duvar",
         &format!(
-            "DXF'te KentOS'un duvarı yoktur: duvarlar {} ayrıntıda çizgiler ve taramalar olarak yazıldı; duvar olarak geri okunmaz",
+            "DXF'te KentOS'un duvarı yoktur: duvarlar {} ayrıntıda, birleşimleriyle çizgiler ve taramalar olarak yazıldı; stilleri, bileşenleri, katları, yükseklikleri ve birleşimleri taşınmaz, duvar olarak geri okunmaz",
             detail.label().to_lowercase()
         ),
         0,

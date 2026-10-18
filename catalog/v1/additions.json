@@ -1496,6 +1496,110 @@
       "status": "implemented"
     },
     {
+      "id": "tool.wallJoins",
+      "title": "Duvar birleşimi",
+      "icon": "wallJoins",
+      "description": "Bir duvar ucuna tıklayın, birleşimini seçin: Otomatik (O), Yok (Y), Gönye (G), Alın (A: bu duvar diğerinin yüzünde durur), Geçen (E: bu duvar diğerini aşar); Temizlik (T) bileşenlerin önceliğe göre geçişini açar ya da kapar, Sıfırla (R) ikisini de kurala döndürür. Her seçim tek adımda yazılır.",
+      "aliases": [
+        "DUVARBIRLESIMI",
+        "DUVARUCU"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallSplit",
+      "title": "Duvarı böl",
+      "icon": "wallSplit",
+      "description": "Tıklanan duvarı tıklanan yerde ikiye böler; ikinci parça aynı stilde yeni duvardır, parçalar düz devam eder. Kapalı duvar orada açılır.",
+      "aliases": [
+        "DUVARBOL",
+        "WALLSPLIT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallJoin",
+      "title": "Duvarları birleştir",
+      "icon": "wallJoin",
+      "description": "Uç uca duvarları tek duvar yapar: seçili duvarlar hemen, yoksa tıklananlar Enter ile. Alanları aynı olmalı; ters yöndeki duvar gövdesi yerinde çevrilir.",
+      "aliases": [
+        "DUVARBIRLESTIR",
+        "WALLJOIN"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallExtend",
+      "title": "Duvarı uzat",
+      "icon": "wallExtend",
+      "description": "Önce varılacak duvara, sonra uzatılacak duvarlara ucunun yanından tıklayın: her birinin ucu son kenarının doğrultusunda varılacak duvarın yoluna dek uzar ve onunla birleşir.",
+      "aliases": [
+        "DUVARUZAT",
+        "WALLEXTEND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallTrim",
+      "title": "Duvarı buda",
+      "icon": "wallTrim",
+      "description": "Önce kesen duvara, sonra budanacak duvarın kalacak parçasına tıklayın: duvar kesen duvarın yolunu kestiği yerde kısalır.",
+      "aliases": [
+        "DUVARBUDA",
+        "WALLTRIM"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallFlip",
+      "title": "Duvarı çevir",
+      "icon": "wallFlip",
+      "description": "Duvarın yönünü çevirir: gövdesi yolun diğer yanına aynalanır, katmanları diğer yana bakar, uçlarının birleşimi yer değiştirir. Seçili duvarlar hemen, yoksa tıklananlar.",
+      "aliases": [
+        "DUVARYONU",
+        "WALLFLIP"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallRestyle",
+      "title": "Stili değiştir",
+      "icon": "wallRestyle",
+      "description": "Bir duvara tıklayın, Stil (S) ile yeni stili seçin: o stildeki bütün duvarlar (Tümü, T) ya da yalnız tıklanan yeni stili alır; bileşenleri, uçları ve dolgusu stilden gelir.",
+      "aliases": [
+        "DUVARSTILDEGISTIR",
+        "STILDEGISTIR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.wallJoinCheck",
+      "title": "Birleşimleri denetle",
+      "icon": "wallJoinCheck",
+      "description": "Çizimde buluşup birleşmeyen duvarları listeler: aynı doğrultuda üst üste, ikiden çok uç, çok dar köşe, kesilemeyen birleşim; her birinin onarımı ve Öneriyi uygula ile tek adımda düzeltme, Göster ile yeri.",
+      "aliases": [
+        "BIRLESIMDENETLE",
+        "DUVARDENETLE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.settings",
       "title": "Katlar",
       "icon": "archSettings",
@@ -1689,7 +1793,20 @@
     "wallLeft": "<rect x=\"7\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M7 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
     "wallCenter": "<rect x=\"6\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M10 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
     "wallRight": "<rect x=\"5\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M13 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
-    "archSettings": "<path d=\"M3 17h14\"/><path d=\"M4.5 17V8L10 4l5.5 4v9\"/><path d=\"M4.5 12.5h11\"/><path d=\"M8.5 17v-2.5h3V17\"/>"
+    "archSettings": "<path d=\"M3 17h14\"/><path d=\"M4.5 17V8L10 4l5.5 4v9\"/><path d=\"M4.5 12.5h11\"/><path d=\"M8.5 17v-2.5h3V17\"/>",
+    "wallJoins": "<path d=\"M3 6.5h10.5V17M3 10.5h6.5V17\"/><path d=\"M13 3h3.5v3.5H13z\"/>",
+    "wallSplit": "<path d=\"M2 7.5h6M2 12.5h6M12 7.5h6M12 12.5h6\"/><path d=\"M10 3.5v2.5M10 8.5v3M10 14v2.5\"/>",
+    "wallJoin": "<path d=\"M2 9h6.5M2 13h6.5M11.5 9H18M11.5 13H18\"/><path d=\"M4 5.5h3.5m-1.25-1.25L7.5 5.5 6.25 6.75M16 5.5h-3.5m1.25-1.25L12.5 5.5l1.25 1.25\"/>",
+    "wallExtend": "<path d=\"M2 7.5h7M2 12.5h7M16 3v14\"/><path d=\"M11 10h3.5m-1.5-1.5L14.5 10 13 11.5\"/>",
+    "wallTrim": "<path d=\"M9 3v14M12 3v14M2 8.5h7M2 11.5h7\"/><path d=\"M14.5 7.5l3 3m0-3-3 3\"/>",
+    "wallFlip": "<path d=\"M3 8h14M3 12h14\"/><path d=\"M10 2.5v3.5m-1.5-2L10 2.5 11.5 4M10 14v3.5m-1.5-1.5L10 17.5l1.5-1.5\"/>",
+    "wallRestyle": "<path d=\"M3 6.5h14M3 13.5h14\"/><path d=\"M5.5 13.5l7-7M10.5 13.5l6-6\"/>",
+    "wallJoinCheck": "<path d=\"M3 7.5h8V17M3 11.5h4V17\"/><path d=\"M14.5 3 18 9h-7z\"/><path d=\"M14.5 5.2v1.6\"/>",
+    "wallJoinAuto": "<path d=\"M3 7h10v10M3 11h6v6M9 11l4-4\"/><path d=\"M16.5 2.5v3.5M14.75 4.25h3.5\"/>",
+    "wallJoinNone": "<path d=\"M3 6h8M3 10h8M11 6v4\"/><path d=\"M13 12.5h4v5.5M13 12.5v5.5\"/>",
+    "wallJoinMiter": "<path d=\"M3 5h12v12M3 9.5h7.5V17M10.5 9.5 15 5\"/>",
+    "wallJoinButt": "<path d=\"M11 3v15M15 3v15M11 3h4\"/><path d=\"M3 7h8M3 11h8\"/>",
+    "wallJoinThrough": "<path d=\"M3 5h14M3 9h14M17 5v4\"/><path d=\"M8 9v9M12 9v9\"/>"
   },
   "tabs": [
     {
@@ -2583,6 +2700,48 @@
         {
           "command": "arch.wallStyles",
           "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Duvar düzenle",
+      "icon": "wallJoins",
+      "items": [
+        {
+          "command": "tool.wallJoins",
+          "size": "large"
+        },
+        {
+          "command": "tool.wallSplit",
+          "size": "small"
+        },
+        {
+          "command": "tool.wallJoin",
+          "size": "small"
+        },
+        {
+          "command": "tool.wallExtend",
+          "size": "small"
+        },
+        {
+          "command": "tool.wallTrim",
+          "size": "small"
+        },
+        {
+          "command": "tool.wallFlip",
+          "size": "small"
+        },
+        {
+          "command": "tool.wallRestyle",
+          "size": "small"
+        },
+        {
+          "command": "arch.wallJoinCheck",
+          "size": "large"
         }
       ]
     },
